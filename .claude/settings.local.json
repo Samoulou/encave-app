@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-next-app:*)",
+      "Bash(npm init:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx prisma:*)",
+      "Bash(npm run test:run:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run format:*)",
+      "Bash(npm run format:check:*)",
+      "Bash(npx neonctl@latest init)",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}
