@@ -1,0 +1,68 @@
+schema: 1
+story: '1.2'
+story_title: 'Authentication System'
+gate: CONCERNS
+status_reason: 'All 12 ACs implemented with solid code quality. Medium-severity security concern (no rate limiting) and test coverage gaps require team attention before production.'
+reviewer: 'Quinn (Test Architect)'
+updated: '2026-01-07T00:00:00Z'
+
+waiver: { active: false }
+
+top_issues:
+  - id: 'SEC-001'
+    severity: medium
+    finding: 'No rate limiting on login endpoint - vulnerable to brute force attacks'
+    suggested_action: 'Add rate limiting middleware (e.g., @upstash/ratelimit or custom implementation)'
+    suggested_owner: dev
+  - id: 'TEST-001'
+    severity: medium
+    finding: 'Missing integration tests for auth actions (loginAction, registerAction)'
+    suggested_action: 'Add integration tests covering success and failure paths'
+    suggested_owner: dev
+  - id: 'I18N-001'
+    severity: low
+    finding: 'Hardcoded strings in LoginForm.tsx and RegisterForm.tsx violate i18n-first policy'
+    suggested_action: 'Replace with next-intl translations'
+    suggested_owner: dev
+  - id: 'SEC-002'
+    severity: low
+    finding: 'Email not normalized to lowercase - could allow duplicate accounts'
+    suggested_action: 'Normalize email to lowercase in registerAction before storage'
+    suggested_owner: dev
+
+quality_score: 70  # 100 - (0*20 FAILs) - (2*10 medium CONCERNS) - (2*5 low) = 70
+
+expires: '2026-01-21T00:00:00Z'
+
+evidence:
+  tests_reviewed: 11
+  risks_identified: 4
+  trace:
+    ac_covered: [6]  # Only AC6 (password validation) has direct unit tests
+    ac_gaps: [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12]  # Missing dedicated test coverage
+
+nfr_validation:
+  security:
+    status: CONCERNS
+    notes: 'Rate limiting missing on login endpoint; email normalization needed'
+  performance:
+    status: PASS
+    notes: 'Standard patterns used; no concerns'
+  reliability:
+    status: PASS
+    notes: 'Proper error handling throughout; ActionResult pattern enforced'
+  maintainability:
+    status: PASS
+    notes: 'Clean separation of concerns; follows project structure'
+
+recommendations:
+  immediate:
+    - action: 'Add rate limiting to login endpoint'
+      refs: ['src/server/actions/auth.ts:10-34']
+    - action: 'Add integration tests for auth actions'
+      refs: ['tests/integration/actions/auth.test.ts']
+  future:
+    - action: 'Implement next-intl translations in auth forms'
+      refs: ['src/components/features/auth/LoginForm.tsx', 'src/components/features/auth/RegisterForm.tsx']
+    - action: 'Normalize email to lowercase before storage'
+      refs: ['src/server/actions/auth.ts:52']

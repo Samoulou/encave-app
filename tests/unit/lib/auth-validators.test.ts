@@ -60,6 +60,7 @@ describe('registerSchema', () => {
       email: 'test@example.com',
       password: 'password123',
       confirmPassword: 'password123',
+      isWinemaker: false,
     });
     expect(result.success).toBe(false);
   });
@@ -70,6 +71,7 @@ describe('registerSchema', () => {
       email: 'test@example.com',
       password: 'password123',
       confirmPassword: 'password456',
+      isWinemaker: false,
     });
     expect(result.success).toBe(false);
   });
@@ -80,6 +82,7 @@ describe('registerSchema', () => {
       email: 'test@example.com',
       password: 'weak',
       confirmPassword: 'weak',
+      isWinemaker: false,
     });
     expect(result.success).toBe(false);
   });
@@ -90,6 +93,18 @@ describe('registerSchema', () => {
       email: 'test@example.com',
       password: 'password123',
       confirmPassword: 'password123',
+      isWinemaker: false,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts registration with isWinemaker true', () => {
+    const result = registerSchema.safeParse({
+      name: 'Winemaker User',
+      email: 'winemaker@example.com',
+      password: 'password123',
+      confirmPassword: 'password123',
+      isWinemaker: true,
     });
     expect(result.success).toBe(true);
   });

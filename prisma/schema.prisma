@@ -16,6 +16,13 @@ enum UserRole {
   ADMIN
 }
 
+enum WineryStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  SUSPENDED
+}
+
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
@@ -29,8 +36,41 @@ model User {
 
   accounts Account[]
   sessions Session[]
+  winery   Winery?
 
   @@map("users")
+}
+
+model Winery {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  slug        String       @unique
+  description String
+  address     String
+  commune     String
+  phone       String
+  email       String
+  coverPhoto  String?
+  userId      String       @unique
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status      WineryStatus @default(PENDING)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  galleryImages WineryGalleryImage[]
+
+  @@map("wineries")
+}
+
+model WineryGalleryImage {
+  id        String   @id @default(cuid())
+  url       String
+  order     Int      @default(0)
+  wineryId  String
+  winery    Winery   @relation(fields: [wineryId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@map("winery_gallery_images")
 }
 
 model Account {

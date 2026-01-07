@@ -24,6 +24,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import Link from 'next/link';
 
 export function RegisterForm() {
@@ -38,6 +39,7 @@ export function RegisterForm() {
       email: '',
       password: '',
       confirmPassword: '',
+      isWinemaker: false,
     },
   });
 
@@ -52,7 +54,12 @@ export function RegisterForm() {
         // Auto-login after registration
         const loginResult = await loginAction(data.email, data.password);
         if (loginResult.success) {
-          router.push('/');
+          // Redirect winemakers to onboarding, others to home
+          if (data.isWinemaker) {
+            router.push('/onboarding/winery');
+          } else {
+            router.push('/');
+          }
           router.refresh();
         } else {
           // Registration succeeded but login failed, redirect to login
@@ -155,6 +162,29 @@ export function RegisterForm() {
                     />
                   </FormControl>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="isWinemaker"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel className="cursor-pointer">
+                      I am a winemaker
+                    </FormLabel>
+                    <p className="text-sm text-slate-500">
+                      Check this if you want to register your winery and offer
+                      experiences
+                    </p>
+                  </div>
                 </FormItem>
               )}
             />
