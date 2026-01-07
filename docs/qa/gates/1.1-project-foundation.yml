@@ -3,9 +3,9 @@ schema: 1
 story: '1.1'
 story_title: 'Project Foundation & Infrastructure'
 gate: PASS
-status_reason: 'All code implementation complete with 7/7 tests passing. External service tasks (DB, GitHub, Vercel) require user action as documented in story.'
+status_reason: 'All required ACs complete. Database on Neon, migration applied, GitHub repo created. 7/7 tests passing, build successful.'
 reviewer: 'Quinn (Test Architect)'
-updated: '2026-01-07T17:35:00Z'
+updated: '2026-01-07T18:05:00Z'
 
 waiver: { active: false }
 
@@ -24,9 +24,9 @@ evidence:
   tests_reviewed: 7
   risks_identified: 0
   trace:
-    ac_covered: [1, 2, 3, 5, 6, 9, 10, 11, 12]
+    ac_covered: [1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12]
     ac_gaps: []
-    ac_pending_user_action: [4, 7, 8]
+    ac_optional: [8]
 
 nfr_validation:
   security:
@@ -42,18 +42,27 @@ nfr_validation:
     status: PASS
     notes: 'Clean code structure following architecture docs. TypeScript strict mode enforced.'
 
+database:
+  provider: 'Neon PostgreSQL'
+  region: 'eu-central-1'
+  database: 'neondb'
+  migration: '20260107165826_init'
+  status: 'Schema up to date'
+
 recommendations:
   immediate: []
   future:
-    - action: 'Provision PostgreSQL database on Neon'
-      refs: ['prisma/schema.prisma']
-      owner: user
-    - action: 'Create GitHub repository and configure branch protection'
-      refs: ['.github/workflows/ci.yml']
-      owner: user
-    - action: 'Connect Vercel project for auto-deploy'
+    - action: 'Connect Vercel project for auto-deploy (optional)'
       refs: ['README.md']
       owner: user
-    - action: 'Run prisma migrate dev after database is provisioned'
-      refs: ['prisma/schema.prisma']
+    - action: 'Configure main branch protection (optional)'
+      refs: ['.github/workflows/ci.yml']
       owner: user
+
+history:
+  - at: '2026-01-07T17:35:00Z'
+    gate: PASS
+    note: 'Initial review - code complete, external services pending user action'
+  - at: '2026-01-07T18:05:00Z'
+    gate: PASS
+    note: 'Re-verified after Neon DB provisioning and GitHub repo creation'
