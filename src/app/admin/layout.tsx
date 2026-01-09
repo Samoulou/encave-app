@@ -32,22 +32,25 @@ export default async function AdminLayout({
             <Link href="/admin" className="text-xl font-bold text-burgundy-700">
               EnCave Admin
             </Link>
-            <nav className="flex items-center gap-4">
+            <nav aria-label="Admin navigation" className="flex items-center gap-4">
               <Link
                 href="/admin"
                 className="flex items-center gap-2 text-sm text-slate-600 hover:text-burgundy-700"
               >
-                <Home className="h-4 w-4" />
+                <Home className="h-4 w-4" aria-hidden="true" />
                 Dashboard
               </Link>
               <Link
                 href="/admin/wineries/pending"
                 className="flex items-center gap-2 text-sm text-slate-600 hover:text-burgundy-700"
               >
-                <Building2 className="h-4 w-4" />
+                <Building2 className="h-4 w-4" aria-hidden="true" />
                 Pending Wineries
                 {pendingCount > 0 && (
-                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-burgundy-600 px-1.5 text-xs font-medium text-white">
+                  <span
+                    className="flex h-5 min-w-5 items-center justify-center rounded-full bg-burgundy-600 px-1.5 text-xs font-medium text-white"
+                    aria-label={`${pendingCount} pending`}
+                  >
                     {pendingCount}
                   </span>
                 )}
@@ -60,14 +63,14 @@ export default async function AdminLayout({
             </span>
             <form action="/api/auth/signout" method="POST">
               <Button variant="outline" size="sm" type="submit">
-                <LogOut className="mr-2 h-4 w-4" />
+                <LogOut className="mr-2 h-4 w-4" aria-hidden="true" />
                 Sign out
               </Button>
             </form>
           </div>
         </div>
       </header>
-      <main>{children}</main>
+      <main id="main-content">{children}</main>
     </div>
   );
 }

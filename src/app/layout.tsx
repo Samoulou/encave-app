@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Playfair_Display, DM_Sans, JetBrains_Mono } from 'next/font/google';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import { Toaster } from '@/components/ui/sonner';
+import { SkipLink } from '@/components/shared/SkipLink';
 import './globals.css';
 
 const playfair = Playfair_Display({
@@ -38,6 +39,7 @@ export default function RootLayout({
       <body
         className={`${playfair.variable} ${dmSans.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
+        <SkipLink />
         <NuqsAdapter>{children}</NuqsAdapter>
         <Toaster />
       </body>

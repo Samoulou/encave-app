@@ -346,19 +346,19 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
                 <button
                   type="button"
                   className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-slate-600 shadow-lg transition-colors hover:bg-white"
-                  title="Drag to reorder (coming soon)"
+                  aria-label="Drag to reorder (coming soon)"
                   disabled
                 >
-                  <GripVertical className="h-5 w-5" />
+                  <GripVertical className="h-5 w-5" aria-hidden="true" />
                 </button>
                 {/* Remove Button */}
                 <button
                   type="button"
                   className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-red-600 shadow-lg transition-colors hover:bg-red-50"
                   onClick={() => handleRemoveGalleryImage(image.id)}
-                  title="Remove image"
+                  aria-label={`Remove gallery image ${index + 1}`}
                 >
-                  <X className="h-5 w-5" />
+                  <X className="h-5 w-5" aria-hidden="true" />
                 </button>
               </div>
             </div>
