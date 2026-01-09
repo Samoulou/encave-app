@@ -5,6 +5,8 @@ node_modules
 
 # Testing
 coverage
+playwright-report/
+test-results/
 
 # Next.js
 .next/
@@ -40,6 +42,7 @@ next-env.d.ts
 # IDE
 .idea
 .vscode
+.claude/
 
 # Prisma
 /src/generated/prisma
