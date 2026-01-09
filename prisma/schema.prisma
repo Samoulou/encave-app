@@ -161,7 +161,8 @@ model Experience {
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 
-  galleryImages ExperienceGalleryImage[]
+  galleryImages     ExperienceGalleryImage[]
+  availabilitySlots AvailabilitySlot[]
 
   @@unique([wineryId, slug])
   @@map("experiences")
@@ -176,4 +177,19 @@ model ExperienceGalleryImage {
   createdAt    DateTime   @default(now())
 
   @@map("experience_gallery_images")
+}
+
+model AvailabilitySlot {
+  id           String     @id @default(cuid())
+  experienceId String
+  experience   Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  dayOfWeek    Int        // 0 = Sunday, 6 = Saturday
+  startTime    String     // "HH:mm" format
+  endTime      String     // "HH:mm" format
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([experienceId, dayOfWeek])
+  @@map("availability_slots")
 }

@@ -4,8 +4,9 @@ import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
 import { EditExperienceForm } from '@/components/features/experience/EditExperienceForm';
+import { AvailabilityScheduleBuilder } from '@/components/features/experience/AvailabilityScheduleBuilder';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Calendar } from 'lucide-react';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -97,6 +98,29 @@ export default async function EditExperiencePage({ params }: PageProps) {
         </div>
 
         <EditExperienceForm experience={experienceData} />
+
+        {/* Availability Section */}
+        <section className="mt-12 space-y-6">
+          <div className="flex items-start gap-4 pb-6 border-b border-stone-200">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-burgundy-100 text-burgundy-600">
+              <Calendar className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="font-display text-xl font-semibold text-slate-900">
+                Availability Schedule
+              </h2>
+              <p className="mt-1 text-sm text-slate-600">
+                Configure when visitors can book this experience
+              </p>
+            </div>
+          </div>
+
+          <AvailabilityScheduleBuilder
+            experienceId={experience.id}
+            experienceDuration={experience.duration}
+            experienceStatus={experience.status}
+          />
+        </section>
       </div>
     </WineryAccessGuard>
   );
