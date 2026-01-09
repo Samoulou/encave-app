@@ -240,6 +240,508 @@ export async function createExperience(
 }
 
 /**
+ * Update an existing experience
+ */
+export async function updateExperience(
+  experienceId: string,
+  input: CreateExperienceInput,
+  coverPhotoUrl: string,
+  galleryImageUrls: string[] = []
+): Promise<ActionResult<{ experienceId: string; slug: string }>> {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return {
+        success: false,
+        error: { code: 'UNAUTHORIZED', message: 'Please sign in to continue' },
+      };
+    }
+
+    // Validate input
+    const validated = createExperienceSchema.safeParse(input);
+    if (!validated.success) {
+      const firstError = validated.error.issues[0];
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: firstError?.message ?? 'Invalid input',
+        },
+      };
+    }
+
+    // Get user's winery
+    const winery = await db.winery.findUnique({
+      where: { userId: session.user.id },
+      select: { id: true, status: true },
+    });
+
+    if (!winery || winery.status !== 'VERIFIED') {
+      return {
+        success: false,
+        error: { code: 'FORBIDDEN', message: 'Access denied' },
+      };
+    }
+
+    // Verify experience belongs to this winery
+    const existingExperience = await db.experience.findFirst({
+      where: { id: experienceId, wineryId: winery.id },
+      include: { galleryImages: true },
+    });
+
+    if (!existingExperience) {
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Experience not found' },
+      };
+    }
+
+    const { title, type, description, duration, price, minCapacity, maxCapacity } =
+      validated.data;
+
+    // Generate new slug if title changed
+    let slug = existingExperience.slug;
+    if (title !== existingExperience.title) {
+      const baseSlug = generateSlug(title);
+      slug = await ensureUniqueExperienceSlug(winery.id, baseSlug);
+    }
+
+    // Convert price to cents
+    const priceInCents = Math.round(price * 100);
+
+    // Update experience in transaction
+    const experience = await db.$transaction(async (tx) => {
+      // Delete old gallery images
+      await tx.experienceGalleryImage.deleteMany({
+        where: { experienceId },
+      });
+
+      // Update experience
+      const updated = await tx.experience.update({
+        where: { id: experienceId },
+        data: {
+          title,
+          slug,
+          description,
+          type,
+          duration,
+          price: priceInCents,
+          minCapacity,
+          maxCapacity,
+          coverPhoto: coverPhotoUrl,
+        },
+      });
+
+      // Add new gallery images
+      if (galleryImageUrls.length > 0) {
+        await tx.experienceGalleryImage.createMany({
+          data: galleryImageUrls.slice(0, 8).map((url, index) => ({
+            experienceId,
+            url,
+            order: index,
+          })),
+        });
+      }
+
+      return updated;
+    });
+
+    return {
+      success: true,
+      data: { experienceId: experience.id, slug: experience.slug },
+    };
+  } catch (error) {
+    console.error('updateExperience error:', error);
+    return {
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Something went wrong. Please try again.',
+      },
+    };
+  }
+}
+
+/**
+ * Publish an experience (DRAFT -> PUBLISHED)
+ */
+export async function publishExperience(
+  experienceId: string
+): Promise<ActionResult<{ status: string }>> {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return {
+        success: false,
+        error: { code: 'UNAUTHORIZED', message: 'Please sign in to continue' },
+      };
+    }
+
+    const winery = await db.winery.findUnique({
+      where: { userId: session.user.id },
+      select: { id: true, status: true },
+    });
+
+    if (!winery || winery.status !== 'VERIFIED') {
+      return {
+        success: false,
+        error: { code: 'FORBIDDEN', message: 'Access denied' },
+      };
+    }
+
+    const experience = await db.experience.findFirst({
+      where: { id: experienceId, wineryId: winery.id },
+    });
+
+    if (!experience) {
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Experience not found' },
+      };
+    }
+
+    if (experience.status !== 'DRAFT') {
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Only draft experiences can be published',
+        },
+      };
+    }
+
+    await db.experience.update({
+      where: { id: experienceId },
+      data: { status: 'PUBLISHED' },
+    });
+
+    return {
+      success: true,
+      data: { status: 'PUBLISHED' },
+    };
+  } catch (error) {
+    console.error('publishExperience error:', error);
+    return {
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Something went wrong. Please try again.',
+      },
+    };
+  }
+}
+
+/**
+ * Unpublish an experience (PUBLISHED -> DRAFT)
+ */
+export async function unpublishExperience(
+  experienceId: string
+): Promise<ActionResult<{ status: string }>> {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return {
+        success: false,
+        error: { code: 'UNAUTHORIZED', message: 'Please sign in to continue' },
+      };
+    }
+
+    const winery = await db.winery.findUnique({
+      where: { userId: session.user.id },
+      select: { id: true, status: true },
+    });
+
+    if (!winery || winery.status !== 'VERIFIED') {
+      return {
+        success: false,
+        error: { code: 'FORBIDDEN', message: 'Access denied' },
+      };
+    }
+
+    const experience = await db.experience.findFirst({
+      where: { id: experienceId, wineryId: winery.id },
+    });
+
+    if (!experience) {
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Experience not found' },
+      };
+    }
+
+    if (experience.status !== 'PUBLISHED') {
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Only published experiences can be unpublished',
+        },
+      };
+    }
+
+    await db.experience.update({
+      where: { id: experienceId },
+      data: { status: 'DRAFT' },
+    });
+
+    return {
+      success: true,
+      data: { status: 'DRAFT' },
+    };
+  } catch (error) {
+    console.error('unpublishExperience error:', error);
+    return {
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Something went wrong. Please try again.',
+      },
+    };
+  }
+}
+
+/**
+ * Archive an experience (any status -> ARCHIVED)
+ */
+export async function archiveExperience(
+  experienceId: string
+): Promise<ActionResult<{ status: string }>> {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return {
+        success: false,
+        error: { code: 'UNAUTHORIZED', message: 'Please sign in to continue' },
+      };
+    }
+
+    const winery = await db.winery.findUnique({
+      where: { userId: session.user.id },
+      select: { id: true, status: true },
+    });
+
+    if (!winery || winery.status !== 'VERIFIED') {
+      return {
+        success: false,
+        error: { code: 'FORBIDDEN', message: 'Access denied' },
+      };
+    }
+
+    const experience = await db.experience.findFirst({
+      where: { id: experienceId, wineryId: winery.id },
+    });
+
+    if (!experience) {
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Experience not found' },
+      };
+    }
+
+    if (experience.status === 'ARCHIVED') {
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Experience is already archived',
+        },
+      };
+    }
+
+    await db.experience.update({
+      where: { id: experienceId },
+      data: { status: 'ARCHIVED' },
+    });
+
+    return {
+      success: true,
+      data: { status: 'ARCHIVED' },
+    };
+  } catch (error) {
+    console.error('archiveExperience error:', error);
+    return {
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Something went wrong. Please try again.',
+      },
+    };
+  }
+}
+
+/**
+ * Duplicate an experience (creates copy with DRAFT status)
+ */
+export async function duplicateExperience(
+  experienceId: string
+): Promise<ActionResult<{ experienceId: string; slug: string }>> {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return {
+        success: false,
+        error: { code: 'UNAUTHORIZED', message: 'Please sign in to continue' },
+      };
+    }
+
+    const winery = await db.winery.findUnique({
+      where: { userId: session.user.id },
+      select: { id: true, status: true },
+    });
+
+    if (!winery || winery.status !== 'VERIFIED') {
+      return {
+        success: false,
+        error: { code: 'FORBIDDEN', message: 'Access denied' },
+      };
+    }
+
+    const experience = await db.experience.findFirst({
+      where: { id: experienceId, wineryId: winery.id },
+      include: { galleryImages: { orderBy: { order: 'asc' } } },
+    });
+
+    if (!experience) {
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Experience not found' },
+      };
+    }
+
+    // Generate new unique slug
+    const baseSlug = generateSlug(`${experience.title} copy`);
+    const slug = await ensureUniqueExperienceSlug(winery.id, baseSlug);
+
+    // Create duplicate in transaction
+    const duplicate = await db.$transaction(async (tx) => {
+      const newExperience = await tx.experience.create({
+        data: {
+          wineryId: winery.id,
+          title: `${experience.title} (Copy)`,
+          slug,
+          description: experience.description,
+          type: experience.type,
+          duration: experience.duration,
+          price: experience.price,
+          minCapacity: experience.minCapacity,
+          maxCapacity: experience.maxCapacity,
+          coverPhoto: experience.coverPhoto,
+          status: 'DRAFT',
+        },
+      });
+
+      // Copy gallery images
+      if (experience.galleryImages.length > 0) {
+        await tx.experienceGalleryImage.createMany({
+          data: experience.galleryImages.map((img, index) => ({
+            experienceId: newExperience.id,
+            url: img.url,
+            order: index,
+          })),
+        });
+      }
+
+      return newExperience;
+    });
+
+    return {
+      success: true,
+      data: { experienceId: duplicate.id, slug: duplicate.slug },
+    };
+  } catch (error) {
+    console.error('duplicateExperience error:', error);
+    return {
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Something went wrong. Please try again.',
+      },
+    };
+  }
+}
+
+/**
+ * Get a single experience for editing
+ */
+export async function getExperienceForEdit(
+  experienceId: string
+): Promise<ActionResult<{
+  id: string;
+  title: string;
+  type: string;
+  description: string;
+  duration: number;
+  price: number;
+  minCapacity: number;
+  maxCapacity: number;
+  coverPhoto: string;
+  galleryImages: { id: string; url: string; order: number }[];
+}>> {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return {
+        success: false,
+        error: { code: 'UNAUTHORIZED', message: 'Please sign in to continue' },
+      };
+    }
+
+    const winery = await db.winery.findUnique({
+      where: { userId: session.user.id },
+      select: { id: true },
+    });
+
+    if (!winery) {
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Winery not found' },
+      };
+    }
+
+    const experience = await db.experience.findFirst({
+      where: { id: experienceId, wineryId: winery.id },
+      include: { galleryImages: { orderBy: { order: 'asc' } } },
+    });
+
+    if (!experience) {
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Experience not found' },
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        id: experience.id,
+        title: experience.title,
+        type: experience.type,
+        description: experience.description,
+        duration: experience.duration,
+        price: experience.price / 100, // Convert cents to CHF
+        minCapacity: experience.minCapacity,
+        maxCapacity: experience.maxCapacity,
+        coverPhoto: experience.coverPhoto,
+        galleryImages: experience.galleryImages.map((img) => ({
+          id: img.id,
+          url: img.url,
+          order: img.order,
+        })),
+      },
+    };
+  } catch (error) {
+    console.error('getExperienceForEdit error:', error);
+    return {
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Something went wrong. Please try again.',
+      },
+    };
+  }
+}
+
+/**
  * Delete an uploaded image from Blob storage (for cleanup on form cancellation)
  */
 export async function deleteUploadedImage(
