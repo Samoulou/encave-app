@@ -4,14 +4,21 @@ import { NextResponse } from 'next/server';
 // Routes that require authentication
 const protectedRoutes = ['/dashboard', '/onboarding'];
 
+// Routes that require ADMIN role
+const adminRoutes = ['/admin'];
+
 // Routes that should redirect to home if already authenticated
 const authRoutes = ['/login', '/register'];
 
 export default auth((req) => {
   const { nextUrl } = req;
   const isLoggedIn = !!req.auth;
+  const userRole = req.auth?.user?.role;
 
   const isProtectedRoute = protectedRoutes.some((route) =>
+    nextUrl.pathname.startsWith(route)
+  );
+  const isAdminRoute = adminRoutes.some((route) =>
     nextUrl.pathname.startsWith(route)
   );
   const isAuthRoute = authRoutes.some((route) =>
@@ -19,10 +26,17 @@ export default auth((req) => {
   );
 
   // Redirect unauthenticated users from protected routes to login
-  if (isProtectedRoute && !isLoggedIn) {
+  if ((isProtectedRoute || isAdminRoute) && !isLoggedIn) {
     const loginUrl = new URL('/login', nextUrl.origin);
     loginUrl.searchParams.set('callbackUrl', nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
+  }
+
+  // Redirect non-admin users from admin routes to home with error
+  if (isAdminRoute && userRole !== 'ADMIN') {
+    const homeUrl = new URL('/', nextUrl.origin);
+    homeUrl.searchParams.set('error', 'unauthorized');
+    return NextResponse.redirect(homeUrl);
   }
 
   // Redirect authenticated users from auth routes to home

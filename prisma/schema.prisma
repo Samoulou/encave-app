@@ -42,22 +42,26 @@ model User {
 }
 
 model Winery {
-  id          String       @id @default(cuid())
-  name        String       @unique
-  slug        String       @unique
-  description String
-  address     String
-  commune     String
-  phone       String
-  email       String
-  coverPhoto  String?
-  userId      String       @unique
-  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  status      WineryStatus @default(PENDING)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id              String       @id @default(cuid())
+  name            String       @unique
+  slug            String       @unique
+  description     String
+  address         String
+  commune         String
+  phone           String
+  email           String
+  coverPhoto      String?
+  userId          String       @unique
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status          WineryStatus @default(PENDING)
+  verifiedAt      DateTime?
+  verifiedBy      String?
+  rejectionReason String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 
-  galleryImages WineryGalleryImage[]
+  galleryImages    WineryGalleryImage[]
+  verificationLogs VerificationLog[]
 
   @@map("wineries")
 }
@@ -111,4 +115,16 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map("verification_tokens")
+}
+
+model VerificationLog {
+  id        String   @id @default(cuid())
+  wineryId  String
+  winery    Winery   @relation(fields: [wineryId], references: [id], onDelete: Cascade)
+  action    String   // 'APPROVED' | 'REJECTED'
+  adminId   String
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@map("verification_logs")
 }

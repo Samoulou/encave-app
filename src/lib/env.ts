@@ -8,6 +8,9 @@ const envSchema = z.object({
   NEXTAUTH_SECRET: z.string().min(32).optional(),
   NEXTAUTH_URL: z.string().url().optional(),
 
+  // Email (Resend)
+  RESEND_API_KEY: z.string().optional(),
+
   // Node environment
   NODE_ENV: z
     .enum(['development', 'production', 'test'])
