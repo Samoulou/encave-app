@@ -1,0 +1,57 @@
+schema: 1
+story: '2.1'
+story_title: 'Create Experience'
+gate: CONCERNS
+status_reason: 'All 12 acceptance criteria met with strong implementation. Minor i18n compliance gap - user-facing strings are hardcoded instead of using next-intl per coding standards.'
+reviewer: 'Quinn (Test Architect)'
+updated: '2026-01-09T16:30:00Z'
+
+waiver: { active: false }
+
+top_issues:
+  - id: 'I18N-001'
+    severity: medium
+    finding: 'User-facing strings in ExperienceForm.tsx and page components are hardcoded in English'
+    suggested_action: 'Add next-intl translations in future i18n sweep'
+    suggested_owner: dev
+
+risk_summary:
+  totals: { critical: 0, high: 0, medium: 1, low: 0 }
+  recommendations:
+    must_fix: []
+    monitor:
+      - 'i18n compliance for user-facing strings'
+
+quality_score: 90
+expires: '2026-01-23T00:00:00Z'
+
+evidence:
+  tests_reviewed: 26
+  risks_identified: 1
+  trace:
+    ac_covered: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    ac_gaps: []
+
+nfr_validation:
+  security:
+    status: PASS
+    notes: 'Auth checks in all actions, file validation, path-based access control'
+  performance:
+    status: PASS
+    notes: 'Indexed queries, image limits, CDN delivery'
+  reliability:
+    status: PASS
+    notes: 'Transaction-based creation, proper error handling'
+  maintainability:
+    status: CONCERNS
+    notes: 'Hardcoded strings should use i18n system'
+
+recommendations:
+  immediate: []
+  future:
+    - action: 'Add next-intl translations for user-facing strings'
+      refs: ['src/components/features/experience/ExperienceForm.tsx', 'src/app/(protected)/dashboard/experiences/']
+    - action: 'Add integration tests for createExperience server action'
+      refs: ['src/server/actions/experience.ts']
+    - action: 'Add component tests for ExperienceForm'
+      refs: ['src/components/features/experience/ExperienceForm.tsx']

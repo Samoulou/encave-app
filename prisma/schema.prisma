@@ -23,6 +23,20 @@ enum WineryStatus {
   SUSPENDED
 }
 
+enum ExperienceType {
+  TASTING
+  CELLAR_VISIT
+  WORKSHOP
+  VINEYARD_TOUR
+  FOOD_PAIRING
+}
+
+enum ExperienceStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
@@ -62,6 +76,7 @@ model Winery {
 
   galleryImages    WineryGalleryImage[]
   verificationLogs VerificationLog[]
+  experiences      Experience[]
 
   @@map("wineries")
 }
@@ -127,4 +142,38 @@ model VerificationLog {
   createdAt DateTime @default(now())
 
   @@map("verification_logs")
+}
+
+model Experience {
+  id          String           @id @default(cuid())
+  wineryId    String
+  winery      Winery           @relation(fields: [wineryId], references: [id], onDelete: Cascade)
+  title       String
+  slug        String
+  description String           @db.Text
+  type        ExperienceType
+  duration    Int              // minutes
+  price       Int              // cents (CHF)
+  minCapacity Int
+  maxCapacity Int
+  coverPhoto  String
+  status      ExperienceStatus @default(DRAFT)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  galleryImages ExperienceGalleryImage[]
+
+  @@unique([wineryId, slug])
+  @@map("experiences")
+}
+
+model ExperienceGalleryImage {
+  id           String     @id @default(cuid())
+  url          String
+  order        Int        @default(0)
+  experienceId String
+  experience   Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+
+  @@map("experience_gallery_images")
 }

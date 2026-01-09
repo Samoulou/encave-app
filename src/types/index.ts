@@ -13,3 +13,10 @@ export interface User {
 export type { ActionResult, ErrorCode } from './actions';
 export type { WineryPublic, WineryWithStatus } from './winery';
 export type { WineryStatus } from '@prisma/client';
+export type {
+  ExperienceFormData,
+  ExperiencePublic,
+  ExperienceWithStatus,
+  ExperienceType,
+  ExperienceStatus,
+} from './experience';
