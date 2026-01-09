@@ -29,13 +29,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { cn } from '@/lib/utils';
+
+const MAX_DESCRIPTION_LENGTH = 500;
+const MIN_DESCRIPTION_LENGTH = 50;
 
 export function WineryOnboardingForm() {
   const router = useRouter();
@@ -52,6 +49,9 @@ export function WineryOnboardingForm() {
       phone: '',
     },
   });
+
+  const descriptionValue = form.watch('description') || '';
+  const descriptionLength = descriptionValue.length;
 
   async function onSubmit(data: WineryOnboardingInput) {
     setIsLoading(true);
@@ -74,24 +74,22 @@ export function WineryOnboardingForm() {
   }
 
   return (
-    <Card className="mx-auto max-w-2xl">
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold text-burgundy-700">
-          Register Your Winery
-        </CardTitle>
-        <CardDescription>
-          Tell us about your winery to get started on EnCave
-        </CardDescription>
-      </CardHeader>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <CardContent className="space-y-6">
-            {error && (
-              <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">
-                {error}
-              </div>
-            )}
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        {error && (
+          <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-600">
+            {error}
+          </div>
+        )}
 
+        {/* Section: Winery Information */}
+        <section className="space-y-6">
+          <div className="flex items-center gap-3 rounded-lg bg-burgundy-50 px-4 py-3">
+            <span className="text-xl">🍷</span>
+            <h2 className="font-semibold text-burgundy-900">Winery Information</h2>
+          </div>
+
+          <div className="space-y-6 pl-1">
             <FormField
               control={form.control}
               name="name"
@@ -115,19 +113,46 @@ export function WineryOnboardingForm() {
                   <FormControl>
                     <Textarea
                       placeholder="Tell visitors about your winery, your history, and what makes your wines special..."
-                      className="min-h-[120px]"
+                      className="min-h-[140px] resize-none"
+                      maxLength={MAX_DESCRIPTION_LENGTH}
                       {...field}
                     />
                   </FormControl>
-                  <FormDescription>
-                    Minimum 50 characters. Describe your winery, wines, and what
-                    visitors can expect.
-                  </FormDescription>
+                  <div className="flex items-center justify-between">
+                    <FormDescription>
+                      Describe your winery, wines, and what visitors can expect.
+                    </FormDescription>
+                    <span
+                      className={cn(
+                        'text-xs font-medium tabular-nums',
+                        descriptionLength < MIN_DESCRIPTION_LENGTH
+                          ? 'text-amber-600'
+                          : descriptionLength > MAX_DESCRIPTION_LENGTH - 50
+                            ? 'text-red-500'
+                            : 'text-slate-400'
+                      )}
+                    >
+                      {descriptionLength}/{MAX_DESCRIPTION_LENGTH}
+                    </span>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
             />
+          </div>
+        </section>
 
+        {/* Divider */}
+        <div className="border-t border-stone-200" />
+
+        {/* Section: Location */}
+        <section className="space-y-6">
+          <div className="flex items-center gap-3 rounded-lg bg-gold-50 px-4 py-3">
+            <span className="text-xl">📍</span>
+            <h2 className="font-semibold text-gold-900">Location</h2>
+          </div>
+
+          <div className="space-y-6 pl-1">
             <FormField
               control={form.control}
               name="address"
@@ -169,7 +194,20 @@ export function WineryOnboardingForm() {
                 </FormItem>
               )}
             />
+          </div>
+        </section>
 
+        {/* Divider */}
+        <div className="border-t border-stone-200" />
+
+        {/* Section: Contact */}
+        <section className="space-y-6">
+          <div className="flex items-center gap-3 rounded-lg bg-slate-100 px-4 py-3">
+            <span className="text-xl">📞</span>
+            <h2 className="font-semibold text-slate-900">Contact</h2>
+          </div>
+
+          <div className="space-y-6 pl-1">
             <FormField
               control={form.control}
               name="phone"
@@ -186,13 +224,20 @@ export function WineryOnboardingForm() {
                 </FormItem>
               )}
             />
+          </div>
+        </section>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Submitting...' : 'Submit for Verification'}
-            </Button>
-          </CardContent>
-        </form>
-      </Form>
-    </Card>
+        {/* Submit button */}
+        <div className="pt-4">
+          <Button
+            type="submit"
+            className="w-full sm:w-auto sm:min-w-[200px] sm:mx-auto sm:block"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Submitting...' : 'Continue'}
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 }
