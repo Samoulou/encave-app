@@ -1,19 +1,18 @@
-import { db } from '@/server/db';
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
+import { getWineryBySlug } from '@/server/queries/winery.queries';
 
 interface WineryPageProps {
-  params: {
-    slug: string;
-  };
+  params: Promise<{ slug: string }>;
 }
 
-export async function generateMetadata({ params }: WineryPageProps) {
-  const winery = await db.winery.findUnique({
-    where: { slug: params.slug },
-    select: { name: true, description: true },
-  });
+export async function generateMetadata({
+  params,
+}: WineryPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const winery = await getWineryBySlug(slug);
 
   if (!winery) {
     return { title: 'Winery Not Found' };
@@ -22,20 +21,20 @@ export async function generateMetadata({ params }: WineryPageProps) {
   return {
     title: `${winery.name} | EnCave`,
     description: winery.description.substring(0, 160),
+    openGraph: {
+      title: `${winery.name} | EnCave`,
+      description: winery.description.substring(0, 160),
+      type: 'website',
+      ...(winery.coverPhoto && { images: [winery.coverPhoto] }),
+    },
   };
 }
 
 export default async function WineryPage({ params }: WineryPageProps) {
-  const winery = await db.winery.findUnique({
-    where: { slug: params.slug },
-    include: {
-      galleryImages: {
-        orderBy: { order: 'asc' },
-      },
-    },
-  });
+  const { slug } = await params;
+  const winery = await getWineryBySlug(slug);
 
-  if (!winery || winery.status !== 'VERIFIED') {
+  if (!winery) {
     notFound();
   }
 
@@ -183,6 +182,31 @@ export default async function WineryPage({ params }: WineryPageProps) {
                     <span className="text-slate-900">{winery.email}</span>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Coming Soon Teaser */}
+            <Card className="border-dashed border-2 border-burgundy-200 bg-burgundy-50">
+              <CardContent className="p-6 text-center">
+                <svg
+                  className="mx-auto h-10 w-10 text-burgundy-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+                <h3 className="mt-3 font-semibold text-burgundy-900">
+                  Coming soon: Book experiences
+                </h3>
+                <p className="mt-1 text-sm text-burgundy-700">
+                  Wine tastings and tours will be available for booking soon.
+                </p>
               </CardContent>
             </Card>
           </div>

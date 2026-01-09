@@ -11,6 +11,8 @@
     "format:check": "prettier --check .",
     "test": "vitest",
     "test:run": "vitest run",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "db:seed": "npx tsx prisma/seed.ts"
   },
   "prisma": {
@@ -34,6 +36,7 @@
     "next": "^14.2.35",
     "next-auth": "^5.0.0-beta.30",
     "next-themes": "^0.4.6",
+    "nuqs": "^2.8.6",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.70.0",
@@ -43,6 +46,9 @@
     "zod": "^4.3.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.57.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.1",
     "@types/bcrypt": "^6.0.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.0.0",
@@ -52,6 +58,7 @@
     "autoprefixer": "^10.4.23",
     "eslint": "^8.0.0",
     "eslint-config-next": "^14.0.0",
+    "jsdom": "^27.4.0",
     "postcss": "^8.5.6",
     "prettier": "^3.0.0",
     "prettier-plugin-tailwindcss": "^0.7.2",
