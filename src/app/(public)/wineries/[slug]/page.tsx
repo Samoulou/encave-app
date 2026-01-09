@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
-import { Card, CardContent } from '@/components/ui/card';
+import Link from 'next/link';
+import { ArrowLeft, MapPin, Phone, Mail, Calendar, ExternalLink, Wine } from 'lucide-react';
 import { getWineryBySlug } from '@/server/queries/winery.queries';
+import { VerifiedBadge } from '@/components/shared/VerifiedBadge';
 
 interface WineryPageProps {
   params: Promise<{ slug: string }>;
@@ -38,11 +40,14 @@ export default async function WineryPage({ params }: WineryPageProps) {
     notFound();
   }
 
+  const isVerified = winery.status === 'VERIFIED';
+  const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${winery.address}, ${winery.commune}, Valais, Switzerland`)}`;
+
   return (
-    <div className="min-h-screen">
-      {/* Cover Photo */}
-      {winery.coverPhoto ? (
-        <div className="relative h-[300px] w-full md:h-[400px]">
+    <div className="min-h-screen bg-cream-50">
+      {/* Hero Section */}
+      <section className="relative h-[50vh] min-h-[400px] w-full">
+        {winery.coverPhoto ? (
           <Image
             src={winery.coverPhoto}
             alt={winery.name}
@@ -51,164 +56,151 @@ export default async function WineryPage({ params }: WineryPageProps) {
             priority
             sizes="100vw"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-          <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-            <div className="container">
-              <h1 className="text-3xl font-bold md:text-4xl">{winery.name}</h1>
-              <p className="mt-2 text-lg opacity-90">{winery.commune}, Valais</p>
+        ) : (
+          <div className="h-full w-full bg-gradient-to-br from-burgundy-700 to-burgundy-900">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Wine className="h-32 w-32 text-burgundy-500/30" />
             </div>
           </div>
-        </div>
-      ) : (
-        <div className="bg-burgundy-700 py-16">
-          <div className="container">
-            <h1 className="text-3xl font-bold text-white md:text-4xl">
-              {winery.name}
-            </h1>
-            <p className="mt-2 text-lg text-white/90">
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-burgundy-950/80 via-burgundy-900/30 to-transparent" />
+
+        {/* Hero Content */}
+        <div className="absolute bottom-0 left-0 right-0 p-8 lg:p-12">
+          <div className="mx-auto max-w-6xl">
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="font-display text-display-lg text-white">
+                {winery.name}
+              </h1>
+              {isVerified && <VerifiedBadge size="lg" />}
+            </div>
+            <p className="mt-2 flex items-center gap-2 text-lg text-white/90">
+              <MapPin className="h-5 w-5" />
               {winery.commune}, Valais
             </p>
           </div>
         </div>
-      )}
+      </section>
 
-      <div className="container py-10">
+      {/* Back to directory link */}
+      <div className="border-b border-stone-200/60 bg-white">
+        <div className="mx-auto max-w-6xl px-6 py-4 lg:px-8">
+          <Link
+            href="/wineries"
+            className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-burgundy-700 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to all wineries
+          </Link>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="mx-auto max-w-6xl px-6 py-10 lg:px-8 lg:py-12">
         <div className="grid gap-8 lg:grid-cols-3">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* About */}
-            <Card>
-              <CardContent className="p-6">
-                <h2 className="mb-4 text-xl font-semibold text-slate-900">
-                  About
-                </h2>
-                <p className="whitespace-pre-wrap text-slate-600">
+            <section className="rounded-xl bg-white p-6 shadow-warm lg:p-8">
+              <h2 className="font-display text-xl font-semibold text-slate-900">
+                About the Winery
+              </h2>
+              <div className="mt-4 prose prose-slate max-w-none">
+                <p className="whitespace-pre-wrap text-slate-600 leading-relaxed">
                   {winery.description}
                 </p>
-              </CardContent>
-            </Card>
+              </div>
+            </section>
 
             {/* Gallery */}
             {winery.galleryImages.length > 0 && (
-              <Card>
-                <CardContent className="p-6">
-                  <h2 className="mb-4 text-xl font-semibold text-slate-900">
-                    Gallery
-                  </h2>
-                  <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-                    {winery.galleryImages.map((image) => (
-                      <div
-                        key={image.id}
-                        className="relative aspect-square overflow-hidden rounded-lg"
-                      >
-                        <Image
-                          src={image.url}
-                          alt={`${winery.name} gallery`}
-                          fill
-                          className="object-cover transition-transform hover:scale-105"
-                          sizes="(max-width: 768px) 50vw, 33vw"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              <section className="rounded-xl bg-white p-6 shadow-warm lg:p-8">
+                <h2 className="font-display text-xl font-semibold text-slate-900">
+                  Gallery
+                </h2>
+                <div className="mt-4 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+                  {winery.galleryImages.map((image) => (
+                    <div
+                      key={image.id}
+                      className="group relative aspect-square overflow-hidden rounded-lg"
+                    >
+                      <Image
+                        src={image.url}
+                        alt={`${winery.name} gallery`}
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        sizes="(max-width: 768px) 50vw, 33vw"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </section>
             )}
           </div>
 
           {/* Sidebar */}
           <div className="space-y-6">
-            <Card>
-              <CardContent className="p-6">
-                <h2 className="mb-4 text-lg font-semibold text-slate-900">
-                  Contact
-                </h2>
-                <div className="space-y-3 text-sm">
-                  <div className="flex items-start gap-3">
-                    <svg
-                      className="mt-0.5 h-5 w-5 flex-shrink-0 text-slate-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                    </svg>
-                    <div>
-                      <p className="text-slate-900">{winery.address}</p>
-                      <p className="text-slate-600">{winery.commune}</p>
-                    </div>
+            {/* Contact Card */}
+            <div className="rounded-xl bg-white p-6 shadow-warm">
+              <h2 className="font-display text-lg font-semibold text-slate-900">
+                Contact
+              </h2>
+              <div className="mt-4 space-y-4">
+                {/* Phone */}
+                <a
+                  href={`tel:${winery.phone}`}
+                  className="flex items-center gap-3 text-sm text-slate-700 hover:text-burgundy-700 transition-colors"
+                >
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-burgundy-50">
+                    <Phone className="h-5 w-5 text-burgundy-600" />
                   </div>
-                  <div className="flex items-center gap-3">
-                    <svg
-                      className="h-5 w-5 flex-shrink-0 text-slate-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                      />
-                    </svg>
-                    <span className="text-slate-900">{winery.phone}</span>
+                  <span>{winery.phone}</span>
+                </a>
+
+                {/* Email */}
+                <a
+                  href={`mailto:${winery.email}`}
+                  className="flex items-center gap-3 text-sm text-slate-700 hover:text-burgundy-700 transition-colors"
+                >
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-burgundy-50">
+                    <Mail className="h-5 w-5 text-burgundy-600" />
                   </div>
-                  <div className="flex items-center gap-3">
-                    <svg
-                      className="h-5 w-5 flex-shrink-0 text-slate-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                      />
-                    </svg>
-                    <span className="text-slate-900">{winery.email}</span>
+                  <span className="break-all">{winery.email}</span>
+                </a>
+
+                {/* Address with map link */}
+                <a
+                  href={mapUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-start gap-3 text-sm text-slate-700 hover:text-burgundy-700 transition-colors"
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-burgundy-50">
+                    <MapPin className="h-5 w-5 text-burgundy-600" />
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                  <div className="pt-2">
+                    <p>{winery.address}</p>
+                    <p>{winery.commune}, Valais</p>
+                    <span className="mt-1 inline-flex items-center gap-1 text-xs text-burgundy-600">
+                      View on map <ExternalLink className="h-3 w-3" />
+                    </span>
+                  </div>
+                </a>
+              </div>
+            </div>
 
             {/* Coming Soon Teaser */}
-            <Card className="border-dashed border-2 border-burgundy-200 bg-burgundy-50">
-              <CardContent className="p-6 text-center">
-                <svg
-                  className="mx-auto h-10 w-10 text-burgundy-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-                <h3 className="mt-3 font-semibold text-burgundy-900">
-                  Coming soon: Book experiences
-                </h3>
-                <p className="mt-1 text-sm text-burgundy-700">
-                  Wine tastings and tours will be available for booking soon.
-                </p>
-              </CardContent>
-            </Card>
+            <div className="rounded-xl border-2 border-dashed border-gold-300 bg-gradient-to-br from-gold-50 to-gold-100/50 p-6 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gold-400/20">
+                <Calendar className="h-6 w-6 text-gold-700" />
+              </div>
+              <h3 className="mt-4 font-display font-semibold text-gold-900">
+                Coming soon: Book experiences
+              </h3>
+              <p className="mt-2 text-sm text-gold-800">
+                Wine tastings and tours will be available for booking soon.
+              </p>
+            </div>
           </div>
         </div>
       </div>

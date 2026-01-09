@@ -2,7 +2,7 @@
 
 ## Status
 
-Ready for Dev
+Ready for Review
 
 ## PM Validation
 
@@ -108,8 +108,48 @@ Reference: `docs/epic-1-premium-redesign-spec.md` Section 5.3, 6.5 & 6.6
 
 Large (8-12 hours)
 
+## Dev Agent Record
+
+### Tasks
+
+- [x] Redesign directory page with hero and filter bar (AC 1-11)
+- [x] Redesign WineryCard component (AC 12-23)
+- [x] Redesign winery detail page (AC 24-32)
+- [x] Update EmptyState and CommuneFilter components
+- [x] Run linting and tests to validate changes
+
+### File List
+
+| File | Action |
+| ---- | ------ |
+| `src/app/(public)/wineries/page.tsx` | Modified - Full hero section, sticky filter bar with backdrop blur, staggered animation |
+| `src/components/features/winery/WineryCard.tsx` | Modified - Premium card with hover zoom, gradient overlay, verified badge, arrow CTA |
+| `src/app/(public)/wineries/[slug]/page.tsx` | Modified - Full hero with cover photo, two-column layout, contact sidebar, gold teaser |
+| `src/components/shared/EmptyState.tsx` | Modified - Gradient background, wine glass icon in burgundy circle |
+| `src/components/features/winery/CommuneFilter.tsx` | Modified - Premium styling with MapPin icon, burgundy focus states |
+
+### Agent Model Used
+
+Claude Opus 4.5
+
+### Debug Log References
+
+N/A - No issues encountered
+
+### Completion Notes
+
+- All 32 acceptance criteria implemented (largest story in sprint)
+- Directory page: Full-bleed hero with Unsplash vineyard panorama, sticky filter bar with backdrop blur, staggered entrance animations
+- WineryCard: rounded-xl, aspect-[4/3] image with hover zoom (scale-105), gradient overlay, verified badge top-right, "Discover" CTA with sliding arrow
+- Detail page: Full hero with cover photo or gradient fallback, verified badge, two-column layout, contact card with tel:/mailto:/maps links, gold "Coming soon" teaser
+- EmptyState: Gradient background from cream to burgundy, wine glass icon in burgundy circle
+- CommuneFilter: MapPin icon, premium border/shadow styling, burgundy focus states
+- Used CSS animations (animate-in) as DS-7 not yet implemented - can be enhanced later
+- Lint passes, TypeScript compiles, all 119 tests pass
+
 ## Change Log
 
 | Date       | Version | Description            | Author   |
 | ---------- | ------- | ---------------------- | -------- |
 | 2026-01-09 | 1.0     | Initial story creation | PM Agent |
+| 2026-01-09 | 1.1     | Implementation complete | Dev Agent (James) |
