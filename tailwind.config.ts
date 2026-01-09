@@ -9,6 +9,25 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        display: ['var(--font-display)', 'Playfair Display', 'Georgia', 'serif'],
+        sans: ['var(--font-sans)', 'DM Sans', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-mono)', 'JetBrains Mono', 'monospace'],
+      },
+      fontSize: {
+        'display-xl': [
+          '3.5rem',
+          { lineHeight: '1.1', letterSpacing: '-0.02em', fontWeight: '700' },
+        ],
+        'display-lg': [
+          '2.75rem',
+          { lineHeight: '1.15', letterSpacing: '-0.02em', fontWeight: '700' },
+        ],
+        'display-md': [
+          '2.25rem',
+          { lineHeight: '1.2', letterSpacing: '-0.01em', fontWeight: '600' },
+        ],
+      },
       colors: {
         // EnCave brand colors
         burgundy: {
@@ -50,6 +69,27 @@ const config: Config = {
           900: '#0f172a',
           950: '#020617',
         },
+        // Warm neutrals for premium feel
+        cream: {
+          50: '#fdfcfa',
+          100: '#faf8f5',
+          200: '#f5f2ed',
+        },
+        stone: {
+          100: '#f5f5f4',
+          200: '#e7e5e4',
+        },
+      },
+      boxShadow: {
+        // Warm burgundy-tinted shadows
+        'warm-sm': '0 1px 2px rgba(122, 27, 59, 0.05)',
+        warm: '0 1px 3px rgba(122, 27, 59, 0.08), 0 1px 2px rgba(122, 27, 59, 0.04)',
+        'warm-md':
+          '0 4px 6px rgba(122, 27, 59, 0.07), 0 2px 4px rgba(122, 27, 59, 0.04)',
+        'warm-lg':
+          '0 10px 15px rgba(122, 27, 59, 0.08), 0 4px 6px rgba(122, 27, 59, 0.04)',
+        // Gold accent shadow
+        gold: '0 4px 14px rgba(241, 201, 29, 0.15)',
       },
       borderRadius: {
         lg: 'var(--radius)',

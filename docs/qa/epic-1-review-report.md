@@ -2,12 +2,15 @@
 
 **Review Date:** 2026-01-09
 **Reviewed By:** John (PM Agent) + Manual Testing
-**Status:** AWAITING UX SPECS
+**Status:** DESIGN SPRINT READY
 
 **Current State:**
 - Phase 1 (Critical Fixes): DONE
-- Phase 2-4: ON HOLD - Waiting for UX Expert specifications
-- Design Sprint: PLANNED
+- Phase 2 (UX/Navigation): Merged into Design Sprint
+- Phase 3-4: Merged into Design Sprint
+- Design Sprint: **9 STORIES CREATED** - Ready for implementation
+
+**UX Spec:** `docs/epic-1-premium-redesign-spec.md` (by Sally, UX Expert)
 
 ---
 
@@ -117,6 +120,33 @@ Epic 1 is **functionally complete** (69/70 ACs met) but requires improvements be
 | Photo upload | Yes | **FAIL** | Upload not working |
 | Public winery directory | Pending | - | - |
 | Winery detail page | Pending | - | - |
+
+---
+
+## Design Sprint Stories
+
+**Location:** `docs/stories/design-sprint/`
+
+| Story | Title | Effort | Dependencies |
+|-------|-------|--------|--------------|
+| DS-1 | Design System Foundation | Small | None |
+| DS-2 | Core Components Premium Upgrade | Medium | DS-1 |
+| DS-3 | Auth Pages Premium Redesign | Medium | DS-1, DS-2 |
+| DS-4 | Onboarding Pages Premium Redesign | Medium | DS-1, DS-2, DS-7 |
+| DS-5 | Winery Directory Premium Redesign | Large | DS-1, DS-2, DS-7 |
+| DS-6 | Admin Pages Premium Redesign | Medium | DS-1, DS-2 |
+| DS-7 | Animations & Micro-interactions | Medium | DS-1 |
+| DS-8 | Winemaker Profile Redesign | Medium | DS-1, DS-2 |
+| DS-9 | Accessibility Audit & Fixes | Medium | DS-1 to DS-8 |
+
+**Total Estimated Effort:** ~40-60 hours
+
+**Recommended Order:**
+1. DS-1 (Foundation) - Must be first
+2. DS-7 (Animations) - Can parallel with DS-2
+3. DS-2 (Components) - Enables all screen work
+4. DS-3, DS-4, DS-5, DS-6, DS-8 (Screens) - Can be parallelized
+5. DS-9 (Accessibility) - Final audit
 
 ---
 
