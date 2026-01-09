@@ -2,7 +2,7 @@
 
 ## Status
 
-Ready for Dev
+Ready for Review
 
 ## PM Validation
 
@@ -94,8 +94,47 @@ Mobile (< 768px):
 
 Medium (4-8 hours)
 
+## Dev Agent Record
+
+### Tasks
+
+- [x] Create AuthPageLayout component for split-screen design (AC 1-3, 7)
+- [x] Update auth layout to be minimal (just auth redirect check)
+- [x] Redesign LoginForm with premium styling (AC 4-9)
+- [x] Redesign RegisterForm with premium styling (AC 10-15)
+- [x] Ensure shared styling requirements (AC 16-19)
+- [x] Run linting and tests to validate changes
+
+### File List
+
+| File | Action |
+| ---- | ------ |
+| `src/components/features/auth/AuthPageLayout.tsx` | Created - Split-screen layout with image panel, gradient overlay, quote |
+| `src/app/(auth)/layout.tsx` | Modified - Simplified to just handle auth redirect |
+| `src/components/features/auth/LoginForm.tsx` | Modified - Premium redesign with AuthPageLayout, gold underline links |
+| `src/components/features/auth/RegisterForm.tsx` | Modified - Premium redesign with dashed winemaker checkbox, visual feedback |
+
+### Agent Model Used
+
+Claude Opus 4.5
+
+### Debug Log References
+
+N/A - No issues encountered
+
+### Completion Notes
+
+- All 19 acceptance criteria implemented
+- Created reusable AuthPageLayout component for split-screen design
+- Login: Vineyard image, "Welcome back" heading, forgot password with gold underline, arrow on "Create one" link
+- Register: Wine cellar image, different quote, dashed border winemaker checkbox with bg change when selected
+- Both pages use premium Input/Button from DS-2, max-w-md constraint
+- Images use Unsplash placeholders (can be replaced with actual assets later)
+- Lint passes, TypeScript compiles, all 119 tests pass
+
 ## Change Log
 
 | Date       | Version | Description            | Author   |
 | ---------- | ------- | ---------------------- | -------- |
 | 2026-01-09 | 1.0     | Initial story creation | PM Agent |
+| 2026-01-09 | 1.1     | Implementation complete | Dev Agent (James) |

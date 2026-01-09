@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Wine } from 'lucide-react';
 import { registerSchema, type RegisterInput } from '@/lib/validators/auth';
 import { registerAction, loginAction } from '@/server/actions/auth';
 import { Button } from '@/components/ui/button';
@@ -16,16 +17,10 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { AuthPageLayout } from './AuthPageLayout';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 export function RegisterForm() {
   const router = useRouter();
@@ -42,6 +37,8 @@ export function RegisterForm() {
       isWinemaker: false,
     },
   });
+
+  const isWinemaker = form.watch('isWinemaker');
 
   async function onSubmit(data: RegisterInput) {
     setIsLoading(true);
@@ -76,139 +73,157 @@ export function RegisterForm() {
   }
 
   return (
-    <Card>
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold text-burgundy-700">
+    <AuthPageLayout
+      imageUrl="https://images.unsplash.com/photo-1516594915697-87eb3b1c14ea?q=80&w=1920&auto=format&fit=crop"
+      imageAlt="Wine cellar with oak barrels"
+      quote="Every great wine begins with passion. Join our community of exceptional winemakers."
+    >
+      {/* Heading */}
+      <div className="mb-8">
+        <h1 className="font-display text-3xl font-semibold text-slate-900">
           Create an account
-        </CardTitle>
-        <CardDescription>
-          Enter your details to get started
-        </CardDescription>
-      </CardHeader>
+        </h1>
+        <p className="mt-2 text-slate-600">
+          Join EnCave and discover exceptional wine experiences
+        </p>
+      </div>
+
+      {/* Form */}
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <CardContent className="space-y-4">
-            {error && (
-              <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">
-                {error}
-              </div>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {error && (
+            <div className="rounded-lg bg-red-50 p-4 text-sm text-red-600">
+              {error}
+            </div>
+          )}
+
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name</FormLabel>
+                <FormControl>
+                  <Input
+                    type="text"
+                    placeholder="Your name"
+                    autoComplete="name"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="text"
-                      placeholder="Your name"
-                      autoComplete="name"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="email"
-                      placeholder="name@example.com"
-                      autoComplete="email"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="At least 8 characters with a number"
-                      autoComplete="new-password"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="confirmPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Confirm Password</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="Confirm your password"
-                      autoComplete="new-password"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="isWinemaker"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel className="cursor-pointer">
-                      I am a winemaker
-                    </FormLabel>
-                    <p className="text-sm text-slate-500">
-                      Check this if you want to register your winery and offer
-                      experiences
-                    </p>
-                  </div>
-                </FormItem>
-              )}
-            />
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Creating account...' : 'Create account'}
-            </Button>
-            <p className="text-center text-sm text-slate-600">
-              Already have an account?{' '}
-              <Link
-                href="/login"
-                className="font-medium text-burgundy-600 hover:underline"
+          />
+
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input
+                    type="email"
+                    placeholder="name@example.com"
+                    autoComplete="email"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password</FormLabel>
+                <FormControl>
+                  <Input
+                    type="password"
+                    placeholder="Create a password"
+                    autoComplete="new-password"
+                    {...field}
+                  />
+                </FormControl>
+                <p className="mt-1.5 text-xs text-slate-500">
+                  At least 8 characters with one number
+                </p>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="confirmPassword"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Confirm Password</FormLabel>
+                <FormControl>
+                  <Input
+                    type="password"
+                    placeholder="Confirm your password"
+                    autoComplete="new-password"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Winemaker checkbox with dashed border and visual feedback */}
+          <FormField
+            control={form.control}
+            name="isWinemaker"
+            render={({ field }) => (
+              <FormItem
+                className={cn(
+                  'flex flex-row items-start space-x-3 space-y-0 rounded-lg border-2 border-dashed p-4 transition-all duration-200',
+                  isWinemaker
+                    ? 'border-burgundy-400 bg-burgundy-50'
+                    : 'border-stone-300 hover:border-stone-400'
+                )}
               >
-                Sign in
-              </Link>
-            </p>
-          </CardFooter>
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel className="flex cursor-pointer items-center gap-2">
+                    <Wine className="h-4 w-4 text-burgundy-600" />
+                    I am a winemaker
+                  </FormLabel>
+                  <p className="text-sm text-slate-500">
+                    Check this if you want to register your winery and offer
+                    experiences
+                  </p>
+                </div>
+              </FormItem>
+            )}
+          />
+
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? 'Creating account...' : 'Create account'}
+          </Button>
+
+          <p className="text-center text-sm text-slate-600">
+            Already have an account?{' '}
+            <Link
+              href="/login"
+              className="font-medium text-burgundy-600 hover:text-burgundy-800 relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-gold-400 after:transition-all hover:after:w-full"
+            >
+              Sign in
+            </Link>
+          </p>
         </form>
       </Form>
-    </Card>
+    </AuthPageLayout>
   );
 }
