@@ -47,6 +47,22 @@ body {
 }
 
 @layer components {
+  /* Animated gold underline link */
+  .link-gold-underline {
+    @apply relative;
+  }
+
+  .link-gold-underline::after {
+    content: '';
+    @apply absolute bottom-0 left-0 h-0.5 w-0;
+    background: linear-gradient(to right, #f1c91d, #d4b119);
+    transition: width 300ms var(--ease-out);
+  }
+
+  .link-gold-underline:hover::after {
+    @apply w-full;
+  }
+
   /* Hero gradient overlay */
   .gradient-hero {
     background: linear-gradient(

@@ -2,8 +2,10 @@ import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { CheckCircle, Clock, Mail, ArrowRight } from 'lucide-react';
+import { Clock, Mail, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { SuccessCheckmark } from '@/components/shared/SuccessCheckmark';
+import { AnimatedProgressBar } from '@/components/shared/AnimatedProgressBar';
 
 export default async function WineryConfirmationPage() {
   const session = await auth();
@@ -30,19 +32,14 @@ export default async function WineryConfirmationPage() {
     <div className="min-h-screen bg-cream-50">
       {/* Progress bar - complete */}
       <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-sm border-b border-stone-200/60">
-        <div className="h-1.5 bg-stone-100">
-          <div className="h-full bg-burgundy-600 rounded-r-full w-full" />
-        </div>
+        <AnimatedProgressBar progress={100} />
       </div>
 
       <div className="mx-auto max-w-xl px-6 py-12 lg:py-16">
         {/* Success checkmark with glow */}
         <div className="mb-8 text-center">
-          <div className="relative mx-auto mb-6 inline-flex">
-            <div className="absolute inset-0 animate-pulse rounded-full bg-green-400/30 blur-xl" />
-            <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-500 shadow-lg shadow-green-500/25">
-              <CheckCircle className="h-10 w-10 text-white" strokeWidth={2.5} />
-            </div>
+          <div className="mb-6 flex justify-center">
+            <SuccessCheckmark size="md" />
           </div>
 
           <h1 className="font-display text-display-md text-slate-900">

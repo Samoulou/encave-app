@@ -19,7 +19,7 @@ export function WineryCard({ winery }: WineryCardProps) {
 
   return (
     <Link href={`/wineries/${winery.slug}`} className="group block h-full">
-      <article className="h-full overflow-hidden rounded-xl border border-stone-200/60 bg-white shadow-[0_1px_3px_rgba(122,27,59,0.04),0_4px_12px_rgba(122,27,59,0.03)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_12px_40px_rgba(122,27,59,0.12)]">
+      <article className="h-full overflow-hidden rounded-xl border border-stone-200/60 bg-white shadow-[0_1px_3px_rgba(122,27,59,0.04),0_4px_12px_rgba(122,27,59,0.03)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(122,27,59,0.12)]">
         {/* Image Container */}
         <div className="relative aspect-[4/3] w-full overflow-hidden">
           {winery.coverPhoto ? (

@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Wine } from 'lucide-react';
 import { WineryOnboardingForm } from '@/components/features/winery/WineryOnboardingForm';
+import { AnimatedProgressBar } from '@/components/shared/AnimatedProgressBar';
 
 export default async function WineryOnboardingPage() {
   const session = await auth();
@@ -30,12 +31,7 @@ export default async function WineryOnboardingPage() {
     <div className="min-h-screen bg-cream-50">
       {/* Progress bar */}
       <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-sm border-b border-stone-200/60">
-        <div className="h-1.5 bg-stone-100">
-          <div
-            className="h-full bg-burgundy-600 rounded-r-full transition-all duration-500 ease-out"
-            style={{ width: '50%' }}
-          />
-        </div>
+        <AnimatedProgressBar progress={50} />
       </div>
 
       <div className="mx-auto max-w-2xl px-6 py-8 lg:py-12">

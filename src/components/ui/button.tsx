@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Slot } from '@radix-ui/react-slot';
 import { cva, type VariantProps } from 'class-variance-authority';
+import { motion, HTMLMotionProps } from 'framer-motion';
 
 import { cn } from '@/lib/utils';
 
@@ -55,4 +56,50 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 );
 Button.displayName = 'Button';
 
-export { Button, buttonVariants };
+// Spring animation variants for buttons
+const buttonSpring = {
+  hover: { scale: 1.02 },
+  tap: { scale: 0.98 },
+};
+
+const springTransition = {
+  type: 'spring' as const,
+  stiffness: 400,
+  damping: 25,
+};
+
+export interface MotionButtonProps
+  extends Omit<HTMLMotionProps<'button'>, 'ref'>,
+    VariantProps<typeof buttonVariants> {
+  asChild?: boolean;
+}
+
+const MotionButton = React.forwardRef<HTMLButtonElement, MotionButtonProps>(
+  ({ className, variant, size, asChild = false, ...props }, ref) => {
+    if (asChild) {
+      // For asChild, fall back to regular Button
+      return (
+        <Slot
+          className={cn(buttonVariants({ variant, size, className }))}
+          ref={ref}
+          {...(props as React.HTMLAttributes<HTMLElement>)}
+        />
+      );
+    }
+
+    return (
+      <motion.button
+        className={cn(buttonVariants({ variant, size, className }))}
+        ref={ref}
+        variants={buttonSpring}
+        whileHover="hover"
+        whileTap="tap"
+        transition={springTransition}
+        {...props}
+      />
+    );
+  }
+);
+MotionButton.displayName = 'MotionButton';
+
+export { Button, MotionButton, buttonVariants };
