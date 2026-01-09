@@ -11,6 +11,13 @@ const envSchema = z.object({
   // Email (Resend)
   RESEND_API_KEY: z.string().optional(),
 
+  // Storage (Vercel Blob)
+  BLOB_READ_WRITE_TOKEN: z.string().optional(),
+
+  // Rate Limiting (Upstash) - optional, falls back to in-memory
+  UPSTASH_REDIS_REST_URL: z.string().url().optional(),
+  UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
+
   // Node environment
   NODE_ENV: z
     .enum(['development', 'production', 'test'])
