@@ -1,5 +1,3 @@
-'use server';
-
 /**
  * Simple in-memory rate limiter for authentication endpoints.
  * For production with multiple instances, integrate with Upstash Redis.

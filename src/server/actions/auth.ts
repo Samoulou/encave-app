@@ -1,7 +1,6 @@
 'use server';
 
 import { headers } from 'next/headers';
-import { signIn, signOut } from '@/server/auth';
 import { db } from '@/server/db';
 import { hashPassword } from '@/server/password';
 import { registerSchema, type RegisterInput } from '@/lib/validators/auth';
@@ -47,6 +46,8 @@ export async function loginAction(
       };
     }
 
+    // Import signIn dynamically to avoid "use server" export issue
+    const { signIn } = await import('@/server/auth');
     await signIn('credentials', {
       email,
       password,
@@ -136,5 +137,7 @@ export async function registerAction(
 }
 
 export async function logoutAction(): Promise<void> {
+  // Import signOut dynamically to avoid "use server" export issue
+  const { signOut } = await import('@/server/auth');
   await signOut({ redirect: false });
 }
