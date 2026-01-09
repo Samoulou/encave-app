@@ -3,7 +3,8 @@ import { AdminStats } from '@/components/features/admin/AdminStats';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Clock, MapPin, ClipboardList, Wine } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
 
 async function getWineryStats() {
   const [pending, verified, rejected, total] = await Promise.all([
@@ -36,7 +37,7 @@ export default async function AdminDashboard() {
   return (
     <div className="container py-10">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-burgundy-700">Admin Dashboard</h1>
+        <h1 className="font-display text-display-md text-burgundy-700">Admin Dashboard</h1>
         <p className="mt-2 text-slate-600">
           Manage winery verifications and platform settings
         </p>
@@ -45,14 +46,20 @@ export default async function AdminDashboard() {
       <AdminStats {...stats} />
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
+        {/* Recent Pending Section */}
+        <Card className="shadow-warm">
+          <CardHeader className="border-b border-stone-100">
             <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Recent Pending Wineries</CardTitle>
-                <CardDescription>
-                  Latest winery registrations awaiting review
-                </CardDescription>
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100">
+                  <Clock className="h-5 w-5 text-amber-600" />
+                </div>
+                <div>
+                  <CardTitle className="font-display">Recent Pending</CardTitle>
+                  <CardDescription>
+                    Latest winery registrations awaiting review
+                  </CardDescription>
+                </div>
               </div>
               {stats.pending > 0 && (
                 <Link href="/admin/wineries/pending">
@@ -64,30 +71,31 @@ export default async function AdminDashboard() {
               )}
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-4">
             {recentPending.length === 0 ? (
-              <p className="text-sm text-slate-500">
-                No pending wineries to review.
-              </p>
+              <div className="flex flex-col items-center py-8 text-center">
+                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+                  <Wine className="h-6 w-6 text-green-600" />
+                </div>
+                <p className="text-sm text-slate-500">
+                  No pending wineries to review.
+                </p>
+              </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {recentPending.map((winery) => (
                   <div
                     key={winery.id}
-                    className="flex items-center justify-between rounded-lg border p-4"
+                    className="flex items-center justify-between rounded-lg border border-stone-200 bg-white p-4 transition-colors hover:border-burgundy-200 hover:bg-burgundy-50/30"
                   >
-                    <div>
-                      <p className="font-medium">{winery.name}</p>
-                      <p className="text-sm text-slate-500">
-                        {winery.commune} &bull; {winery.user.email}
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-slate-900">{winery.name}</p>
+                      <p className="mt-0.5 flex items-center gap-1.5 text-sm text-slate-500">
+                        <MapPin className="h-3.5 w-3.5" />
+                        {winery.commune}
                       </p>
-                      <p className="text-xs text-slate-400">
-                        Registered{' '}
-                        {new Date(winery.createdAt).toLocaleDateString('en-CH', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric',
-                        })}
+                      <p className="mt-1 text-xs text-slate-400">
+                        {formatDistanceToNow(new Date(winery.createdAt), { addSuffix: true })}
                       </p>
                     </div>
                     <Link href={`/admin/wineries/${winery.id}`}>
@@ -100,17 +108,26 @@ export default async function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Common administrative tasks</CardDescription>
+        {/* Quick Actions Section */}
+        <Card className="shadow-warm">
+          <CardHeader className="border-b border-stone-100">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-burgundy-100">
+                <ClipboardList className="h-5 w-5 text-burgundy-600" />
+              </div>
+              <div>
+                <CardTitle className="font-display">Quick Actions</CardTitle>
+                <CardDescription>Common administrative tasks</CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3 pt-4">
             <Link href="/admin/wineries/pending" className="block">
-              <Button variant="outline" className="w-full justify-start">
+              <Button variant="outline" className="w-full justify-start h-12 hover:border-burgundy-300 hover:bg-burgundy-50">
+                <Clock className="mr-3 h-4 w-4 text-amber-500" />
                 Review pending wineries
                 {stats.pending > 0 && (
-                  <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-burgundy-600 px-1.5 text-xs font-medium text-white">
+                  <span className="ml-auto flex h-6 min-w-6 items-center justify-center rounded-full bg-burgundy-600 px-2 text-xs font-semibold text-white">
                     {stats.pending}
                   </span>
                 )}

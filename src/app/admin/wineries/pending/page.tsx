@@ -35,14 +35,21 @@ export default async function PendingWineriesPage() {
       <div className="mb-8">
         <Link
           href="/admin"
-          className="mb-4 inline-flex items-center text-sm text-slate-600 hover:text-burgundy-700"
+          className="mb-4 inline-flex items-center text-sm text-slate-600 hover:text-burgundy-700 transition-colors"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Dashboard
         </Link>
-        <h1 className="text-3xl font-bold text-burgundy-700">
-          Pending Winery Verifications
-        </h1>
+        <div className="flex items-center gap-3">
+          <h1 className="font-display text-display-md text-burgundy-700">
+            Pending Verifications
+          </h1>
+          {wineries.length > 0 && (
+            <span className="flex h-8 min-w-8 items-center justify-center rounded-full bg-burgundy-600 px-3 text-sm font-semibold text-white">
+              {wineries.length}
+            </span>
+          )}
+        </div>
         <p className="mt-2 text-slate-600">
           Review and verify winemaker registrations
         </p>
