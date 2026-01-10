@@ -78,6 +78,8 @@ model Winery {
   verificationLogs VerificationLog[]
   experiences      Experience[]
 
+  @@index([commune])
+  @@index([status])
   @@map("wineries")
 }
 
@@ -165,6 +167,12 @@ model Experience {
   availabilitySlots AvailabilitySlot[]
 
   @@unique([wineryId, slug])
+  @@index([status])
+  @@index([type])
+  @@index([price])
+  @@index([status, type])
+  @@index([status, price])
+  @@index([createdAt])
   @@map("experiences")
 }
 
@@ -191,5 +199,6 @@ model AvailabilitySlot {
   updatedAt    DateTime   @updatedAt
 
   @@index([experienceId, dayOfWeek])
+  @@index([experienceId, isActive])
   @@map("availability_slots")
 }
