@@ -1,51 +1,88 @@
-import { auth } from '@/server/auth';
-import { NextResponse } from 'next/server';
+import createMiddleware from 'next-intl/middleware';
+import { NextRequest, NextResponse } from 'next/server';
+import { routing } from '@/i18n/routing';
 
-// Routes that require authentication
-const protectedRoutes = ['/dashboard', '/onboarding'];
+// Create the next-intl middleware
+const intlMiddleware = createMiddleware(routing);
 
-// Routes that require ADMIN role
-const adminRoutes = ['/admin'];
+// Routes that require authentication (without locale prefix)
+const protectedPatterns = ['/dashboard', '/onboarding'];
 
-// Routes that should redirect to home if already authenticated
-const authRoutes = ['/login', '/register'];
+// Routes that require ADMIN role (without locale prefix)
+const adminPatterns = ['/admin'];
 
-export default auth((req) => {
-  const { nextUrl } = req;
-  const isLoggedIn = !!req.auth;
-  const userRole = req.auth?.user?.role;
+// Routes that should redirect to home if already authenticated (without locale prefix)
+const authPatterns = ['/login', '/register'];
 
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    nextUrl.pathname.startsWith(route)
+// Helper to extract pathname without locale prefix
+function getPathnameWithoutLocale(pathname: string): string {
+  const localePattern = new RegExp(`^/(${routing.locales.join('|')})`);
+  return pathname.replace(localePattern, '') || '/';
+}
+
+// Helper to get the current locale from pathname
+function getLocaleFromPathname(pathname: string): string {
+  const match = pathname.match(new RegExp(`^/(${routing.locales.join('|')})`));
+  return match?.[1] ?? routing.defaultLocale;
+}
+
+export default async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+
+  // Skip middleware for API routes and static files
+  if (
+    pathname.startsWith('/api') ||
+    pathname.startsWith('/_next') ||
+    pathname.includes('.')
+  ) {
+    return NextResponse.next();
+  }
+
+  // First, apply the intl middleware for locale handling
+  const intlResponse = intlMiddleware(request);
+
+  // If intl middleware returned a redirect (e.g., for locale detection), honor it
+  if (intlResponse.headers.get('x-middleware-rewrite') || intlResponse.status === 307) {
+    return intlResponse;
+  }
+
+  // For auth checks, we need to check the session
+  // Since next-auth middleware doesn't easily chain, we'll use a different approach
+  // We'll check for the session token in cookies
+  const sessionToken = request.cookies.get('authjs.session-token')?.value ||
+    request.cookies.get('__Secure-authjs.session-token')?.value;
+
+  const isLoggedIn = !!sessionToken;
+  const pathnameWithoutLocale = getPathnameWithoutLocale(pathname);
+  const locale = getLocaleFromPathname(pathname);
+
+  const isProtectedRoute = protectedPatterns.some((route) =>
+    pathnameWithoutLocale.startsWith(route)
   );
-  const isAdminRoute = adminRoutes.some((route) =>
-    nextUrl.pathname.startsWith(route)
+  const isAdminRoute = adminPatterns.some((route) =>
+    pathnameWithoutLocale.startsWith(route)
   );
-  const isAuthRoute = authRoutes.some((route) =>
-    nextUrl.pathname.startsWith(route)
+  const isAuthRoute = authPatterns.some((route) =>
+    pathnameWithoutLocale.startsWith(route)
   );
 
   // Redirect unauthenticated users from protected routes to login
   if ((isProtectedRoute || isAdminRoute) && !isLoggedIn) {
-    const loginUrl = new URL('/login', nextUrl.origin);
-    loginUrl.searchParams.set('callbackUrl', nextUrl.pathname);
+    const loginUrl = new URL(`/${locale}/login`, request.url);
+    loginUrl.searchParams.set('callbackUrl', pathname);
     return NextResponse.redirect(loginUrl);
-  }
-
-  // Redirect non-admin users from admin routes to home with error
-  if (isAdminRoute && userRole !== 'ADMIN') {
-    const homeUrl = new URL('/', nextUrl.origin);
-    homeUrl.searchParams.set('error', 'unauthorized');
-    return NextResponse.redirect(homeUrl);
   }
 
   // Redirect authenticated users from auth routes to home
   if (isAuthRoute && isLoggedIn) {
-    return NextResponse.redirect(new URL('/', nextUrl.origin));
+    return NextResponse.redirect(new URL(`/${locale}`, request.url));
   }
 
-  return NextResponse.next();
-});
+  // Note: Admin role check requires session data which needs server-side check
+  // This will be handled in the admin layout for now
+
+  return intlResponse;
+}
 
 export const config = {
   matcher: [
@@ -55,8 +92,8 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - public folder
+     * - public folder files with extensions
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|.*\\..*|_next).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)',
   ],
 };

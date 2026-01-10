@@ -1,0 +1,40 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "search": "Search",
+    "noResults": "No results"
+  },
+  "navigation": {
+    "home": "Home",
+    "experiences": "Experiences",
+    "wineries": "Wineries",
+    "dashboard": "Dashboard",
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout"
+  },
+  "locale": {
+    "fr": "Français",
+    "de": "Deutsch",
+    "en": "English",
+    "switchTo": "Switch language"
+  },
+  "home": {
+    "title": "Discover Alsace Wines",
+    "subtitle": "Book unique experiences with local winemakers"
+  },
+  "metadata": {
+    "title": "Encave - Wine Experiences in Alsace",
+    "description": "Discover and book unique wine experiences with Alsatian winemakers"
+  }
+}

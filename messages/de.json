@@ -1,0 +1,40 @@
+{
+  "common": {
+    "loading": "Laden...",
+    "error": "Fehler",
+    "success": "Erfolg",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "create": "Erstellen",
+    "back": "Zurück",
+    "next": "Weiter",
+    "previous": "Zurück",
+    "search": "Suchen",
+    "noResults": "Keine Ergebnisse"
+  },
+  "navigation": {
+    "home": "Startseite",
+    "experiences": "Erlebnisse",
+    "wineries": "Weingüter",
+    "dashboard": "Dashboard",
+    "login": "Anmelden",
+    "register": "Registrieren",
+    "logout": "Abmelden"
+  },
+  "locale": {
+    "fr": "Français",
+    "de": "Deutsch",
+    "en": "English",
+    "switchTo": "Sprache wechseln"
+  },
+  "home": {
+    "title": "Entdecken Sie die Weine des Elsass",
+    "subtitle": "Buchen Sie einzigartige Erlebnisse mit lokalen Winzern"
+  },
+  "metadata": {
+    "title": "Encave - Weinerlebnisse im Elsass",
+    "description": "Entdecken und buchen Sie einzigartige Weinerlebnisse mit elsässischen Winzern"
+  }
+}

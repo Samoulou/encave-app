@@ -1,0 +1,40 @@
+{
+  "common": {
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "create": "Créer",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "search": "Rechercher",
+    "noResults": "Aucun résultat"
+  },
+  "navigation": {
+    "home": "Accueil",
+    "experiences": "Expériences",
+    "wineries": "Domaines",
+    "dashboard": "Tableau de bord",
+    "login": "Connexion",
+    "register": "Inscription",
+    "logout": "Déconnexion"
+  },
+  "locale": {
+    "fr": "Français",
+    "de": "Deutsch",
+    "en": "English",
+    "switchTo": "Changer de langue"
+  },
+  "home": {
+    "title": "Découvrez les vins d'Alsace",
+    "subtitle": "Réservez des expériences uniques avec des vignerons locaux"
+  },
+  "metadata": {
+    "title": "Encave - Expériences viticoles en Alsace",
+    "description": "Découvrez et réservez des expériences viticoles uniques avec des vignerons alsaciens"
+  }
+}

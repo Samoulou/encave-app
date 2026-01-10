@@ -7,6 +7,11 @@ vi.mock('@/server/auth', () => ({
   auth: vi.fn(),
 }));
 
+// Mock LocaleSwitcher component (uses next-intl)
+vi.mock('@/components/shared/LocaleSwitcher', () => ({
+  LocaleSwitcher: () => <div data-testid="locale-switcher">FR | DE | EN</div>,
+}));
+
 // Mock NavLink component
 vi.mock('@/components/layout/NavLink', () => ({
   NavLink: ({ href, children }: { href: string; children: React.ReactNode }) => (

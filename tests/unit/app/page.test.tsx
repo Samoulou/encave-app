@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
-import Home from '@/app/page';
+
+// Mock next-intl
+vi.mock('next-intl/server', () => ({
+  setRequestLocale: vi.fn(),
+}));
 
 // Mock the Header component
 vi.mock('@/components/layout/Header', () => ({
@@ -12,21 +16,30 @@ vi.mock('@/components/shared/HealthStatus', () => ({
   HealthStatus: () => <div data-testid="health-status">HealthStatus</div>,
 }));
 
+// Import after mocks
+import Home from '@/app/[locale]/page';
+
 describe('Homepage', () => {
   afterEach(() => {
     cleanup();
   });
 
-  it('renders hero section with title', () => {
-    render(<Home />);
+  // Helper to render the async component
+  const renderHome = async () => {
+    const Component = await Home({ params: Promise.resolve({ locale: 'en' }) });
+    render(Component);
+  };
+
+  it('renders hero section with title', async () => {
+    await renderHome();
 
     expect(
       screen.getByRole('heading', { name: /discover valais wine experiences/i })
     ).toBeInTheDocument();
   });
 
-  it('renders discovery section with experiences CTA', () => {
-    render(<Home />);
+  it('renders discovery section with experiences CTA', async () => {
+    await renderHome();
 
     const experiencesCard = screen.getByRole('heading', { name: /^wine experiences$/i, level: 3 });
     expect(experiencesCard).toBeInTheDocument();
@@ -35,8 +48,8 @@ describe('Homepage', () => {
     expect(experiencesLink).toHaveAttribute('href', '/experiences');
   });
 
-  it('renders discovery section with wineries CTA', () => {
-    render(<Home />);
+  it('renders discovery section with wineries CTA', async () => {
+    await renderHome();
 
     const wineriesCard = screen.getByRole('heading', { name: /our wineries/i });
     expect(wineriesCard).toBeInTheDocument();
@@ -45,8 +58,8 @@ describe('Homepage', () => {
     expect(wineriesLink).toHaveAttribute('href', '/wineries');
   });
 
-  it('renders CTA buttons section', () => {
-    render(<Home />);
+  it('renders CTA buttons section', async () => {
+    await renderHome();
 
     expect(
       screen.getByRole('heading', { name: /ready to explore/i })
@@ -59,18 +72,18 @@ describe('Homepage', () => {
     expect(becomePartnerButton).toHaveAttribute('href', '/register/winemaker');
   });
 
-  it('includes header component', () => {
-    render(<Home />);
+  it('includes header component', async () => {
+    await renderHome();
     expect(screen.getByTestId('header')).toBeInTheDocument();
   });
 
-  it('includes health status component', () => {
-    render(<Home />);
+  it('includes health status component', async () => {
+    await renderHome();
     expect(screen.getByTestId('health-status')).toBeInTheDocument();
   });
 
-  it('has proper accessibility structure', () => {
-    render(<Home />);
+  it('has proper accessibility structure', async () => {
+    await renderHome();
 
     // Main content area
     const main = screen.getByRole('main');

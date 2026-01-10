@@ -1,11 +1,18 @@
 import Link from 'next/link';
 import { Sparkles, Building2, ArrowRight } from 'lucide-react';
+import { setRequestLocale } from 'next-intl/server';
 import { Header } from '@/components/layout/Header';
 import { HealthStatus } from '@/components/shared/HealthStatus';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
-export default function Home() {
+type Props = {
+  params: Promise<{ locale: string }>;
+};
+
+export default async function Home({ params }: Props) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   return (
     <div className="min-h-screen bg-cream-50">
       <Header />

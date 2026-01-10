@@ -4,6 +4,7 @@ import { auth } from '@/server/auth';
 import { Button } from '@/components/ui/button';
 import { UserMenu } from '@/components/features/auth/UserMenu';
 import { NavLink } from '@/components/layout/NavLink';
+import { LocaleSwitcher } from '@/components/shared/LocaleSwitcher';
 
 export async function Header() {
   const session = await auth();
@@ -36,18 +37,20 @@ export async function Header() {
           )}
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
+          <LocaleSwitcher />
+          <div className="h-5 w-px bg-slate-200" aria-hidden="true" />
           {session?.user ? (
             <UserMenu userName={session.user.name} />
           ) : (
-            <>
+            <div className="flex items-center gap-3">
               <Button variant="ghost" asChild>
                 <Link href="/login">Sign in</Link>
               </Button>
               <Button asChild>
                 <Link href="/register">Get started</Link>
               </Button>
-            </>
+            </div>
           )}
         </div>
       </div>
