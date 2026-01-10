@@ -136,3 +136,28 @@ Enable winemakers to create experiences and visitors to search/browse them - del
 **Prerequisites:** Story 2.4
 
 ---
+
+## Story 2.6: Navigation Connectivity
+
+**As a** visitor or winemaker,
+**I want** clear navigation paths to discover experiences and manage my offerings,
+**so that** I can easily find what I'm looking for without knowing specific URLs.
+
+**Acceptance Criteria:**
+
+1. Header navigation includes "Experiences" link to `/experiences` (visible on all public pages)
+2. "Experiences" link uses same styling as existing "Wineries" link with active state
+3. Dashboard sidebar component created with navigation links to `/dashboard/experiences` and `/dashboard/winery/profile`
+4. Sidebar displays on all `/dashboard/*` routes with active state indication
+5. Sidebar includes winemaker's winery name at top
+6. Sidebar is responsive (collapses on mobile)
+7. Homepage includes discovery section with CTAs to `/experiences` and `/wineries`
+8. All navigation links have appropriate icons (Lucide React)
+9. Active state styling indicates current section in both header and sidebar
+10. Mobile navigation includes all links (hamburger menu updated)
+
+**Prerequisites:** Stories 2.1-2.5
+
+**Rationale:** This story addresses navigation gaps discovered during Epic 2 verification. Stories 2.1-2.5 created the pages but did not explicitly include navigation paths to reach them, leaving orphan routes.
+
+---

@@ -30,3 +30,10 @@ export async function getDistinctCommunes() {
   });
   return wineries.map((w) => w.commune);
 }
+
+export async function getWineryByUserId(userId: string) {
+  return db.winery.findUnique({
+    where: { userId },
+    select: { name: true },
+  });
+}

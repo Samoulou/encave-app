@@ -3,6 +3,7 @@ import { Wine } from 'lucide-react';
 import { auth } from '@/server/auth';
 import { Button } from '@/components/ui/button';
 import { UserMenu } from '@/components/features/auth/UserMenu';
+import { NavLink } from '@/components/layout/NavLink';
 
 export async function Header() {
   const session = await auth();
@@ -25,27 +26,13 @@ export async function Header() {
         </Link>
 
         <nav aria-label="Main navigation" className="hidden md:flex items-center gap-8">
-          <Link
-            href="/wineries"
-            className="text-sm font-medium text-slate-600 hover:text-burgundy-700 transition-colors"
-          >
-            Wineries
-          </Link>
+          <NavLink href="/wineries">Wineries</NavLink>
+          <NavLink href="/experiences">Experiences</NavLink>
           {userRole === 'ADMIN' && (
-            <Link
-              href="/admin"
-              className="text-sm font-medium text-slate-600 hover:text-burgundy-700 transition-colors"
-            >
-              Admin
-            </Link>
+            <NavLink href="/admin">Admin</NavLink>
           )}
           {userRole === 'WINEMAKER' && (
-            <Link
-              href="/dashboard"
-              className="text-sm font-medium text-slate-600 hover:text-burgundy-700 transition-colors"
-            >
-              Dashboard
-            </Link>
+            <NavLink href="/dashboard">Dashboard</NavLink>
           )}
         </nav>
 
