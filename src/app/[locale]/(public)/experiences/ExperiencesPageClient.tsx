@@ -2,6 +2,7 @@
 
 import { useCallback, useTransition } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { ExperienceType } from '@prisma/client';
 import { SearchBar, SearchFilters, SearchResults } from '@/components/features/search';
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,7 @@ export function ExperiencesPageClient({
 }: ExperiencesPageClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations('search');
   const [isPending, startTransition] = useTransition();
 
   // Parse current URL params
@@ -114,7 +116,7 @@ export function ExperiencesPageClient({
           className="flex-1"
         >
           <SlidersHorizontal className="mr-2 h-4 w-4" />
-          Filters
+          {t('filters')}
           {hasActiveFilters && (
             <span className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-burgundy-600 text-xs text-white">
               !
@@ -129,7 +131,7 @@ export function ExperiencesPageClient({
             className="text-slate-600"
           >
             <X className="mr-1 h-4 w-4" />
-            Clear
+            {t('clear')}
           </Button>
         )}
       </div>

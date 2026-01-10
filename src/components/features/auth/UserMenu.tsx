@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { logoutAction } from '@/server/actions/auth';
 
@@ -10,6 +11,7 @@ interface UserMenuProps {
 
 export function UserMenu({ userName }: UserMenuProps) {
   const router = useRouter();
+  const t = useTranslations('nav');
 
   async function handleLogout() {
     await logoutAction();
@@ -20,10 +22,10 @@ export function UserMenu({ userName }: UserMenuProps) {
   return (
     <div className="flex items-center gap-4">
       <span className="text-sm text-slate-600">
-        Welcome, {userName ?? 'User'}
+        {t('welcome', { name: userName ?? t('user') })}
       </span>
       <Button variant="outline" size="sm" onClick={handleLogout}>
-        Sign out
+        {t('signOut')}
       </Button>
     </div>
   );

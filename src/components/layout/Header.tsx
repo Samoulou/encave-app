@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Wine } from 'lucide-react';
+import { getTranslations } from 'next-intl/server';
 import { auth } from '@/server/auth';
 import { Button } from '@/components/ui/button';
 import { UserMenu } from '@/components/features/auth/UserMenu';
@@ -9,6 +10,7 @@ import { LocaleSwitcher } from '@/components/shared/LocaleSwitcher';
 export async function Header() {
   const session = await auth();
   const userRole = session?.user?.role;
+  const t = await getTranslations('nav');
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-stone-200/60 bg-white/95 backdrop-blur-md supports-[backdrop-filter]:bg-white/80">
@@ -16,7 +18,7 @@ export async function Header() {
         <Link
           href="/"
           className="flex items-center gap-2 group"
-          aria-label="EnCave - Go to homepage"
+          aria-label={t('goToHomepage')}
         >
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-burgundy-600 text-white transition-colors group-hover:bg-burgundy-700">
             <Wine className="h-5 w-5" aria-hidden="true" />
@@ -26,14 +28,14 @@ export async function Header() {
           </span>
         </Link>
 
-        <nav aria-label="Main navigation" className="hidden md:flex items-center gap-8">
-          <NavLink href="/wineries">Wineries</NavLink>
-          <NavLink href="/experiences">Experiences</NavLink>
+        <nav aria-label={t('mainNavigation')} className="hidden md:flex items-center gap-8">
+          <NavLink href="/wineries">{t('wineries')}</NavLink>
+          <NavLink href="/experiences">{t('experiences')}</NavLink>
           {userRole === 'ADMIN' && (
-            <NavLink href="/admin">Admin</NavLink>
+            <NavLink href="/admin">{t('admin')}</NavLink>
           )}
           {userRole === 'WINEMAKER' && (
-            <NavLink href="/dashboard">Dashboard</NavLink>
+            <NavLink href="/dashboard">{t('dashboard')}</NavLink>
           )}
         </nav>
 
@@ -45,10 +47,10 @@ export async function Header() {
           ) : (
             <div className="flex items-center gap-3">
               <Button variant="ghost" asChild>
-                <Link href="/login">Sign in</Link>
+                <Link href="/login">{t('signIn')}</Link>
               </Button>
               <Button asChild>
-                <Link href="/register">Get started</Link>
+                <Link href="/register">{t('getStarted')}</Link>
               </Button>
             </div>
           )}

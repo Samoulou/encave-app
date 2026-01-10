@@ -2,6 +2,23 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
 import { Header } from '@/components/layout/Header';
 
+// Mock next-intl/server
+vi.mock('next-intl/server', () => ({
+  getTranslations: vi.fn(() => Promise.resolve((key: string) => {
+    const translations: Record<string, string> = {
+      'goToHomepage': 'EnCave - Go to homepage',
+      'mainNavigation': 'Main navigation',
+      'wineries': 'Wineries',
+      'experiences': 'Experiences',
+      'admin': 'Admin',
+      'dashboard': 'Dashboard',
+      'signIn': 'Sign in',
+      'getStarted': 'Get started',
+    };
+    return translations[key] || key;
+  })),
+}));
+
 // Mock auth
 vi.mock('@/server/auth', () => ({
   auth: vi.fn(),

@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import { Metadata } from 'next';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import {
   searchExperiences,
   getExperienceCommunes,
@@ -20,6 +21,7 @@ export const metadata: Metadata = {
 };
 
 interface PageProps {
+  params: Promise<{ locale: string }>;
   searchParams: Promise<{
     q?: string;
     type?: string | string[];
@@ -31,18 +33,21 @@ interface PageProps {
   }>;
 }
 
-export default async function ExperiencesPage({ searchParams }: PageProps) {
-  const params = await searchParams;
+export default async function ExperiencesPage({ params, searchParams }: PageProps) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations('search');
+  const searchParamsData = await searchParams;
 
   // Parse search parameters
   const parsedParams: SearchParams = {
-    search: params.q || undefined,
-    type: parseTypeParam(params.type),
-    commune: params.commune || undefined,
-    minPrice: params.minPrice ? parseInt(params.minPrice, 10) : undefined,
-    maxPrice: params.maxPrice ? parseInt(params.maxPrice, 10) : undefined,
-    capacity: params.capacity ? parseInt(params.capacity, 10) : undefined,
-    sort: parseSort(params.sort),
+    search: searchParamsData.q || undefined,
+    type: parseTypeParam(searchParamsData.type),
+    commune: searchParamsData.commune || undefined,
+    minPrice: searchParamsData.minPrice ? parseInt(searchParamsData.minPrice, 10) : undefined,
+    maxPrice: searchParamsData.maxPrice ? parseInt(searchParamsData.maxPrice, 10) : undefined,
+    capacity: searchParamsData.capacity ? parseInt(searchParamsData.capacity, 10) : undefined,
+    sort: parseSort(searchParamsData.sort),
   };
 
   // Fetch data in parallel
@@ -57,10 +62,10 @@ export default async function ExperiencesPage({ searchParams }: PageProps) {
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="font-display text-3xl font-bold text-slate-900 sm:text-4xl">
-            Wine Experiences
+            {t('wineExperiences')}
           </h1>
           <p className="mt-2 text-lg text-slate-600">
-            Discover unique wine experiences in Valais
+            {t('discoverExperiences')}
           </p>
         </div>
 

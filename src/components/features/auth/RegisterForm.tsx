@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Wine } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { registerSchema, type RegisterInput } from '@/lib/validators/auth';
 import { registerAction, loginAction } from '@/server/actions/auth';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,8 @@ import { cn } from '@/lib/utils';
 
 export function RegisterForm() {
   const router = useRouter();
+  const t = useTranslations('auth.register');
+  const tCommon = useTranslations('common');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -66,7 +69,7 @@ export function RegisterForm() {
         setError(result.error.message);
       }
     } catch {
-      setError('Something went wrong. Please try again.');
+      setError(tCommon('errors.somethingWentWrong'));
     } finally {
       setIsLoading(false);
     }
@@ -75,16 +78,16 @@ export function RegisterForm() {
   return (
     <AuthPageLayout
       imageUrl="https://images.unsplash.com/photo-1516594915697-87eb3b1c14ea?q=80&w=1920&auto=format&fit=crop"
-      imageAlt="Wine cellar with oak barrels"
-      quote="Every great wine begins with passion. Join our community of exceptional winemakers."
+      imageAlt={t('imageAlt')}
+      quote={t('quote')}
     >
       {/* Heading */}
       <div className="mb-8">
         <h1 className="font-display text-3xl font-semibold text-slate-900">
-          Create an account
+          {t('title')}
         </h1>
         <p className="mt-2 text-slate-600">
-          Join EnCave and discover exceptional wine experiences
+          {t('subtitle')}
         </p>
       </div>
 
@@ -102,11 +105,11 @@ export function RegisterForm() {
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Name</FormLabel>
+                <FormLabel>{tCommon('labels.name')}</FormLabel>
                 <FormControl>
                   <Input
                     type="text"
-                    placeholder="Your name"
+                    placeholder={tCommon('placeholders.name')}
                     autoComplete="name"
                     {...field}
                   />
@@ -121,11 +124,11 @@ export function RegisterForm() {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel>{tCommon('labels.email')}</FormLabel>
                 <FormControl>
                   <Input
                     type="email"
-                    placeholder="name@example.com"
+                    placeholder={tCommon('placeholders.email')}
                     autoComplete="email"
                     {...field}
                   />
@@ -140,17 +143,17 @@ export function RegisterForm() {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Password</FormLabel>
+                <FormLabel>{tCommon('labels.password')}</FormLabel>
                 <FormControl>
                   <Input
                     type="password"
-                    placeholder="Create a password"
+                    placeholder={t('passwordPlaceholder')}
                     autoComplete="new-password"
                     {...field}
                   />
                 </FormControl>
                 <p className="mt-1.5 text-xs text-slate-500">
-                  At least 8 characters with one number
+                  {t('passwordHint')}
                 </p>
                 <FormMessage />
               </FormItem>
@@ -162,11 +165,11 @@ export function RegisterForm() {
             name="confirmPassword"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Confirm Password</FormLabel>
+                <FormLabel>{t('confirmPassword')}</FormLabel>
                 <FormControl>
                   <Input
                     type="password"
-                    placeholder="Confirm your password"
+                    placeholder={t('confirmPasswordPlaceholder')}
                     autoComplete="new-password"
                     {...field}
                   />
@@ -198,11 +201,10 @@ export function RegisterForm() {
                 <div className="space-y-1 leading-none">
                   <FormLabel className="flex cursor-pointer items-center gap-2">
                     <Wine className="h-4 w-4 text-burgundy-600" />
-                    I am a winemaker
+                    {t('iAmWinemaker')}
                   </FormLabel>
                   <p className="text-sm text-slate-500">
-                    Check this if you want to register your winery and offer
-                    experiences
+                    {t('winemakerDescription')}
                   </p>
                 </div>
               </FormItem>
@@ -210,16 +212,16 @@ export function RegisterForm() {
           />
 
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Creating account...' : 'Create account'}
+            {isLoading ? t('creatingAccount') : t('createAccount')}
           </Button>
 
           <p className="text-center text-sm text-slate-600">
-            Already have an account?{' '}
+            {t('haveAccount')}{' '}
             <Link
               href="/login"
               className="font-medium text-burgundy-600 hover:text-burgundy-800 relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-gold-400 after:transition-all hover:after:w-full"
             >
-              Sign in
+              {tCommon('buttons.signIn')}
             </Link>
           </p>
         </form>
