@@ -1,21 +1,24 @@
 import { Resend } from 'resend';
+import { render } from '@react-email/components';
 import { env } from '@/lib/env';
+import type { Locale } from '@prisma/client';
+import {
+  BookingConfirmationEmail,
+  BookingReminderEmail,
+  BookingCancellationEmail,
+  PasswordResetEmail,
+  WelcomeEmail,
+  EmailVerificationEmail,
+  WinemakerNewBookingEmail,
+  WinemakerCancellationEmail,
+  WineryApprovedEmail,
+  WineryRejectedEmail,
+} from '@/emails';
+import { subjects, t } from '@/emails/translations';
 
 const resend = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null;
-
-/**
- * Escape HTML entities to prevent XSS in email templates
- */
-function escapeHtml(unsafe: string): string {
-  return unsafe
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
-
 const FROM_EMAIL = 'EnCave <noreply@encave.ch>';
+const DEFAULT_LOCALE: Locale = 'FR';
 
 interface SendEmailOptions {
   to: string;
@@ -23,7 +26,7 @@ interface SendEmailOptions {
   html: string;
 }
 
-export async function sendEmail({ to, subject, html }: SendEmailOptions): Promise<boolean> {
+async function sendEmail({ to, subject, html }: SendEmailOptions): Promise<boolean> {
   if (!resend) {
     console.log('[Email] Resend not configured, skipping email:');
     console.log(`  To: ${to}`);
@@ -51,112 +54,282 @@ export async function sendEmail({ to, subject, html }: SendEmailOptions): Promis
   }
 }
 
-export async function sendWineryApprovedEmail(
+function getLocale(locale?: Locale | null): Locale {
+  return locale ?? DEFAULT_LOCALE;
+}
+
+// Booking Emails
+
+export interface BookingConfirmationData {
+  guestName: string;
+  experienceTitle: string;
+  wineryName: string;
+  date: Date;
+  guestCount: number;
+  duration: number;
+  totalPrice: number;
+  bookingRef: string;
+}
+
+export async function sendBookingConfirmationEmail(
   email: string,
-  wineryName: string
+  data: BookingConfirmationData,
+  locale?: Locale | null
 ): Promise<boolean> {
-  const safeWineryName = escapeHtml(wineryName);
-  const html = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8">
-        <title>Your winery has been verified!</title>
-      </head>
-      <body style="font-family: sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="color: #7c2d12; margin-bottom: 10px;">Welcome to EnCave!</h1>
-        </div>
-
-        <p>Dear Winemaker,</p>
-
-        <p>Great news! Your winery <strong>${safeWineryName}</strong> has been verified and is now active on the EnCave platform.</p>
-
-        <p>You can now:</p>
-        <ul>
-          <li>Complete your winery profile with photos and descriptions</li>
-          <li>Create wine tasting experiences for guests to book</li>
-          <li>Manage your availability calendar</li>
-          <li>Receive and manage bookings</li>
-        </ul>
-
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="https://encave.ch/dashboard"
-             style="background-color: #7c2d12; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
-            Go to Dashboard
-          </a>
-        </div>
-
-        <p>If you have any questions, please don't hesitate to reach out to our support team.</p>
-
-        <p>
-          Best regards,<br>
-          The EnCave Team
-        </p>
-
-        <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-        <p style="font-size: 12px; color: #666; text-align: center;">
-          EnCave - Book unique wine tasting experiences directly with Swiss winemakers
-        </p>
-      </body>
-    </html>
-  `;
+  const loc = getLocale(locale);
+  const html = await render(
+    BookingConfirmationEmail({
+      locale: loc,
+      ...data,
+      bookingUrl: `https://encave.ch/bookings/${data.bookingRef}`,
+    })
+  );
 
   return sendEmail({
     to: email,
-    subject: 'Your winery has been verified!',
+    subject: t(subjects.bookingConfirmation, loc),
+    html,
+  });
+}
+
+export interface BookingReminderData {
+  guestName: string;
+  experienceTitle: string;
+  wineryName: string;
+  wineryAddress: string;
+  date: Date;
+  guestCount: number;
+  bookingRef: string;
+  isTomorrow?: boolean;
+}
+
+export async function sendBookingReminderEmail(
+  email: string,
+  data: BookingReminderData,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const html = await render(
+    BookingReminderEmail({
+      locale: loc,
+      ...data,
+      directionsUrl: `https://maps.google.com/?q=${encodeURIComponent(data.wineryAddress)}`,
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.bookingReminder, loc),
+    html,
+  });
+}
+
+export interface BookingCancellationData {
+  guestName: string;
+  experienceTitle: string;
+  wineryName: string;
+  date: Date;
+  totalPrice: number;
+  bookingRef: string;
+}
+
+export async function sendBookingCancellationEmail(
+  email: string,
+  data: BookingCancellationData,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const html = await render(
+    BookingCancellationEmail({
+      locale: loc,
+      ...data,
+      experiencesUrl: 'https://encave.ch/experiences',
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.bookingCancellation, loc),
+    html,
+  });
+}
+
+// Authentication Emails
+
+export async function sendPasswordResetEmail(
+  email: string,
+  userName: string,
+  resetUrl: string,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const html = await render(
+    PasswordResetEmail({
+      locale: loc,
+      userName,
+      resetUrl,
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.passwordReset, loc),
+    html,
+  });
+}
+
+export async function sendWelcomeEmail(
+  email: string,
+  userName: string,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const html = await render(
+    WelcomeEmail({
+      locale: loc,
+      userName,
+      experiencesUrl: 'https://encave.ch/experiences',
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.welcome, loc),
+    html,
+  });
+}
+
+export async function sendEmailVerificationEmail(
+  email: string,
+  userName: string,
+  verificationUrl: string,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const html = await render(
+    EmailVerificationEmail({
+      locale: loc,
+      userName,
+      verificationUrl,
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.emailVerification, loc),
+    html,
+  });
+}
+
+// Winemaker Notification Emails
+
+export interface WinemakerNewBookingData {
+  winemakerName: string;
+  experienceTitle: string;
+  date: Date;
+  guestCount: number;
+  totalPrice: number;
+  guestName: string;
+  guestEmail: string;
+  bookingRef: string;
+}
+
+export async function sendWinemakerNewBookingEmail(
+  email: string,
+  data: WinemakerNewBookingData,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const html = await render(
+    WinemakerNewBookingEmail({
+      locale: loc,
+      ...data,
+      dashboardUrl: 'https://encave.ch/dashboard/bookings',
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.wineryNewBooking, loc),
+    html,
+  });
+}
+
+export interface WinemakerCancellationData {
+  winemakerName: string;
+  experienceTitle: string;
+  date: Date;
+  guestCount: number;
+  guestName: string;
+  bookingRef: string;
+}
+
+export async function sendWinemakerCancellationEmail(
+  email: string,
+  data: WinemakerCancellationData,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const html = await render(
+    WinemakerCancellationEmail({
+      locale: loc,
+      ...data,
+      dashboardUrl: 'https://encave.ch/dashboard/bookings',
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.wineryCancellation, loc),
+    html,
+  });
+}
+
+// Winery Verification Emails
+
+export async function sendWineryApprovedEmail(
+  email: string,
+  winemakerName: string,
+  wineryName: string,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const html = await render(
+    WineryApprovedEmail({
+      locale: loc,
+      winemakerName,
+      wineryName,
+      dashboardUrl: 'https://encave.ch/dashboard',
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.wineryApproved, loc),
     html,
   });
 }
 
 export async function sendWineryRejectedEmail(
   email: string,
+  winemakerName: string,
   wineryName: string,
-  reason: string
+  reason: string,
+  locale?: Locale | null
 ): Promise<boolean> {
-  const safeWineryName = escapeHtml(wineryName);
-  const safeReason = escapeHtml(reason);
-  const html = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8">
-        <title>Winery Registration Update</title>
-      </head>
-      <body style="font-family: sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="color: #7c2d12; margin-bottom: 10px;">EnCave</h1>
-        </div>
-
-        <p>Dear Winemaker,</p>
-
-        <p>Thank you for your interest in joining the EnCave platform. After reviewing your registration for <strong>${safeWineryName}</strong>, we regret to inform you that we are unable to approve it at this time.</p>
-
-        <div style="background-color: #fef2f2; border-left: 4px solid #dc2626; padding: 15px; margin: 20px 0;">
-          <p style="margin: 0; font-weight: 600; color: #991b1b;">Reason:</p>
-          <p style="margin: 10px 0 0 0; color: #7f1d1d;">${safeReason}</p>
-        </div>
-
-        <p>If you believe this decision was made in error or if you would like to provide additional information, please contact our support team.</p>
-
-        <p>You are welcome to submit a new registration once you have addressed the concerns mentioned above.</p>
-
-        <p>
-          Best regards,<br>
-          The EnCave Team
-        </p>
-
-        <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-        <p style="font-size: 12px; color: #666; text-align: center;">
-          EnCave - Book unique wine tasting experiences directly with Swiss winemakers
-        </p>
-      </body>
-    </html>
-  `;
+  const loc = getLocale(locale);
+  const html = await render(
+    WineryRejectedEmail({
+      locale: loc,
+      winemakerName,
+      wineryName,
+      reason,
+    })
+  );
 
   return sendEmail({
     to: email,
-    subject: 'Winery Registration Update',
+    subject: t(subjects.wineryRejected, loc),
     html,
   });
 }

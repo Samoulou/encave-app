@@ -63,7 +63,7 @@ describe('Admin Actions Integration Tests', () => {
     name: 'Test Winery',
     slug: 'test-winery',
     status: 'PENDING' as const,
-    user: { email: 'winemaker@test.com' },
+    user: { email: 'winemaker@test.com', name: 'Test Winemaker', preferredLocale: 'FR' as const },
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -143,7 +143,9 @@ describe('Admin Actions Integration Tests', () => {
       expect(mockDb.$transaction).toHaveBeenCalled();
       expect(mockSendApprovedEmail).toHaveBeenCalledWith(
         'winemaker@test.com',
-        'Test Winery'
+        'Test Winemaker',
+        'Test Winery',
+        'FR'
       );
     });
 
@@ -241,8 +243,10 @@ describe('Admin Actions Integration Tests', () => {
       expect(mockDb.$transaction).toHaveBeenCalled();
       expect(mockSendRejectedEmail).toHaveBeenCalledWith(
         'winemaker@test.com',
+        'Test Winemaker',
         'Test Winery',
-        rejectionReason
+        rejectionReason,
+        'FR'
       );
     });
 
@@ -256,8 +260,10 @@ describe('Admin Actions Integration Tests', () => {
 
       expect(mockSendRejectedEmail).toHaveBeenCalledWith(
         'winemaker@test.com',
+        'Test Winemaker',
         'Test Winery',
-        rejectionReason
+        rejectionReason,
+        'FR'
       );
     });
   });

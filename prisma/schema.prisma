@@ -37,16 +37,23 @@ enum ExperienceStatus {
   ARCHIVED
 }
 
+enum Locale {
+  FR
+  DE
+  EN
+}
+
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  emailVerified DateTime?
-  name          String?
-  passwordHash  String?
-  image         String?
-  role          UserRole  @default(CLIENT)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id              String    @id @default(cuid())
+  email           String    @unique
+  emailVerified   DateTime?
+  name            String?
+  passwordHash    String?
+  image           String?
+  role            UserRole  @default(CLIENT)
+  preferredLocale Locale    @default(FR)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   accounts Account[]
   sessions Session[]

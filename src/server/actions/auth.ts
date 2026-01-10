@@ -1,6 +1,6 @@
 'use server';
 
-import { headers } from 'next/headers';
+import { headers, cookies } from 'next/headers';
 import { db } from '@/server/db';
 import { hashPassword } from '@/server/password';
 import { registerSchema, type RegisterInput } from '@/lib/validators/auth';
@@ -12,6 +12,21 @@ import {
   AUTH_RATE_LIMIT,
   REGISTRATION_RATE_LIMIT,
 } from '@/server/services/rate-limit.service';
+import type { Locale } from '@prisma/client';
+
+/**
+ * Get the user's preferred locale from cookies (set by next-intl)
+ */
+async function getPreferredLocale(): Promise<Locale> {
+  const cookieStore = await cookies();
+  const localeCookie = cookieStore.get('NEXT_LOCALE')?.value?.toUpperCase();
+
+  if (localeCookie === 'FR' || localeCookie === 'DE' || localeCookie === 'EN') {
+    return localeCookie;
+  }
+
+  return 'FR'; // Default to French
+}
 
 /**
  * Get client identifier for rate limiting (IP-based)
@@ -124,12 +139,14 @@ export async function registerAction(
 
   // Hash password and create user
   const passwordHash = await hashPassword(password);
+  const preferredLocale = await getPreferredLocale();
 
   const user = await db.user.create({
     data: {
       name,
       email,
       passwordHash,
+      preferredLocale,
     },
   });
 

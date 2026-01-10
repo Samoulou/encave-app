@@ -52,7 +52,7 @@ export async function approveWinery(
     const winery = await db.winery.findUnique({
       where: { id: wineryId },
       include: {
-        user: { select: { email: true } },
+        user: { select: { email: true, name: true, preferredLocale: true } },
       },
     });
 
@@ -95,7 +95,12 @@ export async function approveWinery(
     ]);
 
     // Send approval email (log failure but don't fail the action)
-    const emailSent = await sendWineryApprovedEmail(winery.user.email, winery.name);
+    const emailSent = await sendWineryApprovedEmail(
+      winery.user.email,
+      winery.user.name ?? 'Winemaker',
+      winery.name,
+      winery.user.preferredLocale
+    );
     if (!emailSent) {
       console.warn(`[approveWinery] Failed to send approval email to ${winery.user.email} for winery ${wineryId}`);
     }
@@ -152,7 +157,7 @@ export async function rejectWinery(
     const winery = await db.winery.findUnique({
       where: { id: wineryId },
       include: {
-        user: { select: { email: true } },
+        user: { select: { email: true, name: true, preferredLocale: true } },
       },
     });
 
@@ -196,7 +201,13 @@ export async function rejectWinery(
     ]);
 
     // Send rejection email (log failure but don't fail the action)
-    const emailSent = await sendWineryRejectedEmail(winery.user.email, winery.name, trimmedReason);
+    const emailSent = await sendWineryRejectedEmail(
+      winery.user.email,
+      winery.user.name ?? 'Winemaker',
+      winery.name,
+      trimmedReason,
+      winery.user.preferredLocale
+    );
     if (!emailSent) {
       console.warn(`[rejectWinery] Failed to send rejection email to ${winery.user.email} for winery ${wineryId}`);
     }
