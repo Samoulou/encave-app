@@ -37,6 +37,15 @@ enum ExperienceStatus {
   ARCHIVED
 }
 
+enum BookingStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  CANCELLED_BY_CLIENT
+  CANCELLED_BY_WINERY
+  COMPLETED
+  NO_SHOW
+}
+
 enum Locale {
   FR
   DE
@@ -87,6 +96,7 @@ model Winery {
   galleryImages    WineryGalleryImage[]
   verificationLogs VerificationLog[]
   experiences      Experience[]
+  bookings         Booking[]
 
   @@index([commune])
   @@index([status])
@@ -175,6 +185,7 @@ model Experience {
 
   galleryImages     ExperienceGalleryImage[]
   availabilitySlots AvailabilitySlot[]
+  bookings          Booking[]
 
   @@unique([wineryId, slug])
   @@index([status])
@@ -211,4 +222,33 @@ model AvailabilitySlot {
   @@index([experienceId, dayOfWeek])
   @@index([experienceId, isActive])
   @@map("availability_slots")
+}
+
+model Booking {
+  id                    String        @id @default(cuid())
+  reference             String        @unique // ENC-XXXXXX
+  visitorEmail          String
+  visitorName           String
+  visitorPhone          String
+  experienceId          String
+  experience            Experience    @relation(fields: [experienceId], references: [id])
+  wineryId              String
+  winery                Winery        @relation(fields: [wineryId], references: [id])
+  date                  DateTime      @db.Date
+  timeSlot              String        // "HH:mm"
+  guestCount            Int
+  totalPrice            Int           // cents
+  platformFee           Int           // cents
+  wineryPayout          Int           // cents
+  status                BookingStatus @default(PENDING_PAYMENT)
+  stripePaymentIntentId String?
+  expiresAt             DateTime?     // For pending payment reservations
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  @@index([experienceId, date, timeSlot])
+  @@index([wineryId, date])
+  @@index([status])
+  @@index([reference])
+  @@map("bookings")
 }

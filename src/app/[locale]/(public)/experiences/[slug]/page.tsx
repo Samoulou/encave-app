@@ -153,7 +153,11 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
             {/* Right Column - Sidebar */}
             <div className="space-y-6">
               {/* Booking CTA */}
-              <BookingCTA price={experience.price} />
+              <BookingCTA
+                price={experience.price}
+                experienceSlug={experience.slug}
+                stripeConnected={experience.winery.stripeOnboardingComplete}
+              />
 
               {/* Winery Info Card */}
               <WineryInfoCard

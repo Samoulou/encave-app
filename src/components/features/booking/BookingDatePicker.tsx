@@ -1,0 +1,111 @@
+'use client';
+
+import { useMemo, useCallback } from 'react';
+import { format, addMonths, startOfDay, isBefore } from 'date-fns';
+import { Calendar } from '@/components/ui/calendar';
+
+interface BookingDatePickerProps {
+  selectedDate: string | null;
+  onDateChange: (_date: string | null) => void;
+  availableDays: Set<number>;
+}
+
+export function BookingDatePicker({
+  selectedDate,
+  onDateChange,
+  availableDays,
+}: BookingDatePickerProps) {
+  const today = useMemo(() => startOfDay(new Date()), []);
+  const maxDate = useMemo(() => addMonths(today, 3), [today]); // Allow booking up to 3 months ahead
+
+  const selected = selectedDate ? new Date(selectedDate) : undefined;
+
+  // Function to determine if a date should be disabled
+  const isDateDisabled = useCallback(
+    (date: Date): boolean => {
+      // Disable past dates (but not today)
+      if (isBefore(startOfDay(date), today)) {
+        return true;
+      }
+
+      // Disable dates beyond max booking window
+      if (isBefore(maxDate, date)) {
+        return true;
+      }
+
+      // Disable days without availability slots
+      const dayOfWeek = date.getDay();
+      if (!availableDays.has(dayOfWeek)) {
+        return true;
+      }
+
+      return false;
+    },
+    [today, maxDate, availableDays]
+  );
+
+  const handleSelect = (date: Date | undefined) => {
+    if (date) {
+      // Format as YYYY-MM-DD for URL state
+      const formatted = format(date, 'yyyy-MM-dd');
+      onDateChange(formatted);
+    } else {
+      onDateChange(null);
+    }
+  };
+
+  // Custom day render to show today indicator
+  const modifiers = useMemo(
+    () => ({
+      today: today,
+      unavailable: isDateDisabled,
+    }),
+    [today, isDateDisabled]
+  );
+
+  const modifiersClassNames = {
+    today: 'border-2 border-burgundy-500',
+    unavailable: 'text-slate-300 line-through cursor-not-allowed',
+  };
+
+  return (
+    <div className="flex justify-center">
+      <Calendar
+        mode="single"
+        selected={selected}
+        onSelect={handleSelect}
+        disabled={isDateDisabled}
+        fromDate={today}
+        toDate={maxDate}
+        modifiers={modifiers}
+        modifiersClassNames={modifiersClassNames}
+        className="rounded-lg border-0"
+        classNames={{
+          months: 'flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0',
+          month: 'space-y-4',
+          caption: 'flex justify-center pt-1 relative items-center',
+          caption_label: 'text-sm font-medium text-slate-900',
+          nav: 'space-x-1 flex items-center',
+          nav_button:
+            'h-8 w-8 bg-transparent p-0 opacity-50 hover:opacity-100 hover:bg-slate-100 rounded-md transition-colors',
+          nav_button_previous: 'absolute left-1',
+          nav_button_next: 'absolute right-1',
+          table: 'w-full border-collapse space-y-1',
+          head_row: 'flex',
+          head_cell:
+            'text-slate-500 rounded-md w-10 font-normal text-[0.8rem]',
+          row: 'flex w-full mt-2',
+          cell: 'relative p-0 text-center text-sm focus-within:relative focus-within:z-20',
+          day: 'h-10 w-10 p-0 font-normal aria-selected:opacity-100 hover:bg-burgundy-50 rounded-md transition-colors',
+          day_selected:
+            'bg-burgundy-600 text-white hover:bg-burgundy-600 hover:text-white focus:bg-burgundy-600 focus:text-white',
+          day_outside: 'text-slate-400 opacity-50',
+          day_disabled: 'text-slate-300 opacity-50 cursor-not-allowed hover:bg-transparent',
+          day_range_middle:
+            'aria-selected:bg-burgundy-100 aria-selected:text-burgundy-900',
+          day_hidden: 'invisible',
+        }}
+      />
+    </div>
+  );
+}

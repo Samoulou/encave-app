@@ -1,0 +1,271 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import { useTranslations } from 'next-intl';
+import { parseAsString, parseAsInteger, useQueryStates } from 'nuqs';
+import { Calendar, Clock, Users, ArrowRight, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { BookingDatePicker } from './BookingDatePicker';
+import { TimeSlotSelector } from './TimeSlotSelector';
+import { GuestCountInput } from './GuestCountInput';
+import { PriceCalculator } from './PriceCalculator';
+import { BookingSummary } from './BookingSummary';
+import type { ExperienceForBooking } from '@/server/actions/booking';
+
+interface BookingWidgetProps {
+  experience: ExperienceForBooking;
+}
+
+export function BookingWidget({ experience }: BookingWidgetProps) {
+  const t = useTranslations('booking');
+  const router = useRouter();
+
+  // URL state persistence using nuqs
+  const [queryState, setQueryState] = useQueryStates({
+    date: parseAsString,
+    time: parseAsString,
+    guests: parseAsInteger.withDefault(experience.minCapacity),
+  });
+
+  const [remainingCapacity, setRemainingCapacity] = useState<number | null>(null);
+  const [isLoadingCapacity, setIsLoadingCapacity] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { date, time, guests } = queryState;
+
+  // Check if form is valid
+  const isValid = date && time && guests >= experience.minCapacity && guests <= experience.maxCapacity;
+
+  // Available days based on availability slots
+  const availableDays = new Set(
+    experience.availabilitySlots.map((slot) => slot.dayOfWeek)
+  );
+
+  const handleDateChange = useCallback(
+    (newDate: string | null) => {
+      setQueryState({ date: newDate, time: null });
+      setRemainingCapacity(null);
+    },
+    [setQueryState]
+  );
+
+  const handleTimeChange = useCallback(
+    (newTime: string | null) => {
+      setQueryState({ time: newTime });
+    },
+    [setQueryState]
+  );
+
+  const handleGuestsChange = useCallback(
+    (newGuests: number) => {
+      setQueryState({ guests: newGuests });
+    },
+    [setQueryState]
+  );
+
+  // Update remaining capacity when date/time changes
+  useEffect(() => {
+    if (date && time) {
+      setIsLoadingCapacity(true);
+      import('@/server/actions/booking').then(({ checkAvailability }) => {
+        checkAvailability({
+          experienceId: experience.id,
+          date,
+          timeSlot: time,
+        }).then((result) => {
+          if (result.success) {
+            setRemainingCapacity(result.data.remainingCapacity);
+          }
+          setIsLoadingCapacity(false);
+        });
+      });
+    }
+  }, [date, time, experience.id]);
+
+  const handleContinueToPayment = async () => {
+    if (!isValid) return;
+
+    setIsSubmitting(true);
+    // Navigate to checkout page with booking details
+    const params = new URLSearchParams({
+      date: date!,
+      time: time!,
+      guests: guests.toString(),
+    });
+    router.push(`/experiences/${experience.slug}/checkout?${params.toString()}`);
+  };
+
+  return (
+    <div className="grid gap-8 lg:grid-cols-3">
+      {/* Left Column - Booking Form */}
+      <div className="lg:col-span-2 space-y-6">
+        {/* Experience Header */}
+        <Card className="overflow-hidden">
+          <div className="flex flex-col sm:flex-row">
+            <div className="relative h-48 sm:h-auto sm:w-48 flex-shrink-0">
+              <Image
+                src={experience.coverPhoto}
+                alt={experience.title}
+                fill
+                className="object-cover"
+              />
+            </div>
+            <CardContent className="flex-1 p-6">
+              <h1 className="font-display text-2xl font-bold text-slate-900">
+                {experience.title}
+              </h1>
+              <p className="mt-2 text-sm text-slate-600">
+                {experience.winery.name}
+              </p>
+              <div className="mt-4 flex flex-wrap gap-4 text-sm text-slate-600">
+                <span className="flex items-center gap-1.5">
+                  <Clock className="h-4 w-4" />
+                  {experience.duration} min
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Users className="h-4 w-4" />
+                  {experience.minCapacity}-{experience.maxCapacity} {t('guests', { count: experience.maxCapacity })}
+                </span>
+              </div>
+            </CardContent>
+          </div>
+        </Card>
+
+        {/* Date Selection */}
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-burgundy-100">
+                <Calendar className="h-5 w-5 text-burgundy-600" />
+              </div>
+              <div>
+                <h2 className="font-semibold text-slate-900">{t('selectDate')}</h2>
+                <p className="text-sm text-slate-500">
+                  {t('selectDateFirst')}
+                </p>
+              </div>
+            </div>
+            <BookingDatePicker
+              selectedDate={date}
+              onDateChange={handleDateChange}
+              availableDays={availableDays}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Time Selection */}
+        <Card className={!date ? 'opacity-60 pointer-events-none' : ''}>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-burgundy-100">
+                <Clock className="h-5 w-5 text-burgundy-600" />
+              </div>
+              <div>
+                <h2 className="font-semibold text-slate-900">{t('selectTime')}</h2>
+                <p className="text-sm text-slate-500">
+                  {date ? t('selectTimeFirst') : t('selectDateFirst')}
+                </p>
+              </div>
+            </div>
+            <TimeSlotSelector
+              experienceId={experience.id}
+              selectedDate={date}
+              selectedTime={time}
+              onTimeChange={handleTimeChange}
+              onCapacityUpdate={setRemainingCapacity}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Guest Count */}
+        <Card className={!time ? 'opacity-60 pointer-events-none' : ''}>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-burgundy-100">
+                <Users className="h-5 w-5 text-burgundy-600" />
+              </div>
+              <div>
+                <h2 className="font-semibold text-slate-900">{t('selectGuests')}</h2>
+                <p className="text-sm text-slate-500">
+                  {t('minGuests', { count: experience.minCapacity })} - {t('maxGuests', { count: experience.maxCapacity })}
+                </p>
+              </div>
+            </div>
+            <GuestCountInput
+              value={guests}
+              onChange={handleGuestsChange}
+              min={experience.minCapacity}
+              max={remainingCapacity !== null ? Math.min(experience.maxCapacity, remainingCapacity) : experience.maxCapacity}
+              isLoading={isLoadingCapacity}
+              remainingCapacity={remainingCapacity}
+            />
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Right Column - Summary */}
+      <div className="lg:col-span-1">
+        <div className="sticky top-6 space-y-6">
+          {/* Price Calculator */}
+          <Card>
+            <CardContent className="p-6">
+              <PriceCalculator
+                pricePerPerson={experience.price}
+                guests={guests}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Booking Summary */}
+          {isValid && (
+            <Card>
+              <CardContent className="p-6">
+                <BookingSummary
+                  experienceTitle={experience.title}
+                  wineryName={experience.winery.name}
+                  date={date!}
+                  time={time!}
+                  guests={guests}
+                  totalPrice={experience.price * guests}
+                />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Continue Button */}
+          <Button
+            size="lg"
+            className="w-full"
+            disabled={!isValid || isSubmitting}
+            onClick={handleContinueToPayment}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                {t('continueToPayment')}
+              </>
+            ) : (
+              <>
+                {t('continueToPayment')}
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </>
+            )}
+          </Button>
+
+          {!isValid && (
+            <p className="text-center text-sm text-slate-500">
+              {!date
+                ? t('selectDateFirst')
+                : !time
+                  ? t('selectTimeFirst')
+                  : t('selectGuestsFirst')}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
