@@ -1,9 +1,11 @@
 'use server';
 
 import { z } from 'zod';
+import crypto from 'crypto';
 import { db } from '@/server/db';
 import type { ActionResult } from '@/types/actions';
 import { BookingStatus } from '@prisma/client';
+import { sendBookingConfirmationEmail } from '@/server/services/email.service';
 
 const CheckAvailabilitySchema = z.object({
   experienceId: z.string(),
@@ -233,6 +235,177 @@ export async function getExperienceForBooking(
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to get experience' },
+    };
+  }
+}
+
+/**
+ * Resend booking confirmation email
+ */
+export async function resendConfirmationEmail(
+  bookingId: string
+): Promise<ActionResult<{ sent: boolean }>> {
+  try {
+    const booking = await db.booking.findUnique({
+      where: { id: bookingId },
+      include: {
+        experience: {
+          select: {
+            title: true,
+            duration: true,
+          },
+        },
+        winery: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    });
+
+    if (!booking) {
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Booking not found' },
+      };
+    }
+
+    if (booking.status !== BookingStatus.CONFIRMED) {
+      return {
+        success: false,
+        error: { code: 'VALIDATION_ERROR', message: 'Booking is not confirmed' },
+      };
+    }
+
+    // Combine date and timeSlot for email formatting
+    const [hours, minutes] = booking.timeSlot.split(':').map(Number);
+    const bookingDateTime = new Date(booking.date);
+    bookingDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
+
+    const sent = await sendBookingConfirmationEmail(
+      booking.visitorEmail,
+      {
+        guestName: booking.visitorName,
+        experienceTitle: booking.experience.title,
+        wineryName: booking.winery.name,
+        date: bookingDateTime,
+        guestCount: booking.guestCount,
+        duration: booking.experience.duration,
+        totalPrice: booking.totalPrice,
+        bookingRef: booking.reference,
+      }
+    );
+
+    if (sent) {
+      await db.booking.update({
+        where: { id: bookingId },
+        data: { confirmationSentAt: new Date() },
+      });
+    }
+
+    return { success: true, data: { sent } };
+  } catch (error) {
+    console.error('resendConfirmationEmail error:', error);
+    return {
+      success: false,
+      error: { code: 'INTERNAL_ERROR', message: 'Failed to resend email' },
+    };
+  }
+}
+
+/**
+ * Get booking by access token (for email links)
+ */
+export async function getBookingByToken(
+  token: string
+): Promise<ActionResult<{
+  id: string;
+  reference: string;
+  status: BookingStatus;
+  visitorName: string;
+  visitorEmail: string;
+  visitorPhone: string;
+  date: Date;
+  timeSlot: string;
+  guestCount: number;
+  totalPrice: number;
+  experience: {
+    title: string;
+    slug: string;
+    duration: number;
+    coverPhoto: string;
+  };
+  winery: {
+    name: string;
+    slug: string;
+    address: string;
+    commune: string;
+    phone: string;
+    email: string;
+  };
+}>> {
+  try {
+    // Hash the token to compare with stored hash
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+    const booking = await db.booking.findFirst({
+      where: {
+        OR: [
+          { accessToken: token },
+          { accessTokenHash: tokenHash },
+        ],
+      },
+      include: {
+        experience: {
+          select: {
+            title: true,
+            slug: true,
+            duration: true,
+            coverPhoto: true,
+          },
+        },
+        winery: {
+          select: {
+            name: true,
+            slug: true,
+            address: true,
+            commune: true,
+            phone: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    if (!booking) {
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Booking not found or invalid token' },
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        id: booking.id,
+        reference: booking.reference,
+        status: booking.status,
+        visitorName: booking.visitorName,
+        visitorEmail: booking.visitorEmail,
+        visitorPhone: booking.visitorPhone,
+        date: booking.date,
+        timeSlot: booking.timeSlot,
+        guestCount: booking.guestCount,
+        totalPrice: booking.totalPrice,
+        experience: booking.experience,
+        winery: booking.winery,
+      },
+    };
+  } catch (error) {
+    console.error('getBookingByToken error:', error);
+    return {
+      success: false,
+      error: { code: 'INTERNAL_ERROR', message: 'Failed to get booking' },
     };
   }
 }

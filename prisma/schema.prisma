@@ -243,6 +243,10 @@ model Booking {
   status                BookingStatus @default(PENDING_PAYMENT)
   stripePaymentIntentId String?
   expiresAt             DateTime?     // For pending payment reservations
+  accessToken           String?       @unique // Secure token for email access
+  accessTokenHash       String?       // Hash of access token for verification
+  confirmationSentAt    DateTime?     // When client confirmation email was sent
+  wineryNotifiedAt      DateTime?     // When winery notification was sent
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
 
@@ -250,5 +254,6 @@ model Booking {
   @@index([wineryId, date])
   @@index([status])
   @@index([reference])
+  @@index([accessToken])
   @@map("bookings")
 }

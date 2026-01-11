@@ -1,9 +1,14 @@
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
+import crypto from 'crypto';
 import Stripe from 'stripe';
 import { db } from '@/server/db';
 import { env } from '@/lib/env';
 import { BookingStatus } from '@prisma/client';
+import {
+  sendBookingConfirmationEmail,
+  sendWinemakerNewBookingEmail,
+} from '@/server/services/email.service';
 
 // Initialize Stripe
 const stripe = env.STRIPE_SECRET_KEY
@@ -85,7 +90,7 @@ export async function POST(req: Request) {
 
 /**
  * Handle checkout.session.completed event
- * Updates booking status to CONFIRMED
+ * Updates booking status to CONFIRMED and sends confirmation emails
  */
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const bookingId = session.metadata?.bookingId;
@@ -98,7 +103,26 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   // Idempotency check - ensure we don't process twice
   const booking = await db.booking.findUnique({
     where: { id: bookingId },
-    select: { id: true, status: true, reference: true },
+    include: {
+      experience: {
+        select: {
+          title: true,
+          duration: true,
+        },
+      },
+      winery: {
+        select: {
+          name: true,
+          email: true,
+          user: {
+            select: {
+              name: true,
+              preferredLocale: true,
+            },
+          },
+        },
+      },
+    },
   });
 
   if (!booking) {
@@ -118,6 +142,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     return;
   }
 
+  // Generate secure access token for email link
+  const accessToken = crypto.randomBytes(32).toString('hex');
+  const accessTokenHash = crypto.createHash('sha256').update(accessToken).digest('hex');
+
   // Update booking to confirmed
   await db.booking.update({
     where: { id: bookingId },
@@ -125,13 +153,74 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       status: BookingStatus.CONFIRMED,
       stripePaymentIntentId: session.payment_intent as string,
       expiresAt: null, // Clear expiration since payment is complete
+      accessToken,
+      accessTokenHash,
     },
   });
 
   console.log(`Booking ${booking.reference} confirmed via webhook`);
 
-  // TODO: Send confirmation email to visitor
-  // TODO: Send notification to winery
+  // Combine date and timeSlot for email formatting
+  const [hours, minutes] = booking.timeSlot.split(':').map(Number);
+  const bookingDateTime = new Date(booking.date);
+  bookingDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
+
+  // Send confirmation email to visitor
+  try {
+    await sendBookingConfirmationEmail(
+      booking.visitorEmail,
+      {
+        guestName: booking.visitorName,
+        experienceTitle: booking.experience.title,
+        wineryName: booking.winery.name,
+        date: bookingDateTime,
+        guestCount: booking.guestCount,
+        duration: booking.experience.duration,
+        totalPrice: booking.totalPrice,
+        bookingRef: booking.reference,
+      }
+    );
+
+    // Update confirmation sent timestamp
+    await db.booking.update({
+      where: { id: bookingId },
+      data: { confirmationSentAt: new Date() },
+    });
+
+    console.log(`Confirmation email sent to ${booking.visitorEmail}`);
+  } catch (error) {
+    console.error('Failed to send confirmation email:', error);
+    // Don't throw - booking is still confirmed, email failure is not critical
+  }
+
+  // Send notification to winery
+  try {
+    await sendWinemakerNewBookingEmail(
+      booking.winery.email,
+      {
+        winemakerName: booking.winery.user.name ?? 'Winemaker',
+        experienceTitle: booking.experience.title,
+        date: bookingDateTime,
+        guestCount: booking.guestCount,
+        totalPrice: booking.wineryPayout, // Show payout amount, not total
+        guestName: booking.visitorName,
+        guestEmail: booking.visitorEmail,
+        bookingRef: booking.reference,
+      },
+      booking.winery.user.preferredLocale
+    );
+
+    // Update winery notified timestamp
+    await db.booking.update({
+      where: { id: bookingId },
+      data: { wineryNotifiedAt: new Date() },
+    });
+
+    console.log(`Winery notification sent to ${booking.winery.email}`);
+  } catch (error) {
+    console.error('Failed to send winery notification:', error);
+    // Don't throw - booking is still confirmed
+  }
 }
 
 /**

@@ -225,7 +225,8 @@
     "minGuests": "Mindestens {count} {count, plural, =1 {Person} other {Personen}}",
     "maxGuests": "Maximal {count} {count, plural, =1 {Person} other {Personen}}",
     "pastDate": "Vergangenes Datum",
-    "today": "Heute"
+    "today": "Heute",
+    "bookingDetails": "Buchungsdetails"
   },
   "checkout": {
     "guestDetails": "Gastdaten",
@@ -261,7 +262,20 @@
     "phone": "Telefon",
     "viewExperience": "Erlebnis ansehen",
     "browseMore": "Weitere Erlebnisse entdecken",
-    "emailConfirmationNote": "Eine Bestatigungsmail wurde an {email} gesendet"
+    "emailConfirmationNote": "Eine Bestatigungsmail wurde an {email} gesendet",
+    "addToCalendar": "Zum Kalender hinzufugen",
+    "addToGoogleCalendar": "Google Kalender",
+    "downloadIcal": ".ics herunterladen",
+    "getDirections": "Wegbeschreibung",
+    "resendEmail": "Bestatigungsmail erneut senden",
+    "emailResent": "Bestatigungsmail erneut gesendet"
+  },
+  "cancellation": {
+    "title": "Stornierungsbedingungen",
+    "free24Hours": "Kostenlose Stornierung bis 24 Stunden vor dem Erlebnis",
+    "halfRefund": "50% Erstattung zwischen 24 und 12 Stunden vorher",
+    "noRefund": "Keine Erstattung innerhalb von 12 Stunden vor dem Erlebnis",
+    "contactForChanges": "Fur Anderungen kontaktieren Sie bitte das Weingut direkt."
   },
   "winery": {
     "verified": "Verifiziert",

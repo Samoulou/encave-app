@@ -225,7 +225,8 @@
     "minGuests": "Minimum {count} {count, plural, =1 {guest} other {guests}}",
     "maxGuests": "Maximum {count} {count, plural, =1 {guest} other {guests}}",
     "pastDate": "Past date",
-    "today": "Today"
+    "today": "Today",
+    "bookingDetails": "Booking Details"
   },
   "checkout": {
     "guestDetails": "Guest Details",
@@ -261,7 +262,20 @@
     "phone": "Phone",
     "viewExperience": "View Experience",
     "browseMore": "Browse More Experiences",
-    "emailConfirmationNote": "A confirmation email has been sent to {email}"
+    "emailConfirmationNote": "A confirmation email has been sent to {email}",
+    "addToCalendar": "Add to Calendar",
+    "addToGoogleCalendar": "Google Calendar",
+    "downloadIcal": "Download .ics",
+    "getDirections": "Get directions",
+    "resendEmail": "Resend confirmation email",
+    "emailResent": "Confirmation email resent"
+  },
+  "cancellation": {
+    "title": "Cancellation Policy",
+    "free24Hours": "Free cancellation up to 24 hours before the experience",
+    "halfRefund": "50% refund between 24 hours and 12 hours before",
+    "noRefund": "No refund within 12 hours of the experience",
+    "contactForChanges": "For any changes, please contact the winery directly."
   },
   "winery": {
     "verified": "Verified",

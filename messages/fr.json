@@ -225,7 +225,8 @@
     "minGuests": "Minimum {count} {count, plural, =1 {personne} other {personnes}}",
     "maxGuests": "Maximum {count} {count, plural, =1 {personne} other {personnes}}",
     "pastDate": "Date passee",
-    "today": "Aujourd'hui"
+    "today": "Aujourd'hui",
+    "bookingDetails": "Details de la reservation"
   },
   "checkout": {
     "guestDetails": "Informations du visiteur",
@@ -261,7 +262,20 @@
     "phone": "Telephone",
     "viewExperience": "Voir l'experience",
     "browseMore": "Decouvrir plus d'experiences",
-    "emailConfirmationNote": "Un email de confirmation a ete envoye a {email}"
+    "emailConfirmationNote": "Un email de confirmation a ete envoye a {email}",
+    "addToCalendar": "Ajouter au calendrier",
+    "addToGoogleCalendar": "Google Agenda",
+    "downloadIcal": "Telecharger .ics",
+    "getDirections": "Obtenir l'itineraire",
+    "resendEmail": "Renvoyer l'email de confirmation",
+    "emailResent": "Email de confirmation renvoye"
+  },
+  "cancellation": {
+    "title": "Conditions d'annulation",
+    "free24Hours": "Annulation gratuite jusqu'a 24 heures avant l'experience",
+    "halfRefund": "Remboursement de 50% entre 24 et 12 heures avant",
+    "noRefund": "Aucun remboursement dans les 12 heures precedant l'experience",
+    "contactForChanges": "Pour tout changement, veuillez contacter le domaine directement."
   },
   "winery": {
     "verified": "Verifie",
