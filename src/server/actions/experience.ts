@@ -379,13 +379,41 @@ export async function publishExperience(
 
     const winery = await db.winery.findUnique({
       where: { userId: session.user.id },
-      select: { id: true, status: true },
+      select: {
+        id: true,
+        status: true,
+        stripeAccountId: true,
+        stripeOnboardingComplete: true,
+      },
     });
 
     if (!winery || winery.status !== 'VERIFIED') {
       return {
         success: false,
         error: { code: 'FORBIDDEN', message: 'Access denied' },
+      };
+    }
+
+    // Check Stripe onboarding status
+    if (!winery.stripeAccountId) {
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message:
+            'Payment setup required. Connect your Stripe account to publish experiences.',
+        },
+      };
+    }
+
+    if (!winery.stripeOnboardingComplete) {
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message:
+            'Complete your Stripe onboarding before publishing experiences.',
+        },
       };
     }
 

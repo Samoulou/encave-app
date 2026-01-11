@@ -18,6 +18,13 @@ const envSchema = z.object({
   UPSTASH_REDIS_REST_URL: z.string().url().optional(),
   UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
 
+  // Stripe
+  STRIPE_SECRET_KEY: z.string().startsWith('sk_').optional(),
+  STRIPE_PUBLISHABLE_KEY: z.string().startsWith('pk_').optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().startsWith('whsec_').optional(),
+  STRIPE_CONNECT_WEBHOOK_SECRET: z.string().startsWith('whsec_').optional(),
+  PLATFORM_COMMISSION_RATE: z.coerce.number().min(0).max(1).default(0.12),
+
   // Node environment
   NODE_ENV: z
     .enum(['development', 'production', 'test'])

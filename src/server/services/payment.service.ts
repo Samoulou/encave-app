@@ -1,0 +1,173 @@
+import Stripe from 'stripe';
+import { db } from '@/server/db';
+import { env } from '@/lib/env';
+
+// Initialize Stripe with optional key (for build time)
+const stripe = env.STRIPE_SECRET_KEY
+  ? new Stripe(env.STRIPE_SECRET_KEY, {
+      typescript: true,
+    })
+  : null;
+
+function getStripe(): Stripe {
+  if (!stripe) {
+    throw new Error('Stripe is not configured. Set STRIPE_SECRET_KEY.');
+  }
+  return stripe;
+}
+
+/**
+ * Creates a Stripe Connect Express account for a winery
+ */
+export async function createConnectAccount(wineryId: string): Promise<string> {
+  const winery = await db.winery.findUnique({
+    where: { id: wineryId },
+    include: { user: true },
+  });
+
+  if (!winery) {
+    throw new Error('Winery not found');
+  }
+
+  if (winery.stripeAccountId) {
+    // Account already exists, create new onboarding link
+    return createOnboardingLink(winery.stripeAccountId);
+  }
+
+  const account = await getStripe().accounts.create({
+    type: 'express',
+    country: 'CH',
+    email: winery.email,
+    capabilities: {
+      card_payments: { requested: true },
+      transfers: { requested: true },
+    },
+    business_type: 'individual',
+    metadata: {
+      wineryId: winery.id,
+      wineryName: winery.name,
+    },
+  });
+
+  // Save stripeAccountId to winery
+  await db.winery.update({
+    where: { id: wineryId },
+    data: { stripeAccountId: account.id },
+  });
+
+  return createOnboardingLink(account.id);
+}
+
+/**
+ * Creates an onboarding link for an existing Stripe Connect account
+ */
+async function createOnboardingLink(accountId: string): Promise<string> {
+  const baseUrl = env.NEXTAUTH_URL || 'http://localhost:3000';
+
+  const accountLink = await getStripe().accountLinks.create({
+    account: accountId,
+    refresh_url: `${baseUrl}/dashboard/stripe/callback?refresh=true`,
+    return_url: `${baseUrl}/dashboard/stripe/callback?success=true`,
+    type: 'account_onboarding',
+  });
+
+  return accountLink.url;
+}
+
+/**
+ * Gets the Stripe Express dashboard login link for a winemaker
+ */
+export async function getStripeLoginLink(
+  stripeAccountId: string
+): Promise<string> {
+  const loginLink = await getStripe().accounts.createLoginLink(stripeAccountId);
+  return loginLink.url;
+}
+
+/**
+ * Retrieves Stripe account details to check status
+ */
+export async function getStripeAccountStatus(stripeAccountId: string): Promise<{
+  chargesEnabled: boolean;
+  detailsSubmitted: boolean;
+  payoutsEnabled: boolean;
+  requiresAction: boolean;
+  requirements: Stripe.Account.Requirements | null;
+}> {
+  const account = await getStripe().accounts.retrieve(stripeAccountId);
+
+  return {
+    chargesEnabled: account.charges_enabled,
+    detailsSubmitted: account.details_submitted,
+    payoutsEnabled: account.payouts_enabled,
+    requiresAction:
+      (account.requirements?.currently_due?.length ?? 0) > 0 ||
+      (account.requirements?.errors?.length ?? 0) > 0,
+    requirements: account.requirements ?? null,
+  };
+}
+
+/**
+ * Syncs Stripe account status to the database
+ */
+export async function syncStripeAccountStatus(
+  stripeAccountId: string
+): Promise<void> {
+  const status = await getStripeAccountStatus(stripeAccountId);
+
+  await db.winery.update({
+    where: { stripeAccountId },
+    data: {
+      stripeOnboardingComplete: status.chargesEnabled,
+      stripeDetailsSubmitted: status.detailsSubmitted,
+    },
+  });
+}
+
+/**
+ * Checks if a winery can publish experiences (Stripe must be fully onboarded)
+ */
+export async function canPublishExperiences(wineryId: string): Promise<{
+  canPublish: boolean;
+  reason?: string;
+}> {
+  const winery = await db.winery.findUnique({
+    where: { id: wineryId },
+    select: {
+      status: true,
+      stripeAccountId: true,
+      stripeOnboardingComplete: true,
+    },
+  });
+
+  if (!winery) {
+    return { canPublish: false, reason: 'Winery not found' };
+  }
+
+  if (winery.status !== 'VERIFIED') {
+    return { canPublish: false, reason: 'Winery not verified' };
+  }
+
+  if (!winery.stripeAccountId) {
+    return {
+      canPublish: false,
+      reason: 'Payment setup required. Connect your Stripe account to publish.',
+    };
+  }
+
+  if (!winery.stripeOnboardingComplete) {
+    return {
+      canPublish: false,
+      reason: 'Complete Stripe onboarding to publish experiences.',
+    };
+  }
+
+  return { canPublish: true };
+}
+
+/**
+ * Gets the platform commission rate
+ */
+export function getPlatformCommissionRate(): number {
+  return env.PLATFORM_COMMISSION_RATE;
+}

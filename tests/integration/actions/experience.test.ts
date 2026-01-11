@@ -94,6 +94,8 @@ describe('Experience Server Actions', () => {
       vi.mocked(db.winery.findUnique).mockResolvedValue({
         id: 'winery-123',
         status: 'VERIFIED',
+        stripeAccountId: 'acct_123',
+        stripeOnboardingComplete: true,
       } as never);
       vi.mocked(db.experience.findFirst).mockResolvedValue(null);
 
@@ -113,6 +115,8 @@ describe('Experience Server Actions', () => {
       vi.mocked(db.winery.findUnique).mockResolvedValue({
         id: 'winery-123',
         status: 'VERIFIED',
+        stripeAccountId: 'acct_123',
+        stripeOnboardingComplete: true,
       } as never);
       vi.mocked(db.experience.findFirst).mockResolvedValue({
         id: 'exp-123',
@@ -136,6 +140,8 @@ describe('Experience Server Actions', () => {
       vi.mocked(db.winery.findUnique).mockResolvedValue({
         id: 'winery-123',
         status: 'VERIFIED',
+        stripeAccountId: 'acct_123',
+        stripeOnboardingComplete: true,
       } as never);
       vi.mocked(db.experience.findFirst).mockResolvedValue({
         id: 'exp-123',
@@ -156,6 +162,48 @@ describe('Experience Server Actions', () => {
         where: { id: 'exp-123' },
         data: { status: 'PUBLISHED' },
       });
+    });
+
+    it('returns VALIDATION_ERROR when Stripe is not connected', async () => {
+      vi.mocked(auth).mockResolvedValue({
+        user: { id: 'user-123', email: 'test@test.com', role: 'WINEMAKER' },
+        expires: '',
+      });
+      vi.mocked(db.winery.findUnique).mockResolvedValue({
+        id: 'winery-123',
+        status: 'VERIFIED',
+        stripeAccountId: null,
+        stripeOnboardingComplete: false,
+      } as never);
+
+      const result = await publishExperience('exp-123');
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe('VALIDATION_ERROR');
+        expect(result.error.message).toContain('Stripe');
+      }
+    });
+
+    it('returns VALIDATION_ERROR when Stripe onboarding is incomplete', async () => {
+      vi.mocked(auth).mockResolvedValue({
+        user: { id: 'user-123', email: 'test@test.com', role: 'WINEMAKER' },
+        expires: '',
+      });
+      vi.mocked(db.winery.findUnique).mockResolvedValue({
+        id: 'winery-123',
+        status: 'VERIFIED',
+        stripeAccountId: 'acct_123',
+        stripeOnboardingComplete: false,
+      } as never);
+
+      const result = await publishExperience('exp-123');
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe('VALIDATION_ERROR');
+        expect(result.error.message).toContain('onboarding');
+      }
     });
   });
 

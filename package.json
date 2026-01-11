@@ -13,7 +13,8 @@
     "test:run": "vitest run",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "db:seed": "npx tsx prisma/seed.ts"
+    "db:seed": "npx tsx prisma/seed.ts",
+    "i18n:check": "npx tsx scripts/check-translations.ts"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
@@ -31,6 +32,7 @@
     "@radix-ui/react-switch": "^1.2.6",
     "@radix-ui/react-toast": "^1.2.15",
     "@react-email/components": "^1.0.4",
+    "@stripe/stripe-js": "^8.6.1",
     "@vercel/blob": "^2.0.0",
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
@@ -48,6 +50,7 @@
     "react-hook-form": "^7.70.0",
     "resend": "^6.7.0",
     "sonner": "^2.0.7",
+    "stripe": "^20.1.2",
     "tailwind-merge": "^3.4.0",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^4.3.5"

@@ -4,6 +4,9 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
 import { WineryProfileForm } from '@/components/features/winery/WineryProfileForm';
+import { StripeOnboarding } from '@/components/features/winery/StripeOnboarding';
+import { PaymentStatus } from '@/components/features/winery/PaymentStatus';
+import { getPaymentStatusType } from '@/lib/utils/payment-status';
 import { Button } from '@/components/ui/button';
 import { VerifiedBadge } from '@/components/shared/VerifiedBadge';
 
@@ -101,6 +104,28 @@ export default async function WineryProfilePage() {
             </Button>
           </div>
         </div>
+
+        {/* Payment Status Section */}
+        {isVerified && (
+          <div className="mb-8">
+            {!winery.stripeAccountId ? (
+              <StripeOnboarding wineryId={winery.id} />
+            ) : (
+              <div className="space-y-3">
+                <h2 className="text-sm font-medium text-slate-700">
+                  Payment Status
+                </h2>
+                <PaymentStatus
+                  status={getPaymentStatusType({
+                    stripeAccountId: winery.stripeAccountId,
+                    stripeOnboardingComplete: winery.stripeOnboardingComplete,
+                    stripeDetailsSubmitted: winery.stripeDetailsSubmitted,
+                  })}
+                />
+              </div>
+            )}
+          </div>
+        )}
 
         <WineryProfileForm
           winery={{

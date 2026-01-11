@@ -63,23 +63,26 @@ model User {
 }
 
 model Winery {
-  id              String       @id @default(cuid())
-  name            String       @unique
-  slug            String       @unique
-  description     String
-  address         String
-  commune         String
-  phone           String
-  email           String
-  coverPhoto      String?
-  userId          String       @unique
-  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  status          WineryStatus @default(PENDING)
-  verifiedAt      DateTime?
-  verifiedBy      String?
-  rejectionReason String?
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  id                       String       @id @default(cuid())
+  name                     String       @unique
+  slug                     String       @unique
+  description              String
+  address                  String
+  commune                  String
+  phone                    String
+  email                    String
+  coverPhoto               String?
+  userId                   String       @unique
+  user                     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status                   WineryStatus @default(PENDING)
+  verifiedAt               DateTime?
+  verifiedBy               String?
+  rejectionReason          String?
+  stripeAccountId          String?      @unique
+  stripeOnboardingComplete Boolean      @default(false)
+  stripeDetailsSubmitted   Boolean      @default(false)
+  createdAt                DateTime     @default(now())
+  updatedAt                DateTime     @updatedAt
 
   galleryImages    WineryGalleryImage[]
   verificationLogs VerificationLog[]

@@ -5,6 +5,8 @@ export type ErrorCode =
   | 'VALIDATION_ERROR'
   | 'CONFLICT'
   | 'RATE_LIMITED'
+  | 'STRIPE_ERROR'
+  | 'STRIPE_NOT_CONFIGURED'
   | 'INTERNAL_ERROR';
 
 export type ActionResult<T> =
