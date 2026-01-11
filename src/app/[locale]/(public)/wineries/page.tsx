@@ -1,4 +1,3 @@
-import type { Metadata } from 'next';
 import Image from 'next/image';
 import { Suspense } from 'react';
 import {
@@ -8,18 +7,17 @@ import {
 import { WineryCard } from '@/components/features/winery/WineryCard';
 import { CommuneFilter } from '@/components/features/winery/CommuneFilter';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { generateWineriesMetadata } from '@/lib/seo';
+import type { Locale } from '@/i18n/routing';
 
-export const metadata: Metadata = {
-  title: 'Wineries in Valais | EnCave',
-  description:
-    'Discover verified winemakers in Valais, Switzerland. Browse our directory of local wineries offering unique wine experiences.',
-  openGraph: {
-    title: 'Wineries in Valais | EnCave',
-    description:
-      'Discover verified winemakers in Valais, Switzerland. Browse our directory of local wineries offering unique wine experiences.',
-    type: 'website',
-  },
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  return generateWineriesMetadata(locale as Locale);
+}
 
 interface WineriesPageProps {
   searchParams: Promise<{ commune?: string }>;

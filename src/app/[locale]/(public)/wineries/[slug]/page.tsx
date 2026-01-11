@@ -5,31 +5,30 @@ import Link from 'next/link';
 import { ArrowLeft, MapPin, Phone, Mail, Calendar, ExternalLink, Wine } from 'lucide-react';
 import { getWineryBySlug } from '@/server/queries/winery.queries';
 import { VerifiedBadge } from '@/components/shared/VerifiedBadge';
+import { generateWineryDetailMetadata } from '@/lib/seo';
+import type { Locale } from '@/i18n/routing';
 
 interface WineryPageProps {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ slug: string; locale: string }>;
 }
 
 export async function generateMetadata({
   params,
 }: WineryPageProps): Promise<Metadata> {
-  const { slug } = await params;
+  const { slug, locale } = await params;
   const winery = await getWineryBySlug(slug);
 
   if (!winery) {
-    return { title: 'Winery Not Found' };
+    return { title: 'Winery Not Found | EnCave' };
   }
 
-  return {
-    title: `${winery.name} | EnCave`,
-    description: winery.description.substring(0, 160),
-    openGraph: {
-      title: `${winery.name} | EnCave`,
-      description: winery.description.substring(0, 160),
-      type: 'website',
-      ...(winery.coverPhoto && { images: [winery.coverPhoto] }),
-    },
-  };
+  return generateWineryDetailMetadata(
+    locale as Locale,
+    slug,
+    winery.name,
+    winery.description,
+    winery.coverPhoto ?? undefined
+  );
 }
 
 export default async function WineryPage({ params }: WineryPageProps) {

@@ -80,7 +80,8 @@
     "switchToFrench": "Switch to French",
     "switchToGerman": "Switch to German",
     "switchToEnglish": "Switch to English",
-    "languageSwitcher": "Language switcher"
+    "languageSwitcher": "Language switcher",
+    "currentLanguage": "current language"
   },
   "auth": {
     "login": {
@@ -315,7 +316,36 @@
     "tryAgain": "Try again with different terms"
   },
   "metadata": {
+    "siteName": "EnCave",
     "title": "EnCave - Wine Experiences in Valais",
-    "description": "Book unique wine experiences directly with Swiss winemakers"
+    "description": "Book unique wine experiences directly with Swiss winemakers. Tastings, cellar visits and workshops in Valais.",
+    "home": {
+      "title": "Wine Experiences in Valais | EnCave",
+      "description": "Discover and book unique wine experiences with Valais winemakers. Tastings, cellar visits, workshops and vineyard tours."
+    },
+    "experiences": {
+      "title": "Wine Experiences | EnCave",
+      "description": "Browse our selection of wine experiences in Valais. Tastings, cellar visits, oenology workshops and food pairings."
+    },
+    "experienceDetail": {
+      "title": "{title} | EnCave",
+      "description": "{description}"
+    },
+    "wineries": {
+      "title": "Wineries in Valais | EnCave",
+      "description": "Discover the wineries of Valais and their passionate winemakers. Meet the artisans of Swiss wine."
+    },
+    "wineryDetail": {
+      "title": "{name} - Winery | EnCave",
+      "description": "Discover {name} winery and its wine experiences. Book your visit in Valais."
+    },
+    "login": {
+      "title": "Sign In | EnCave",
+      "description": "Sign in to your EnCave account to manage your reservations and wine experiences."
+    },
+    "register": {
+      "title": "Sign Up | EnCave",
+      "description": "Create your EnCave account and start discovering the wine experiences of Valais."
+    }
   }
 }

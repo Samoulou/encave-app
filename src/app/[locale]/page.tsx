@@ -5,10 +5,17 @@ import { Header } from '@/components/layout/Header';
 import { HealthStatus } from '@/components/shared/HealthStatus';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { generateHomeMetadata } from '@/lib/seo';
+import type { Locale } from '@/i18n/routing';
 
 type Props = {
   params: Promise<{ locale: string }>;
 };
+
+export async function generateMetadata({ params }: Props) {
+  const { locale } = await params;
+  return generateHomeMetadata(locale as Locale);
+}
 
 export default async function Home({ params }: Props) {
   const { locale } = await params;

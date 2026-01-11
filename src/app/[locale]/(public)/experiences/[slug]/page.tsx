@@ -14,9 +14,11 @@ import { LocationSection } from '@/components/features/experience/LocationSectio
 import { BookingCTA } from '@/components/features/experience/BookingCTA';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { RelatedExperiences } from '@/components/features/experience/RelatedExperiences';
+import { generateExperienceDetailMetadata } from '@/lib/seo';
+import type { Locale } from '@/i18n/routing';
 
 interface ExperiencePageProps {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ slug: string; locale: string }>;
 }
 
 export async function generateStaticParams() {
@@ -27,31 +29,20 @@ export async function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: ExperiencePageProps): Promise<Metadata> {
-  const { slug } = await params;
+  const { slug, locale } = await params;
   const experience = await getExperienceBySlug(slug);
 
   if (!experience) {
     return { title: 'Experience Not Found | EnCave' };
   }
 
-  const description = experience.description.slice(0, 160);
-
-  return {
-    title: `${experience.title} | ${experience.winery.name} | EnCave`,
-    description,
-    openGraph: {
-      title: `${experience.title} | ${experience.winery.name}`,
-      description,
-      type: 'website',
-      images: [experience.coverPhoto],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: `${experience.title} | ${experience.winery.name}`,
-      description,
-      images: [experience.coverPhoto],
-    },
-  };
+  return generateExperienceDetailMetadata(
+    locale as Locale,
+    slug,
+    experience.title,
+    experience.description,
+    experience.coverPhoto
+  );
 }
 
 export default async function ExperiencePage({ params }: ExperiencePageProps) {

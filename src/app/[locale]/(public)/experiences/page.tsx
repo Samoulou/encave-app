@@ -1,5 +1,4 @@
 import { Suspense } from 'react';
-import { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import {
   searchExperiences,
@@ -8,17 +7,17 @@ import {
 } from '@/server/queries/experience.queries';
 import { ExperiencesPageClient } from './ExperiencesPageClient';
 import { ExperienceType } from '@prisma/client';
+import { generateExperiencesMetadata } from '@/lib/seo';
+import type { Locale } from '@/i18n/routing';
 
-export const metadata: Metadata = {
-  title: 'Wine Experiences in Valais | EnCave',
-  description:
-    'Discover unique wine experiences in Valais, Switzerland. Book tastings, cellar visits, vineyard tours, and more from local winemakers.',
-  openGraph: {
-    title: 'Wine Experiences in Valais | EnCave',
-    description:
-      'Discover unique wine experiences in Valais, Switzerland. Book tastings, cellar visits, vineyard tours, and more from local winemakers.',
-  },
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  return generateExperiencesMetadata(locale as Locale);
+}
 
 interface PageProps {
   params: Promise<{ locale: string }>;

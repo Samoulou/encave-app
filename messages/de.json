@@ -80,7 +80,8 @@
     "switchToFrench": "Auf Franzosisch wechseln",
     "switchToGerman": "Auf Deutsch wechseln",
     "switchToEnglish": "Auf Englisch wechseln",
-    "languageSwitcher": "Sprachauswahl"
+    "languageSwitcher": "Sprachauswahl",
+    "currentLanguage": "aktuelle Sprache"
   },
   "auth": {
     "login": {
@@ -315,7 +316,36 @@
     "tryAgain": "Versuchen Sie es mit anderen Begriffen"
   },
   "metadata": {
+    "siteName": "EnCave",
     "title": "EnCave - Weinerlebnisse im Wallis",
-    "description": "Buchen Sie einzigartige Weinerlebnisse direkt bei Schweizer Winzern"
+    "description": "Buchen Sie einzigartige Weinerlebnisse direkt bei Schweizer Winzern. Degustationen, Kellerbesuche und Workshops im Wallis.",
+    "home": {
+      "title": "Weinerlebnisse im Wallis | EnCave",
+      "description": "Entdecken und buchen Sie einzigartige Weinerlebnisse bei Walliser Winzern. Degustationen, Kellerbesuche, Workshops und Weinbergtouren."
+    },
+    "experiences": {
+      "title": "Weinerlebnisse | EnCave",
+      "description": "Durchstobern Sie unsere Auswahl an Weinerlebnissen im Wallis. Degustationen, Kellerbesuche, Oenologie-Workshops und Food-Pairings."
+    },
+    "experienceDetail": {
+      "title": "{title} | EnCave",
+      "description": "{description}"
+    },
+    "wineries": {
+      "title": "Weinguter im Wallis | EnCave",
+      "description": "Entdecken Sie die Weinguter des Wallis und ihre leidenschaftlichen Winzer. Treffen Sie die Handwerker des Schweizer Weins."
+    },
+    "wineryDetail": {
+      "title": "{name} - Weingut | EnCave",
+      "description": "Entdecken Sie das Weingut {name} und seine Weinerlebnisse. Buchen Sie Ihren Besuch im Wallis."
+    },
+    "login": {
+      "title": "Anmeldung | EnCave",
+      "description": "Melden Sie sich bei Ihrem EnCave-Konto an, um Ihre Reservierungen und Weinerlebnisse zu verwalten."
+    },
+    "register": {
+      "title": "Registrierung | EnCave",
+      "description": "Erstellen Sie Ihr EnCave-Konto und entdecken Sie die Weinerlebnisse des Wallis."
+    }
   }
 }

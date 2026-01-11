@@ -80,7 +80,8 @@
     "switchToFrench": "Passer en francais",
     "switchToGerman": "Passer en allemand",
     "switchToEnglish": "Passer en anglais",
-    "languageSwitcher": "Selecteur de langue"
+    "languageSwitcher": "Selecteur de langue",
+    "currentLanguage": "langue actuelle"
   },
   "auth": {
     "login": {
@@ -315,7 +316,36 @@
     "tryAgain": "Reessayez avec des termes differents"
   },
   "metadata": {
+    "siteName": "EnCave",
     "title": "EnCave - Experiences viticoles en Valais",
-    "description": "Reservez des experiences viticoles uniques directement avec les vignerons suisses"
+    "description": "Reservez des experiences viticoles uniques directement avec les vignerons suisses. Degustations, visites de caves et ateliers dans le Valais.",
+    "home": {
+      "title": "Experiences viticoles en Valais | EnCave",
+      "description": "Decouvrez et reservez des experiences viticoles uniques avec les vignerons du Valais. Degustations, visites de caves, ateliers et tours de vignobles."
+    },
+    "experiences": {
+      "title": "Experiences viticoles | EnCave",
+      "description": "Parcourez notre selection d'experiences viticoles en Valais. Degustations, visites de caves, ateliers oenologiques et accords mets-vins."
+    },
+    "experienceDetail": {
+      "title": "{title} | EnCave",
+      "description": "{description}"
+    },
+    "wineries": {
+      "title": "Domaines viticoles du Valais | EnCave",
+      "description": "Decouvrez les domaines viticoles du Valais et leurs vignerons passionnes. Rencontrez les artisans du vin suisse."
+    },
+    "wineryDetail": {
+      "title": "{name} - Domaine viticole | EnCave",
+      "description": "Decouvrez le domaine {name} et ses experiences viticoles. Reservez votre visite dans le Valais."
+    },
+    "login": {
+      "title": "Connexion | EnCave",
+      "description": "Connectez-vous a votre compte EnCave pour gerer vos reservations et experiences viticoles."
+    },
+    "register": {
+      "title": "Inscription | EnCave",
+      "description": "Creez votre compte EnCave et commencez a decouvrir les experiences viticoles du Valais."
+    }
   }
 }
