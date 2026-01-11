@@ -7,6 +7,8 @@ export type ErrorCode =
   | 'RATE_LIMITED'
   | 'STRIPE_ERROR'
   | 'STRIPE_NOT_CONFIGURED'
+  | 'STRIPE_NOT_READY'
+  | 'NO_CAPACITY'
   | 'INTERNAL_ERROR';
 
 export type ActionResult<T> =
