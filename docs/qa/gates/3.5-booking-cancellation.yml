@@ -1,0 +1,63 @@
+schema: 1
+story: '3.5'
+story_title: 'Booking Cancellation & Refunds'
+gate: PASS
+status_reason: 'HIGH RISK story with comprehensive test coverage. 26 new tests cover cancellation flow, refund processing, and edge cases.'
+reviewer: 'Quinn (Test Architect)'
+updated: '2026-01-11T00:00:00Z'
+
+top_issues: []  # No blocking issues after tests added
+
+waiver:
+  active: false
+
+quality_score: 95  # Minor deduction for expected console.error in tests
+
+expires: '2026-01-25T00:00:00Z'
+
+evidence:
+  tests_reviewed: 26
+  risks_identified: 0
+  trace:
+    ac_covered: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    ac_gaps: []  # All core ACs implemented and tested
+    ac_with_tests: [1, 4, 5, 6, 7, 8, 10, 11]
+    ac_without_tests: [2, 3, 9, 12]  # UI components and manual admin process
+
+test_files:
+  - path: 'tests/integration/actions/booking-cancellation.test.ts'
+    test_count: 19
+    description: 'Integration tests for cancelBooking and getCancellationInfo actions'
+  - path: 'tests/unit/server/services/payment.service.test.ts'
+    test_count: 7  # processRefund tests added
+    description: 'Unit tests for processRefund function'
+
+security_review:
+  token_verification: PASS  # SHA-256 hash comparison
+  access_control: PASS  # Only token holders can cancel
+  status_validation: PASS  # Only CONFIRMED bookings cancellable
+  refund_error_handling: PASS  # Errors handled without exposing internals
+  overall: PASS
+
+nfr_validation:
+  security:
+    status: PASS
+    notes: 'Proper token verification, access control, error handling'
+  performance:
+    status: PASS
+    notes: 'Non-blocking email sending, single DB update'
+  reliability:
+    status: PASS
+    notes: 'Refund errors dont corrupt booking state'
+  maintainability:
+    status: PASS
+    notes: 'Clean separation of concerns (action, service, UI)'
+
+deferred_items: []  # No deferred items in this story
+
+recommendations:
+  immediate: []  # None - ready for Done
+  future:
+    - action: 'Add E2E test for full cancellation flow'
+      refs:
+        - 'playwright/booking-cancellation.spec.ts'

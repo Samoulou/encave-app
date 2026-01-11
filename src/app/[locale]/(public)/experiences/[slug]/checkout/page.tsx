@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
@@ -12,18 +12,15 @@ import { BookingSummary } from '@/components/features/booking';
 import { CheckoutForm } from '@/components/features/checkout/CheckoutForm';
 import { getExperienceForBooking, type ExperienceForBooking } from '@/server/actions/booking';
 
-interface CheckoutPageProps {
-  params: Promise<{ slug: string; locale: string }>;
-}
-
-export default function CheckoutPage({ params }: CheckoutPageProps) {
+export default function CheckoutPage() {
+  const params = useParams<{ slug: string; locale: string }>();
+  const slug = params.slug;
   const t = useTranslations('checkout');
   const searchParams = useSearchParams();
 
   const [experience, setExperience] = useState<ExperienceForBooking | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [slug, setSlug] = useState<string | null>(null);
 
   // Get booking params from URL
   const date = searchParams.get('date');
@@ -34,10 +31,6 @@ export default function CheckoutPage({ params }: CheckoutPageProps) {
   // Validate required params
   const guestCount = guests ? parseInt(guests, 10) : null;
   const hasValidParams = date && time && guestCount && guestCount > 0;
-
-  useEffect(() => {
-    params.then((p) => setSlug(p.slug));
-  }, [params]);
 
   useEffect(() => {
     if (!slug) return;

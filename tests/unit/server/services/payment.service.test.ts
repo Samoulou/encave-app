@@ -24,6 +24,8 @@ const mockAccountsCreate = vi.fn();
 const mockAccountsRetrieve = vi.fn();
 const mockAccountsCreateLoginLink = vi.fn();
 const mockAccountLinksCreate = vi.fn();
+const mockCheckoutSessionsRetrieve = vi.fn();
+const mockRefundsCreate = vi.fn();
 
 // Mock Stripe constructor
 vi.mock('stripe', () => ({
@@ -35,6 +37,14 @@ vi.mock('stripe', () => ({
     },
     accountLinks: {
       create: mockAccountLinksCreate,
+    },
+    checkout: {
+      sessions: {
+        retrieve: mockCheckoutSessionsRetrieve,
+      },
+    },
+    refunds: {
+      create: mockRefundsCreate,
     },
   })),
 }));
@@ -49,6 +59,7 @@ const {
   syncStripeAccountStatus,
   canPublishExperiences,
   getPlatformCommissionRate,
+  processRefund,
 } = await import('@/server/services/payment.service');
 
 const mockDb = vi.mocked(db);
@@ -334,6 +345,106 @@ describe('Payment Service', () => {
       const result = getPlatformCommissionRate();
 
       expect(result).toBe(0.12);
+    });
+  });
+
+  describe('processRefund', () => {
+    it('processes full refund with application fee', async () => {
+      mockCheckoutSessionsRetrieve.mockResolvedValue({
+        id: 'cs_test123',
+        payment_intent: 'pi_test456',
+      });
+      mockRefundsCreate.mockResolvedValue({
+        id: 're_test789',
+        amount: 20000,
+        status: 'succeeded',
+      });
+
+      const result = await processRefund('cs_test123', true);
+
+      expect(result).toEqual({
+        refundId: 're_test789',
+        amount: 20000,
+      });
+      expect(mockCheckoutSessionsRetrieve).toHaveBeenCalledWith('cs_test123');
+      expect(mockRefundsCreate).toHaveBeenCalledWith({
+        payment_intent: 'pi_test456',
+        refund_application_fee: true,
+      });
+    });
+
+    it('processes refund without application fee refund', async () => {
+      mockCheckoutSessionsRetrieve.mockResolvedValue({
+        id: 'cs_test123',
+        payment_intent: 'pi_test456',
+      });
+      mockRefundsCreate.mockResolvedValue({
+        id: 're_test789',
+        amount: 20000,
+      });
+
+      await processRefund('cs_test123', false);
+
+      expect(mockRefundsCreate).toHaveBeenCalledWith({
+        payment_intent: 'pi_test456',
+        refund_application_fee: false,
+      });
+    });
+
+    it('defaults to refunding application fee', async () => {
+      mockCheckoutSessionsRetrieve.mockResolvedValue({
+        id: 'cs_test123',
+        payment_intent: 'pi_test456',
+      });
+      mockRefundsCreate.mockResolvedValue({
+        id: 're_test789',
+        amount: 20000,
+      });
+
+      await processRefund('cs_test123');
+
+      expect(mockRefundsCreate).toHaveBeenCalledWith({
+        payment_intent: 'pi_test456',
+        refund_application_fee: true,
+      });
+    });
+
+    it('throws error when session has no payment intent', async () => {
+      mockCheckoutSessionsRetrieve.mockResolvedValue({
+        id: 'cs_test123',
+        payment_intent: null,
+      });
+
+      await expect(processRefund('cs_test123')).rejects.toThrow(
+        'No payment intent found for this session'
+      );
+    });
+
+    it('throws error when payment intent is not a string', async () => {
+      mockCheckoutSessionsRetrieve.mockResolvedValue({
+        id: 'cs_test123',
+        payment_intent: { id: 'pi_expanded' }, // Expanded object instead of string
+      });
+
+      await expect(processRefund('cs_test123')).rejects.toThrow(
+        'No payment intent found for this session'
+      );
+    });
+
+    it('propagates Stripe refund errors', async () => {
+      mockCheckoutSessionsRetrieve.mockResolvedValue({
+        id: 'cs_test123',
+        payment_intent: 'pi_test456',
+      });
+      mockRefundsCreate.mockRejectedValue(new Error('Insufficient funds'));
+
+      await expect(processRefund('cs_test123')).rejects.toThrow('Insufficient funds');
+    });
+
+    it('propagates Stripe session retrieve errors', async () => {
+      mockCheckoutSessionsRetrieve.mockRejectedValue(new Error('Session not found'));
+
+      await expect(processRefund('cs_invalid')).rejects.toThrow('Session not found');
     });
   });
 });

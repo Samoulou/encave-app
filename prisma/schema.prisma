@@ -247,6 +247,10 @@ model Booking {
   accessTokenHash       String?       // Hash of access token for verification
   confirmationSentAt    DateTime?     // When client confirmation email was sent
   wineryNotifiedAt      DateTime?     // When winery notification was sent
+  cancelledAt           DateTime?     // When booking was cancelled
+  refundIssued          Boolean       @default(false)
+  refundAmount          Int?          // cents - amount refunded
+  stripeRefundId        String?       // Stripe refund ID for tracking
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
 

@@ -2,10 +2,16 @@
 
 import { z } from 'zod';
 import crypto from 'crypto';
+import { differenceInHours } from 'date-fns';
 import { db } from '@/server/db';
 import type { ActionResult } from '@/types/actions';
 import { BookingStatus } from '@prisma/client';
-import { sendBookingConfirmationEmail } from '@/server/services/email.service';
+import {
+  sendBookingConfirmationEmail,
+  sendBookingCancellationEmail,
+  sendWinemakerCancellationEmail,
+} from '@/server/services/email.service';
+import { processRefund } from '@/server/services/payment.service';
 
 const CheckAvailabilitySchema = z.object({
   experienceId: z.string(),
@@ -406,6 +412,266 @@ export async function getBookingByToken(
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to get booking' },
+    };
+  }
+}
+
+export interface CancellationResult {
+  bookingId: string;
+  status: BookingStatus;
+  refundIssued: boolean;
+  refundAmount: number | null;
+}
+
+/**
+ * Cancel a booking and process refund if eligible
+ * Refund policy: Full refund if >24h before experience, no refund otherwise
+ */
+export async function cancelBooking(
+  bookingId: string,
+  accessToken: string
+): Promise<ActionResult<CancellationResult>> {
+  try {
+    // Hash the token to compare with stored hash
+    const tokenHash = crypto.createHash('sha256').update(accessToken).digest('hex');
+
+    // Find booking and verify access
+    const booking = await db.booking.findFirst({
+      where: {
+        id: bookingId,
+        OR: [
+          { accessToken: accessToken },
+          { accessTokenHash: tokenHash },
+        ],
+      },
+      include: {
+        experience: {
+          select: {
+            title: true,
+            duration: true,
+          },
+        },
+        winery: {
+          select: {
+            name: true,
+            email: true,
+            user: {
+              select: {
+                name: true,
+                preferredLocale: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!booking) {
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Booking not found or invalid access' },
+      };
+    }
+
+    // Check if booking can be cancelled
+    if (booking.status !== BookingStatus.CONFIRMED) {
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Only confirmed bookings can be cancelled',
+        },
+      };
+    }
+
+    // Calculate hours until experience
+    const [hours, minutes] = booking.timeSlot.split(':').map(Number);
+    const experienceDateTime = new Date(booking.date);
+    experienceDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
+
+    const hoursUntilExperience = differenceInHours(experienceDateTime, new Date());
+
+    // Check if experience hasn't already passed
+    if (hoursUntilExperience < 0) {
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Cannot cancel a past booking',
+        },
+      };
+    }
+
+    // Determine refund eligibility (>24h = full refund)
+    const isEligibleForRefund = hoursUntilExperience > 24;
+    let refundAmount: number | null = null;
+    let stripeRefundId: string | null = null;
+
+    // Process refund if eligible and payment was made
+    if (isEligibleForRefund && booking.stripePaymentIntentId) {
+      try {
+        const refundResult = await processRefund(booking.stripePaymentIntentId, true);
+        refundAmount = refundResult.amount;
+        stripeRefundId = refundResult.refundId;
+      } catch (refundError) {
+        console.error('Refund processing error:', refundError);
+        return {
+          success: false,
+          error: {
+            code: 'PAYMENT_FAILED',
+            message: 'Failed to process refund. Please try again or contact support.',
+          },
+        };
+      }
+    }
+
+    // Update booking status
+    const updatedBooking = await db.booking.update({
+      where: { id: bookingId },
+      data: {
+        status: BookingStatus.CANCELLED_BY_CLIENT,
+        cancelledAt: new Date(),
+        refundIssued: isEligibleForRefund,
+        refundAmount,
+        stripeRefundId,
+      },
+    });
+
+    // Combine date and timeSlot for email formatting
+    const bookingDateTime = new Date(booking.date);
+    bookingDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
+
+    // Send cancellation email to client
+    await sendBookingCancellationEmail(
+      booking.visitorEmail,
+      {
+        guestName: booking.visitorName,
+        experienceTitle: booking.experience.title,
+        wineryName: booking.winery.name,
+        date: bookingDateTime,
+        totalPrice: booking.totalPrice,
+        bookingRef: booking.reference,
+      }
+    );
+
+    // Send notification to winemaker
+    await sendWinemakerCancellationEmail(
+      booking.winery.email,
+      {
+        winemakerName: booking.winery.user?.name ?? 'Winemaker',
+        experienceTitle: booking.experience.title,
+        date: bookingDateTime,
+        guestCount: booking.guestCount,
+        guestName: booking.visitorName,
+        bookingRef: booking.reference,
+      },
+      booking.winery.user?.preferredLocale
+    );
+
+    return {
+      success: true,
+      data: {
+        bookingId: updatedBooking.id,
+        status: updatedBooking.status,
+        refundIssued: isEligibleForRefund,
+        refundAmount,
+      },
+    };
+  } catch (error) {
+    console.error('cancelBooking error:', error);
+    return {
+      success: false,
+      error: { code: 'INTERNAL_ERROR', message: 'Failed to cancel booking' },
+    };
+  }
+}
+
+/**
+ * Get cancellation eligibility info for a booking
+ */
+export async function getCancellationInfo(
+  bookingId: string,
+  accessToken: string
+): Promise<ActionResult<{
+  canCancel: boolean;
+  isEligibleForRefund: boolean;
+  hoursUntilExperience: number;
+  refundAmount: number;
+  reason?: string;
+}>> {
+  try {
+    // Hash the token to compare with stored hash
+    const tokenHash = crypto.createHash('sha256').update(accessToken).digest('hex');
+
+    const booking = await db.booking.findFirst({
+      where: {
+        id: bookingId,
+        OR: [
+          { accessToken: accessToken },
+          { accessTokenHash: tokenHash },
+        ],
+      },
+    });
+
+    if (!booking) {
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Booking not found' },
+      };
+    }
+
+    // Check status
+    if (booking.status !== BookingStatus.CONFIRMED) {
+      return {
+        success: true,
+        data: {
+          canCancel: false,
+          isEligibleForRefund: false,
+          hoursUntilExperience: 0,
+          refundAmount: 0,
+          reason: 'Only confirmed bookings can be cancelled',
+        },
+      };
+    }
+
+    // Calculate hours until experience
+    const [hours, minutes] = booking.timeSlot.split(':').map(Number);
+    const experienceDateTime = new Date(booking.date);
+    experienceDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
+
+    const hoursUntilExperience = differenceInHours(experienceDateTime, new Date());
+
+    // Check if experience hasn't passed
+    if (hoursUntilExperience < 0) {
+      return {
+        success: true,
+        data: {
+          canCancel: false,
+          isEligibleForRefund: false,
+          hoursUntilExperience: 0,
+          refundAmount: 0,
+          reason: 'Cannot cancel a past booking',
+        },
+      };
+    }
+
+    const isEligibleForRefund = hoursUntilExperience > 24;
+    const refundAmount = isEligibleForRefund ? booking.totalPrice : 0;
+
+    return {
+      success: true,
+      data: {
+        canCancel: true,
+        isEligibleForRefund,
+        hoursUntilExperience,
+        refundAmount,
+      },
+    };
+  } catch (error) {
+    console.error('getCancellationInfo error:', error);
+    return {
+      success: false,
+      error: { code: 'INTERNAL_ERROR', message: 'Failed to get cancellation info' },
     };
   }
 }

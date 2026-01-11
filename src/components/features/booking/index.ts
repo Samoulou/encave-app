@@ -6,3 +6,5 @@ export { PriceCalculator } from './PriceCalculator';
 export { BookingSummary } from './BookingSummary';
 export { AddToCalendar } from './AddToCalendar';
 export { CancellationPolicy } from './CancellationPolicy';
+export { CancelBookingButton } from './CancelBookingButton';
+export { CancellationModal } from './CancellationModal';

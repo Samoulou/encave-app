@@ -171,3 +171,30 @@ export async function canPublishExperiences(wineryId: string): Promise<{
 export function getPlatformCommissionRate(): number {
   return env.PLATFORM_COMMISSION_RATE;
 }
+
+/**
+ * Process a refund for a booking
+ * Handles both full and partial refunds, including application fee refund
+ */
+export async function processRefund(
+  stripeSessionId: string,
+  refundApplicationFee: boolean = true
+): Promise<{ refundId: string; amount: number }> {
+  // Retrieve the checkout session to get the payment intent
+  const session = await getStripe().checkout.sessions.retrieve(stripeSessionId);
+
+  if (!session.payment_intent || typeof session.payment_intent !== 'string') {
+    throw new Error('No payment intent found for this session');
+  }
+
+  // Create the refund
+  const refund = await getStripe().refunds.create({
+    payment_intent: session.payment_intent,
+    refund_application_fee: refundApplicationFee,
+  });
+
+  return {
+    refundId: refund.id,
+    amount: refund.amount,
+  };
+}

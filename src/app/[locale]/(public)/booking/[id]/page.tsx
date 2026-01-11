@@ -20,7 +20,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { db } from '@/server/db';
 import { getBookingByToken } from '@/server/actions/booking';
 import { BookingStatus } from '@prisma/client';
-import { AddToCalendar, CancellationPolicy } from '@/components/features/booking';
+import {
+  AddToCalendar,
+  CancellationPolicy,
+  CancelBookingButton,
+} from '@/components/features/booking';
 
 interface BookingPageProps {
   params: Promise<{ id: string; locale: string }>;
@@ -262,10 +266,17 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
         </CardContent>
       </Card>
 
-      {/* Cancellation Policy (only for confirmed bookings) */}
-      {isConfirmed && !isCancelled && (
-        <div className="mb-8">
+      {/* Cancellation Policy and Cancel Button (only for confirmed bookings) */}
+      {isConfirmed && !isCancelled && token && (
+        <div className="mb-8 space-y-4">
           <CancellationPolicy />
+          <div className="flex justify-center">
+            <CancelBookingButton
+              bookingId={booking.id}
+              accessToken={token}
+              totalPrice={booking.totalPrice}
+            />
+          </div>
         </div>
       )}
 

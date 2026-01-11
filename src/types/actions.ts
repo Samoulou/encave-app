@@ -9,6 +9,7 @@ export type ErrorCode =
   | 'STRIPE_NOT_CONFIGURED'
   | 'STRIPE_NOT_READY'
   | 'NO_CAPACITY'
+  | 'PAYMENT_FAILED'
   | 'INTERNAL_ERROR';
 
 export type ActionResult<T> =
