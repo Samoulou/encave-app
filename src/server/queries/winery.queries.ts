@@ -37,3 +37,11 @@ export async function getWineryByUserId(userId: string) {
     select: { name: true },
   });
 }
+
+export async function getAllVerifiedWinerySlugs(): Promise<string[]> {
+  const wineries = await db.winery.findMany({
+    where: { status: 'VERIFIED' },
+    select: { slug: true },
+  });
+  return wineries.map((w) => w.slug);
+}
