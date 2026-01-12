@@ -385,6 +385,12 @@
     "somethingWentWrong": "Etwas ist schiefgelaufen!",
     "pageNotFound": "Seite nicht gefunden",
     "pageNotFoundDescription": "Die gesuchte Seite existiert nicht.",
+    "searchPlaceholder": "Erlebnisse suchen...",
+    "popularExperiences": "Beliebte Erlebnisse",
+    "browseExperiences": "Erlebnisse durchsuchen",
+    "serverError": "Serverfehler",
+    "serverErrorDescription": "Es tut uns leid, auf unserer Seite ist ein Fehler aufgetreten. Bitte versuchen Sie es spater erneut.",
+    "supportContact": "Wenn das Problem weiterhin besteht, kontaktieren Sie uns unter support@encave.ch",
     "genericError": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
     "required": "Dieses Feld ist erforderlich",
     "invalidEmail": "Ungultige E-Mail-Adresse",
@@ -433,6 +439,179 @@
     "register": {
       "title": "Registrierung | EnCave",
       "description": "Erstellen Sie Ihr EnCave-Konto und entdecken Sie die Weinerlebnisse des Wallis."
+    }
+  },
+  "legal": {
+    "backToHome": "Zurück zur Startseite",
+    "privacy": {
+      "title": "Datenschutzerklärung",
+      "description": "Erfahren Sie, wie EnCave Ihre persönlichen Daten erhebt, verwendet und schützt.",
+      "lastUpdated": "Zuletzt aktualisiert: {date}",
+      "sections": {
+        "introduction": {
+          "title": "Einleitung",
+          "content": "EnCave SA (\"wir\", \"uns\" oder \"unser\") respektiert Ihre Privatsphäre und verpflichtet sich, Ihre persönlichen Daten zu schützen. Diese Datenschutzerklärung erklärt, wie wir Ihre persönlichen Daten erheben, verwenden und schützen, wenn Sie unsere Plattform besuchen oder unsere Dienste nutzen."
+        },
+        "dataCollection": {
+          "title": "Daten, die wir erheben",
+          "content": "Wir erheben verschiedene Arten von Informationen, um unsere Dienste bereitzustellen und zu verbessern:",
+          "items": {
+            "personal": "Persönliche Identifikationsdaten (Name, E-Mail-Adresse, Telefonnummer)",
+            "payment": "Zahlungsinformationen (verarbeitet durch unseren sicheren Zahlungsanbieter Stripe)",
+            "usage": "Nutzungsdaten (besuchte Seiten, auf unserer Plattform verbrachte Zeit, Klicks)",
+            "cookies": "Cookies und ähnliche Tracking-Technologien"
+          }
+        },
+        "dataUsage": {
+          "title": "Wie wir Ihre Daten verwenden",
+          "content": "Wir verwenden Ihre Daten für folgende Zwecke:",
+          "items": {
+            "booking": "Zur Verarbeitung Ihrer Buchungen und Zahlungen",
+            "communication": "Zur Kommunikation mit Ihnen bezüglich Ihrer Reservierungen",
+            "improvement": "Zur Verbesserung unserer Plattform und Benutzererfahrung",
+            "legal": "Zur Erfüllung gesetzlicher Verpflichtungen"
+          }
+        },
+        "dataSharing": {
+          "title": "Datenweitergabe",
+          "content": "Wir teilen Ihre persönlichen Daten mit Weingütern, wenn Sie bei ihnen buchen, mit unserem Zahlungsabwickler (Stripe) für die Transaktionsverarbeitung und mit Dienstleistern, die uns bei der Plattformbetreibung unterstützen. Wir verkaufen Ihre persönlichen Daten niemals an Dritte."
+        },
+        "security": {
+          "title": "Datensicherheit",
+          "content": "Wir setzen branchenübliche Sicherheitsmassnahmen ein, um Ihre persönlichen Daten zu schützen. Die gesamte Datenübertragung ist mit SSL/TLS verschlüsselt und Zahlungsinformationen werden direkt von unserem PCI-konformen Zahlungsanbieter verarbeitet."
+        },
+        "rights": {
+          "title": "Ihre Rechte",
+          "content": "Nach Schweizer Recht und der DSGVO haben Sie folgende Rechte:",
+          "items": {
+            "access": "Recht auf Zugang zu Ihren persönlichen Daten",
+            "rectification": "Recht auf Berichtigung unrichtiger Daten",
+            "deletion": "Recht auf Löschung Ihrer Daten",
+            "portability": "Recht auf Datenübertragbarkeit"
+          }
+        },
+        "contact": {
+          "title": "Kontakt",
+          "content": "Bei Fragen zu dieser Datenschutzerklärung oder zur Ausübung Ihrer Rechte kontaktieren Sie uns bitte:",
+          "address": "Rue du Vignoble 1, 1950 Sion, Schweiz"
+        }
+      }
+    },
+    "terms": {
+      "title": "Allgemeine Geschäftsbedingungen",
+      "description": "Lesen Sie die Nutzungsbedingungen für die EnCave-Plattform.",
+      "lastUpdated": "Zuletzt aktualisiert: {date}",
+      "sections": {
+        "acceptance": {
+          "title": "Annahme der Bedingungen",
+          "content": "Durch den Zugang oder die Nutzung der EnCave-Plattform stimmen Sie zu, an diese Allgemeinen Geschäftsbedingungen gebunden zu sein. Wenn Sie mit einem Teil dieser Bedingungen nicht einverstanden sind, dürfen Sie unsere Dienste nicht nutzen."
+        },
+        "services": {
+          "title": "Unsere Dienste",
+          "content": "EnCave bietet eine Online-Plattform, die Gäste mit Weingütern verbindet, die Weinerlebnisse im Wallis, Schweiz, anbieten. Wir ermöglichen Buchungen und Zahlungen zwischen Gästen und Weingütern, führen aber die Erlebnisse selbst nicht durch."
+        },
+        "accounts": {
+          "title": "Benutzerkonten",
+          "content": "Bei der Erstellung eines Kontos bei EnCave müssen Sie:",
+          "items": {
+            "accuracy": "Genaue und vollständige Informationen bereitstellen",
+            "security": "Die Sicherheit Ihres Kontos gewährleisten",
+            "responsibility": "Die Verantwortung für alle Aktivitäten unter Ihrem Konto übernehmen"
+          }
+        },
+        "bookings": {
+          "title": "Buchungen",
+          "content": "Bei der Buchung eines Erlebnisses über EnCave schliessen Sie einen direkten Vertrag mit dem Weingut ab. EnCave handelt als Vermittler und ist nicht Partei des Vertrags zwischen Ihnen und dem Weingut."
+        },
+        "payments": {
+          "title": "Zahlungen",
+          "content": "Alle Zahlungen werden sicher über Stripe, unseren Zahlungsanbieter, verarbeitet. Die Preise sind in Schweizer Franken (CHF) angegeben und beinhalten die anwendbare Mehrwertsteuer. Das Weingut erhält die Zahlung nach Abschluss des Erlebnisses."
+        },
+        "winemakers": {
+          "title": "Für Winzer",
+          "content": "Winzer, die ihre Erlebnisse auf EnCave listen, erklären sich damit einverstanden, genaue Informationen bereitzustellen, ihre Verfügbarkeit aktuell zu halten und gebuchte Erlebnisse wie beschrieben zu ehren. EnCave erhebt eine Servicegebühr auf jede Buchung."
+        },
+        "intellectual": {
+          "title": "Geistiges Eigentum",
+          "content": "Die EnCave-Plattform, einschliesslich ihrer Inhalte, Funktionen und Funktionalitäten, ist Eigentum von EnCave SA und durch internationale Urheberrechts-, Marken- und andere Gesetze zum Schutz geistigen Eigentums geschützt."
+        },
+        "liability": {
+          "title": "Haftungsbeschränkung",
+          "content": "EnCave haftet nicht für indirekte, zufällige, besondere oder Folgeschäden, die aus Ihrer Nutzung unserer Dienste entstehen. Unsere Haftung ist auf den für Ihre Buchung gezahlten Betrag begrenzt."
+        },
+        "modifications": {
+          "title": "Änderungen der Bedingungen",
+          "content": "Wir behalten uns das Recht vor, diese Bedingungen jederzeit zu ändern. Wir werden Sie per E-Mail oder durch einen auffälligen Hinweis auf unserer Plattform über wesentliche Änderungen informieren."
+        },
+        "governing": {
+          "title": "Anwendbares Recht",
+          "content": "Diese Bedingungen unterliegen dem Schweizer Recht. Streitigkeiten werden den zuständigen Gerichten des Kantons Wallis, Schweiz, vorgelegt."
+        },
+        "contact": {
+          "title": "Kontakt",
+          "content": "Bei Fragen zu diesen Allgemeinen Geschäftsbedingungen kontaktieren Sie uns bitte:",
+          "address": "Rue du Vignoble 1, 1950 Sion, Schweiz"
+        }
+      }
+    },
+    "cancellation": {
+      "pageTitle": "Stornierungsrichtlinie",
+      "description": "Verstehen Sie unsere Stornierungsrichtlinien und Rückerstattungsprozesse.",
+      "lastUpdated": "Zuletzt aktualisiert: {date}",
+      "sections": {
+        "overview": {
+          "title": "Übersicht",
+          "content": "Wir verstehen, dass Pläne sich ändern können. Diese Richtlinie beschreibt unsere Stornierungsbedingungen und Rückerstattungsprozesse für über EnCave gebuchte Erlebnisse."
+        },
+        "clientPolicy": {
+          "title": "Stornierungsrichtlinie für Gäste",
+          "content": "Gäste können ihre Buchungen mit den folgenden Rückerstattungsbedingungen basierend auf dem Zeitpunkt der Stornierung vor dem geplanten Erlebnis stornieren:",
+          "timeline": {
+            "title": "Zeitrahmen für Rückerstattungen",
+            "over24h": {
+              "time": "Mehr als 24 Stunden vor dem Erlebnis",
+              "refund": "Volle Rückerstattung"
+            },
+            "12to24h": {
+              "time": "12 bis 24 Stunden vor dem Erlebnis",
+              "refund": "50% Rückerstattung"
+            },
+            "under12h": {
+              "time": "Weniger als 12 Stunden vor dem Erlebnis",
+              "refund": "Keine Rückerstattung"
+            }
+          }
+        },
+        "wineryPolicy": {
+          "title": "Stornierungen durch Weingüter",
+          "content": "Weingüter können Buchungen in Ausnahmefällen stornieren (Wetter, Notfall, Krankheit). In solchen Fällen erhalten Gäste eine volle Rückerstattung und werden umgehend per E-Mail benachrichtigt. Weingüter werden ermutigt, wenn möglich alternative Termine anzubieten."
+        },
+        "noShow": {
+          "title": "Nichterscheinen",
+          "content": "Wenn ein Gast ohne Vorankündigung nicht zu einer gebuchten Erfahrung erscheint, gilt die Buchung als Nichterscheinen und es wird keine Rückerstattung gewährt. Bitte kontaktieren Sie uns, wenn Sie zu spät kommen."
+        },
+        "modifications": {
+          "title": "Buchungsänderungen",
+          "content": "Um Ihre Buchung zu ändern (Datum, Uhrzeit oder Anzahl der Gäste), stornieren Sie bitte Ihre aktuelle Buchung und erstellen Sie eine neue. Für spezielle Wünsche kontaktieren Sie das Weingut direkt."
+        },
+        "refunds": {
+          "title": "Rückerstattungsprozess",
+          "content": "Berechtigte Rückerstattungen werden über die ursprüngliche Zahlungsmethode bearbeitet. Bitte warten Sie 5-10 Werktage, bis die Rückerstattung auf Ihrem Konto erscheint. Der Betrag wird in CHF zurückerstattet."
+        },
+        "exceptional": {
+          "title": "Aussergewöhnliche Umstände",
+          "content": "Bei aussergewöhnlichen Umständen (Naturkatastrophen, Gesundheitsnotfälle, Reisebeschränkungen) können wir flexiblere Stornierungsbedingungen anbieten. Bitte kontaktieren Sie unser Support-Team, um Ihre Situation zu besprechen."
+        },
+        "contact": {
+          "title": "Brauchen Sie Hilfe?",
+          "content": "Bei Fragen zu Stornierungen oder Rückerstattungen steht Ihnen unser Support-Team zur Verfügung:"
+        }
+      }
+    },
+    "navLinks": {
+      "privacy": "Datenschutz",
+      "terms": "AGB",
+      "cancellation": "Stornierungen"
     }
   }
 }

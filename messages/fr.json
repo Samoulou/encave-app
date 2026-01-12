@@ -385,6 +385,12 @@
     "somethingWentWrong": "Une erreur s'est produite!",
     "pageNotFound": "Page non trouvee",
     "pageNotFoundDescription": "La page que vous recherchez n'existe pas.",
+    "searchPlaceholder": "Rechercher des experiences...",
+    "popularExperiences": "Experiences populaires",
+    "browseExperiences": "Parcourir les experiences",
+    "serverError": "Erreur serveur",
+    "serverErrorDescription": "Nous sommes desoles, une erreur s'est produite de notre cote. Veuillez reessayer plus tard.",
+    "supportContact": "Si le probleme persiste, contactez-nous a support@encave.ch",
     "genericError": "Une erreur est survenue. Veuillez reessayer.",
     "required": "Ce champ est requis",
     "invalidEmail": "Adresse e-mail invalide",
@@ -433,6 +439,175 @@
     "register": {
       "title": "Inscription | EnCave",
       "description": "Creez votre compte EnCave et commencez a decouvrir les experiences viticoles du Valais."
+    }
+  },
+  "legal": {
+    "backToHome": "Retour a l'accueil",
+    "privacy": {
+      "title": "Politique de confidentialite",
+      "description": "Decouvrez comment EnCave collecte, utilise et protege vos donnees personnelles.",
+      "lastUpdated": "Derniere mise a jour: {date}",
+      "sections": {
+        "introduction": {
+          "title": "Introduction",
+          "content": "EnCave SA (\"nous\", \"notre\" ou \"nos\") s'engage a proteger votre vie privee. Cette politique de confidentialite explique comment nous collectons, utilisons, divulguons et protegeons vos informations lorsque vous utilisez notre plateforme."
+        },
+        "dataCollection": {
+          "title": "Informations que nous collectons",
+          "content": "Nous collectons les informations que vous nous fournissez directement, notamment:",
+          "items": {
+            "personal": "Informations personnelles (nom, adresse e-mail, numero de telephone)",
+            "payment": "Informations de paiement (traitees de maniere securisee via Stripe)",
+            "usage": "Donnees d'utilisation (comment vous interagissez avec notre plateforme)",
+            "cookies": "Cookies et technologies de suivi similaires"
+          }
+        },
+        "dataUsage": {
+          "title": "Comment nous utilisons vos informations",
+          "content": "Nous utilisons les informations que nous collectons pour:",
+          "items": {
+            "booking": "Traiter et gerer vos reservations",
+            "communication": "Communiquer avec vous concernant vos experiences",
+            "improvement": "Ameliorer et personnaliser nos services",
+            "legal": "Respecter nos obligations legales"
+          }
+        },
+        "dataSharing": {
+          "title": "Partage d'informations",
+          "content": "Nous partageons vos informations avec les domaines viticoles lorsque vous reservez une experience, et avec les prestataires de services qui nous aident a exploiter notre plateforme (comme Stripe pour les paiements et Resend pour les e-mails). Nous ne vendons pas vos informations personnelles."
+        },
+        "security": {
+          "title": "Securite des donnees",
+          "content": "Nous mettons en oeuvre des mesures de securite appropriees pour proteger vos informations personnelles. Toutes les donnees de paiement sont traitees par Stripe et ne sont jamais stockees sur nos serveurs."
+        },
+        "rights": {
+          "title": "Vos droits",
+          "content": "En vertu des lois applicables sur la protection des donnees, vous avez le droit de:",
+          "items": {
+            "access": "Acceder a vos donnees personnelles",
+            "rectification": "Corriger les donnees inexactes",
+            "deletion": "Demander la suppression de vos donnees",
+            "portability": "Recevoir vos donnees dans un format portable"
+          }
+        },
+        "contact": {
+          "title": "Nous contacter",
+          "content": "Si vous avez des questions concernant cette politique de confidentialite, veuillez nous contacter a:",
+          "address": "Rue du Vin 1, 1950 Sion, Suisse"
+        }
+      }
+    },
+    "terms": {
+      "title": "Conditions d'utilisation",
+      "description": "Lisez les conditions generales d'utilisation de la plateforme EnCave.",
+      "lastUpdated": "Derniere mise a jour: {date}",
+      "sections": {
+        "acceptance": {
+          "title": "Acceptation des conditions",
+          "content": "En accedant ou en utilisant EnCave, vous acceptez d'etre lie par ces conditions d'utilisation. Si vous n'acceptez pas ces conditions, veuillez ne pas utiliser notre plateforme."
+        },
+        "services": {
+          "title": "Nos services",
+          "content": "EnCave fournit une plateforme connectant les amateurs de vin avec les domaines viticoles du Valais, en Suisse. Nous facilitons la reservation d'experiences viticoles mais ne sommes pas le fournisseur des experiences elles-memes."
+        },
+        "accounts": {
+          "title": "Comptes utilisateurs",
+          "content": "Pour utiliser certaines fonctionnalites de notre plateforme, vous devrez peut-etre creer un compte. Vous etes responsable de:",
+          "items": {
+            "accuracy": "Maintenir des informations de compte exactes",
+            "security": "Garder votre mot de passe securise",
+            "responsibility": "Toutes les activites sous votre compte"
+          }
+        },
+        "bookings": {
+          "title": "Reservations",
+          "content": "Lorsque vous reservez une experience via EnCave, vous concluez un accord direct avec le domaine viticole. EnCave agit en tant qu'intermediaire pour faciliter le processus de reservation."
+        },
+        "payments": {
+          "title": "Paiements",
+          "content": "Tous les paiements sont traites de maniere securisee via Stripe. Les prix sont affiches en francs suisses (CHF). En effectuant une reservation, vous nous autorisez a debiter votre moyen de paiement."
+        },
+        "winemakers": {
+          "title": "Obligations des vignerons",
+          "content": "Les vignerons utilisant notre plateforme acceptent de fournir des informations exactes sur leurs experiences, d'honorer les reservations confirmees et de maintenir des normes de service appropriees."
+        },
+        "intellectual": {
+          "title": "Propriete intellectuelle",
+          "content": "Tout le contenu sur EnCave, y compris les textes, graphiques, logos et logiciels, est la propriete d'EnCave ou de ses concedants de licence et est protege par les lois sur la propriete intellectuelle."
+        },
+        "liability": {
+          "title": "Limitation de responsabilite",
+          "content": "EnCave n'est pas responsable de la qualite, de la securite ou de la legalite des experiences proposees par les domaines viticoles. Nous ne garantissons pas l'exactitude des informations fournies par les domaines."
+        },
+        "modifications": {
+          "title": "Modifications",
+          "content": "Nous nous reservons le droit de modifier ces conditions a tout moment. L'utilisation continue de la plateforme apres les modifications constitue une acceptation des nouvelles conditions."
+        },
+        "governing": {
+          "title": "Droit applicable",
+          "content": "Ces conditions sont regies par le droit suisse. Tout litige sera resolu devant les tribunaux du Valais, Suisse."
+        },
+        "contact": {
+          "title": "Contact",
+          "content": "Pour toute question concernant ces conditions d'utilisation, veuillez nous contacter a:",
+          "address": "Rue du Vin 1, 1950 Sion, Suisse"
+        }
+      }
+    },
+    "cancellation": {
+      "title": "Politique d'annulation",
+      "pageTitle": "Politique d'annulation",
+      "description": "Comprenez nos politiques d'annulation et de remboursement pour les reservations d'experiences viticoles.",
+      "lastUpdated": "Derniere mise a jour: {date}",
+      "sections": {
+        "overview": {
+          "title": "Apercu",
+          "content": "Nous comprenons que les plans peuvent changer. Cette politique decrit nos procedures d'annulation et de remboursement pour les reservations effectuees via EnCave."
+        },
+        "clientPolicy": {
+          "title": "Politique d'annulation client",
+          "content": "En tant que client, vous pouvez annuler votre reservation selon les conditions suivantes:",
+          "timeline": {
+            "title": "Delais d'annulation",
+            "over24h": {
+              "time": "Plus de 24 heures avant l'experience",
+              "refund": "Remboursement integral"
+            },
+            "12to24h": {
+              "time": "Entre 12 et 24 heures avant",
+              "refund": "Remboursement de 50%"
+            },
+            "under12h": {
+              "time": "Moins de 12 heures avant",
+              "refund": "Aucun remboursement"
+            }
+          }
+        },
+        "wineryPolicy": {
+          "title": "Annulation par le domaine",
+          "content": "Si un domaine annule votre reservation, vous recevrez un remboursement integral quel que soit le delai. Nous vous aiderons egalement a trouver une experience alternative si vous le souhaitez."
+        },
+        "noShow": {
+          "title": "Politique de non-presentation",
+          "content": "Si vous ne vous presentez pas a votre experience reservee sans annulation prealable, aucun remboursement ne sera accorde."
+        },
+        "modifications": {
+          "title": "Modifications de reservation",
+          "content": "Pour modifier votre reservation (date, heure ou nombre de personnes), veuillez contacter le domaine directement ou via notre plateforme au moins 24 heures avant votre experience prevue."
+        },
+        "refunds": {
+          "title": "Traitement des remboursements",
+          "content": "Les remboursements sont traites dans un delai de 5 a 10 jours ouvrables et seront credites sur votre moyen de paiement d'origine."
+        },
+        "exceptional": {
+          "title": "Circonstances exceptionnelles",
+          "content": "En cas de force majeure (catastrophes naturelles, conditions meteorologiques severes, etc.), nous travaillerons avec les deux parties pour trouver une solution appropriee, pouvant inclure un report ou un remboursement integral."
+        },
+        "contact": {
+          "title": "Nous contacter",
+          "content": "Pour les demandes d'annulation ou les questions concernant cette politique, veuillez nous contacter a:"
+        }
+      }
     }
   }
 }

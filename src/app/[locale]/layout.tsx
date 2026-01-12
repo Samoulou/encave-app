@@ -5,6 +5,7 @@ import { getMessages, setRequestLocale } from 'next-intl/server';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import { Toaster } from '@/components/ui/sonner';
 import { SkipLink } from '@/components/shared/SkipLink';
+import { Analytics } from '@/components/shared/Analytics';
 import { routing, type Locale } from '@/i18n/routing';
 import '../globals.css';
 
@@ -58,6 +59,7 @@ export default async function LocaleLayout({ children, params }: Props) {
           <SkipLink />
           <NuqsAdapter>{children}</NuqsAdapter>
           <Toaster />
+          <Analytics />
         </NextIntlClientProvider>
       </body>
     </html>

@@ -34,6 +34,13 @@ const envSchema = z.object({
   // Cron Jobs
   CRON_SECRET: z.string().min(32).optional(),
 
+  // Sentry (Error Tracking)
+  NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
+  SENTRY_AUTH_TOKEN: z.string().optional(),
+
+  // Analytics
+  NEXT_PUBLIC_VERCEL_ANALYTICS_ID: z.string().optional(),
+
   // Node environment
   NODE_ENV: z
     .enum(['development', 'production', 'test'])

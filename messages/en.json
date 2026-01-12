@@ -385,6 +385,12 @@
     "somethingWentWrong": "Something went wrong!",
     "pageNotFound": "Page Not Found",
     "pageNotFoundDescription": "The page you are looking for does not exist.",
+    "searchPlaceholder": "Search for experiences...",
+    "popularExperiences": "Popular Experiences",
+    "browseExperiences": "Browse Experiences",
+    "serverError": "Server Error",
+    "serverErrorDescription": "We're sorry, something went wrong on our end. Please try again later.",
+    "supportContact": "If the problem persists, contact us at support@encave.ch",
     "genericError": "An error occurred. Please try again.",
     "required": "This field is required",
     "invalidEmail": "Invalid email address",
@@ -433,6 +439,175 @@
     "register": {
       "title": "Sign Up | EnCave",
       "description": "Create your EnCave account and start discovering the wine experiences of Valais."
+    }
+  },
+  "legal": {
+    "backToHome": "Back to home",
+    "privacy": {
+      "title": "Privacy Policy",
+      "description": "Learn how EnCave collects, uses, and protects your personal data.",
+      "lastUpdated": "Last updated: {date}",
+      "sections": {
+        "introduction": {
+          "title": "Introduction",
+          "content": "EnCave SA (\"we\", \"us\", or \"our\") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform."
+        },
+        "dataCollection": {
+          "title": "Information We Collect",
+          "content": "We collect information you provide directly to us, including:",
+          "items": {
+            "personal": "Personal information (name, email address, phone number)",
+            "payment": "Payment information (processed securely via Stripe)",
+            "usage": "Usage data (how you interact with our platform)",
+            "cookies": "Cookies and similar tracking technologies"
+          }
+        },
+        "dataUsage": {
+          "title": "How We Use Your Information",
+          "content": "We use the information we collect to:",
+          "items": {
+            "booking": "Process and manage your bookings",
+            "communication": "Communicate with you about your experiences",
+            "improvement": "Improve and personalize our services",
+            "legal": "Comply with legal obligations"
+          }
+        },
+        "dataSharing": {
+          "title": "Information Sharing",
+          "content": "We share your information with wineries when you book an experience, and with service providers who assist us in operating our platform (such as Stripe for payments and Resend for emails). We do not sell your personal information."
+        },
+        "security": {
+          "title": "Data Security",
+          "content": "We implement appropriate security measures to protect your personal information. All payment data is processed through Stripe and is never stored on our servers."
+        },
+        "rights": {
+          "title": "Your Rights",
+          "content": "Under applicable data protection laws, you have the right to:",
+          "items": {
+            "access": "Access your personal data",
+            "rectification": "Correct inaccurate data",
+            "deletion": "Request deletion of your data",
+            "portability": "Receive your data in a portable format"
+          }
+        },
+        "contact": {
+          "title": "Contact Us",
+          "content": "If you have questions about this Privacy Policy, please contact us at:",
+          "address": "Rue du Vin 1, 1950 Sion, Switzerland"
+        }
+      }
+    },
+    "terms": {
+      "title": "Terms of Service",
+      "description": "Read the terms and conditions for using the EnCave platform.",
+      "lastUpdated": "Last updated: {date}",
+      "sections": {
+        "acceptance": {
+          "title": "Acceptance of Terms",
+          "content": "By accessing or using EnCave, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our platform."
+        },
+        "services": {
+          "title": "Our Services",
+          "content": "EnCave provides a platform connecting wine enthusiasts with wineries in Valais, Switzerland. We facilitate the booking of wine experiences but are not the provider of the experiences themselves."
+        },
+        "accounts": {
+          "title": "User Accounts",
+          "content": "To use certain features of our platform, you may need to create an account. You are responsible for:",
+          "items": {
+            "accuracy": "Maintaining accurate account information",
+            "security": "Keeping your password secure",
+            "responsibility": "All activities under your account"
+          }
+        },
+        "bookings": {
+          "title": "Bookings",
+          "content": "When you book an experience through EnCave, you enter into a direct agreement with the winery. EnCave acts as an intermediary to facilitate the booking process."
+        },
+        "payments": {
+          "title": "Payments",
+          "content": "All payments are processed securely through Stripe. Prices are displayed in Swiss Francs (CHF). By making a booking, you authorize us to charge your payment method."
+        },
+        "winemakers": {
+          "title": "Winemaker Obligations",
+          "content": "Winemakers using our platform agree to provide accurate information about their experiences, honor confirmed bookings, and maintain appropriate standards of service."
+        },
+        "intellectual": {
+          "title": "Intellectual Property",
+          "content": "All content on EnCave, including text, graphics, logos, and software, is the property of EnCave or its licensors and is protected by intellectual property laws."
+        },
+        "liability": {
+          "title": "Limitation of Liability",
+          "content": "EnCave is not liable for the quality, safety, or legality of experiences offered by wineries. We do not guarantee the accuracy of information provided by wineries."
+        },
+        "modifications": {
+          "title": "Modifications",
+          "content": "We reserve the right to modify these terms at any time. Continued use of the platform after changes constitutes acceptance of the new terms."
+        },
+        "governing": {
+          "title": "Governing Law",
+          "content": "These terms are governed by Swiss law. Any disputes will be resolved in the courts of Valais, Switzerland."
+        },
+        "contact": {
+          "title": "Contact",
+          "content": "For questions about these Terms of Service, please contact us at:",
+          "address": "Rue du Vin 1, 1950 Sion, Switzerland"
+        }
+      }
+    },
+    "cancellation": {
+      "title": "Cancellation Policy",
+      "pageTitle": "Cancellation Policy",
+      "description": "Understand our cancellation and refund policies for wine experience bookings.",
+      "lastUpdated": "Last updated: {date}",
+      "sections": {
+        "overview": {
+          "title": "Overview",
+          "content": "We understand that plans can change. This policy outlines our cancellation and refund procedures for bookings made through EnCave."
+        },
+        "clientPolicy": {
+          "title": "Client Cancellation Policy",
+          "content": "As a client, you may cancel your booking subject to the following conditions:",
+          "timeline": {
+            "title": "Cancellation Timeline",
+            "over24h": {
+              "time": "More than 24 hours before the experience",
+              "refund": "Full refund"
+            },
+            "12to24h": {
+              "time": "Between 12 and 24 hours before",
+              "refund": "50% refund"
+            },
+            "under12h": {
+              "time": "Less than 12 hours before",
+              "refund": "No refund"
+            }
+          }
+        },
+        "wineryPolicy": {
+          "title": "Winery Cancellation",
+          "content": "If a winery cancels your booking, you will receive a full refund regardless of the timing. We will also assist you in finding an alternative experience if desired."
+        },
+        "noShow": {
+          "title": "No-Show Policy",
+          "content": "If you do not arrive for your booked experience without prior cancellation, no refund will be provided."
+        },
+        "modifications": {
+          "title": "Booking Modifications",
+          "content": "To modify your booking (date, time, or number of guests), please contact the winery directly or through our platform at least 24 hours before your scheduled experience."
+        },
+        "refunds": {
+          "title": "Refund Processing",
+          "content": "Refunds are processed within 5-10 business days and will be returned to your original payment method."
+        },
+        "exceptional": {
+          "title": "Exceptional Circumstances",
+          "content": "In cases of force majeure (natural disasters, severe weather, etc.), we will work with both parties to find a suitable solution, which may include rescheduling or full refund."
+        },
+        "contact": {
+          "title": "Contact Us",
+          "content": "For cancellation requests or questions about this policy, please contact us at:"
+        }
+      }
     }
   }
 }

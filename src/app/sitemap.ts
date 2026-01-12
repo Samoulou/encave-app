@@ -56,6 +56,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   entries.push(...createEntry('/login', 'monthly', 0.3));
   entries.push(...createEntry('/register', 'monthly', 0.3));
 
+  // Legal pages
+  entries.push(...createEntry('/legal/privacy', 'monthly', 0.2));
+  entries.push(...createEntry('/legal/terms', 'monthly', 0.2));
+  entries.push(...createEntry('/legal/cancellation', 'monthly', 0.2));
+
   // Dynamic pages - experiences
   try {
     const experienceSlugs = await getAllPublishedExperienceSlugs();
