@@ -31,6 +31,9 @@ const envSchema = z.object({
   STRIPE_CONNECT_WEBHOOK_SECRET: z.string().startsWith('whsec_').optional(),
   PLATFORM_COMMISSION_RATE: z.coerce.number().min(0).max(1).default(0.12),
 
+  // Cron Jobs
+  CRON_SECRET: z.string().min(32).optional(),
+
   // Node environment
   NODE_ENV: z
     .enum(['development', 'production', 'test'])

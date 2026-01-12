@@ -52,6 +52,26 @@ export const subjects = {
     DE: 'Verifizieren Sie Ihre E-Mail-Adresse',
     EN: 'Verify your email address',
   },
+  reminder2h: {
+    FR: 'Votre experience commence bientot!',
+    DE: 'Ihr Erlebnis beginnt bald!',
+    EN: 'Your experience starts soon!',
+  },
+  dailyDigest: {
+    FR: 'Vos reservations du jour',
+    DE: 'Ihre heutigen Buchungen',
+    EN: "Today's bookings",
+  },
+  postExperience: {
+    FR: 'Merci pour votre visite!',
+    DE: 'Danke fur Ihren Besuch!',
+    EN: 'Thank you for your visit!',
+  },
+  weeklySummary: {
+    FR: 'Votre resume hebdomadaire',
+    DE: 'Ihre wochentliche Zusammenfassung',
+    EN: 'Your weekly summary',
+  },
 } as const;
 
 // Common email strings
@@ -388,6 +408,167 @@ export const auth = {
       DE: 'Dieser Link lauft in 24 Stunden ab.',
       EN: 'This link expires in 24 hours.',
     },
+  },
+} as const;
+
+// Client 2h reminder email strings
+export const clientReminder2h = {
+  title: {
+    FR: 'Votre experience commence bientot!',
+    DE: 'Ihr Erlebnis beginnt bald!',
+    EN: 'Your experience starts soon!',
+  },
+  intro: {
+    FR: 'Votre experience de degustation commence dans moins de 2 heures.',
+    DE: 'Ihr Verkostungserlebnis beginnt in weniger als 2 Stunden.',
+    EN: 'Your wine tasting experience starts in less than 2 hours.',
+  },
+  startsSoon: {
+    FR: 'Commence bientot',
+    DE: 'Beginnt bald',
+    EN: 'Starts soon',
+  },
+  directions: {
+    FR: 'Voir les indications',
+    DE: 'Wegbeschreibung anzeigen',
+    EN: 'Get directions',
+  },
+  contact: {
+    FR: 'Contact',
+    DE: 'Kontakt',
+    EN: 'Contact',
+  },
+} as const;
+
+// Daily digest email strings
+export const dailyDigest = {
+  title: {
+    FR: 'Vos reservations du jour',
+    DE: 'Ihre heutigen Buchungen',
+    EN: "Today's bookings",
+  },
+  intro: {
+    FR: 'Voici un apercu de vos reservations pour aujourd\'hui et demain.',
+    DE: 'Hier ist eine Ubersicht Ihrer Buchungen fur heute und morgen.',
+    EN: "Here's an overview of your bookings for today and tomorrow.",
+  },
+  today: {
+    FR: "Aujourd'hui",
+    DE: 'Heute',
+    EN: 'Today',
+  },
+  tomorrow: {
+    FR: 'Demain',
+    DE: 'Morgen',
+    EN: 'Tomorrow',
+  },
+  noBookings: {
+    FR: 'Aucune reservation',
+    DE: 'Keine Buchungen',
+    EN: 'No bookings',
+  },
+  guest: {
+    FR: 'Client',
+    DE: 'Gast',
+    EN: 'Guest',
+  },
+  viewDashboard: {
+    FR: 'Voir le tableau de bord',
+    DE: 'Dashboard anzeigen',
+    EN: 'View dashboard',
+  },
+} as const;
+
+// Post-experience follow-up email strings
+export const postExperience = {
+  title: {
+    FR: 'Merci pour votre visite!',
+    DE: 'Danke fur Ihren Besuch!',
+    EN: 'Thank you for your visit!',
+  },
+  intro: {
+    FR: 'Nous esperons que vous avez passe un excellent moment lors de votre experience de degustation.',
+    DE: 'Wir hoffen, dass Sie bei Ihrem Verkostungserlebnis eine tolle Zeit hatten.',
+    EN: 'We hope you had a wonderful time at your wine tasting experience.',
+  },
+  visitedOn: {
+    FR: 'Visite le',
+    DE: 'Besucht am',
+    EN: 'Visited on',
+  },
+  feedbackTitle: {
+    FR: 'Votre avis compte',
+    DE: 'Ihre Meinung zahlt',
+    EN: 'Your feedback matters',
+  },
+  feedbackText: {
+    FR: 'Nous travaillons sur une fonctionnalite d\'avis. En attendant, n\'hesitez pas a contacter le domaine directement pour partager votre experience.',
+    DE: 'Wir arbeiten an einer Bewertungsfunktion. In der Zwischenzeit konnen Sie das Weingut direkt kontaktieren, um Ihre Erfahrungen zu teilen.',
+    EN: 'We\'re working on a review feature. In the meantime, feel free to contact the winery directly to share your experience.',
+  },
+  discoverMore: {
+    FR: 'Envie de decouvrir d\'autres experiences viticoles en Suisse?',
+    DE: 'Mochten Sie weitere Weinerlebnisse in der Schweiz entdecken?',
+    EN: 'Want to discover more wine experiences in Switzerland?',
+  },
+  discoverMoreCta: {
+    FR: 'Decouvrir plus d\'experiences',
+    DE: 'Mehr Erlebnisse entdecken',
+    EN: 'Discover more experiences',
+  },
+} as const;
+
+// Weekly summary email strings
+export const weeklySummary = {
+  title: {
+    FR: 'Votre resume hebdomadaire',
+    DE: 'Ihre wochentliche Zusammenfassung',
+    EN: 'Your weekly summary',
+  },
+  intro: {
+    FR: 'Voici un apercu de votre activite de la semaine derniere et des reservations a venir.',
+    DE: 'Hier ist eine Ubersicht Ihrer Aktivitaten der letzten Woche und der kommenden Buchungen.',
+    EN: "Here's an overview of your activity from last week and upcoming bookings.",
+  },
+  lastWeek: {
+    FR: 'Semaine derniere',
+    DE: 'Letzte Woche',
+    EN: 'Last week',
+  },
+  thisWeek: {
+    FR: 'Cette semaine',
+    DE: 'Diese Woche',
+    EN: 'This week',
+  },
+  bookings: {
+    FR: 'Reservations',
+    DE: 'Buchungen',
+    EN: 'Bookings',
+  },
+  guests: {
+    FR: 'Visiteurs',
+    DE: 'Besucher',
+    EN: 'Guests',
+  },
+  revenue: {
+    FR: 'Revenus',
+    DE: 'Einnahmen',
+    EN: 'Revenue',
+  },
+  upcoming: {
+    FR: 'Reservations a venir',
+    DE: 'Kommende Buchungen',
+    EN: 'Upcoming bookings',
+  },
+  noActivity: {
+    FR: 'Aucune activite',
+    DE: 'Keine Aktivitat',
+    EN: 'No activity',
+  },
+  viewDashboard: {
+    FR: 'Voir le tableau de bord',
+    DE: 'Dashboard anzeigen',
+    EN: 'View dashboard',
   },
 } as const;
 

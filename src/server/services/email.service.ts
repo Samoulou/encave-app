@@ -13,6 +13,10 @@ import {
   WinemakerCancellationEmail,
   WineryApprovedEmail,
   WineryRejectedEmail,
+  ClientReminder2hEmail,
+  DailyDigestEmail,
+  PostExperienceFollowUpEmail,
+  WeeklySummaryEmail,
 } from '@/emails';
 import { subjects, t } from '@/emails/translations';
 
@@ -330,6 +334,139 @@ export async function sendWineryRejectedEmail(
   return sendEmail({
     to: email,
     subject: t(subjects.wineryRejected, loc),
+    html,
+  });
+}
+
+// Automated Notification Emails
+
+export interface ClientReminder2hData {
+  guestName: string;
+  experienceTitle: string;
+  wineryName: string;
+  wineryAddress: string;
+  wineryPhone: string;
+  date: Date;
+  guestCount: number;
+}
+
+export async function sendClientReminder2hEmail(
+  email: string,
+  data: ClientReminder2hData,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const html = await render(
+    ClientReminder2hEmail({
+      locale: loc,
+      ...data,
+      directionsUrl: `https://maps.google.com/?q=${encodeURIComponent(data.wineryAddress)}`,
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.reminder2h, loc),
+    html,
+  });
+}
+
+export interface DailyDigestBooking {
+  time: string;
+  experienceTitle: string;
+  guestName: string;
+  guestCount: number;
+}
+
+export interface DailyDigestData {
+  winemakerName: string;
+  wineryName: string;
+  todayBookings: DailyDigestBooking[];
+  tomorrowBookings: DailyDigestBooking[];
+}
+
+export async function sendDailyDigestEmail(
+  email: string,
+  data: DailyDigestData,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const html = await render(
+    DailyDigestEmail({
+      locale: loc,
+      ...data,
+      dashboardUrl: 'https://encave.ch/dashboard/bookings',
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.dailyDigest, loc),
+    html,
+  });
+}
+
+export interface PostExperienceFollowUpData {
+  guestName: string;
+  experienceTitle: string;
+  wineryName: string;
+  date: Date;
+}
+
+export async function sendPostExperienceFollowUpEmail(
+  email: string,
+  data: PostExperienceFollowUpData,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const html = await render(
+    PostExperienceFollowUpEmail({
+      locale: loc,
+      ...data,
+      experiencesUrl: 'https://encave.ch/experiences',
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.postExperience, loc),
+    html,
+  });
+}
+
+export interface WeeklySummaryStats {
+  bookings: number;
+  guests: number;
+  revenue: number;
+}
+
+export interface WeeklySummaryData {
+  winemakerName: string;
+  wineryName: string;
+  lastWeekStats: WeeklySummaryStats;
+  thisWeekPreview: {
+    bookings: number;
+    guests: number;
+  };
+}
+
+export async function sendWeeklySummaryEmail(
+  email: string,
+  data: WeeklySummaryData,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const html = await render(
+    WeeklySummaryEmail({
+      locale: loc,
+      ...data,
+      dashboardUrl: 'https://encave.ch/dashboard/earnings',
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.weeklySummary, loc),
     html,
   });
 }

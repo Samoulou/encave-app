@@ -93,10 +93,11 @@ model Winery {
   createdAt                DateTime     @default(now())
   updatedAt                DateTime     @updatedAt
 
-  galleryImages    WineryGalleryImage[]
-  verificationLogs VerificationLog[]
-  experiences      Experience[]
-  bookings         Booking[]
+  galleryImages           WineryGalleryImage[]
+  verificationLogs        VerificationLog[]
+  experiences             Experience[]
+  bookings                Booking[]
+  notificationPreferences NotificationPreferences?
 
   @@index([commune])
   @@index([status])
@@ -248,6 +249,9 @@ model Booking {
   accessTokenHash       String?       // Hash of access token for verification
   confirmationSentAt    DateTime?     // When client confirmation email was sent
   wineryNotifiedAt      DateTime?     // When winery notification was sent
+  reminder24hSentAt     DateTime?     // When 24h reminder was sent
+  reminder2hSentAt      DateTime?     // When 2h reminder was sent
+  followUpSentAt        DateTime?     // When post-experience follow-up was sent
   cancelledAt           DateTime?     // When booking was cancelled
   refundIssued          Boolean       @default(false)
   refundAmount          Int?          // cents - amount refunded
@@ -274,4 +278,42 @@ model BlockedDate {
   @@unique([experienceId, date])
   @@index([experienceId])
   @@map("blocked_dates")
+}
+
+model NotificationPreferences {
+  id String @id @default(cuid())
+
+  wineryId String? @unique
+  winery   Winery? @relation(fields: [wineryId], references: [id], onDelete: Cascade)
+
+  // Winemaker preferences
+  dailyDigest          Boolean @default(true) // Daily digest at 7am
+  weeklySummary        Boolean @default(true) // Weekly summary on Mondays
+  instantBookingAlerts Boolean @default(true) // Immediate booking notifications
+
+  // Client preferences (for future use with user accounts)
+  bookingReminders Boolean @default(true) // 24h and 2h reminders
+  marketingEmails  Boolean @default(true) // Promotional/follow-up emails
+
+  // Unsubscribe token for email links
+  unsubscribeToken String @unique @default(cuid())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("notification_preferences")
+}
+
+model EmailLog {
+  id           String   @id @default(cuid())
+  type         String // reminder_24h, reminder_2h, daily_digest, follow_up, weekly_summary
+  recipientId  String // User ID, Winery ID, or email address
+  bookingId    String? // Optional booking reference
+  status       String // sent, failed, skipped
+  errorMessage String? // Error details if failed
+  createdAt    DateTime @default(now())
+
+  @@index([type, createdAt])
+  @@index([recipientId])
+  @@map("email_logs")
 }
