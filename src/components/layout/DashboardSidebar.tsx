@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Calendar, Sparkles, Building2, Menu, X } from 'lucide-react';
+import { Calendar, Sparkles, Building2, Menu, X, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ interface DashboardSidebarProps {
 
 const sidebarLinks = [
   { href: '/dashboard/bookings', label: 'Bookings', icon: Calendar },
+  { href: '/dashboard/earnings', label: 'Earnings', icon: TrendingUp },
   { href: '/dashboard/experiences', label: 'Experiences', icon: Sparkles },
   { href: '/dashboard/winery/profile', label: 'Winery Profile', icon: Building2 },
 ];
