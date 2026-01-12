@@ -32,6 +32,7 @@
     "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-switch": "^1.2.6",
     "@radix-ui/react-toast": "^1.2.15",
+    "@radix-ui/react-tooltip": "^1.2.8",
     "@react-email/components": "^1.0.4",
     "@stripe/stripe-js": "^8.6.1",
     "@vercel/blob": "^2.0.0",

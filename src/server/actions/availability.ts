@@ -288,3 +288,308 @@ export async function toggleSlotActive(
     };
   }
 }
+
+// ============================================
+// Blocked Date Functions
+// ============================================
+
+interface BlockDateResult {
+  id: string;
+  experienceId: string;
+  date: Date;
+}
+
+/**
+ * Block a specific date for an experience
+ */
+export async function blockDate(
+  experienceId: string,
+  date: Date,
+  reason?: string
+): Promise<ActionResult<BlockDateResult>> {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return {
+        success: false,
+        error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
+      };
+    }
+
+    // Verify ownership
+    const experience = await db.experience.findUnique({
+      where: { id: experienceId },
+      include: { winery: { select: { userId: true } } },
+    });
+
+    if (!experience) {
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Experience not found' },
+      };
+    }
+
+    if (experience.winery.userId !== session.user.id) {
+      return {
+        success: false,
+        error: { code: 'FORBIDDEN', message: 'Not authorized' },
+      };
+    }
+
+    // Check if already blocked
+    const existing = await db.blockedDate.findUnique({
+      where: {
+        experienceId_date: {
+          experienceId,
+          date,
+        },
+      },
+    });
+
+    if (existing) {
+      return {
+        success: false,
+        error: { code: 'CONFLICT', message: 'Date is already blocked' },
+      };
+    }
+
+    // Create blocked date
+    const blockedDate = await db.blockedDate.create({
+      data: {
+        experienceId,
+        date,
+        reason,
+      },
+    });
+
+    return {
+      success: true,
+      data: {
+        id: blockedDate.id,
+        experienceId: blockedDate.experienceId,
+        date: blockedDate.date,
+      },
+    };
+  } catch (error) {
+    console.error('blockDate error:', error);
+    return {
+      success: false,
+      error: { code: 'INTERNAL_ERROR', message: 'Failed to block date' },
+    };
+  }
+}
+
+/**
+ * Unblock a date for an experience
+ */
+export async function unblockDate(
+  experienceId: string,
+  date: Date
+): Promise<ActionResult<{ success: boolean }>> {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return {
+        success: false,
+        error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
+      };
+    }
+
+    // Verify ownership
+    const experience = await db.experience.findUnique({
+      where: { id: experienceId },
+      include: { winery: { select: { userId: true } } },
+    });
+
+    if (!experience) {
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Experience not found' },
+      };
+    }
+
+    if (experience.winery.userId !== session.user.id) {
+      return {
+        success: false,
+        error: { code: 'FORBIDDEN', message: 'Not authorized' },
+      };
+    }
+
+    // Delete blocked date
+    await db.blockedDate.deleteMany({
+      where: {
+        experienceId,
+        date,
+      },
+    });
+
+    return { success: true, data: { success: true } };
+  } catch (error) {
+    console.error('unblockDate error:', error);
+    return {
+      success: false,
+      error: { code: 'INTERNAL_ERROR', message: 'Failed to unblock date' },
+    };
+  }
+}
+
+/**
+ * Block a date for all experiences of a winery
+ */
+export async function blockDateForAllExperiences(
+  date: Date,
+  reason?: string
+): Promise<ActionResult<{ blockedCount: number }>> {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return {
+        success: false,
+        error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
+      };
+    }
+
+    // Get winery and all published experiences
+    const winery = await db.winery.findUnique({
+      where: { userId: session.user.id },
+      include: {
+        experiences: {
+          where: { status: 'PUBLISHED' },
+          select: { id: true },
+        },
+      },
+    });
+
+    if (!winery) {
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Winery not found' },
+      };
+    }
+
+    // Block date for each experience
+    let blockedCount = 0;
+    for (const experience of winery.experiences) {
+      try {
+        await db.blockedDate.create({
+          data: {
+            experienceId: experience.id,
+            date,
+            reason,
+          },
+        });
+        blockedCount++;
+      } catch {
+        // Skip if already blocked (unique constraint violation)
+      }
+    }
+
+    return { success: true, data: { blockedCount } };
+  } catch (error) {
+    console.error('blockDateForAllExperiences error:', error);
+    return {
+      success: false,
+      error: { code: 'INTERNAL_ERROR', message: 'Failed to block date' },
+    };
+  }
+}
+
+/**
+ * Unblock a date for all experiences of a winery
+ */
+export async function unblockDateForAllExperiences(
+  date: Date
+): Promise<ActionResult<{ unblockedCount: number }>> {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return {
+        success: false,
+        error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
+      };
+    }
+
+    // Get winery
+    const winery = await db.winery.findUnique({
+      where: { userId: session.user.id },
+      select: { id: true },
+    });
+
+    if (!winery) {
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Winery not found' },
+      };
+    }
+
+    // Delete all blocked dates for this winery on this date
+    const result = await db.blockedDate.deleteMany({
+      where: {
+        date,
+        experience: { wineryId: winery.id },
+      },
+    });
+
+    return { success: true, data: { unblockedCount: result.count } };
+  } catch (error) {
+    console.error('unblockDateForAllExperiences error:', error);
+    return {
+      success: false,
+      error: { code: 'INTERNAL_ERROR', message: 'Failed to unblock date' },
+    };
+  }
+}
+
+/**
+ * Get blocked dates for a specific experience
+ */
+export async function getBlockedDatesForExperience(
+  experienceId: string
+): Promise<ActionResult<{ dates: Date[] }>> {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return {
+        success: false,
+        error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
+      };
+    }
+
+    // Verify ownership
+    const experience = await db.experience.findUnique({
+      where: { id: experienceId },
+      include: { winery: { select: { userId: true } } },
+    });
+
+    if (!experience) {
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Experience not found' },
+      };
+    }
+
+    if (experience.winery.userId !== session.user.id) {
+      return {
+        success: false,
+        error: { code: 'FORBIDDEN', message: 'Not authorized' },
+      };
+    }
+
+    const blockedDates = await db.blockedDate.findMany({
+      where: { experienceId },
+      select: { date: true },
+      orderBy: { date: 'asc' },
+    });
+
+    return {
+      success: true,
+      data: { dates: blockedDates.map((bd) => bd.date) },
+    };
+  } catch (error) {
+    console.error('getBlockedDatesForExperience error:', error);
+    return {
+      success: false,
+      error: { code: 'INTERNAL_ERROR', message: 'Failed to get blocked dates' },
+    };
+  }
+}

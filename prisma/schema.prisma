@@ -186,6 +186,7 @@ model Experience {
   galleryImages     ExperienceGalleryImage[]
   availabilitySlots AvailabilitySlot[]
   bookings          Booking[]
+  blockedDates      BlockedDate[]
 
   @@unique([wineryId, slug])
   @@index([status])
@@ -260,4 +261,17 @@ model Booking {
   @@index([reference])
   @@index([accessToken])
   @@map("bookings")
+}
+
+model BlockedDate {
+  id           String     @id @default(cuid())
+  experienceId String
+  experience   Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  date         DateTime   @db.Date
+  reason       String?
+  createdAt    DateTime   @default(now())
+
+  @@unique([experienceId, date])
+  @@index([experienceId])
+  @@map("blocked_dates")
 }

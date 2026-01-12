@@ -2,6 +2,7 @@ import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { redirect } from 'next/navigation';
 import { BookingStatus } from '@prisma/client';
+import { startOfMonth, parseISO } from 'date-fns';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
 import {
   BookingSummaryCards,
@@ -18,6 +19,11 @@ import {
   type BookingFilters as BookingFiltersType,
   type BookingSortOptions,
 } from '@/server/queries/booking.queries';
+import {
+  getMonthCalendarData,
+  getWeekCalendarData,
+} from '@/server/queries/calendar.queries';
+import { CalendarViewWrapper } from './CalendarViewWrapper';
 
 interface PageProps {
   searchParams: Promise<{
@@ -28,6 +34,8 @@ interface PageProps {
     search?: string;
     sort?: string;
     order?: string;
+    view?: string;
+    month?: string;
   }>;
 }
 
@@ -82,11 +90,27 @@ export default async function BookingsDashboardPage({ searchParams }: PageProps)
         }
       : undefined;
 
+  // Parse view mode and calendar date
+  const viewMode = (params.view as 'list' | 'calendar' | 'week') || 'list';
+  const calendarDate = params.month
+    ? startOfMonth(parseISO(`${params.month}-01`))
+    : new Date();
+
+  // Status filter for calendar
+  const statusFilter = filters.status && filters.status.length > 0
+    ? filters.status
+    : undefined;
+
   // Fetch data in parallel
-  const [bookings, summary, experiences] = await Promise.all([
+  const [bookings, summary, experiences, calendarData] = await Promise.all([
     getWineryBookings(winery.id, filters, sort),
     getBookingSummary(winery.id),
     getWineryExperiencesForFilter(winery.id),
+    viewMode === 'calendar'
+      ? getMonthCalendarData(winery.id, calendarDate, statusFilter)
+      : viewMode === 'week'
+        ? getWeekCalendarData(winery.id, calendarDate, statusFilter)
+        : Promise.resolve(new Map()),
   ]);
 
   const hasAnyBookings = summary.totalGuests > 0 || bookings.length > 0;
@@ -112,32 +136,44 @@ export default async function BookingsDashboardPage({ searchParams }: PageProps)
           <BookingsEmptyState />
         ) : (
           <>
-            {/* Filters and Search Row */}
+            {/* Filters, Search and View Toggle Row */}
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <BookingFilters experiences={experiences} />
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <BookingSearch />
                 <ExportCSVButton />
+                <CalendarViewWrapper viewToggleOnly />
               </div>
             </div>
 
-            {/* Results Info */}
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-slate-600">
-                {bookings.length} booking{bookings.length !== 1 ? 's' : ''}
-                {Object.keys(filters).length > 0 && ' (filtered)'}
-              </p>
-            </div>
+            {/* View Content */}
+            {viewMode === 'list' ? (
+              <>
+                {/* Results Info */}
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-slate-600">
+                    {bookings.length} booking{bookings.length !== 1 ? 's' : ''}
+                    {Object.keys(filters).length > 0 && ' (filtered)'}
+                  </p>
+                </div>
 
-            {/* Bookings Table */}
-            {bookings.length > 0 ? (
-              <BookingsTable bookings={bookings} />
+                {/* Bookings Table */}
+                {bookings.length > 0 ? (
+                  <BookingsTable bookings={bookings} />
+                ) : (
+                  <div className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center">
+                    <p className="text-slate-600">
+                      No bookings match your current filters.
+                    </p>
+                  </div>
+                )}
+              </>
             ) : (
-              <div className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center">
-                <p className="text-slate-600">
-                  No bookings match your current filters.
-                </p>
-              </div>
+              <CalendarViewWrapper
+                viewMode={viewMode}
+                calendarData={calendarData}
+                initialDate={calendarDate}
+              />
             )}
           </>
         )}
