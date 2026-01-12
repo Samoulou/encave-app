@@ -1,6 +1,6 @@
 import Stripe from 'stripe';
 import { db } from '@/server/db';
-import { env } from '@/lib/env';
+import { env, getBaseUrl } from '@/lib/env';
 
 // Initialize Stripe with optional key (for build time)
 const stripe = env.STRIPE_SECRET_KEY
@@ -62,7 +62,7 @@ export async function createConnectAccount(wineryId: string): Promise<string> {
  * Creates an onboarding link for an existing Stripe Connect account
  */
 async function createOnboardingLink(accountId: string): Promise<string> {
-  const baseUrl = env.NEXTAUTH_URL || 'http://localhost:3000';
+  const baseUrl = getBaseUrl();
 
   const accountLink = await getStripe().accountLinks.create({
     account: accountId,

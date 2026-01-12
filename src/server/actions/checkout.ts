@@ -3,7 +3,7 @@
 import { z } from 'zod';
 import Stripe from 'stripe';
 import { db } from '@/server/db';
-import { env } from '@/lib/env';
+import { env, getBaseUrl } from '@/lib/env';
 import type { ActionResult } from '@/types/actions';
 import { BookingStatus } from '@prisma/client';
 
@@ -164,7 +164,7 @@ export async function createBookingAndCheckout(
     });
 
     // Create Stripe Checkout Session
-    const baseUrl = env.NEXTAUTH_URL || 'http://localhost:3000';
+    const baseUrl = getBaseUrl();
 
     const session = await getStripe().checkout.sessions.create({
       payment_method_types: ['card'],
