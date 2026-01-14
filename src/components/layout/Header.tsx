@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { UserMenu } from '@/components/features/auth/UserMenu';
 import { NavLink } from '@/components/layout/NavLink';
 import { LocaleSwitcher } from '@/components/shared/LocaleSwitcher';
+import { MobileNav } from '@/components/layout/MobileNav';
 
 export async function Header() {
   const session = await auth();
@@ -39,7 +40,8 @@ export async function Header() {
           )}
         </nav>
 
-        <div className="flex items-center gap-4">
+        {/* Desktop auth section - hidden on mobile */}
+        <div className="hidden md:flex items-center gap-4">
           <LocaleSwitcher />
           <div className="h-5 w-px bg-slate-200" aria-hidden="true" />
           {session?.user ? (
@@ -55,6 +57,13 @@ export async function Header() {
             </div>
           )}
         </div>
+
+        {/* Mobile navigation */}
+        <MobileNav
+          isAuthenticated={!!session?.user}
+          userName={session?.user?.name}
+          userRole={userRole}
+        />
       </div>
     </header>
   );

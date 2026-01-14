@@ -59,7 +59,7 @@ export default async function Home({ params }: Props) {
       <main id="main-content" className="flex flex-col items-center px-6 py-16 lg:px-8 lg:py-24">
         {/* Hero Section */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h1 className="font-display text-display-lg text-burgundy-800 mb-4">
+          <h1 className="font-display text-3xl sm:text-4xl md:text-display-lg text-burgundy-800 mb-4">
             {t('title')}
           </h1>
           <p className="text-lg text-slate-600 mb-8">
@@ -74,7 +74,7 @@ export default async function Home({ params }: Props) {
             {/* Experiences CTA */}
             <Card className="group overflow-hidden rounded-xl shadow-warm hover:-translate-y-1 hover:shadow-warm-lg transition-all duration-300">
               <CardContent className="p-0">
-                <Link href="/experiences" className="block p-8">
+                <Link href="/experiences" className="block p-6 sm:p-8">
                   <div className="flex items-center gap-4 mb-4">
                     <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-burgundy-100 text-burgundy-600 group-hover:bg-burgundy-600 group-hover:text-white transition-colors">
                       <Sparkles className="h-6 w-6" aria-hidden="true" />
@@ -97,7 +97,7 @@ export default async function Home({ params }: Props) {
             {/* Wineries CTA */}
             <Card className="group overflow-hidden rounded-xl shadow-warm hover:-translate-y-1 hover:shadow-warm-lg transition-all duration-300">
               <CardContent className="p-0">
-                <Link href="/wineries" className="block p-8">
+                <Link href="/wineries" className="block p-6 sm:p-8">
                   <div className="flex items-center gap-4 mb-4">
                     <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-burgundy-100 text-burgundy-600 group-hover:bg-burgundy-600 group-hover:text-white transition-colors">
                       <Building2 className="h-6 w-6" aria-hidden="true" />
@@ -121,7 +121,7 @@ export default async function Home({ params }: Props) {
 
         {/* CTA Section */}
         <section className="text-center max-w-2xl mx-auto mb-16">
-          <h2 className="font-display text-display-md text-slate-900 mb-4">
+          <h2 className="font-display text-2xl sm:text-display-md text-slate-900 mb-4">
             {t('readyToExplore')}
           </h2>
           <p className="text-slate-600 mb-8">
