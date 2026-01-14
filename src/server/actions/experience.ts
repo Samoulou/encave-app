@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidateTag, revalidatePath } from 'next/cache';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { put, del } from '@vercel/blob';
@@ -9,6 +10,33 @@ import {
 } from '@/lib/validators/experience';
 import { generateSlug } from '@/lib/utils/slug';
 import type { ActionResult } from '@/types/actions';
+
+/**
+ * Invalidate experience-related caches after mutations
+ */
+function invalidateExperienceCaches(winerySlug?: string, experienceSlug?: string) {
+  // Invalidate the experiences list cache
+  revalidateTag('experiences');
+
+  // Revalidate the experiences listing page
+  revalidatePath('/experiences');
+  revalidatePath('/fr/experiences');
+  revalidatePath('/de/experiences');
+
+  // Revalidate specific experience page if slug is provided
+  if (experienceSlug) {
+    revalidatePath(`/experiences/${experienceSlug}`);
+    revalidatePath(`/fr/experiences/${experienceSlug}`);
+    revalidatePath(`/de/experiences/${experienceSlug}`);
+  }
+
+  // Revalidate winery page if slug is provided
+  if (winerySlug) {
+    revalidatePath(`/wineries/${winerySlug}`);
+    revalidatePath(`/fr/wineries/${winerySlug}`);
+    revalidatePath(`/de/wineries/${winerySlug}`);
+  }
+}
 
 /**
  * Ensure slug uniqueness within a winery by appending a number if needed
@@ -192,6 +220,12 @@ export async function createExperience(
     const priceInCents = Math.round(price * 100);
 
     // 6. Create experience with DRAFT status (AC 10)
+    // Get winery slug for cache invalidation
+    const wineryData = await db.winery.findUnique({
+      where: { id: winery.id },
+      select: { slug: true },
+    });
+
     const experience = await db.$transaction(async (tx) => {
       const newExperience = await tx.experience.create({
         data: {
@@ -222,6 +256,9 @@ export async function createExperience(
 
       return newExperience;
     });
+
+    // Invalidate caches after successful creation
+    invalidateExperienceCaches(wineryData?.slug, experience.slug);
 
     return {
       success: true,
@@ -309,6 +346,12 @@ export async function updateExperience(
     // Convert price to cents
     const priceInCents = Math.round(price * 100);
 
+    // Get winery slug for cache invalidation
+    const wineryData = await db.winery.findUnique({
+      where: { id: winery.id },
+      select: { slug: true },
+    });
+
     // Update experience in transaction
     const experience = await db.$transaction(async (tx) => {
       // Delete old gallery images
@@ -345,6 +388,13 @@ export async function updateExperience(
 
       return updated;
     });
+
+    // Invalidate caches after successful update
+    // Also invalidate old slug if it changed
+    invalidateExperienceCaches(wineryData?.slug, experience.slug);
+    if (existingExperience.slug !== experience.slug) {
+      invalidateExperienceCaches(undefined, existingExperience.slug);
+    }
 
     return {
       success: true,
@@ -438,10 +488,19 @@ export async function publishExperience(
       };
     }
 
+    // Get winery slug for cache invalidation
+    const wineryData = await db.winery.findUnique({
+      where: { id: winery.id },
+      select: { slug: true },
+    });
+
     await db.experience.update({
       where: { id: experienceId },
       data: { status: 'PUBLISHED' },
     });
+
+    // Invalidate caches after publishing
+    invalidateExperienceCaches(wineryData?.slug, experience.slug);
 
     return {
       success: true,
@@ -507,10 +566,19 @@ export async function unpublishExperience(
       };
     }
 
+    // Get winery slug for cache invalidation
+    const wineryData = await db.winery.findUnique({
+      where: { id: winery.id },
+      select: { slug: true },
+    });
+
     await db.experience.update({
       where: { id: experienceId },
       data: { status: 'DRAFT' },
     });
+
+    // Invalidate caches after unpublishing
+    invalidateExperienceCaches(wineryData?.slug, experience.slug);
 
     return {
       success: true,
@@ -576,10 +644,19 @@ export async function archiveExperience(
       };
     }
 
+    // Get winery slug for cache invalidation
+    const wineryData = await db.winery.findUnique({
+      where: { id: winery.id },
+      select: { slug: true },
+    });
+
     await db.experience.update({
       where: { id: experienceId },
       data: { status: 'ARCHIVED' },
     });
+
+    // Invalidate caches after archiving
+    invalidateExperienceCaches(wineryData?.slug, experience.slug);
 
     return {
       success: true,
@@ -640,6 +717,12 @@ export async function duplicateExperience(
     const baseSlug = generateSlug(`${experience.title} copy`);
     const slug = await ensureUniqueExperienceSlug(winery.id, baseSlug);
 
+    // Get winery slug for cache invalidation
+    const wineryData = await db.winery.findUnique({
+      where: { id: winery.id },
+      select: { slug: true },
+    });
+
     // Create duplicate in transaction
     const duplicate = await db.$transaction(async (tx) => {
       const newExperience = await tx.experience.create({
@@ -671,6 +754,9 @@ export async function duplicateExperience(
 
       return newExperience;
     });
+
+    // Invalidate caches after duplication
+    invalidateExperienceCaches(wineryData?.slug, duplicate.slug);
 
     return {
       success: true,

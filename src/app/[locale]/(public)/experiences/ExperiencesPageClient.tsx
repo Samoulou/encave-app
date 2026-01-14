@@ -12,14 +12,23 @@ import type { ExperienceSearchResult } from '@/server/queries/experience.queries
 
 type SortOption = 'relevance' | 'price_asc' | 'price_desc' | 'newest';
 
+interface PaginationInfo {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 interface ExperiencesPageClientProps {
   initialExperiences: ExperienceSearchResult[];
   communes: string[];
+  pagination: PaginationInfo;
 }
 
 export function ExperiencesPageClient({
   initialExperiences,
   communes,
+  pagination,
 }: ExperiencesPageClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -62,33 +71,37 @@ export function ExperiencesPageClient({
     [router, searchParams]
   );
 
-  // Handler functions
+  // Handler functions - reset page on filter changes
   const handleSearchChange = (value: string) => {
-    updateParams({ q: value || null });
+    updateParams({ q: value || null, page: null });
   };
 
   const handleTypesChange = (types: ExperienceType[]) => {
-    updateParams({ type: types.length > 0 ? types : null });
+    updateParams({ type: types.length > 0 ? types : null, page: null });
   };
 
   const handleCommuneChange = (commune: string | null) => {
-    updateParams({ commune });
+    updateParams({ commune, page: null });
   };
 
   const handleMinPriceChange = (price: number | null) => {
-    updateParams({ minPrice: price !== null ? String(price) : null });
+    updateParams({ minPrice: price !== null ? String(price) : null, page: null });
   };
 
   const handleMaxPriceChange = (price: number | null) => {
-    updateParams({ maxPrice: price !== null ? String(price) : null });
+    updateParams({ maxPrice: price !== null ? String(price) : null, page: null });
   };
 
   const handleCapacityChange = (capacity: number | null) => {
-    updateParams({ capacity: capacity !== null ? String(capacity) : null });
+    updateParams({ capacity: capacity !== null ? String(capacity) : null, page: null });
   };
 
   const handleSortChange = (sort: SortOption) => {
-    updateParams({ sort: sort !== 'relevance' ? sort : null });
+    updateParams({ sort: sort !== 'relevance' ? sort : null, page: null });
+  };
+
+  const handlePageChange = (page: number) => {
+    updateParams({ page: page > 1 ? String(page) : null });
   };
 
   const handleClearFilters = () => {
@@ -201,6 +214,8 @@ export function ExperiencesPageClient({
             experiences={initialExperiences}
             sort={currentParams.sort}
             onSortChange={handleSortChange}
+            pagination={pagination}
+            onPageChange={handlePageChange}
           />
         </div>
       </main>

@@ -1,26 +1,24 @@
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
-import Stripe from 'stripe';
+import type Stripe from 'stripe';
+import { getStripe, isStripeConfigured } from '@/server/stripe';
 import { db } from '@/server/db';
 import { env } from '@/lib/env';
-
-// Initialize Stripe
-const stripe = env.STRIPE_SECRET_KEY
-  ? new Stripe(env.STRIPE_SECRET_KEY, { typescript: true })
-  : null;
+import { logError, logInfo, logWarn } from '@/lib/logger';
 
 export async function POST(req: Request) {
-  if (!stripe) {
-    console.error('Stripe is not configured');
+  if (!isStripeConfigured()) {
+    logError('Stripe is not configured');
     return NextResponse.json(
       { error: 'Stripe not configured' },
       { status: 500 }
     );
   }
+  const stripe = getStripe();
 
   const webhookSecret = env.STRIPE_CONNECT_WEBHOOK_SECRET;
   if (!webhookSecret) {
-    console.error('STRIPE_CONNECT_WEBHOOK_SECRET is not configured');
+    logError('STRIPE_CONNECT_WEBHOOK_SECRET is not configured');
     return NextResponse.json(
       { error: 'Webhook secret not configured' },
       { status: 500 }
@@ -32,7 +30,7 @@ export async function POST(req: Request) {
   const signature = headersList.get('stripe-signature');
 
   if (!signature) {
-    console.error('Missing stripe-signature header');
+    logError('Missing stripe-signature header');
     return NextResponse.json(
       { error: 'Missing signature' },
       { status: 400 }
@@ -44,10 +42,9 @@ export async function POST(req: Request) {
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
   } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-    console.error('Webhook signature verification failed:', errorMessage);
+    logError('Webhook signature verification failed', err);
     return NextResponse.json(
-      { error: `Webhook Error: ${errorMessage}` },
+      { error: `Webhook Error: ${err instanceof Error ? err.message : 'Unknown error'}` },
       { status: 400 }
     );
   }
@@ -71,12 +68,12 @@ export async function POST(req: Request) {
 
       default:
         // Unexpected event type - log but don't fail
-        console.log(`Unhandled event type: ${event.type}`);
+        logInfo('Unhandled event type', { eventType: event.type });
     }
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error('Error processing webhook:', error);
+    logError('Error processing webhook', error);
     return NextResponse.json(
       { error: 'Webhook handler failed' },
       { status: 500 }
@@ -98,7 +95,7 @@ async function handleAccountUpdated(account: Stripe.Account) {
   });
 
   if (!winery) {
-    console.log(`No winery found for Stripe account: ${stripeAccountId}`);
+    logWarn('No winery found for Stripe account', { stripeAccountId });
     return;
   }
 
@@ -111,7 +108,8 @@ async function handleAccountUpdated(account: Stripe.Account) {
     },
   });
 
-  console.log(`Updated winery ${winery.id} Stripe status:`, {
+  logInfo('Updated winery Stripe status', {
+    wineryId: winery.id,
     detailsSubmitted: account.details_submitted,
     chargesEnabled: account.charges_enabled,
   });
@@ -122,7 +120,6 @@ async function handleAccountUpdated(account: Stripe.Account) {
  * When a winemaker disconnects their Stripe account
  */
 async function handleAccountDeauthorized(stripeAccountId: string) {
-
   // Find the winery with this Stripe account
   const winery = await db.winery.findUnique({
     where: { stripeAccountId },
@@ -130,9 +127,7 @@ async function handleAccountDeauthorized(stripeAccountId: string) {
   });
 
   if (!winery) {
-    console.log(
-      `No winery found for deauthorized Stripe account: ${stripeAccountId}`
-    );
+    logWarn('No winery found for deauthorized Stripe account', { stripeAccountId });
     return;
   }
 
@@ -146,5 +141,5 @@ async function handleAccountDeauthorized(stripeAccountId: string) {
     },
   });
 
-  console.log(`Winery ${winery.id} Stripe account deauthorized`);
+  logInfo('Winery Stripe account deauthorized', { wineryId: winery.id });
 }

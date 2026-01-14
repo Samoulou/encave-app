@@ -11,6 +11,8 @@ export interface SearchParams {
   maxPrice?: number;
   capacity?: number;
   sort?: 'relevance' | 'price_asc' | 'price_desc' | 'newest';
+  page?: number;
+  limit?: number;
 }
 
 export interface ExperienceSearchResult {
@@ -32,6 +34,14 @@ export interface ExperienceSearchResult {
   };
 }
 
+export interface PaginatedSearchResult {
+  experiences: ExperienceSearchResult[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 function getOrderBy(
   sort?: string
 ): Prisma.ExperienceOrderByWithRelationInput | Prisma.ExperienceOrderByWithRelationInput[] {
@@ -50,9 +60,15 @@ function getOrderBy(
   }
 }
 
+const DEFAULT_PAGE_SIZE = 20;
+
 export async function searchExperiences(
   params: SearchParams
-): Promise<ExperienceSearchResult[]> {
+): Promise<PaginatedSearchResult> {
+  const page = params.page ?? 1;
+  const limit = params.limit ?? DEFAULT_PAGE_SIZE;
+  const skip = (page - 1) * limit;
+
   const where: Prisma.ExperienceWhereInput = {
     status: ExperienceStatus.PUBLISHED,
     winery: {
@@ -96,22 +112,34 @@ export async function searchExperiences(
     }),
   };
 
-  const experiences = await db.experience.findMany({
-    where,
-    include: {
-      winery: {
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          commune: true,
+  // Execute both queries in parallel for performance
+  const [experiences, total] = await Promise.all([
+    db.experience.findMany({
+      where,
+      include: {
+        winery: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            commune: true,
+          },
         },
       },
-    },
-    orderBy: getOrderBy(params.sort),
-  });
+      orderBy: getOrderBy(params.sort),
+      skip,
+      take: limit,
+    }),
+    db.experience.count({ where }),
+  ]);
 
-  return experiences;
+  return {
+    experiences,
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit),
+  };
 }
 
 export async function getExperienceCommunes(): Promise<string[]> {
