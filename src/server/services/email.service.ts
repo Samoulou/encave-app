@@ -1,6 +1,7 @@
 import { Resend } from 'resend';
 import { render } from '@react-email/components';
-import { env } from '@/lib/env';
+import { env, getBaseUrl } from '@/lib/env';
+import { logInfo, logError, logWarn } from '@/lib/logger';
 import type { Locale } from '@prisma/client';
 import {
   BookingConfirmationEmail,
@@ -24,38 +25,80 @@ const resend = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null;
 const FROM_EMAIL = 'EnCave <noreply@encave.ch>';
 const DEFAULT_LOCALE: Locale = 'FR';
 
+// BACK-004 FIX: Retry configuration
+const MAX_RETRY_ATTEMPTS = 3;
+const INITIAL_RETRY_DELAY_MS = 1000; // 1 second
+
 interface SendEmailOptions {
   to: string;
   subject: string;
   html: string;
 }
 
+/**
+ * BACK-004 FIX: Send email with exponential backoff retry
+ * Retries up to 3 times with delays of 1s, 2s, 4s
+ */
 async function sendEmail({ to, subject, html }: SendEmailOptions): Promise<boolean> {
   if (!resend) {
-    console.log('[Email] Resend not configured, skipping email:');
-    console.log(`  To: ${to}`);
-    console.log(`  Subject: ${subject}`);
+    logInfo('Resend not configured, skipping email', { to, subject });
     return true;
   }
 
-  try {
-    const { error } = await resend.emails.send({
-      from: FROM_EMAIL,
-      to,
-      subject,
-      html,
-    });
+  for (let attempt = 1; attempt <= MAX_RETRY_ATTEMPTS; attempt++) {
+    try {
+      const { error } = await resend.emails.send({
+        from: FROM_EMAIL,
+        to,
+        subject,
+        html,
+      });
 
-    if (error) {
-      console.error('[Email] Failed to send:', error);
-      return false;
+      if (error) {
+        logWarn(`Email attempt ${attempt}/${MAX_RETRY_ATTEMPTS} failed`, {
+          to,
+          subject,
+          attempt,
+          error: String(error),
+        });
+        if (attempt === MAX_RETRY_ATTEMPTS) {
+          logError('Email max retries reached', error, { to, subject });
+          return false;
+        }
+        // Wait before retrying (exponential backoff: 1s, 2s, 4s)
+        const delay = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt - 1);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        continue;
+      }
+
+      return true;
+    } catch (error) {
+      logWarn(`Email attempt ${attempt}/${MAX_RETRY_ATTEMPTS} error`, {
+        to,
+        subject,
+        attempt,
+      });
+      if (attempt === MAX_RETRY_ATTEMPTS) {
+        logError('Email max retries reached', error, { to, subject });
+        return false;
+      }
+      // Wait before retrying
+      const delay = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt - 1);
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
-
-    return true;
-  } catch (error) {
-    console.error('[Email] Error sending email:', error);
-    return false;
   }
+
+  return false;
+}
+
+/**
+ * BACK-004 FIX: Non-blocking email sending
+ * Fire and forget - logs errors but doesn't block caller
+ */
+export function sendEmailNonBlocking(options: SendEmailOptions): void {
+  sendEmail(options).catch((error) => {
+    logError('Non-blocking email send failed', error, { to: options.to, subject: options.subject });
+  });
 }
 
 function getLocale(locale?: Locale | null): Locale {
@@ -85,7 +128,7 @@ export async function sendBookingConfirmationEmail(
     BookingConfirmationEmail({
       locale: loc,
       ...data,
-      bookingUrl: `https://encave.ch/bookings/${data.bookingRef}`,
+      bookingUrl: `${getBaseUrl()}/bookings/${data.bookingRef}`,
     })
   );
 
@@ -147,7 +190,7 @@ export async function sendBookingCancellationEmail(
     BookingCancellationEmail({
       locale: loc,
       ...data,
-      experiencesUrl: 'https://encave.ch/experiences',
+      experiencesUrl: `${getBaseUrl()}/experiences`,
     })
   );
 
@@ -192,7 +235,7 @@ export async function sendWelcomeEmail(
     WelcomeEmail({
       locale: loc,
       userName,
-      experiencesUrl: 'https://encave.ch/experiences',
+      experiencesUrl: `${getBaseUrl()}/experiences`,
     })
   );
 
@@ -248,7 +291,7 @@ export async function sendWinemakerNewBookingEmail(
     WinemakerNewBookingEmail({
       locale: loc,
       ...data,
-      dashboardUrl: 'https://encave.ch/dashboard/bookings',
+      dashboardUrl: `${getBaseUrl()}/dashboard/bookings`,
     })
   );
 
@@ -278,7 +321,7 @@ export async function sendWinemakerCancellationEmail(
     WinemakerCancellationEmail({
       locale: loc,
       ...data,
-      dashboardUrl: 'https://encave.ch/dashboard/bookings',
+      dashboardUrl: `${getBaseUrl()}/dashboard/bookings`,
     })
   );
 
@@ -303,7 +346,7 @@ export async function sendWineryApprovedEmail(
       locale: loc,
       winemakerName,
       wineryName,
-      dashboardUrl: 'https://encave.ch/dashboard',
+      dashboardUrl: `${getBaseUrl()}/dashboard`,
     })
   );
 
@@ -395,7 +438,7 @@ export async function sendDailyDigestEmail(
     DailyDigestEmail({
       locale: loc,
       ...data,
-      dashboardUrl: 'https://encave.ch/dashboard/bookings',
+      dashboardUrl: `${getBaseUrl()}/dashboard/bookings`,
     })
   );
 
@@ -423,7 +466,7 @@ export async function sendPostExperienceFollowUpEmail(
     PostExperienceFollowUpEmail({
       locale: loc,
       ...data,
-      experiencesUrl: 'https://encave.ch/experiences',
+      experiencesUrl: `${getBaseUrl()}/experiences`,
     })
   );
 
@@ -460,7 +503,7 @@ export async function sendWeeklySummaryEmail(
     WeeklySummaryEmail({
       locale: loc,
       ...data,
-      dashboardUrl: 'https://encave.ch/dashboard/earnings',
+      dashboardUrl: `${getBaseUrl()}/dashboard/earnings`,
     })
   );
 

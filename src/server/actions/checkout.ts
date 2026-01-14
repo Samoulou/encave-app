@@ -6,6 +6,7 @@ import { db } from '@/server/db';
 import { env, getBaseUrl } from '@/lib/env';
 import type { ActionResult } from '@/types/actions';
 import { BookingStatus } from '@prisma/client';
+import { timeSlotSchema } from '@/lib/validators/booking';
 
 // Initialize Stripe
 const stripe = env.STRIPE_SECRET_KEY
@@ -33,7 +34,7 @@ const CreateBookingSchema = z.object({
   experienceId: z.string(),
   wineryId: z.string(),
   date: z.string(),
-  timeSlot: z.string(),
+  timeSlot: timeSlotSchema, // BACK-003 FIX: Validate HH:mm format
   guestCount: z.number().positive(),
   visitorName: z.string().min(2),
   visitorEmail: z.string().email(),
@@ -98,70 +99,87 @@ export async function createBookingAndCheckout(
       };
     }
 
-    // Check availability
-    const bookingDate = new Date(date);
-    const existingBookings = await db.booking.aggregate({
-      where: {
-        experienceId,
-        date: bookingDate,
-        timeSlot,
-        status: { in: [BookingStatus.PENDING_PAYMENT, BookingStatus.CONFIRMED] },
-      },
-      _sum: { guestCount: true },
-    });
-
-    const bookedCount = existingBookings._sum.guestCount ?? 0;
-    const remainingCapacity = experience.maxCapacity - bookedCount;
-
-    if (guestCount > remainingCapacity) {
-      return {
-        success: false,
-        error: { code: 'NO_CAPACITY', message: 'Not enough availability for this time slot' },
-      };
-    }
-
     // Calculate prices
     const totalPrice = experience.price * guestCount;
     const platformFee = Math.round(totalPrice * env.PLATFORM_COMMISSION_RATE);
     const wineryPayout = totalPrice - platformFee;
 
-    // Generate unique reference
-    let reference = generateBookingReference();
-    let referenceExists = true;
-    let attempts = 0;
-
-    while (referenceExists && attempts < 10) {
-      const existing = await db.booking.findUnique({ where: { reference } });
-      if (!existing) {
-        referenceExists = false;
-      } else {
-        reference = generateBookingReference();
-        attempts++;
-      }
-    }
-
-    // Create booking with PENDING_PAYMENT status
-    // Set expiration to 30 minutes from now
+    const bookingDate = new Date(date);
     const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
 
-    const booking = await db.booking.create({
-      data: {
-        reference,
-        experienceId,
-        wineryId,
-        date: bookingDate,
-        timeSlot,
-        guestCount,
-        totalPrice,
-        platformFee,
-        wineryPayout,
-        visitorName,
-        visitorEmail,
-        visitorPhone,
-        status: BookingStatus.PENDING_PAYMENT,
-        expiresAt,
-      },
-    });
+    // BACK-001 FIX: Use serializable transaction to prevent race condition double bookings
+    // This ensures capacity check and booking creation are atomic
+    let booking;
+    try {
+      booking = await db.$transaction(
+        async (tx) => {
+          // Check availability within transaction (atomic with create)
+          const existingBookings = await tx.booking.aggregate({
+            where: {
+              experienceId,
+              date: bookingDate,
+              timeSlot,
+              status: { in: [BookingStatus.PENDING_PAYMENT, BookingStatus.CONFIRMED] },
+            },
+            _sum: { guestCount: true },
+          });
+
+          const bookedCount = existingBookings._sum.guestCount ?? 0;
+          const remainingCapacity = experience.maxCapacity - bookedCount;
+
+          if (guestCount > remainingCapacity) {
+            throw new Error('NO_CAPACITY');
+          }
+
+          // Generate unique reference within transaction
+          let reference = generateBookingReference();
+          let referenceExists = true;
+          let attempts = 0;
+
+          while (referenceExists && attempts < 10) {
+            const existing = await tx.booking.findUnique({ where: { reference } });
+            if (!existing) {
+              referenceExists = false;
+            } else {
+              reference = generateBookingReference();
+              attempts++;
+            }
+          }
+
+          // Create booking within same transaction
+          return tx.booking.create({
+            data: {
+              reference,
+              experienceId,
+              wineryId,
+              date: bookingDate,
+              timeSlot,
+              guestCount,
+              totalPrice,
+              platformFee,
+              wineryPayout,
+              visitorName,
+              visitorEmail,
+              visitorPhone,
+              status: BookingStatus.PENDING_PAYMENT,
+              expiresAt,
+            },
+          });
+        },
+        {
+          isolationLevel: 'Serializable', // Prevents concurrent booking race conditions
+          timeout: 10000, // 10 second timeout
+        }
+      );
+    } catch (txError) {
+      if (txError instanceof Error && txError.message === 'NO_CAPACITY') {
+        return {
+          success: false,
+          error: { code: 'NO_CAPACITY', message: 'Not enough availability for this time slot' },
+        };
+      }
+      throw txError; // Re-throw other errors to be caught by outer catch
+    }
 
     // Create Stripe Checkout Session
     const baseUrl = getBaseUrl();

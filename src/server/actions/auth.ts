@@ -83,7 +83,15 @@ export async function loginAction(
         },
       };
     }
-    throw error;
+    // BACK-002 FIX: Return ActionResult instead of throwing unhandled error
+    console.error('Login error:', error);
+    return {
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'An unexpected error occurred. Please try again.',
+      },
+    };
   }
 }
 
