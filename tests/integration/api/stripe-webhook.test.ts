@@ -24,6 +24,16 @@ vi.mock('@/lib/env', () => ({
   },
 }));
 
+// Mock logger
+const mockLogInfo = vi.fn();
+const mockLogWarn = vi.fn();
+const mockLogError = vi.fn();
+vi.mock('@/lib/logger', () => ({
+  logInfo: (...args: unknown[]) => mockLogInfo(...args),
+  logWarn: (...args: unknown[]) => mockLogWarn(...args),
+  logError: (...args: unknown[]) => mockLogError(...args),
+}));
+
 // Create a mock Stripe instance
 const mockConstructEvent = vi.fn();
 const mockStripeInstance = {
@@ -51,6 +61,9 @@ const mockDb = vi.mocked(db);
 describe('Stripe Connect Webhook Handler', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockLogInfo.mockClear();
+    mockLogWarn.mockClear();
+    mockLogError.mockClear();
   });
 
   function createMockRequest(body: string, signature: string | null): Request {
@@ -137,7 +150,6 @@ describe('Stripe Connect Webhook Handler', () => {
     });
 
     it('logs warning when winery not found for account', async () => {
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
       const req = createMockRequest('{}', 'valid_signature');
       mockHeaders.mockResolvedValue(
         createMockHeaders('valid_signature') as never
@@ -151,11 +163,10 @@ describe('Stripe Connect Webhook Handler', () => {
       expect(response.status).toBe(200);
       expect(data.received).toBe(true);
       expect(mockDb.winery.update).not.toHaveBeenCalled();
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('No winery found')
+      expect(mockLogWarn).toHaveBeenCalledWith(
+        expect.stringContaining('No winery found'),
+        expect.any(Object)
       );
-
-      consoleSpy.mockRestore();
     });
 
     it('handles partial onboarding correctly', async () => {
@@ -229,7 +240,6 @@ describe('Stripe Connect Webhook Handler', () => {
     });
 
     it('handles deauthorization for non-existent winery gracefully', async () => {
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
       const req = createMockRequest('{}', 'valid_signature');
       mockHeaders.mockResolvedValue(
         createMockHeaders('valid_signature') as never
@@ -241,14 +251,11 @@ describe('Stripe Connect Webhook Handler', () => {
 
       expect(response.status).toBe(200);
       expect(mockDb.winery.update).not.toHaveBeenCalled();
-
-      consoleSpy.mockRestore();
     });
   });
 
   describe('unhandled events', () => {
     it('returns success for unhandled event types', async () => {
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
       const unhandledEvent: Partial<Stripe.Event> = {
         type: 'payment_intent.created',
         data: {
@@ -267,19 +274,15 @@ describe('Stripe Connect Webhook Handler', () => {
 
       expect(response.status).toBe(200);
       expect(data.received).toBe(true);
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Unhandled event type')
+      expect(mockLogInfo).toHaveBeenCalledWith(
+        expect.stringContaining('Unhandled event type'),
+        expect.any(Object)
       );
-
-      consoleSpy.mockRestore();
     });
   });
 
   describe('error handling', () => {
     it('returns 500 when database update fails', async () => {
-      const consoleErrorSpy = vi
-        .spyOn(console, 'error')
-        .mockImplementation(() => {});
       const mockEvent: Partial<Stripe.Event> = {
         type: 'account.updated',
         data: {
@@ -306,9 +309,7 @@ describe('Stripe Connect Webhook Handler', () => {
 
       expect(response.status).toBe(500);
       expect(data.error).toBe('Webhook handler failed');
-      expect(consoleErrorSpy).toHaveBeenCalled();
-
-      consoleErrorSpy.mockRestore();
+      expect(mockLogError).toHaveBeenCalled();
     });
   });
 });

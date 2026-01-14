@@ -19,7 +19,7 @@ vi.mock('stripe', () => {
   };
 });
 
-// Mock db
+// Mock db with $transaction support
 vi.mock('@/server/db', () => ({
   db: {
     experience: {
@@ -31,6 +31,15 @@ vi.mock('@/server/db', () => ({
       create: vi.fn(),
       update: vi.fn(),
     },
+    // $transaction executes the callback with the same db object (simplified mock)
+    $transaction: vi.fn(async (callback: (tx: unknown) => Promise<unknown>) => {
+      // Create a transaction-like object that delegates to the mocked methods
+      const { db } = await import('@/server/db');
+      return callback({
+        booking: db.booking,
+        experience: db.experience,
+      });
+    }),
   },
 }));
 
@@ -45,6 +54,7 @@ vi.mock('@/lib/env', () => ({
     PLATFORM_COMMISSION_RATE: 0.12,
     NODE_ENV: 'test',
   },
+  getBaseUrl: () => 'http://localhost:3000',
 }));
 
 describe('Checkout Server Actions', () => {
