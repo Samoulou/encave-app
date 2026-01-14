@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Calendar, Sparkles, Building2, Menu, X, TrendingUp, Settings } from 'lucide-react';
+import { useLocale } from 'next-intl';
+import { Calendar, Sparkles, Building2, Menu, X, TrendingUp, Settings, Home, Wine } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,7 @@ const sidebarLinks = [
 
 export function DashboardSidebar({ wineryName }: DashboardSidebarProps) {
   const pathname = usePathname();
+  const locale = useLocale();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   return (
@@ -52,13 +54,29 @@ export function DashboardSidebar({ wineryName }: DashboardSidebarProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed left-0 top-20 z-40 h-[calc(100vh-5rem)] w-64 border-r border-stone-200 bg-white transition-transform duration-300 ease-in-out',
+          'fixed left-0 top-0 z-40 h-screen w-64 border-r border-stone-200 bg-white transition-transform duration-300 ease-in-out',
           'md:translate-x-0',
           isMobileOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
         <div className="flex h-full flex-col">
-          {/* Winery name header */}
+          {/* Logo header - links to home */}
+          <div className="border-b border-stone-200 px-6 py-4">
+            <Link
+              href={`/${locale}`}
+              className="flex items-center gap-2 group"
+              aria-label="Go to homepage"
+            >
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-burgundy-600 text-white transition-colors group-hover:bg-burgundy-700">
+                <Wine className="h-5 w-5" aria-hidden="true" />
+              </div>
+              <span className="font-display text-xl font-semibold text-burgundy-800">
+                EnCave
+              </span>
+            </Link>
+          </div>
+
+          {/* Winery name */}
           <div className="border-b border-stone-200 px-6 py-4">
             <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
               Your Winery
@@ -71,15 +89,35 @@ export function DashboardSidebar({ wineryName }: DashboardSidebarProps) {
           {/* Navigation links */}
           <nav className="flex-1 px-4 py-6" aria-label="Dashboard navigation">
             <ul className="space-y-1">
+              {/* Home link */}
+              <li>
+                <Link
+                  href={`/${locale}`}
+                  onClick={() => setIsMobileOpen(false)}
+                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 hover:bg-stone-50 hover:text-burgundy-700 transition-colors"
+                >
+                  <Home
+                    className="h-5 w-5 flex-shrink-0 text-slate-400"
+                    aria-hidden="true"
+                  />
+                  Back to Home
+                </Link>
+              </li>
+
+              <li className="pt-2">
+                <div className="border-t border-stone-200 pt-3" />
+              </li>
+
               {sidebarLinks.map((link) => {
+                const localizedHref = `/${locale}${link.href}`;
                 const isActive =
-                  pathname === link.href || pathname.startsWith(`${link.href}/`);
+                  pathname === localizedHref || pathname.startsWith(`${localizedHref}/`);
                 const Icon = link.icon;
 
                 return (
                   <li key={link.href}>
                     <Link
-                      href={link.href}
+                      href={localizedHref}
                       onClick={() => setIsMobileOpen(false)}
                       className={cn(
                         'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',

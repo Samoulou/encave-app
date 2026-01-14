@@ -1,5 +1,6 @@
 import { auth } from '@/server/auth';
 import { redirect } from 'next/navigation';
+import { getLocale } from 'next-intl/server';
 import { DashboardSidebar } from '@/components/layout/DashboardSidebar';
 import { getWineryByUserId } from '@/server/queries/winery.queries';
 
@@ -9,14 +10,15 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const session = await auth();
+  const locale = await getLocale();
 
   if (!session?.user) {
-    redirect('/login');
+    redirect(`/${locale}/login`);
   }
 
   // Only winemakers should access the dashboard
   if (session.user.role !== 'WINEMAKER') {
-    redirect('/');
+    redirect(`/${locale}`);
   }
 
   const winery = await getWineryByUserId(session.user.id);

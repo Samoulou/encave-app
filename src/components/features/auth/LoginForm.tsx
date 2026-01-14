@@ -107,12 +107,13 @@ export function LoginForm() {
               <FormItem>
                 <div className="flex items-center justify-between">
                   <FormLabel>{tCommon('labels.password')}</FormLabel>
-                  <Link
-                    href="/forgot-password"
+                  <a
+                    href="mailto:support@encave.ch?subject=Password%20Reset%20Request"
                     className="text-sm text-burgundy-600 hover:text-burgundy-800 relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-gold-400 after:transition-all hover:after:w-full"
+                    title={t('forgotPasswordContactSupport')}
                   >
                     {t('forgotPassword')}
-                  </Link>
+                  </a>
                 </div>
                 <FormControl>
                   <Input
