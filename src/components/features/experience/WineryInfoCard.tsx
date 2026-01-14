@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { MapPin, ArrowRight, Wine } from 'lucide-react';
+import { IMAGE_PLACEHOLDERS } from '@/lib/image-placeholder';
 
 interface WineryInfoCardProps {
   name: string;
@@ -26,6 +27,8 @@ export function WineryInfoCard({
             fill
             className="object-cover"
             sizes="(max-width: 1024px) 100vw, 33vw"
+            placeholder="blur"
+            blurDataURL={IMAGE_PLACEHOLDERS.card}
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-burgundy-100 to-burgundy-200">

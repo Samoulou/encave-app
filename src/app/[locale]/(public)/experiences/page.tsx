@@ -7,7 +7,9 @@ import {
 } from '@/server/queries/experience.queries';
 import { ExperiencesPageClient } from './ExperiencesPageClient';
 import { ExperienceType } from '@prisma/client';
+import { JsonLd } from '@/components/shared/JsonLd';
 import { generateExperiencesMetadata } from '@/lib/seo';
+import { getBaseUrl } from '@/lib/env';
 import type { Locale } from '@/i18n/routing';
 
 export async function generateMetadata({
@@ -29,6 +31,7 @@ interface PageProps {
     maxPrice?: string;
     capacity?: string;
     sort?: string;
+    page?: string;
   }>;
 }
 
@@ -39,6 +42,7 @@ export default async function ExperiencesPage({ params, searchParams }: PageProp
   const searchParamsData = await searchParams;
 
   // Parse search parameters
+  const page = searchParamsData.page ? parseInt(searchParamsData.page, 10) : 1;
   const parsedParams: SearchParams = {
     search: searchParamsData.q || undefined,
     type: parseTypeParam(searchParamsData.type),
@@ -47,15 +51,58 @@ export default async function ExperiencesPage({ params, searchParams }: PageProp
     maxPrice: searchParamsData.maxPrice ? parseInt(searchParamsData.maxPrice, 10) : undefined,
     capacity: searchParamsData.capacity ? parseInt(searchParamsData.capacity, 10) : undefined,
     sort: parseSort(searchParamsData.sort),
+    page: page > 0 ? page : 1,
   };
 
   // Fetch data in parallel
-  const [experiences, communes] = await Promise.all([
+  const [searchResult, communes] = await Promise.all([
     searchExperiences(parsedParams),
     getExperienceCommunes(),
   ]);
 
+  const baseUrl = getBaseUrl();
+
+  // SEO-004: ItemList schema for experiences listing
+  const itemListSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'Wine Experiences in Valais',
+    description: 'Discover wine tastings, cellar visits, and vineyard tours in Valais, Switzerland',
+    url: `${baseUrl}/experiences`,
+    numberOfItems: searchResult.total,
+    itemListElement: searchResult.experiences.map((exp, index) => ({
+      '@type': 'ListItem',
+      position: (searchResult.page - 1) * searchResult.limit + index + 1,
+      item: {
+        '@type': 'Event',
+        '@id': `${baseUrl}/experiences/${exp.slug}`,
+        name: exp.title,
+        description: exp.description,
+        image: exp.coverPhoto,
+        url: `${baseUrl}/experiences/${exp.slug}`,
+        offers: {
+          '@type': 'Offer',
+          price: exp.price / 100,
+          priceCurrency: 'CHF',
+          availability: 'https://schema.org/InStock',
+        },
+        location: {
+          '@type': 'Place',
+          name: exp.winery.name,
+          address: {
+            '@type': 'PostalAddress',
+            addressLocality: exp.winery.commune,
+            addressRegion: 'Valais',
+            addressCountry: 'CH',
+          },
+        },
+      },
+    })),
+  };
+
   return (
+    <>
+    <JsonLd data={itemListSchema} />
     <div className="min-h-screen bg-cream-50">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Page Header */}
@@ -71,12 +118,19 @@ export default async function ExperiencesPage({ params, searchParams }: PageProp
         {/* Search Page Content */}
         <Suspense fallback={<LoadingState />}>
           <ExperiencesPageClient
-            initialExperiences={experiences}
+            initialExperiences={searchResult.experiences}
             communes={communes}
+            pagination={{
+              total: searchResult.total,
+              page: searchResult.page,
+              limit: searchResult.limit,
+              totalPages: searchResult.totalPages,
+            }}
           />
         </Suspense>
       </div>
     </div>
+    </>
   );
 }
 

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useLocale } from 'next-intl';
 import { ChevronRight, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getBaseUrl } from '@/lib/env';
 
 interface BreadcrumbItem {
   label: string;
@@ -17,6 +18,7 @@ interface BreadcrumbProps {
 
 export function Breadcrumb({ items, className }: BreadcrumbProps) {
   const locale = useLocale();
+  const baseUrl = getBaseUrl();
 
   // Helper to ensure href has locale prefix
   const getLocalizedHref = (href: string) => {
@@ -32,7 +34,26 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
     return `/${locale}${href}`;
   };
 
+  // SEO-005: BreadcrumbList schema for rich snippets
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items.map((item, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: item.label,
+      ...(item.href && {
+        item: `${baseUrl}${getLocalizedHref(item.href)}`,
+      }),
+    })),
+  };
+
   return (
+    <>
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+    />
     <nav aria-label="Breadcrumb" className={cn('flex', className)}>
       <ol className="flex flex-wrap items-center gap-1.5 text-sm">
         {items.map((item, index) => {
@@ -74,5 +95,6 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
         })}
       </ol>
     </nav>
+    </>
   );
 }

@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { MapPin, Clock, Wine } from 'lucide-react';
 import type { ExperienceType } from '@prisma/client';
+import { IMAGE_PLACEHOLDERS } from '@/lib/image-placeholder';
 
 interface RelatedExperience {
   id: string;
@@ -69,6 +70,8 @@ export function RelatedExperiences({ experiences }: RelatedExperiencesProps) {
                   fill
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  placeholder="blur"
+                  blurDataURL={IMAGE_PLACEHOLDERS.card}
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-burgundy-100 to-burgundy-200">

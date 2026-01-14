@@ -1,20 +1,7 @@
-import Stripe from 'stripe';
+import type Stripe from 'stripe';
+import { getStripe } from '@/server/stripe';
 import { db } from '@/server/db';
 import { env, getBaseUrl } from '@/lib/env';
-
-// Initialize Stripe with optional key (for build time)
-const stripe = env.STRIPE_SECRET_KEY
-  ? new Stripe(env.STRIPE_SECRET_KEY, {
-      typescript: true,
-    })
-  : null;
-
-function getStripe(): Stripe {
-  if (!stripe) {
-    throw new Error('Stripe is not configured. Set STRIPE_SECRET_KEY.');
-  }
-  return stripe;
-}
 
 /**
  * Creates a Stripe Connect Express account for a winery

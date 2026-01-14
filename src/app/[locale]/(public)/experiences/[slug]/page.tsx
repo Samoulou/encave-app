@@ -14,7 +14,9 @@ import { LocationSection } from '@/components/features/experience/LocationSectio
 import { BookingCTA } from '@/components/features/experience/BookingCTA';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { RelatedExperiences } from '@/components/features/experience/RelatedExperiences';
+import { JsonLd } from '@/components/shared/JsonLd';
 import { generateExperienceDetailMetadata } from '@/lib/seo';
+import { getBaseUrl } from '@/lib/env';
 import type { Locale } from '@/i18n/routing';
 
 interface ExperiencePageProps {
@@ -60,13 +62,62 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
     3
   );
 
-  // Schema.org structured data
-  const jsonLd = {
+  const baseUrl = getBaseUrl();
+
+  // SEO-002: Calculate next available date from availability slots
+  const getNextAvailableDate = () => {
+    if (!experience.availabilitySlots || experience.availabilitySlots.length === 0) {
+      return null;
+    }
+
+    const now = new Date();
+    const availableDays = experience.availabilitySlots
+      .filter((slot) => slot.isActive)
+      .map((slot) => slot.dayOfWeek);
+
+    if (availableDays.length === 0) return null;
+
+    // Find next available day (0 = Sunday, 1 = Monday, etc.)
+    for (let i = 0; i < 14; i++) {
+      const checkDate = new Date(now);
+      checkDate.setDate(now.getDate() + i);
+      const dayOfWeek = checkDate.getDay();
+      if (availableDays.includes(dayOfWeek)) {
+        // Get the first time slot for that day
+        const slot = experience.availabilitySlots.find(
+          (s) => s.dayOfWeek === dayOfWeek && s.isActive
+        );
+        if (slot) {
+          const [hoursStr, minutesStr] = slot.startTime.split(':');
+          const hours = parseInt(hoursStr ?? '10', 10);
+          const minutes = parseInt(minutesStr ?? '0', 10);
+          checkDate.setHours(hours, minutes, 0, 0);
+          return checkDate;
+        }
+      }
+    }
+    return null;
+  };
+
+  const nextAvailableDate = getNextAvailableDate();
+
+  // SEO-002: Schema.org Event structured data with complete fields
+  const eventSchema = {
     '@context': 'https://schema.org',
     '@type': 'Event',
+    '@id': `${baseUrl}/experiences/${experience.slug}`,
     name: experience.title,
     description: experience.description,
     image: experience.coverPhoto,
+    url: `${baseUrl}/experiences/${experience.slug}`,
+    ...(nextAvailableDate && {
+      startDate: nextAvailableDate.toISOString(),
+      endDate: new Date(
+        nextAvailableDate.getTime() + experience.duration * 60000
+      ).toISOString(),
+    }),
+    eventStatus: 'https://schema.org/EventScheduled',
+    eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
     location: {
       '@type': 'Place',
       name: experience.winery.name,
@@ -77,17 +128,33 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
         addressRegion: 'Valais',
         addressCountry: 'CH',
       },
+      ...(experience.winery.latitude && experience.winery.longitude && {
+        geo: {
+          '@type': 'GeoCoordinates',
+          latitude: experience.winery.latitude,
+          longitude: experience.winery.longitude,
+        },
+      }),
     },
     offers: {
       '@type': 'Offer',
       price: experience.price / 100,
       priceCurrency: 'CHF',
       availability: 'https://schema.org/InStock',
+      url: `${baseUrl}/experiences/${experience.slug}`,
+      validFrom: new Date().toISOString(),
     },
     organizer: {
       '@type': 'Organization',
       name: experience.winery.name,
+      url: `${baseUrl}/wineries/${experience.winery.slug}`,
     },
+    performer: {
+      '@type': 'Organization',
+      name: experience.winery.name,
+    },
+    maximumAttendeeCapacity: experience.maxCapacity,
+    remainingAttendeeCapacity: experience.maxCapacity, // Full capacity shown (bookings are per-slot)
   };
 
   const breadcrumbItems = [
@@ -98,10 +165,7 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <JsonLd data={eventSchema} />
 
       <div className="min-h-screen bg-cream-50">
         <ExperienceHero

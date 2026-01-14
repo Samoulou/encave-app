@@ -1,7 +1,8 @@
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
-import Stripe from 'stripe';
+import type Stripe from 'stripe';
+import { getStripe, isStripeConfigured } from '@/server/stripe';
 import { db } from '@/server/db';
 import { env } from '@/lib/env';
 import { BookingStatus } from '@prisma/client';
@@ -9,24 +10,21 @@ import {
   sendBookingConfirmationEmail,
   sendWinemakerNewBookingEmail,
 } from '@/server/services/email.service';
-
-// Initialize Stripe
-const stripe = env.STRIPE_SECRET_KEY
-  ? new Stripe(env.STRIPE_SECRET_KEY, { typescript: true })
-  : null;
+import { logError, logInfo } from '@/lib/logger';
 
 export async function POST(req: Request) {
-  if (!stripe) {
-    console.error('Stripe is not configured');
+  if (!isStripeConfigured()) {
+    logError('Stripe is not configured');
     return NextResponse.json(
       { error: 'Stripe not configured' },
       { status: 500 }
     );
   }
+  const stripe = getStripe();
 
   const webhookSecret = env.STRIPE_WEBHOOK_SECRET;
   if (!webhookSecret) {
-    console.error('STRIPE_WEBHOOK_SECRET is not configured');
+    logError('STRIPE_WEBHOOK_SECRET is not configured');
     return NextResponse.json(
       { error: 'Webhook secret not configured' },
       { status: 500 }
@@ -38,7 +36,7 @@ export async function POST(req: Request) {
   const signature = headersList.get('stripe-signature');
 
   if (!signature) {
-    console.error('Missing stripe-signature header');
+    logError('Missing stripe-signature header');
     return NextResponse.json(
       { error: 'Missing signature' },
       { status: 400 }
@@ -50,10 +48,9 @@ export async function POST(req: Request) {
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
   } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-    console.error('Webhook signature verification failed:', errorMessage);
+    logError('Webhook signature verification failed', err);
     return NextResponse.json(
-      { error: `Webhook Error: ${errorMessage}` },
+      { error: `Webhook Error: ${err instanceof Error ? err.message : 'Unknown error'}` },
       { status: 400 }
     );
   }
@@ -75,12 +72,12 @@ export async function POST(req: Request) {
 
       default:
         // Log unhandled events but don't fail
-        console.log(`Unhandled checkout event type: ${event.type}`);
+        logInfo('Unhandled checkout event type', { eventType: event.type });
     }
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error('Error processing checkout webhook:', error);
+    logError('Error processing checkout webhook', error);
     return NextResponse.json(
       { error: 'Webhook handler failed' },
       { status: 500 }
@@ -96,7 +93,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const bookingId = session.metadata?.bookingId;
 
   if (!bookingId) {
-    console.error('No bookingId in session metadata');
+    logError('No bookingId in session metadata');
     return;
   }
 
@@ -126,19 +123,22 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   });
 
   if (!booking) {
-    console.error(`Booking not found: ${bookingId}`);
+    logError('Booking not found', undefined, { bookingId });
     return;
   }
 
   // Already confirmed - skip (idempotency)
   if (booking.status === BookingStatus.CONFIRMED) {
-    console.log(`Booking ${booking.reference} already confirmed, skipping`);
+    logInfo('Booking already confirmed, skipping', { bookingRef: booking.reference });
     return;
   }
 
   // Only update if still pending payment
   if (booking.status !== BookingStatus.PENDING_PAYMENT) {
-    console.log(`Booking ${booking.reference} is ${booking.status}, not updating`);
+    logInfo('Booking not pending payment, not updating', {
+      bookingRef: booking.reference,
+      status: booking.status,
+    });
     return;
   }
 
@@ -159,7 +159,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     },
   });
 
-  console.log(`Booking ${booking.reference} confirmed via webhook`);
+  logInfo('Booking confirmed via webhook', { bookingRef: booking.reference });
 
   // Combine date and timeSlot for email formatting
   const [hours, minutes] = booking.timeSlot.split(':').map(Number);
@@ -188,9 +188,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       data: { confirmationSentAt: new Date() },
     });
 
-    console.log(`Confirmation email sent to ${booking.visitorEmail}`);
+    logInfo('Confirmation email sent', { to: booking.visitorEmail, bookingRef: booking.reference });
   } catch (error) {
-    console.error('Failed to send confirmation email:', error);
+    logError('Failed to send confirmation email', error, { bookingId });
     // Don't throw - booking is still confirmed, email failure is not critical
   }
 
@@ -217,9 +217,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       data: { wineryNotifiedAt: new Date() },
     });
 
-    console.log(`Winery notification sent to ${booking.winery.email}`);
+    logInfo('Winery notification sent', { to: booking.winery.email, bookingRef: booking.reference });
   } catch (error) {
-    console.error('Failed to send winery notification:', error);
+    logError('Failed to send winery notification', error, { bookingId });
     // Don't throw - booking is still confirmed
   }
 }
@@ -232,7 +232,7 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
   const bookingId = session.metadata?.bookingId;
 
   if (!bookingId) {
-    console.error('No bookingId in session metadata');
+    logError('No bookingId in session metadata');
     return;
   }
 
@@ -242,13 +242,16 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
   });
 
   if (!booking) {
-    console.error(`Booking not found: ${bookingId}`);
+    logError('Booking not found', undefined, { bookingId });
     return;
   }
 
   // Only cancel if still pending
   if (booking.status !== BookingStatus.PENDING_PAYMENT) {
-    console.log(`Booking ${booking.reference} is ${booking.status}, not cancelling`);
+    logInfo('Booking not pending payment, not cancelling', {
+      bookingRef: booking.reference,
+      status: booking.status,
+    });
     return;
   }
 
@@ -257,5 +260,5 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
     where: { id: bookingId },
   });
 
-  console.log(`Booking ${booking.reference} deleted due to checkout session expiry`);
+  logInfo('Booking deleted due to checkout session expiry', { bookingRef: booking.reference });
 }

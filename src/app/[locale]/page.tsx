@@ -5,7 +5,9 @@ import { Header } from '@/components/layout/Header';
 import { HealthStatus } from '@/components/shared/HealthStatus';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { JsonLd } from '@/components/shared/JsonLd';
 import { generateHomeMetadata } from '@/lib/seo';
+import { getBaseUrl } from '@/lib/env';
 import type { Locale } from '@/i18n/routing';
 
 type Props = {
@@ -22,7 +24,36 @@ export default async function Home({ params }: Props) {
   setRequestLocale(locale);
   const t = await getTranslations('home');
 
+  const baseUrl = getBaseUrl();
+
+  // SEO-003: Organization schema for home page
+  const organizationSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    '@id': `${baseUrl}/#organization`,
+    name: 'EnCave',
+    url: baseUrl,
+    logo: `${baseUrl}/logo.png`,
+    description: 'Plateforme de réservation d\'expériences viticoles en Valais, Suisse. Découvrez et réservez des dégustations de vin, visites de caves et expériences œnologiques authentiques.',
+    areaServed: {
+      '@type': 'Place',
+      name: 'Valais, Switzerland',
+      address: {
+        '@type': 'PostalAddress',
+        addressRegion: 'Valais',
+        addressCountry: 'CH',
+      },
+    },
+    contactPoint: {
+      '@type': 'ContactPoint',
+      contactType: 'customer service',
+      email: 'contact@encave.ch',
+    },
+  };
+
   return (
+    <>
+    <JsonLd data={organizationSchema} />
     <div className="min-h-screen bg-cream-50">
       <Header />
       <main id="main-content" className="flex flex-col items-center px-6 py-16 lg:px-8 lg:py-24">
@@ -116,5 +147,6 @@ export default async function Home({ params }: Props) {
         </div>
       </main>
     </div>
+    </>
   );
 }

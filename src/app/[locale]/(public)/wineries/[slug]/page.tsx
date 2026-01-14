@@ -5,7 +5,10 @@ import Link from 'next/link';
 import { ArrowLeft, MapPin, Phone, Mail, Calendar, ExternalLink, Wine } from 'lucide-react';
 import { getWineryBySlug } from '@/server/queries/winery.queries';
 import { VerifiedBadge } from '@/components/shared/VerifiedBadge';
+import { JsonLd } from '@/components/shared/JsonLd';
 import { generateWineryDetailMetadata } from '@/lib/seo';
+import { getBaseUrl } from '@/lib/env';
+import { IMAGE_PLACEHOLDERS } from '@/lib/image-placeholder';
 import type { Locale } from '@/i18n/routing';
 
 interface WineryPageProps {
@@ -41,10 +44,40 @@ export default async function WineryPage({ params }: WineryPageProps) {
 
   const isVerified = winery.status === 'VERIFIED';
   const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${winery.address}, ${winery.commune}, Valais, Switzerland`)}`;
+  const baseUrl = getBaseUrl();
+
+  // SEO-001: LocalBusiness structured data for rich snippets
+  const winerySchema = {
+    '@context': 'https://schema.org',
+    '@type': 'LocalBusiness',
+    '@id': `${baseUrl}/wineries/${winery.slug}`,
+    name: winery.name,
+    description: winery.description,
+    image: winery.coverPhoto,
+    telephone: winery.phone,
+    email: winery.email,
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: winery.address,
+      addressLocality: winery.commune,
+      addressRegion: 'Valais',
+      addressCountry: 'CH',
+    },
+    ...(winery.latitude && winery.longitude && {
+      geo: {
+        '@type': 'GeoCoordinates',
+        latitude: winery.latitude,
+        longitude: winery.longitude,
+      },
+    }),
+    url: `${baseUrl}/wineries/${winery.slug}`,
+  };
 
   return (
-    <div className="min-h-screen bg-cream-50">
-      {/* Hero Section */}
+    <>
+      <JsonLd data={winerySchema} />
+      <div className="min-h-screen bg-cream-50">
+        {/* Hero Section */}
       <section className="relative h-[50vh] min-h-[400px] w-full">
         {winery.coverPhoto ? (
           <Image
@@ -54,6 +87,8 @@ export default async function WineryPage({ params }: WineryPageProps) {
             className="object-cover"
             priority
             sizes="100vw"
+            placeholder="blur"
+            blurDataURL={IMAGE_PLACEHOLDERS.hero}
           />
         ) : (
           <div className="h-full w-full bg-gradient-to-br from-burgundy-700 to-burgundy-900">
@@ -129,6 +164,8 @@ export default async function WineryPage({ params }: WineryPageProps) {
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
                         sizes="(max-width: 768px) 50vw, 33vw"
+                        placeholder="blur"
+                        blurDataURL={IMAGE_PLACEHOLDERS.square}
                       />
                     </div>
                   ))}
@@ -203,6 +240,7 @@ export default async function WineryPage({ params }: WineryPageProps) {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

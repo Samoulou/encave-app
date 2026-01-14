@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { IMAGE_PLACEHOLDERS } from '@/lib/image-placeholder';
 
 interface GalleryImage {
   id: string;
@@ -81,6 +82,8 @@ export function ExperienceGallery({
                 fill
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                 sizes="(max-width: 768px) 50vw, 33vw"
+                placeholder="blur"
+                blurDataURL={IMAGE_PLACEHOLDERS.square}
               />
               <div className="absolute inset-0 bg-burgundy-900/0 transition-colors group-hover:bg-burgundy-900/10" />
             </button>
@@ -127,6 +130,8 @@ export function ExperienceGallery({
               className="object-contain"
               sizes="90vw"
               priority
+              placeholder="blur"
+              blurDataURL={IMAGE_PLACEHOLDERS.hero}
             />
           </div>
 
@@ -169,6 +174,8 @@ export function ExperienceGallery({
                     fill
                     className="object-cover"
                     sizes="48px"
+                    placeholder="blur"
+                    blurDataURL={IMAGE_PLACEHOLDERS.square}
                   />
                 </button>
               ))}
