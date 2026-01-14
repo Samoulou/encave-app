@@ -3,6 +3,14 @@ import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import { SearchResults } from '@/components/features/search/SearchResults';
 import type { ExperienceSearchResult } from '@/server/queries/experience.queries';
 
+// Default pagination info for tests
+const defaultPagination = {
+  total: 2,
+  page: 1,
+  limit: 20,
+  totalPages: 1,
+};
+
 const mockExperiences: ExperienceSearchResult[] = [
   {
     id: 'exp-1',
@@ -53,6 +61,8 @@ describe('SearchResults', () => {
         experiences={mockExperiences}
         sort="relevance"
         onSortChange={vi.fn()}
+        pagination={defaultPagination}
+        onPageChange={vi.fn()}
       />
     );
     // Check for "2 experiences found" text pattern
@@ -68,6 +78,8 @@ describe('SearchResults', () => {
         experiences={[mockExperiences[0]!]}
         sort="relevance"
         onSortChange={vi.fn()}
+        pagination={{ total: 1, page: 1, limit: 20, totalPages: 1 }}
+        onPageChange={vi.fn()}
       />
     );
     // Check for "1 experience found" text pattern
@@ -82,6 +94,8 @@ describe('SearchResults', () => {
         experiences={mockExperiences}
         sort="relevance"
         onSortChange={vi.fn()}
+        pagination={defaultPagination}
+        onPageChange={vi.fn()}
       />
     );
     expect(screen.getByText('Wine Tasting Experience')).toBeDefined();
@@ -90,7 +104,13 @@ describe('SearchResults', () => {
 
   it('renders empty state when no results', () => {
     render(
-      <SearchResults experiences={[]} sort="relevance" onSortChange={vi.fn()} />
+      <SearchResults
+        experiences={[]}
+        sort="relevance"
+        onSortChange={vi.fn()}
+        pagination={{ total: 0, page: 1, limit: 20, totalPages: 0 }}
+        onPageChange={vi.fn()}
+      />
     );
     expect(screen.getByText('No experiences found')).toBeDefined();
     expect(
@@ -104,6 +124,8 @@ describe('SearchResults', () => {
         experiences={mockExperiences}
         sort="price_asc"
         onSortChange={vi.fn()}
+        pagination={defaultPagination}
+        onPageChange={vi.fn()}
       />
     );
     expect(screen.getByText('Price: Low to High')).toBeDefined();
@@ -116,6 +138,8 @@ describe('SearchResults', () => {
         experiences={mockExperiences}
         sort="relevance"
         onSortChange={onSortChange}
+        pagination={defaultPagination}
+        onPageChange={vi.fn()}
       />
     );
 
@@ -136,6 +160,8 @@ describe('SearchResults', () => {
         experiences={mockExperiences}
         sort="relevance"
         onSortChange={vi.fn()}
+        pagination={defaultPagination}
+        onPageChange={vi.fn()}
       />
     );
 

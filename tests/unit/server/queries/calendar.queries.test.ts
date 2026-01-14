@@ -282,7 +282,7 @@ describe('calendar.queries', () => {
       const whereClause = call?.[0]?.where;
       expect(whereClause?.wineryId).toBe('winery-123');
       expect(whereClause?.date?.gte).toBeDefined();
-      expect(whereClause?.date?.lte).toBeDefined();
+      expect(whereClause?.date?.lt).toBeDefined(); // Uses lt, not lte
     });
 
     it('passes status filter to getCalendarData', async () => {
@@ -319,7 +319,7 @@ describe('calendar.queries', () => {
       const whereClause = call?.[0]?.where;
       expect(whereClause?.wineryId).toBe('winery-123');
       expect(whereClause?.date?.gte).toBeDefined();
-      expect(whereClause?.date?.lte).toBeDefined();
+      expect(whereClause?.date?.lt).toBeDefined(); // Uses lt, not lte
     });
 
     it('passes status filter to getCalendarData', async () => {

@@ -281,9 +281,9 @@ describe('booking.queries', () => {
       const weekCall = vi.mocked(db.booking.aggregate).mock.calls[1];
       const monthCall = vi.mocked(db.booking.aggregate).mock.calls[2];
 
-      // Today should have date range for Jan 12
+      // Today should have date range for Jan 12 (uses gte/lt pattern)
       expect(todayCall?.[0]?.where?.date?.gte).toBeDefined();
-      expect(todayCall?.[0]?.where?.date?.lte).toBeDefined();
+      expect(todayCall?.[0]?.where?.date?.lt).toBeDefined();
 
       // Week should start on Monday (Jan 6) for Jan 12
       expect(weekCall?.[0]?.where?.date?.gte).toBeDefined();

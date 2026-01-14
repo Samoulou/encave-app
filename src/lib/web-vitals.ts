@@ -31,8 +31,9 @@ function isGoodScore(name: string, value: number): boolean {
 export function reportWebVitals(metric: Metric) {
   const isGood = isGoodScore(metric.name, metric.value);
 
-  // Log to console in development
+  // Log to console in development for debugging Web Vitals metrics
   if (process.env.NODE_ENV === 'development') {
+    // eslint-disable-next-line no-console -- Development-only logging for Web Vitals debugging
     console.log(
       `[Web Vital] ${metric.name}: ${metric.value.toFixed(2)} ${isGood ? '✓' : '✗'}`
     );

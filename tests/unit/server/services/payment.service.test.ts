@@ -17,6 +17,7 @@ vi.mock('@/lib/env', () => ({
     NEXTAUTH_URL: 'https://test.example.com',
     PLATFORM_COMMISSION_RATE: 0.12,
   },
+  getBaseUrl: () => 'https://test.example.com',
 }));
 
 // Create mock Stripe methods
