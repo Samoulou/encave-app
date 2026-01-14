@@ -1,10 +1,12 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { BookingStatus, ExperienceType } from '@prisma/client';
 import { ViewToggle, CalendarView, WeekView } from '@/components/features/booking/calendar';
+
+const POLLING_INTERVAL = 60_000; // 60 seconds
 
 interface CalendarBooking {
   id: string;
@@ -51,6 +53,7 @@ export function CalendarViewWrapper({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const lastRefreshRef = useRef<number>(Date.now());
 
   const handleDateChange = useCallback(
     (date: Date) => {
@@ -62,8 +65,43 @@ export function CalendarViewWrapper({
   );
 
   const handleRefresh = useCallback(() => {
+    lastRefreshRef.current = Date.now();
     router.refresh();
   }, [router]);
+
+  // Auto-refresh when tab becomes visible
+  useEffect(() => {
+    if (viewToggleOnly) return;
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        // Only refresh if it's been more than 5 seconds since last refresh
+        const timeSinceLastRefresh = Date.now() - lastRefreshRef.current;
+        if (timeSinceLastRefresh > 5000) {
+          handleRefresh();
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [viewToggleOnly, handleRefresh]);
+
+  // Optional polling for real-time updates (every 60 seconds)
+  useEffect(() => {
+    if (viewToggleOnly) return;
+
+    const intervalId = setInterval(() => {
+      // Only poll if tab is visible
+      if (document.visibilityState === 'visible') {
+        handleRefresh();
+      }
+    }, POLLING_INTERVAL);
+
+    return () => clearInterval(intervalId);
+  }, [viewToggleOnly, handleRefresh]);
 
   // Just render the toggle button
   if (viewToggleOnly) {

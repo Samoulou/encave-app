@@ -1,6 +1,25 @@
 import { db } from '@/server/db';
 import { BookingStatus, ExperienceType } from '@prisma/client';
-import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, format } from 'date-fns';
+import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays } from 'date-fns';
+
+/**
+ * Convert a local date to UTC date, preserving the local date components.
+ * This ensures that dates in local time map to the correct database date.
+ */
+function localDateToUTC(date: Date): Date {
+  return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+}
+
+/**
+ * Get the date string in YYYY-MM-DD format from a UTC date.
+ * This is used for creating consistent map keys from database dates.
+ */
+function toUTCDateString(date: Date): string {
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
 export interface CalendarBooking {
   id: string;
@@ -54,10 +73,15 @@ export async function getCalendarData(
     ? statusFilter
     : [BookingStatus.CONFIRMED, BookingStatus.COMPLETED];
 
+  // Normalize dates to UTC for consistent database comparison
+  // Use lt instead of lte for endDate to include the full end day
+  const startUTC = localDateToUTC(startDate);
+  const endUTC = localDateToUTC(addDays(endDate, 1)); // Day after to include full end day
+
   const bookings = await db.booking.findMany({
     where: {
       wineryId,
-      date: { gte: startDate, lte: endDate },
+      date: { gte: startUTC, lt: endUTC },
       status: { in: statuses },
     },
     orderBy: [{ date: 'asc' }, { timeSlot: 'asc' }],
@@ -88,7 +112,7 @@ export async function getCalendarData(
   const blockedDates = await db.blockedDate.findMany({
     where: {
       experience: { wineryId },
-      date: { gte: startDate, lte: endDate },
+      date: { gte: startUTC, lt: endUTC },
     },
     select: {
       date: true,
@@ -96,10 +120,10 @@ export async function getCalendarData(
     },
   });
 
-  // Group blocked dates by date string
+  // Group blocked dates by date string (UTC-based for consistency)
   const blockedByDate = new Map<string, string[]>();
   for (const blocked of blockedDates) {
-    const dateKey = format(blocked.date, 'yyyy-MM-dd');
+    const dateKey = toUTCDateString(blocked.date);
     const existing = blockedByDate.get(dateKey) || [];
     existing.push(blocked.experienceId);
     blockedByDate.set(dateKey, existing);
@@ -109,7 +133,8 @@ export async function getCalendarData(
   const calendarData = new Map<string, CalendarDayData>();
 
   for (const booking of bookings) {
-    const dateKey = format(booking.date, 'yyyy-MM-dd');
+    // Use UTC-based date string for consistent key matching
+    const dateKey = toUTCDateString(booking.date);
 
     let dayData = calendarData.get(dateKey);
     if (!dayData) {
@@ -185,10 +210,14 @@ export async function getBlockedDates(
   startDate: Date,
   endDate: Date
 ): Promise<BlockedDateInfo[]> {
+  // Normalize dates to UTC for consistent database comparison
+  const startUTC = localDateToUTC(startDate);
+  const endUTC = localDateToUTC(addDays(endDate, 1)); // Day after to include full end day
+
   const blockedDates = await db.blockedDate.findMany({
     where: {
       experience: { wineryId },
-      date: { gte: startDate, lte: endDate },
+      date: { gte: startUTC, lt: endUTC },
     },
     select: {
       id: true,

@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Clock, Loader2 } from 'lucide-react';
+import { Clock, Loader2, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { getTimeSlotsForDate, type TimeSlotAvailability } from '@/server/actions/booking';
 
@@ -26,7 +27,7 @@ export function TimeSlotSelector({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchTimeSlots = useCallback(() => {
     if (!selectedDate) {
       setSlots([]);
       return;
@@ -35,21 +36,39 @@ export function TimeSlotSelector({
     setIsLoading(true);
     setError(null);
 
-    getTimeSlotsForDate(experienceId, selectedDate).then((result) => {
-      if (result.success) {
-        setSlots(result.data);
-        // If previously selected time is not available, clear it
-        if (selectedTime && !result.data.find((s) => s.timeSlot === selectedTime)?.available) {
-          onTimeChange(null);
-          onCapacityUpdate(null);
+    getTimeSlotsForDate(experienceId, selectedDate)
+      .then((result) => {
+        if (result.success) {
+          setSlots(result.data);
+          // BUG-030 FIX: Handle previously selected time
+          if (selectedTime) {
+            const selectedSlot = result.data.find((s) => s.timeSlot === selectedTime);
+            if (selectedSlot?.available) {
+              // Time still available - update capacity for new date
+              onCapacityUpdate(selectedSlot.remainingCapacity);
+            } else {
+              // Time no longer available - clear selection
+              onTimeChange(null);
+              onCapacityUpdate(null);
+            }
+          }
+        } else {
+          setError(result.error.message);
+          setSlots([]);
         }
-      } else {
-        setError(result.error.message);
+      })
+      .catch(() => {
+        setError('Failed to load time slots. Please try again.');
         setSlots([]);
-      }
-      setIsLoading(false);
-    });
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }, [experienceId, selectedDate, selectedTime, onTimeChange, onCapacityUpdate]);
+
+  useEffect(() => {
+    fetchTimeSlots();
+  }, [fetchTimeSlots]);
 
   const handleSlotSelect = (slot: TimeSlotAvailability) => {
     if (!slot.available) return;
@@ -87,7 +106,22 @@ export function TimeSlotSelector({
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center py-8 text-red-500">
-        <p className="text-sm">{error}</p>
+        <p className="text-sm mb-3">{error}</p>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={fetchTimeSlots}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <>
+              <RefreshCw className="h-4 w-4 mr-1" />
+              Retry
+            </>
+          )}
+        </Button>
       </div>
     );
   }

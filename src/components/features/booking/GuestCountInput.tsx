@@ -1,5 +1,6 @@
 'use client';
 
+import { useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { Minus, Plus, Users, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -24,21 +25,41 @@ export function GuestCountInput({
 }: GuestCountInputProps) {
   const t = useTranslations('booking');
 
-  const handleDecrement = () => {
-    if (value > min) {
-      onChange(value - 1);
-    }
-  };
+  // BUG-002 FIX: Use refs to track the latest values for stable callbacks
+  const valueRef = useRef(value);
+  valueRef.current = value;
 
-  const handleIncrement = () => {
-    if (value < max) {
-      onChange(value + 1);
+  const minRef = useRef(min);
+  minRef.current = min;
+
+  const maxRef = useRef(max);
+  maxRef.current = max;
+
+  const remainingCapacityRef = useRef(remainingCapacity);
+  remainingCapacityRef.current = remainingCapacity;
+
+  // BUG-002 FIX: Use stable callbacks that read from refs
+  const handleDecrement = useCallback(() => {
+    const currentValue = valueRef.current;
+    const currentMin = minRef.current;
+    if (currentValue > currentMin) {
+      onChange(currentValue - 1);
     }
-  };
+  }, [onChange]);
+
+  const handleIncrement = useCallback(() => {
+    const currentValue = valueRef.current;
+    const currentMax = maxRef.current;
+    const currentRemaining = remainingCapacityRef.current;
+    const effectiveMax = currentRemaining !== null ? Math.min(currentMax, currentRemaining) : currentMax;
+    if (currentValue < effectiveMax) {
+      onChange(currentValue + 1);
+    }
+  }, [onChange]);
 
   const effectiveMax = remainingCapacity !== null ? Math.min(max, remainingCapacity) : max;
-  const canDecrement = value > min;
-  const canIncrement = value < effectiveMax;
+  const canDecrement = value > min && !isLoading;
+  const canIncrement = value < effectiveMax && !isLoading;
 
   return (
     <div className="space-y-4">
@@ -48,9 +69,10 @@ export function GuestCountInput({
           variant="outline"
           size="icon"
           onClick={handleDecrement}
-          disabled={!canDecrement || isLoading}
+          disabled={!canDecrement}
           className={cn(
-            'h-12 w-12 rounded-full',
+            'h-12 w-12 rounded-full transition-all duration-150',
+            canDecrement && 'hover:bg-burgundy-50 hover:border-burgundy-300 active:scale-95 active:bg-burgundy-100',
             !canDecrement && 'opacity-50 cursor-not-allowed'
           )}
           aria-label="Decrease guests"
@@ -58,10 +80,10 @@ export function GuestCountInput({
           <Minus className="h-5 w-5" />
         </Button>
 
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center min-w-[80px]">
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5 text-burgundy-600" />
-            <span className="text-4xl font-bold text-slate-900">{value}</span>
+            <span className="text-4xl font-bold text-slate-900 tabular-nums">{value}</span>
           </div>
           <span className="text-sm text-slate-500">
             {t('guests', { count: value })}
@@ -72,9 +94,10 @@ export function GuestCountInput({
           variant="outline"
           size="icon"
           onClick={handleIncrement}
-          disabled={!canIncrement || isLoading}
+          disabled={!canIncrement}
           className={cn(
-            'h-12 w-12 rounded-full',
+            'h-12 w-12 rounded-full transition-all duration-150',
+            canIncrement && 'hover:bg-burgundy-50 hover:border-burgundy-300 active:scale-95 active:bg-burgundy-100',
             !canIncrement && 'opacity-50 cursor-not-allowed'
           )}
           aria-label="Increase guests"
@@ -83,7 +106,7 @@ export function GuestCountInput({
         </Button>
       </div>
 
-      {/* Capacity Info */}
+      {/* Capacity Info - BUG-031 FIX: Show text OR badge, not both */}
       <div className="flex items-center justify-center gap-4 text-sm text-slate-500">
         <span>{t('minGuests', { count: min })}</span>
         <span className="text-slate-300">|</span>
@@ -92,20 +115,15 @@ export function GuestCountInput({
             <Loader2 className="h-3 w-3 animate-spin" />
             Loading...
           </span>
-        ) : remainingCapacity !== null ? (
-          <span
-            className={cn(
-              remainingCapacity <= 3 ? 'text-orange-600 font-medium' : ''
-            )}
-          >
-            {t('remainingCapacity', { count: remainingCapacity })}
-          </span>
-        ) : (
+        ) : remainingCapacity !== null && remainingCapacity > 3 ? (
+          // Normal capacity (>3) - show as text
+          <span>{t('remainingCapacity', { count: remainingCapacity })}</span>
+        ) : remainingCapacity === null ? (
           <span>{t('maxGuests', { count: max })}</span>
-        )}
+        ) : null}
       </div>
 
-      {/* Warning if low capacity */}
+      {/* Badge for low capacity - ONLY display when <= 3 */}
       {remainingCapacity !== null && remainingCapacity <= 3 && remainingCapacity > 0 && (
         <div className="flex justify-center">
           <span className="inline-flex items-center rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-orange-800">

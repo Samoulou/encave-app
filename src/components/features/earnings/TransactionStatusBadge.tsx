@@ -6,6 +6,10 @@ const STATUS_CONFIG: Record<TransactionStatus, { color: string; label: string }>
     color: 'bg-green-100 text-green-800',
     label: 'Paid',
   },
+  processing: {
+    color: 'bg-blue-100 text-blue-800',
+    label: 'Processing',
+  },
   pending: {
     color: 'bg-yellow-100 text-yellow-800',
     label: 'Pending',

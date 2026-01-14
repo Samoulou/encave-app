@@ -1,13 +1,22 @@
 import { db } from '@/server/db';
 import { BookingStatus, Prisma } from '@prisma/client';
 import {
-  startOfDay,
-  endOfDay,
   startOfWeek,
   endOfWeek,
   startOfMonth,
   endOfMonth,
+  addDays,
 } from 'date-fns';
+
+/**
+ * Convert a local date to UTC date, preserving the local date components.
+ * This ensures that "today" in local time maps to the correct database date.
+ * The database stores dates as @db.Date (date-only), so we need to
+ * ensure our queries use UTC-normalized dates to avoid timezone issues.
+ */
+function localDateToUTC(date: Date): Date {
+  return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+}
 
 export interface BookingFilters {
   status?: BookingStatus[];
@@ -148,22 +157,34 @@ export async function getWineryBookings(
  */
 export async function getBookingSummary(wineryId: string): Promise<BookingSummary> {
   const now = new Date();
-  const todayStart = startOfDay(now);
-  const todayEnd = endOfDay(now);
-  const weekStart = startOfWeek(now, { weekStartsOn: 1 }); // Monday
-  const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
-  const monthStart = startOfMonth(now);
-  const monthEnd = endOfMonth(now);
+
+  // Use local-to-UTC conversion for database comparison
+  // The database uses @db.Date which stores date-only values
+  // We convert local dates to UTC to match database storage format
+  const todayUTC = localDateToUTC(now);
+  const tomorrowUTC = localDateToUTC(addDays(now, 1));
+
+  // Week boundaries (Monday start)
+  const weekStartLocal = startOfWeek(now, { weekStartsOn: 1 });
+  const weekEndLocal = endOfWeek(now, { weekStartsOn: 1 });
+  const weekStartUTC = localDateToUTC(weekStartLocal);
+  const weekEndUTC = localDateToUTC(addDays(weekEndLocal, 1)); // Day after to include full end day
+
+  // Month boundaries
+  const monthStartLocal = startOfMonth(now);
+  const monthEndLocal = endOfMonth(now);
+  const monthStartUTC = localDateToUTC(monthStartLocal);
+  const monthEndUTC = localDateToUTC(addDays(monthEndLocal, 1)); // Day after to include full end day
 
   // Active statuses for counting (exclude pending payment and cancelled)
   const activeStatuses = [BookingStatus.CONFIRMED, BookingStatus.COMPLETED];
 
   const [todayStats, weekStats, monthStats, totalStats] = await Promise.all([
-    // Today's bookings
+    // Today's bookings - use exact date match via gte/lt pattern
     db.booking.aggregate({
       where: {
         wineryId,
-        date: { gte: todayStart, lte: todayEnd },
+        date: { gte: todayUTC, lt: tomorrowUTC },
         status: { in: activeStatuses },
       },
       _count: true,
@@ -173,7 +194,7 @@ export async function getBookingSummary(wineryId: string): Promise<BookingSummar
     db.booking.aggregate({
       where: {
         wineryId,
-        date: { gte: weekStart, lte: weekEnd },
+        date: { gte: weekStartUTC, lt: weekEndUTC },
         status: { in: activeStatuses },
       },
       _count: true,
@@ -183,7 +204,7 @@ export async function getBookingSummary(wineryId: string): Promise<BookingSummar
     db.booking.aggregate({
       where: {
         wineryId,
-        date: { gte: monthStart, lte: monthEnd },
+        date: { gte: monthStartUTC, lt: monthEndUTC },
         status: { in: activeStatuses },
       },
       _count: true,

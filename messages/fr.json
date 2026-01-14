@@ -213,6 +213,7 @@
     "continueToPayment": "Continuer vers le paiement",
     "priceCalculation": "{price} x {guests} = {total}",
     "remainingCapacity": "{count} {count, plural, =1 {place restante} other {places restantes}}",
+    "capacityExceeded": "Seulement {remaining} {remaining, plural, =1 {place restante} other {places restantes}}. Veuillez reduire le nombre d'invites.",
     "noAvailability": "Aucune disponibilite",
     "unavailable": "Indisponible",
     "selectDateFirst": "Selectionnez d'abord une date",
@@ -224,6 +225,7 @@
     "time": "Horaire",
     "minGuests": "Minimum {count} {count, plural, =1 {personne} other {personnes}}",
     "maxGuests": "Maximum {count} {count, plural, =1 {personne} other {personnes}}",
+    "capacityRange": "{min}-{max} personnes",
     "pastDate": "Date passee",
     "today": "Aujourd'hui",
     "bookingDetails": "Details de la reservation"
@@ -245,7 +247,11 @@
     "experienceNotFound": "Experience non trouvee",
     "invalidBookingParams": "Parametres de reservation invalides. Veuillez recommencer.",
     "paymentCancelled": "Paiement annule. Vous pouvez reessayer.",
-    "paymentFailed": "Echec du paiement. Veuillez reessayer ou utiliser un autre moyen de paiement."
+    "paymentFailed": "Echec du paiement. Veuillez reessayer ou utiliser un autre moyen de paiement.",
+    "verifyingAvailability": "Verification de la disponibilite...",
+    "capacityExceeded": "Capacite depassee",
+    "capacityExceededMessage": "Vous avez demande {requested} personnes, mais seulement {available} places sont disponibles pour ce creneau.",
+    "adjustGuestCount": "Ajuster le nombre de personnes"
   },
   "confirmation": {
     "bookingConfirmed": "Reservation confirmee !",

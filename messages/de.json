@@ -213,6 +213,7 @@
     "continueToPayment": "Weiter zur Zahlung",
     "priceCalculation": "{price} x {guests} = {total}",
     "remainingCapacity": "{count} {count, plural, =1 {Platz ubrig} other {Platze ubrig}}",
+    "capacityExceeded": "Nur {remaining} {remaining, plural, =1 {Platz} other {Platze}} verfugbar. Bitte reduzieren Sie die Gastezahl.",
     "noAvailability": "Keine Verfugbarkeit",
     "unavailable": "Nicht verfugbar",
     "selectDateFirst": "Wahlen Sie zuerst ein Datum",
@@ -224,6 +225,7 @@
     "time": "Uhrzeit",
     "minGuests": "Mindestens {count} {count, plural, =1 {Person} other {Personen}}",
     "maxGuests": "Maximal {count} {count, plural, =1 {Person} other {Personen}}",
+    "capacityRange": "{min}-{max} Gäste",
     "pastDate": "Vergangenes Datum",
     "today": "Heute",
     "bookingDetails": "Buchungsdetails"
@@ -245,7 +247,11 @@
     "experienceNotFound": "Erlebnis nicht gefunden",
     "invalidBookingParams": "Ungultige Buchungsparameter. Bitte versuchen Sie es erneut.",
     "paymentCancelled": "Zahlung wurde abgebrochen. Sie konnen es erneut versuchen.",
-    "paymentFailed": "Zahlung fehlgeschlagen. Bitte versuchen Sie es erneut oder verwenden Sie eine andere Zahlungsmethode."
+    "paymentFailed": "Zahlung fehlgeschlagen. Bitte versuchen Sie es erneut oder verwenden Sie eine andere Zahlungsmethode.",
+    "verifyingAvailability": "Verfugbarkeit wird uberpruft...",
+    "capacityExceeded": "Kapazitat uberschritten",
+    "capacityExceededMessage": "Sie haben {requested} Gaste angefragt, aber nur {available} Platze sind fur diesen Zeitraum verfugbar.",
+    "adjustGuestCount": "Gastezahl anpassen"
   },
   "confirmation": {
     "bookingConfirmed": "Buchung bestatigt!",

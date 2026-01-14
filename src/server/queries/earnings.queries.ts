@@ -7,11 +7,9 @@ import {
   endOfYear,
   subMonths,
   format,
-  differenceInDays,
-  addDays,
 } from 'date-fns';
 
-export type TransactionStatus = 'paid' | 'pending' | 'refunded';
+export type TransactionStatus = 'paid' | 'processing' | 'pending' | 'refunded';
 
 export interface EarningsSummary {
   totalEarnings: number;
@@ -39,6 +37,7 @@ export interface Transaction {
   netPayout: number;
   status: TransactionStatus;
   reference: string;
+  estimatedPayoutDate: Date | null;
 }
 
 export interface TransactionFilters {
@@ -56,7 +55,54 @@ export interface YearToDateSummary {
 }
 
 /**
- * Determine transaction status based on booking state
+ * Calculate number of business days between two dates.
+ * Excludes weekends (Saturday and Sunday).
+ */
+function getBusinessDaysSince(fromDate: Date): number {
+  const now = new Date();
+  let businessDays = 0;
+  const current = new Date(fromDate);
+
+  while (current < now) {
+    const dayOfWeek = current.getDay();
+    // Count if not Saturday (6) or Sunday (0)
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+      businessDays++;
+    }
+    current.setDate(current.getDate() + 1);
+  }
+
+  return businessDays;
+}
+
+/**
+ * Calculate estimated payout date (experience date + 5 business days)
+ * Skips weekends when counting business days.
+ */
+function calculateEstimatedPayoutDate(experienceDate: Date): Date {
+  const result = new Date(experienceDate);
+  let businessDaysAdded = 0;
+
+  while (businessDaysAdded < 5) {
+    result.setDate(result.getDate() + 1);
+    const dayOfWeek = result.getDay();
+    // Only count weekdays
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+      businessDaysAdded++;
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Determine transaction status based on booking state.
+ *
+ * Status logic:
+ * - 'refunded': Refund has been issued
+ * - 'pending': Experience hasn't happened yet (date is in future)
+ * - 'processing': Experience completed, within 2-5 business days (funds being processed)
+ * - 'paid': Experience completed 5+ business days ago (funds should be available)
  */
 function getTransactionStatus(
   bookingStatus: BookingStatus,
@@ -65,9 +111,24 @@ function getTransactionStatus(
 ): TransactionStatus {
   if (refundIssued) return 'refunded';
 
-  if (bookingStatus === BookingStatus.COMPLETED) {
-    const daysSinceExperience = differenceInDays(new Date(), bookingDate);
-    return daysSinceExperience >= 7 ? 'paid' : 'pending';
+  const now = new Date();
+
+  // If the experience hasn't happened yet, it's pending
+  if (bookingDate > now) {
+    return 'pending';
+  }
+
+  // Experience has passed - calculate business days
+  if (bookingStatus === BookingStatus.COMPLETED || bookingStatus === BookingStatus.CONFIRMED) {
+    const businessDaysSince = getBusinessDaysSince(bookingDate);
+
+    if (businessDaysSince >= 5) {
+      return 'paid';
+    } else if (businessDaysSince >= 2) {
+      return 'processing';
+    }
+    // Less than 2 business days after experience
+    return 'pending';
   }
 
   return 'pending';
@@ -96,36 +157,40 @@ export async function getEarningsSummary(wineryId: string): Promise<EarningsSumm
   });
 
   // Total earnings (all time, excluding refunded)
+  // Only count bookings where experience has passed (date <= now)
   const totalEarnings = bookings
-    .filter((b) => !b.refundIssued)
+    .filter((b) => !b.refundIssued && b.date <= now)
     .reduce((sum, b) => sum + b.wineryPayout, 0);
 
-  // This month earnings
+  // This month earnings (experiences that happened this month)
   const thisMonth = bookings
     .filter(
       (b) =>
         !b.refundIssued &&
         b.date >= monthStart &&
-        b.date <= monthEnd
+        b.date <= monthEnd &&
+        b.date <= now // Only count completed experiences
     )
     .reduce((sum, b) => sum + b.wineryPayout, 0);
 
-  // Pending payout: completed bookings within last 7 days
-  const pendingBookings = bookings.filter(
-    (b) =>
-      !b.refundIssued &&
-      b.status === BookingStatus.COMPLETED &&
-      differenceInDays(now, b.date) < 7
-  );
+  // Pending payout: bookings where experience passed but < 5 business days ago
+  // This includes both 'pending' and 'processing' statuses
+  const pendingBookings = bookings.filter((b) => {
+    if (b.refundIssued) return false;
+    if (b.date > now) return false; // Future experience
+
+    const status = getTransactionStatus(b.status, b.date, b.refundIssued);
+    return status === 'pending' || status === 'processing';
+  });
 
   const pendingPayout = pendingBookings.reduce((sum, b) => sum + b.wineryPayout, 0);
 
-  // Next payout date: earliest pending booking + 7 days
+  // Next payout date: earliest pending booking's estimated payout date
   const sortedPending = pendingBookings.sort(
     (a, b) => a.date.getTime() - b.date.getTime()
   );
   const nextPayoutDate = sortedPending[0]
-    ? addDays(sortedPending[0].date, 7)
+    ? calculateEstimatedPayoutDate(sortedPending[0].date)
     : null;
 
   return {
@@ -226,18 +291,27 @@ export async function getTransactions(
   });
 
   // Map to Transaction type with status calculation
-  let transactions: Transaction[] = bookings.map((b) => ({
-    id: b.id,
-    date: b.date,
-    experienceTitle: b.experience.title,
-    experienceId: b.experience.id,
-    guestCount: b.guestCount,
-    grossAmount: b.totalPrice,
-    platformFee: b.platformFee,
-    netPayout: b.wineryPayout,
-    status: getTransactionStatus(b.status, b.date, b.refundIssued),
-    reference: b.reference,
-  }));
+  let transactions: Transaction[] = bookings.map((b) => {
+    const status = getTransactionStatus(b.status, b.date, b.refundIssued);
+    const estimatedPayoutDate =
+      status === 'pending' || status === 'processing'
+        ? calculateEstimatedPayoutDate(b.date)
+        : null;
+
+    return {
+      id: b.id,
+      date: b.date,
+      experienceTitle: b.experience.title,
+      experienceId: b.experience.id,
+      guestCount: b.guestCount,
+      grossAmount: b.totalPrice,
+      platformFee: b.platformFee,
+      netPayout: b.wineryPayout,
+      status,
+      reference: b.reference,
+      estimatedPayoutDate,
+    };
+  });
 
   // Status filter (applied after calculation)
   if (filters?.status) {

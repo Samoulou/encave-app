@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { parseAsString, parseAsInteger, useQueryStates } from 'nuqs';
-import { Calendar, Clock, Users, ArrowRight, Loader2 } from 'lucide-react';
+import { Calendar, Clock, Users, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { BookingDatePicker } from './BookingDatePicker';
 import { TimeSlotSelector } from './TimeSlotSelector';
 import { GuestCountInput } from './GuestCountInput';
@@ -31,13 +32,21 @@ export function BookingWidget({ experience }: BookingWidgetProps) {
   });
 
   const [remainingCapacity, setRemainingCapacity] = useState<number | null>(null);
-  const [isLoadingCapacity, setIsLoadingCapacity] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Ref to store the previous experience ID for detecting changes
+  const prevExperienceIdRef = useRef<string>(experience.id);
 
   const { date, time, guests } = queryState;
 
-  // Check if form is valid
-  const isValid = date && time && guests >= experience.minCapacity && guests <= experience.maxCapacity;
+  // BUG-003b FIX: Check if form is valid including remainingCapacity
+  const isValid = date && time &&
+    guests >= experience.minCapacity &&
+    guests <= experience.maxCapacity &&
+    (remainingCapacity === null || guests <= remainingCapacity);
+
+  // BUG-003b: Check if capacity is exceeded (for warning display)
+  const capacityExceeded = remainingCapacity !== null && guests > remainingCapacity;
 
   // Available days based on availability slots
   const availableDays = new Set(
@@ -46,7 +55,8 @@ export function BookingWidget({ experience }: BookingWidgetProps) {
 
   const handleDateChange = useCallback(
     (newDate: string | null) => {
-      setQueryState({ date: newDate, time: null });
+      // BUG-030 FIX: Keep time selection - TimeSlotSelector validates if still available
+      setQueryState({ date: newDate });
       setRemainingCapacity(null);
     },
     [setQueryState]
@@ -66,24 +76,19 @@ export function BookingWidget({ experience }: BookingWidgetProps) {
     [setQueryState]
   );
 
-  // Update remaining capacity when date/time changes
+  // BUG-023 FIX: Reset guests when experience changes
   useEffect(() => {
-    if (date && time) {
-      setIsLoadingCapacity(true);
-      import('@/server/actions/booking').then(({ checkAvailability }) => {
-        checkAvailability({
-          experienceId: experience.id,
-          date,
-          timeSlot: time,
-        }).then((result) => {
-          if (result.success) {
-            setRemainingCapacity(result.data.remainingCapacity);
-          }
-          setIsLoadingCapacity(false);
-        });
-      });
+    if (prevExperienceIdRef.current !== experience.id) {
+      prevExperienceIdRef.current = experience.id;
+      setQueryState({ guests: experience.minCapacity, date: null, time: null });
+      setRemainingCapacity(null);
     }
-  }, [date, time, experience.id]);
+  }, [experience.id, experience.minCapacity, setQueryState]);
+
+  // Callback for TimeSlotSelector to update capacity
+  const handleCapacityUpdate = useCallback((capacity: number | null) => {
+    setRemainingCapacity(capacity);
+  }, []);
 
   const handleContinueToPayment = async () => {
     if (!isValid) return;
@@ -127,7 +132,8 @@ export function BookingWidget({ experience }: BookingWidgetProps) {
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Users className="h-4 w-4" />
-                  {experience.minCapacity}-{experience.maxCapacity} {t('guests', { count: experience.maxCapacity })}
+                  {/* BUG-032 FIX: Use capacityRange key to avoid "8-10 10 personnes" */}
+                  {t('capacityRange', { min: experience.minCapacity, max: experience.maxCapacity })}
                 </span>
               </div>
             </CardContent>
@@ -175,7 +181,7 @@ export function BookingWidget({ experience }: BookingWidgetProps) {
               selectedDate={date}
               selectedTime={time}
               onTimeChange={handleTimeChange}
-              onCapacityUpdate={setRemainingCapacity}
+              onCapacityUpdate={handleCapacityUpdate}
             />
           </CardContent>
         </Card>
@@ -194,12 +200,13 @@ export function BookingWidget({ experience }: BookingWidgetProps) {
                 </p>
               </div>
             </div>
+
             <GuestCountInput
               value={guests}
               onChange={handleGuestsChange}
               min={experience.minCapacity}
               max={remainingCapacity !== null ? Math.min(experience.maxCapacity, remainingCapacity) : experience.maxCapacity}
-              isLoading={isLoadingCapacity}
+              isLoading={false}
               remainingCapacity={remainingCapacity}
             />
           </CardContent>
@@ -233,6 +240,16 @@ export function BookingWidget({ experience }: BookingWidgetProps) {
                 />
               </CardContent>
             </Card>
+          )}
+
+          {/* BUG-003b: Capacity Exceeded Warning */}
+          {capacityExceeded && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                {t('capacityExceeded', { remaining: remainingCapacity })}
+              </AlertDescription>
+            </Alert>
           )}
 
           {/* Continue Button */}

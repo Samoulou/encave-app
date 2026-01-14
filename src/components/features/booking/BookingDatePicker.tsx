@@ -81,29 +81,29 @@ export function BookingDatePicker({
         modifiersClassNames={modifiersClassNames}
         className="rounded-lg border-0"
         classNames={{
+          // BUG-033 FIX: Updated to react-day-picker v9 class names
           months: 'flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0',
           month: 'space-y-4',
-          caption: 'flex justify-center pt-1 relative items-center',
+          month_caption: 'flex justify-center pt-1 relative items-center',
           caption_label: 'text-sm font-medium text-slate-900',
           nav: 'space-x-1 flex items-center',
-          nav_button:
-            'h-8 w-8 bg-transparent p-0 opacity-50 hover:opacity-100 hover:bg-slate-100 rounded-md transition-colors',
-          nav_button_previous: 'absolute left-1',
-          nav_button_next: 'absolute right-1',
-          table: 'w-full border-collapse space-y-1',
-          head_row: 'flex',
-          head_cell:
-            'text-slate-500 rounded-md w-10 font-normal text-[0.8rem]',
-          row: 'flex w-full mt-2',
-          cell: 'relative p-0 text-center text-sm focus-within:relative focus-within:z-20',
-          day: 'h-10 w-10 p-0 font-normal aria-selected:opacity-100 hover:bg-burgundy-50 rounded-md transition-colors',
-          day_selected:
+          button_previous:
+            'h-8 w-8 bg-transparent p-0 opacity-50 hover:opacity-100 hover:bg-slate-100 rounded-md transition-colors absolute left-1 right-auto',
+          button_next:
+            'h-8 w-8 bg-transparent p-0 opacity-50 hover:opacity-100 hover:bg-slate-100 rounded-md transition-colors absolute right-1 left-auto',
+          month_grid: 'w-full border-collapse space-y-1',
+          weekdays: 'flex',
+          weekday: 'text-slate-500 rounded-md w-10 font-normal text-[0.8rem]',
+          week: 'flex w-full mt-2',
+          day: 'h-10 w-10 text-center text-sm p-0 relative focus-within:relative focus-within:z-20',
+          day_button:
+            'h-10 w-10 p-0 font-normal aria-selected:opacity-100 hover:bg-burgundy-50 rounded-md transition-colors',
+          selected:
             'bg-burgundy-600 text-white hover:bg-burgundy-600 hover:text-white focus:bg-burgundy-600 focus:text-white',
-          day_outside: 'text-slate-400 opacity-50',
-          day_disabled: 'text-slate-300 opacity-50 cursor-not-allowed hover:bg-transparent',
-          day_range_middle:
-            'aria-selected:bg-burgundy-100 aria-selected:text-burgundy-900',
-          day_hidden: 'invisible',
+          outside: 'text-slate-400 opacity-50',
+          disabled: 'text-slate-300 opacity-50 cursor-not-allowed hover:bg-transparent',
+          range_middle: 'aria-selected:bg-burgundy-100 aria-selected:text-burgundy-900',
+          hidden: 'invisible',
         }}
       />
     </div>
