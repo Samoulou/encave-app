@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import {
   getExperienceBySlug,
-  getRelatedExperiences,
   getAllPublishedExperienceSlugs,
 } from '@/server/queries/experience.queries';
 import { ExperienceHero } from '@/components/features/experience/ExperienceHero';
@@ -13,8 +13,9 @@ import { WineryInfoCard } from '@/components/features/experience/WineryInfoCard'
 import { LocationSection } from '@/components/features/experience/LocationSection';
 import { BookingCTA } from '@/components/features/experience/BookingCTA';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
-import { RelatedExperiences } from '@/components/features/experience/RelatedExperiences';
+import { RelatedExperiencesSection } from './RelatedExperiencesSection';
 import { JsonLd } from '@/components/shared/JsonLd';
+import { Skeleton } from '@/components/shared/Skeleton';
 import { generateExperienceDetailMetadata } from '@/lib/seo';
 import { getBaseUrl } from '@/lib/env';
 import type { Locale } from '@/i18n/routing';
@@ -54,13 +55,6 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
   if (!experience) {
     notFound();
   }
-
-  const relatedExperiences = await getRelatedExperiences(
-    experience.id,
-    experience.wineryId,
-    experience.type,
-    3
-  );
 
   const baseUrl = getBaseUrl();
 
@@ -178,7 +172,7 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
         {/* Breadcrumb */}
         <div className="border-b border-stone-200/60 bg-white">
           <div className="mx-auto max-w-6xl px-6 py-4 lg:px-8">
-            <Breadcrumb items={breadcrumbItems} />
+            <Breadcrumb items={breadcrumbItems} baseUrl={baseUrl} />
           </div>
         </div>
 
@@ -235,14 +229,35 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
             </div>
           </div>
 
-          {/* Related Experiences */}
-          {relatedExperiences.length > 0 && (
-            <div className="mt-16">
-              <RelatedExperiences experiences={relatedExperiences} />
-            </div>
-          )}
+          {/* Related Experiences - streams in after main content */}
+          <Suspense fallback={<RelatedExperiencesSkeleton />}>
+            <RelatedExperiencesSection
+              experienceId={experience.id}
+              wineryId={experience.wineryId}
+              experienceType={experience.type}
+            />
+          </Suspense>
         </div>
       </div>
     </>
+  );
+}
+
+function RelatedExperiencesSkeleton() {
+  return (
+    <div className="mt-16">
+      <Skeleton className="h-8 w-48 mb-6" />
+      <div className="grid gap-6 md:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="overflow-hidden rounded-xl bg-white shadow-warm">
+            <Skeleton className="h-48 w-full" />
+            <div className="p-5">
+              <Skeleton className="h-5 w-3/4 mb-2" />
+              <Skeleton className="h-4 w-1/2" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

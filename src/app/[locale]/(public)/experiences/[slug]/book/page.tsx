@@ -3,6 +3,7 @@ import { getExperienceForBooking } from '@/server/actions/booking';
 import { BookingWidget } from '@/components/features/booking/BookingWidget';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { getTranslations } from 'next-intl/server';
+import { getBaseUrl } from '@/lib/env';
 import type { Metadata } from 'next';
 
 interface BookingPageProps {
@@ -42,6 +43,8 @@ export default async function BookingPage({ params }: BookingPageProps) {
     redirect(`/experiences/${slug}`);
   }
 
+  const baseUrl = getBaseUrl();
+
   const breadcrumbItems = [
     { label: 'Home', href: '/' },
     { label: 'Experiences', href: '/experiences' },
@@ -54,7 +57,7 @@ export default async function BookingPage({ params }: BookingPageProps) {
       {/* Header */}
       <div className="border-b border-stone-200/60 bg-white">
         <div className="mx-auto max-w-4xl px-6 py-4 lg:px-8">
-          <Breadcrumb items={breadcrumbItems} />
+          <Breadcrumb items={breadcrumbItems} baseUrl={baseUrl} />
         </div>
       </div>
 

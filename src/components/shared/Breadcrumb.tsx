@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useLocale } from 'next-intl';
 import { ChevronRight, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getBaseUrl } from '@/lib/env';
 
 interface BreadcrumbItem {
   label: string;
@@ -14,11 +13,11 @@ interface BreadcrumbItem {
 interface BreadcrumbProps {
   items: BreadcrumbItem[];
   className?: string;
+  baseUrl?: string;
 }
 
-export function Breadcrumb({ items, className }: BreadcrumbProps) {
+export function Breadcrumb({ items, className, baseUrl = '' }: BreadcrumbProps) {
   const locale = useLocale();
-  const baseUrl = getBaseUrl();
 
   // Helper to ensure href has locale prefix
   const getLocalizedHref = (href: string) => {

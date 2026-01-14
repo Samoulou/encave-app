@@ -1,15 +1,10 @@
 import { Suspense } from 'react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import {
-  searchExperiences,
-  getExperienceCommunes,
-  type SearchParams,
-} from '@/server/queries/experience.queries';
-import { ExperiencesPageClient } from './ExperiencesPageClient';
+import { type SearchParams } from '@/server/queries/experience.queries';
+import { ExperiencesContent } from './ExperiencesContent';
 import { ExperienceType } from '@prisma/client';
-import { JsonLd } from '@/components/shared/JsonLd';
 import { generateExperiencesMetadata } from '@/lib/seo';
-import { getBaseUrl } from '@/lib/env';
+import { SkeletonExperienceGrid, Skeleton } from '@/components/shared/Skeleton';
 import type { Locale } from '@/i18n/routing';
 
 export async function generateMetadata({
@@ -41,7 +36,7 @@ export default async function ExperiencesPage({ params, searchParams }: PageProp
   const t = await getTranslations('search');
   const searchParamsData = await searchParams;
 
-  // Parse search parameters
+  // Parse search parameters (fast - no DB calls)
   const page = searchParamsData.page ? parseInt(searchParamsData.page, 10) : 1;
   const parsedParams: SearchParams = {
     search: searchParamsData.q || undefined,
@@ -54,58 +49,10 @@ export default async function ExperiencesPage({ params, searchParams }: PageProp
     page: page > 0 ? page : 1,
   };
 
-  // Fetch data in parallel
-  const [searchResult, communes] = await Promise.all([
-    searchExperiences(parsedParams),
-    getExperienceCommunes(),
-  ]);
-
-  const baseUrl = getBaseUrl();
-
-  // SEO-004: ItemList schema for experiences listing
-  const itemListSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'ItemList',
-    name: 'Wine Experiences in Valais',
-    description: 'Discover wine tastings, cellar visits, and vineyard tours in Valais, Switzerland',
-    url: `${baseUrl}/experiences`,
-    numberOfItems: searchResult.total,
-    itemListElement: searchResult.experiences.map((exp, index) => ({
-      '@type': 'ListItem',
-      position: (searchResult.page - 1) * searchResult.limit + index + 1,
-      item: {
-        '@type': 'Event',
-        '@id': `${baseUrl}/experiences/${exp.slug}`,
-        name: exp.title,
-        description: exp.description,
-        image: exp.coverPhoto,
-        url: `${baseUrl}/experiences/${exp.slug}`,
-        offers: {
-          '@type': 'Offer',
-          price: exp.price / 100,
-          priceCurrency: 'CHF',
-          availability: 'https://schema.org/InStock',
-        },
-        location: {
-          '@type': 'Place',
-          name: exp.winery.name,
-          address: {
-            '@type': 'PostalAddress',
-            addressLocality: exp.winery.commune,
-            addressRegion: 'Valais',
-            addressCountry: 'CH',
-          },
-        },
-      },
-    })),
-  };
-
   return (
-    <>
-    <JsonLd data={itemListSchema} />
     <div className="min-h-screen bg-cream-50">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Page Header */}
+        {/* Page Header - renders immediately */}
         <div className="mb-8">
           <h1 className="font-display text-3xl font-bold text-slate-900 sm:text-4xl">
             {t('wineExperiences')}
@@ -115,29 +62,40 @@ export default async function ExperiencesPage({ params, searchParams }: PageProp
           </p>
         </div>
 
-        {/* Search Page Content */}
-        <Suspense fallback={<LoadingState />}>
-          <ExperiencesPageClient
-            initialExperiences={searchResult.experiences}
-            communes={communes}
-            pagination={{
-              total: searchResult.total,
-              page: searchResult.page,
-              limit: searchResult.limit,
-              totalPages: searchResult.totalPages,
-            }}
-          />
+        {/* Content with data - streams in when ready */}
+        <Suspense fallback={<ContentLoadingState />}>
+          <ExperiencesContent searchParams={parsedParams} />
         </Suspense>
       </div>
     </div>
-    </>
   );
 }
 
-function LoadingState() {
+/**
+ * Skeleton shown while ExperiencesContent fetches data.
+ * Header is NOT included since it renders immediately above.
+ */
+function ContentLoadingState() {
   return (
-    <div className="flex min-h-[400px] items-center justify-center">
-      <div className="h-8 w-8 animate-spin rounded-full border-4 border-burgundy-200 border-t-burgundy-600" />
+    <div className="animate-pulse">
+      {/* Search & filters skeleton */}
+      <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <Skeleton className="h-12 w-full lg:w-96" />
+        <div className="flex gap-2">
+          <Skeleton className="h-10 w-24" />
+          <Skeleton className="h-10 w-24" />
+          <Skeleton className="h-10 w-24" />
+        </div>
+      </div>
+
+      {/* Results count skeleton */}
+      <div className="mb-4 flex items-center justify-between">
+        <Skeleton className="h-5 w-32" />
+        <Skeleton className="h-10 w-40" />
+      </div>
+
+      {/* Grid skeleton */}
+      <SkeletonExperienceGrid count={9} />
     </div>
   );
 }
