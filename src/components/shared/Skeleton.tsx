@@ -1,17 +1,52 @@
 import { cn } from '@/lib/utils';
 
-interface SkeletonProps {
+interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
 }
 
-export function Skeleton({ className }: SkeletonProps) {
+/**
+ * Base skeleton loading component with accessibility support.
+ * Individual skeletons are decorative (aria-hidden), but should be wrapped
+ * in a container with aria-busy="true" and aria-live="polite" for screen readers.
+ */
+export function Skeleton({ className, ...props }: SkeletonProps) {
   return (
     <div
       className={cn(
         'animate-pulse rounded-md bg-stone-200',
         className
       )}
+      aria-hidden="true"
+      {...props}
     />
+  );
+}
+
+/**
+ * Wrapper component for skeleton loaders with proper accessibility attributes.
+ * Use this to wrap skeleton content to announce loading state to screen readers.
+ */
+interface SkeletonContainerProps {
+  children: React.ReactNode;
+  label?: string;
+  className?: string;
+}
+
+export function SkeletonContainer({
+  children,
+  label = 'Chargement en cours...',
+  className
+}: SkeletonContainerProps) {
+  return (
+    <div
+      className={className}
+      aria-busy="true"
+      aria-live="polite"
+      role="status"
+    >
+      <span className="sr-only">{label}</span>
+      {children}
+    </div>
   );
 }
 

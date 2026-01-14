@@ -232,9 +232,10 @@ export function WineryOnboardingForm() {
           <Button
             type="submit"
             className="w-full sm:w-auto sm:min-w-[200px] sm:mx-auto sm:block"
-            disabled={isLoading}
+            isLoading={isLoading}
+            loadingText="Submitting..."
           >
-            {isLoading ? 'Submitting...' : 'Continue'}
+            Continue
           </Button>
         </div>
       </form>

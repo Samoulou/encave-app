@@ -1,8 +1,8 @@
-import { SkeletonDashboardStats, Skeleton } from '@/components/shared/Skeleton';
+import { SkeletonDashboardStats, Skeleton, SkeletonContainer } from '@/components/shared/Skeleton';
 
 export default function EarningsLoading() {
   return (
-    <div className="space-y-8">
+    <SkeletonContainer label="Chargement des revenus..." className="space-y-8">
       <div className="flex items-center justify-between">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-10 w-32" />
@@ -18,6 +18,6 @@ export default function EarningsLoading() {
           <Skeleton className="mt-4 h-64 w-full" />
         </div>
       </div>
-    </div>
+    </SkeletonContainer>
   );
 }

@@ -195,9 +195,11 @@ export function CancellationModal({
           <Button
             variant="destructive"
             onClick={handleCancel}
-            disabled={!isConfirmed || isCancelling || !cancellationInfo?.canCancel}
+            disabled={!isConfirmed || !cancellationInfo?.canCancel}
+            isLoading={isCancelling}
+            loadingText={t('cancelling')}
           >
-            {isCancelling ? t('cancelling') : t('confirmCancel')}
+            {t('confirmCancel')}
           </Button>
         </DialogFooter>
       </DialogContent>

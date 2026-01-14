@@ -128,8 +128,13 @@ export function LoginForm() {
             )}
           />
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? t('signingIn') : tCommon('buttons.signIn')}
+          <Button
+            type="submit"
+            className="w-full"
+            isLoading={isLoading}
+            loadingText={t('signingIn')}
+          >
+            {tCommon('buttons.signIn')}
           </Button>
 
           <p className="text-center text-sm text-slate-600">

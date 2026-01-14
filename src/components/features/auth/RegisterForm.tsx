@@ -211,8 +211,13 @@ export function RegisterForm() {
             )}
           />
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? t('creatingAccount') : t('createAccount')}
+          <Button
+            type="submit"
+            className="w-full"
+            isLoading={isLoading}
+            loadingText={t('creatingAccount')}
+          >
+            {t('createAccount')}
           </Button>
 
           <p className="text-center text-sm text-slate-600">
