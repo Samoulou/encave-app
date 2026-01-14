@@ -167,53 +167,63 @@ export function BookingWidget({ experience }: BookingWidgetProps) {
         </Card>
 
         {/* Time Selection */}
-        <Card className={!date ? 'opacity-60 pointer-events-none' : ''}>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-burgundy-100">
-                <Clock className="h-5 w-5 text-burgundy-600" />
+        <Card
+          className={!date ? 'opacity-60' : ''}
+          aria-disabled={!date}
+        >
+          <fieldset disabled={!date}>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-burgundy-100">
+                  <Clock className="h-5 w-5 text-burgundy-600" />
+                </div>
+                <div>
+                  <h2 className="font-semibold text-slate-900">{t('selectTime')}</h2>
+                  <p className="text-sm text-slate-500">
+                    {date ? t('selectTimeFirst') : t('selectDateFirst')}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 className="font-semibold text-slate-900">{t('selectTime')}</h2>
-                <p className="text-sm text-slate-500">
-                  {date ? t('selectTimeFirst') : t('selectDateFirst')}
-                </p>
-              </div>
-            </div>
-            <TimeSlotSelector
-              experienceId={experience.id}
-              selectedDate={date}
-              selectedTime={time}
-              onTimeChange={handleTimeChange}
-              onCapacityUpdate={handleCapacityUpdate}
-            />
-          </CardContent>
+              <TimeSlotSelector
+                experienceId={experience.id}
+                selectedDate={date}
+                selectedTime={time}
+                onTimeChange={handleTimeChange}
+                onCapacityUpdate={handleCapacityUpdate}
+              />
+            </CardContent>
+          </fieldset>
         </Card>
 
         {/* Guest Count */}
-        <Card className={!time ? 'opacity-60 pointer-events-none' : ''}>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-burgundy-100">
-                <Users className="h-5 w-5 text-burgundy-600" />
+        <Card
+          className={!time ? 'opacity-60' : ''}
+          aria-disabled={!time}
+        >
+          <fieldset disabled={!time}>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-burgundy-100">
+                  <Users className="h-5 w-5 text-burgundy-600" />
+                </div>
+                <div>
+                  <h2 className="font-semibold text-slate-900">{t('selectGuests')}</h2>
+                  <p className="text-sm text-slate-500">
+                    {t('minGuests', { count: experience.minCapacity })} - {t('maxGuests', { count: experience.maxCapacity })}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 className="font-semibold text-slate-900">{t('selectGuests')}</h2>
-                <p className="text-sm text-slate-500">
-                  {t('minGuests', { count: experience.minCapacity })} - {t('maxGuests', { count: experience.maxCapacity })}
-                </p>
-              </div>
-            </div>
 
-            <GuestCountInput
-              value={guests}
-              onChange={handleGuestsChange}
-              min={experience.minCapacity}
-              max={remainingCapacity !== null ? Math.min(experience.maxCapacity, remainingCapacity) : experience.maxCapacity}
-              isLoading={false}
-              remainingCapacity={remainingCapacity}
-            />
-          </CardContent>
+              <GuestCountInput
+                value={guests}
+                onChange={handleGuestsChange}
+                min={experience.minCapacity}
+                max={remainingCapacity !== null ? Math.min(experience.maxCapacity, remainingCapacity) : experience.maxCapacity}
+                isLoading={false}
+                remainingCapacity={remainingCapacity}
+              />
+            </CardContent>
+          </fieldset>
         </Card>
       </div>
 

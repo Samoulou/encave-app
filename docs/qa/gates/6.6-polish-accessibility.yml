@@ -1,0 +1,61 @@
+schema: 1
+story: '6.6'
+story_title: 'Polish & Accessibility'
+gate: CONCERNS
+status_reason: 'Core bugs fixed (error i18n, settings page, metadata, accessibility, image fallback, calendar mobile). CharacterCounter created but not integrated. PWA icons and autocomplete attributes missing.'
+reviewer: 'Quinn (Test Architect)'
+updated: '2026-01-14T14:30:00Z'
+
+waiver: { active: false }
+
+top_issues:
+  - id: "BUG-015"
+    severity: low
+    finding: "CharacterCounter component created but not integrated into any forms"
+    suggested_action: "Add to experience/winery description fields in future iteration"
+    suggested_owner: dev
+  - id: "BUG-024"
+    severity: low
+    finding: "PWA icons directory is empty"
+    suggested_action: "Generate icon set from logo in future iteration"
+    suggested_owner: dev
+  - id: "BUG-026"
+    severity: low
+    finding: "Autocomplete attributes not added to form inputs"
+    suggested_action: "Add autocomplete hints for better UX in future iteration"
+    suggested_owner: dev
+
+risk_summary:
+  totals: { critical: 0, high: 0, medium: 0, low: 3 }
+  recommendations:
+    must_fix: []
+    monitor:
+      - "Consider integrating CharacterCounter in next polish pass"
+      - "PWA icons needed before app store submission"
+
+quality_score: 80
+expires: '2026-01-28T00:00:00Z'
+
+evidence:
+  tests_reviewed: 0
+  risks_identified: 3
+  trace:
+    ac_covered: [1, 4, 5, 6, 8, 11]
+    ac_gaps: [2, 3, 7, 9, 10]
+    notes: "AC gaps are lower priority items deferred to future iteration"
+
+nfr_validation:
+  security: { status: PASS, notes: "No security changes" }
+  performance: { status: PASS, notes: "No performance impact" }
+  reliability: { status: PASS, notes: "Error handling improved with i18n and fallbacks" }
+  maintainability: { status: PASS, notes: "Clean reusable components created" }
+
+recommendations:
+  immediate: []
+  future:
+    - action: "Integrate CharacterCounter into description fields"
+      refs: ["src/components/shared/CharacterCounter.tsx"]
+    - action: "Generate PWA icons from logo"
+      refs: ["public/icons/"]
+    - action: "Add autocomplete attributes to form inputs"
+      refs: ["src/components/features/checkout/CheckoutForm.tsx"]

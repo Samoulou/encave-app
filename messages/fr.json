@@ -90,6 +90,7 @@
       "imageAlt": "Vignoble en Valais, Suisse",
       "quote": "Decouvrez les meilleurs vins du Valais, ou la tradition rencontre l'excellence dans chaque verre.",
       "forgotPassword": "Mot de passe oublie?",
+      "forgotPasswordContactSupport": "Contactez le support pour reinitialiser votre mot de passe",
       "passwordPlaceholder": "Entrez votre mot de passe",
       "signingIn": "Connexion en cours...",
       "noAccount": "Pas encore de compte?",
@@ -231,6 +232,8 @@
     "bookingDetails": "Details de la reservation"
   },
   "checkout": {
+    "checkout": "Paiement",
+    "experiences": "Experiences",
     "guestDetails": "Informations du visiteur",
     "name": "Nom complet",
     "namePlaceholder": "Jean Dupont",

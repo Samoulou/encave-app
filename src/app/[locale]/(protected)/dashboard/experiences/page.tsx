@@ -1,7 +1,13 @@
+import type { Metadata } from 'next';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+
+export const metadata: Metadata = {
+  title: 'Experiences | EnCave Dashboard',
+  robots: { index: false, follow: false },
+};
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
 import { ExperiencesList } from '@/components/features/experience/ExperiencesList';
 import { ExperiencesSortSelect } from '@/components/features/experience/ExperiencesSortSelect';

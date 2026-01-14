@@ -90,6 +90,7 @@
       "imageAlt": "Weinberg im Wallis, Schweiz",
       "quote": "Entdecken Sie die besten Weine des Wallis, wo Tradition auf Exzellenz in jedem Glas trifft.",
       "forgotPassword": "Passwort vergessen?",
+      "forgotPasswordContactSupport": "Kontaktieren Sie den Support, um Ihr Passwort zuruckzusetzen",
       "passwordPlaceholder": "Geben Sie Ihr Passwort ein",
       "signingIn": "Anmeldung...",
       "noAccount": "Noch kein Konto?",
@@ -231,6 +232,8 @@
     "bookingDetails": "Buchungsdetails"
   },
   "checkout": {
+    "checkout": "Kasse",
+    "experiences": "Erlebnisse",
     "guestDetails": "Gastdaten",
     "name": "Vollstandiger Name",
     "namePlaceholder": "Max Mustermann",

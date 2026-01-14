@@ -95,6 +95,7 @@ export function CheckoutForm({
         <Input
           id="name"
           placeholder={t('namePlaceholder')}
+          autoComplete="name"
           {...register('name')}
           disabled={isSubmitting}
         />
@@ -110,6 +111,7 @@ export function CheckoutForm({
           id="email"
           type="email"
           placeholder={t('emailPlaceholder')}
+          autoComplete="email"
           {...register('email')}
           disabled={isSubmitting}
         />
@@ -126,6 +128,7 @@ export function CheckoutForm({
           id="phone"
           type="tel"
           placeholder={t('phonePlaceholder')}
+          autoComplete="tel"
           {...register('phone')}
           disabled={isSubmitting}
         />

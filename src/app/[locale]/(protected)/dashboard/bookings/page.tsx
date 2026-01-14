@@ -1,7 +1,13 @@
+import type { Metadata } from 'next';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { redirect } from 'next/navigation';
 import { BookingStatus } from '@prisma/client';
+
+export const metadata: Metadata = {
+  title: 'Bookings | EnCave Dashboard',
+  robots: { index: false, follow: false },
+};
 import { startOfMonth, parseISO } from 'date-fns';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
 import {

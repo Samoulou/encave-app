@@ -1,7 +1,13 @@
+import type { Metadata } from 'next';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { redirect } from 'next/navigation';
 import { AlertTriangle } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'Earnings | EnCave Dashboard',
+  robots: { index: false, follow: false },
+};
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
 import {
   EarningsSummaryCards,

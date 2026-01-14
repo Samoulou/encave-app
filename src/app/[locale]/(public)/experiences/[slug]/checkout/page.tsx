@@ -2,12 +2,13 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { ArrowLeft, Loader2, AlertCircle, RefreshCw, Users } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { BookingSummary } from '@/components/features/booking';
 import { CheckoutForm } from '@/components/features/checkout/CheckoutForm';
 import { getExperienceForBooking, checkAvailability, type ExperienceForBooking } from '@/server/actions/booking';
@@ -18,8 +19,10 @@ const AVAILABILITY_RECHECK_INTERVAL_MS = 60000;
 export default function CheckoutPage() {
   const params = useParams<{ slug: string; locale: string }>();
   const slug = params.slug;
+  const locale = useLocale();
   const t = useTranslations('checkout');
   const tBooking = useTranslations('booking');
+  const tNav = useTranslations('nav');
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -88,7 +91,7 @@ export default function CheckoutPage() {
 
         // If no capacity at all, redirect back to booking
         if (result.data.remainingCapacity === 0) {
-          router.push(`/experiences/${slug}/book?error=no_availability&date=${date}&time=${time}`);
+          router.push(`/${locale}/experiences/${slug}/book?error=no_availability&date=${date}&time=${time}`);
           return;
         }
       } else {
@@ -101,7 +104,7 @@ export default function CheckoutPage() {
         setIsCheckingAvailability(false);
       }
     }
-  }, [date, time, guestCount, slug, router]);
+  }, [date, time, guestCount, slug, router, locale]);
 
   // BUG-003: Validate availability on mount when experience is loaded
   useEffect(() => {
@@ -163,7 +166,7 @@ export default function CheckoutPage() {
         </Alert>
         <div className="mt-4">
           <Button asChild variant="outline">
-            <Link href={`/experiences/${slug}/book`}>
+            <Link href={`/${locale}/experiences/${slug}/book`}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               {t('backToBooking')}
             </Link>
@@ -178,12 +181,25 @@ export default function CheckoutPage() {
   // BUG-003: Form is disabled if capacity is exceeded or still checking
   const isFormDisabled = capacityExceeded || isCheckingAvailability;
 
+  // Breadcrumb items
+  const breadcrumbItems = [
+    { label: tNav('home'), href: '/' },
+    { label: t('experiences'), href: '/experiences' },
+    { label: experience.title, href: `/experiences/${slug}` },
+    { label: t('checkout') },
+  ];
+
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">
+      {/* Breadcrumb */}
+      <div className="mb-6">
+        <Breadcrumb items={breadcrumbItems} />
+      </div>
+
       {/* Back link */}
       <div className="mb-6">
         <Button asChild variant="ghost" size="sm">
-          <Link href={`/experiences/${slug}/book?date=${date}&time=${time}&guests=${guests}`}>
+          <Link href={`/${locale}/experiences/${slug}/book?date=${date}&time=${time}&guests=${guests}`}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             {t('backToBooking')}
           </Link>
@@ -235,7 +251,7 @@ export default function CheckoutPage() {
             {t('capacityExceededMessage', { requested: guestCount, available: remainingCapacity })}
             <div className="mt-3">
               <Button asChild variant="outline" size="sm">
-                <Link href={`/experiences/${slug}/book?date=${date}&time=${time}&guests=${remainingCapacity}`}>
+                <Link href={`/${locale}/experiences/${slug}/book?date=${date}&time=${time}&guests=${remainingCapacity}`}>
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   {t('adjustGuestCount')}
                 </Link>
@@ -258,20 +274,25 @@ export default function CheckoutPage() {
       <div className="grid gap-8 lg:grid-cols-3">
         {/* Left Column - Checkout Form */}
         <div className="lg:col-span-2">
-          <Card className={isFormDisabled ? 'opacity-60 pointer-events-none' : ''}>
-            <CardHeader>
-              <CardTitle>{t('guestDetails')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CheckoutForm
-                experienceId={experience.id}
-                wineryId={experience.winery.id}
-                date={date}
-                time={time}
-                guestCount={guestCount}
-                totalPrice={totalPrice}
-              />
-            </CardContent>
+          <Card
+            className={isFormDisabled ? 'opacity-60' : ''}
+            aria-disabled={isFormDisabled}
+          >
+            <fieldset disabled={isFormDisabled}>
+              <CardHeader>
+                <CardTitle>{t('guestDetails')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CheckoutForm
+                  experienceId={experience.id}
+                  wineryId={experience.winery.id}
+                  date={date}
+                  time={time}
+                  guestCount={guestCount}
+                  totalPrice={totalPrice}
+                />
+              </CardContent>
+            </fieldset>
           </Card>
         </div>
 

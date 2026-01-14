@@ -90,6 +90,7 @@
       "imageAlt": "Vineyard in Valais, Switzerland",
       "quote": "Discover the finest wines of Valais, where tradition meets excellence in every glass.",
       "forgotPassword": "Forgot password?",
+      "forgotPasswordContactSupport": "Contact support to reset your password",
       "passwordPlaceholder": "Enter your password",
       "signingIn": "Signing in...",
       "noAccount": "Don't have an account?",
@@ -231,6 +232,8 @@
     "bookingDetails": "Booking Details"
   },
   "checkout": {
+    "checkout": "Checkout",
+    "experiences": "Experiences",
     "guestDetails": "Guest Details",
     "name": "Full Name",
     "namePlaceholder": "John Doe",
