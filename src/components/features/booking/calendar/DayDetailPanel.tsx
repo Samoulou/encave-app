@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { format } from 'date-fns';
+import { useTranslations, useLocale } from 'next-intl';
+import { fr, de, enUS } from 'date-fns/locale';
 import { BookingStatus, ExperienceType } from '@prisma/client';
 import { Users, Clock, Ban, Loader2, X } from 'lucide-react';
 import {
@@ -45,6 +47,8 @@ interface DayDetailPanelProps {
   onRefresh?: () => void;
 }
 
+const dateLocales = { fr, de, en: enUS };
+
 export function DayDetailPanel({
   open,
   onOpenChange,
@@ -55,6 +59,9 @@ export function DayDetailPanel({
   onBookingClick,
   onRefresh,
 }: DayDetailPanelProps) {
+  const t = useTranslations('calendar');
+  const locale = useLocale();
+  const dateLocale = dateLocales[locale as keyof typeof dateLocales] || enUS;
   const [isBlocking, setIsBlocking] = useState(false);
   const isFullyBlocked = blockedExperienceIds.length > 0;
 
@@ -63,13 +70,13 @@ export function DayDetailPanel({
     try {
       const result = await blockDateForAllExperiences(date);
       if (result.success) {
-        toast.success(`Blocked ${result.data?.blockedCount || 0} experiences for ${format(date, 'MMMM d, yyyy')}`);
+        toast.success(t('blockedSuccess', { count: result.data?.blockedCount || 0, date: format(date, 'PPP', { locale: dateLocale }) }));
         onRefresh?.();
       } else {
-        toast.error(result.error?.message || 'Failed to block date');
+        toast.error(result.error?.message || t('blockError'));
       }
     } catch {
-      toast.error('Failed to block date');
+      toast.error(t('blockError'));
     } finally {
       setIsBlocking(false);
     }
@@ -80,13 +87,13 @@ export function DayDetailPanel({
     try {
       const result = await unblockDateForAllExperiences(date);
       if (result.success) {
-        toast.success(`Unblocked ${result.data?.unblockedCount || 0} experiences for ${format(date, 'MMMM d, yyyy')}`);
+        toast.success(t('unblockedSuccess', { count: result.data?.unblockedCount || 0, date: format(date, 'PPP', { locale: dateLocale }) }));
         onRefresh?.();
       } else {
-        toast.error(result.error?.message || 'Failed to unblock date');
+        toast.error(result.error?.message || t('unblockError'));
       }
     } catch {
-      toast.error('Failed to unblock date');
+      toast.error(t('unblockError'));
     } finally {
       setIsBlocking(false);
     }
@@ -104,10 +111,10 @@ export function DayDetailPanel({
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between pr-8">
-            <span>{format(date, 'EEEE, MMMM d, yyyy')}</span>
+            <span>{format(date, 'PPPP', { locale: dateLocale })}</span>
             {isFullyBlocked && (
               <span className="rounded bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
-                Blocked
+                {t('blocked')}
               </span>
             )}
           </DialogTitle>
@@ -118,13 +125,13 @@ export function DayDetailPanel({
           <div className="flex items-center gap-4 rounded-lg bg-slate-50 p-3">
             <div className="flex items-center gap-2 text-sm text-slate-600">
               <span className="font-semibold text-slate-900">{bookings.length}</span>
-              bookings
+              {t('bookingsCount', { count: bookings.length })}
             </div>
             <div className="h-4 w-px bg-slate-200" />
             <div className="flex items-center gap-2 text-sm text-slate-600">
               <Users className="h-4 w-4" />
               <span className="font-semibold text-slate-900">{totalGuests}</span>
-              guests
+              {t('guestsCount', { count: totalGuests })}
             </div>
           </div>
 
@@ -132,9 +139,9 @@ export function DayDetailPanel({
           <div className="flex items-center justify-between rounded-lg border border-slate-200 p-3">
             <div className="text-sm">
               {isFullyBlocked ? (
-                <span className="text-slate-600">This date is blocked for bookings</span>
+                <span className="text-slate-600">{t('dateBlockedMessage')}</span>
               ) : (
-                <span className="text-slate-600">Block this date for all experiences?</span>
+                <span className="text-slate-600">{t('blockDateQuestion')}</span>
               )}
             </div>
             <Button
@@ -148,12 +155,12 @@ export function DayDetailPanel({
               ) : isFullyBlocked ? (
                 <>
                   <X className="mr-1.5 h-4 w-4" />
-                  Unblock
+                  {t('unblock')}
                 </>
               ) : (
                 <>
                   <Ban className="mr-1.5 h-4 w-4" />
-                  Block Date
+                  {t('blockDate')}
                 </>
               )}
             </Button>
@@ -162,7 +169,7 @@ export function DayDetailPanel({
           {/* Bookings List */}
           {bookings.length > 0 ? (
             <div className="space-y-2">
-              <h3 className="text-sm font-medium text-slate-700">Bookings</h3>
+              <h3 className="text-sm font-medium text-slate-700">{t('bookingsTitle')}</h3>
               <div className="space-y-2">
                 {bookings.map((booking) => (
                   <button
@@ -188,7 +195,7 @@ export function DayDetailPanel({
                           </div>
                           <div className="flex items-center gap-1">
                             <Users className="h-3 w-3" />
-                            {booking.guestCount} guests
+                            {t('guestsCount', { count: booking.guestCount })}
                           </div>
                           <span>{formatPrice(booking.totalPrice)}</span>
                         </div>
@@ -201,7 +208,7 @@ export function DayDetailPanel({
             </div>
           ) : (
             <div className="rounded-lg bg-slate-50 p-4 text-center text-sm text-slate-500">
-              No bookings for this day
+              {t('noBookings')}
             </div>
           )}
         </div>

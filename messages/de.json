@@ -49,6 +49,16 @@
     },
     "currency": {
       "perPerson": "pro Person"
+    },
+    "pagination": {
+      "showing": "Zeige {from} bis {to} von {total} Ergebnissen",
+      "noResults": "Keine Ergebnisse",
+      "show": "Anzeigen",
+      "page": "Seite {current} von {total}",
+      "firstPage": "Zur ersten Seite",
+      "previousPage": "Zur vorherigen Seite",
+      "nextPage": "Zur nachsten Seite",
+      "lastPage": "Zur letzten Seite"
     }
   },
   "nav": {
@@ -70,7 +80,11 @@
     "yourWinery": "Ihr Weingut",
     "wineryProfile": "Weingut-Profil",
     "welcome": "Willkommen, {name}",
-    "user": "Benutzer"
+    "user": "Benutzer",
+    "bookings": "Buchungen",
+    "earnings": "Einnahmen",
+    "settings": "Einstellungen",
+    "backToHome": "Zuruck zur Startseite"
   },
   "locale": {
     "fr": "Francais",
@@ -229,7 +243,16 @@
     "capacityRange": "{min}-{max} Gäste",
     "pastDate": "Vergangenes Datum",
     "today": "Heute",
-    "bookingDetails": "Buchungsdetails"
+    "bookingDetails": "Buchungsdetails",
+    "decreaseGuests": "Anzahl der Gaste verringern",
+    "increaseGuests": "Anzahl der Gaste erhohen"
+  },
+  "bookings": {
+    "empty": {
+      "title": "Noch keine Buchungen",
+      "description": "Teilen Sie Ihre Erlebnisse, um Besucher anzuziehen und Buchungen zu erhalten.",
+      "action": "Erlebnisse verwalten"
+    }
   },
   "checkout": {
     "checkout": "Kasse",
@@ -303,6 +326,16 @@
     "refundProcessed": "Eine Ruckerstattung von {amount} wird innerhalb von 5-10 Werktagen bearbeitet.",
     "cancelError": "Stornierung fehlgeschlagen. Bitte versuchen Sie es erneut."
   },
+  "gallery": {
+    "title": "Galerie",
+    "imageAlt": "{title} - Galeriebild {index}",
+    "lightbox": "Bildansicht",
+    "closeLightbox": "Bildansicht schliessen",
+    "previousImage": "Vorheriges Bild",
+    "nextImage": "Nachstes Bild",
+    "imageCounter": "{current} / {total}",
+    "goToImage": "Zu Bild {index} gehen"
+  },
   "winery": {
     "verified": "Verifiziert",
     "coverPhoto": "Titelbild",
@@ -350,6 +383,21 @@
     "noExperiences": "Noch keine Erlebnisse",
     "createFirstExperience": "Erstellen Sie Ihr erstes Erlebnis, um Buchungen zu erhalten.",
     "statistics": "Statistiken"
+  },
+  "calendar": {
+    "blocked": "Gesperrt",
+    "bookingsCount": "{count, plural, =1 {Buchung} other {Buchungen}}",
+    "guestsCount": "{count, plural, =1 {Gast} other {Gaste}}",
+    "dateBlockedMessage": "Dieses Datum ist fur Buchungen gesperrt",
+    "blockDateQuestion": "Dieses Datum fur alle Erlebnisse sperren?",
+    "unblock": "Entsperren",
+    "blockDate": "Sperren",
+    "bookingsTitle": "Buchungen",
+    "noBookings": "Keine Buchungen fur diesen Tag",
+    "blockedSuccess": "{count} Erlebnisse fur {date} gesperrt",
+    "unblockedSuccess": "{count} Erlebnisse fur {date} entsperrt",
+    "blockError": "Datum konnte nicht gesperrt werden",
+    "unblockError": "Datum konnte nicht entsperrt werden"
   },
   "admin": {
     "title": "Administration",

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Calendar, Sparkles, Building2, Menu, X, TrendingUp, Settings, Home, Wine } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -13,16 +13,17 @@ interface DashboardSidebarProps {
 }
 
 const sidebarLinks = [
-  { href: '/dashboard/bookings', label: 'Bookings', icon: Calendar },
-  { href: '/dashboard/earnings', label: 'Earnings', icon: TrendingUp },
-  { href: '/dashboard/experiences', label: 'Experiences', icon: Sparkles },
-  { href: '/dashboard/winery/profile', label: 'Winery Profile', icon: Building2 },
-  { href: '/dashboard/settings/notifications', label: 'Settings', icon: Settings },
+  { href: '/dashboard/bookings', labelKey: 'bookings', icon: Calendar },
+  { href: '/dashboard/earnings', labelKey: 'earnings', icon: TrendingUp },
+  { href: '/dashboard/experiences', labelKey: 'experiences', icon: Sparkles },
+  { href: '/dashboard/winery/profile', labelKey: 'wineryProfile', icon: Building2 },
+  { href: '/dashboard/settings/notifications', labelKey: 'settings', icon: Settings },
 ];
 
 export function DashboardSidebar({ wineryName }: DashboardSidebarProps) {
   const pathname = usePathname();
   const locale = useLocale();
+  const t = useTranslations('nav');
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   return (
@@ -33,7 +34,7 @@ export function DashboardSidebar({ wineryName }: DashboardSidebarProps) {
         size="icon"
         className="fixed top-24 left-4 z-50 md:hidden"
         onClick={() => setIsMobileOpen(!isMobileOpen)}
-        aria-label={isMobileOpen ? 'Close menu' : 'Open menu'}
+        aria-label={isMobileOpen ? t('closeMenu') : t('openMenu')}
       >
         {isMobileOpen ? (
           <X className="h-5 w-5" aria-hidden="true" />
@@ -79,7 +80,7 @@ export function DashboardSidebar({ wineryName }: DashboardSidebarProps) {
           {/* Winery name */}
           <div className="border-b border-stone-200 px-6 py-4">
             <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
-              Your Winery
+              {t('yourWinery')}
             </p>
             <h2 className="mt-1 truncate font-display text-lg font-semibold text-burgundy-800">
               {wineryName}
@@ -100,7 +101,7 @@ export function DashboardSidebar({ wineryName }: DashboardSidebarProps) {
                     className="h-5 w-5 flex-shrink-0 text-slate-400"
                     aria-hidden="true"
                   />
-                  Back to Home
+                  {t('backToHome')}
                 </Link>
               </li>
 
@@ -134,7 +135,7 @@ export function DashboardSidebar({ wineryName }: DashboardSidebarProps) {
                         )}
                         aria-hidden="true"
                       />
-                      {link.label}
+                      {t(link.labelKey)}
                     </Link>
                   </li>
                 );

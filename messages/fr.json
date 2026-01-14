@@ -49,6 +49,16 @@
     },
     "currency": {
       "perPerson": "par personne"
+    },
+    "pagination": {
+      "showing": "Affichage de {from} a {to} sur {total} resultats",
+      "noResults": "Aucun resultat",
+      "show": "Afficher",
+      "page": "Page {current} sur {total}",
+      "firstPage": "Aller a la premiere page",
+      "previousPage": "Aller a la page precedente",
+      "nextPage": "Aller a la page suivante",
+      "lastPage": "Aller a la derniere page"
     }
   },
   "nav": {
@@ -70,7 +80,11 @@
     "yourWinery": "Votre domaine",
     "wineryProfile": "Profil du domaine",
     "welcome": "Bienvenue, {name}",
-    "user": "Utilisateur"
+    "user": "Utilisateur",
+    "bookings": "Reservations",
+    "earnings": "Revenus",
+    "settings": "Parametres",
+    "backToHome": "Retour a l'accueil"
   },
   "locale": {
     "fr": "Francais",
@@ -229,7 +243,16 @@
     "capacityRange": "{min}-{max} personnes",
     "pastDate": "Date passee",
     "today": "Aujourd'hui",
-    "bookingDetails": "Details de la reservation"
+    "bookingDetails": "Details de la reservation",
+    "decreaseGuests": "Diminuer le nombre d'invites",
+    "increaseGuests": "Augmenter le nombre d'invites"
+  },
+  "bookings": {
+    "empty": {
+      "title": "Pas encore de reservations",
+      "description": "Partagez vos experiences pour attirer des visiteurs et recevoir vos premieres reservations.",
+      "action": "Gerer les experiences"
+    }
   },
   "checkout": {
     "checkout": "Paiement",
@@ -303,6 +326,16 @@
     "refundProcessed": "Un remboursement de {amount} sera traite sous 5-10 jours ouvrables.",
     "cancelError": "Echec de l'annulation. Veuillez reessayer."
   },
+  "gallery": {
+    "title": "Galerie",
+    "imageAlt": "{title} - image {index}",
+    "lightbox": "Visionneuse d'images",
+    "closeLightbox": "Fermer la visionneuse",
+    "previousImage": "Image precedente",
+    "nextImage": "Image suivante",
+    "imageCounter": "{current} / {total}",
+    "goToImage": "Voir l'image {index}"
+  },
   "winery": {
     "verified": "Verifie",
     "coverPhoto": "Photo de couverture",
@@ -350,6 +383,21 @@
     "noExperiences": "Pas encore d'experiences",
     "createFirstExperience": "Creez votre premiere experience pour commencer a recevoir des reservations.",
     "statistics": "Statistiques"
+  },
+  "calendar": {
+    "blocked": "Bloque",
+    "bookingsCount": "{count, plural, =1 {reservation} other {reservations}}",
+    "guestsCount": "{count, plural, =1 {invite} other {invites}}",
+    "dateBlockedMessage": "Cette date est bloquee pour les reservations",
+    "blockDateQuestion": "Bloquer cette date pour toutes les experiences?",
+    "unblock": "Debloquer",
+    "blockDate": "Bloquer",
+    "bookingsTitle": "Reservations",
+    "noBookings": "Aucune reservation pour ce jour",
+    "blockedSuccess": "{count} experiences bloquees pour le {date}",
+    "unblockedSuccess": "{count} experiences debloquees pour le {date}",
+    "blockError": "Echec du blocage de la date",
+    "unblockError": "Echec du deblocage de la date"
   },
   "admin": {
     "title": "Administration",

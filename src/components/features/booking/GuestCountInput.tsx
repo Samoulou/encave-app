@@ -24,6 +24,7 @@ export function GuestCountInput({
   remainingCapacity,
 }: GuestCountInputProps) {
   const t = useTranslations('booking');
+  const tCommon = useTranslations('common');
 
   // BUG-002 FIX: Use refs to track the latest values for stable callbacks
   const valueRef = useRef(value);
@@ -75,7 +76,7 @@ export function GuestCountInput({
             canDecrement && 'hover:bg-burgundy-50 hover:border-burgundy-300 active:scale-95 active:bg-burgundy-100',
             !canDecrement && 'opacity-50 cursor-not-allowed'
           )}
-          aria-label="Decrease guests"
+          aria-label={t('decreaseGuests')}
         >
           <Minus className="h-5 w-5" />
         </Button>
@@ -100,7 +101,7 @@ export function GuestCountInput({
             canIncrement && 'hover:bg-burgundy-50 hover:border-burgundy-300 active:scale-95 active:bg-burgundy-100',
             !canIncrement && 'opacity-50 cursor-not-allowed'
           )}
-          aria-label="Increase guests"
+          aria-label={t('increaseGuests')}
         >
           <Plus className="h-5 w-5" />
         </Button>
@@ -113,7 +114,7 @@ export function GuestCountInput({
         {isLoading ? (
           <span className="flex items-center gap-1">
             <Loader2 className="h-3 w-3 animate-spin" />
-            Loading...
+            {tCommon('loading')}
           </span>
         ) : remainingCapacity !== null && remainingCapacity > 3 ? (
           // Normal capacity (>3) - show as text

@@ -49,6 +49,16 @@
     },
     "currency": {
       "perPerson": "per person"
+    },
+    "pagination": {
+      "showing": "Showing {from} to {to} of {total} results",
+      "noResults": "No results",
+      "show": "Show",
+      "page": "Page {current} of {total}",
+      "firstPage": "Go to first page",
+      "previousPage": "Go to previous page",
+      "nextPage": "Go to next page",
+      "lastPage": "Go to last page"
     }
   },
   "nav": {
@@ -70,7 +80,11 @@
     "yourWinery": "Your Winery",
     "wineryProfile": "Winery Profile",
     "welcome": "Welcome, {name}",
-    "user": "User"
+    "user": "User",
+    "bookings": "Bookings",
+    "earnings": "Earnings",
+    "settings": "Settings",
+    "backToHome": "Back to Home"
   },
   "locale": {
     "fr": "Francais",
@@ -229,7 +243,16 @@
     "capacityRange": "{min}-{max} guests",
     "pastDate": "Past date",
     "today": "Today",
-    "bookingDetails": "Booking Details"
+    "bookingDetails": "Booking Details",
+    "decreaseGuests": "Decrease guests",
+    "increaseGuests": "Increase guests"
+  },
+  "bookings": {
+    "empty": {
+      "title": "No bookings yet",
+      "description": "Share your experiences to attract visitors and start receiving bookings.",
+      "action": "Manage Experiences"
+    }
   },
   "checkout": {
     "checkout": "Checkout",
@@ -303,6 +326,16 @@
     "refundProcessed": "A refund of {amount} will be processed within 5-10 business days.",
     "cancelError": "Failed to cancel booking. Please try again."
   },
+  "gallery": {
+    "title": "Gallery",
+    "imageAlt": "{title} gallery image {index}",
+    "lightbox": "Image lightbox",
+    "closeLightbox": "Close lightbox",
+    "previousImage": "Previous image",
+    "nextImage": "Next image",
+    "imageCounter": "{current} / {total}",
+    "goToImage": "Go to image {index}"
+  },
   "winery": {
     "verified": "Verified",
     "coverPhoto": "Cover Photo",
@@ -350,6 +383,21 @@
     "noExperiences": "No experiences yet",
     "createFirstExperience": "Create your first experience to start receiving bookings.",
     "statistics": "Statistics"
+  },
+  "calendar": {
+    "blocked": "Blocked",
+    "bookingsCount": "{count, plural, =1 {booking} other {bookings}}",
+    "guestsCount": "{count, plural, =1 {guest} other {guests}}",
+    "dateBlockedMessage": "This date is blocked for bookings",
+    "blockDateQuestion": "Block this date for all experiences?",
+    "unblock": "Unblock",
+    "blockDate": "Block Date",
+    "bookingsTitle": "Bookings",
+    "noBookings": "No bookings for this day",
+    "blockedSuccess": "Blocked {count} experiences for {date}",
+    "unblockedSuccess": "Unblocked {count} experiences for {date}",
+    "blockError": "Failed to block date",
+    "unblockError": "Failed to unblock date"
   },
   "admin": {
     "title": "Administration",

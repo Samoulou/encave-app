@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -20,6 +21,7 @@ export function ExperienceGallery({
   images,
   experienceTitle,
 }: ExperienceGalleryProps) {
+  const t = useTranslations('gallery');
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -63,7 +65,7 @@ export function ExperienceGallery({
     <>
       <section className="rounded-xl bg-white p-6 shadow-warm lg:p-8">
         <h2 className="font-display text-xl font-semibold text-slate-900">
-          Gallery
+          {t('title')}
         </h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
           {images.map((image, index) => (
@@ -75,7 +77,7 @@ export function ExperienceGallery({
             >
               <Image
                 src={image.url}
-                alt={`${experienceTitle} gallery image ${index + 1}`}
+                alt={t('imageAlt', { title: experienceTitle, index: index + 1 })}
                 fill
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                 sizes="(max-width: 768px) 50vw, 33vw"
@@ -92,14 +94,14 @@ export function ExperienceGallery({
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/95"
           role="dialog"
           aria-modal="true"
-          aria-label="Image lightbox"
+          aria-label={t('lightbox')}
         >
           {/* Close button */}
           <button
             type="button"
             onClick={closeLightbox}
             className="absolute right-4 top-4 z-10 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white"
-            aria-label="Close lightbox"
+            aria-label={t('closeLightbox')}
           >
             <X className="h-6 w-6" />
           </button>
@@ -110,7 +112,7 @@ export function ExperienceGallery({
               type="button"
               onClick={goToPrevious}
               className="absolute left-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white transition-colors hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white"
-              aria-label="Previous image"
+              aria-label={t('previousImage')}
             >
               <ChevronLeft className="h-8 w-8" />
             </button>
@@ -120,7 +122,7 @@ export function ExperienceGallery({
           <div className="relative h-[80vh] w-[90vw] max-w-5xl">
             <Image
               src={images[currentIndex]?.url ?? ''}
-              alt={`${experienceTitle} gallery image ${currentIndex + 1}`}
+              alt={t('imageAlt', { title: experienceTitle, index: currentIndex + 1 })}
               fill
               className="object-contain"
               sizes="90vw"
@@ -134,7 +136,7 @@ export function ExperienceGallery({
               type="button"
               onClick={goToNext}
               className="absolute right-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white transition-colors hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white"
-              aria-label="Next image"
+              aria-label={t('nextImage')}
             >
               <ChevronRight className="h-8 w-8" />
             </button>
@@ -142,7 +144,7 @@ export function ExperienceGallery({
 
           {/* Image counter */}
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-4 py-2 text-sm text-white">
-            {currentIndex + 1} / {images.length}
+            {t('imageCounter', { current: currentIndex + 1, total: images.length })}
           </div>
 
           {/* Thumbnail strip */}
@@ -159,7 +161,7 @@ export function ExperienceGallery({
                       ? 'border-white'
                       : 'border-transparent opacity-60 hover:opacity-100'
                   )}
-                  aria-label={`Go to image ${index + 1}`}
+                  aria-label={t('goToImage', { index: index + 1 })}
                 >
                   <Image
                     src={image.url}

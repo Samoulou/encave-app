@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useTranslations } from 'next-intl';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -39,6 +40,7 @@ export function Pagination({
   pageSizeOptions = [10, 20, 50],
   className,
 }: PaginationProps) {
+  const t = useTranslations('common.pagination');
   const startItem = (currentPage - 1) * pageSize + 1;
   const endItem = Math.min(currentPage * pageSize, totalItems);
 
@@ -55,13 +57,9 @@ export function Pagination({
       {/* Item count info */}
       <div className="text-sm text-slate-600">
         {totalItems > 0 ? (
-          <>
-            Showing <span className="font-medium">{startItem}</span> to{' '}
-            <span className="font-medium">{endItem}</span> of{' '}
-            <span className="font-medium">{totalItems}</span> results
-          </>
+          t('showing', { from: startItem, to: endItem, total: totalItems })
         ) : (
-          'No results'
+          t('noResults')
         )}
       </div>
 
@@ -69,7 +67,7 @@ export function Pagination({
         {/* Page size selector */}
         {onPageSizeChange && (
           <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-600">Show</span>
+            <span className="text-sm text-slate-600">{t('show')}</span>
             <Select
               value={pageSize.toString()}
               onValueChange={(value) => onPageSizeChange(Number(value))}
@@ -97,7 +95,7 @@ export function Pagination({
             className="h-8 w-8"
             onClick={() => onPageChange(1)}
             disabled={!canGoPrevious}
-            aria-label="Go to first page"
+            aria-label={t('firstPage')}
           >
             <ChevronsLeft className="h-4 w-4" />
           </Button>
@@ -109,7 +107,7 @@ export function Pagination({
             className="h-8 w-8"
             onClick={() => onPageChange(currentPage - 1)}
             disabled={!canGoPrevious}
-            aria-label="Go to previous page"
+            aria-label={t('previousPage')}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -117,9 +115,7 @@ export function Pagination({
           {/* Page indicator */}
           <div className="flex items-center gap-1 px-2">
             <span className="text-sm text-slate-600">
-              Page{' '}
-              <span className="font-medium">{currentPage}</span> of{' '}
-              <span className="font-medium">{totalPages || 1}</span>
+              {t('page', { current: currentPage, total: totalPages || 1 })}
             </span>
           </div>
 
@@ -130,7 +126,7 @@ export function Pagination({
             className="h-8 w-8"
             onClick={() => onPageChange(currentPage + 1)}
             disabled={!canGoNext}
-            aria-label="Go to next page"
+            aria-label={t('nextPage')}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
@@ -142,7 +138,7 @@ export function Pagination({
             className="h-8 w-8"
             onClick={() => onPageChange(totalPages)}
             disabled={!canGoNext}
-            aria-label="Go to last page"
+            aria-label={t('lastPage')}
           >
             <ChevronsRight className="h-4 w-4" />
           </Button>
