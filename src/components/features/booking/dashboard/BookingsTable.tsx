@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo, memo } from 'react';
 import { useQueryState } from 'nuqs';
 import { format } from 'date-fns';
 import { BookingStatus } from '@prisma/client';
@@ -10,6 +10,7 @@ import { BookingStatusBadge } from './BookingStatusBadge';
 import { BookingRowExpanded } from './BookingRowExpanded';
 import { BookingQuickActions } from './BookingQuickActions';
 import { ClientDetailsModal } from './ClientDetailsModal';
+import { Pagination } from '@/components/shared/Pagination';
 
 interface BookingWithExperience {
   id: string;
@@ -36,7 +37,9 @@ interface BookingsTableProps {
 
 type SortField = 'date' | 'totalPrice' | 'guestCount';
 
-export function BookingsTable({ bookings }: BookingsTableProps) {
+const DEFAULT_PAGE_SIZE = 20;
+
+function BookingsTableComponent({ bookings }: BookingsTableProps) {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [clientModalData, setClientModalData] = useState<{
     name: string;
@@ -44,14 +47,43 @@ export function BookingsTable({ bookings }: BookingsTableProps) {
     phone: string;
   } | null>(null);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+
   const [sortField, setSortField] = useQueryState('sort', {
     defaultValue: 'date',
-    shallow: false,
+    shallow: true,
   });
   const [sortOrder, setSortOrder] = useQueryState('order', {
     defaultValue: 'asc',
-    shallow: false,
+    shallow: true,
   });
+
+  // Calculate paginated data
+  const totalPages = Math.ceil(bookings.length / pageSize);
+  const paginatedBookings = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return bookings.slice(startIndex, startIndex + pageSize);
+  }, [bookings, currentPage, pageSize]);
+
+  // Reset to page 1 when bookings change
+  useMemo(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(1);
+    }
+  }, [currentPage, totalPages]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    setExpandedRows(new Set()); // Collapse all rows when changing page
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(1);
+    setExpandedRows(new Set());
+  };
 
   const toggleRow = (id: string) => {
     const newExpanded = new Set(expandedRows);
@@ -115,7 +147,7 @@ export function BookingsTable({ bookings }: BookingsTableProps) {
 
         {/* Table Body */}
         <div className="divide-y divide-slate-200">
-          {bookings.map((booking) => {
+          {paginatedBookings.map((booking) => {
             const isExpanded = expandedRows.has(booking.id);
             const bookingDate = new Date(booking.date);
 
@@ -240,6 +272,21 @@ export function BookingsTable({ bookings }: BookingsTableProps) {
         </div>
       </div>
 
+      {/* Pagination */}
+      {bookings.length > DEFAULT_PAGE_SIZE && (
+        <div className="mt-4">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={bookings.length}
+            pageSize={pageSize}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+            pageSizeOptions={[10, 20, 50]}
+          />
+        </div>
+      )}
+
       {/* Client Details Modal */}
       <ClientDetailsModal
         open={clientModalData !== null}
@@ -251,3 +298,6 @@ export function BookingsTable({ bookings }: BookingsTableProps) {
     </>
   );
 }
+
+// Memoized export to prevent unnecessary re-renders
+export const BookingsTable = memo(BookingsTableComponent);

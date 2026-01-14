@@ -14,6 +14,7 @@ import { TimeSlotSelector } from './TimeSlotSelector';
 import { GuestCountInput } from './GuestCountInput';
 import { PriceCalculator } from './PriceCalculator';
 import { BookingSummary } from './BookingSummary';
+import { IMAGE_PLACEHOLDERS } from '@/lib/image-placeholder';
 import type { ExperienceForBooking } from '@/server/actions/booking';
 
 interface BookingWidgetProps {
@@ -116,6 +117,9 @@ export function BookingWidget({ experience }: BookingWidgetProps) {
                 alt={experience.title}
                 fill
                 className="object-cover"
+                sizes="(max-width: 640px) 100vw, 192px"
+                placeholder="blur"
+                blurDataURL={IMAGE_PLACEHOLDERS.card}
               />
             </div>
             <CardContent className="flex-1 p-6">

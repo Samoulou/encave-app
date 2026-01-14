@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Wine, MapPin, ArrowRight } from 'lucide-react';
 import { VerifiedBadge } from '@/components/shared/VerifiedBadge';
+import { IMAGE_PLACEHOLDERS } from '@/lib/image-placeholder';
 
 interface WineryCardProps {
   winery: {
@@ -30,6 +31,8 @@ export function WineryCard({ winery }: WineryCardProps) {
                 fill
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                placeholder="blur"
+                blurDataURL={IMAGE_PLACEHOLDERS.card}
               />
               {/* Gradient overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />

@@ -1,7 +1,9 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { Clock, Users, MapPin } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { IMAGE_PLACEHOLDERS } from '@/lib/image-placeholder';
 import type { ExperienceType } from '@prisma/client';
 
 const TYPE_LABELS: Record<ExperienceType, string> = {
@@ -55,17 +57,20 @@ export function ExperienceCard({ experience, className }: ExperienceCardProps) {
     >
       <Card className="overflow-hidden">
         {/* Cover Photo */}
-        <div className="relative aspect-[4/3] bg-slate-100">
+        <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
           {experience.coverPhoto && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <Image
               src={experience.coverPhoto}
               alt={experience.title}
-              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+              fill
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              placeholder="blur"
+              blurDataURL={IMAGE_PLACEHOLDERS.card}
             />
           )}
           {/* Type Badge */}
-          <div className="absolute right-3 top-3">
+          <div className="absolute right-3 top-3 z-10">
             <span className="rounded-full bg-white/95 px-3 py-1 text-xs font-medium text-slate-700 shadow-sm backdrop-blur-sm">
               {TYPE_LABELS[experience.type]}
             </span>

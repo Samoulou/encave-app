@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { Wine } from 'lucide-react';
 import type { ExperienceType } from '@prisma/client';
+import { IMAGE_PLACEHOLDERS } from '@/lib/image-placeholder';
 
 interface ExperienceHeroProps {
   title: string;
@@ -37,6 +38,8 @@ export function ExperienceHero({
           className="object-cover"
           priority
           sizes="100vw"
+          placeholder="blur"
+          blurDataURL={IMAGE_PLACEHOLDERS.hero}
         />
       ) : (
         <div className="h-full w-full bg-gradient-to-br from-burgundy-700 to-burgundy-900">

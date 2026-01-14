@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useMemo, memo } from 'react';
 import { format } from 'date-fns';
 import { Info } from 'lucide-react';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -7,13 +8,42 @@ import { Card } from '@/components/ui/card';
 import { formatCHF } from '@/lib/utils/currency';
 import { TransactionStatusBadge } from './TransactionStatusBadge';
 import { PayoutBreakdownTooltip } from './PayoutBreakdownTooltip';
+import { Pagination } from '@/components/shared/Pagination';
 import type { Transaction } from '@/server/queries/earnings.queries';
 
 interface TransactionTableProps {
   transactions: Transaction[];
 }
 
-export function TransactionTable({ transactions }: TransactionTableProps) {
+const DEFAULT_PAGE_SIZE = 20;
+
+function TransactionTableComponent({ transactions }: TransactionTableProps) {
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+
+  // Calculate paginated data
+  const totalPages = Math.ceil(transactions.length / pageSize);
+  const paginatedTransactions = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return transactions.slice(startIndex, startIndex + pageSize);
+  }, [transactions, currentPage, pageSize]);
+
+  // Reset to page 1 when transactions change
+  useMemo(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(1);
+    }
+  }, [currentPage, totalPages]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(1);
+  };
   if (transactions.length === 0) {
     return (
       <Card className="p-8 text-center">
@@ -53,7 +83,7 @@ export function TransactionTable({ transactions }: TransactionTableProps) {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {transactions.map((transaction) => (
+              {paginatedTransactions.map((transaction) => (
                 <tr
                   key={transaction.id}
                   className="hover:bg-slate-50 transition-colors"
@@ -98,7 +128,25 @@ export function TransactionTable({ transactions }: TransactionTableProps) {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {transactions.length > DEFAULT_PAGE_SIZE && (
+          <div className="border-t border-slate-200 p-4">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={transactions.length}
+              pageSize={pageSize}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+              pageSizeOptions={[10, 20, 50]}
+            />
+          </div>
+        )}
       </Card>
     </TooltipProvider>
   );
 }
+
+// Memoized export to prevent unnecessary re-renders
+export const TransactionTable = memo(TransactionTableComponent);
