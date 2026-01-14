@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/reminders",
-      "schedule": "0 * * * *"
+      "schedule": "0 7 * * *"
     },
     {
       "path": "/api/cron/daily-digest",
@@ -14,7 +14,7 @@
     },
     {
       "path": "/api/cron/follow-ups",
-      "schedule": "0 * * * *"
+      "schedule": "0 10 * * *"
     }
   ]
 }
