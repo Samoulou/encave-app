@@ -147,6 +147,8 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
                 address={experience.winery.address}
                 commune={experience.winery.commune}
                 wineryName={experience.winery.name}
+                latitude={experience.winery.latitude}
+                longitude={experience.winery.longitude}
               />
             </div>
 

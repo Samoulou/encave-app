@@ -1,21 +1,36 @@
 import { MapPin, ExternalLink } from 'lucide-react';
+import {
+  getMapEmbedUrl,
+  VALAIS_FALLBACK_MAP_URL,
+} from '@/lib/geocoding';
 
 interface LocationSectionProps {
   address: string;
   commune: string;
   wineryName: string;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export function LocationSection({
   address,
   commune,
   wineryName,
+  latitude,
+  longitude,
 }: LocationSectionProps) {
   const fullAddress = `${address}, ${commune}, Valais, Switzerland`;
-  const encodedAddress = encodeURIComponent(fullAddress);
+  const hasCoordinates = latitude != null && longitude != null;
 
-  // Google Maps link for external navigation
-  const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+  // Google Maps link - use coordinates if available, otherwise address
+  const googleMapsUrl = hasCoordinates
+    ? `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
+
+  // Map embed URL - use coordinates with marker if available, otherwise fallback
+  const mapEmbedUrl = hasCoordinates
+    ? getMapEmbedUrl(latitude, longitude, 15)
+    : VALAIS_FALLBACK_MAP_URL;
 
   return (
     <section className="rounded-xl bg-white p-6 shadow-warm lg:p-8">
@@ -48,20 +63,26 @@ export function LocationSection({
       <div className="mt-6 overflow-hidden rounded-lg border border-stone-200">
         <iframe
           title={`Map showing location of ${wineryName}`}
-          src={`https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent('7.0,46.0,8.0,46.5')}&layer=mapnik`}
+          src={mapEmbedUrl}
           className="h-64 w-full"
           loading="lazy"
           referrerPolicy="no-referrer"
         />
         <div className="bg-stone-50 px-3 py-2 text-center">
-          <a
-            href={googleMapsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-slate-600 hover:text-burgundy-600"
-          >
-            View larger map
-          </a>
+          {hasCoordinates ? (
+            <a
+              href={googleMapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-slate-600 hover:text-burgundy-600"
+            >
+              View larger map
+            </a>
+          ) : (
+            <span className="text-xs text-slate-500">
+              Exact location will be provided after booking confirmation
+            </span>
+          )}
         </div>
       </div>
     </section>

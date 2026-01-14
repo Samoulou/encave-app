@@ -189,6 +189,8 @@ export async function getExperienceBySlug(slug: string) {
           commune: true,
           address: true,
           coverPhoto: true,
+          latitude: true,
+          longitude: true,
           stripeOnboardingComplete: true,
         },
       },

@@ -81,6 +81,8 @@ model Winery {
   phone                    String
   email                    String
   coverPhoto               String?
+  latitude                 Float?       // Geocoded from address
+  longitude                Float?       // Geocoded from address
   userId                   String       @unique
   user                     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   status                   WineryStatus @default(PENDING)

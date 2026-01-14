@@ -10,6 +10,7 @@ import {
   type WineryProfileInput,
 } from '@/lib/validators/winery';
 import { generateSlug } from '@/lib/utils/slug';
+import { geocodeWineryAddress } from '@/lib/geocoding';
 import type { ActionResult } from '@/types/actions';
 
 /**
@@ -116,9 +117,18 @@ export async function createWinery(
       };
     }
 
-    // 7. Create winery and update user role in a transaction
+    // 7. Geocode address (non-blocking, best effort)
+    let coordinates: { latitude: number; longitude: number } | null = null;
+    try {
+      coordinates = await geocodeWineryAddress(address, commune);
+    } catch (geocodeError) {
+      // Log but don't fail - geocoding is optional
+      console.warn('Geocoding failed for new winery:', geocodeError);
+    }
+
+    // 8. Create winery and update user role in a transaction
     const winery = await db.$transaction(async (tx) => {
-      // Create the winery
+      // Create the winery with coordinates if available
       const newWinery = await tx.winery.create({
         data: {
           name,
@@ -130,6 +140,8 @@ export async function createWinery(
           email: user.email,
           userId: session.user.id,
           status: 'PENDING',
+          latitude: coordinates?.latitude ?? null,
+          longitude: coordinates?.longitude ?? null,
         },
       });
 
@@ -209,10 +221,33 @@ export async function updateWineryProfile(
       };
     }
 
+    // Check if address or commune changed - if so, re-geocode
+    const addressChanged =
+      (validated.data.address && validated.data.address !== winery.address) ||
+      (validated.data.commune && validated.data.commune !== winery.commune);
+
+    let coordinates: { latitude: number; longitude: number } | null = null;
+    if (addressChanged) {
+      try {
+        const newAddress = validated.data.address ?? winery.address;
+        const newCommune = validated.data.commune ?? winery.commune;
+        coordinates = await geocodeWineryAddress(newAddress, newCommune);
+      } catch (geocodeError) {
+        console.warn('Geocoding failed for winery update:', geocodeError);
+      }
+    }
+
     // Update winery
     const updated = await db.winery.update({
       where: { id: winery.id },
-      data: validated.data,
+      data: {
+        ...validated.data,
+        // Only update coordinates if address changed and we got new ones
+        ...(addressChanged && {
+          latitude: coordinates?.latitude ?? null,
+          longitude: coordinates?.longitude ?? null,
+        }),
+      },
     });
 
     return {
