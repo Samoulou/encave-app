@@ -2,17 +2,14 @@ import Image from 'next/image';
 import { Suspense } from 'react';
 import { WineriesContent } from './WineriesContent';
 import { Skeleton } from '@/components/shared/Skeleton';
-import { generateWineriesMetadata } from '@/lib/seo';
-import type { Locale } from '@/i18n/routing';
+import type { Metadata } from 'next';
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}) {
-  const { locale } = await params;
-  return generateWineriesMetadata(locale as Locale);
-}
+// Static metadata - no async, no blocking!
+export const metadata: Metadata = {
+  title: 'Wineries in Valais | EnCave',
+  description:
+    'Discover exceptional winemakers in Switzerland\'s premier wine region. Each winery offers unique experiences rooted in centuries of tradition.',
+};
 
 interface WineriesPageProps {
   searchParams: Promise<{ commune?: string }>;

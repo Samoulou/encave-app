@@ -7,6 +7,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { SkipLink } from '@/components/shared/SkipLink';
 import { Analytics } from '@/components/shared/Analytics';
 import { ProgressBarProvider } from '@/components/shared/ProgressBarProvider';
+import { NavigationLoader } from '@/components/shared/NavigationLoader';
 import { routing, type Locale } from '@/i18n/routing';
 import '../globals.css';
 
@@ -61,6 +62,7 @@ export default async function LocaleLayout({ children, params }: Props) {
           <NuqsAdapter>{children}</NuqsAdapter>
           <Toaster />
           <ProgressBarProvider />
+          <NavigationLoader />
           <Analytics />
         </NextIntlClientProvider>
       </body>
