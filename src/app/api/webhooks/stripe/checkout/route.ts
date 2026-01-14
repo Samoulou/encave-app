@@ -143,17 +143,18 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   }
 
   // Generate secure access token for email link
+  // Store only the hash for security - the plaintext token is sent in emails
   const accessToken = crypto.randomBytes(32).toString('hex');
   const accessTokenHash = crypto.createHash('sha256').update(accessToken).digest('hex');
 
   // Update booking to confirmed
+  // Note: We only store the hash, not the plaintext token (SEC-002 fix)
   await db.booking.update({
     where: { id: bookingId },
     data: {
       status: BookingStatus.CONFIRMED,
       stripePaymentIntentId: session.payment_intent as string,
       expiresAt: null, // Clear expiration since payment is complete
-      accessToken,
       accessTokenHash,
     },
   });

@@ -351,15 +351,12 @@ export async function getBookingByToken(
   };
 }>> {
   try {
-    // Hash the token to compare with stored hash
+    // Hash the token to compare with stored hash (SEC-002: plaintext token no longer stored)
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
 
     const booking = await db.booking.findFirst({
       where: {
-        OR: [
-          { accessToken: token },
-          { accessTokenHash: tokenHash },
-        ],
+        accessTokenHash: tokenHash,
       },
       include: {
         experience: {
@@ -432,17 +429,14 @@ export async function cancelBooking(
   accessToken: string
 ): Promise<ActionResult<CancellationResult>> {
   try {
-    // Hash the token to compare with stored hash
+    // Hash the token to compare with stored hash (SEC-002: plaintext token no longer stored)
     const tokenHash = crypto.createHash('sha256').update(accessToken).digest('hex');
 
     // Find booking and verify access
     const booking = await db.booking.findFirst({
       where: {
         id: bookingId,
-        OR: [
-          { accessToken: accessToken },
-          { accessTokenHash: tokenHash },
-        ],
+        accessTokenHash: tokenHash,
       },
       include: {
         experience: {
@@ -600,16 +594,13 @@ export async function getCancellationInfo(
   reason?: string;
 }>> {
   try {
-    // Hash the token to compare with stored hash
+    // Hash the token to compare with stored hash (SEC-002: plaintext token no longer stored)
     const tokenHash = crypto.createHash('sha256').update(accessToken).digest('hex');
 
     const booking = await db.booking.findFirst({
       where: {
         id: bookingId,
-        OR: [
-          { accessToken: accessToken },
-          { accessTokenHash: tokenHash },
-        ],
+        accessTokenHash: tokenHash,
       },
     });
 

@@ -1,9 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { db } from '@/server/db';
 
 export const dynamic = 'force-dynamic';
 
 type UnsubscribeType = 'daily_digest' | 'weekly_summary' | 'marketing' | 'all';
+
+// SEC-004: Token expiration duration (30 days)
+const TOKEN_EXPIRATION_DAYS = 30;
+
+/**
+ * Generate a new unsubscribe token with expiration
+ */
+function generateNewToken(): { token: string; expiresAt: Date } {
+  const token = crypto.randomBytes(16).toString('hex');
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + TOKEN_EXPIRATION_DAYS);
+  return { token, expiresAt };
+}
 
 export async function GET(
   request: NextRequest,
@@ -24,6 +38,23 @@ export async function GET(
       // Redirect to error page
       return NextResponse.redirect(
         new URL('/unsubscribe?status=invalid', request.url)
+      );
+    }
+
+    // SEC-004: Check token expiration
+    if (preferences.unsubscribeTokenExpiresAt && preferences.unsubscribeTokenExpiresAt < new Date()) {
+      // Token expired - regenerate and redirect to expired page
+      const { token: newToken, expiresAt } = generateNewToken();
+      await db.notificationPreferences.update({
+        where: { id: preferences.id },
+        data: {
+          unsubscribeToken: newToken,
+          unsubscribeTokenExpiresAt: expiresAt,
+        },
+      });
+
+      return NextResponse.redirect(
+        new URL('/unsubscribe?status=expired', request.url)
       );
     }
 

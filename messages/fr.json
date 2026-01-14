@@ -102,7 +102,7 @@
       "imageAlt": "Cave a vin avec barriques de chene",
       "quote": "Chaque grand vin commence par la passion. Rejoignez notre communaute de vignerons exceptionnels.",
       "passwordPlaceholder": "Creez un mot de passe",
-      "passwordHint": "Au moins 8 caracteres avec un chiffre",
+      "passwordHint": "Au moins 8 caracteres avec majuscule, minuscule, chiffre et caractere special",
       "confirmPassword": "Confirmer le mot de passe",
       "confirmPasswordPlaceholder": "Confirmez votre mot de passe",
       "iAmWinemaker": "Je suis vigneron",
@@ -406,6 +406,13 @@
     "minLength": "Minimum {count} caracteres",
     "maxLength": "Maximum {count} caracteres",
     "passwordMismatch": "Les mots de passe ne correspondent pas",
+    "password": {
+      "minLength": "Le mot de passe doit contenir au moins 8 caracteres",
+      "requireNumber": "Le mot de passe doit contenir au moins un chiffre",
+      "requireUppercase": "Le mot de passe doit contenir au moins une majuscule",
+      "requireLowercase": "Le mot de passe doit contenir au moins une minuscule",
+      "requireSpecial": "Le mot de passe doit contenir au moins un caractere special (!@#$%^&*)"
+    },
     "invalidPhone": "Numero de telephone invalide",
     "fileTooLarge": "Le fichier est trop volumineux",
     "invalidFileType": "Type de fichier non valide",

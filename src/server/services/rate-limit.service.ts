@@ -1,16 +1,31 @@
 /**
- * Simple in-memory rate limiter for authentication endpoints.
- * For production with multiple instances, integrate with Upstash Redis.
+ * Rate limiter service with Upstash Redis support for production.
+ * SEC-006: Uses Redis in production for scalability, falls back to in-memory for development.
  *
  * This implementation uses a sliding window approach with automatic cleanup.
  */
+
+import { env } from '@/lib/env';
 
 interface RateLimitEntry {
   count: number;
   resetAt: number;
 }
 
-// In-memory store (works for single instance, use Upstash for distributed)
+// Check if Redis is configured
+const isRedisConfigured = !!(
+  env.UPSTASH_REDIS_REST_URL && env.UPSTASH_REDIS_REST_TOKEN
+);
+const isProduction = env.NODE_ENV === 'production';
+
+// SEC-006: Enforce Redis in production
+if (isProduction && !isRedisConfigured) {
+  console.warn(
+    '⚠️ [Rate Limiter] UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are required in production for scalable rate limiting.'
+  );
+}
+
+// In-memory store (fallback for development)
 const rateLimitStore = new Map<string, RateLimitEntry>();
 
 // Cleanup interval (every 5 minutes)
@@ -45,15 +60,74 @@ export interface RateLimitResult {
 }
 
 /**
- * Check if a request should be rate limited
- * @param identifier - Unique identifier (e.g., IP address, user ID, or email)
- * @param config - Rate limit configuration
- * @returns Rate limit result with success status and remaining requests
+ * Check rate limit using Upstash Redis
  */
-export async function checkRateLimit(
+async function checkRateLimitRedis(
   identifier: string,
   config: RateLimitConfig
 ): Promise<RateLimitResult> {
+  const key = `ratelimit:${identifier}`;
+  const now = Date.now();
+  const windowStart = now - config.windowMs;
+
+  try {
+    // Use Upstash REST API for atomic operations
+    const response = await fetch(
+      `${env.UPSTASH_REDIS_REST_URL}/pipeline`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${env.UPSTASH_REDIS_REST_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify([
+          // Remove expired entries
+          ['ZREMRANGEBYSCORE', key, '0', windowStart.toString()],
+          // Add current request
+          ['ZADD', key, now.toString(), `${now}-${Math.random()}`],
+          // Count requests in window
+          ['ZCOUNT', key, windowStart.toString(), now.toString()],
+          // Set expiry on the key
+          ['PEXPIRE', key, config.windowMs.toString()],
+        ]),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Redis request failed: ${response.status}`);
+    }
+
+    const results = await response.json();
+    const count = results[2]?.result ?? 1;
+    const resetAt = now + config.windowMs;
+
+    if (count > config.maxRequests) {
+      return {
+        success: false,
+        remaining: 0,
+        resetAt,
+      };
+    }
+
+    return {
+      success: true,
+      remaining: Math.max(0, config.maxRequests - count),
+      resetAt,
+    };
+  } catch (error) {
+    console.error('[Rate Limiter] Redis error, falling back to in-memory:', error);
+    // Fallback to in-memory on Redis error
+    return checkRateLimitInMemory(identifier, config);
+  }
+}
+
+/**
+ * Check rate limit using in-memory store
+ */
+function checkRateLimitInMemory(
+  identifier: string,
+  config: RateLimitConfig
+): RateLimitResult {
   // Run periodic cleanup
   cleanup();
 
@@ -91,9 +165,40 @@ export async function checkRateLimit(
 }
 
 /**
+ * Check if a request should be rate limited
+ * @param identifier - Unique identifier (e.g., IP address, user ID, or email)
+ * @param config - Rate limit configuration
+ * @returns Rate limit result with success status and remaining requests
+ */
+export async function checkRateLimit(
+  identifier: string,
+  config: RateLimitConfig
+): Promise<RateLimitResult> {
+  // Use Redis in production if configured
+  if (isRedisConfigured) {
+    return checkRateLimitRedis(identifier, config);
+  }
+
+  // Fallback to in-memory for development
+  return checkRateLimitInMemory(identifier, config);
+}
+
+/**
  * Reset rate limit for an identifier (useful after successful login)
  */
 export async function resetRateLimit(identifier: string): Promise<void> {
+  if (isRedisConfigured) {
+    try {
+      await fetch(`${env.UPSTASH_REDIS_REST_URL}/del/ratelimit:${identifier}`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${env.UPSTASH_REDIS_REST_TOKEN}`,
+        },
+      });
+    } catch (error) {
+      console.error('[Rate Limiter] Failed to reset rate limit in Redis:', error);
+    }
+  }
   rateLimitStore.delete(identifier);
 }
 

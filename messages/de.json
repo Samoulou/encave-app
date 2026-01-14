@@ -102,7 +102,7 @@
       "imageAlt": "Weinkeller mit Eichenfassern",
       "quote": "Jeder grossartige Wein beginnt mit Leidenschaft. Treten Sie unserer Gemeinschaft aussergewohnlicher Winzer bei.",
       "passwordPlaceholder": "Passwort erstellen",
-      "passwordHint": "Mindestens 8 Zeichen mit einer Zahl",
+      "passwordHint": "Mindestens 8 Zeichen mit Gross-, Kleinbuchstaben, Zahl und Sonderzeichen",
       "confirmPassword": "Passwort bestatigen",
       "confirmPasswordPlaceholder": "Bestatigen Sie Ihr Passwort",
       "iAmWinemaker": "Ich bin Winzer",
@@ -406,6 +406,13 @@
     "minLength": "Mindestens {count} Zeichen",
     "maxLength": "Maximal {count} Zeichen",
     "passwordMismatch": "Passworter stimmen nicht uberein",
+    "password": {
+      "minLength": "Das Passwort muss mindestens 8 Zeichen lang sein",
+      "requireNumber": "Das Passwort muss mindestens eine Zahl enthalten",
+      "requireUppercase": "Das Passwort muss mindestens einen Grossbuchstaben enthalten",
+      "requireLowercase": "Das Passwort muss mindestens einen Kleinbuchstaben enthalten",
+      "requireSpecial": "Das Passwort muss mindestens ein Sonderzeichen enthalten (!@#$%^&*)"
+    },
     "invalidPhone": "Ungultige Telefonnummer",
     "fileTooLarge": "Datei ist zu gross",
     "invalidFileType": "Ungultiger Dateityp",

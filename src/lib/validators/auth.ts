@@ -1,9 +1,13 @@
 import { z } from 'zod';
 
+// SEC-005: Enhanced password complexity requirements
 export const passwordSchema = z
   .string()
-  .min(8, 'Password must be at least 8 characters')
-  .regex(/\d/, 'Password must contain at least one number');
+  .min(8, 'password.minLength')
+  .regex(/\d/, 'password.requireNumber')
+  .regex(/[A-Z]/, 'password.requireUppercase')
+  .regex(/[a-z]/, 'password.requireLowercase')
+  .regex(/[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/`~]/, 'password.requireSpecial');
 
 export const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),

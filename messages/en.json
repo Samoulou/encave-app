@@ -102,7 +102,7 @@
       "imageAlt": "Wine cellar with oak barrels",
       "quote": "Every great wine begins with passion. Join our community of exceptional winemakers.",
       "passwordPlaceholder": "Create a password",
-      "passwordHint": "At least 8 characters with one number",
+      "passwordHint": "At least 8 characters with uppercase, lowercase, number, and special character",
       "confirmPassword": "Confirm password",
       "confirmPasswordPlaceholder": "Confirm your password",
       "iAmWinemaker": "I am a winemaker",
@@ -406,6 +406,13 @@
     "minLength": "Minimum {count} characters",
     "maxLength": "Maximum {count} characters",
     "passwordMismatch": "Passwords do not match",
+    "password": {
+      "minLength": "Password must be at least 8 characters",
+      "requireNumber": "Password must contain at least one number",
+      "requireUppercase": "Password must contain at least one uppercase letter",
+      "requireLowercase": "Password must contain at least one lowercase letter",
+      "requireSpecial": "Password must contain at least one special character (!@#$%^&*)"
+    },
     "invalidPhone": "Invalid phone number",
     "fileTooLarge": "File is too large",
     "invalidFileType": "Invalid file type",

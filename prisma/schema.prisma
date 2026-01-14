@@ -247,8 +247,7 @@ model Booking {
   status                BookingStatus @default(PENDING_PAYMENT)
   stripePaymentIntentId String?
   expiresAt             DateTime?     // For pending payment reservations
-  accessToken           String?       @unique // Secure token for email access
-  accessTokenHash       String?       // Hash of access token for verification
+  accessTokenHash       String?       // Hash of access token for verification (SEC-002: plaintext removed)
   confirmationSentAt    DateTime?     // When client confirmation email was sent
   wineryNotifiedAt      DateTime?     // When winery notification was sent
   reminder24hSentAt     DateTime?     // When 24h reminder was sent
@@ -265,7 +264,7 @@ model Booking {
   @@index([wineryId, date])
   @@index([status])
   @@index([reference])
-  @@index([accessToken])
+  @@index([accessTokenHash])
   @@map("bookings")
 }
 
@@ -297,8 +296,9 @@ model NotificationPreferences {
   bookingReminders Boolean @default(true) // 24h and 2h reminders
   marketingEmails  Boolean @default(true) // Promotional/follow-up emails
 
-  // Unsubscribe token for email links
-  unsubscribeToken String @unique @default(cuid())
+  // Unsubscribe token for email links (SEC-004: added expiration)
+  unsubscribeToken          String    @unique @default(cuid())
+  unsubscribeTokenExpiresAt DateTime? // Token expires 30 days after creation
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
