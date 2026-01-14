@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { Calendar, Sparkles, Building2, Menu, X, TrendingUp, Settings, Home, Wine } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -23,8 +23,25 @@ const sidebarLinks = [
 export function DashboardSidebar({ wineryName }: DashboardSidebarProps) {
   const pathname = usePathname();
   const locale = useLocale();
+  const router = useRouter();
   const t = useTranslations('nav');
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  // Prefetch all dashboard routes on mount for instant navigation
+  useEffect(() => {
+    sidebarLinks.forEach((link) => {
+      router.prefetch(`/${locale}${link.href}`);
+    });
+    router.prefetch(`/${locale}`);
+  }, [locale, router]);
+
+  // Prefetch on hover for immediate response
+  const handlePrefetch = useCallback(
+    (href: string) => {
+      router.prefetch(href);
+    },
+    [router]
+  );
 
   return (
     <>
@@ -94,7 +111,10 @@ export function DashboardSidebar({ wineryName }: DashboardSidebarProps) {
               <li>
                 <Link
                   href={`/${locale}`}
+                  prefetch={true}
                   onClick={() => setIsMobileOpen(false)}
+                  onMouseEnter={() => handlePrefetch(`/${locale}`)}
+                  onFocus={() => handlePrefetch(`/${locale}`)}
                   className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 hover:bg-stone-50 hover:text-burgundy-700 transition-colors"
                 >
                   <Home
@@ -119,7 +139,10 @@ export function DashboardSidebar({ wineryName }: DashboardSidebarProps) {
                   <li key={link.href}>
                     <Link
                       href={localizedHref}
+                      prefetch={true}
                       onClick={() => setIsMobileOpen(false)}
+                      onMouseEnter={() => handlePrefetch(localizedHref)}
+                      onFocus={() => handlePrefetch(localizedHref)}
                       className={cn(
                         'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                         isActive

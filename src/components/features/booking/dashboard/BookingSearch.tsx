@@ -1,14 +1,16 @@
 'use client';
 
 import { useQueryState } from 'nuqs';
-import { Search, X } from 'lucide-react';
+import { Search, X, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useRef, useEffect, useCallback, useState } from 'react';
+import { useRef, useEffect, useCallback, useState, useTransition } from 'react';
 
 export function BookingSearch() {
+  const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useQueryState('search', {
     shallow: false,
+    startTransition,
   });
   const inputRef = useRef<HTMLInputElement>(null);
   const [localValue, setLocalValue] = useState(search ?? '');
@@ -56,7 +58,11 @@ export function BookingSearch() {
 
   return (
     <div className="relative">
-      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+      {isPending ? (
+        <Loader2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-burgundy-600 animate-spin" />
+      ) : (
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+      )}
       <Input
         ref={inputRef}
         type="text"
@@ -65,7 +71,7 @@ export function BookingSearch() {
         onChange={handleChange}
         className="h-9 w-full pl-9 pr-8 sm:w-[280px]"
       />
-      {localValue && (
+      {localValue && !isPending && (
         <Button
           variant="ghost"
           size="icon"

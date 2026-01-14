@@ -14,6 +14,7 @@ This document defines the coding standards and patterns for the EnCave project. 
 3. **Consistent action responses** - All Server Actions return `ActionResult<T>`
 4. **Internationalization first** - All user-facing strings via `next-intl`
 5. **Type-safe environment** - Access env vars only via `src/lib/env.ts`
+6. **Instant feedback** - All interactions provide < 50ms visual feedback (see `performance-patterns.md`)
 
 ---
 
@@ -393,4 +394,35 @@ docs(api): update webhook documentation
 
 ---
 
+## Perceived Performance Standards
+
+All user interactions must provide instant visual feedback. See `performance-patterns.md` for detailed patterns:
+
+| Pattern | When to Use |
+|---------|-------------|
+| `useTransition` | All programmatic navigation |
+| `useOptimistic` | Filter, sort, search, pagination changes |
+| Route prefetch | Critical navigation links |
+| Granular Suspense | Pages with multiple data sources |
+| Debounced search | Text input that triggers server requests |
+
+### Quick Reference
+
+```typescript
+// Navigation - always use useTransition
+const [isPending, startTransition] = useTransition();
+startTransition(() => router.push(href));
+
+// Filters - always use useOptimistic
+const [optimistic, setOptimistic] = useOptimistic(serverValue);
+setOptimistic(newValue); // Instant UI update
+startTransition(() => router.push(`?filter=${newValue}`));
+
+// Links - enable prefetch
+<Link href="/path" prefetch={true}>...</Link>
+```
+
+---
+
 _Reference: Full architecture at `docs/architecture.md`_
+_Reference: Performance patterns at `docs/architecture/performance-patterns.md`_

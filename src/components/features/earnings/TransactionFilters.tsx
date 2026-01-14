@@ -1,7 +1,8 @@
 'use client';
 
+import { useTransition } from 'react';
 import { useQueryState } from 'nuqs';
-import { X } from 'lucide-react';
+import { X, Loader2 } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -42,11 +43,14 @@ const STATUS_OPTIONS = [
 ];
 
 export function TransactionFilters({ experiences }: TransactionFiltersProps) {
-  const [monthFilter, setMonthFilter] = useQueryState('month', { shallow: false });
-  const [experienceFilter, setExperienceFilter] = useQueryState('experience', {
-    shallow: false,
-  });
-  const [statusFilter, setStatusFilter] = useQueryState('status', { shallow: false });
+  const [isPending, startTransition] = useTransition();
+
+  // Use nuqs with startTransition for non-blocking URL updates
+  const transitionOptions = { shallow: false, startTransition };
+
+  const [monthFilter, setMonthFilter] = useQueryState('month', transitionOptions);
+  const [experienceFilter, setExperienceFilter] = useQueryState('experience', transitionOptions);
+  const [statusFilter, setStatusFilter] = useQueryState('status', transitionOptions);
 
   const monthOptions = getMonthOptions();
 
@@ -118,8 +122,13 @@ export function TransactionFilters({ experiences }: TransactionFiltersProps) {
         </SelectContent>
       </Select>
 
+      {/* Loading Indicator */}
+      {isPending && (
+        <Loader2 className="h-4 w-4 animate-spin text-burgundy-600" />
+      )}
+
       {/* Clear All Filters */}
-      {hasFilters && (
+      {hasFilters && !isPending && (
         <Button
           variant="ghost"
           size="sm"

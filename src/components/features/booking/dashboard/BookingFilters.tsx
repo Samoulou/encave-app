@@ -1,8 +1,9 @@
 'use client';
 
+import { useTransition } from 'react';
 import { useQueryState, parseAsArrayOf, parseAsString } from 'nuqs';
 import { BookingStatus } from '@prisma/client';
-import { Filter, X } from 'lucide-react';
+import { Filter, X, Loader2 } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -40,15 +41,18 @@ const STATUS_OPTIONS = [
 ];
 
 export function BookingFilters({ experiences }: BookingFiltersProps) {
+  const [isPending, startTransition] = useTransition();
+
+  // Use nuqs with startTransition for non-blocking URL updates
+  const transitionOptions = { shallow: false, startTransition };
+
   const [statusFilter, setStatusFilter] = useQueryState(
     'status',
-    parseAsArrayOf(parseAsString).withOptions({ shallow: false })
+    parseAsArrayOf(parseAsString).withOptions(transitionOptions)
   );
-  const [experienceFilter, setExperienceFilter] = useQueryState('experience', {
-    shallow: false,
-  });
-  const [dateFrom, setDateFrom] = useQueryState('from', { shallow: false });
-  const [dateTo, setDateTo] = useQueryState('to', { shallow: false });
+  const [experienceFilter, setExperienceFilter] = useQueryState('experience', transitionOptions);
+  const [dateFrom, setDateFrom] = useQueryState('from', transitionOptions);
+  const [dateTo, setDateTo] = useQueryState('to', transitionOptions);
 
   const hasFilters =
     (statusFilter && statusFilter.length > 0) ||
@@ -79,7 +83,11 @@ export function BookingFilters({ experiences }: BookingFiltersProps) {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="sm" className="gap-2">
-            <Filter className="h-4 w-4" />
+            {isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Filter className="h-4 w-4" />
+            )}
             Status
             {statusFilter && statusFilter.length > 0 && (
               <span className="ml-1 rounded-full bg-burgundy-100 px-2 py-0.5 text-xs text-burgundy-700">

@@ -4,7 +4,7 @@ import { type SearchParams } from '@/server/queries/experience.queries';
 import { ExperiencesContent } from './ExperiencesContent';
 import { ExperienceType } from '@prisma/client';
 import { generateExperiencesMetadata } from '@/lib/seo';
-import { SkeletonExperienceGrid, Skeleton } from '@/components/shared/Skeleton';
+import { SkeletonExperienceGrid, Skeleton, SkeletonContainer } from '@/components/shared/Skeleton';
 import type { Locale } from '@/i18n/routing';
 
 export async function generateMetadata({
@@ -74,29 +74,50 @@ export default async function ExperiencesPage({ params, searchParams }: PageProp
 /**
  * Skeleton shown while ExperiencesContent fetches data.
  * Header is NOT included since it renders immediately above.
+ * Uses SkeletonContainer for proper accessibility (aria-busy, screen reader text).
  */
 function ContentLoadingState() {
   return (
-    <div className="animate-pulse">
-      {/* Search & filters skeleton */}
-      <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <Skeleton className="h-12 w-full lg:w-96" />
-        <div className="flex gap-2">
-          <Skeleton className="h-10 w-24" />
-          <Skeleton className="h-10 w-24" />
-          <Skeleton className="h-10 w-24" />
+    <SkeletonContainer label="Loading wine experiences..." className="lg:grid lg:grid-cols-[280px_1fr] lg:gap-8">
+      {/* Sidebar filters skeleton (desktop) */}
+      <aside className="hidden lg:block">
+        <div className="sticky top-24 rounded-xl border border-stone-200 bg-white p-6 space-y-6">
+          <Skeleton className="h-6 w-20" />
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <Skeleton className="h-5 w-5 rounded" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+            ))}
+          </div>
+          <Skeleton className="h-px w-full" />
+          <Skeleton className="h-6 w-16" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-px w-full" />
+          <Skeleton className="h-6 w-20" />
+          <div className="flex gap-2">
+            <Skeleton className="h-10 flex-1" />
+            <Skeleton className="h-10 flex-1" />
+          </div>
         </div>
-      </div>
+      </aside>
 
-      {/* Results count skeleton */}
-      <div className="mb-4 flex items-center justify-between">
-        <Skeleton className="h-5 w-32" />
-        <Skeleton className="h-10 w-40" />
-      </div>
+      {/* Main content skeleton */}
+      <main className="space-y-6">
+        {/* Search bar skeleton */}
+        <Skeleton className="h-12 w-full" />
 
-      {/* Grid skeleton */}
-      <SkeletonExperienceGrid count={9} />
-    </div>
+        {/* Results header skeleton */}
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-5 w-32" />
+          <Skeleton className="h-10 w-40" />
+        </div>
+
+        {/* Grid skeleton */}
+        <SkeletonExperienceGrid count={6} />
+      </main>
+    </SkeletonContainer>
   );
 }
 

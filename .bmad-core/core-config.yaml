@@ -18,6 +18,7 @@ devLoadAlwaysFiles:
   - docs/architecture/tech-stack.md
   - docs/architecture/source-tree.md
   - docs/architecture/design-system.md
+  - docs/architecture/performance-patterns.md
 devDebugLog: .ai/debug-log.md
 devStoryLocation: docs/stories
 slashPrefix: BMad

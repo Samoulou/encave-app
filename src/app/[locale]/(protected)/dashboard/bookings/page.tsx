@@ -4,8 +4,10 @@ import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { redirect } from 'next/navigation';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
-import { Skeleton } from '@/components/shared/Skeleton';
-import { BookingsContent } from './BookingsContent';
+import { Skeleton, SkeletonContainer } from '@/components/shared/Skeleton';
+import { BookingsSummary } from './BookingsSummary';
+import { BookingsFiltersSection } from './BookingsFiltersSection';
+import { BookingsTableSection } from './BookingsTableSection';
 
 export const metadata: Metadata = {
   title: 'Bookings | EnCave Dashboard',
@@ -58,45 +60,66 @@ export default async function BookingsDashboardPage({ searchParams }: PageProps)
           </p>
         </div>
 
-        {/* Content streams in when data is ready */}
-        <Suspense fallback={<BookingsLoadingState />}>
-          <BookingsContent wineryId={winery.id} params={params} />
+        {/* Stream 1: Summary Cards (fast query) */}
+        <Suspense fallback={<SummaryCardsSkeleton />}>
+          <BookingsSummary wineryId={winery.id} />
+        </Suspense>
+
+        {/* Stream 2: Filters Section (medium query) */}
+        <Suspense fallback={<FiltersSkeleton />}>
+          <BookingsFiltersSection wineryId={winery.id} />
+        </Suspense>
+
+        {/* Stream 3: Table/Calendar (heavier query) */}
+        <Suspense fallback={<TableSkeleton />}>
+          <BookingsTableSection wineryId={winery.id} params={params} />
         </Suspense>
       </div>
     </WineryAccessGuard>
   );
 }
 
-function BookingsLoadingState() {
+/** Skeleton for summary cards - matches BookingSummaryCards layout */
+function SummaryCardsSkeleton() {
   return (
-    <div className="space-y-8">
-      {/* Summary Cards skeleton */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="rounded-xl bg-white p-6 shadow-warm">
-            <Skeleton className="h-4 w-24 mb-2" />
-            <Skeleton className="h-8 w-16" />
-          </div>
-        ))}
-      </div>
-
-      {/* Filters skeleton */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex gap-2">
-          <Skeleton className="h-10 w-32" />
-          <Skeleton className="h-10 w-32" />
-          <Skeleton className="h-10 w-32" />
+    <SkeletonContainer label="Loading summary..." className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i} className="rounded-xl bg-white p-6 shadow-warm">
+          <Skeleton className="h-4 w-24 mb-2" />
+          <Skeleton className="h-8 w-16" />
         </div>
-        <div className="flex gap-2">
-          <Skeleton className="h-10 w-48" />
-          <Skeleton className="h-10 w-24" />
-        </div>
-      </div>
+      ))}
+    </SkeletonContainer>
+  );
+}
 
-      {/* Table skeleton */}
+/** Skeleton for filters section - matches BookingFilters layout */
+function FiltersSkeleton() {
+  return (
+    <SkeletonContainer label="Loading filters..." className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex gap-2">
+        <Skeleton className="h-9 w-28" />
+        <Skeleton className="h-9 w-36" />
+        <Skeleton className="h-9 w-28" />
+        <Skeleton className="h-9 w-28" />
+      </div>
+      <div className="flex gap-3">
+        <Skeleton className="h-9 w-64" />
+        <Skeleton className="h-9 w-24" />
+        <Skeleton className="h-9 w-28" />
+      </div>
+    </SkeletonContainer>
+  );
+}
+
+/** Skeleton for bookings table - matches BookingsTable layout */
+function TableSkeleton() {
+  return (
+    <SkeletonContainer label="Loading bookings..." className="space-y-4">
+      <Skeleton className="h-5 w-32" />
       <div className="rounded-xl bg-white shadow-warm overflow-hidden">
         <div className="p-4 border-b border-stone-100">
-          <Skeleton className="h-5 w-32" />
+          <Skeleton className="h-5 w-48" />
         </div>
         {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className="p-4 border-b border-stone-100 flex items-center gap-4">
@@ -110,6 +133,6 @@ function BookingsLoadingState() {
           </div>
         ))}
       </div>
-    </div>
+    </SkeletonContainer>
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useTransition } from 'react';
+import * as React from 'react';
+import { useCallback, useTransition, useOptimistic } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { ExperienceType } from '@prisma/client';
@@ -25,6 +26,16 @@ interface ExperiencesPageClientProps {
   pagination: PaginationInfo;
 }
 
+interface FilterState {
+  search: string;
+  types: ExperienceType[];
+  commune: string | null;
+  minPrice: number | null;
+  maxPrice: number | null;
+  capacity: number | null;
+  sort: SortOption;
+}
+
 export function ExperiencesPageClient({
   initialExperiences,
   communes,
@@ -35,8 +46,8 @@ export function ExperiencesPageClient({
   const t = useTranslations('search');
   const [isPending, startTransition] = useTransition();
 
-  // Parse current URL params
-  const currentParams = {
+  // Parse current URL params (server-confirmed state)
+  const serverParams: FilterState = {
     search: searchParams.get('q') || '',
     types: parseTypes(searchParams.get('type')),
     commune: searchParams.get('commune'),
@@ -46,12 +57,24 @@ export function ExperiencesPageClient({
     sort: (searchParams.get('sort') as SortOption) || 'relevance',
   };
 
+  // Optimistic state for instant UI updates
+  const [optimisticFilters, setOptimisticFilters] = useOptimistic(serverParams);
+
+  // Use optimistic values for display
+  const currentParams = optimisticFilters;
+
   // Mobile filter state
   const [showMobileFilters, setShowMobileFilters] = React.useState(false);
 
-  // Update URL with new params
+  // Update URL with new params - optimistic updates happen immediately
   const updateParams = useCallback(
-    (updates: Record<string, string | string[] | null>) => {
+    (updates: Record<string, string | string[] | null>, optimisticUpdate?: Partial<FilterState>) => {
+      // Step 1: Update UI IMMEDIATELY (optimistic)
+      if (optimisticUpdate) {
+        setOptimisticFilters((prev) => ({ ...prev, ...optimisticUpdate }));
+      }
+
+      // Step 2: Sync with server in background (non-blocking)
       startTransition(() => {
         const params = new URLSearchParams(searchParams.toString());
 
@@ -68,36 +91,37 @@ export function ExperiencesPageClient({
         router.push(`/experiences?${params.toString()}`, { scroll: false });
       });
     },
-    [router, searchParams]
+    [router, searchParams, setOptimisticFilters]
   );
 
   // Handler functions - reset page on filter changes
+  // Each handler updates UI optimistically before syncing with server
   const handleSearchChange = (value: string) => {
-    updateParams({ q: value || null, page: null });
+    updateParams({ q: value || null, page: null }, { search: value });
   };
 
   const handleTypesChange = (types: ExperienceType[]) => {
-    updateParams({ type: types.length > 0 ? types : null, page: null });
+    updateParams({ type: types.length > 0 ? types : null, page: null }, { types });
   };
 
   const handleCommuneChange = (commune: string | null) => {
-    updateParams({ commune, page: null });
+    updateParams({ commune, page: null }, { commune });
   };
 
   const handleMinPriceChange = (price: number | null) => {
-    updateParams({ minPrice: price !== null ? String(price) : null, page: null });
+    updateParams({ minPrice: price !== null ? String(price) : null, page: null }, { minPrice: price });
   };
 
   const handleMaxPriceChange = (price: number | null) => {
-    updateParams({ maxPrice: price !== null ? String(price) : null, page: null });
+    updateParams({ maxPrice: price !== null ? String(price) : null, page: null }, { maxPrice: price });
   };
 
   const handleCapacityChange = (capacity: number | null) => {
-    updateParams({ capacity: capacity !== null ? String(capacity) : null, page: null });
+    updateParams({ capacity: capacity !== null ? String(capacity) : null, page: null }, { capacity });
   };
 
   const handleSortChange = (sort: SortOption) => {
-    updateParams({ sort: sort !== 'relevance' ? sort : null, page: null });
+    updateParams({ sort: sort !== 'relevance' ? sort : null, page: null }, { sort });
   };
 
   const handlePageChange = (page: number) => {
@@ -105,6 +129,16 @@ export function ExperiencesPageClient({
   };
 
   const handleClearFilters = () => {
+    // Reset optimistic state to defaults
+    setOptimisticFilters({
+      search: '',
+      types: [],
+      commune: null,
+      minPrice: null,
+      maxPrice: null,
+      capacity: null,
+      sort: 'relevance',
+    });
     startTransition(() => {
       router.push('/experiences', { scroll: false });
     });
@@ -198,13 +232,17 @@ export function ExperiencesPageClient({
         <SearchBar
           value={currentParams.search}
           onChange={handleSearchChange}
+          isPending={isPending}
           className="mb-6"
         />
 
-        {/* Loading Overlay */}
-        <div className={cn('relative', isPending && 'opacity-60')}>
+        {/* Loading Overlay - smooth transition for pending state */}
+        <div className={cn(
+          'relative transition-opacity duration-150',
+          isPending && 'opacity-70 pointer-events-none'
+        )}>
           {isPending && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-cream-50/50">
+            <div className="absolute inset-0 z-10 flex items-center justify-center">
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-burgundy-200 border-t-burgundy-600" />
             </div>
           )}
@@ -222,9 +260,6 @@ export function ExperiencesPageClient({
     </div>
   );
 }
-
-// Helper to import React
-import * as React from 'react';
 
 function parseTypes(typeParam: string | null): ExperienceType[] {
   if (!typeParam) return [];
