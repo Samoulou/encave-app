@@ -11,6 +11,12 @@ const localeLabels: Record<Locale, string> = {
   en: 'EN',
 };
 
+const localeToLanguage: Record<Locale, 'French' | 'German' | 'English'> = {
+  fr: 'French',
+  de: 'German',
+  en: 'English',
+};
+
 export function LocaleSwitcher() {
   const locale = useLocale() as Locale;
   const router = useRouter();
@@ -38,7 +44,7 @@ export function LocaleSwitcher() {
             aria-label={
               locale === loc
                 ? `${t(loc)} (${t('currentLanguage')})`
-                : t(`switchTo${loc.charAt(0).toUpperCase() + loc.slice(1)}` as 'switchToFrench')
+                : t(`switchTo${localeToLanguage[loc]}`)
             }
           >
             {localeLabels[loc]}

@@ -98,67 +98,78 @@ export async function loginAction(
 export async function registerAction(
   input: RegisterInput
 ): Promise<ActionResult<{ userId: string }>> {
-  // Rate limiting check
-  const identifier = await getClientIdentifier('register');
-  const rateLimitResult = await checkRateLimit(identifier, REGISTRATION_RATE_LIMIT);
+  try {
+    // Rate limiting check
+    const identifier = await getClientIdentifier('register');
+    const rateLimitResult = await checkRateLimit(identifier, REGISTRATION_RATE_LIMIT);
 
-  if (!rateLimitResult.success) {
-    const retryAfterSeconds = Math.ceil(
-      (rateLimitResult.resetAt - Date.now()) / 1000
-    );
+    if (!rateLimitResult.success) {
+      const retryAfterSeconds = Math.ceil(
+        (rateLimitResult.resetAt - Date.now()) / 1000
+      );
+      return {
+        success: false,
+        error: {
+          code: 'RATE_LIMITED',
+          message: `Too many registration attempts. Please try again in ${Math.ceil(retryAfterSeconds / 60)} minutes.`,
+        },
+      };
+    }
+
+    const validated = registerSchema.safeParse(input);
+
+    if (!validated.success) {
+      const firstError = validated.error.issues[0];
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: firstError?.message ?? 'Invalid input',
+        },
+      };
+    }
+
+    const { name, email, password } = validated.data;
+
+    // Check if user already exists
+    const existingUser = await db.user.findUnique({
+      where: { email },
+    });
+
+    if (existingUser) {
+      return {
+        success: false,
+        error: {
+          code: 'CONFLICT',
+          message: 'An account with this email already exists',
+        },
+      };
+    }
+
+    // Hash password and create user
+    const passwordHash = await hashPassword(password);
+    const preferredLocale = await getPreferredLocale();
+
+    const user = await db.user.create({
+      data: {
+        name,
+        email,
+        passwordHash,
+        preferredLocale,
+      },
+    });
+
+    return { success: true, data: { userId: user.id } };
+  } catch (error) {
+    console.error('Registration error:', error);
     return {
       success: false,
       error: {
-        code: 'RATE_LIMITED',
-        message: `Too many registration attempts. Please try again in ${Math.ceil(retryAfterSeconds / 60)} minutes.`,
+        code: 'INTERNAL_ERROR',
+        message: 'An unexpected error occurred. Please try again.',
       },
     };
   }
-
-  const validated = registerSchema.safeParse(input);
-
-  if (!validated.success) {
-    const firstError = validated.error.issues[0];
-    return {
-      success: false,
-      error: {
-        code: 'VALIDATION_ERROR',
-        message: firstError?.message ?? 'Invalid input',
-      },
-    };
-  }
-
-  const { name, email, password } = validated.data;
-
-  // Check if user already exists
-  const existingUser = await db.user.findUnique({
-    where: { email },
-  });
-
-  if (existingUser) {
-    return {
-      success: false,
-      error: {
-        code: 'CONFLICT',
-        message: 'An account with this email already exists',
-      },
-    };
-  }
-
-  // Hash password and create user
-  const passwordHash = await hashPassword(password);
-  const preferredLocale = await getPreferredLocale();
-
-  const user = await db.user.create({
-    data: {
-      name,
-      email,
-      passwordHash,
-      preferredLocale,
-    },
-  });
-
-  return { success: true, data: { userId: user.id } };
 }
 
 export async function logoutAction(): Promise<void> {
