@@ -48,11 +48,22 @@ export function RegisterForm() {
     setError(null);
 
     try {
-      const result = await registerAction(data);
+      // Add timeout to prevent indefinite hanging
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Request timeout')), 30000);
+      });
+
+      const result = await Promise.race([
+        registerAction(data),
+        timeoutPromise,
+      ]);
 
       if (result.success) {
         // Auto-login after registration
-        const loginResult = await loginAction(data.email, data.password);
+        const loginResult = await Promise.race([
+          loginAction(data.email, data.password),
+          timeoutPromise,
+        ]);
         if (loginResult.success) {
           // Redirect winemakers to onboarding, others to home
           if (data.isWinemaker) {
@@ -68,8 +79,13 @@ export function RegisterForm() {
       } else {
         setError(result.error.message);
       }
-    } catch {
-      setError(tCommon('errors.somethingWentWrong'));
+    } catch (err) {
+      console.error('Registration error:', err);
+      if (err instanceof Error && err.message === 'Request timeout') {
+        setError('La requête a pris trop de temps. Veuillez réessayer.');
+      } else {
+        setError(tCommon('errors.somethingWentWrong'));
+      }
     } finally {
       setIsLoading(false);
     }

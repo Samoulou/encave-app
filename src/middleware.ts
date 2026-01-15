@@ -49,9 +49,13 @@ export default async function middleware(request: NextRequest) {
   // For auth checks, we need to check the session
   // Since next-auth middleware doesn't easily chain, we'll use a different approach
   // We'll check for the session token in cookies
+  // Note: This only checks if a token exists, not if it's valid
+  // Invalid tokens will be handled by the auth layer and cleared
   const sessionToken = request.cookies.get('authjs.session-token')?.value ||
     request.cookies.get('__Secure-authjs.session-token')?.value;
 
+  // Don't block auth routes even if there's a session token
+  // This allows users with invalid/corrupted tokens to still access login/register
   const isLoggedIn = !!sessionToken;
   const pathnameWithoutLocale = getPathnameWithoutLocale(pathname);
   const locale = getLocaleFromPathname(pathname);
@@ -73,10 +77,9 @@ export default async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Redirect authenticated users from auth routes to home
-  if (isAuthRoute && isLoggedIn) {
-    return NextResponse.redirect(new URL(`/${locale}`, request.url));
-  }
+  // Note: We no longer redirect from auth routes based on cookie presence
+  // because invalid/corrupted tokens would trap users on redirect loops
+  // The actual session validation happens in the auth layer, not middleware
 
   // Note: Admin role check requires session data which needs server-side check
   // This will be handled in the admin layout for now
