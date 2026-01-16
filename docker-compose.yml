@@ -1,0 +1,30 @@
+# Docker Compose pour la base de données de développement local
+#
+# Usage:
+#   npm run dev:db:start   # Démarrer la DB
+#   npm run dev:db:stop    # Arrêter la DB
+#   npm run dev:db:reset   # Reset complet (supprime les données)
+#   npm run dev:db:seed    # Seed avec données de démo
+#
+# La base sera accessible sur localhost:5432
+
+services:
+  postgres-dev:
+    image: postgres:15-alpine
+    container_name: encave-dev-db
+    environment:
+      POSTGRES_USER: encave
+      POSTGRES_PASSWORD: encave_dev
+      POSTGRES_DB: encave
+    ports:
+      - "5432:5432"
+    volumes:
+      - encave_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U encave -d encave"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  encave_dev_data:

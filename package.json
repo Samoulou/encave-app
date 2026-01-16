@@ -21,7 +21,14 @@
     "test:db:start": "docker-compose -f docker-compose.test.yml up -d",
     "test:db:stop": "docker-compose -f docker-compose.test.yml down",
     "test:db:reset": "docker-compose -f docker-compose.test.yml down -v && docker-compose -f docker-compose.test.yml up -d",
-    "db:seed": "npx tsx prisma/seed.ts",
+    "db:seed": "dotenv -e .env.local -- npx tsx prisma/seed.ts",
+    "db:migrate": "dotenv -e .env.local -- prisma migrate dev",
+    "db:push": "dotenv -e .env.local -- prisma db push",
+    "db:studio": "dotenv -e .env.local -- prisma studio",
+    "dev:db:start": "docker-compose up -d",
+    "dev:db:stop": "docker-compose down",
+    "dev:db:reset": "docker-compose down -v && docker-compose up -d",
+    "dev:db:setup": "dotenv -e .env.local -- prisma db push && npm run db:seed",
     "i18n:check": "npx tsx scripts/check-translations.ts"
   },
   "prisma": {
