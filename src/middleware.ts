@@ -26,8 +26,12 @@ function getLocaleFromPathname(pathname: string): string {
   return match?.[1] ?? routing.defaultLocale;
 }
 
+// Production domain that should show "Coming Soon"
+const COMING_SOON_DOMAIN = 'encave.ch';
+
 export default async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+  const hostname = request.headers.get('host') ?? '';
 
   // Skip middleware for API routes and static files
   if (
@@ -36,6 +40,20 @@ export default async function middleware(request: NextRequest) {
     pathname.includes('.')
   ) {
     return NextResponse.next();
+  }
+
+  // Coming Soon: Redirect production domain to coming-soon page
+  // Remove this block when ready to launch
+  if (
+    hostname === COMING_SOON_DOMAIN ||
+    hostname === `www.${COMING_SOON_DOMAIN}`
+  ) {
+    // Allow the coming-soon page itself
+    if (pathname === '/coming-soon') {
+      return NextResponse.next();
+    }
+    // Redirect everything else to coming-soon
+    return NextResponse.redirect(new URL('/coming-soon', request.url));
   }
 
   // First, apply the intl middleware for locale handling
