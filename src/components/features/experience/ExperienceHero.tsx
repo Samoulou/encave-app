@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { Wine } from 'lucide-react';
 import type { ExperienceType } from '@prisma/client';
+import { formatCHF } from '@/lib/utils/currency';
 import { IMAGE_PLACEHOLDERS } from '@/lib/image-placeholder';
 
 interface ExperienceHeroProps {
@@ -17,10 +18,6 @@ const TYPE_LABELS: Record<ExperienceType, string> = {
   VINEYARD_TOUR: 'Vineyard Tour',
   FOOD_PAIRING: 'Food Pairing',
 };
-
-function formatPrice(priceInCents: number): string {
-  return `CHF ${(priceInCents / 100).toFixed(0)}`;
-}
 
 export function ExperienceHero({
   title,
@@ -65,7 +62,7 @@ export function ExperienceHero({
 
           {/* Price */}
           <p className="mt-2 text-2xl font-semibold text-white">
-            {formatPrice(price)}
+            {formatCHF(price)}
             <span className="ml-2 text-base font-normal text-white/70">
               per person
             </span>

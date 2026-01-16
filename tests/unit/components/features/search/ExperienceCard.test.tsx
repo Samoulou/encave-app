@@ -47,7 +47,7 @@ describe('ExperienceCard', () => {
 
   it('formats price correctly in CHF', () => {
     render(<ExperienceCard experience={mockExperience} />);
-    expect(screen.getByText('CHF 50')).toBeDefined();
+    expect(screen.getByText('CHF 50.00')).toBeDefined();
   });
 
   it('formats duration as hours when >= 60 minutes', () => {

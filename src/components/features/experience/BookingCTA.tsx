@@ -5,15 +5,12 @@ import Link from 'next/link';
 import { Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from 'next-intl';
+import { formatCHF } from '@/lib/utils/currency';
 
 interface BookingCTAProps {
   price: number;
   experienceSlug: string;
   stripeConnected: boolean;
-}
-
-function formatPrice(priceInCents: number): string {
-  return `CHF ${(priceInCents / 100).toFixed(0)}`;
 }
 
 export function BookingCTA({ price, experienceSlug, stripeConnected }: BookingCTAProps) {
@@ -26,7 +23,7 @@ export function BookingCTA({ price, experienceSlug, stripeConnected }: BookingCT
     <div className="rounded-xl bg-white p-6 shadow-warm">
       {/* Price */}
       <div className="text-center">
-        <p className="text-3xl font-bold text-slate-900">{formatPrice(price)}</p>
+        <p className="text-3xl font-bold text-slate-900">{formatCHF(price)}</p>
         <p className="text-sm text-slate-500">{t('perPerson')}</p>
       </div>
 

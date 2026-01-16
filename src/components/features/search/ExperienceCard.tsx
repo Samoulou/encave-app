@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Clock, Users, MapPin } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { formatCHF } from '@/lib/utils/currency';
 import { IMAGE_PLACEHOLDERS } from '@/lib/image-placeholder';
 import type { ExperienceType } from '@prisma/client';
 
@@ -46,9 +47,6 @@ export function ExperienceCard({ experience, className }: ExperienceCardProps) {
     return `${minutes} min`;
   };
 
-  const formatPrice = (cents: number): string => {
-    return `CHF ${(cents / 100).toFixed(0)}`;
-  };
 
   return (
     <Link
@@ -110,7 +108,7 @@ export function ExperienceCard({ experience, className }: ExperienceCardProps) {
           {/* Price */}
           <div className="mt-4 flex items-center justify-between">
             <span className="text-lg font-semibold text-slate-900">
-              {formatPrice(experience.price)}
+              {formatCHF(experience.price)}
             </span>
             <span className="text-sm text-slate-500">per person</span>
           </div>

@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { createBookingAndCheckout } from '@/server/actions/checkout';
+import { formatCHF } from '@/lib/utils/currency';
 
 // Phone validation - accepts Swiss and international formats
 const phoneRegex = /^(\+41|0041|0)?[1-9][0-9]{8}$|^\+?[1-9]\d{6,14}$/;
@@ -81,10 +82,6 @@ export function CheckoutForm({
       setError(tErrors('somethingWentWrong'));
       setIsSubmitting(false);
     }
-  };
-
-  const formatPrice = (priceInCents: number) => {
-    return `CHF ${(priceInCents / 100).toFixed(0)}`;
   };
 
   return (
@@ -166,7 +163,7 @@ export function CheckoutForm({
         ) : (
           <>
             <CreditCard className="mr-2 h-5 w-5" />
-            {t('payAmount', { amount: formatPrice(totalPrice) })}
+            {t('payAmount', { amount: formatCHF(totalPrice) })}
           </>
         )}
       </Button>

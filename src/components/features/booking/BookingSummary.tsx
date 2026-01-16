@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { format, parseISO } from 'date-fns';
 import { Calendar, Clock, Users, Wine } from 'lucide-react';
+import { formatCHF } from '@/lib/utils/currency';
 
 interface BookingSummaryProps {
   experienceTitle: string;
@@ -11,10 +12,6 @@ interface BookingSummaryProps {
   time: string;
   guests: number;
   totalPrice: number;
-}
-
-function formatPrice(priceInCents: number): string {
-  return `CHF ${(priceInCents / 100).toFixed(2)}`;
 }
 
 function formatTime(time: string): string {
@@ -92,7 +89,7 @@ export function BookingSummary({
       <div className="border-t border-stone-200 pt-4">
         <div className="flex items-baseline justify-between">
           <span className="font-medium text-slate-700">{t('totalPrice')}</span>
-          <span className="text-xl font-bold text-burgundy-600">{formatPrice(totalPrice)}</span>
+          <span className="text-xl font-bold text-burgundy-600">{formatCHF(totalPrice)}</span>
         </div>
       </div>
     </div>

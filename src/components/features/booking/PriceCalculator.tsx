@@ -1,14 +1,11 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { formatCHF } from '@/lib/utils/currency';
 
 interface PriceCalculatorProps {
   pricePerPerson: number; // in cents
   guests: number;
-}
-
-function formatPrice(priceInCents: number): string {
-  return `CHF ${(priceInCents / 100).toFixed(2)}`;
 }
 
 export function PriceCalculator({ pricePerPerson, guests }: PriceCalculatorProps) {
@@ -24,7 +21,7 @@ export function PriceCalculator({ pricePerPerson, guests }: PriceCalculatorProps
       <div className="space-y-2 text-sm">
         <div className="flex items-center justify-between text-slate-600">
           <span>
-            {formatPrice(pricePerPerson)} x {guests} {t('guests', { count: guests })}
+            {formatCHF(pricePerPerson)} x {guests} {t('guests', { count: guests })}
           </span>
         </div>
       </div>
@@ -35,12 +32,12 @@ export function PriceCalculator({ pricePerPerson, guests }: PriceCalculatorProps
       {/* Total */}
       <div className="flex items-baseline justify-between">
         <span className="font-medium text-slate-700">{t('totalPrice')}</span>
-        <span className="text-2xl font-bold text-slate-900">{formatPrice(total)}</span>
+        <span className="text-2xl font-bold text-slate-900">{formatCHF(total)}</span>
       </div>
 
       {/* Per Person Note */}
       <p className="text-xs text-center text-slate-400">
-        {formatPrice(pricePerPerson)} {t('perPerson')}
+        {formatCHF(pricePerPerson)} {t('perPerson')}
       </p>
     </div>
   );

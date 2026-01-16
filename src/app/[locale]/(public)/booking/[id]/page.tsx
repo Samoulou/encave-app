@@ -25,6 +25,7 @@ import {
   CancellationPolicy,
   CancelBookingButton,
 } from '@/components/features/booking';
+import { formatCHF } from '@/lib/utils/currency';
 
 interface BookingPageProps {
   params: Promise<{ id: string; locale: string }>;
@@ -75,10 +76,6 @@ function formatTime(time: string): string {
   const period = hours >= 12 ? 'PM' : 'AM';
   const displayHours = hours % 12 || 12;
   return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
-}
-
-function formatPrice(priceInCents: number): string {
-  return `CHF ${(priceInCents / 100).toFixed(2)}`;
 }
 
 function getStatusIcon(status: BookingStatus) {
@@ -192,7 +189,7 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
               <div className="flex items-baseline justify-between">
                 <span className="text-slate-600">{tConfirmation('totalPaid')}</span>
                 <span className="text-xl font-bold text-burgundy-600">
-                  {formatPrice(booking.totalPrice)}
+                  {formatCHF(booking.totalPrice)}
                 </span>
               </div>
             </div>

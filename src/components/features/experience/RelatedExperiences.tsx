@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { MapPin, Clock, Wine } from 'lucide-react';
 import type { ExperienceType } from '@prisma/client';
+import { formatCHF } from '@/lib/utils/currency';
 import { IMAGE_PLACEHOLDERS } from '@/lib/image-placeholder';
 
 interface RelatedExperience {
@@ -30,10 +31,6 @@ const TYPE_LABELS: Record<ExperienceType, string> = {
   VINEYARD_TOUR: 'Vineyard Tour',
   FOOD_PAIRING: 'Food Pairing',
 };
-
-function formatPrice(priceInCents: number): string {
-  return `CHF ${(priceInCents / 100).toFixed(0)}`;
-}
 
 function formatDuration(minutes: number): string {
   if (minutes < 60) {
@@ -87,7 +84,7 @@ export function RelatedExperiences({ experiences }: RelatedExperiencesProps) {
 
               {/* Price */}
               <div className="absolute bottom-3 right-3 rounded-lg bg-white/95 px-3 py-1.5 text-sm font-semibold text-slate-900 shadow-sm backdrop-blur-sm">
-                {formatPrice(experience.price)}
+                {formatCHF(experience.price)}
               </div>
             </div>
 

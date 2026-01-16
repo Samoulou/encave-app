@@ -9,36 +9,23 @@ import {
   type WineryOnboardingInput,
   type WineryProfileInput,
 } from '@/lib/validators/winery';
-import { generateSlug } from '@/lib/utils/slug';
+import { generateSlug, ensureUniqueSlug } from '@/lib/utils/slug';
 import { geocodeWineryAddress } from '@/lib/geocoding';
+import {
+  IMAGE_MAX_SIZE,
+  WINERY_ALLOWED_TYPES,
+} from '@/lib/validators/image';
 import type { ActionResult } from '@/types/actions';
 
 /**
- * Ensure slug uniqueness by appending a number if needed
+ * Check if a winery slug already exists
  */
-async function ensureUniqueSlug(baseSlug: string): Promise<string> {
-  let slug = baseSlug;
-  let counter = 1;
-
-  while (true) {
-    const existing = await db.winery.findUnique({
-      where: { slug },
-      select: { id: true },
-    });
-
-    if (!existing) {
-      return slug;
-    }
-
-    slug = `${baseSlug}-${counter}`;
-    counter++;
-
-    // Safety limit to prevent infinite loops
-    if (counter > 100) {
-      slug = `${baseSlug}-${Date.now()}`;
-      return slug;
-    }
-  }
+async function winerySlugExists(slug: string): Promise<boolean> {
+  const existing = await db.winery.findUnique({
+    where: { slug },
+    select: { id: true },
+  });
+  return !!existing;
 }
 
 export async function createWinery(
@@ -102,7 +89,7 @@ export async function createWinery(
 
     // 5. Generate unique slug
     const baseSlug = generateSlug(name);
-    const slug = await ensureUniqueSlug(baseSlug);
+    const slug = await ensureUniqueSlug(baseSlug, winerySlugExists);
 
     // 6. Get user email for the winery contact
     const user = await db.user.findUnique({
@@ -290,17 +277,14 @@ export async function uploadWineryImage(
     }
 
     // Validate file
-    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
-    const ALLOWED_TYPES = ['image/jpeg', 'image/png'];
-
-    if (file.size > MAX_SIZE) {
+    if (file.size > IMAGE_MAX_SIZE) {
       return {
         success: false,
         error: { code: 'VALIDATION_ERROR', message: 'Image must be less than 5MB' },
       };
     }
 
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    if (!WINERY_ALLOWED_TYPES.includes(file.type as typeof WINERY_ALLOWED_TYPES[number])) {
       return {
         success: false,
         error: {

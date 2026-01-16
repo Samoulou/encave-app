@@ -8,7 +8,11 @@ import {
   createExperienceSchema,
   type CreateExperienceInput,
 } from '@/lib/validators/experience';
-import { generateSlug } from '@/lib/utils/slug';
+import { generateSlug, ensureUniqueSlug } from '@/lib/utils/slug';
+import {
+  IMAGE_MAX_SIZE,
+  EXPERIENCE_ALLOWED_TYPES,
+} from '@/lib/validators/image';
 import type { ActionResult } from '@/types/actions';
 
 /**
@@ -39,36 +43,16 @@ function invalidateExperienceCaches(winerySlug?: string, experienceSlug?: string
 }
 
 /**
- * Ensure slug uniqueness within a winery by appending a number if needed
+ * Create a slug existence checker for a specific winery
  */
-async function ensureUniqueExperienceSlug(
-  wineryId: string,
-  baseSlug: string
-): Promise<string> {
-  let slug = baseSlug;
-  let counter = 1;
-
-  while (true) {
+function createExperienceSlugChecker(wineryId: string) {
+  return async (slug: string): Promise<boolean> => {
     const existing = await db.experience.findUnique({
-      where: {
-        wineryId_slug: { wineryId, slug },
-      },
+      where: { wineryId_slug: { wineryId, slug } },
       select: { id: true },
     });
-
-    if (!existing) {
-      return slug;
-    }
-
-    slug = `${baseSlug}-${counter}`;
-    counter++;
-
-    // Safety limit to prevent infinite loops
-    if (counter > 100) {
-      slug = `${baseSlug}-${Date.now()}`;
-      return slug;
-    }
-  }
+    return !!existing;
+  };
 }
 
 /**
@@ -111,17 +95,14 @@ export async function uploadExperienceImage(
     }
 
     // Validate file
-    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
-    const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-
-    if (file.size > MAX_SIZE) {
+    if (file.size > IMAGE_MAX_SIZE) {
       return {
         success: false,
         error: { code: 'VALIDATION_ERROR', message: 'Image must be less than 5MB' },
       };
     }
 
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    if (!EXPERIENCE_ALLOWED_TYPES.includes(file.type as typeof EXPERIENCE_ALLOWED_TYPES[number])) {
       return {
         success: false,
         error: {
@@ -214,7 +195,7 @@ export async function createExperience(
 
     // 4. Generate unique slug within winery (AC 9)
     const baseSlug = generateSlug(title);
-    const slug = await ensureUniqueExperienceSlug(winery.id, baseSlug);
+    const slug = await ensureUniqueSlug(baseSlug, createExperienceSlugChecker(winery.id));
 
     // 5. Convert price to cents for storage
     const priceInCents = Math.round(price * 100);
@@ -340,7 +321,7 @@ export async function updateExperience(
     let slug = existingExperience.slug;
     if (title !== existingExperience.title) {
       const baseSlug = generateSlug(title);
-      slug = await ensureUniqueExperienceSlug(winery.id, baseSlug);
+      slug = await ensureUniqueSlug(baseSlug, createExperienceSlugChecker(winery.id));
     }
 
     // Convert price to cents
@@ -715,7 +696,7 @@ export async function duplicateExperience(
 
     // Generate new unique slug
     const baseSlug = generateSlug(`${experience.title} copy`);
-    const slug = await ensureUniqueExperienceSlug(winery.id, baseSlug);
+    const slug = await ensureUniqueSlug(baseSlug, createExperienceSlugChecker(winery.id));
 
     // Get winery slug for cache invalidation
     const wineryData = await db.winery.findUnique({

@@ -17,6 +17,7 @@ import { BookingStatusBadge } from '@/components/features/booking/dashboard/Book
 import { ExperienceTypeDot } from './ExperienceTypeDot';
 import { blockDateForAllExperiences, unblockDateForAllExperiences } from '@/server/actions/availability';
 import { toast } from 'sonner';
+import { formatCHF } from '@/lib/utils/currency';
 
 interface DayBooking {
   id: string;
@@ -97,13 +98,6 @@ export function DayDetailPanel({
     } finally {
       setIsBlocking(false);
     }
-  };
-
-  const formatPrice = (cents: number) => {
-    return new Intl.NumberFormat('de-CH', {
-      style: 'currency',
-      currency: 'CHF',
-    }).format(cents / 100);
   };
 
   return (
@@ -197,7 +191,7 @@ export function DayDetailPanel({
                             <Users className="h-3 w-3" />
                             {t('guestsCount', { count: booking.guestCount })}
                           </div>
-                          <span>{formatPrice(booking.totalPrice)}</span>
+                          <span>{formatCHF(booking.totalPrice)}</span>
                         </div>
                       </div>
                       <BookingStatusBadge status={booking.status} />

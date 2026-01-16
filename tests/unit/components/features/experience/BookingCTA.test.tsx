@@ -36,7 +36,7 @@ describe('BookingCTA', () => {
         />
       );
 
-      expect(screen.getByText('CHF 50')).toBeDefined();
+      expect(screen.getByText('CHF 50.00')).toBeDefined();
     });
 
     it('renders per person text', () => {
@@ -99,7 +99,7 @@ describe('BookingCTA', () => {
         />
       );
 
-      expect(screen.getByText('CHF 150')).toBeDefined();
+      expect(screen.getByText('CHF 150.00')).toBeDefined();
     });
   });
 

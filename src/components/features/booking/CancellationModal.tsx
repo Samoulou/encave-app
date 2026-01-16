@@ -17,6 +17,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { cancelBooking, getCancellationInfo } from '@/server/actions/booking';
 import { toast } from 'sonner';
+import { formatCHF } from '@/lib/utils/currency';
 
 interface CancellationModalProps {
   isOpen: boolean;
@@ -24,10 +25,6 @@ interface CancellationModalProps {
   bookingId: string;
   accessToken: string;
   totalPrice: number;
-}
-
-function formatPrice(priceInCents: number): string {
-  return `CHF ${(priceInCents / 100).toFixed(2)}`;
 }
 
 export function CancellationModal({
@@ -74,7 +71,7 @@ export function CancellationModal({
       if (result.success) {
         toast.success(t('cancelled'), {
           description: result.data.refundIssued
-            ? t('refundProcessed', { amount: formatPrice(result.data.refundAmount ?? 0) })
+            ? t('refundProcessed', { amount: formatCHF(result.data.refundAmount ?? 0) })
             : t('cancelledDescription'),
         });
         onClose();
@@ -166,7 +163,7 @@ export function CancellationModal({
                 }`}
               >
                 {cancellationInfo?.isEligibleForRefund
-                  ? formatPrice(totalPrice)
+                  ? formatCHF(totalPrice)
                   : t('noRefundAmount')}
               </span>
             </div>

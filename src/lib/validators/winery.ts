@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { wineryImageSchema } from './image';
 
 /**
  * Swiss phone number validation regex
@@ -56,13 +57,8 @@ export type WineryProfileInput = z.infer<typeof wineryProfileSchema>;
 
 /**
  * Image file validation schema
+ * @deprecated Use wineryImageSchema from '@/lib/validators/image' instead
  */
-export const imageFileSchema = z
-  .instanceof(File)
-  .refine((f) => f.size <= 5 * 1024 * 1024, 'Image must be less than 5MB')
-  .refine(
-    (f) => ['image/jpeg', 'image/png'].includes(f.type),
-    'Only JPEG and PNG images are allowed'
-  );
+export const imageFileSchema = wineryImageSchema;
 
 export type ImageFile = z.infer<typeof imageFileSchema>;

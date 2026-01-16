@@ -1,4 +1,8 @@
 import { put, del } from '@vercel/blob';
+import {
+  validateImageFile as sharedValidateImageFile,
+  WINERY_ALLOWED_TYPES,
+} from '@/lib/validators/image';
 
 /**
  * Upload a file to Vercel Blob storage
@@ -31,21 +35,11 @@ export async function deleteImage(url: string): Promise<void> {
 
 /**
  * Validate image file before upload
+ * @deprecated Use validateImageFile from '@/lib/validators/image' instead
  */
 export function validateImageFile(file: File): {
   valid: boolean;
   error?: string;
 } {
-  const MAX_SIZE = 5 * 1024 * 1024; // 5MB
-  const ALLOWED_TYPES = ['image/jpeg', 'image/png'];
-
-  if (file.size > MAX_SIZE) {
-    return { valid: false, error: 'Image must be less than 5MB' };
-  }
-
-  if (!ALLOWED_TYPES.includes(file.type)) {
-    return { valid: false, error: 'Only JPEG and PNG images are allowed' };
-  }
-
-  return { valid: true };
+  return sharedValidateImageFile(file, WINERY_ALLOWED_TYPES);
 }

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { experienceImageSchema as sharedExperienceImageSchema } from './image';
 
 /**
  * Duration options in minutes for wine experiences
@@ -82,14 +83,9 @@ export const createExperienceSchema = z
 export type CreateExperienceInput = z.infer<typeof createExperienceSchema>;
 
 /**
- * Image file validation schema (reuse pattern from winery)
+ * Image file validation schema for experiences
+ * @deprecated Use experienceImageSchema from '@/lib/validators/image' instead
  */
-export const experienceImageSchema = z
-  .instanceof(File)
-  .refine((f) => f.size <= 5 * 1024 * 1024, 'Image must be less than 5MB')
-  .refine(
-    (f) => ['image/jpeg', 'image/png', 'image/webp'].includes(f.type),
-    'Only JPEG, PNG, and WebP images are allowed'
-  );
+export const experienceImageSchema = sharedExperienceImageSchema;
 
 export type ExperienceImageFile = z.infer<typeof experienceImageSchema>;

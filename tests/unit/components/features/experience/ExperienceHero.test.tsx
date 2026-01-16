@@ -45,7 +45,7 @@ describe('ExperienceHero', () => {
       />
     );
 
-    expect(screen.getByText('CHF 75')).toBeDefined();
+    expect(screen.getByText('CHF 75.00')).toBeDefined();
   });
 
   it('renders per person text', () => {

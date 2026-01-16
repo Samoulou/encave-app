@@ -1,6 +1,15 @@
 import { type Locale } from '@/i18n/routing';
 
 /**
+ * Map our locale codes to BCP 47 locale tags for Swiss locales
+ */
+export const LOCALE_MAP: Record<Locale, string> = {
+  fr: 'fr-CH',
+  de: 'de-CH',
+  en: 'en-CH',
+} as const;
+
+/**
  * Formats a date in a locale-aware manner
  * @param date - The date to format
  * @param locale - The locale to use for formatting
@@ -21,14 +30,7 @@ export function formatDate(
     ...options,
   };
 
-  // Map our locale codes to BCP 47 locale tags
-  const localeMap: Record<Locale, string> = {
-    fr: 'fr-CH',
-    de: 'de-CH',
-    en: 'en-CH',
-  };
-
-  return new Intl.DateTimeFormat(localeMap[locale], defaultOptions).format(dateObj);
+  return new Intl.DateTimeFormat(LOCALE_MAP[locale], defaultOptions).format(dateObj);
 }
 
 /**
@@ -51,13 +53,7 @@ export function formatDateShort(date: Date | string, locale: Locale): string {
 export function formatTime(date: Date | string, locale: Locale): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
 
-  const localeMap: Record<Locale, string> = {
-    fr: 'fr-CH',
-    de: 'de-CH',
-    en: 'en-CH',
-  };
-
-  return new Intl.DateTimeFormat(localeMap[locale], {
+  return new Intl.DateTimeFormat(LOCALE_MAP[locale], {
     hour: '2-digit',
     minute: '2-digit',
   }).format(dateObj);
@@ -69,13 +65,7 @@ export function formatTime(date: Date | string, locale: Locale): string {
 export function formatDateTime(date: Date | string, locale: Locale): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
 
-  const localeMap: Record<Locale, string> = {
-    fr: 'fr-CH',
-    de: 'de-CH',
-    en: 'en-CH',
-  };
-
-  return new Intl.DateTimeFormat(localeMap[locale], {
+  return new Intl.DateTimeFormat(LOCALE_MAP[locale], {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
@@ -96,13 +86,7 @@ export function formatNumber(
   locale: Locale,
   options?: Intl.NumberFormatOptions
 ): string {
-  const localeMap: Record<Locale, string> = {
-    fr: 'fr-CH',
-    de: 'de-CH',
-    en: 'en-CH',
-  };
-
-  return new Intl.NumberFormat(localeMap[locale], options).format(value);
+  return new Intl.NumberFormat(LOCALE_MAP[locale], options).format(value);
 }
 
 /**

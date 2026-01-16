@@ -1,16 +1,19 @@
 import type { Locale } from '@prisma/client';
 
-const localeMap: Record<Locale, string> = {
+/**
+ * Map Prisma Locale enum to BCP 47 locale tags for Swiss locales
+ */
+const PRISMA_LOCALE_MAP: Record<Locale, string> = {
   FR: 'fr-CH',
   DE: 'de-CH',
   EN: 'en-CH',
-};
+} as const;
 
 /**
  * Format a date for email display with full weekday and date
  */
 export function formatEmailDate(date: Date, locale: Locale): string {
-  return new Intl.DateTimeFormat(localeMap[locale], {
+  return new Intl.DateTimeFormat(PRISMA_LOCALE_MAP[locale], {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -22,7 +25,7 @@ export function formatEmailDate(date: Date, locale: Locale): string {
  * Format a short date for email display (without weekday)
  */
 export function formatEmailDateShort(date: Date, locale: Locale): string {
-  return new Intl.DateTimeFormat(localeMap[locale], {
+  return new Intl.DateTimeFormat(PRISMA_LOCALE_MAP[locale], {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
@@ -33,7 +36,7 @@ export function formatEmailDateShort(date: Date, locale: Locale): string {
  * Format time for email display
  */
 export function formatEmailTime(date: Date, locale: Locale): string {
-  return new Intl.DateTimeFormat(localeMap[locale], {
+  return new Intl.DateTimeFormat(PRISMA_LOCALE_MAP[locale], {
     hour: '2-digit',
     minute: '2-digit',
   }).format(date);

@@ -40,38 +40,9 @@ export function reportWebVitals(metric: Metric) {
   }
 
   // Send to analytics (Vercel Analytics handles this automatically)
-  // For custom analytics, uncomment below:
-  // sendToAnalytics(metric);
 
   // Send to Sentry for performance monitoring (if configured)
   if (typeof window !== 'undefined' && 'Sentry' in window) {
     // Sentry will capture this if performance monitoring is enabled
-  }
-}
-
-/**
- * Custom analytics sender (example implementation)
- * Uncomment usage in reportWebVitals to enable
- */
-// eslint-disable-next-line no-unused-vars
-function _sendToAnalytics(metric: Metric) {
-  const body = JSON.stringify({
-    name: metric.name,
-    value: metric.value,
-    rating: metric.rating,
-    delta: metric.delta,
-    id: metric.id,
-    navigationType: metric.navigationType,
-  });
-
-  // Use Navigator.sendBeacon for reliable delivery
-  if (navigator.sendBeacon) {
-    navigator.sendBeacon('/api/analytics/vitals', body);
-  } else {
-    fetch('/api/analytics/vitals', {
-      body,
-      method: 'POST',
-      keepalive: true,
-    });
   }
 }
