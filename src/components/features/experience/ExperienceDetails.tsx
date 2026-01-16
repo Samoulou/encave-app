@@ -40,13 +40,13 @@ export function ExperienceDetails({
 
       {/* Quick Info */}
       <div className="mt-4 flex flex-wrap gap-4">
-        <div className="flex items-center gap-2 rounded-lg bg-burgundy-50 px-4 py-2">
+        <div className="flex items-center gap-2 rounded-lg bg-burgundy-50 px-4 py-2" data-testid="experience-duration">
           <Clock className="h-5 w-5 text-burgundy-600" />
           <span className="text-sm font-medium text-burgundy-900">
             {formatDuration(duration)}
           </span>
         </div>
-        <div className="flex items-center gap-2 rounded-lg bg-burgundy-50 px-4 py-2">
+        <div className="flex items-center gap-2 rounded-lg bg-burgundy-50 px-4 py-2" data-testid="experience-capacity">
           <Users className="h-5 w-5 text-burgundy-600" />
           <span className="text-sm font-medium text-burgundy-900">
             {formatCapacity(minCapacity, maxCapacity)}
@@ -55,7 +55,7 @@ export function ExperienceDetails({
       </div>
 
       {/* Description */}
-      <div className="mt-6 prose prose-slate max-w-none">
+      <div className="mt-6 prose prose-slate max-w-none" data-testid="experience-description">
         <p className="whitespace-pre-wrap text-slate-600 leading-relaxed">
           {description}
         </p>

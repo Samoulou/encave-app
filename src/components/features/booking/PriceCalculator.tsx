@@ -18,7 +18,7 @@ export function PriceCalculator({ pricePerPerson, guests }: PriceCalculatorProps
       <h3 className="font-semibold text-slate-900">{t('totalPrice')}</h3>
 
       {/* Calculation Breakdown */}
-      <div className="space-y-2 text-sm">
+      <div className="space-y-2 text-sm" data-testid="price-breakdown">
         <div className="flex items-center justify-between text-slate-600">
           <span>
             {formatCHF(pricePerPerson)} x {guests} {t('guests', { count: guests })}
@@ -32,11 +32,11 @@ export function PriceCalculator({ pricePerPerson, guests }: PriceCalculatorProps
       {/* Total */}
       <div className="flex items-baseline justify-between">
         <span className="font-medium text-slate-700">{t('totalPrice')}</span>
-        <span className="text-2xl font-bold text-slate-900">{formatCHF(total)}</span>
+        <span className="text-2xl font-bold text-slate-900" data-testid="total-price">{formatCHF(total)}</span>
       </div>
 
       {/* Per Person Note */}
-      <p className="text-xs text-center text-slate-400">
+      <p className="text-xs text-center text-slate-400" data-testid="price-per-person">
         {formatCHF(pricePerPerson)} {t('perPerson')}
       </p>
     </div>

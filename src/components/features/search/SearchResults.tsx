@@ -50,7 +50,7 @@ export function SearchResults({
     <div className="space-y-6">
       {/* Results Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-slate-600" data-testid="results-count">
           <span className="font-medium text-slate-900">{total}</span>{' '}
           {total === 1 ? 'experience' : 'experiences'} found
           {totalPages > 1 && (
@@ -78,7 +78,7 @@ export function SearchResults({
 
       {/* Results Grid or Empty State */}
       {count > 0 ? (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" data-testid="search-results-grid">
           {experiences.map((experience) => (
             <ExperienceCard key={experience.id} experience={experience} />
           ))}
@@ -203,7 +203,7 @@ function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
 
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-stone-300 bg-cream-50 px-6 py-16 text-center">
+    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-stone-300 bg-cream-50 px-6 py-16 text-center" data-testid="empty-state">
       <div className="flex h-16 w-16 items-center justify-center rounded-full bg-burgundy-100">
         <Wine className="h-8 w-8 text-burgundy-600" aria-hidden="true" />
       </div>

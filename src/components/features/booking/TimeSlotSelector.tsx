@@ -97,7 +97,7 @@ export function TimeSlotSelector({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-8">
+      <div className="flex items-center justify-center py-8" data-testid="time-slot-loading">
         <Loader2 className="h-8 w-8 animate-spin text-burgundy-600" />
       </div>
     );
@@ -105,7 +105,7 @@ export function TimeSlotSelector({
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center py-8 text-red-500">
+      <div className="flex flex-col items-center justify-center py-8 text-red-500" data-testid="time-slot-error">
         <p className="text-sm mb-3">{error}</p>
         <Button
           variant="outline"
@@ -136,7 +136,7 @@ export function TimeSlotSelector({
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3" data-testid="time-slot-grid">
       {slots.map((slot) => (
         <button
           key={slot.timeSlot}
@@ -153,7 +153,7 @@ export function TimeSlotSelector({
         >
           <span className="text-sm font-medium">{formatTime(slot.timeSlot)}</span>
           {slot.available ? (
-            <span className="mt-1 text-xs text-slate-500">
+            <span className="mt-1 text-xs text-slate-500" data-testid="remaining-capacity">
               {t('remainingCapacity', { count: slot.remainingCapacity })}
             </span>
           ) : (

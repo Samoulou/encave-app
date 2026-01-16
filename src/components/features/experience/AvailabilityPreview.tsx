@@ -47,7 +47,7 @@ function groupSlotsByDay(
 export function AvailabilityPreview({ slots }: AvailabilityPreviewProps) {
   if (slots.length === 0) {
     return (
-      <section className="rounded-xl bg-white p-6 shadow-warm lg:p-8">
+      <section className="rounded-xl bg-white p-6 shadow-warm lg:p-8" data-testid="availability-preview">
         <h2 className="font-display text-xl font-semibold text-slate-900">
           Availability
         </h2>
@@ -65,7 +65,7 @@ export function AvailabilityPreview({ slots }: AvailabilityPreviewProps) {
   const availableDays = Array.from(groupedSlots.keys()).sort((a, b) => a - b);
 
   return (
-    <section className="rounded-xl bg-white p-6 shadow-warm lg:p-8">
+    <section className="rounded-xl bg-white p-6 shadow-warm lg:p-8" data-testid="availability-preview">
       <h2 className="font-display text-xl font-semibold text-slate-900">
         Availability
       </h2>
@@ -107,6 +107,7 @@ export function AvailabilityPreview({ slots }: AvailabilityPreviewProps) {
                   <span
                     key={slot.id}
                     className="rounded-md bg-burgundy-50 px-3 py-1 text-sm text-burgundy-700"
+                    data-testid="availability-slot"
                   >
                     {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
                   </span>

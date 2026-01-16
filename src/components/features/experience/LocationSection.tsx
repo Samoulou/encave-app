@@ -33,7 +33,7 @@ export function LocationSection({
     : VALAIS_FALLBACK_MAP_URL;
 
   return (
-    <section className="rounded-xl bg-white p-6 shadow-warm lg:p-8">
+    <section className="rounded-xl bg-white p-6 shadow-warm lg:p-8" data-testid="location-section">
       <h2 className="font-display text-xl font-semibold text-slate-900">
         Location
       </h2>
@@ -43,7 +43,7 @@ export function LocationSection({
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-burgundy-50">
           <MapPin className="h-5 w-5 text-burgundy-600" />
         </div>
-        <div>
+        <div data-testid="winery-address">
           <p className="font-medium text-slate-900">{wineryName}</p>
           <p className="text-sm text-slate-600">{address}</p>
           <p className="text-sm text-slate-600">{commune}, Valais</p>

@@ -299,7 +299,7 @@ export default function CheckoutPage() {
         {/* Right Column - Booking Summary */}
         <div className="lg:col-span-1">
           <div className="sticky top-6 space-y-4">
-            <Card>
+            <Card data-testid="checkout-summary">
               <CardContent className="p-6">
                 <BookingSummary
                   experienceTitle={experience.title}

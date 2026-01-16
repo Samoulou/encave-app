@@ -64,7 +64,7 @@ export function ExperienceGallery({
 
   return (
     <>
-      <section className="rounded-xl bg-white p-6 shadow-warm lg:p-8">
+      <section className="rounded-xl bg-white p-6 shadow-warm lg:p-8" data-testid="experience-gallery">
         <h2 className="font-display text-xl font-semibold text-slate-900">
           {t('title')}
         </h2>

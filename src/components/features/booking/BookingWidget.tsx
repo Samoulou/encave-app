@@ -109,7 +109,7 @@ export function BookingWidget({ experience }: BookingWidgetProps) {
       {/* Left Column - Booking Form */}
       <div className="lg:col-span-2 space-y-6">
         {/* Experience Header */}
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden" data-testid="experience-summary-card">
           <div className="flex flex-col sm:flex-row">
             <div className="relative h-48 sm:h-auto sm:w-48 flex-shrink-0">
               <Image
@@ -123,18 +123,18 @@ export function BookingWidget({ experience }: BookingWidgetProps) {
               />
             </div>
             <CardContent className="flex-1 p-6">
-              <h1 className="font-display text-2xl font-bold text-slate-900">
+              <h1 className="font-display text-2xl font-bold text-slate-900" data-testid="experience-title">
                 {experience.title}
               </h1>
-              <p className="mt-2 text-sm text-slate-600">
+              <p className="mt-2 text-sm text-slate-600" data-testid="winery-name">
                 {experience.winery.name}
               </p>
               <div className="mt-4 flex flex-wrap gap-4 text-sm text-slate-600">
-                <span className="flex items-center gap-1.5">
+                <span className="flex items-center gap-1.5" data-testid="experience-duration">
                   <Clock className="h-4 w-4" />
                   {experience.duration} min
                 </span>
-                <span className="flex items-center gap-1.5">
+                <span className="flex items-center gap-1.5" data-testid="capacity-range">
                   <Users className="h-4 w-4" />
                   {/* BUG-032 FIX: Use capacityRange key to avoid "8-10 10 personnes" */}
                   {t('capacityRange', { min: experience.minCapacity, max: experience.maxCapacity })}
@@ -170,6 +170,7 @@ export function BookingWidget({ experience }: BookingWidgetProps) {
         <Card
           className={!date ? 'opacity-60' : ''}
           aria-disabled={!date}
+          data-testid="time-slot-section"
         >
           <fieldset disabled={!date}>
             <CardContent className="p-6">
@@ -199,6 +200,7 @@ export function BookingWidget({ experience }: BookingWidgetProps) {
         <Card
           className={!time ? 'opacity-60' : ''}
           aria-disabled={!time}
+          data-testid="guest-count-section"
         >
           <fieldset disabled={!time}>
             <CardContent className="p-6">
@@ -231,7 +233,7 @@ export function BookingWidget({ experience }: BookingWidgetProps) {
       <div className="lg:col-span-1">
         <div className="sticky top-6 space-y-6">
           {/* Price Calculator */}
-          <Card>
+          <Card data-testid="price-section">
             <CardContent className="p-6">
               <PriceCalculator
                 pricePerPerson={experience.price}
@@ -242,7 +244,7 @@ export function BookingWidget({ experience }: BookingWidgetProps) {
 
           {/* Booking Summary */}
           {isValid && (
-            <Card>
+            <Card data-testid="booking-summary">
               <CardContent className="p-6">
                 <BookingSummary
                   experienceTitle={experience.title}

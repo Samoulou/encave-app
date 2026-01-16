@@ -52,6 +52,7 @@ export function ExperienceCard({ experience, className }: ExperienceCardProps) {
     <Link
       href={`/experiences/${experience.slug}`}
       className={cn('group block', className)}
+      data-testid="experience-card"
     >
       <Card className="overflow-hidden">
         {/* Cover Photo */}
@@ -78,12 +79,12 @@ export function ExperienceCard({ experience, className }: ExperienceCardProps) {
         {/* Content */}
         <CardContent className="p-5">
           {/* Winery Name */}
-          <p className="text-sm font-medium text-burgundy-600">
+          <p className="text-sm font-medium text-burgundy-600" data-testid="winery-name">
             {experience.winery.name}
           </p>
 
           {/* Title */}
-          <h3 className="mt-1 font-display text-lg font-semibold text-slate-900 line-clamp-2 group-hover:text-burgundy-700 transition-colors">
+          <h3 className="mt-1 font-display text-lg font-semibold text-slate-900 line-clamp-2 group-hover:text-burgundy-700 transition-colors" data-testid="experience-title">
             {experience.title}
           </h3>
 
@@ -95,7 +96,7 @@ export function ExperienceCard({ experience, className }: ExperienceCardProps) {
 
           {/* Meta Info */}
           <div className="mt-3 flex items-center gap-4 text-sm text-slate-600">
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-1" data-testid="experience-duration">
               <Clock className="h-4 w-4" aria-hidden="true" />
               {formatDuration(experience.duration)}
             </span>
@@ -107,7 +108,7 @@ export function ExperienceCard({ experience, className }: ExperienceCardProps) {
 
           {/* Price */}
           <div className="mt-4 flex items-center justify-between">
-            <span className="text-lg font-semibold text-slate-900">
+            <span className="text-lg font-semibold text-slate-900" data-testid="experience-price">
               {formatCHF(experience.price)}
             </span>
             <span className="text-sm text-slate-500">per person</span>

@@ -46,7 +46,7 @@ function formatDuration(minutes: number): string {
 
 export function RelatedExperiences({ experiences }: RelatedExperiencesProps) {
   return (
-    <section>
+    <section data-testid="related-experiences">
       <h2 className="font-display text-2xl font-semibold text-slate-900">
         You might also like
       </h2>
@@ -57,6 +57,7 @@ export function RelatedExperiences({ experiences }: RelatedExperiencesProps) {
             key={experience.id}
             href={`/experiences/${experience.slug}`}
             className="group overflow-hidden rounded-xl bg-white shadow-warm transition-all hover:-translate-y-1 hover:shadow-warm-lg"
+            data-testid="experience-card"
           >
             {/* Image */}
             <div className="relative aspect-[4/3] overflow-hidden">

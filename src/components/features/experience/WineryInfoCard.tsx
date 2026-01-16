@@ -17,7 +17,7 @@ export function WineryInfoCard({
   coverPhoto,
 }: WineryInfoCardProps) {
   return (
-    <div className="overflow-hidden rounded-xl bg-white shadow-warm">
+    <div className="overflow-hidden rounded-xl bg-white shadow-warm" data-testid="winery-info-card">
       {/* Cover Image */}
       <div className="relative h-32 w-full">
         {coverPhoto ? (
@@ -40,10 +40,10 @@ export function WineryInfoCard({
 
       {/* Content */}
       <div className="p-6">
-        <h3 className="font-display text-lg font-semibold text-slate-900">
+        <h3 className="font-display text-lg font-semibold text-slate-900" data-testid="winery-name">
           {name}
         </h3>
-        <p className="mt-1 flex items-center gap-1.5 text-sm text-slate-600">
+        <p className="mt-1 flex items-center gap-1.5 text-sm text-slate-600" data-testid="winery-location">
           <MapPin className="h-4 w-4" />
           {commune}, Valais
         </p>

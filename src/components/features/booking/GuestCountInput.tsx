@@ -84,7 +84,7 @@ export function GuestCountInput({
         <div className="flex flex-col items-center min-w-[80px]">
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5 text-burgundy-600" />
-            <span className="text-4xl font-bold text-slate-900 tabular-nums">{value}</span>
+            <span className="text-4xl font-bold text-slate-900 tabular-nums" data-testid="guest-count-display">{value}</span>
           </div>
           <span className="text-sm text-slate-500">
             {t('guests', { count: value })}

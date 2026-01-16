@@ -20,10 +20,10 @@ export function BookingCTA({ price, experienceSlug, stripeConnected }: BookingCT
   const isBookingEnabled = stripeConnected;
 
   return (
-    <div className="rounded-xl bg-white p-6 shadow-warm">
+    <div className="rounded-xl bg-white p-6 shadow-warm" data-testid="booking-cta">
       {/* Price */}
       <div className="text-center">
-        <p className="text-3xl font-bold text-slate-900">{formatCHF(price)}</p>
+        <p className="text-3xl font-bold text-slate-900" data-testid="experience-price">{formatCHF(price)}</p>
         <p className="text-sm text-slate-500">{t('perPerson')}</p>
       </div>
 

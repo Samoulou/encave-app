@@ -37,7 +37,7 @@ export default async function NotFound() {
   const popularExperiences = await getPopularExperiences();
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-cream-50 px-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-cream-50 px-4" data-testid="not-found">
       <div className="w-full max-w-xl text-center">
         {/* 404 Icon */}
         <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-burgundy-100">
