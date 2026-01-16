@@ -505,6 +505,32 @@
       "description": "Create your EnCave account and start discovering the wine experiences of Valais."
     }
   },
+  "about": {
+    "metadata": {
+      "title": "About EnCave | EnCave",
+      "description": "Discover the story and passion behind EnCave, a celebration of Valais wines"
+    },
+    "hero": {
+      "title": "A passion born in the heart of Valais vineyards"
+    },
+    "valais": {
+      "title": "Valais, cradle of viticultural excellence",
+      "paragraph1": "Between the Alpine peaks and the winding Rhone, Valais is home to Switzerland's sunniest vineyard. Here, grape varieties found nowhere else in the world - Petite Arvine, Amigne, Cornalin, Humagne - tell a thousand-year-old story.",
+      "paragraph2": "Every bottle is the fruit of expertise passed down through generations, exceptional geology, and a microclimate that the world's greatest terroirs envy.",
+      "highlight": "Valais wines have nothing to envy anyone. It's time the world knew."
+    },
+    "mission": {
+      "title": "Our mission",
+      "content": "EnCave was created for all those who, like me, believe that every bottle deserves its story. Manage your cellar, track your tastings, discover the perfect moment to open your treasures - and above all, celebrate the richness of our wine heritage."
+    },
+    "contact": {
+      "title": "The craftsman behind the app",
+      "content": "This project is a personal creation, developed with passion and dedication. If you have questions, suggestions, or simply want to share your love of wine, don't hesitate to reach out.",
+      "name": "Samuel",
+      "email": "samuel@encave.ch"
+    },
+    "footer": "Cheers, and long live Valais wines!"
+  },
   "legal": {
     "backToHome": "Back to home",
     "privacy": {

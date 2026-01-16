@@ -32,6 +32,7 @@ export async function Header() {
         <nav aria-label={t('mainNavigation')} className="hidden md:flex items-center gap-8">
           <NavLink href="/wineries">{t('wineries')}</NavLink>
           <NavLink href="/experiences">{t('experiences')}</NavLink>
+          <NavLink href="/about">{t('about')}</NavLink>
           {userRole === 'ADMIN' && (
             <NavLink href="/admin">{t('admin')}</NavLink>
           )}

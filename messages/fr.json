@@ -505,6 +505,32 @@
       "description": "Creez votre compte EnCave et commencez a decouvrir les experiences viticoles du Valais."
     }
   },
+  "about": {
+    "metadata": {
+      "title": "A propos d'EnCave | EnCave",
+      "description": "Decouvrez l'histoire et la passion derriere EnCave, une celebration des vins du Valais"
+    },
+    "hero": {
+      "title": "Une passion nee au coeur des vignes valaisannes"
+    },
+    "valais": {
+      "title": "Le Valais, berceau de l'excellence viticole",
+      "paragraph1": "Entre les sommets alpins et le Rhone qui serpente, le Valais abrite le vignoble le plus ensoleille de Suisse. Ici, des cepages uniques au monde - la Petite Arvine, l'Amigne, le Cornalin, l'Humagne - racontent une histoire millenaire.",
+      "paragraph2": "Chaque bouteille est le fruit d'un savoir-faire transmis de generation en generation, d'une geologie exceptionnelle et d'un microclimat que nous envient les plus grands terroirs.",
+      "highlight": "Les vins valaisans n'ont rien a envier a personne. Il est temps que le monde le sache."
+    },
+    "mission": {
+      "title": "Notre mission",
+      "content": "EnCave a ete concu pour tous ceux qui, comme moi, croient que chaque bouteille merite son histoire. Gerez votre cave, suivez vos degustations, decouvrez le moment ideal pour ouvrir vos tresors - et surtout, celebrez la richesse de notre patrimoine viticole."
+    },
+    "contact": {
+      "title": "L'artisan derriere l'application",
+      "content": "Ce projet est une creation personnelle, developpee avec passion et devouement. Si vous avez des questions, des suggestions ou simplement envie de partager votre amour du vin, n'hesitez pas a me contacter.",
+      "name": "Samuel",
+      "email": "samuel@encave.ch"
+    },
+    "footer": "Sante, et vive les vins du Valais!"
+  },
   "legal": {
     "backToHome": "Retour a l'accueil",
     "privacy": {

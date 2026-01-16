@@ -505,6 +505,32 @@
       "description": "Erstellen Sie Ihr EnCave-Konto und entdecken Sie die Weinerlebnisse des Wallis."
     }
   },
+  "about": {
+    "metadata": {
+      "title": "Uber EnCave | EnCave",
+      "description": "Entdecken Sie die Geschichte und Leidenschaft hinter EnCave, eine Hommage an die Weine des Wallis"
+    },
+    "hero": {
+      "title": "Eine Leidenschaft, geboren im Herzen der Walliser Weinberge"
+    },
+    "valais": {
+      "title": "Das Wallis, Wiege der Weinbauexzellenz",
+      "paragraph1": "Zwischen den Alpengipfeln und der sich schlangelnden Rhone beheimatet das Wallis den sonnigsten Weinberg der Schweiz. Hier erzahlen Rebsorten, die es nirgendwo sonst auf der Welt gibt - Petite Arvine, Amigne, Cornalin, Humagne - eine tausendjahrige Geschichte.",
+      "paragraph2": "Jede Flasche ist das Ergebnis eines uber Generationen weitergegebenen Know-hows, einer aussergewohnlichen Geologie und eines Mikroklimas, um das uns die grossten Terroirs der Welt beneiden.",
+      "highlight": "Walliser Weine mussen sich vor niemandem verstecken. Es ist Zeit, dass die Welt das erfahrt."
+    },
+    "mission": {
+      "title": "Unsere Mission",
+      "content": "EnCave wurde fur all jene geschaffen, die wie ich glauben, dass jede Flasche ihre Geschichte verdient. Verwalten Sie Ihren Weinkeller, verfolgen Sie Ihre Degustationen, entdecken Sie den perfekten Moment, Ihre Schatze zu offnen - und vor allem: feiern Sie den Reichtum unseres Weinerbes."
+    },
+    "contact": {
+      "title": "Der Handwerker hinter der App",
+      "content": "Dieses Projekt ist eine personliche Kreation, entwickelt mit Leidenschaft und Hingabe. Wenn Sie Fragen oder Anregungen haben oder einfach Ihre Liebe zum Wein teilen mochten, zogern Sie nicht, mich zu kontaktieren.",
+      "name": "Samuel",
+      "email": "samuel@encave.ch"
+    },
+    "footer": "Zum Wohl, und es lebe der Walliser Wein!"
+  },
   "legal": {
     "backToHome": "Zurück zur Startseite",
     "privacy": {

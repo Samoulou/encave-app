@@ -65,6 +65,13 @@ export function MobileNav({ isAuthenticated, userName, userRole }: MobileNavProp
           >
             {t('experiences')}
           </Link>
+          <Link
+            href="/about"
+            onClick={closeMenu}
+            className="text-lg font-medium text-slate-700 hover:text-burgundy-600 hover:bg-burgundy-50 transition-colors py-3 px-3 rounded-lg"
+          >
+            {t('about')}
+          </Link>
           {userRole === 'ADMIN' && (
             <Link
               href="/admin"
