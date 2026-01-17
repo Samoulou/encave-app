@@ -52,6 +52,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   entries.push(...createEntry('/experiences', 'daily', 0.9));
   entries.push(...createEntry('/wineries', 'daily', 0.9));
 
+  // SEO Landing pages - high priority for organic traffic
+  entries.push(...createEntry('/degustation-vin-valais', 'weekly', 0.9));
+  entries.push(...createEntry('/cepages-valaisans', 'weekly', 0.9));
+
+  // About page
+  entries.push(...createEntry('/about', 'monthly', 0.7));
+
   // Auth pages (lower priority, but still indexed for discoverability)
   entries.push(...createEntry('/login', 'monthly', 0.3));
   entries.push(...createEntry('/register', 'monthly', 0.3));

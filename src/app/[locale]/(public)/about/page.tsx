@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Header } from '@/components/layout/Header';
+import { Footer } from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Mail, MapPin, Grape, Heart, User } from 'lucide-react';
 
@@ -115,6 +116,7 @@ export default async function AboutPage({ params }: PageProps) {
           </p>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

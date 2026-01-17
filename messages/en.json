@@ -699,5 +699,137 @@
         }
       }
     }
+  },
+  "landing": {
+    "degustation": {
+      "metadata": {
+        "title": "Wine Tasting in Valais | EnCave",
+        "description": "Discover the best wine tastings in Valais. Book a unique oenological experience with Valais winemakers. Petite Arvine, Fendant, Cornalin and more.",
+        "keywords": "wine tasting valais, valais cellar, wine tourism valais, swiss wine, petite arvine, fendant, cornalin"
+      },
+      "hero": {
+        "title": "Wine Tasting in Valais",
+        "subtitle": "Experience authentic wine culture in the heart of Swiss vineyards"
+      },
+      "intro": {
+        "title": "The art of Valais wine tasting",
+        "paragraph1": "Valais, Switzerland's largest wine-growing canton, offers exceptional conditions for viticulture thanks to its record sunshine and varied terroirs. From Visp to Martigny, the steep slopes are home to grape varieties found nowhere else in the world.",
+        "paragraph2": "A tasting in Valais is much more than a simple wine discovery: it's an immersion into ancestral know-how, passed down from generation to generation by passionate winemakers.",
+        "paragraph3": "Whether you're an enlightened enthusiast or a curious newcomer, our partner wineries welcome you to share their passion and help you discover the hidden treasures of Valais viticulture.",
+        "highlight1": "1-3 hour experiences",
+        "highlight2": "50+ partner wineries",
+        "highlight3": "Unique native grape varieties"
+      },
+      "experiences": {
+        "title": "Tasting experiences to discover",
+        "viewAll": "View all experiences"
+      },
+      "faq": {
+        "title": "Frequently Asked Questions",
+        "q1": {
+          "question": "How much does a wine tasting in Valais cost?",
+          "answer": "Prices generally range from CHF 20 to 80 per person depending on the winery and type of experience. A simple tasting starts around CHF 20-30, while a complete experience with cellar visit and food pairing can reach CHF 60-80."
+        },
+        "q2": {
+          "question": "Do I need to book in advance for a tasting?",
+          "answer": "Yes, we strongly recommend booking in advance, especially during peak season (May-October) and weekends. Booking guarantees your spot and allows winemakers to prepare a personalized experience."
+        },
+        "q3": {
+          "question": "What wines can I taste in Valais?",
+          "answer": "Valais is famous for its native grape varieties: Petite Arvine, Amigne, Cornalin, Humagne Rouge and Blanc. You'll also discover excellent Fendant (Chasselas), Pinot Noir and unique blends."
+        },
+        "q4": {
+          "question": "Are tastings suitable for beginners?",
+          "answer": "Absolutely! Our partner winemakers welcome all levels. They take the time to explain tasting techniques and the characteristics of each wine. It's the ideal opportunity to learn in a friendly setting."
+        },
+        "q5": {
+          "question": "Can I buy wine after the tasting?",
+          "answer": "Yes, most wineries offer direct wine sales. It's the perfect opportunity to take home your favorites and extend the pleasure at home."
+        }
+      },
+      "cta": {
+        "title": "Ready to discover Valais wines?",
+        "subtitle": "Book your tasting and enjoy an unforgettable experience with our passionate winemakers.",
+        "button": "Book a tasting"
+      }
+    },
+    "cepages": {
+      "metadata": {
+        "title": "Valais Grape Varieties - Native Wines of Valais | EnCave",
+        "description": "Discover the native grape varieties of Valais: Petite Arvine, Amigne, Cornalin, Humagne. Complete guide to grape varieties unique to Swiss Valais.",
+        "keywords": "valais grape varieties, petite arvine, amigne, cornalin, humagne, swiss native wine, valais grape varieties"
+      },
+      "hero": {
+        "title": "Valais Grape Varieties",
+        "subtitle": "Discover the unique grape varieties that make Valais wines famous"
+      },
+      "intro": {
+        "title": "A wine heritage unique in the world",
+        "paragraph1": "Valais is home to an exceptional collection of native grape varieties, found nowhere else in the world. These ancestral varieties, preserved by generations of winemakers, offer unique aromatic profiles.",
+        "paragraph2": "From the iconic white grape Petite Arvine to the full-bodied red Cornalin, each variety tells the story of an exceptional terroir and centuries-old know-how."
+      },
+      "whites": {
+        "title": "White grape varieties",
+        "petiteArvine": {
+          "name": "Petite Arvine",
+          "description": "The jewel of Valais grapes, Petite Arvine produces wines of exceptional finesse with a characteristic saline finish.",
+          "tasting": "Citrus notes, rhubarb, wisteria, distinctive saline finish",
+          "pairing": "Seafood, raclette, asparagus, foie gras"
+        },
+        "amigne": {
+          "name": "Amigne",
+          "description": "Grown almost exclusively in Vétroz, Amigne is a rare grape with multiple facets, from dry to sweet.",
+          "tasting": "Honey, quince, dried apricot, floral notes",
+          "pairing": "Foie gras, fruit desserts, blue cheeses"
+        },
+        "heida": {
+          "name": "Heida (Païen)",
+          "description": "The same grape as Savagnin, grown at altitude, produces powerful and aromatic wines.",
+          "tasting": "Exotic fruits, hazelnut, sweet spices",
+          "pairing": "Alpine cheeses, fish in sauce, poultry"
+        },
+        "humagneBlanc": {
+          "name": "Humagne Blanc",
+          "description": "An ancestral grape that nearly disappeared then was resurrected, Humagne Blanc offers fresh and aromatic wines.",
+          "tasting": "White flowers, linden, delicate citrus",
+          "pairing": "Aperitif, grilled fish, salads"
+        }
+      },
+      "reds": {
+        "title": "Red grape varieties",
+        "cornalin": {
+          "name": "Cornalin",
+          "description": "The king of Valais reds, Cornalin produces intense and structured wines that require several years of aging.",
+          "tasting": "Black fruits, violet, spices, silky tannins",
+          "pairing": "Game, grilled red meats, aged cheeses"
+        },
+        "humagneRouge": {
+          "name": "Humagne Rouge",
+          "description": "A rustic grape unique to Valais, Humagne Rouge produces wild wines with characteristic aromas.",
+          "tasting": "Undergrowth, violet, animal notes, pepper",
+          "pairing": "Stews, Valais charcuterie, mountain cheeses"
+        }
+      },
+      "labels": {
+        "tasting": "Tasting notes",
+        "pairing": "Food pairings"
+      },
+      "taste": {
+        "title": "Where to taste these grape varieties?",
+        "description": "Discover these unique grape varieties directly at our partner winemakers. Book a tasting and let yourself be guided through these authentic flavors.",
+        "experiencesButton": "Book a tasting",
+        "wineriesButton": "View wineries"
+      },
+      "cta": {
+        "title": "Discover Valais grape varieties",
+        "subtitle": "Book your tasting and explore the unique flavors of Switzerland's largest vineyard.",
+        "button": "Discover experiences"
+      }
+    },
+    "footer": {
+      "discover": "Discover",
+      "degustation": "Tasting in Valais",
+      "cepages": "Valais Grape Varieties"
+    }
   }
 }

@@ -77,6 +77,27 @@ export async function getWineryByUserId(userId: string) {
 }
 
 /**
+ * Get featured wineries for landing pages.
+ * Cached for 5 minutes.
+ */
+export const getFeaturedWineries = unstable_cache(
+  async (limit: number = 6) => {
+    return db.winery.findMany({
+      where: {
+        status: 'VERIFIED',
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
+  },
+  ['featured-wineries'],
+  {
+    revalidate: 300, // 5 minutes
+    tags: ['wineries'],
+  }
+);
+
+/**
  * Get all verified winery slugs (for sitemap/static generation).
  * Cached for 1 hour.
  */

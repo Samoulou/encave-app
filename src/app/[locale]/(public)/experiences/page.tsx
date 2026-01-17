@@ -4,6 +4,8 @@ import { type SearchParams } from '@/server/queries/experience.queries';
 import { ExperiencesContent } from './ExperiencesContent';
 import { ExperienceType } from '@prisma/client';
 import { SkeletonExperienceGrid, Skeleton, SkeletonContainer } from '@/components/shared/Skeleton';
+import { Header } from '@/components/layout/Header';
+import { Footer } from '@/components/layout/Footer';
 import type { Metadata } from 'next';
 
 // Static metadata - no async, instant navigation!
@@ -47,6 +49,7 @@ export default async function ExperiencesPage({ params, searchParams }: PageProp
 
   return (
     <div className="min-h-screen bg-cream-50">
+      <Header />
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Page Header - renders immediately (no async) */}
         <div className="mb-8">
@@ -63,6 +66,7 @@ export default async function ExperiencesPage({ params, searchParams }: PageProp
           <ExperiencesContent searchParams={parsedParams} />
         </Suspense>
       </div>
+      <Footer />
     </div>
   );
 }

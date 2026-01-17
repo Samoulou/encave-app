@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Sparkles, Building2, ArrowRight } from 'lucide-react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Header } from '@/components/layout/Header';
+import { Footer } from '@/components/layout/Footer';
 import { HealthStatus } from '@/components/shared/HealthStatus';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -146,6 +147,7 @@ export default async function Home({ params }: Props) {
           <HealthStatus />
         </div>
       </main>
+      <Footer />
     </div>
     </>
   );

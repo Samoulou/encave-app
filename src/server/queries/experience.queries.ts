@@ -350,6 +350,38 @@ export const getRelatedExperiences = unstable_cache(
 );
 
 /**
+ * Get featured experiences for landing pages.
+ * Cached for 5 minutes.
+ */
+export const getFeaturedExperiences = unstable_cache(
+  async (limit: number = 6) => {
+    return db.experience.findMany({
+      where: {
+        status: ExperienceStatus.PUBLISHED,
+        winery: { status: 'VERIFIED' },
+      },
+      include: {
+        winery: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            commune: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
+  },
+  ['featured-experiences'],
+  {
+    revalidate: 300, // 5 minutes
+    tags: ['experiences'],
+  }
+);
+
+/**
  * Get all published experience slugs (for sitemap/static generation).
  * Cached for 1 hour.
  */

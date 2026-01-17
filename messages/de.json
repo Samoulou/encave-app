@@ -645,6 +645,7 @@
       }
     },
     "cancellation": {
+      "title": "Stornierungsrichtlinie",
       "pageTitle": "Stornierungsrichtlinie",
       "description": "Verstehen Sie unsere Stornierungsrichtlinien und Rückerstattungsprozesse.",
       "lastUpdated": "Zuletzt aktualisiert: {date}",
@@ -702,6 +703,138 @@
       "privacy": "Datenschutz",
       "terms": "AGB",
       "cancellation": "Stornierungen"
+    }
+  },
+  "landing": {
+    "degustation": {
+      "metadata": {
+        "title": "Weinverkostung im Wallis | EnCave",
+        "description": "Entdecken Sie die besten Weinverkostungen im Wallis. Buchen Sie ein einzigartiges önologisches Erlebnis bei Walliser Winzern. Petite Arvine, Fendant, Cornalin und mehr.",
+        "keywords": "weinverkostung wallis, walliser keller, weintourismus wallis, schweizer wein, petite arvine, fendant, cornalin"
+      },
+      "hero": {
+        "title": "Weinverkostung im Wallis",
+        "subtitle": "Erleben Sie authentische Weinkultur im Herzen der Schweizer Weinberge"
+      },
+      "intro": {
+        "title": "Die Kunst der Walliser Weinverkostung",
+        "paragraph1": "Das Wallis, der grösste Weinkanton der Schweiz, bietet dank seines Rekordsonnenlichts und seiner vielfältigen Terroirs aussergewöhnliche Bedingungen für den Weinbau. Von Visp bis Martigny beherbergen die steilen Hänge Rebsorten, die es nirgendwo sonst auf der Welt gibt.",
+        "paragraph2": "Eine Verkostung im Wallis ist viel mehr als eine einfache Weinentdeckung: Es ist ein Eintauchen in ein jahrhundertealtes Know-how, das von Generation zu Generation von leidenschaftlichen Winzern weitergegeben wird.",
+        "paragraph3": "Ob Sie ein aufgeklärter Liebhaber oder ein neugieriger Neuling sind, unsere Partnerweingüter heissen Sie willkommen, ihre Leidenschaft zu teilen und Ihnen die verborgenen Schätze des Walliser Weinbaus zu zeigen.",
+        "highlight1": "1-3 Stunden Erlebnisse",
+        "highlight2": "50+ Partnerweingüter",
+        "highlight3": "Einzigartige autochthone Rebsorten"
+      },
+      "experiences": {
+        "title": "Verkostungserlebnisse zum Entdecken",
+        "viewAll": "Alle Erlebnisse ansehen"
+      },
+      "faq": {
+        "title": "Häufig gestellte Fragen",
+        "q1": {
+          "question": "Wie viel kostet eine Weinverkostung im Wallis?",
+          "answer": "Die Preise liegen in der Regel zwischen CHF 20 und 80 pro Person, je nach Weingut und Art des Erlebnisses. Eine einfache Verkostung beginnt bei etwa CHF 20-30, während ein komplettes Erlebnis mit Kellerbesuch und Food-Pairing CHF 60-80 erreichen kann."
+        },
+        "q2": {
+          "question": "Muss ich im Voraus für eine Verkostung buchen?",
+          "answer": "Ja, wir empfehlen dringend, im Voraus zu buchen, besonders während der Hochsaison (Mai-Oktober) und an Wochenenden. Die Buchung garantiert Ihren Platz und ermöglicht es den Winzern, ein personalisiertes Erlebnis vorzubereiten."
+        },
+        "q3": {
+          "question": "Welche Weine kann ich im Wallis probieren?",
+          "answer": "Das Wallis ist berühmt für seine autochthonen Rebsorten: Petite Arvine, Amigne, Cornalin, Humagne Rouge und Blanc. Sie werden auch ausgezeichnete Fendant (Chasselas), Pinot Noir und einzigartige Cuvées entdecken."
+        },
+        "q4": {
+          "question": "Sind Verkostungen für Anfänger geeignet?",
+          "answer": "Absolut! Unsere Partnerwinzer heissen alle Niveaus willkommen. Sie nehmen sich die Zeit, Verkostungstechniken und die Eigenschaften jedes Weins zu erklären. Es ist die ideale Gelegenheit, in einer freundlichen Umgebung zu lernen."
+        },
+        "q5": {
+          "question": "Kann ich nach der Verkostung Wein kaufen?",
+          "answer": "Ja, die meisten Weingüter bieten Direktverkauf ihrer Weine an. Es ist die perfekte Gelegenheit, Ihre Favoriten mit nach Hause zu nehmen und das Vergnügen zu verlängern."
+        }
+      },
+      "cta": {
+        "title": "Bereit, Walliser Weine zu entdecken?",
+        "subtitle": "Buchen Sie Ihre Verkostung und geniessen Sie ein unvergessliches Erlebnis mit unseren leidenschaftlichen Winzern.",
+        "button": "Verkostung buchen"
+      }
+    },
+    "cepages": {
+      "metadata": {
+        "title": "Walliser Rebsorten - Autochtone Weine des Wallis | EnCave",
+        "description": "Entdecken Sie die autochthonen Rebsorten des Wallis: Petite Arvine, Amigne, Cornalin, Humagne. Kompletter Führer zu den einzigartigen Rebsorten des Schweizer Wallis.",
+        "keywords": "walliser rebsorten, petite arvine, amigne, cornalin, humagne, schweizer autochthoner wein, walliser traubensorten"
+      },
+      "hero": {
+        "title": "Walliser Rebsorten",
+        "subtitle": "Entdecken Sie die einzigartigen Rebsorten, die die Walliser Weine berühmt machen"
+      },
+      "intro": {
+        "title": "Ein weltweit einzigartiges Weinerbe",
+        "paragraph1": "Das Wallis beherbergt eine aussergewöhnliche Sammlung autochthoner Rebsorten, die nirgendwo sonst auf der Welt zu finden sind. Diese uralten Sorten, von Generationen von Winzern bewahrt, bieten einzigartige Aromaprofile.",
+        "paragraph2": "Von der ikonischen weissen Traube Petite Arvine bis zum vollmundigen roten Cornalin erzählt jede Sorte die Geschichte eines aussergewöhnlichen Terroirs und jahrhundertealten Know-hows."
+      },
+      "whites": {
+        "title": "Weisse Rebsorten",
+        "petiteArvine": {
+          "name": "Petite Arvine",
+          "description": "Das Juwel der Walliser Trauben, die Petite Arvine produziert Weine von aussergewöhnlicher Finesse mit einem charakteristischen salzigen Abgang.",
+          "tasting": "Zitrusnoten, Rhabarber, Glyzinie, markanter salziger Abgang",
+          "pairing": "Meeresfrüchte, Raclette, Spargel, Foie Gras"
+        },
+        "amigne": {
+          "name": "Amigne",
+          "description": "Fast ausschliesslich in Vétroz angebaut, ist Amigne eine seltene Traube mit vielen Facetten, von trocken bis süss.",
+          "tasting": "Honig, Quitte, getrocknete Aprikose, florale Noten",
+          "pairing": "Foie Gras, Fruchtdesserts, Blauschimmelkäse"
+        },
+        "heida": {
+          "name": "Heida (Païen)",
+          "description": "Die gleiche Traube wie Savagnin, in Höhenlagen angebaut, produziert kräftige und aromatische Weine.",
+          "tasting": "Exotische Früchte, Haselnuss, süsse Gewürze",
+          "pairing": "Alpkäse, Fisch in Sauce, Geflügel"
+        },
+        "humagneBlanc": {
+          "name": "Humagne Blanc",
+          "description": "Eine uralte Traube, die fast verschwunden und dann wiederauferstanden ist, bietet Humagne Blanc frische und aromatische Weine.",
+          "tasting": "Weisse Blüten, Linde, delikate Zitrusnoten",
+          "pairing": "Aperitif, gegrillter Fisch, Salate"
+        }
+      },
+      "reds": {
+        "title": "Rote Rebsorten",
+        "cornalin": {
+          "name": "Cornalin",
+          "description": "Der König der Walliser Rotweine, Cornalin produziert intensive und strukturierte Weine, die mehrere Jahre Reifung benötigen.",
+          "tasting": "Schwarze Früchte, Veilchen, Gewürze, seidige Tannine",
+          "pairing": "Wild, gegrilltes rotes Fleisch, gereifte Käse"
+        },
+        "humagneRouge": {
+          "name": "Humagne Rouge",
+          "description": "Eine rustikale, einzigartige Traube des Wallis, Humagne Rouge produziert wilde Weine mit charakteristischen Aromen.",
+          "tasting": "Unterholz, Veilchen, animalische Noten, Pfeffer",
+          "pairing": "Eintöpfe, Walliser Charcuterie, Bergkäse"
+        }
+      },
+      "labels": {
+        "tasting": "Verkostungsnotizen",
+        "pairing": "Speiseempfehlungen"
+      },
+      "taste": {
+        "title": "Wo kann man diese Rebsorten probieren?",
+        "description": "Entdecken Sie diese einzigartigen Rebsorten direkt bei unseren Partnerwinzern. Buchen Sie eine Verkostung und lassen Sie sich durch diese authentischen Aromen führen.",
+        "experiencesButton": "Verkostung buchen",
+        "wineriesButton": "Weingüter ansehen"
+      },
+      "cta": {
+        "title": "Entdecken Sie Walliser Rebsorten",
+        "subtitle": "Buchen Sie Ihre Verkostung und erkunden Sie die einzigartigen Aromen des grössten Weinbergs der Schweiz.",
+        "button": "Erlebnisse entdecken"
+      }
+    },
+    "footer": {
+      "discover": "Entdecken",
+      "degustation": "Verkostung im Wallis",
+      "cepages": "Walliser Rebsorten"
     }
   }
 }

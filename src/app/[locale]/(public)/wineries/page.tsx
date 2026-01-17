@@ -2,6 +2,8 @@ import Image from 'next/image';
 import { Suspense } from 'react';
 import { WineriesContent } from './WineriesContent';
 import { Skeleton } from '@/components/shared/Skeleton';
+import { Header } from '@/components/layout/Header';
+import { Footer } from '@/components/layout/Footer';
 import type { Metadata } from 'next';
 
 // Static metadata - no async, no blocking!
@@ -22,7 +24,9 @@ export default async function WineriesPage({
   const commune = params.commune;
 
   return (
-    <main id="main-content" className="min-h-screen bg-cream-50">
+    <div className="min-h-screen bg-cream-50">
+      <Header />
+      <main id="main-content">
       {/* Hero Section - renders immediately */}
       <section aria-labelledby="hero-heading" className="relative h-[40vh] min-h-[320px] w-full">
         <Image
@@ -50,7 +54,9 @@ export default async function WineriesPage({
       <Suspense fallback={<WineriesLoadingState />}>
         <WineriesContent commune={commune} />
       </Suspense>
-    </main>
+      </main>
+      <Footer />
+    </div>
   );
 }
 

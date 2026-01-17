@@ -1,0 +1,200 @@
+import { Metadata } from 'next';
+import Link from 'next/link';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { Wine, ArrowRight, Clock, MapPin, Star } from 'lucide-react';
+import { Header } from '@/components/layout/Header';
+import { Footer } from '@/components/layout/Footer';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { FaqSchema } from '@/components/seo/FaqSchema';
+import { FaqAccordion } from '@/components/shared/FaqAccordion';
+import { JsonLd } from '@/components/shared/JsonLd';
+import { ExperienceCard } from '@/components/features/search/ExperienceCard';
+import { getFeaturedExperiences } from '@/server/queries/experience.queries';
+import { getBaseUrl } from '@/lib/env';
+
+interface PageProps {
+  params: Promise<{ locale: string }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'landing.degustation' });
+
+  return {
+    title: t('metadata.title'),
+    description: t('metadata.description'),
+    keywords: t('metadata.keywords'),
+    openGraph: {
+      title: t('metadata.title'),
+      description: t('metadata.description'),
+      type: 'website',
+    },
+  };
+}
+
+export default async function DegustationVinValaisPage({ params }: PageProps) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations('landing.degustation');
+  const tCommon = await getTranslations('common');
+
+  const baseUrl = getBaseUrl();
+  const experiences = await getFeaturedExperiences(6);
+
+  // FAQ items for schema and display
+  const faqItems = [
+    { question: t('faq.q1.question'), answer: t('faq.q1.answer') },
+    { question: t('faq.q2.question'), answer: t('faq.q2.answer') },
+    { question: t('faq.q3.question'), answer: t('faq.q3.answer') },
+    { question: t('faq.q4.question'), answer: t('faq.q4.answer') },
+    { question: t('faq.q5.question'), answer: t('faq.q5.answer') },
+  ];
+
+  // Breadcrumb schema
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'EnCave',
+        item: baseUrl,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: t('hero.title'),
+        item: `${baseUrl}/${locale}/degustation-vin-valais`,
+      },
+    ],
+  };
+
+  return (
+    <>
+      <FaqSchema items={faqItems} />
+      <JsonLd data={breadcrumbSchema} />
+      <div className="min-h-screen bg-cream-50">
+        <Header />
+
+        {/* Hero Section */}
+        <section className="relative bg-gradient-to-br from-burgundy-800 via-burgundy-700 to-burgundy-900 py-20 lg:py-28">
+          <div className="absolute inset-0 bg-[url('/images/wine-texture.png')] opacity-5" />
+          <div className="relative mx-auto max-w-4xl px-6 text-center">
+            <Wine className="mx-auto mb-6 h-12 w-12 text-gold-400" aria-hidden="true" />
+            <h1 className="font-display text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
+              {t('hero.title')}
+            </h1>
+            <p className="mt-4 text-lg text-burgundy-100 max-w-2xl mx-auto">
+              {t('hero.subtitle')}
+            </p>
+          </div>
+        </section>
+
+        {/* Breadcrumb Navigation */}
+        <nav className="mx-auto max-w-6xl px-6 py-4" aria-label="Breadcrumb">
+          <ol className="flex items-center gap-2 text-sm text-slate-600">
+            <li>
+              <Link href="/" className="hover:text-burgundy-600 transition-colors">
+                EnCave
+              </Link>
+            </li>
+            <li aria-hidden="true">/</li>
+            <li className="text-slate-900 font-medium">{t('hero.title')}</li>
+          </ol>
+        </nav>
+
+        {/* Introduction Section */}
+        <section className="mx-auto max-w-4xl px-6 py-12 lg:py-16">
+          <Card className="overflow-hidden rounded-xl border-0 shadow-warm-lg">
+            <CardContent className="p-8 sm:p-10">
+              <h2 className="font-display text-2xl font-semibold text-slate-900 sm:text-3xl mb-6">
+                {t('intro.title')}
+              </h2>
+              <div className="space-y-4 text-slate-700 leading-relaxed">
+                <p>{t('intro.paragraph1')}</p>
+                <p>{t('intro.paragraph2')}</p>
+                <p>{t('intro.paragraph3')}</p>
+              </div>
+
+              {/* Highlights */}
+              <div className="mt-8 grid gap-4 sm:grid-cols-3">
+                <div className="flex items-center gap-3 rounded-lg bg-burgundy-50 p-4">
+                  <Clock className="h-5 w-5 text-burgundy-600" aria-hidden="true" />
+                  <span className="text-sm font-medium text-slate-900">{t('intro.highlight1')}</span>
+                </div>
+                <div className="flex items-center gap-3 rounded-lg bg-burgundy-50 p-4">
+                  <MapPin className="h-5 w-5 text-burgundy-600" aria-hidden="true" />
+                  <span className="text-sm font-medium text-slate-900">{t('intro.highlight2')}</span>
+                </div>
+                <div className="flex items-center gap-3 rounded-lg bg-burgundy-50 p-4">
+                  <Star className="h-5 w-5 text-burgundy-600" aria-hidden="true" />
+                  <span className="text-sm font-medium text-slate-900">{t('intro.highlight3')}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Featured Experiences Section */}
+        <section className="mx-auto max-w-6xl px-6 py-12 lg:py-16">
+          <h2 className="font-display text-2xl font-semibold text-slate-900 sm:text-3xl mb-8 text-center">
+            {t('experiences.title')}
+          </h2>
+          {experiences.length > 0 ? (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {experiences.map((experience) => (
+                <ExperienceCard key={experience.id} experience={experience} />
+              ))}
+            </div>
+          ) : (
+            <Card className="p-8 text-center">
+              <p className="text-slate-600">{tCommon('noResults')}</p>
+            </Card>
+          )}
+          <div className="mt-10 text-center">
+            <Button size="lg" asChild>
+              <Link href="/experiences">
+                {t('experiences.viewAll')}
+                <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
+              </Link>
+            </Button>
+          </div>
+        </section>
+
+        {/* FAQ Section */}
+        <section className="mx-auto max-w-4xl px-6 py-12 lg:py-16">
+          <h2 className="font-display text-2xl font-semibold text-slate-900 sm:text-3xl mb-8 text-center">
+            {t('faq.title')}
+          </h2>
+          <Card className="overflow-hidden rounded-xl border-0 shadow-warm-lg">
+            <CardContent className="p-8 sm:p-10">
+              <FaqAccordion items={faqItems} />
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* CTA Section */}
+        <section className="bg-gradient-to-br from-burgundy-800 via-burgundy-700 to-burgundy-900 py-16 lg:py-20">
+          <div className="mx-auto max-w-4xl px-6 text-center">
+            <h2 className="font-display text-2xl font-bold text-white sm:text-3xl mb-4">
+              {t('cta.title')}
+            </h2>
+            <p className="text-burgundy-100 mb-8 max-w-2xl mx-auto">
+              {t('cta.subtitle')}
+            </p>
+            <Button size="lg" variant="secondary" asChild>
+              <Link href="/experiences">
+                {t('cta.button')}
+                <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
+              </Link>
+            </Button>
+          </div>
+        </section>
+
+        <Footer />
+      </div>
+    </>
+  );
+}

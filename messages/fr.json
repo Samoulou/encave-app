@@ -2,8 +2,8 @@
   "common": {
     "loading": "Chargement...",
     "saving": "Enregistrement...",
-    "noResults": "Aucun resultat",
-    "unsavedChanges": "Modifications non enregistrees",
+    "noResults": "Aucun résultat",
+    "unsavedChanges": "Modifications non enregistrées",
     "buttons": {
       "save": "Enregistrer",
       "saveChanges": "Enregistrer les modifications",
@@ -11,14 +11,14 @@
       "submit": "Soumettre",
       "back": "Retour",
       "next": "Suivant",
-      "previous": "Precedent",
+      "previous": "Précédent",
       "delete": "Supprimer",
       "edit": "Modifier",
-      "create": "Creer",
+      "create": "Créer",
       "search": "Rechercher",
       "clearAll": "Tout effacer",
-      "tryAgain": "Reessayer",
-      "goHome": "Retour a l'accueil",
+      "tryAgain": "Réessayer",
+      "goHome": "Retour à l'accueil",
       "signIn": "Se connecter"
     },
     "labels": {
@@ -31,70 +31,70 @@
       "name": "Votre nom"
     },
     "errors": {
-      "somethingWentWrong": "Une erreur est survenue. Veuillez reessayer."
+      "somethingWentWrong": "Une erreur est survenue. Veuillez réessayer."
     },
     "status": {
       "draft": "Brouillon",
-      "published": "Publie",
-      "archived": "Archive",
+      "published": "Publié",
+      "archived": "Archivé",
       "pending": "En attente",
-      "verified": "Verifie",
-      "rejected": "Rejete"
+      "verified": "Vérifié",
+      "rejected": "Rejeté"
     },
     "time": {
       "hoursAgo": "il y a {count, plural, =1 {# heure} other {# heures}}",
       "minutesAgo": "il y a {count, plural, =1 {# minute} other {# minutes}}",
       "daysAgo": "il y a {count, plural, =1 {# jour} other {# jours}}",
-      "updated": "Mis a jour {time}"
+      "updated": "Mis à jour {time}"
     },
     "currency": {
       "perPerson": "par personne"
     },
     "pagination": {
-      "showing": "Affichage de {from} a {to} sur {total} resultats",
-      "noResults": "Aucun resultat",
+      "showing": "Affichage de {from} à {to} sur {total} résultats",
+      "noResults": "Aucun résultat",
       "show": "Afficher",
       "page": "Page {current} sur {total}",
-      "firstPage": "Aller a la premiere page",
-      "previousPage": "Aller a la page precedente",
-      "nextPage": "Aller a la page suivante",
-      "lastPage": "Aller a la derniere page"
+      "firstPage": "Aller à la première page",
+      "previousPage": "Aller à la page précédente",
+      "nextPage": "Aller à la page suivante",
+      "lastPage": "Aller à la dernière page"
     }
   },
   "nav": {
     "home": "Accueil",
-    "experiences": "Experiences",
+    "experiences": "Expériences",
     "wineries": "Domaines",
-    "about": "A propos",
+    "about": "À propos",
     "dashboard": "Tableau de bord",
     "admin": "Administration",
     "signIn": "Connexion",
     "signUp": "Inscription",
-    "signOut": "Deconnexion",
+    "signOut": "Déconnexion",
     "getStarted": "Commencer",
     "mainNavigation": "Navigation principale",
     "dashboardNavigation": "Navigation du tableau de bord",
-    "goToHomepage": "EnCave - Aller a l'accueil",
+    "goToHomepage": "EnCave - Aller à l'accueil",
     "openMenu": "Ouvrir le menu",
     "closeMenu": "Fermer le menu",
     "yourWinery": "Votre domaine",
     "wineryProfile": "Profil du domaine",
     "welcome": "Bienvenue, {name}",
     "user": "Utilisateur",
-    "bookings": "Reservations",
+    "bookings": "Réservations",
     "earnings": "Revenus",
-    "settings": "Parametres",
-    "backToHome": "Retour a l'accueil"
+    "settings": "Paramètres",
+    "backToHome": "Retour à l'accueil"
   },
   "locale": {
-    "fr": "Francais",
+    "fr": "Français",
     "de": "Deutsch",
     "en": "English",
     "switchTo": "Changer de langue",
-    "switchToFrench": "Passer en francais",
+    "switchToFrench": "Passer en français",
     "switchToGerman": "Passer en allemand",
     "switchToEnglish": "Passer en anglais",
-    "languageSwitcher": "Selecteur de langue",
+    "languageSwitcher": "Sélecteur de langue",
     "currentLanguage": "langue actuelle"
   },
   "auth": {
@@ -102,112 +102,112 @@
       "title": "Bon retour",
       "subtitle": "Connectez-vous pour continuer votre voyage viticole",
       "imageAlt": "Vignoble en Valais, Suisse",
-      "quote": "Decouvrez les meilleurs vins du Valais, ou la tradition rencontre l'excellence dans chaque verre.",
-      "forgotPassword": "Mot de passe oublie?",
-      "forgotPasswordContactSupport": "Contactez le support pour reinitialiser votre mot de passe",
+      "quote": "Découvrez les meilleurs vins du Valais, où la tradition rencontre l'excellence dans chaque verre.",
+      "forgotPassword": "Mot de passe oublié?",
+      "forgotPasswordContactSupport": "Contactez le support pour réinitialiser votre mot de passe",
       "passwordPlaceholder": "Entrez votre mot de passe",
       "signingIn": "Connexion en cours...",
       "noAccount": "Pas encore de compte?",
-      "createOne": "Creer un compte"
+      "createOne": "Créer un compte"
     },
     "register": {
-      "title": "Creer un compte",
-      "subtitle": "Rejoignez EnCave et decouvrez des experiences viticoles exceptionnelles",
-      "imageAlt": "Cave a vin avec barriques de chene",
-      "quote": "Chaque grand vin commence par la passion. Rejoignez notre communaute de vignerons exceptionnels.",
-      "passwordPlaceholder": "Creez un mot de passe",
-      "passwordHint": "Au moins 8 caracteres avec majuscule, minuscule, chiffre et caractere special",
+      "title": "Créer un compte",
+      "subtitle": "Rejoignez EnCave et découvrez des expériences viticoles exceptionnelles",
+      "imageAlt": "Cave à vin avec barriques de chêne",
+      "quote": "Chaque grand vin commence par la passion. Rejoignez notre communauté de vignerons exceptionnels.",
+      "passwordPlaceholder": "Créez un mot de passe",
+      "passwordHint": "Au moins 8 caractères avec majuscule, minuscule, chiffre et caractère spécial",
       "confirmPassword": "Confirmer le mot de passe",
       "confirmPasswordPlaceholder": "Confirmez votre mot de passe",
       "iAmWinemaker": "Je suis vigneron",
-      "winemakerDescription": "Cochez cette case si vous souhaitez enregistrer votre domaine et proposer des experiences",
-      "creatingAccount": "Creation du compte...",
-      "createAccount": "Creer le compte",
-      "haveAccount": "Vous avez deja un compte?"
+      "winemakerDescription": "Cochez cette case si vous souhaitez enregistrer votre domaine et proposer des expériences",
+      "creatingAccount": "Création du compte...",
+      "createAccount": "Créer le compte",
+      "haveAccount": "Vous avez déjà un compte?"
     }
   },
   "home": {
-    "title": "Decouvrez les experiences viticoles du Valais",
-    "subtitle": "Reservez des degustations uniques directement avec les vignerons suisses. Explorez les caves, goutez des vins exceptionnels et creez des souvenirs inoubliables.",
-    "discoverSection": "Decouvrir",
-    "wineExperiences": "Experiences viticoles",
-    "wineExperiencesDescription": "Explorez les degustations, visites de caves, ateliers et tours de vignobles a travers la magnifique region du Valais.",
-    "browseExperiences": "Parcourir les experiences",
+    "title": "Découvrez les expériences viticoles du Valais",
+    "subtitle": "Réservez des dégustations uniques directement avec les vignerons suisses. Explorez les caves, goûtez des vins exceptionnels et créez des souvenirs inoubliables.",
+    "discoverSection": "Découvrir",
+    "wineExperiences": "Expériences viticoles",
+    "wineExperiencesDescription": "Explorez les dégustations, visites de caves, ateliers et tours de vignobles à travers la magnifique région du Valais.",
+    "browseExperiences": "Parcourir les expériences",
     "ourWineries": "Nos domaines",
-    "ourWineriesDescription": "Decouvrez des vignerons passionnes et leurs histoires uniques, traditions et vins exceptionnels.",
+    "ourWineriesDescription": "Découvrez des vignerons passionnés et leurs histoires uniques, traditions et vins exceptionnels.",
     "meetWinemakers": "Rencontrer nos vignerons",
-    "readyToExplore": "Pret a explorer?",
-    "startJourney": "Commencez votre voyage a travers le monde des vins suisses aujourd'hui.",
-    "viewAllExperiences": "Voir toutes les experiences",
+    "readyToExplore": "Prêt à explorer?",
+    "startJourney": "Commencez votre voyage à travers le monde des vins suisses aujourd'hui.",
+    "viewAllExperiences": "Voir toutes les expériences",
     "becomePartner": "Devenir partenaire"
   },
   "experience": {
     "types": {
-      "TASTING": "Degustation",
+      "TASTING": "Dégustation",
       "CELLAR_VISIT": "Visite de cave",
       "WORKSHOP": "Atelier",
       "VINEYARD_TOUR": "Visite du vignoble",
       "FOOD_PAIRING": "Accord mets-vins"
     },
-    "duration": "Duree",
+    "duration": "Durée",
     "durationFormat": "{count, plural, =1 {# heure} other {# heures}}",
     "durationMinutes": "{count} min",
     "price": "Prix",
     "pricePerPerson": "Prix par personne (CHF)",
-    "capacity": "Capacite",
+    "capacity": "Capacité",
     "minGuests": "Min. {count} {count, plural, =1 {personne} other {personnes}}",
     "maxGuests": "Max. {count} {count, plural, =1 {personne} other {personnes}}",
     "guests": "{count, plural, =1 {# personne} other {# personnes}}",
-    "selectType": "Selectionnez le type d'experience",
-    "selectDuration": "Selectionnez la duree",
+    "selectType": "Sélectionnez le type d'expérience",
+    "selectDuration": "Sélectionnez la durée",
     "coverPhoto": "Photo de couverture",
-    "coverPhotoDescription": "Cette image sera le visuel principal de votre experience",
-    "coverPhotoRequired": "Obligatoire. Recommande: 1920 x 1080 pixels (format 16:9). Max 5MB, JPEG ou PNG.",
+    "coverPhotoDescription": "Cette image sera le visuel principal de votre expérience",
+    "coverPhotoRequired": "Obligatoire. Recommandé: 1920 x 1080 pixels (format 16:9). Max 5MB, JPEG ou PNG.",
     "galleryPhotos": "Photos de la galerie",
-    "galleryPhotosDescription": "Ajoutez plus de photos pour presenter votre experience ({count}/{max})",
+    "galleryPhotosDescription": "Ajoutez plus de photos pour présenter votre expérience ({count}/{max})",
     "galleryImageAlt": "Image de galerie {index}",
-    "galleryHelp": "Optionnel. Les images carrees fonctionnent le mieux. Jusqu'a 8 photos autorisees.",
-    "experienceDetails": "Details de l'experience",
-    "tellVisitors": "Parlez aux visiteurs de votre experience viticole",
+    "galleryHelp": "Optionnel. Les images carrées fonctionnent le mieux. Jusqu'à 8 photos autorisées.",
+    "experienceDetails": "Détails de l'expérience",
+    "tellVisitors": "Parlez aux visiteurs de votre expérience viticole",
     "title": "Titre",
-    "titlePlaceholder": "ex: Experience de degustation Grand Cru",
-    "titleHelp": "Maximum 100 caracteres. Rendez-le descriptif et attrayant.",
-    "experienceType": "Type d'experience",
+    "titlePlaceholder": "ex: Expérience de dégustation Grand Cru",
+    "titleHelp": "Maximum 100 caractères. Rendez-le descriptif et attrayant.",
+    "experienceType": "Type d'expérience",
     "description": "Description",
-    "descriptionPlaceholder": "Decrivez votre experience en detail. Que verront, gouteront et apprendront les visiteurs? Qu'est-ce qui rend cette experience speciale?",
-    "descriptionHelp": "Minimum 100 caracteres requis",
+    "descriptionPlaceholder": "Décrivez votre expérience en détail. Que verront, goûteront et apprendront les visiteurs? Qu'est-ce qui rend cette expérience spéciale?",
+    "descriptionHelp": "Minimum 100 caractères requis",
     "characterCount": "{count} / 100 min",
-    "durationAndCapacity": "Duree et capacite",
-    "durationCapacityDescription": "Definissez le timing et la taille du groupe pour votre experience",
+    "durationAndCapacity": "Durée et capacité",
+    "durationCapacityDescription": "Définissez le timing et la taille du groupe pour votre expérience",
     "minGuestsLabel": "Personnes min.",
     "maxGuestsLabel": "Personnes max.",
     "pricing": "Tarification",
-    "pricingDescription": "Definissez le prix par personne pour votre experience",
-    "priceMustBePositive": "Le prix doit etre superieur a 0",
-    "creating": "Creation...",
-    "createExperience": "Creer l'experience",
-    "updating": "Mise a jour...",
-    "updateExperience": "Mettre a jour l'experience",
-    "pleaseUploadCover": "Veuillez telecharger une photo de couverture",
-    "createdSuccessfully": "Experience creee avec succes",
-    "savedAsDraft": "Votre experience a ete enregistree comme brouillon.",
+    "pricingDescription": "Définissez le prix par personne pour votre expérience",
+    "priceMustBePositive": "Le prix doit être supérieur à 0",
+    "creating": "Création...",
+    "createExperience": "Créer l'expérience",
+    "updating": "Mise à jour...",
+    "updateExperience": "Mettre à jour l'expérience",
+    "pleaseUploadCover": "Veuillez télécharger une photo de couverture",
+    "createdSuccessfully": "Expérience créée avec succès",
+    "savedAsDraft": "Votre expérience a été enregistrée comme brouillon.",
     "moreActions": "Plus d'actions",
-    "preview": "Apercu",
+    "preview": "Aperçu",
     "publish": "Publier",
-    "unpublish": "Depublier",
+    "unpublish": "Dépublier",
     "duplicate": "Dupliquer",
     "archive": "Archiver",
-    "publishedSuccess": "Experience publiee",
-    "publishedDescription": "Votre experience est maintenant visible par les visiteurs.",
-    "unpublishedSuccess": "Experience depubliee",
-    "unpublishedDescription": "Votre experience est maintenant un brouillon.",
-    "duplicatedSuccess": "Experience dupliquee",
-    "duplicatedDescription": "Une copie a ete creee comme brouillon.",
-    "archivedSuccess": "Experience archivee",
-    "archivedDescription": "Votre experience a ete archivee.",
+    "publishedSuccess": "Expérience publiée",
+    "publishedDescription": "Votre expérience est maintenant visible par les visiteurs.",
+    "unpublishedSuccess": "Expérience dépubliée",
+    "unpublishedDescription": "Votre expérience est maintenant un brouillon.",
+    "duplicatedSuccess": "Expérience dupliquée",
+    "duplicatedDescription": "Une copie a été créée comme brouillon.",
+    "archivedSuccess": "Expérience archivée",
+    "archivedDescription": "Votre expérience a été archivée.",
     "archiveModal": {
-      "title": "Archiver l'experience",
-      "description": "Etes-vous sur de vouloir archiver \"{title}\"? Cette experience ne sera plus visible par les visiteurs. Vous pourrez la restaurer plus tard si necessaire.",
+      "title": "Archiver l'expérience",
+      "description": "Êtes-vous sûr de vouloir archiver \"{title}\"? Cette expérience ne sera plus visible par les visiteurs. Vous pourrez la restaurer plus tard si nécessaire.",
       "archiving": "Archivage...",
       "archiveButton": "Archiver"
     }
@@ -216,216 +216,216 @@
     "selectDate": "Choisissez une date",
     "selectTime": "Choisissez un horaire",
     "totalPrice": "Prix total",
-    "confirmBooking": "Confirmer la reservation",
-    "bookExperience": "Reserver cette experience",
-    "bookNow": "Reserver cette experience",
+    "confirmBooking": "Confirmer la réservation",
+    "bookExperience": "Réserver cette expérience",
+    "bookNow": "Réserver cette expérience",
     "perPerson": "par personne",
-    "comingSoon": "Reservation bientot disponible!",
-    "comingSoonTitle": "Reservation en ligne bientot disponible!",
-    "contactWinery": "Contactez le domaine directement pour reserver cette experience.",
+    "comingSoon": "Réservation bientôt disponible!",
+    "comingSoonTitle": "Réservation en ligne bientôt disponible!",
+    "contactWinery": "Contactez le domaine directement pour réserver cette expérience.",
     "selectGuests": "Nombre de personnes",
     "guests": "{count, plural, =1 {# personne} other {# personnes}}",
     "continueToPayment": "Continuer vers le paiement",
     "priceCalculation": "{price} x {guests} = {total}",
     "remainingCapacity": "{count} {count, plural, =1 {place restante} other {places restantes}}",
-    "capacityExceeded": "Seulement {remaining} {remaining, plural, =1 {place restante} other {places restantes}}. Veuillez reduire le nombre d'invites.",
-    "noAvailability": "Aucune disponibilite",
+    "capacityExceeded": "Seulement {remaining} {remaining, plural, =1 {place restante} other {places restantes}}. Veuillez réduire le nombre d'invités.",
+    "noAvailability": "Aucune disponibilité",
     "unavailable": "Indisponible",
-    "selectDateFirst": "Selectionnez d'abord une date",
-    "selectTimeFirst": "Selectionnez d'abord un horaire",
-    "selectGuestsFirst": "Selectionnez le nombre de personnes",
-    "bookingSummary": "Resume de la reservation",
-    "experience": "Experience",
+    "selectDateFirst": "Sélectionnez d'abord une date",
+    "selectTimeFirst": "Sélectionnez d'abord un horaire",
+    "selectGuestsFirst": "Sélectionnez le nombre de personnes",
+    "bookingSummary": "Résumé de la réservation",
+    "experience": "Expérience",
     "date": "Date",
     "time": "Horaire",
     "minGuests": "Minimum {count} {count, plural, =1 {personne} other {personnes}}",
     "maxGuests": "Maximum {count} {count, plural, =1 {personne} other {personnes}}",
     "capacityRange": "{min}-{max} personnes",
-    "pastDate": "Date passee",
+    "pastDate": "Date passée",
     "today": "Aujourd'hui",
-    "bookingDetails": "Details de la reservation",
-    "decreaseGuests": "Diminuer le nombre d'invites",
-    "increaseGuests": "Augmenter le nombre d'invites"
+    "bookingDetails": "Détails de la réservation",
+    "decreaseGuests": "Diminuer le nombre d'invités",
+    "increaseGuests": "Augmenter le nombre d'invités"
   },
   "bookings": {
     "empty": {
-      "title": "Pas encore de reservations",
-      "description": "Partagez vos experiences pour attirer des visiteurs et recevoir vos premieres reservations.",
-      "action": "Gerer les experiences"
+      "title": "Pas encore de réservations",
+      "description": "Partagez vos expériences pour attirer des visiteurs et recevoir vos premières réservations.",
+      "action": "Gérer les expériences"
     }
   },
   "checkout": {
     "checkout": "Paiement",
-    "experiences": "Experiences",
+    "experiences": "Expériences",
     "guestDetails": "Informations du visiteur",
     "name": "Nom complet",
     "namePlaceholder": "Jean Dupont",
     "email": "Adresse email",
     "emailPlaceholder": "jean@exemple.com",
-    "emailHelp": "Nous enverrons la confirmation de votre reservation a cette adresse",
-    "phone": "Numero de telephone",
+    "emailHelp": "Nous enverrons la confirmation de votre réservation à cette adresse",
+    "phone": "Numéro de téléphone",
     "phonePlaceholder": "+41 79 123 45 67",
-    "phoneHelp": "En cas de besoin de vous contacter concernant votre reservation",
+    "phoneHelp": "En cas de besoin de vous contacter concernant votre réservation",
     "payAmount": "Payer {amount}",
     "processing": "Traitement en cours...",
-    "securePayment": "Paiement securise par Stripe",
-    "backToBooking": "Retour a la reservation",
-    "experienceNotFound": "Experience non trouvee",
-    "invalidBookingParams": "Parametres de reservation invalides. Veuillez recommencer.",
-    "paymentCancelled": "Paiement annule. Vous pouvez reessayer.",
-    "paymentFailed": "Echec du paiement. Veuillez reessayer ou utiliser un autre moyen de paiement.",
-    "verifyingAvailability": "Verification de la disponibilite...",
-    "capacityExceeded": "Capacite depassee",
-    "capacityExceededMessage": "Vous avez demande {requested} personnes, mais seulement {available} places sont disponibles pour ce creneau.",
+    "securePayment": "Paiement sécurisé par Stripe",
+    "backToBooking": "Retour à la réservation",
+    "experienceNotFound": "Expérience non trouvée",
+    "invalidBookingParams": "Paramètres de réservation invalides. Veuillez recommencer.",
+    "paymentCancelled": "Paiement annulé. Vous pouvez réessayer.",
+    "paymentFailed": "Échec du paiement. Veuillez réessayer ou utiliser un autre moyen de paiement.",
+    "verifyingAvailability": "Vérification de la disponibilité...",
+    "capacityExceeded": "Capacité dépassée",
+    "capacityExceededMessage": "Vous avez demandé {requested} personnes, mais seulement {available} places sont disponibles pour ce créneau.",
     "adjustGuestCount": "Ajuster le nombre de personnes"
   },
   "confirmation": {
-    "bookingConfirmed": "Reservation confirmee !",
-    "confirmationSent": "Un email de confirmation a ete envoye.",
+    "bookingConfirmed": "Réservation confirmée !",
+    "confirmationSent": "Un email de confirmation a été envoyé.",
     "paymentPending": "Paiement en attente",
     "paymentPendingDescription": "Votre paiement est en cours de traitement. Veuillez patienter...",
-    "bookingStatus": "Statut de la reservation",
-    "bookingReference": "Reference de reservation",
-    "totalPaid": "Total paye",
+    "bookingStatus": "Statut de la réservation",
+    "bookingReference": "Référence de réservation",
+    "totalPaid": "Total payé",
     "wineryDetails": "Informations du domaine",
     "yourDetails": "Vos informations",
     "name": "Nom",
     "email": "Email",
-    "phone": "Telephone",
-    "viewExperience": "Voir l'experience",
-    "browseMore": "Decouvrir plus d'experiences",
-    "emailConfirmationNote": "Un email de confirmation a ete envoye a {email}",
+    "phone": "Téléphone",
+    "viewExperience": "Voir l'expérience",
+    "browseMore": "Découvrir plus d'expériences",
+    "emailConfirmationNote": "Un email de confirmation a été envoyé à {email}",
     "addToCalendar": "Ajouter au calendrier",
     "addToGoogleCalendar": "Google Agenda",
-    "downloadIcal": "Telecharger .ics",
-    "getDirections": "Obtenir l'itineraire",
+    "downloadIcal": "Télécharger .ics",
+    "getDirections": "Obtenir l'itinéraire",
     "resendEmail": "Renvoyer l'email de confirmation",
-    "emailResent": "Email de confirmation renvoye"
+    "emailResent": "Email de confirmation renvoyé"
   },
   "cancellation": {
     "title": "Conditions d'annulation",
-    "free24Hours": "Annulation gratuite jusqu'a 24 heures avant l'experience",
+    "free24Hours": "Annulation gratuite jusqu'à 24 heures avant l'expérience",
     "halfRefund": "Remboursement de 50% entre 24 et 12 heures avant",
-    "noRefund": "Aucun remboursement dans les 12 heures precedant l'experience",
+    "noRefund": "Aucun remboursement dans les 12 heures précédant l'expérience",
     "contactForChanges": "Pour tout changement, veuillez contacter le domaine directement.",
-    "cancelBooking": "Annuler la reservation",
-    "cancelBookingTitle": "Annuler votre reservation",
+    "cancelBooking": "Annuler la réservation",
+    "cancelBookingTitle": "Annuler votre réservation",
     "policyExplanation": "Politique d'annulation",
-    "refundEligible": "Vous avez droit a un remboursement complet",
+    "refundEligible": "Vous avez droit à un remboursement complet",
     "noRefundEligible": "Aucun remboursement possible (moins de 24 heures avant)",
     "timeRemaining": "Temps restant pour le remboursement complet",
     "hoursRemaining": "{hours}h {minutes}m restantes",
     "refundAmount": "Montant du remboursement",
     "fullRefund": "Remboursement complet",
     "noRefundAmount": "Pas de remboursement",
-    "confirmCheckbox": "Je comprends que cette action est irreversible",
+    "confirmCheckbox": "Je comprends que cette action est irréversible",
     "confirmCancel": "Confirmer l'annulation",
     "cancelling": "Annulation en cours...",
-    "cancelled": "Reservation annulee",
-    "cancelledDescription": "Votre reservation a ete annulee avec succes.",
-    "refundProcessed": "Un remboursement de {amount} sera traite sous 5-10 jours ouvrables.",
-    "cancelError": "Echec de l'annulation. Veuillez reessayer."
+    "cancelled": "Réservation annulée",
+    "cancelledDescription": "Votre réservation a été annulée avec succès.",
+    "refundProcessed": "Un remboursement de {amount} sera traité sous 5-10 jours ouvrables.",
+    "cancelError": "Échec de l'annulation. Veuillez réessayer."
   },
   "gallery": {
     "title": "Galerie",
     "imageAlt": "{title} - image {index}",
     "lightbox": "Visionneuse d'images",
     "closeLightbox": "Fermer la visionneuse",
-    "previousImage": "Image precedente",
+    "previousImage": "Image précédente",
     "nextImage": "Image suivante",
     "imageCounter": "{current} / {total}",
     "goToImage": "Voir l'image {index}"
   },
   "winery": {
-    "verified": "Verifie",
+    "verified": "Vérifié",
     "coverPhoto": "Photo de couverture",
-    "coverPhotoDescription": "Cette image apparait en haut de votre profil public",
-    "coverPhotoRecommended": "Recommande: 1920 x 1080 pixels (format 16:9). Max 5MB, JPEG ou PNG.",
+    "coverPhotoDescription": "Cette image apparaît en haut de votre profil public",
+    "coverPhotoRecommended": "Recommandé: 1920 x 1080 pixels (format 16:9). Max 5MB, JPEG ou PNG.",
     "galleryPhotos": "Photos de la galerie",
-    "galleryPhotosDescription": "Presentez votre domaine avec jusqu'a 6 photos ({count}/6)",
+    "galleryPhotosDescription": "Présentez votre domaine avec jusqu'à 6 photos ({count}/6)",
     "galleryImageAlt": "Image de galerie {index}",
-    "dragToReorder": "Glisser pour reorganiser (bientot disponible)",
+    "dragToReorder": "Glisser pour réorganiser (bientôt disponible)",
     "removeGalleryImage": "Supprimer l'image de galerie {index}",
-    "galleryHelp": "Les images carrees fonctionnent le mieux. Vous pourrez bientot reorganiser les photos par glisser-deposer.",
+    "galleryHelp": "Les images carrées fonctionnent le mieux. Vous pourrez bientôt réorganiser les photos par glisser-déposer.",
     "wineryInformation": "Informations du domaine",
-    "tellVisitors": "Parlez aux visiteurs de votre domaine et ce qui le rend special",
+    "tellVisitors": "Parlez aux visiteurs de votre domaine et ce qui le rend spécial",
     "wineryName": "Nom du domaine",
     "wineryNamePlaceholder": "Domaine des Vignes",
     "description": "Description",
-    "descriptionPlaceholder": "Parlez aux visiteurs de votre domaine, votre histoire et ce qui rend vos vins speciaux...",
-    "descriptionHelp": "Decrivez votre domaine, vos vins et ce que les visiteurs peuvent attendre.",
-    "descriptionMinLength": "Minimum 50 caracteres. Decrivez votre domaine, vos vins et ce que les visiteurs peuvent attendre.",
+    "descriptionPlaceholder": "Parlez aux visiteurs de votre domaine, votre histoire et ce qui rend vos vins spéciaux...",
+    "descriptionHelp": "Décrivez votre domaine, vos vins et ce que les visiteurs peuvent attendre.",
+    "descriptionMinLength": "Minimum 50 caractères. Décrivez votre domaine, vos vins et ce que les visiteurs peuvent attendre.",
     "location": "Localisation",
     "address": "Adresse",
     "addressPlaceholder": "Rue du Vignoble 12",
     "commune": "Commune",
-    "communePlaceholder": "Selectionnez votre commune",
+    "communePlaceholder": "Sélectionnez votre commune",
     "allCommunes": "Toutes les communes",
     "contact": "Contact",
-    "contactDetails": "Coordonnees",
+    "contactDetails": "Coordonnées",
     "contactDetailsDescription": "Comment les visiteurs peuvent vous trouver et vous contacter",
-    "contactPhone": "Telephone",
+    "contactPhone": "Téléphone",
     "phonePlaceholder": "+41 27 123 45 67",
     "phoneHelp": "Format suisse: +41 XX XXX XX XX ou 0XX XXX XX XX",
     "submitting": "Envoi...",
     "continue": "Continuer",
-    "profileUpdated": "Profil mis a jour",
-    "changesSaved": "Vos modifications ont ete enregistrees.",
-    "coverPhotoUpdated": "Photo de couverture mise a jour",
-    "coverPhotoRemoved": "Photo de couverture supprimee",
-    "galleryImageAdded": "Image de galerie ajoutee",
-    "galleryImageRemoved": "Image de galerie supprimee"
+    "profileUpdated": "Profil mis à jour",
+    "changesSaved": "Vos modifications ont été enregistrées.",
+    "coverPhotoUpdated": "Photo de couverture mise à jour",
+    "coverPhotoRemoved": "Photo de couverture supprimée",
+    "galleryImageAdded": "Image de galerie ajoutée",
+    "galleryImageRemoved": "Image de galerie supprimée"
   },
   "dashboard": {
     "title": "Tableau de bord",
-    "yourExperiences": "Vos experiences",
-    "createNewExperience": "Creer une nouvelle experience",
-    "noExperiences": "Pas encore d'experiences",
-    "createFirstExperience": "Creez votre premiere experience pour commencer a recevoir des reservations.",
+    "yourExperiences": "Vos expériences",
+    "createNewExperience": "Créer une nouvelle expérience",
+    "noExperiences": "Pas encore d'expériences",
+    "createFirstExperience": "Créez votre première expérience pour commencer à recevoir des réservations.",
     "statistics": "Statistiques"
   },
   "calendar": {
-    "blocked": "Bloque",
-    "bookingsCount": "{count, plural, =1 {reservation} other {reservations}}",
-    "guestsCount": "{count, plural, =1 {invite} other {invites}}",
-    "dateBlockedMessage": "Cette date est bloquee pour les reservations",
-    "blockDateQuestion": "Bloquer cette date pour toutes les experiences?",
-    "unblock": "Debloquer",
+    "blocked": "Bloqué",
+    "bookingsCount": "{count, plural, =1 {réservation} other {réservations}}",
+    "guestsCount": "{count, plural, =1 {invité} other {invités}}",
+    "dateBlockedMessage": "Cette date est bloquée pour les réservations",
+    "blockDateQuestion": "Bloquer cette date pour toutes les expériences?",
+    "unblock": "Débloquer",
     "blockDate": "Bloquer",
-    "bookingsTitle": "Reservations",
-    "noBookings": "Aucune reservation pour ce jour",
-    "blockedSuccess": "{count} experiences bloquees pour le {date}",
-    "unblockedSuccess": "{count} experiences debloquees pour le {date}",
-    "blockError": "Echec du blocage de la date",
-    "unblockError": "Echec du deblocage de la date"
+    "bookingsTitle": "Réservations",
+    "noBookings": "Aucune réservation pour ce jour",
+    "blockedSuccess": "{count} expériences bloquées pour le {date}",
+    "unblockedSuccess": "{count} expériences débloquées pour le {date}",
+    "blockError": "Échec du blocage de la date",
+    "unblockError": "Échec du déblocage de la date"
   },
   "admin": {
     "title": "Administration",
     "pendingReview": "En attente de validation",
-    "verified": "Verifie",
-    "rejected": "Rejete",
+    "verified": "Vérifié",
+    "rejected": "Rejeté",
     "totalWineries": "Total des domaines",
     "showingPending": "Affichage de {count} {count, plural, =1 {domaine en attente} other {domaines en attente}}",
     "filterByCommune": "Filtrer par commune",
-    "newest": "Plus recents",
+    "newest": "Plus récents",
     "oldest": "Plus anciens",
     "wineryName": "Nom du domaine",
     "applicant": "Demandeur",
     "submitted": "Soumis",
     "actions": "Actions",
     "review": "Examiner",
-    "allCaughtUp": "Tout est a jour!",
+    "allCaughtUp": "Tout est à jour!",
     "noPendingWineries": "Aucun domaine en attente de validation."
   },
   "search": {
-    "placeholder": "Rechercher des experiences, domaines...",
-    "searchExperiences": "Rechercher des experiences",
-    "wineExperiences": "Experiences viticoles",
-    "discoverExperiences": "Decouvrez des experiences viticoles uniques en Valais",
+    "placeholder": "Rechercher des expériences, domaines...",
+    "searchExperiences": "Rechercher des expériences",
+    "wineExperiences": "Expériences viticoles",
+    "discoverExperiences": "Découvrez des expériences viticoles uniques en Valais",
     "clearSearch": "Effacer la recherche",
     "filters": "Filtres",
     "clear": "Effacer",
-    "experienceType": "Type d'experience",
+    "experienceType": "Type d'expérience",
     "location": "Localisation",
     "priceRange": "Fourchette de prix (CHF)",
     "min": "Min",
@@ -435,54 +435,54 @@
     "groupSize": "Taille du groupe (minimum)",
     "anySize": "Toute taille",
     "minGroupSize": "Taille minimum du groupe",
-    "noResultsFound": "Aucun resultat trouve",
+    "noResultsFound": "Aucun résultat trouvé",
     "tryDifferentFilters": "Essayez d'ajuster vos filtres ou termes de recherche."
   },
   "errors": {
     "somethingWentWrong": "Une erreur s'est produite!",
-    "pageNotFound": "Page non trouvee",
+    "pageNotFound": "Page non trouvée",
     "pageNotFoundDescription": "La page que vous recherchez n'existe pas.",
-    "searchPlaceholder": "Rechercher des experiences...",
-    "popularExperiences": "Experiences populaires",
-    "browseExperiences": "Parcourir les experiences",
+    "searchPlaceholder": "Rechercher des expériences...",
+    "popularExperiences": "Expériences populaires",
+    "browseExperiences": "Parcourir les expériences",
     "serverError": "Erreur serveur",
-    "serverErrorDescription": "Nous sommes desoles, une erreur s'est produite de notre cote. Veuillez reessayer plus tard.",
-    "supportContact": "Si le probleme persiste, contactez-nous a support@encave.ch",
-    "genericError": "Une erreur est survenue. Veuillez reessayer.",
+    "serverErrorDescription": "Nous sommes désolés, une erreur s'est produite de notre côté. Veuillez réessayer plus tard.",
+    "supportContact": "Si le problème persiste, contactez-nous à support@encave.ch",
+    "genericError": "Une erreur est survenue. Veuillez réessayer.",
     "required": "Ce champ est requis",
     "invalidEmail": "Adresse e-mail invalide",
-    "minLength": "Minimum {count} caracteres",
-    "maxLength": "Maximum {count} caracteres",
+    "minLength": "Minimum {count} caractères",
+    "maxLength": "Maximum {count} caractères",
     "passwordMismatch": "Les mots de passe ne correspondent pas",
     "password": {
-      "minLength": "Le mot de passe doit contenir au moins 8 caracteres",
+      "minLength": "Le mot de passe doit contenir au moins 8 caractères",
       "requireNumber": "Le mot de passe doit contenir au moins un chiffre",
       "requireUppercase": "Le mot de passe doit contenir au moins une majuscule",
       "requireLowercase": "Le mot de passe doit contenir au moins une minuscule",
-      "requireSpecial": "Le mot de passe doit contenir au moins un caractere special (!@#$%^&*)"
+      "requireSpecial": "Le mot de passe doit contenir au moins un caractère spécial (!@#$%^&*)"
     },
-    "invalidPhone": "Numero de telephone invalide",
+    "invalidPhone": "Numéro de téléphone invalide",
     "fileTooLarge": "Le fichier est trop volumineux",
     "invalidFileType": "Type de fichier non valide",
-    "uploadFailed": "Echec du telechargement"
+    "uploadFailed": "Échec du téléchargement"
   },
   "empty": {
-    "noExperiences": "Aucune experience trouvee",
-    "noWineries": "Aucun domaine trouve",
-    "noResults": "Aucun resultat",
-    "tryAgain": "Reessayez avec des termes differents"
+    "noExperiences": "Aucune expérience trouvée",
+    "noWineries": "Aucun domaine trouvé",
+    "noResults": "Aucun résultat",
+    "tryAgain": "Réessayez avec des termes différents"
   },
   "metadata": {
     "siteName": "EnCave",
-    "title": "EnCave - Experiences viticoles en Valais",
-    "description": "Reservez des experiences viticoles uniques directement avec les vignerons suisses. Degustations, visites de caves et ateliers dans le Valais.",
+    "title": "EnCave - Expériences viticoles en Valais",
+    "description": "Réservez des expériences viticoles uniques directement avec les vignerons suisses. Dégustations, visites de caves et ateliers dans le Valais.",
     "home": {
-      "title": "Experiences viticoles en Valais | EnCave",
-      "description": "Decouvrez et reservez des experiences viticoles uniques avec les vignerons du Valais. Degustations, visites de caves, ateliers et tours de vignobles."
+      "title": "Expériences viticoles en Valais | EnCave",
+      "description": "Découvrez et réservez des expériences viticoles uniques avec les vignerons du Valais. Dégustations, visites de caves, ateliers et tours de vignobles."
     },
     "experiences": {
-      "title": "Experiences viticoles | EnCave",
-      "description": "Parcourez notre selection d'experiences viticoles en Valais. Degustations, visites de caves, ateliers oenologiques et accords mets-vins."
+      "title": "Expériences viticoles | EnCave",
+      "description": "Parcourez notre sélection d'expériences viticoles en Valais. Dégustations, visites de caves, ateliers œnologiques et accords mets-vins."
     },
     "experienceDetail": {
       "title": "{title} | EnCave",
@@ -490,65 +490,65 @@
     },
     "wineries": {
       "title": "Domaines viticoles du Valais | EnCave",
-      "description": "Decouvrez les domaines viticoles du Valais et leurs vignerons passionnes. Rencontrez les artisans du vin suisse."
+      "description": "Découvrez les domaines viticoles du Valais et leurs vignerons passionnés. Rencontrez les artisans du vin suisse."
     },
     "wineryDetail": {
       "title": "{name} - Domaine viticole | EnCave",
-      "description": "Decouvrez le domaine {name} et ses experiences viticoles. Reservez votre visite dans le Valais."
+      "description": "Découvrez le domaine {name} et ses expériences viticoles. Réservez votre visite dans le Valais."
     },
     "login": {
       "title": "Connexion | EnCave",
-      "description": "Connectez-vous a votre compte EnCave pour gerer vos reservations et experiences viticoles."
+      "description": "Connectez-vous à votre compte EnCave pour gérer vos réservations et expériences viticoles."
     },
     "register": {
       "title": "Inscription | EnCave",
-      "description": "Creez votre compte EnCave et commencez a decouvrir les experiences viticoles du Valais."
+      "description": "Créez votre compte EnCave et commencez à découvrir les expériences viticoles du Valais."
     }
   },
   "about": {
     "metadata": {
-      "title": "A propos d'EnCave | EnCave",
-      "description": "Decouvrez l'histoire et la passion derriere EnCave, une celebration des vins du Valais"
+      "title": "À propos d'EnCave | EnCave",
+      "description": "Découvrez l'histoire et la passion derrière EnCave, une célébration des vins du Valais"
     },
     "hero": {
-      "title": "Une passion nee au coeur des vignes valaisannes"
+      "title": "Une passion née au cœur des vignes valaisannes"
     },
     "valais": {
       "title": "Le Valais, berceau de l'excellence viticole",
-      "paragraph1": "Entre les sommets alpins et le Rhone qui serpente, le Valais abrite le vignoble le plus ensoleille de Suisse. Ici, des cepages uniques au monde - la Petite Arvine, l'Amigne, le Cornalin, l'Humagne - racontent une histoire millenaire.",
-      "paragraph2": "Chaque bouteille est le fruit d'un savoir-faire transmis de generation en generation, d'une geologie exceptionnelle et d'un microclimat que nous envient les plus grands terroirs.",
-      "highlight": "Les vins valaisans n'ont rien a envier a personne. Il est temps que le monde le sache."
+      "paragraph1": "Entre les sommets alpins et le Rhône qui serpente, le Valais abrite le vignoble le plus ensoleillé de Suisse. Ici, des cépages uniques au monde - la Petite Arvine, l'Amigne, le Cornalin, l'Humagne - racontent une histoire millénaire.",
+      "paragraph2": "Chaque bouteille est le fruit d'un savoir-faire transmis de génération en génération, d'une géologie exceptionnelle et d'un microclimat que nous envient les plus grands terroirs.",
+      "highlight": "Les vins valaisans n'ont rien à envier à personne. Il est temps que le monde le sache."
     },
     "mission": {
       "title": "Notre mission",
-      "content": "EnCave a ete concu pour tous ceux qui, comme moi, croient que chaque bouteille merite son histoire. Gerez votre cave, suivez vos degustations, decouvrez le moment ideal pour ouvrir vos tresors - et surtout, celebrez la richesse de notre patrimoine viticole."
+      "content": "EnCave a été conçu pour tous ceux qui, comme moi, croient que chaque bouteille mérite son histoire. Gérez votre cave, suivez vos dégustations, découvrez le moment idéal pour ouvrir vos trésors - et surtout, célébrez la richesse de notre patrimoine viticole."
     },
     "contact": {
-      "title": "L'artisan derriere l'application",
-      "content": "Ce projet est une creation personnelle, developpee avec passion et devouement. Si vous avez des questions, des suggestions ou simplement envie de partager votre amour du vin, n'hesitez pas a me contacter.",
+      "title": "L'artisan derrière l'application",
+      "content": "Ce projet est une création personnelle, développée avec passion et dévouement. Si vous avez des questions, des suggestions ou simplement envie de partager votre amour du vin, n'hésitez pas à me contacter.",
       "name": "Samuel",
       "email": "samuel@encave.ch"
     },
-    "footer": "Sante, et vive les vins du Valais!"
+    "footer": "Santé, et vive les vins du Valais!"
   },
   "legal": {
-    "backToHome": "Retour a l'accueil",
+    "backToHome": "Retour à l'accueil",
     "privacy": {
-      "title": "Politique de confidentialite",
-      "description": "Decouvrez comment EnCave collecte, utilise et protege vos donnees personnelles.",
-      "lastUpdated": "Derniere mise a jour: {date}",
+      "title": "Politique de confidentialité",
+      "description": "Découvrez comment EnCave collecte, utilise et protège vos données personnelles.",
+      "lastUpdated": "Dernière mise à jour: {date}",
       "sections": {
         "introduction": {
           "title": "Introduction",
-          "content": "EnCave SA (\"nous\", \"notre\" ou \"nos\") s'engage a proteger votre vie privee. Cette politique de confidentialite explique comment nous collectons, utilisons, divulguons et protegeons vos informations lorsque vous utilisez notre plateforme."
+          "content": "EnCave SA (\"nous\", \"notre\" ou \"nos\") s'engage à protéger votre vie privée. Cette politique de confidentialité explique comment nous collectons, utilisons, divulguons et protégeons vos informations lorsque vous utilisez notre plateforme."
         },
         "dataCollection": {
           "title": "Informations que nous collectons",
           "content": "Nous collectons les informations que vous nous fournissez directement, notamment:",
           "items": {
-            "personal": "Informations personnelles (nom, adresse e-mail, numero de telephone)",
-            "payment": "Informations de paiement (traitees de maniere securisee via Stripe)",
-            "usage": "Donnees d'utilisation (comment vous interagissez avec notre plateforme)",
+            "personal": "Informations personnelles (nom, adresse e-mail, numéro de téléphone)",
+            "payment": "Informations de paiement (traitées de manière sécurisée via Stripe)",
+            "usage": "Données d'utilisation (comment vous interagissez avec notre plateforme)",
             "cookies": "Cookies et technologies de suivi similaires"
           }
         },
@@ -556,90 +556,90 @@
           "title": "Comment nous utilisons vos informations",
           "content": "Nous utilisons les informations que nous collectons pour:",
           "items": {
-            "booking": "Traiter et gerer vos reservations",
-            "communication": "Communiquer avec vous concernant vos experiences",
-            "improvement": "Ameliorer et personnaliser nos services",
-            "legal": "Respecter nos obligations legales"
+            "booking": "Traiter et gérer vos réservations",
+            "communication": "Communiquer avec vous concernant vos expériences",
+            "improvement": "Améliorer et personnaliser nos services",
+            "legal": "Respecter nos obligations légales"
           }
         },
         "dataSharing": {
           "title": "Partage d'informations",
-          "content": "Nous partageons vos informations avec les domaines viticoles lorsque vous reservez une experience, et avec les prestataires de services qui nous aident a exploiter notre plateforme (comme Stripe pour les paiements et Resend pour les e-mails). Nous ne vendons pas vos informations personnelles."
+          "content": "Nous partageons vos informations avec les domaines viticoles lorsque vous réservez une expérience, et avec les prestataires de services qui nous aident à exploiter notre plateforme (comme Stripe pour les paiements et Resend pour les e-mails). Nous ne vendons pas vos informations personnelles."
         },
         "security": {
-          "title": "Securite des donnees",
-          "content": "Nous mettons en oeuvre des mesures de securite appropriees pour proteger vos informations personnelles. Toutes les donnees de paiement sont traitees par Stripe et ne sont jamais stockees sur nos serveurs."
+          "title": "Sécurité des données",
+          "content": "Nous mettons en œuvre des mesures de sécurité appropriées pour protéger vos informations personnelles. Toutes les données de paiement sont traitées par Stripe et ne sont jamais stockées sur nos serveurs."
         },
         "rights": {
           "title": "Vos droits",
-          "content": "En vertu des lois applicables sur la protection des donnees, vous avez le droit de:",
+          "content": "En vertu des lois applicables sur la protection des données, vous avez le droit de:",
           "items": {
-            "access": "Acceder a vos donnees personnelles",
-            "rectification": "Corriger les donnees inexactes",
-            "deletion": "Demander la suppression de vos donnees",
-            "portability": "Recevoir vos donnees dans un format portable"
+            "access": "Accéder à vos données personnelles",
+            "rectification": "Corriger les données inexactes",
+            "deletion": "Demander la suppression de vos données",
+            "portability": "Recevoir vos données dans un format portable"
           }
         },
         "contact": {
           "title": "Nous contacter",
-          "content": "Si vous avez des questions concernant cette politique de confidentialite, veuillez nous contacter a:",
+          "content": "Si vous avez des questions concernant cette politique de confidentialité, veuillez nous contacter à:",
           "address": "Rue du Vin 1, 1950 Sion, Suisse"
         }
       }
     },
     "terms": {
       "title": "Conditions d'utilisation",
-      "description": "Lisez les conditions generales d'utilisation de la plateforme EnCave.",
-      "lastUpdated": "Derniere mise a jour: {date}",
+      "description": "Lisez les conditions générales d'utilisation de la plateforme EnCave.",
+      "lastUpdated": "Dernière mise à jour: {date}",
       "sections": {
         "acceptance": {
           "title": "Acceptation des conditions",
-          "content": "En accedant ou en utilisant EnCave, vous acceptez d'etre lie par ces conditions d'utilisation. Si vous n'acceptez pas ces conditions, veuillez ne pas utiliser notre plateforme."
+          "content": "En accédant ou en utilisant EnCave, vous acceptez d'être lié par ces conditions d'utilisation. Si vous n'acceptez pas ces conditions, veuillez ne pas utiliser notre plateforme."
         },
         "services": {
           "title": "Nos services",
-          "content": "EnCave fournit une plateforme connectant les amateurs de vin avec les domaines viticoles du Valais, en Suisse. Nous facilitons la reservation d'experiences viticoles mais ne sommes pas le fournisseur des experiences elles-memes."
+          "content": "EnCave fournit une plateforme connectant les amateurs de vin avec les domaines viticoles du Valais, en Suisse. Nous facilitons la réservation d'expériences viticoles mais ne sommes pas le fournisseur des expériences elles-mêmes."
         },
         "accounts": {
           "title": "Comptes utilisateurs",
-          "content": "Pour utiliser certaines fonctionnalites de notre plateforme, vous devrez peut-etre creer un compte. Vous etes responsable de:",
+          "content": "Pour utiliser certaines fonctionnalités de notre plateforme, vous devrez peut-être créer un compte. Vous êtes responsable de:",
           "items": {
             "accuracy": "Maintenir des informations de compte exactes",
-            "security": "Garder votre mot de passe securise",
-            "responsibility": "Toutes les activites sous votre compte"
+            "security": "Garder votre mot de passe sécurisé",
+            "responsibility": "Toutes les activités sous votre compte"
           }
         },
         "bookings": {
-          "title": "Reservations",
-          "content": "Lorsque vous reservez une experience via EnCave, vous concluez un accord direct avec le domaine viticole. EnCave agit en tant qu'intermediaire pour faciliter le processus de reservation."
+          "title": "Réservations",
+          "content": "Lorsque vous réservez une expérience via EnCave, vous concluez un accord direct avec le domaine viticole. EnCave agit en tant qu'intermédiaire pour faciliter le processus de réservation."
         },
         "payments": {
           "title": "Paiements",
-          "content": "Tous les paiements sont traites de maniere securisee via Stripe. Les prix sont affiches en francs suisses (CHF). En effectuant une reservation, vous nous autorisez a debiter votre moyen de paiement."
+          "content": "Tous les paiements sont traités de manière sécurisée via Stripe. Les prix sont affichés en francs suisses (CHF). En effectuant une réservation, vous nous autorisez à débiter votre moyen de paiement."
         },
         "winemakers": {
           "title": "Obligations des vignerons",
-          "content": "Les vignerons utilisant notre plateforme acceptent de fournir des informations exactes sur leurs experiences, d'honorer les reservations confirmees et de maintenir des normes de service appropriees."
+          "content": "Les vignerons utilisant notre plateforme acceptent de fournir des informations exactes sur leurs expériences, d'honorer les réservations confirmées et de maintenir des normes de service appropriées."
         },
         "intellectual": {
-          "title": "Propriete intellectuelle",
-          "content": "Tout le contenu sur EnCave, y compris les textes, graphiques, logos et logiciels, est la propriete d'EnCave ou de ses concedants de licence et est protege par les lois sur la propriete intellectuelle."
+          "title": "Propriété intellectuelle",
+          "content": "Tout le contenu sur EnCave, y compris les textes, graphiques, logos et logiciels, est la propriété d'EnCave ou de ses concédants de licence et est protégé par les lois sur la propriété intellectuelle."
         },
         "liability": {
-          "title": "Limitation de responsabilite",
-          "content": "EnCave n'est pas responsable de la qualite, de la securite ou de la legalite des experiences proposees par les domaines viticoles. Nous ne garantissons pas l'exactitude des informations fournies par les domaines."
+          "title": "Limitation de responsabilité",
+          "content": "EnCave n'est pas responsable de la qualité, de la sécurité ou de la légalité des expériences proposées par les domaines viticoles. Nous ne garantissons pas l'exactitude des informations fournies par les domaines."
         },
         "modifications": {
           "title": "Modifications",
-          "content": "Nous nous reservons le droit de modifier ces conditions a tout moment. L'utilisation continue de la plateforme apres les modifications constitue une acceptation des nouvelles conditions."
+          "content": "Nous nous réservons le droit de modifier ces conditions à tout moment. L'utilisation continue de la plateforme après les modifications constitue une acceptation des nouvelles conditions."
         },
         "governing": {
           "title": "Droit applicable",
-          "content": "Ces conditions sont regies par le droit suisse. Tout litige sera resolu devant les tribunaux du Valais, Suisse."
+          "content": "Ces conditions sont régies par le droit suisse. Tout litige sera résolu devant les tribunaux du Valais, Suisse."
         },
         "contact": {
           "title": "Contact",
-          "content": "Pour toute question concernant ces conditions d'utilisation, veuillez nous contacter a:",
+          "content": "Pour toute question concernant ces conditions d'utilisation, veuillez nous contacter à:",
           "address": "Rue du Vin 1, 1950 Sion, Suisse"
         }
       }
@@ -647,21 +647,21 @@
     "cancellation": {
       "title": "Politique d'annulation",
       "pageTitle": "Politique d'annulation",
-      "description": "Comprenez nos politiques d'annulation et de remboursement pour les reservations d'experiences viticoles.",
-      "lastUpdated": "Derniere mise a jour: {date}",
+      "description": "Comprenez nos politiques d'annulation et de remboursement pour les réservations d'expériences viticoles.",
+      "lastUpdated": "Dernière mise à jour: {date}",
       "sections": {
         "overview": {
-          "title": "Apercu",
-          "content": "Nous comprenons que les plans peuvent changer. Cette politique decrit nos procedures d'annulation et de remboursement pour les reservations effectuees via EnCave."
+          "title": "Aperçu",
+          "content": "Nous comprenons que les plans peuvent changer. Cette politique décrit nos procédures d'annulation et de remboursement pour les réservations effectuées via EnCave."
         },
         "clientPolicy": {
           "title": "Politique d'annulation client",
-          "content": "En tant que client, vous pouvez annuler votre reservation selon les conditions suivantes:",
+          "content": "En tant que client, vous pouvez annuler votre réservation selon les conditions suivantes:",
           "timeline": {
-            "title": "Delais d'annulation",
+            "title": "Délais d'annulation",
             "over24h": {
-              "time": "Plus de 24 heures avant l'experience",
-              "refund": "Remboursement integral"
+              "time": "Plus de 24 heures avant l'expérience",
+              "refund": "Remboursement intégral"
             },
             "12to24h": {
               "time": "Entre 12 et 24 heures avant",
@@ -675,29 +675,161 @@
         },
         "wineryPolicy": {
           "title": "Annulation par le domaine",
-          "content": "Si un domaine annule votre reservation, vous recevrez un remboursement integral quel que soit le delai. Nous vous aiderons egalement a trouver une experience alternative si vous le souhaitez."
+          "content": "Si un domaine annule votre réservation, vous recevrez un remboursement intégral quel que soit le délai. Nous vous aiderons également à trouver une expérience alternative si vous le souhaitez."
         },
         "noShow": {
-          "title": "Politique de non-presentation",
-          "content": "Si vous ne vous presentez pas a votre experience reservee sans annulation prealable, aucun remboursement ne sera accorde."
+          "title": "Politique de non-présentation",
+          "content": "Si vous ne vous présentez pas à votre expérience réservée sans annulation préalable, aucun remboursement ne sera accordé."
         },
         "modifications": {
-          "title": "Modifications de reservation",
-          "content": "Pour modifier votre reservation (date, heure ou nombre de personnes), veuillez contacter le domaine directement ou via notre plateforme au moins 24 heures avant votre experience prevue."
+          "title": "Modifications de réservation",
+          "content": "Pour modifier votre réservation (date, heure ou nombre de personnes), veuillez contacter le domaine directement ou via notre plateforme au moins 24 heures avant votre expérience prévue."
         },
         "refunds": {
           "title": "Traitement des remboursements",
-          "content": "Les remboursements sont traites dans un delai de 5 a 10 jours ouvrables et seront credites sur votre moyen de paiement d'origine."
+          "content": "Les remboursements sont traités dans un délai de 5 à 10 jours ouvrables et seront crédités sur votre moyen de paiement d'origine."
         },
         "exceptional": {
           "title": "Circonstances exceptionnelles",
-          "content": "En cas de force majeure (catastrophes naturelles, conditions meteorologiques severes, etc.), nous travaillerons avec les deux parties pour trouver une solution appropriee, pouvant inclure un report ou un remboursement integral."
+          "content": "En cas de force majeure (catastrophes naturelles, conditions météorologiques sévères, etc.), nous travaillerons avec les deux parties pour trouver une solution appropriée, pouvant inclure un report ou un remboursement intégral."
         },
         "contact": {
           "title": "Nous contacter",
-          "content": "Pour les demandes d'annulation ou les questions concernant cette politique, veuillez nous contacter a:"
+          "content": "Pour les demandes d'annulation ou les questions concernant cette politique, veuillez nous contacter à:"
         }
       }
+    }
+  },
+  "landing": {
+    "degustation": {
+      "metadata": {
+        "title": "Dégustation de Vin en Valais | EnCave",
+        "description": "Découvrez les meilleures dégustations de vin en Valais. Réservez une expérience œnologique unique avec les vignerons valaisans. Petite Arvine, Fendant, Cornalin et plus.",
+        "keywords": "dégustation vin valais, cave valais, oenotourisme valais, vin suisse, petite arvine, fendant, cornalin"
+      },
+      "hero": {
+        "title": "Dégustation de Vin en Valais",
+        "subtitle": "Vivez une expérience œnologique authentique au cœur des vignobles suisses"
+      },
+      "intro": {
+        "title": "L'art de la dégustation valaisanne",
+        "paragraph1": "Le Valais, plus grand canton viticole de Suisse, offre des conditions exceptionnelles pour la viticulture grâce à son ensoleillement record et ses terroirs variés. De Viège à Martigny, les coteaux escarpés abritent des cépages uniques au monde.",
+        "paragraph2": "Une dégustation en Valais est bien plus qu'une simple découverte de vins : c'est une immersion dans un savoir-faire ancestral, transmis de génération en génération par des vignerons passionnés.",
+        "paragraph3": "Que vous soyez amateur éclairé ou néophyte curieux, nos domaines partenaires vous accueillent pour partager leur passion et vous faire découvrir les trésors cachés de la viticulture valaisanne.",
+        "highlight1": "1-3 heures d'expérience",
+        "highlight2": "50+ domaines partenaires",
+        "highlight3": "Cépages autochtones uniques"
+      },
+      "experiences": {
+        "title": "Expériences de dégustation à découvrir",
+        "viewAll": "Voir toutes les expériences"
+      },
+      "faq": {
+        "title": "Questions fréquentes",
+        "q1": {
+          "question": "Combien coûte une dégustation de vin en Valais ?",
+          "answer": "Les prix varient généralement entre 20 et 80 CHF par personne selon le domaine et le type d'expérience. Une dégustation simple commence autour de 20-30 CHF, tandis qu'une expérience complète avec visite de cave et accord mets-vins peut atteindre 60-80 CHF."
+        },
+        "q2": {
+          "question": "Faut-il réserver à l'avance pour une dégustation ?",
+          "answer": "Oui, nous recommandons fortement de réserver à l'avance, surtout pendant la haute saison (mai-octobre) et les week-ends. La réservation garantit votre place et permet aux vignerons de préparer une expérience personnalisée."
+        },
+        "q3": {
+          "question": "Quels vins peut-on déguster en Valais ?",
+          "answer": "Le Valais est célèbre pour ses cépages autochtones : Petite Arvine, Amigne, Cornalin, Humagne Rouge et Blanc. Vous découvrirez aussi d'excellents Fendant (Chasselas), Pinot Noir et assemblages uniques."
+        },
+        "q4": {
+          "question": "Les dégustations sont-elles adaptées aux débutants ?",
+          "answer": "Absolument ! Nos vignerons partenaires accueillent tous les niveaux. Ils prennent le temps d'expliquer les techniques de dégustation et les caractéristiques de chaque vin. C'est l'occasion idéale d'apprendre dans un cadre convivial."
+        },
+        "q5": {
+          "question": "Peut-on acheter du vin après la dégustation ?",
+          "answer": "Oui, la plupart des domaines proposent la vente directe de leurs vins. C'est l'occasion de repartir avec vos coups de cœur et de prolonger le plaisir chez vous."
+        }
+      },
+      "cta": {
+        "title": "Prêt à découvrir les vins du Valais ?",
+        "subtitle": "Réservez votre dégustation et vivez une expérience inoubliable avec nos vignerons passionnés.",
+        "button": "Réserver une dégustation"
+      }
+    },
+    "cepages": {
+      "metadata": {
+        "title": "Cépages Valaisans - Vins Autochtones du Valais | EnCave",
+        "description": "Découvrez les cépages autochtones du Valais : Petite Arvine, Amigne, Cornalin, Humagne. Guide complet des variétés de raisin uniques au Valais suisse.",
+        "keywords": "cépages valaisans, petite arvine, amigne, cornalin, humagne, vin autochtone suisse, variétés raisin valais"
+      },
+      "hero": {
+        "title": "Les Cépages du Valais",
+        "subtitle": "Découvrez les variétés de raisin uniques qui font la renommée des vins valaisans"
+      },
+      "intro": {
+        "title": "Un patrimoine viticole unique au monde",
+        "paragraph1": "Le Valais abrite une collection exceptionnelle de cépages autochtones, introuvables ailleurs dans le monde. Ces variétés ancestrales, préservées par des générations de vignerons, offrent des profils aromatiques uniques.",
+        "paragraph2": "Du cépage blanc emblématique, la Petite Arvine, au rouge charpenté du Cornalin, chaque variété raconte l'histoire d'un terroir d'exception et d'un savoir-faire séculaire."
+      },
+      "whites": {
+        "title": "Cépages blancs",
+        "petiteArvine": {
+          "name": "Petite Arvine",
+          "description": "Le joyau des cépages valaisans, la Petite Arvine produit des vins d'une finesse exceptionnelle avec une finale saline caractéristique.",
+          "tasting": "Notes d'agrumes, rhubarbe, glycine, finale saline distinctive",
+          "pairing": "Fruits de mer, raclette, asperges, foie gras"
+        },
+        "amigne": {
+          "name": "Amigne",
+          "description": "Cultivée presque exclusivement à Vétroz, l'Amigne est un cépage rare aux multiples facettes, du sec au liquoreux.",
+          "tasting": "Miel, coing, abricot sec, notes florales",
+          "pairing": "Foie gras, desserts aux fruits, fromages à pâte persillée"
+        },
+        "heida": {
+          "name": "Heida (Païen)",
+          "description": "Le même cépage que le Savagnin, cultivé en altitude, produit des vins puissants et aromatiques.",
+          "tasting": "Fruits exotiques, noisette, épices douces",
+          "pairing": "Fromages d'alpage, poissons en sauce, volailles"
+        },
+        "humagneBlanc": {
+          "name": "Humagne Blanc",
+          "description": "Cépage ancestral presque disparu puis ressuscité, l'Humagne Blanc offre des vins frais et aromatiques.",
+          "tasting": "Fleurs blanches, tilleul, agrumes délicats",
+          "pairing": "Apéritif, poissons grillés, salades"
+        }
+      },
+      "reds": {
+        "title": "Cépages rouges",
+        "cornalin": {
+          "name": "Cornalin",
+          "description": "Le roi des rouges valaisans, le Cornalin produit des vins intenses et structurés, nécessitant plusieurs années de vieillissement.",
+          "tasting": "Fruits noirs, violette, épices, tanins soyeux",
+          "pairing": "Gibier, viandes rouges grillées, fromages affinés"
+        },
+        "humagneRouge": {
+          "name": "Humagne Rouge",
+          "description": "Cépage rustique et unique au Valais, l'Humagne Rouge donne des vins sauvages aux arômes caractéristiques.",
+          "tasting": "Sous-bois, violette, notes animales, poivre",
+          "pairing": "Ragoûts, charcuterie valaisanne, fromages de montagne"
+        }
+      },
+      "labels": {
+        "tasting": "Notes de dégustation",
+        "pairing": "Accords mets-vins"
+      },
+      "taste": {
+        "title": "Où déguster ces cépages ?",
+        "description": "Découvrez ces cépages uniques directement chez nos vignerons partenaires. Réservez une dégustation et laissez-vous guider à travers ces saveurs authentiques.",
+        "experiencesButton": "Réserver une dégustation",
+        "wineriesButton": "Voir les domaines"
+      },
+      "cta": {
+        "title": "Partez à la découverte des cépages valaisans",
+        "subtitle": "Réservez votre dégustation et explorez les saveurs uniques du plus grand vignoble de Suisse.",
+        "button": "Découvrir les expériences"
+      }
+    },
+    "footer": {
+      "discover": "Découvrir",
+      "degustation": "Dégustation en Valais",
+      "cepages": "Cépages Valaisans"
     }
   }
 }
