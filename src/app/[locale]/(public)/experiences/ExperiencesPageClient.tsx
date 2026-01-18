@@ -2,7 +2,8 @@
 
 import * as React from 'react';
 import { useCallback, useTransition, useOptimistic } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { ExperienceType } from '@prisma/client';
 import { SearchBar, SearchFilters, SearchResults } from '@/components/features/search';

@@ -1,6 +1,7 @@
 'use client';
 
 import { ExperienceType } from '@prisma/client';
+import { useTranslations } from 'next-intl';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -15,12 +16,12 @@ import { Button } from '@/components/ui/button';
 import { X, SlidersHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const TYPE_OPTIONS: { value: ExperienceType; label: string }[] = [
-  { value: 'TASTING', label: 'Tasting' },
-  { value: 'CELLAR_VISIT', label: 'Cellar Visit' },
-  { value: 'WORKSHOP', label: 'Workshop' },
-  { value: 'VINEYARD_TOUR', label: 'Vineyard Tour' },
-  { value: 'FOOD_PAIRING', label: 'Food Pairing' },
+const TYPE_OPTIONS: ExperienceType[] = [
+  'TASTING',
+  'CELLAR_VISIT',
+  'WORKSHOP',
+  'VINEYARD_TOUR',
+  'FOOD_PAIRING',
 ];
 
 interface SearchFiltersProps {
@@ -54,6 +55,10 @@ export function SearchFilters({
   onClearFilters,
   className,
 }: SearchFiltersProps) {
+  const t = useTranslations('search');
+  const tExp = useTranslations('experience.types');
+  const tWinery = useTranslations('winery');
+
   const hasActiveFilters =
     types.length > 0 ||
     commune !== null ||
@@ -101,7 +106,7 @@ export function SearchFilters({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-slate-900">
           <SlidersHorizontal className="h-5 w-5" aria-hidden="true" />
-          <span className="font-medium">Filters</span>
+          <span className="font-medium">{t('filters')}</span>
         </div>
         {hasActiveFilters && (
           <Button
@@ -111,7 +116,7 @@ export function SearchFilters({
             className="h-8 px-2 text-sm text-slate-600 hover:text-slate-900"
           >
             <X className="mr-1 h-4 w-4" />
-            Clear all
+            {t('clear')}
           </Button>
         )}
       </div>
@@ -119,21 +124,21 @@ export function SearchFilters({
       {/* Experience Type */}
       <div className="space-y-3">
         <Label className="text-sm font-medium text-slate-700">
-          Experience Type
+          {t('experienceType')}
         </Label>
         <div className="space-y-2">
-          {TYPE_OPTIONS.map((option) => (
-            <div key={option.value} className="flex items-center gap-2">
+          {TYPE_OPTIONS.map((typeValue) => (
+            <div key={typeValue} className="flex items-center gap-2">
               <Checkbox
-                id={`type-${option.value}`}
-                checked={types.includes(option.value)}
-                onCheckedChange={() => handleTypeToggle(option.value)}
+                id={`type-${typeValue}`}
+                checked={types.includes(typeValue)}
+                onCheckedChange={() => handleTypeToggle(typeValue)}
               />
               <Label
-                htmlFor={`type-${option.value}`}
+                htmlFor={`type-${typeValue}`}
                 className="cursor-pointer text-sm font-normal text-slate-600"
               >
-                {option.label}
+                {tExp(typeValue)}
               </Label>
             </div>
           ))}
@@ -142,16 +147,16 @@ export function SearchFilters({
 
       {/* Commune */}
       <div className="space-y-3">
-        <Label className="text-sm font-medium text-slate-700">Location</Label>
+        <Label className="text-sm font-medium text-slate-700">{t('location')}</Label>
         <Select
           value={commune ?? 'all'}
           onValueChange={(v) => onCommuneChange(v === 'all' ? null : v)}
         >
           <SelectTrigger>
-            <SelectValue placeholder="All communes" />
+            <SelectValue placeholder={tWinery('allCommunes')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All communes</SelectItem>
+            <SelectItem value="all">{tWinery('allCommunes')}</SelectItem>
             {communes.map((c) => (
               <SelectItem key={c} value={c}>
                 {c}
@@ -164,27 +169,27 @@ export function SearchFilters({
       {/* Price Range */}
       <div className="space-y-3">
         <Label className="text-sm font-medium text-slate-700">
-          Price Range (CHF)
+          {t('priceRange')}
         </Label>
         <div className="flex items-center gap-2">
           <Input
             type="number"
             min={0}
-            placeholder="Min"
+            placeholder={t('min')}
             value={minPrice !== null ? minPrice / 100 : ''}
             onChange={(e) => handlePriceChange(e.target.value, onMinPriceChange)}
             className="h-10"
-            aria-label="Minimum price"
+            aria-label={t('minPrice')}
           />
           <span className="text-slate-400">-</span>
           <Input
             type="number"
             min={0}
-            placeholder="Max"
+            placeholder={t('max')}
             value={maxPrice !== null ? maxPrice / 100 : ''}
             onChange={(e) => handlePriceChange(e.target.value, onMaxPriceChange)}
             className="h-10"
-            aria-label="Maximum price"
+            aria-label={t('maxPrice')}
           />
         </div>
       </div>
@@ -192,16 +197,16 @@ export function SearchFilters({
       {/* Capacity */}
       <div className="space-y-3">
         <Label className="text-sm font-medium text-slate-700">
-          Group Size (minimum)
+          {t('groupSize')}
         </Label>
         <Input
           type="number"
           min={1}
-          placeholder="Any size"
+          placeholder={t('anySize')}
           value={capacity ?? ''}
           onChange={(e) => handleCapacityChange(e.target.value)}
           className="h-10"
-          aria-label="Minimum group size"
+          aria-label={t('minGroupSize')}
         />
       </div>
     </div>

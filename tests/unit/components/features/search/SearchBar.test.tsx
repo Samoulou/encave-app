@@ -1,7 +1,24 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { NextIntlClientProvider } from 'next-intl';
 import { SearchBar } from '@/components/features/search/SearchBar';
+
+const messages = {
+  search: {
+    placeholder: 'Search experiences, wineries...',
+    searchExperiences: 'Search experiences',
+    clearSearch: 'Clear search',
+  },
+};
+
+function renderWithProviders(ui: React.ReactElement) {
+  return render(
+    <NextIntlClientProvider locale="en" messages={messages}>
+      {ui}
+    </NextIntlClientProvider>
+  );
+}
 
 describe('SearchBar', () => {
   beforeEach(() => {
@@ -14,14 +31,14 @@ describe('SearchBar', () => {
   });
 
   it('renders with placeholder text', () => {
-    render(<SearchBar value="" onChange={vi.fn()} />);
+    renderWithProviders(<SearchBar value="" onChange={vi.fn()} />);
     expect(
       screen.getByPlaceholderText('Search experiences, wineries...')
     ).toBeDefined();
   });
 
   it('renders with custom placeholder', () => {
-    render(
+    renderWithProviders(
       <SearchBar
         value=""
         onChange={vi.fn()}
@@ -32,24 +49,24 @@ describe('SearchBar', () => {
   });
 
   it('displays the current value', () => {
-    render(<SearchBar value="wine" onChange={vi.fn()} />);
+    renderWithProviders(<SearchBar value="wine" onChange={vi.fn()} />);
     const input = screen.getByRole('textbox');
     expect(input).toHaveValue('wine');
   });
 
   it('shows clear button when value is present', () => {
-    render(<SearchBar value="wine" onChange={vi.fn()} />);
+    renderWithProviders(<SearchBar value="wine" onChange={vi.fn()} />);
     expect(screen.getByRole('button', { name: /clear search/i })).toBeDefined();
   });
 
   it('hides clear button when value is empty', () => {
-    render(<SearchBar value="" onChange={vi.fn()} />);
+    renderWithProviders(<SearchBar value="" onChange={vi.fn()} />);
     expect(screen.queryByRole('button', { name: /clear search/i })).toBeNull();
   });
 
   it('clears value when clear button is clicked', async () => {
     const onChange = vi.fn();
-    render(<SearchBar value="wine" onChange={onChange} />);
+    renderWithProviders(<SearchBar value="wine" onChange={onChange} />);
 
     const clearButton = screen.getByRole('button', { name: /clear search/i });
     fireEvent.click(clearButton);
@@ -59,7 +76,7 @@ describe('SearchBar', () => {
 
   it('debounces onChange callback', async () => {
     const onChange = vi.fn();
-    render(<SearchBar value="" onChange={onChange} />);
+    renderWithProviders(<SearchBar value="" onChange={onChange} />);
 
     const input = screen.getByRole('textbox');
     fireEvent.change(input, { target: { value: 'w' } });
@@ -78,7 +95,7 @@ describe('SearchBar', () => {
   });
 
   it('has proper aria-label for accessibility', () => {
-    render(<SearchBar value="" onChange={vi.fn()} />);
+    renderWithProviders(<SearchBar value="" onChange={vi.fn()} />);
     expect(screen.getByRole('textbox', { name: /search experiences/i })).toBeDefined();
   });
 });

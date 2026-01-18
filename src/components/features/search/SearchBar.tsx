@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { Search, X, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -18,12 +19,16 @@ interface SearchBarProps {
 export function SearchBar({
   value,
   onChange,
-  placeholder = 'Search experiences, wineries...',
+  placeholder,
   className,
   isPending = false,
 }: SearchBarProps) {
+  const t = useTranslations('search');
   const [localValue, setLocalValue] = useState(value);
   const [isTyping, setIsTyping] = useState(false);
+
+  // Use translation if no custom placeholder provided
+  const displayPlaceholder = placeholder ?? t('placeholder');
 
   // Sync local state with prop value
   useEffect(() => {
@@ -71,12 +76,12 @@ export function SearchBar({
         type="text"
         value={localValue}
         onChange={(e) => setLocalValue(e.target.value)}
-        placeholder={placeholder}
+        placeholder={displayPlaceholder}
         className={cn(
           'h-12 pl-12 pr-10 text-base transition-colors',
           isTyping && 'border-amber-400 focus:border-amber-400'
         )}
-        aria-label="Search experiences"
+        aria-label={t('searchExperiences')}
       />
       {localValue && !showSpinner && (
         <Button
@@ -85,7 +90,7 @@ export function SearchBar({
           size="sm"
           onClick={handleClear}
           className="absolute right-2 top-1/2 h-8 w-8 -translate-y-1/2 p-0 hover:bg-slate-100"
-          aria-label="Clear search"
+          aria-label={t('clearSearch')}
         >
           <X className="h-4 w-4 text-slate-500" />
         </Button>

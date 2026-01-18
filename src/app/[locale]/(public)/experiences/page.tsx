@@ -1,11 +1,13 @@
 import { Suspense } from 'react';
-import { setRequestLocale } from 'next-intl/server';
+import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { type SearchParams } from '@/server/queries/experience.queries';
 import { ExperiencesContent } from './ExperiencesContent';
 import { ExperienceType } from '@prisma/client';
 import { SkeletonExperienceGrid, Skeleton, SkeletonContainer } from '@/components/shared/Skeleton';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 import type { Metadata } from 'next';
 
 // Static metadata - no async, instant navigation!
@@ -33,6 +35,8 @@ export default async function ExperiencesPage({ params, searchParams }: PageProp
   const { locale } = await params;
   setRequestLocale(locale);
   const searchParamsData = await searchParams;
+  const t = await getTranslations('search');
+  const tNav = await getTranslations('nav');
 
   // Parse search parameters (fast - no DB calls, no async)
   const page = searchParamsData.page ? parseInt(searchParamsData.page, 10) : 1;
@@ -50,17 +54,38 @@ export default async function ExperiencesPage({ params, searchParams }: PageProp
   return (
     <div className="min-h-screen bg-cream-50">
       <Header />
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Page Header - renders immediately (no async) */}
-        <div className="mb-8">
-          <h1 className="font-display text-3xl font-bold text-slate-900 sm:text-4xl">
-            Wine Experiences
-          </h1>
-          <p className="mt-2 text-lg text-slate-600">
-            Discover unique wine experiences in Valais
-          </p>
+
+      {/* Hero Section with visual warmth */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-burgundy-900 via-burgundy-800 to-burgundy-900">
+        {/* Decorative background pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+          }} />
         </div>
 
+        <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+          {/* Back to Home Link */}
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-sm font-medium text-cream-100 hover:text-white transition-colors mb-6"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            {tNav('backToHome')}
+          </Link>
+
+          {/* Page Title */}
+          <h1 className="font-display text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
+            {t('wineExperiences')}
+          </h1>
+          <p className="mt-3 max-w-2xl text-lg text-cream-100/90">
+            {t('discoverExperiences')}
+          </p>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Content with data - streams in when ready */}
         <Suspense fallback={<ContentLoadingState />}>
           <ExperiencesContent searchParams={parsedParams} />
