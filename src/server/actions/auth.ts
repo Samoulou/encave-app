@@ -12,7 +12,7 @@ import {
   AUTH_RATE_LIMIT,
   REGISTRATION_RATE_LIMIT,
 } from '@/server/services/rate-limit.service';
-import type { Locale } from '@prisma/client';
+import type { Locale, UserRole } from '@prisma/client';
 
 /**
  * Get the user's preferred locale from cookies (set by next-intl)
@@ -42,7 +42,7 @@ async function getClientIdentifier(prefix: string): Promise<string> {
 export async function loginAction(
   email: string,
   password: string
-): Promise<ActionResult<{ success: boolean }>> {
+): Promise<ActionResult<{ success: boolean; role: UserRole }>> {
   try {
     // Rate limiting check
     const identifier = await getClientIdentifier(`login:${email.toLowerCase()}`);
@@ -61,6 +61,22 @@ export async function loginAction(
       };
     }
 
+    // Fetch user to get their role before signing in
+    const user = await db.user.findUnique({
+      where: { email: email.toLowerCase() },
+      select: { role: true },
+    });
+
+    if (!user) {
+      return {
+        success: false,
+        error: {
+          code: 'UNAUTHORIZED',
+          message: 'Invalid email or password',
+        },
+      };
+    }
+
     // Import signIn dynamically to avoid "use server" export issue
     const { signIn } = await import('@/server/auth');
     await signIn('credentials', {
@@ -72,7 +88,7 @@ export async function loginAction(
     // Reset rate limit on successful login
     await resetRateLimit(identifier);
 
-    return { success: true, data: { success: true } };
+    return { success: true, data: { success: true, role: user.role } };
   } catch (error) {
     if (error instanceof AuthError) {
       return {

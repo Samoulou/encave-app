@@ -1,7 +1,7 @@
-import Link from 'next/link';
 import { Wine } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { auth } from '@/server/auth';
+import { Link } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { UserMenu } from '@/components/features/auth/UserMenu';
 import { NavLink } from '@/components/layout/NavLink';

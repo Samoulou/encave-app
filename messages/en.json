@@ -113,7 +113,7 @@
     "register": {
       "title": "Create an account",
       "subtitle": "Join EnCave and discover exceptional wine experiences",
-      "imageAlt": "Wine cellar with oak barrels",
+      "imageAlt": "Terraced vineyards in the Swiss Alps",
       "quote": "Every great wine begins with passion. Join our community of exceptional winemakers.",
       "passwordPlaceholder": "Create a password",
       "passwordHint": "At least 8 characters with uppercase, lowercase, number, and special character",
@@ -139,7 +139,9 @@
     "readyToExplore": "Ready to explore?",
     "startJourney": "Start your journey through the world of Swiss wines today.",
     "viewAllExperiences": "View All Experiences",
-    "becomePartner": "Become a Partner"
+    "becomePartner": "Become a Partner",
+    "searchPlaceholder": "Search wine experiences...",
+    "searchButton": "Search"
   },
   "experience": {
     "types": {

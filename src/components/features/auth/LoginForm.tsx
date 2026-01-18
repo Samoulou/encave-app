@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { Link, useRouter } from '@/i18n/navigation';
 import { loginSchema, type LoginInput } from '@/lib/validators/auth';
 import { loginAction } from '@/server/actions/auth';
 import { Button } from '@/components/ui/button';
@@ -19,10 +20,29 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { AuthPageLayout } from './AuthPageLayout';
-import Link from 'next/link';
+
+/**
+ * Validate returnUrl to prevent open redirect attacks
+ * Only allows same-origin relative paths
+ */
+function isValidReturnUrl(url: string): boolean {
+  // Must start with / and not // (prevents protocol-relative URLs)
+  if (!url.startsWith('/') || url.startsWith('//')) {
+    return false;
+  }
+  try {
+    // Parse as URL to check for any tricks
+    const parsed = new URL(url, 'http://localhost');
+    // Ensure it's a relative path (no host change)
+    return parsed.host === 'localhost';
+  } catch {
+    return false;
+  }
+}
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const t = useTranslations('auth.login');
   const tCommon = useTranslations('common');
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +64,33 @@ export function LoginForm() {
       const result = await loginAction(data.email, data.password);
 
       if (result.success) {
-        router.push('/');
+        // Check for callback URL (from middleware) or returnUrl parameter
+        const callbackUrl =
+          searchParams.get('callbackUrl') || searchParams.get('returnUrl');
+
+        // Determine redirect destination
+        let redirectPath: string;
+
+        if (callbackUrl && isValidReturnUrl(callbackUrl)) {
+          // Use callback URL if valid (for protected page access)
+          redirectPath = callbackUrl;
+        } else {
+          // Role-based redirect
+          switch (result.data.role) {
+            case 'WINEMAKER':
+              redirectPath = '/dashboard/bookings';
+              break;
+            case 'ADMIN':
+              redirectPath = '/admin';
+              break;
+            case 'CLIENT':
+            default:
+              redirectPath = '/dashboard';
+              break;
+          }
+        }
+
+        router.push(redirectPath);
         router.refresh();
       } else {
         setError(result.error.message);
@@ -58,7 +104,7 @@ export function LoginForm() {
 
   return (
     <AuthPageLayout
-      imageUrl="https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?q=80&w=1920&auto=format&fit=crop"
+      imageUrl="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=1920&auto=format&fit=crop"
       imageAlt={t('imageAlt')}
       quote={t('quote')}
     >

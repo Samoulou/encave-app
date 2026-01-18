@@ -1,6 +1,6 @@
-import Link from 'next/link';
 import { Sparkles, Building2, ArrowRight } from 'lucide-react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { Link } from '@/i18n/navigation';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { HealthStatus } from '@/components/shared/HealthStatus';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { JsonLd } from '@/components/shared/JsonLd';
 import { generateHomeMetadata } from '@/lib/seo';
 import { getBaseUrl } from '@/lib/env';
+import { HeroSearch } from '@/components/features/home/HeroSearch';
 import type { Locale } from '@/i18n/routing';
 
 type Props = {
@@ -57,16 +58,43 @@ export default async function Home({ params }: Props) {
     <JsonLd data={organizationSchema} />
     <div className="min-h-screen bg-cream-50">
       <Header />
-      <main id="main-content" className="flex flex-col items-center px-6 py-16 lg:px-8 lg:py-24">
-        {/* Hero Section */}
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <h1 className="font-display text-3xl sm:text-4xl md:text-display-lg text-burgundy-800 mb-4">
-            {t('title')}
-          </h1>
-          <p className="text-lg text-slate-600 mb-8">
-            {t('subtitle')}
-          </p>
+
+      {/* Hero Section with Background Image */}
+      <section className="relative overflow-hidden bg-burgundy-900">
+        {/* Background Image with Overlay */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: `url('https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?q=80&w=1920&auto=format&fit=crop')`,
+          }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-burgundy-900/90 via-burgundy-800/85 to-burgundy-900/90" />
         </div>
+
+        {/* Decorative pattern overlay */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+          }} />
+        </div>
+
+        {/* Hero Content */}
+        <div className="relative mx-auto max-w-6xl px-6 py-20 lg:px-8 lg:py-28">
+          <div className="text-center max-w-3xl mx-auto">
+            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-display-lg text-white mb-4 drop-shadow-lg">
+              {t('title')}
+            </h1>
+            <p className="text-lg sm:text-xl text-cream-100/90 mb-10 max-w-2xl mx-auto">
+              {t('subtitle')}
+            </p>
+
+            {/* Quick Search */}
+            <HeroSearch placeholder={t('searchPlaceholder')} buttonText={t('searchButton')} />
+          </div>
+        </div>
+      </section>
+
+      <main id="main-content" className="flex flex-col items-center px-6 py-16 lg:px-8 lg:py-24">
 
         {/* Discovery Section */}
         <section className="w-full max-w-4xl mx-auto mb-16" aria-labelledby="discover-heading">
@@ -135,7 +163,7 @@ export default async function Home({ params }: Props) {
               </Link>
             </Button>
             <Button size="lg" variant="outline" asChild>
-              <Link href="/register/winemaker">
+              <Link href="/register?winemaker=true">
                 {t('becomePartner')}
               </Link>
             </Button>

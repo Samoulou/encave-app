@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Wine } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { Link, useRouter } from '@/i18n/navigation';
 import { registerSchema, type RegisterInput } from '@/lib/validators/auth';
 import { registerAction, loginAction } from '@/server/actions/auth';
 import { Button } from '@/components/ui/button';
@@ -20,15 +21,18 @@ import {
 } from '@/components/ui/form';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AuthPageLayout } from './AuthPageLayout';
-import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
 export function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const t = useTranslations('auth.register');
   const tCommon = useTranslations('common');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Pre-check winemaker if coming from "Become Partner" link
+  const isWinemakerFromUrl = searchParams.get('winemaker') === 'true';
 
   const form = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
@@ -37,7 +41,7 @@ export function RegisterForm() {
       email: '',
       password: '',
       confirmPassword: '',
-      isWinemaker: false,
+      isWinemaker: isWinemakerFromUrl,
     },
   });
 
@@ -65,11 +69,11 @@ export function RegisterForm() {
           timeoutPromise,
         ]);
         if (loginResult.success) {
-          // Redirect winemakers to onboarding, others to home
+          // Redirect winemakers to onboarding, clients to dashboard
           if (data.isWinemaker) {
             router.push('/onboarding/winery');
           } else {
-            router.push('/');
+            router.push('/dashboard');
           }
           router.refresh();
         } else {
@@ -93,7 +97,7 @@ export function RegisterForm() {
 
   return (
     <AuthPageLayout
-      imageUrl="https://images.unsplash.com/photo-1516594915697-87eb3b1c14ea?q=80&w=1920&auto=format&fit=crop"
+      imageUrl="https://images.unsplash.com/photo-1523531294919-4bcd7c65e216?q=80&w=1920&auto=format&fit=crop"
       imageAlt={t('imageAlt')}
       quote={t('quote')}
     >

@@ -113,7 +113,7 @@
     "register": {
       "title": "Konto erstellen",
       "subtitle": "Treten Sie EnCave bei und entdecken Sie aussergewohnliche Weinerlebnisse",
-      "imageAlt": "Weinkeller mit Eichenfassern",
+      "imageAlt": "Terrassierte Weinberge in den Schweizer Alpen",
       "quote": "Jeder grossartige Wein beginnt mit Leidenschaft. Treten Sie unserer Gemeinschaft aussergewohnlicher Winzer bei.",
       "passwordPlaceholder": "Passwort erstellen",
       "passwordHint": "Mindestens 8 Zeichen mit Gross-, Kleinbuchstaben, Zahl und Sonderzeichen",
@@ -139,7 +139,9 @@
     "readyToExplore": "Bereit zu entdecken?",
     "startJourney": "Beginnen Sie noch heute Ihre Reise durch die Welt der Schweizer Weine.",
     "viewAllExperiences": "Alle Erlebnisse ansehen",
-    "becomePartner": "Partner werden"
+    "becomePartner": "Partner werden",
+    "searchPlaceholder": "Weinerlebnisse suchen...",
+    "searchButton": "Suchen"
   },
   "experience": {
     "types": {

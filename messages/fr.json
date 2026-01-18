@@ -113,7 +113,7 @@
     "register": {
       "title": "Créer un compte",
       "subtitle": "Rejoignez EnCave et découvrez des expériences viticoles exceptionnelles",
-      "imageAlt": "Cave à vin avec barriques de chêne",
+      "imageAlt": "Vignobles en terrasses dans les Alpes suisses",
       "quote": "Chaque grand vin commence par la passion. Rejoignez notre communauté de vignerons exceptionnels.",
       "passwordPlaceholder": "Créez un mot de passe",
       "passwordHint": "Au moins 8 caractères avec majuscule, minuscule, chiffre et caractère spécial",
@@ -139,7 +139,9 @@
     "readyToExplore": "Prêt à explorer?",
     "startJourney": "Commencez votre voyage à travers le monde des vins suisses aujourd'hui.",
     "viewAllExperiences": "Voir toutes les expériences",
-    "becomePartner": "Devenir partenaire"
+    "becomePartner": "Devenir partenaire",
+    "searchPlaceholder": "Rechercher des expériences viticoles...",
+    "searchButton": "Rechercher"
   },
   "experience": {
     "types": {
