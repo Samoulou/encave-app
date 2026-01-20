@@ -5,6 +5,15 @@ import { db } from '@/server/db';
 import { hasOverlappingSlots } from '@/lib/constants/time-slots';
 import type { ActionResult } from '@/types/actions';
 
+/**
+ * Normalize a date to UTC midnight to avoid timezone issues.
+ * This ensures the same date is stored/queried regardless of client timezone.
+ */
+function normalizeToUTCDate(date: Date): Date {
+  const d = new Date(date);
+  return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+}
+
 export interface AvailabilitySlotInput {
   id?: string;
   dayOfWeek: number;
@@ -336,12 +345,15 @@ export async function blockDate(
       };
     }
 
+    // Normalize date to UTC to avoid timezone issues
+    const normalizedDate = normalizeToUTCDate(date);
+
     // Check if already blocked
     const existing = await db.blockedDate.findUnique({
       where: {
         experienceId_date: {
           experienceId,
-          date,
+          date: normalizedDate,
         },
       },
     });
@@ -357,7 +369,7 @@ export async function blockDate(
     const blockedDate = await db.blockedDate.create({
       data: {
         experienceId,
-        date,
+        date: normalizedDate,
         reason,
       },
     });
@@ -415,11 +427,14 @@ export async function unblockDate(
       };
     }
 
+    // Normalize date to UTC to avoid timezone issues
+    const normalizedDate = normalizeToUTCDate(date);
+
     // Delete blocked date
     await db.blockedDate.deleteMany({
       where: {
         experienceId,
-        date,
+        date: normalizedDate,
       },
     });
 
@@ -467,6 +482,9 @@ export async function blockDateForAllExperiences(
       };
     }
 
+    // Normalize date to UTC to avoid timezone issues
+    const normalizedDate = normalizeToUTCDate(date);
+
     // Block date for each experience
     let blockedCount = 0;
     for (const experience of winery.experiences) {
@@ -474,7 +492,7 @@ export async function blockDateForAllExperiences(
         await db.blockedDate.create({
           data: {
             experienceId: experience.id,
-            date,
+            date: normalizedDate,
             reason,
           },
         });
@@ -522,10 +540,13 @@ export async function unblockDateForAllExperiences(
       };
     }
 
+    // Normalize date to UTC to avoid timezone issues
+    const normalizedDate = normalizeToUTCDate(date);
+
     // Delete all blocked dates for this winery on this date
     const result = await db.blockedDate.deleteMany({
       where: {
-        date,
+        date: normalizedDate,
         experience: { wineryId: winery.id },
       },
     });

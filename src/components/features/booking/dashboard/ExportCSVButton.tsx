@@ -1,6 +1,6 @@
 'use client';
 
-import { useTransition } from 'react';
+import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Download, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,10 +10,11 @@ import { BookingStatus } from '@prisma/client';
 
 export function ExportCSVButton() {
   const searchParams = useSearchParams();
-  const [isPending, startTransition] = useTransition();
+  const [isExporting, setIsExporting] = useState(false);
 
-  const handleExport = () => {
-    startTransition(async () => {
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
       // Parse current filters from URL
       const statusParam = searchParams.get('status');
       const experienceId = searchParams.get('experience') ?? undefined;
@@ -51,7 +52,12 @@ export function ExportCSVButton() {
       } else {
         toast.error(result.error.message);
       }
-    });
+    } catch (error) {
+      console.error('Export failed:', error);
+      toast.error('Failed to export bookings. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
@@ -59,10 +65,10 @@ export function ExportCSVButton() {
       variant="outline"
       size="sm"
       onClick={handleExport}
-      disabled={isPending}
+      disabled={isExporting}
       className="gap-2"
     >
-      {isPending ? (
+      {isExporting ? (
         <Loader2 className="h-4 w-4 animate-spin" />
       ) : (
         <Download className="h-4 w-4" />
