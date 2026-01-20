@@ -438,7 +438,15 @@
     "anySize": "Beliebige Grosse",
     "minGroupSize": "Mindestgruppengrosse",
     "noResultsFound": "Keine Ergebnisse gefunden",
-    "tryDifferentFilters": "Versuchen Sie, Ihre Filter oder Suchbegriffe anzupassen."
+    "tryDifferentFilters": "Versuchen Sie, Ihre Filter oder Suchbegriffe anzupassen.",
+    "locationPlaceholder": "Stadt oder Dorf...",
+    "clearLocation": "Standort loschen",
+    "experiencesNear": "Erlebnisse in der Nahe von {location}",
+    "experienceFound": "Erlebnis gefunden",
+    "experiencesFound": "Erlebnisse gefunden",
+    "pageOf": "Seite {page} von {totalPages}",
+    "sortBy": "Sortieren nach",
+    "noExperiencesAtLocation": "Keine Erlebnisse in {location}, aber entdecken Sie nahegelegene Weinguter"
   },
   "errors": {
     "somethingWentWrong": "Etwas ist schiefgelaufen!",

@@ -28,6 +28,10 @@ interface PageProps {
     capacity?: string;
     sort?: string;
     page?: string;
+    // Location-based search params
+    location?: string;
+    lat?: string;
+    lng?: string;
   }>;
 }
 
@@ -49,6 +53,10 @@ export default async function ExperiencesPage({ params, searchParams }: PageProp
     capacity: searchParamsData.capacity ? parseInt(searchParamsData.capacity, 10) : undefined,
     sort: parseSort(searchParamsData.sort),
     page: page > 0 ? page : 1,
+    // Location-based search params
+    location: searchParamsData.location || undefined,
+    lat: searchParamsData.lat ? parseFloat(searchParamsData.lat) : undefined,
+    lng: searchParamsData.lng ? parseFloat(searchParamsData.lng) : undefined,
   };
 
   return (
@@ -166,8 +174,8 @@ function parseTypeParam(
 
 function parseSort(
   sort: string | undefined
-): 'relevance' | 'price_asc' | 'price_desc' | 'newest' {
-  const validSorts = ['relevance', 'price_asc', 'price_desc', 'newest'] as const;
+): 'relevance' | 'price_asc' | 'price_desc' | 'newest' | 'distance' {
+  const validSorts = ['relevance', 'price_asc', 'price_desc', 'newest', 'distance'] as const;
   if (sort && validSorts.includes(sort as (typeof validSorts)[number])) {
     return sort as (typeof validSorts)[number];
   }

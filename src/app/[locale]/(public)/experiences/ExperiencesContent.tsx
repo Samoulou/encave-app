@@ -74,6 +74,10 @@ export async function ExperiencesContent({ searchParams }: ExperiencesContentPro
           limit: searchResult.limit,
           totalPages: searchResult.totalPages,
         }}
+        locationSearch={{
+          hasLocationSearch: searchResult.hasLocationSearch,
+          locationName: searchResult.locationName,
+        }}
       />
     </>
   );

@@ -1,10 +1,11 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Clock, Users, MapPin } from 'lucide-react';
+import { Clock, Users, MapPin, Navigation } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { formatCHF } from '@/lib/utils/currency';
 import { IMAGE_PLACEHOLDERS } from '@/lib/image-placeholder';
+import { formatDistance } from '@/lib/geo-utils';
 import type { ExperienceType } from '@prisma/client';
 
 const TYPE_LABELS: Record<ExperienceType, string> = {
@@ -30,6 +31,7 @@ interface ExperienceCardProps {
       slug: string;
       commune: string;
     };
+    distance?: number | null;
   };
   className?: string;
 }
@@ -88,10 +90,18 @@ export function ExperienceCard({ experience, className }: ExperienceCardProps) {
             {experience.title}
           </h3>
 
-          {/* Location */}
-          <div className="mt-2 flex items-center gap-1 text-sm text-slate-500">
-            <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
-            <span>{experience.winery.commune}</span>
+          {/* Location with optional distance */}
+          <div className="mt-2 flex items-center justify-between text-sm text-slate-500">
+            <div className="flex items-center gap-1">
+              <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>{experience.winery.commune}</span>
+            </div>
+            {experience.distance != null && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-burgundy-50 px-2 py-0.5 text-xs font-medium text-burgundy-700">
+                <Navigation className="h-3 w-3" aria-hidden="true" />
+                {formatDistance(experience.distance)}
+              </span>
+            )}
           </div>
 
           {/* Meta Info */}
