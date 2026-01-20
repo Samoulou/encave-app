@@ -6,7 +6,6 @@ import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import { LocationAutocomplete } from './LocationAutocomplete';
 import { type ValaisLocation, getLocationDisplayName } from '@/lib/constants/locations';
 

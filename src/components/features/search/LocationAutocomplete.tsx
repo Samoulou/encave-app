@@ -14,7 +14,7 @@ import { calculateDistance, formatDistance } from '@/lib/geo-utils';
 
 interface LocationAutocompleteProps {
   value: ValaisLocation | null;
-  onChange: (location: ValaisLocation | null) => void;
+  onChange: (_location: ValaisLocation | null) => void;
   placeholder?: string;
   className?: string;
   referenceLocation?: { lat: number; lng: number } | null;
