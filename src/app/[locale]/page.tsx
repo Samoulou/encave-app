@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { JsonLd } from '@/components/shared/JsonLd';
 import { generateHomeMetadata } from '@/lib/seo';
 import { getBaseUrl } from '@/lib/env';
-import { HeroSearch } from '@/components/features/home/HeroSearch';
+import { HeroLocationSearch } from '@/components/features/search/HeroLocationSearch';
 import type { Locale } from '@/i18n/routing';
 
 type Props = {
@@ -88,8 +88,11 @@ export default async function Home({ params }: Props) {
               {t('subtitle')}
             </p>
 
-            {/* Quick Search */}
-            <HeroSearch placeholder={t('searchPlaceholder')} buttonText={t('searchButton')} />
+            {/* Quick Search with Location Autocomplete */}
+            <HeroLocationSearch
+              searchPlaceholder={t('searchPlaceholder')}
+              buttonText={t('searchButton')}
+            />
           </div>
         </div>
       </section>

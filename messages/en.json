@@ -438,7 +438,15 @@
     "anySize": "Any size",
     "minGroupSize": "Minimum group size",
     "noResultsFound": "No results found",
-    "tryDifferentFilters": "Try adjusting your filters or search terms."
+    "tryDifferentFilters": "Try adjusting your filters or search terms.",
+    "locationPlaceholder": "City or village...",
+    "clearLocation": "Clear location",
+    "experiencesNear": "Experiences near {location}",
+    "experienceFound": "experience found",
+    "experiencesFound": "experiences found",
+    "pageOf": "page {page} of {totalPages}",
+    "sortBy": "Sort by",
+    "noExperiencesAtLocation": "No experiences at {location}, but discover nearby wineries"
   },
   "errors": {
     "somethingWentWrong": "Something went wrong!",

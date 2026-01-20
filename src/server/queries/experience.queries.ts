@@ -3,6 +3,8 @@
 import { unstable_cache } from 'next/cache';
 import { db } from '@/server/db';
 import { ExperienceType, ExperienceStatus, Prisma } from '@prisma/client';
+import { calculateDistance } from '@/lib/geo-utils';
+import { getLocationById } from '@/lib/constants/locations';
 
 export interface SearchParams {
   search?: string;
@@ -11,9 +13,13 @@ export interface SearchParams {
   minPrice?: number;
   maxPrice?: number;
   capacity?: number;
-  sort?: 'relevance' | 'price_asc' | 'price_desc' | 'newest';
+  sort?: 'relevance' | 'price_asc' | 'price_desc' | 'newest' | 'distance';
   page?: number;
   limit?: number;
+  // Location-based search params
+  location?: string; // Location slug
+  lat?: number; // Reference latitude
+  lng?: number; // Reference longitude
 }
 
 export interface ExperienceSearchResult {
@@ -32,7 +38,11 @@ export interface ExperienceSearchResult {
     name: string;
     slug: string;
     commune: string;
+    latitude: number | null;
+    longitude: number | null;
   };
+  // Distance from reference point (added when location search is used)
+  distance?: number | null;
 }
 
 export interface PaginatedSearchResult {
@@ -41,6 +51,9 @@ export interface PaginatedSearchResult {
   page: number;
   limit: number;
   totalPages: number;
+  // Location search info
+  locationName?: string;
+  hasLocationSearch: boolean;
 }
 
 function getOrderBy(
@@ -65,6 +78,7 @@ const DEFAULT_PAGE_SIZE = 20;
 
 /**
  * Search experiences with filters and pagination.
+ * Supports location-based proximity sorting.
  * Cached for 2 minutes to balance freshness with performance.
  */
 export async function searchExperiences(
@@ -78,6 +92,10 @@ export async function searchExperiences(
       const page = params.page ?? 1;
       const limit = params.limit ?? DEFAULT_PAGE_SIZE;
       const skip = (page - 1) * limit;
+
+      // Check if location-based search
+      const hasLocationSearch = !!(params.location && params.lat !== undefined && params.lng !== undefined);
+      const locationName = params.location ? getLocationById(params.location)?.name : undefined;
 
       const where: Prisma.ExperienceWhereInput = {
         status: ExperienceStatus.PUBLISHED,
@@ -102,7 +120,7 @@ export async function searchExperiences(
           params.type.length > 0 && {
             type: { in: params.type },
           }),
-        // Commune filter
+        // Commune filter (backward compatible)
         ...(params.commune && {
           winery: { commune: params.commune },
         }),
@@ -122,7 +140,62 @@ export async function searchExperiences(
         }),
       };
 
-      // Execute both queries in parallel for performance
+      // For location-based search, we fetch all matching results and sort in JS
+      // This is more efficient for small datasets (<100 wineries)
+      if (hasLocationSearch && params.lat !== undefined && params.lng !== undefined) {
+        const refLat = params.lat;
+        const refLng = params.lng;
+
+        // Fetch all matching experiences with coordinates
+        const allExperiences = await db.experience.findMany({
+          where,
+          include: {
+            winery: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                commune: true,
+                latitude: true,
+                longitude: true,
+              },
+            },
+          },
+        });
+
+        // Calculate distances and sort
+        const experiencesWithDistance = allExperiences.map((exp) => {
+          const distance =
+            exp.winery.latitude != null && exp.winery.longitude != null
+              ? calculateDistance(refLat, refLng, exp.winery.latitude, exp.winery.longitude)
+              : null;
+          return { ...exp, distance };
+        });
+
+        // Sort by distance (nulls last)
+        experiencesWithDistance.sort((a, b) => {
+          if (a.distance === null && b.distance === null) return 0;
+          if (a.distance === null) return 1;
+          if (b.distance === null) return -1;
+          return a.distance - b.distance;
+        });
+
+        // Apply pagination
+        const total = experiencesWithDistance.length;
+        const paginatedExperiences = experiencesWithDistance.slice(skip, skip + limit);
+
+        return {
+          experiences: paginatedExperiences,
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+          locationName,
+          hasLocationSearch: true,
+        };
+      }
+
+      // Standard search without location
       const [experiences, total] = await Promise.all([
         db.experience.findMany({
           where,
@@ -133,6 +206,8 @@ export async function searchExperiences(
                 name: true,
                 slug: true,
                 commune: true,
+                latitude: true,
+                longitude: true,
               },
             },
           },
@@ -144,11 +219,12 @@ export async function searchExperiences(
       ]);
 
       return {
-        experiences,
+        experiences: experiences.map((exp) => ({ ...exp, distance: undefined })),
         total,
         page,
         limit,
         totalPages: Math.ceil(total / limit),
+        hasLocationSearch: false,
       };
     },
     ['search-experiences', cacheKey],

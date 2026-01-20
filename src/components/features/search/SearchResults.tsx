@@ -9,12 +9,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Wine, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Wine, ChevronLeft, ChevronRight, MapPin } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { ExperienceSearchResult } from '@/server/queries/experience.queries';
 
-type SortOption = 'relevance' | 'price_asc' | 'price_desc' | 'newest';
+type SortOption = 'relevance' | 'price_asc' | 'price_desc' | 'newest' | 'distance';
 
-const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+const SORT_OPTIONS: { value: SortOption; label: string; locationOnly?: boolean }[] = [
+  { value: 'distance', label: 'Distance', locationOnly: true },
   { value: 'relevance', label: 'Relevance' },
   { value: 'price_asc', label: 'Price: Low to High' },
   { value: 'price_desc', label: 'Price: High to Low' },
@@ -28,12 +30,18 @@ interface PaginationInfo {
   totalPages: number;
 }
 
+interface LocationSearchInfo {
+  hasLocationSearch: boolean;
+  locationName?: string;
+}
+
 interface SearchResultsProps {
   experiences: ExperienceSearchResult[];
   sort: SortOption;
   onSortChange: (_sort: SortOption) => void;
   pagination: PaginationInfo;
   onPageChange: (_page: number) => void;
+  locationSearch?: LocationSearchInfo;
 }
 
 export function SearchResults({
@@ -42,31 +50,48 @@ export function SearchResults({
   onSortChange,
   pagination,
   onPageChange,
+  locationSearch,
 }: SearchResultsProps) {
   const { total, page, totalPages } = pagination;
   const count = experiences.length;
+  const t = useTranslations('search');
+
+  // Filter sort options - show distance only when location search is active
+  const availableSortOptions = SORT_OPTIONS.filter(
+    (opt) => !opt.locationOnly || locationSearch?.hasLocationSearch
+  );
 
   return (
     <div className="space-y-6">
+      {/* Location Search Header */}
+      {locationSearch?.hasLocationSearch && locationSearch.locationName && (
+        <div className="flex items-center gap-2 rounded-lg bg-burgundy-50 px-4 py-3 text-burgundy-800">
+          <MapPin className="h-5 w-5 text-burgundy-600" aria-hidden="true" />
+          <span className="text-sm font-medium">
+            {t('experiencesNear', { location: locationSearch.locationName })}
+          </span>
+        </div>
+      )}
+
       {/* Results Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-slate-600" data-testid="results-count">
           <span className="font-medium text-slate-900">{total}</span>{' '}
-          {total === 1 ? 'experience' : 'experiences'} found
+          {total === 1 ? t('experienceFound') : t('experiencesFound')}
           {totalPages > 1 && (
             <span className="ml-1 text-slate-500">
-              (page {page} of {totalPages})
+              ({t('pageOf', { page, totalPages })})
             </span>
           )}
         </p>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-slate-600">Sort by:</span>
+          <span className="text-sm text-slate-600">{t('sortBy')}:</span>
           <Select value={sort} onValueChange={(v) => onSortChange(v as SortOption)}>
             <SelectTrigger className="h-9 w-[180px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {SORT_OPTIONS.map((option) => (
+              {availableSortOptions.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
                 </SelectItem>
@@ -84,7 +109,7 @@ export function SearchResults({
           ))}
         </div>
       ) : (
-        <EmptyState />
+        <EmptyState locationName={locationSearch?.locationName} />
       )}
 
       {/* Pagination Controls */}
@@ -201,18 +226,25 @@ function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
   );
 }
 
-function EmptyState() {
+interface EmptyStateProps {
+  locationName?: string;
+}
+
+function EmptyState({ locationName }: EmptyStateProps) {
+  const t = useTranslations('search');
+
   return (
     <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-stone-300 bg-cream-50 px-6 py-16 text-center" data-testid="empty-state">
       <div className="flex h-16 w-16 items-center justify-center rounded-full bg-burgundy-100">
         <Wine className="h-8 w-8 text-burgundy-600" aria-hidden="true" />
       </div>
       <h3 className="mt-4 font-display text-lg font-semibold text-slate-900">
-        No experiences found
+        {t('noResultsFound')}
       </h3>
       <p className="mt-2 max-w-sm text-sm text-slate-600">
-        No experiences match your filters. Try adjusting your search or clearing
-        some filters to see more results.
+        {locationName
+          ? t('noExperiencesAtLocation', { location: locationName })
+          : t('tryDifferentFilters')}
       </p>
     </div>
   );

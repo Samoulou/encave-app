@@ -12,7 +12,7 @@ import { SlidersHorizontal, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ExperienceSearchResult } from '@/server/queries/experience.queries';
 
-type SortOption = 'relevance' | 'price_asc' | 'price_desc' | 'newest';
+type SortOption = 'relevance' | 'price_asc' | 'price_desc' | 'newest' | 'distance';
 
 interface PaginationInfo {
   total: number;
@@ -21,10 +21,16 @@ interface PaginationInfo {
   totalPages: number;
 }
 
+interface LocationSearchInfo {
+  hasLocationSearch: boolean;
+  locationName?: string;
+}
+
 interface ExperiencesPageClientProps {
   initialExperiences: ExperienceSearchResult[];
   communes: string[];
   pagination: PaginationInfo;
+  locationSearch: LocationSearchInfo;
 }
 
 interface FilterState {
@@ -41,6 +47,7 @@ export function ExperiencesPageClient({
   initialExperiences,
   communes,
   pagination,
+  locationSearch,
 }: ExperiencesPageClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -255,6 +262,7 @@ export function ExperiencesPageClient({
             onSortChange={handleSortChange}
             pagination={pagination}
             onPageChange={handlePageChange}
+            locationSearch={locationSearch}
           />
         </div>
       </main>

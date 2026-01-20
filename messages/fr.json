@@ -438,7 +438,15 @@
     "anySize": "Toute taille",
     "minGroupSize": "Taille minimum du groupe",
     "noResultsFound": "Aucun résultat trouvé",
-    "tryDifferentFilters": "Essayez d'ajuster vos filtres ou termes de recherche."
+    "tryDifferentFilters": "Essayez d'ajuster vos filtres ou termes de recherche.",
+    "locationPlaceholder": "Ville ou village...",
+    "clearLocation": "Effacer la localisation",
+    "experiencesNear": "Expériences près de {location}",
+    "experienceFound": "expérience trouvée",
+    "experiencesFound": "expériences trouvées",
+    "pageOf": "page {page} sur {totalPages}",
+    "sortBy": "Trier par",
+    "noExperiencesAtLocation": "Aucune expérience à {location}, mais découvrez ces caves à proximité"
   },
   "errors": {
     "somethingWentWrong": "Une erreur s'est produite!",
