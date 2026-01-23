@@ -7,3 +7,5 @@ export { TransactionTable } from './TransactionTable';
 export { YearToDateSummary } from './YearToDateSummary';
 export { PayoutScheduleInfo } from './PayoutScheduleInfo';
 export { ExportEarningsButton } from './ExportEarningsButton';
+export { EarningsPeriodSelector } from './EarningsPeriodSelector';
+export { EarningsPageHeader } from './EarningsPageHeader';

@@ -1,10 +1,7 @@
-import {
-  TransactionFilters,
-  TransactionTable,
-} from '@/components/features/earnings';
+import Link from 'next/link';
+import { TransactionTable } from '@/components/features/earnings';
 import {
   getTransactions,
-  getWineryExperiencesForEarnings,
   type TransactionFilters as TransactionFiltersType,
   type TransactionStatus,
 } from '@/server/queries/earnings.queries';
@@ -38,26 +35,21 @@ export async function EarningsTransactionsSection({ wineryId, params }: Earnings
     filters.status = params.status as TransactionStatus;
   }
 
-  // Fetch transactions and experience options in parallel
-  const [transactions, experiences] = await Promise.all([
-    getTransactions(wineryId, filters),
-    getWineryExperiencesForEarnings(wineryId),
-  ]);
+  // Fetch transactions
+  const transactions = await getTransactions(wineryId, filters);
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-lg font-semibold text-slate-900">
-          Transactions
-        </h2>
-        <TransactionFilters experiences={experiences} />
+    <div className="flex flex-col gap-4">
+      {/* Section Header */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold text-[#1a0f12]">Recent Transactions</h2>
+        <Link
+          href="/dashboard/earnings/all"
+          className="text-primary text-sm font-bold hover:underline"
+        >
+          View All
+        </Link>
       </div>
-
-      {/* Results Info */}
-      <p className="text-sm text-slate-600">
-        {transactions.length} transaction{transactions.length !== 1 ? 's' : ''}
-        {Object.keys(filters).length > 0 && ' (filtered)'}
-      </p>
 
       {/* Transaction Table */}
       <TransactionTable transactions={transactions} />

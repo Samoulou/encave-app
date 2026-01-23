@@ -2,12 +2,16 @@
 
 import { useState, useMemo, memo } from 'react';
 import { format } from 'date-fns';
-import { Info } from 'lucide-react';
-import { TooltipProvider } from '@/components/ui/tooltip';
-import { Card } from '@/components/ui/card';
+import { MoreVertical } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 import { formatCHF } from '@/lib/utils/currency';
 import { TransactionStatusBadge } from './TransactionStatusBadge';
-import { PayoutBreakdownTooltip } from './PayoutBreakdownTooltip';
 import { Pagination } from '@/components/shared/Pagination';
 import type { Transaction } from '@/server/queries/earnings.queries';
 
@@ -16,6 +20,17 @@ interface TransactionTableProps {
 }
 
 const DEFAULT_PAGE_SIZE = 20;
+
+/**
+ * Generate initials from a name for avatar fallback.
+ */
+function getInitials(name: string): string {
+  const parts = name.split(' ').filter(Boolean);
+  if (parts.length >= 2) {
+    return `${parts[0]?.[0] ?? ''}${parts[1]?.[0] ?? ''}`.toUpperCase();
+  }
+  return (parts[0]?.slice(0, 2) ?? '').toUpperCase();
+}
 
 function TransactionTableComponent({ transactions }: TransactionTableProps) {
   // Pagination state
@@ -44,107 +59,133 @@ function TransactionTableComponent({ transactions }: TransactionTableProps) {
     setPageSize(size);
     setCurrentPage(1);
   };
+
   if (transactions.length === 0) {
     return (
-      <Card className="p-8 text-center">
-        <p className="text-slate-600">No transactions found.</p>
-      </Card>
+      <div className="rounded-xl border border-[#e5d2d7] bg-white p-8 text-center shadow-sm">
+        <p className="text-[#915564]">No transactions found.</p>
+      </div>
     );
   }
 
   return (
-    <TooltipProvider delayDuration={200}>
-      <Card className="overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50">
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
-                  Date
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
-                  Experience
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-slate-500">
-                  Guests
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-500">
-                  Gross
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-500">
-                  Fee
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-slate-500">
-                  Payout
-                </th>
-                <th className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-slate-500">
-                  Status
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {paginatedTransactions.map((transaction) => (
-                <tr
-                  key={transaction.id}
-                  className="hover:bg-slate-50 transition-colors"
-                >
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-900">
-                    {format(transaction.date, 'MMM d, yyyy')}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="text-sm font-medium text-slate-900">
-                      {transaction.experienceTitle}
-                    </div>
-                    <div className="text-xs text-slate-500">
-                      {transaction.reference}
-                    </div>
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-center text-sm text-slate-600">
-                    {transaction.guestCount}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-right text-sm text-slate-900">
-                    {formatCHF(transaction.grossAmount)}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-right">
-                    <PayoutBreakdownTooltip
-                      grossAmount={transaction.grossAmount}
-                      platformFee={transaction.platformFee}
-                      netPayout={transaction.netPayout}
-                    >
-                      <span className="inline-flex items-center gap-1 text-sm text-slate-500 cursor-help">
-                        -{formatCHF(transaction.platformFee)}
-                        <Info className="h-3 w-3" />
-                      </span>
-                    </PayoutBreakdownTooltip>
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-right text-sm font-medium text-emerald-600">
-                    {formatCHF(transaction.netPayout)}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-center">
-                    <TransactionStatusBadge status={transaction.status} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+    <div className="rounded-xl border border-[#e5d2d7] bg-white shadow-sm overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-sm whitespace-nowrap">
+          <thead className="bg-gray-50 border-b border-[#e5d2d7] text-[#915564] font-medium uppercase text-xs tracking-wider">
+            <tr>
+              <th scope="col" className="px-6 py-4">
+                Date
+              </th>
+              <th scope="col" className="px-6 py-4">
+                Booking ID
+              </th>
+              <th scope="col" className="px-6 py-4">
+                Experience
+              </th>
+              <th scope="col" className="px-6 py-4">
+                Customer
+              </th>
+              <th scope="col" className="px-6 py-4 text-right">
+                Amount
+              </th>
+              <th scope="col" className="px-6 py-4 text-center">
+                Status
+              </th>
+              <th scope="col" className="px-6 py-4">
+                <span className="sr-only">Actions</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#f2e9eb] text-[#1a0f12]">
+            {paginatedTransactions.map((transaction) => (
+              <tr
+                key={transaction.id}
+                className="hover:bg-[#f8f6f6] transition-colors"
+              >
+                {/* Date */}
+                <td className="px-6 py-4 font-medium">
+                  {format(transaction.date, 'MMM d, yyyy')}
+                </td>
 
-        {/* Pagination */}
-        {transactions.length > DEFAULT_PAGE_SIZE && (
-          <div className="border-t border-slate-200 p-4">
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              totalItems={transactions.length}
-              pageSize={pageSize}
-              onPageChange={handlePageChange}
-              onPageSizeChange={handlePageSizeChange}
-              pageSizeOptions={[10, 20, 50]}
-            />
-          </div>
-        )}
-      </Card>
-    </TooltipProvider>
+                {/* Booking ID */}
+                <td className="px-6 py-4 text-[#915564] font-mono text-xs">
+                  #{transaction.bookingId}
+                </td>
+
+                {/* Experience */}
+                <td className="px-6 py-4">{transaction.experienceTitle}</td>
+
+                {/* Customer */}
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-2">
+                    {transaction.customer.avatarUrl ? (
+                      <div
+                        className="h-6 w-6 rounded-full bg-gray-200 bg-cover bg-center flex-shrink-0"
+                        style={{
+                          backgroundImage: `url(${transaction.customer.avatarUrl})`,
+                        }}
+                        aria-hidden="true"
+                      />
+                    ) : (
+                      <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary flex-shrink-0">
+                        {getInitials(transaction.customer.name)}
+                      </div>
+                    )}
+                    <span>{transaction.customer.name}</span>
+                  </div>
+                </td>
+
+                {/* Amount */}
+                <td className="px-6 py-4 text-right font-bold tabular-nums">
+                  {formatCHF(transaction.grossAmount)}
+                </td>
+
+                {/* Status */}
+                <td className="px-6 py-4 text-center">
+                  <TransactionStatusBadge status={transaction.status} />
+                </td>
+
+                {/* Actions */}
+                <td className="px-6 py-4 text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-[#915564] hover:text-primary hover:bg-transparent"
+                      >
+                        <MoreVertical className="h-5 w-5" />
+                        <span className="sr-only">Open menu</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem>View Details</DropdownMenuItem>
+                      <DropdownMenuItem>Download Receipt</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination */}
+      {transactions.length > DEFAULT_PAGE_SIZE && (
+        <div className="border-t border-[#e5d2d7] p-4">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={transactions.length}
+            pageSize={pageSize}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+            pageSizeOptions={[10, 20, 50]}
+          />
+        </div>
+      )}
+    </div>
   );
 }
 

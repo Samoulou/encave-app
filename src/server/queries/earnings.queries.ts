@@ -14,8 +14,11 @@ export type TransactionStatus = 'paid' | 'processing' | 'pending' | 'refunded';
 export interface EarningsSummary {
   totalEarnings: number;
   thisMonth: number;
+  lastMonth: number;
+  yearToDate: number;
   pendingPayout: number;
   nextPayoutDate: Date | null;
+  currentMonthLabel: string;
 }
 
 export interface MonthlyEarning {
@@ -29,8 +32,13 @@ export interface MonthlyEarning {
 export interface Transaction {
   id: string;
   date: Date;
+  bookingId: string;
   experienceTitle: string;
   experienceId: string;
+  customer: {
+    name: string;
+    avatarUrl?: string;
+  };
   guestCount: number;
   grossAmount: number;
   platformFee: number;
@@ -141,6 +149,9 @@ export async function getEarningsSummary(wineryId: string): Promise<EarningsSumm
   const now = new Date();
   const monthStart = startOfMonth(now);
   const monthEnd = endOfMonth(now);
+  const lastMonthStart = startOfMonth(subMonths(now, 1));
+  const lastMonthEnd = endOfMonth(subMonths(now, 1));
+  const yearStart = startOfYear(now);
 
   // Get all completed/confirmed bookings
   const bookings = await db.booking.findMany({
@@ -150,6 +161,7 @@ export async function getEarningsSummary(wineryId: string): Promise<EarningsSumm
     },
     select: {
       wineryPayout: true,
+      totalPrice: true,
       date: true,
       status: true,
       refundIssued: true,
@@ -172,6 +184,26 @@ export async function getEarningsSummary(wineryId: string): Promise<EarningsSumm
         b.date <= now // Only count completed experiences
     )
     .reduce((sum, b) => sum + b.wineryPayout, 0);
+
+  // Last month earnings (for trend calculation)
+  const lastMonth = bookings
+    .filter(
+      (b) =>
+        !b.refundIssued &&
+        b.date >= lastMonthStart &&
+        b.date <= lastMonthEnd
+    )
+    .reduce((sum, b) => sum + b.wineryPayout, 0);
+
+  // Year to date (gross revenue)
+  const yearToDate = bookings
+    .filter(
+      (b) =>
+        !b.refundIssued &&
+        b.date >= yearStart &&
+        b.date <= now
+    )
+    .reduce((sum, b) => sum + b.totalPrice, 0);
 
   // Pending payout: bookings where experience passed but < 5 business days ago
   // This includes both 'pending' and 'processing' statuses
@@ -196,8 +228,11 @@ export async function getEarningsSummary(wineryId: string): Promise<EarningsSumm
   return {
     totalEarnings,
     thisMonth,
+    lastMonth,
+    yearToDate,
     pendingPayout,
     nextPayoutDate,
+    currentMonthLabel: format(now, 'MMM'),
   };
 }
 
@@ -281,6 +316,7 @@ export async function getTransactions(
       wineryPayout: true,
       status: true,
       refundIssued: true,
+      visitorName: true,
       experience: {
         select: {
           id: true,
@@ -301,8 +337,14 @@ export async function getTransactions(
     return {
       id: b.id,
       date: b.date,
+      bookingId: b.reference,
       experienceTitle: b.experience.title,
       experienceId: b.experience.id,
+      customer: {
+        name: b.visitorName,
+        // avatarUrl would come from user profile if they're registered
+        avatarUrl: undefined,
+      },
       guestCount: b.guestCount,
       grossAmount: b.totalPrice,
       platformFee: b.platformFee,

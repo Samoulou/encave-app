@@ -1,16 +1,14 @@
 'use client';
 
 import {
-  BarChart,
-  Bar,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { MonthlyEarning } from '@/server/queries/earnings.queries';
 
 interface EarningsChartProps {
@@ -23,6 +21,7 @@ interface CustomTooltipProps {
     name: string;
     value: number;
     color: string;
+    dataKey: string;
   }>;
   label?: string;
 }
@@ -31,17 +30,19 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!active || !payload || !payload.length) return null;
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-lg">
-      <p className="mb-2 font-medium text-slate-900">{label}</p>
+    <div className="rounded-lg border border-[#e5d2d7] bg-white p-3 shadow-lg">
+      <p className="mb-2 font-bold text-[#1a0f12]">{label}</p>
       {payload.map((entry) => (
-        <div key={entry.name} className="flex items-center gap-2 text-sm">
+        <div key={entry.dataKey} className="flex items-center gap-2 text-sm">
           <span
             className="h-3 w-3 rounded-full"
             style={{ backgroundColor: entry.color }}
           />
-          <span className="text-slate-600">{entry.name}:</span>
-          <span className="font-medium">
-            CHF {(entry.value / 100).toFixed(2)}
+          <span className="text-[#915564]">
+            {entry.dataKey === 'revenue' ? 'Gross' : 'Net Payout'}:
+          </span>
+          <span className="font-bold text-[#1a0f12]">
+            CHF {(entry.value / 100).toLocaleString('de-CH', { minimumFractionDigits: 2 })}
           </span>
         </div>
       ))}
@@ -49,6 +50,11 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   );
 }
 
+/**
+ * Revenue Evolution chart for the earnings dashboard.
+ * Area chart with gradient fill matching the mockup design.
+ * Shows Gross revenue vs Net payout over the last 6 months.
+ */
 export function EarningsChart({ data }: EarningsChartProps) {
   // Format data for chart (convert cents to CHF for display)
   const chartData = data.map((d) => ({
@@ -57,52 +63,110 @@ export function EarningsChart({ data }: EarningsChartProps) {
     payoutDisplay: d.payout / 100,
   }));
 
+  // Calculate Y-axis domain
+  const maxValue = Math.max(...data.map((d) => d.revenue / 100));
+  const yAxisMax = Math.ceil(maxValue / 2500) * 2500 || 10000;
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Revenue Overview</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="h-[300px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis
-                dataKey="monthLabel"
-                tick={{ fill: '#64748b', fontSize: 12 }}
-                axisLine={{ stroke: '#e2e8f0' }}
-              />
-              <YAxis
-                tick={{ fill: '#64748b', fontSize: 12 }}
-                axisLine={{ stroke: '#e2e8f0' }}
-                tickFormatter={(value) => `${value}`}
-              />
-              <Tooltip
-                content={<CustomTooltip />}
-                cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }}
-              />
-              <Legend
-                wrapperStyle={{ paddingTop: '20px' }}
-                formatter={(value) => (
-                  <span className="text-sm text-slate-600">{value}</span>
-                )}
-              />
-              <Bar
-                dataKey="revenue"
-                name="Gross Revenue"
-                fill="#3b82f6"
-                radius={[4, 4, 0, 0]}
-              />
-              <Bar
-                dataKey="payout"
-                name="Your Payout"
-                fill="#10b981"
-                radius={[4, 4, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
+    <div className="rounded-xl border border-[#e5d2d7] bg-white p-6 lg:p-8 shadow-sm">
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
+        <div>
+          <h2 className="text-lg font-bold text-[#1a0f12]">Revenue Evolution</h2>
+          <p className="text-sm text-[#915564]">
+            Gross revenue vs Net payout over the last 6 months
+          </p>
         </div>
-      </CardContent>
-    </Card>
+        <div className="flex items-center gap-4 text-xs font-medium">
+          <div className="flex items-center gap-2">
+            <span className="h-3 w-3 rounded-full bg-primary" />
+            <span className="text-[#915564]">Gross</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="h-3 w-3 rounded-full bg-gray-300" />
+            <span className="text-[#915564]">Net Payout</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Chart */}
+      <div className="h-[320px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart
+            data={chartData}
+            margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+          >
+            <defs>
+              <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#cd2d55" stopOpacity={0.2} />
+                <stop offset="100%" stopColor="#cd2d55" stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="colorPayout" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#9ca3af" stopOpacity={0.15} />
+                <stop offset="100%" stopColor="#9ca3af" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="#e5d2d7"
+              vertical={false}
+            />
+            <XAxis
+              dataKey="monthLabel"
+              tick={{ fill: '#915564', fontSize: 12 }}
+              axisLine={{ stroke: '#e5d2d7' }}
+              tickLine={false}
+            />
+            <YAxis
+              tick={{ fill: '#915564', fontSize: 12 }}
+              axisLine={false}
+              tickLine={false}
+              domain={[0, yAxisMax]}
+              tickFormatter={(value) => {
+                if (value === 0) return '0';
+                if (value >= 1000) return `${(value / 1000).toFixed(1)}k`;
+                return value.toString();
+              }}
+            />
+            <Tooltip
+              content={<CustomTooltip />}
+              cursor={{ stroke: '#e5d2d7', strokeWidth: 1 }}
+            />
+            {/* Net Payout Area (render first so Gross appears on top) */}
+            <Area
+              type="monotone"
+              dataKey="payoutDisplay"
+              name="Net Payout"
+              stroke="#9ca3af"
+              strokeWidth={2}
+              fill="url(#colorPayout)"
+              dot={false}
+              activeDot={{
+                r: 6,
+                fill: '#9ca3af',
+                stroke: '#fff',
+                strokeWidth: 2,
+              }}
+            />
+            {/* Gross Revenue Area */}
+            <Area
+              type="monotone"
+              dataKey="revenueDisplay"
+              name="Gross"
+              stroke="#cd2d55"
+              strokeWidth={3}
+              fill="url(#colorRevenue)"
+              dot={false}
+              activeDot={{
+                r: 6,
+                fill: '#cd2d55',
+                stroke: '#fff',
+                strokeWidth: 2,
+              }}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
   );
 }

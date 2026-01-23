@@ -1,22 +1,41 @@
 import { cn } from '@/lib/utils';
 import type { TransactionStatus } from '@/server/queries/earnings.queries';
 
-const STATUS_CONFIG: Record<TransactionStatus, { color: string; label: string }> = {
+const STATUS_CONFIG: Record<
+  TransactionStatus,
+  { bgColor: string; textColor: string; dotColor: string; label: string; hasDot: boolean; isPulsing: boolean }
+> = {
   paid: {
-    color: 'bg-green-100 text-green-800',
+    bgColor: 'bg-green-50',
+    textColor: 'text-green-700',
+    dotColor: 'bg-green-600',
     label: 'Paid',
+    hasDot: true,
+    isPulsing: false,
   },
   processing: {
-    color: 'bg-blue-100 text-blue-800',
+    bgColor: 'bg-blue-50',
+    textColor: 'text-blue-700',
+    dotColor: 'bg-blue-600',
     label: 'Processing',
+    hasDot: true,
+    isPulsing: false,
   },
   pending: {
-    color: 'bg-yellow-100 text-yellow-800',
+    bgColor: 'bg-yellow-50',
+    textColor: 'text-yellow-700',
+    dotColor: 'bg-yellow-600',
     label: 'Pending',
+    hasDot: true,
+    isPulsing: true,
   },
   refunded: {
-    color: 'bg-gray-100 text-gray-800',
+    bgColor: 'bg-gray-100',
+    textColor: 'text-gray-600',
+    dotColor: '',
     label: 'Refunded',
+    hasDot: false,
+    isPulsing: false,
   },
 };
 
@@ -25,6 +44,13 @@ interface TransactionStatusBadgeProps {
   className?: string;
 }
 
+/**
+ * Transaction status badge matching the mockup design.
+ * - Paid: Green with green dot
+ * - Pending: Yellow with animated pulsing dot
+ * - Processing: Blue with blue dot
+ * - Refunded: Gray without dot
+ */
 export function TransactionStatusBadge({
   status,
   className,
@@ -34,11 +60,21 @@ export function TransactionStatusBadge({
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
-        config.color,
+        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold',
+        config.bgColor,
+        config.textColor,
         className
       )}
     >
+      {config.hasDot && (
+        <span
+          className={cn(
+            'h-1.5 w-1.5 rounded-full',
+            config.dotColor,
+            config.isPulsing && 'animate-pulse'
+          )}
+        />
+      )}
       {config.label}
     </span>
   );

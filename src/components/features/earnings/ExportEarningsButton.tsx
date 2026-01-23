@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Download, ExternalLink, Loader2 } from 'lucide-react';
+import { Download, ExternalLink, Loader2, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -14,9 +14,12 @@ import { toast } from 'sonner';
 import { exportEarningsCSV, exportEarningsPDF } from '@/server/actions/earnings';
 import { getStripeDashboardLink } from '@/server/actions/stripe';
 import type { TransactionFilters } from '@/server/queries/earnings.queries';
-import { FileText } from 'lucide-react';
 
-export function ExportEarningsButton() {
+interface ExportEarningsButtonProps {
+  variant?: 'outline' | 'primary';
+}
+
+export function ExportEarningsButton({ variant = 'outline' }: ExportEarningsButtonProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [isExportingPDF, setIsExportingPDF] = useState(false);
   const [isOpeningStripe, setIsOpeningStripe] = useState(false);
@@ -115,16 +118,27 @@ export function ExportEarningsButton() {
     }
   };
 
+  const isPrimary = variant === 'primary';
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" disabled={isLoading}>
+        <Button
+          variant={isPrimary ? 'default' : 'outline'}
+          size={isPrimary ? 'default' : 'sm'}
+          disabled={isLoading}
+          className={
+            isPrimary
+              ? 'gap-2 bg-primary hover:bg-primary/90 text-white font-bold shadow-md hover:shadow-lg active:scale-95 transition-all'
+              : ''
+          }
+        >
           {isLoading ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <Loader2 className={isPrimary ? 'h-4 w-4 animate-spin' : 'mr-2 h-4 w-4 animate-spin'} />
           ) : (
-            <Download className="mr-2 h-4 w-4" />
+            <Download className={isPrimary ? 'h-4 w-4' : 'mr-2 h-4 w-4'} />
           )}
-          Export
+          <span className="text-sm">{isPrimary ? 'Export Report' : 'Export'}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
