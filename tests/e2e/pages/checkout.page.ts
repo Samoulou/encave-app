@@ -5,7 +5,8 @@ import { BasePage } from './base.page';
  * Visitor form data structure
  */
 export interface VisitorFormData {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
 }
@@ -24,12 +25,14 @@ export class CheckoutPage extends BasePage {
 
   // Form fields
   readonly form: Locator;
-  readonly nameInput: Locator;
+  readonly firstNameInput: Locator;
+  readonly lastNameInput: Locator;
   readonly emailInput: Locator;
   readonly phoneInput: Locator;
 
   // Validation errors
-  readonly nameError: Locator;
+  readonly firstNameError: Locator;
+  readonly lastNameError: Locator;
   readonly emailError: Locator;
   readonly phoneError: Locator;
 
@@ -69,14 +72,16 @@ export class CheckoutPage extends BasePage {
 
     // Form
     this.form = page.getByTestId('checkout-form');
-    this.nameInput = page.getByLabel(/^name/i);
+    this.firstNameInput = page.getByLabel(/first name/i);
+    this.lastNameInput = page.getByLabel(/last name/i);
     this.emailInput = page.getByLabel(/email/i);
     this.phoneInput = page.getByLabel(/phone/i);
 
-    // Validation errors - locate by aria-describedby or adjacent error elements
-    this.nameError = page.getByTestId('name-error');
-    this.emailError = page.getByTestId('email-error');
-    this.phoneError = page.getByTestId('phone-error');
+    // Validation errors - locate by adjacent error elements
+    this.firstNameError = page.locator('#firstName').locator('~ p');
+    this.lastNameError = page.locator('#lastName').locator('~ p');
+    this.emailError = page.locator('#email').locator('~ p');
+    this.phoneError = page.locator('#phone').locator('~ p');
 
     // Summary
     this.bookingSummary = page.getByTestId('checkout-summary');
@@ -90,7 +95,7 @@ export class CheckoutPage extends BasePage {
     this.summaryCapacityBadge = page.getByTestId('summary-capacity-badge');
 
     // Payment
-    this.payButton = page.getByRole('button', { name: /pay/i });
+    this.payButton = page.getByRole('button', { name: /confirm.*pay|pay/i });
     this.processingIndicator = page.getByText(/processing/i);
 
     // Security
@@ -142,10 +147,17 @@ export class CheckoutPage extends BasePage {
   // === FORM INTERACTIONS ===
 
   /**
-   * Fill the visitor name field
+   * Fill the first name field
    */
-  async fillName(name: string) {
-    await this.nameInput.fill(name);
+  async fillFirstName(firstName: string) {
+    await this.firstNameInput.fill(firstName);
+  }
+
+  /**
+   * Fill the last name field
+   */
+  async fillLastName(lastName: string) {
+    await this.lastNameInput.fill(lastName);
   }
 
   /**
@@ -166,7 +178,8 @@ export class CheckoutPage extends BasePage {
    * Fill all form fields
    */
   async fillForm(data: VisitorFormData) {
-    await this.fillName(data.name);
+    await this.fillFirstName(data.firstName);
+    await this.fillLastName(data.lastName);
     await this.fillEmail(data.email);
     await this.fillPhone(data.phone);
   }
@@ -175,7 +188,8 @@ export class CheckoutPage extends BasePage {
    * Clear all form fields
    */
   async clearForm() {
-    await this.nameInput.clear();
+    await this.firstNameInput.clear();
+    await this.lastNameInput.clear();
     await this.emailInput.clear();
     await this.phoneInput.clear();
   }
@@ -185,7 +199,8 @@ export class CheckoutPage extends BasePage {
    */
   async getFormValues(): Promise<VisitorFormData> {
     return {
-      name: (await this.nameInput.inputValue()) ?? '',
+      firstName: (await this.firstNameInput.inputValue()) ?? '',
+      lastName: (await this.lastNameInput.inputValue()) ?? '',
       email: (await this.emailInput.inputValue()) ?? '',
       phone: (await this.phoneInput.inputValue()) ?? '',
     };
@@ -194,17 +209,31 @@ export class CheckoutPage extends BasePage {
   // === VALIDATION ===
 
   /**
-   * Check if name field has validation error
+   * Check if first name field has validation error
    */
-  async hasNameError(): Promise<boolean> {
-    return this.nameError.isVisible();
+  async hasFirstNameError(): Promise<boolean> {
+    return this.firstNameError.isVisible();
   }
 
   /**
-   * Get name validation error text
+   * Get first name validation error text
    */
-  async getNameError(): Promise<string> {
-    return this.getText(this.nameError);
+  async getFirstNameError(): Promise<string> {
+    return this.getText(this.firstNameError);
+  }
+
+  /**
+   * Check if last name field has validation error
+   */
+  async hasLastNameError(): Promise<boolean> {
+    return this.lastNameError.isVisible();
+  }
+
+  /**
+   * Get last name validation error text
+   */
+  async getLastNameError(): Promise<string> {
+    return this.getText(this.lastNameError);
   }
 
   /**
@@ -240,7 +269,10 @@ export class CheckoutPage extends BasePage {
    */
   async hasValidationErrors(): Promise<boolean> {
     return (
-      (await this.hasNameError()) || (await this.hasEmailError()) || (await this.hasPhoneError())
+      (await this.hasFirstNameError()) ||
+      (await this.hasLastNameError()) ||
+      (await this.hasEmailError()) ||
+      (await this.hasPhoneError())
     );
   }
 
@@ -248,12 +280,14 @@ export class CheckoutPage extends BasePage {
    * Get all validation errors
    */
   async getAllValidationErrors(): Promise<{
-    name?: string;
+    firstName?: string;
+    lastName?: string;
     email?: string;
     phone?: string;
   }> {
-    const errors: { name?: string; email?: string; phone?: string } = {};
-    if (await this.hasNameError()) errors.name = await this.getNameError();
+    const errors: { firstName?: string; lastName?: string; email?: string; phone?: string } = {};
+    if (await this.hasFirstNameError()) errors.firstName = await this.getFirstNameError();
+    if (await this.hasLastNameError()) errors.lastName = await this.getLastNameError();
     if (await this.hasEmailError()) errors.email = await this.getEmailError();
     if (await this.hasPhoneError()) errors.phone = await this.getPhoneError();
     return errors;
@@ -289,7 +323,7 @@ export class CheckoutPage extends BasePage {
    */
   async getPayButtonAmount(): Promise<string> {
     const buttonText = await this.getText(this.payButton);
-    // Extract amount from "Pay CHF 200" or similar
+    // Extract amount from "Confirm and Pay CHF 200" or similar
     const match = buttonText.match(/[\d.,]+/);
     return match ? match[0] : '';
   }

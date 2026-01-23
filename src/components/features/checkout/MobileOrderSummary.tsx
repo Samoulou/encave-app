@@ -1,0 +1,54 @@
+'use client';
+
+import { useState } from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { formatCHF } from '@/lib/utils/currency';
+import { OrderSummary } from './OrderSummary';
+
+interface MobileOrderSummaryProps {
+  experienceTitle: string;
+  experienceImage?: string | null;
+  location: string;
+  date: string;
+  time: string;
+  duration?: number;
+  guestCount: number;
+  pricePerPerson: number;
+  serviceFee?: number;
+}
+
+export function MobileOrderSummary(props: MobileOrderSummaryProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const t = useTranslations('checkout');
+
+  const total = props.pricePerPerson * props.guestCount + (props.serviceFee ?? 0);
+
+  return (
+    <div className="lg:hidden">
+      {/* Collapsed View */}
+      <button
+        type="button"
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full bg-white p-4 rounded-xl shadow-sm border border-[#e5d2d7] flex items-center justify-between"
+      >
+        <div className="flex items-center gap-3">
+          <span className="font-medium text-[#1a0f12]">{t('orderSummary')}</span>
+          <span className="text-lg font-bold text-primary">{formatCHF(total)}</span>
+        </div>
+        {isExpanded ? (
+          <ChevronUp className="h-5 w-5 text-[#915564]" />
+        ) : (
+          <ChevronDown className="h-5 w-5 text-[#915564]" />
+        )}
+      </button>
+
+      {/* Expanded View */}
+      {isExpanded && (
+        <div className="mt-4">
+          <OrderSummary {...props} />
+        </div>
+      )}
+    </div>
+  );
+}

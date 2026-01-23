@@ -175,6 +175,7 @@ export interface ExperienceForBooking {
   winery: {
     id: string;
     name: string;
+    commune: string | null;
     stripeOnboardingComplete: boolean;
   };
   availabilitySlots: {
@@ -199,6 +200,7 @@ export async function getExperienceForBooking(
           select: {
             id: true,
             name: true,
+            commune: true,
             stripeOnboardingComplete: true,
           },
         },

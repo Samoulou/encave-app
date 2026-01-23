@@ -22,73 +22,73 @@
 ## Acceptance Criteria
 
 ### AC1: Simplified Header
-- [ ] Minimal header with EnCave logo only
-- [ ] "Secure Checkout" badge with lock icon
-- [ ] Badge styling: `bg-[#f2e9eb] text-[#915564] rounded-full px-3 py-1.5`
-- [ ] No main navigation (focused experience)
+- [x] Minimal header with EnCave logo only
+- [x] "Secure Checkout" badge with lock icon
+- [x] Badge styling: `bg-[#f2e9eb] text-[#915564] rounded-full px-3 py-1.5`
+- [x] No main navigation (focused experience)
 
 ### AC2: Page Layout
-- [ ] Desktop: Two columns - Form (7 cols) | Summary (5 cols)
-- [ ] Mobile: Stacked - Summary collapsible at top, Form below
-- [ ] Max-width: `max-w-7xl`
-- [ ] Background: `#f8f6f6`
+- [x] Desktop: Two columns - Form (7 cols) | Summary (5 cols)
+- [x] Mobile: Stacked - Summary collapsible at top, Form below
+- [x] Max-width: `max-w-7xl`
+- [x] Background: `#f8f6f6`
 
 ### AC3: Contact Details Section
-- [ ] Section card with white background, rounded corners, border
-- [ ] Section icon + title: "Contact Details"
-- [ ] Fields in 2-column grid:
+- [x] Section card with white background, rounded corners, border
+- [x] Section icon + title: "Contact Details"
+- [x] Fields in 2-column grid:
   - First Name | Last Name (side by side)
   - Email Address (full width)
   - Phone Number (full width, with country code)
-- [ ] All inputs use standard styling from spec
+- [x] All inputs use standard styling from spec
 
 ### AC4: Payment Method Section
-- [ ] Section card matching contact details style
-- [ ] Section icon + title: "Payment Method"
-- [ ] Card brand icons (Visa, Mastercard) in header
-- [ ] Stripe Elements integration:
+- [x] Section card matching contact details style
+- [x] Section icon + title: "Payment Method"
+- [x] Card brand icons (Visa, Mastercard) in header
+- [x] Stripe Elements integration:
   - Card number input with card icon
   - Expiry (MM/YY) | CVC (side by side in same row)
   - Cardholder Name input
-- [ ] Combined card input styling (mockup shows single row)
+- [x] Combined card input styling (mockup shows single row)
 
 ### AC5: Trust Badge
-- [ ] Centered below payment form
-- [ ] Lock icon + "Secure payment processed by Stripe"
-- [ ] Subtle background: `bg-[#f2e9eb]/50`
-- [ ] Border: dashed or solid light
+- [x] Centered below payment form
+- [x] Lock icon + "Secure payment processed by Stripe"
+- [x] Subtle background: `bg-[#f2e9eb]/50`
+- [x] Border: dashed or solid light
 
 ### AC6: CTA Button
-- [ ] Full-width primary button
-- [ ] Text: "Confirm and Pay CHF XXX.XX"
-- [ ] Arrow icon on hover
-- [ ] Height: `h-14` (56px)
-- [ ] Shadow: `shadow-lg shadow-primary/20`
-- [ ] Terms text below: "By confirming, you agree to EnCave's Terms..."
+- [x] Full-width primary button
+- [x] Text: "Confirm and Pay CHF XXX.XX"
+- [x] Arrow icon on hover
+- [x] Height: `h-14` (56px)
+- [x] Shadow: `shadow-lg shadow-primary/20`
+- [x] Terms text below: "By confirming, you agree to EnCave's Terms..."
 
 ### AC7: Order Summary (Sticky)
-- [ ] Card with experience image at top (with gradient overlay)
-- [ ] Experience title over image
-- [ ] Details list:
+- [x] Card with experience image at top (with gradient overlay)
+- [x] Experience title over image
+- [x] Details list:
   - Date & time (calendar icon)
   - Number of guests (group icon)
   - Location (map pin icon)
-- [ ] Price breakdown:
+- [x] Price breakdown:
   - Price x Guests = Subtotal
   - Service Fee (if any)
   - **Total (CHF)** in bold, primary color
-- [ ] Cancellation policy note at bottom
-- [ ] Desktop: `sticky top-24`
+- [x] Cancellation policy note at bottom
+- [x] Desktop: `sticky top-24`
 
 ### AC8: Trust Signals
-- [ ] Below summary card: "SSL ENCRYPTED" | "24/7 SUPPORT" badges
-- [ ] Subtle styling: `opacity-50 grayscale hover:grayscale-0`
+- [x] Below summary card: "SSL ENCRYPTED" | "24/7 SUPPORT" badges
+- [x] Subtle styling: `opacity-50 grayscale hover:grayscale-0`
 
 ### AC9: Mobile Adaptations
-- [ ] Summary as collapsible accordion at top
-- [ ] Show total prominently
-- [ ] Expand to see full details
-- [ ] CTA button fixed at bottom or within scroll
+- [x] Summary as collapsible accordion at top
+- [x] Show total prominently
+- [x] Expand to see full details
+- [x] CTA button fixed at bottom or within scroll
 
 ---
 
@@ -162,12 +162,56 @@ const stripeElementsOptions = {
 ---
 
 ## Definition of Done
-- [ ] Layout matches mockup (2-column desktop, stacked mobile)
-- [ ] Contact form captures all required fields
-- [ ] Stripe Elements integrated and styled
-- [ ] Order summary displays correct booking details
-- [ ] Payment processing works end-to-end
-- [ ] Error handling for failed payments
-- [ ] Loading states during processing
-- [ ] Visual match with mockup 90%+
+- [x] Layout matches mockup (2-column desktop, stacked mobile)
+- [x] Contact form captures all required fields
+- [x] Stripe Elements integrated and styled
+- [x] Order summary displays correct booking details
+- [x] Payment processing works end-to-end
+- [x] Error handling for failed payments
+- [x] Loading states during processing
+- [x] Visual match with mockup 90%+
 - [ ] Code reviewed and merged
+
+---
+
+## Dev Agent Record
+
+### Status
+Ready for Review
+
+### Agent Model Used
+Claude Opus 4.5
+
+### File List
+| File | Action |
+|------|--------|
+| `src/app/[locale]/(public)/experiences/[slug]/checkout/page.tsx` | Modified |
+| `src/components/features/checkout/CheckoutHeader.tsx` | Created |
+| `src/components/features/checkout/ContactDetailsSection.tsx` | Created |
+| `src/components/features/checkout/PaymentSection.tsx` | Created |
+| `src/components/features/checkout/OrderSummary.tsx` | Created |
+| `src/components/features/checkout/MobileOrderSummary.tsx` | Created |
+| `src/components/features/checkout/TrustBadges.tsx` | Created |
+| `src/components/features/checkout/index.ts` | Modified |
+| `src/server/actions/booking.ts` | Modified |
+| `messages/en.json` | Modified |
+| `messages/fr.json` | Modified |
+| `messages/de.json` | Modified |
+| `tests/e2e/pages/checkout.page.ts` | Modified |
+
+### Completion Notes
+- Implemented secure checkout page with new mockup-based UI design
+- Added simplified checkout header with EnCave logo and "Secure Checkout" badge
+- Created ContactDetailsSection with split First Name / Last Name fields
+- Created Payment Method section with combined card input styling (card number, expiry, CVC in one row)
+- Created OrderSummary with experience image, details list, and price breakdown
+- Created TrustBadges component with SSL/Support indicators
+- Added MobileOrderSummary collapsible accordion for mobile view
+- Updated ExperienceForBooking interface to include winery commune
+- Added all necessary translations for EN, FR, DE locales
+- Updated E2E page object to support new form structure
+
+### Change Log
+| Date | Change |
+|------|--------|
+| 2026-01-23 | Initial implementation of US-UI-06 |
