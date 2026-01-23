@@ -22,14 +22,14 @@ const config: Config = {
   	extend: {
   		fontFamily: {
   			display: [
-  				'var(--font-display)',
-  				'Playfair Display',
-  				'Georgia',
-  				'serif'
+  				'var(--font-manrope)',
+  				'Manrope',
+  				'system-ui',
+  				'sans-serif'
   			],
   			sans: [
-  				'var(--font-sans)',
-  				'DM Sans',
+  				'var(--font-manrope)',
+  				'Manrope',
   				'system-ui',
   				'sans-serif'
   			],
@@ -155,12 +155,20 @@ const config: Config = {
   			warm: '0 1px 3px rgba(122, 27, 59, 0.08), 0 1px 2px rgba(122, 27, 59, 0.04)',
   			'warm-md': '0 4px 6px rgba(122, 27, 59, 0.07), 0 2px 4px rgba(122, 27, 59, 0.04)',
   			'warm-lg': '0 10px 15px rgba(122, 27, 59, 0.08), 0 4px 6px rgba(122, 27, 59, 0.04)',
-  			gold: '0 4px 14px rgba(241, 201, 29, 0.15)'
+  			gold: '0 4px 14px rgba(241, 201, 29, 0.15)',
+  			card: '0 4px 20px rgba(0, 0, 0, 0.05)',
+  			'card-hover': '0 12px 30px rgba(205, 45, 85, 0.15)',
+  			primary: '0 4px 14px rgba(205, 45, 85, 0.2)'
   		},
   		borderRadius: {
-  			lg: 'var(--radius)',
-  			md: 'calc(var(--radius) - 2px)',
-  			sm: 'calc(var(--radius) - 4px)'
+  			DEFAULT: '0.25rem',
+  			sm: '0.125rem',
+  			md: '0.375rem',
+  			lg: '0.5rem',
+  			xl: '0.75rem',
+  			'2xl': '1rem',
+  			'3xl': '1.5rem',
+  			full: '9999px'
   		},
   		keyframes: {
   			'accordion-down': {

@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { Playfair_Display, DM_Sans, JetBrains_Mono } from 'next/font/google';
+import { Manrope, JetBrains_Mono } from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
@@ -11,15 +11,10 @@ import { NavigationLoader } from '@/components/shared/NavigationLoader';
 import { routing, type Locale } from '@/i18n/routing';
 import '../globals.css';
 
-const playfair = Playfair_Display({
+const manrope = Manrope({
   subsets: ['latin'],
-  variable: '--font-display',
-  display: 'swap',
-});
-
-const dmSans = DM_Sans({
-  subsets: ['latin'],
-  variable: '--font-sans',
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-manrope',
   display: 'swap',
 });
 
@@ -55,7 +50,7 @@ export default async function LocaleLayout({ children, params }: Props) {
   return (
     <html lang={locale} suppressHydrationWarning>
       <body
-        className={`${playfair.variable} ${dmSans.variable} ${jetbrainsMono.variable} font-sans antialiased`}
+        className={`${manrope.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
         <NextIntlClientProvider messages={messages}>
           <SkipLink />
