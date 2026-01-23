@@ -2,63 +2,102 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Wine } from 'lucide-react';
+import { Wine, MapPin } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface AuthPageLayoutProps {
   children: React.ReactNode;
   imageUrl: string;
   imageAlt: string;
-  quote: string;
-  quoteAuthor?: string;
+  heroTitle?: string;
+  heroSubtitle?: string;
+  heroLocation?: string;
 }
 
 export function AuthPageLayout({
   children,
   imageUrl,
   imageAlt,
-  quote,
-  quoteAuthor = 'EnCave',
+  heroTitle,
+  heroSubtitle,
+  heroLocation = 'Valais, Switzerland',
 }: AuthPageLayoutProps) {
+  const t = useTranslations('auth');
+
   return (
-    <div className="flex min-h-screen">
-      {/* Left Panel - Image (hidden on mobile) */}
-      <div className="relative hidden w-1/2 md:block">
+    <div className="flex min-h-screen flex-col md:flex-row overflow-hidden">
+      {/* Left Panel - Image (hidden on mobile, shown as header on mobile) */}
+      <div className="relative hidden lg:flex w-1/2 lg:w-[55%] h-screen bg-slate-900 overflow-hidden">
         <Image
           src={imageUrl}
           alt={imageAlt}
           fill
-          className="object-cover"
+          className="object-cover transition-transform duration-[20s] ease-out hover:scale-105"
           priority
         />
-        {/* Burgundy gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-burgundy-950/70 to-burgundy-900/40" />
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
 
-        {/* Quote at bottom */}
-        <div className="absolute bottom-12 left-8 right-8 text-white">
-          <blockquote className="font-display text-2xl font-medium leading-relaxed">
-            &ldquo;{quote}&rdquo;
-          </blockquote>
-          <p className="mt-4 text-sm text-white/80">— {quoteAuthor}</p>
+        {/* Hero content at bottom */}
+        <div className="absolute bottom-12 left-12 max-w-md text-white z-10">
+          <div className="flex items-center gap-2 mb-4 opacity-80">
+            <MapPin className="h-5 w-5" />
+            <span className="text-sm font-medium tracking-wide uppercase">
+              {heroLocation}
+            </span>
+          </div>
+          {heroTitle && (
+            <h2 className="text-4xl font-bold leading-tight mb-2 font-display">
+              {heroTitle}
+            </h2>
+          )}
+          {heroSubtitle && (
+            <p className="text-lg opacity-80 font-light">{heroSubtitle}</p>
+          )}
         </div>
       </div>
 
-      {/* Right Panel - Form */}
-      <div className="flex w-full flex-col justify-center bg-cream-50 px-6 py-12 md:w-1/2 md:px-12 lg:px-16">
-        {/* Logo */}
-        <div className="mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 group">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-burgundy-600 text-white transition-colors group-hover:bg-burgundy-700">
-              <Wine className="h-5 w-5" />
-            </div>
-            <span className="font-display text-2xl font-semibold text-burgundy-800">
-              EnCave
-            </span>
-          </Link>
-        </div>
+      {/* Mobile Header Image (shown only on small screens) */}
+      <div
+        className="lg:hidden h-48 w-full bg-cover bg-center relative"
+        style={{ backgroundImage: `url("${imageUrl}")` }}
+        role="img"
+        aria-label={imageAlt}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#f8f6f6]" />
+      </div>
 
-        {/* Form content */}
-        <div className="w-full max-w-md">
-          {children}
+      {/* Right Panel - Form */}
+      <div className="w-full lg:w-1/2 lg:w-[45%] min-h-screen lg:h-screen overflow-y-auto flex flex-col relative bg-[#f8f6f6] transition-colors duration-300">
+        <div className="flex-1 flex flex-col justify-center px-6 sm:px-12 lg:px-24 py-12">
+          <div className="w-full max-w-[420px] mx-auto flex flex-col gap-8">
+            {/* Logo */}
+            <Link href="/" className="inline-flex items-center gap-2 group mb-2">
+              <Wine className="h-8 w-8 text-primary" />
+              <span className="text-2xl font-bold tracking-tight text-slate-900 font-display">
+                EnCave
+              </span>
+            </Link>
+
+            {/* Form content */}
+            {children}
+          </div>
+
+          {/* Footer legal links */}
+          <div className="mt-12 flex justify-center gap-6 text-xs text-slate-400">
+            <Link
+              href="/privacy"
+              className="hover:text-slate-600 transition-colors"
+            >
+              {t('legal.privacyPolicy')}
+            </Link>
+            <Link
+              href="/terms"
+              className="hover:text-slate-600 transition-colors"
+            >
+              {t('legal.termsOfService')}
+            </Link>
+          </div>
         </div>
       </div>
     </div>

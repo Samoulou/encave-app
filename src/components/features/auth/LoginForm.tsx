@@ -4,13 +4,14 @@ import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowRight } from 'lucide-react';
+import { Mail, Eye, EyeOff } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Link, useRouter } from '@/i18n/navigation';
 import { loginSchema, type LoginInput } from '@/lib/validators/auth';
 import { loginAction } from '@/server/actions/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Form,
   FormControl,
@@ -20,6 +21,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { AuthPageLayout } from './AuthPageLayout';
+import { SocialLoginButtons } from './SocialLoginButtons';
 
 /**
  * Validate returnUrl to prevent open redirect attacks
@@ -47,6 +49,8 @@ export function LoginForm() {
   const tCommon = useTranslations('common');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
@@ -106,93 +110,141 @@ export function LoginForm() {
     <AuthPageLayout
       imageUrl="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=1920&auto=format&fit=crop"
       imageAlt={t('imageAlt')}
-      quote={t('quote')}
+      heroTitle={t('heroTitle')}
+      heroSubtitle={t('heroSubtitle')}
     >
       {/* Heading */}
-      <div className="mb-8">
-        <h1 className="font-display text-3xl font-semibold text-slate-900">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-3xl font-bold text-slate-900 font-display">
           {t('title')}
         </h1>
-        <p className="mt-2 text-slate-600">
-          {t('subtitle')}
-        </p>
+        <p className="text-[#915564]">{t('subtitle')}</p>
       </div>
 
       {/* Form */}
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5">
           {error && (
             <div className="rounded-lg bg-red-50 p-4 text-sm text-red-600">
               {error}
             </div>
           )}
 
+          {/* Email Field */}
           <FormField
             control={form.control}
             name="email"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>{tCommon('labels.email')}</FormLabel>
+              <FormItem className="flex flex-col gap-2">
+                <FormLabel className="text-sm font-medium text-slate-900">
+                  {tCommon('labels.email')}
+                </FormLabel>
                 <FormControl>
-                  <Input
-                    type="email"
-                    placeholder={tCommon('placeholders.email')}
-                    autoComplete="email"
-                    {...field}
-                  />
+                  <div className="relative group">
+                    <Input
+                      type="email"
+                      placeholder={tCommon('placeholders.email')}
+                      autoComplete="email"
+                      className="w-full h-12 px-4 pr-10 rounded-lg border border-[#e5d2d7] bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-400"
+                      {...field}
+                    />
+                    <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
+                      <Mail className="h-5 w-5" />
+                    </div>
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
 
+          {/* Password Field */}
           <FormField
             control={form.control}
             name="password"
             render={({ field }) => (
-              <FormItem>
-                <div className="flex items-center justify-between">
-                  <FormLabel>{tCommon('labels.password')}</FormLabel>
+              <FormItem className="flex flex-col gap-2">
+                <div className="flex justify-between items-center">
+                  <FormLabel className="text-sm font-medium text-slate-900">
+                    {tCommon('labels.password')}
+                  </FormLabel>
                   <a
                     href="mailto:support@encave.ch?subject=Password%20Reset%20Request"
-                    className="text-sm text-burgundy-600 hover:text-burgundy-800 relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-gold-400 after:transition-all hover:after:w-full"
+                    className="text-sm font-medium text-primary hover:text-primary/80 hover:underline transition-all"
                     title={t('forgotPasswordContactSupport')}
                   >
                     {t('forgotPassword')}
                   </a>
                 </div>
                 <FormControl>
-                  <Input
-                    type="password"
-                    placeholder={t('passwordPlaceholder')}
-                    autoComplete="current-password"
-                    {...field}
-                  />
+                  <div className="relative group">
+                    <Input
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      autoComplete="current-password"
+                      className="w-full h-12 px-4 pr-10 rounded-lg border border-[#e5d2d7] bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-400"
+                      {...field}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-3 flex items-center text-slate-400 hover:text-slate-900 transition-colors"
+                      aria-label={showPassword ? t('hidePassword') : t('showPassword')}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-5 w-5" />
+                      ) : (
+                        <Eye className="h-5 w-5" />
+                      )}
+                    </button>
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
 
+          {/* Remember Me Checkbox */}
+          <div className="flex items-center gap-3 py-1">
+            <Checkbox
+              id="remember"
+              checked={rememberMe}
+              onCheckedChange={(checked) => setRememberMe(checked === true)}
+              className="border-slate-300 data-[state=checked]:border-primary data-[state=checked]:bg-primary"
+            />
+            <label
+              htmlFor="remember"
+              className="text-sm font-medium text-slate-900 cursor-pointer"
+            >
+              {t('rememberMe')}
+            </label>
+          </div>
+
+          {/* Submit Button */}
           <Button
             type="submit"
-            className="w-full"
+            className="mt-2 w-full h-12 bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg transition-colors shadow-sm shadow-primary/30"
             isLoading={isLoading}
             loadingText={t('signingIn')}
           >
-            {tCommon('buttons.signIn')}
+            {t('logIn')}
           </Button>
 
-          <p className="text-center text-sm text-slate-600">
-            {t('noAccount')}{' '}
-            <Link
-              href="/register"
-              className="inline-flex items-center font-medium text-burgundy-600 hover:text-burgundy-800 relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-gold-400 after:transition-all hover:after:w-full"
-            >
-              {t('createOne')}
-              <ArrowRight className="ml-1 h-4 w-4" />
-            </Link>
-          </p>
+          {/* Social Login */}
+          <SocialLoginButtons />
+
+          {/* Sign Up Link */}
+          <div className="text-center mt-4">
+            <p className="text-sm text-slate-500">
+              {t('noAccount')}{' '}
+              <Link
+                href="/register"
+                className="font-semibold text-primary hover:text-primary/80 hover:underline transition-all"
+              >
+                {t('createAccount')}
+              </Link>
+            </p>
+          </div>
         </form>
       </Form>
     </AuthPageLayout>

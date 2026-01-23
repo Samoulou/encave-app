@@ -5,13 +5,14 @@ import {
   getExperienceBySlug,
   getAllPublishedExperienceSlugs,
 } from '@/server/queries/experience.queries';
-import { ExperienceHero } from '@/components/features/experience/ExperienceHero';
-import { ExperienceGallery } from '@/components/features/experience/ExperienceGallery';
-import { ExperienceDetails } from '@/components/features/experience/ExperienceDetails';
-import { AvailabilityPreview } from '@/components/features/experience/AvailabilityPreview';
-import { WineryInfoCard } from '@/components/features/experience/WineryInfoCard';
+import { ExperienceDetailHeader } from '@/components/features/experience/ExperienceDetailHeader';
+import { ExperienceDetailGallery } from '@/components/features/experience/ExperienceDetailGallery';
+import { QuickFacts } from '@/components/features/experience/QuickFacts';
+import { AboutSection } from '@/components/features/experience/AboutSection';
+import { WhatsIncluded } from '@/components/features/experience/WhatsIncluded';
 import { LocationSection } from '@/components/features/experience/LocationSection';
-import { BookingCTA } from '@/components/features/experience/BookingCTA';
+import { BookingWidget } from '@/components/features/experience/BookingWidget';
+import { MobileBookingBar } from '@/components/features/experience/MobileBookingBar';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { RelatedExperiencesSection } from './RelatedExperiencesSection';
 import { JsonLd } from '@/components/shared/JsonLd';
@@ -161,46 +162,46 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
     <>
       <JsonLd data={eventSchema} />
 
-      <div className="min-h-screen bg-cream-50">
-        <ExperienceHero
-          title={experience.title}
-          type={experience.type}
-          price={experience.price}
-          coverPhoto={experience.coverPhoto}
-        />
-
-        {/* Breadcrumb */}
-        <div className="border-b border-stone-200/60 bg-white">
-          <div className="mx-auto max-w-6xl px-6 py-4 lg:px-8">
+      <main className="flex-grow w-full bg-background-light min-h-screen pb-24 lg:pb-8">
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Breadcrumbs */}
+          <nav className="flex items-center text-sm mb-6 overflow-x-auto whitespace-nowrap">
             <Breadcrumb items={breadcrumbItems} baseUrl={baseUrl} />
-          </div>
-        </div>
+          </nav>
 
-        {/* Main Content */}
-        <div className="mx-auto max-w-6xl px-6 py-10 lg:px-8 lg:py-12">
-          <div className="grid gap-8 lg:grid-cols-3">
-            {/* Left Column - Main Content */}
-            <div className="lg:col-span-2 space-y-8">
-              {/* Experience Details */}
-              <ExperienceDetails
-                description={experience.description}
+          {/* Page Heading & Rating */}
+          <ExperienceDetailHeader
+            title={experience.title}
+            wineryName={experience.winery.name}
+            winerySlug={experience.winery.slug}
+            commune={experience.winery.commune}
+          />
+
+          {/* Image Gallery Grid */}
+          <ExperienceDetailGallery
+            coverPhoto={experience.coverPhoto}
+            images={experience.galleryImages}
+            experienceTitle={experience.title}
+          />
+
+          {/* Two Column Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 relative">
+            {/* Left Column: Details (8 cols) */}
+            <div className="lg:col-span-8 flex flex-col gap-10">
+              {/* Quick Facts Chips */}
+              <QuickFacts
                 duration={experience.duration}
-                minCapacity={experience.minCapacity}
                 maxCapacity={experience.maxCapacity}
+                type={experience.type}
               />
 
-              {/* Availability Preview */}
-              <AvailabilityPreview slots={experience.availabilitySlots} />
+              {/* About Section */}
+              <AboutSection description={experience.description} />
 
-              {/* Gallery */}
-              {experience.galleryImages.length > 0 && (
-                <ExperienceGallery
-                  images={experience.galleryImages}
-                  experienceTitle={experience.title}
-                />
-              )}
+              {/* What's Included */}
+              <WhatsIncluded type={experience.type} />
 
-              {/* Location Section */}
+              {/* Location Map */}
               <LocationSection
                 address={experience.winery.address}
                 commune={experience.winery.commune}
@@ -210,21 +211,15 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
               />
             </div>
 
-            {/* Right Column - Sidebar */}
-            <div className="space-y-6">
-              {/* Booking CTA */}
-              <BookingCTA
+            {/* Right Column: Sticky Booking Widget (4 cols) */}
+            <div className="lg:col-span-4 relative hidden lg:block">
+              <BookingWidget
                 price={experience.price}
                 experienceSlug={experience.slug}
                 stripeConnected={experience.winery.stripeOnboardingComplete}
-              />
-
-              {/* Winery Info Card */}
-              <WineryInfoCard
-                name={experience.winery.name}
-                slug={experience.winery.slug}
-                commune={experience.winery.commune}
-                coverPhoto={experience.winery.coverPhoto}
+                minCapacity={experience.minCapacity}
+                maxCapacity={experience.maxCapacity}
+                availabilitySlots={experience.availabilitySlots}
               />
             </div>
           </div>
@@ -238,7 +233,14 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
             />
           </Suspense>
         </div>
-      </div>
+
+        {/* Mobile Booking Bar */}
+        <MobileBookingBar
+          price={experience.price}
+          experienceSlug={experience.slug}
+          stripeConnected={experience.winery.stripeOnboardingComplete}
+        />
+      </main>
     </>
   );
 }

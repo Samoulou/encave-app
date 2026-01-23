@@ -99,14 +99,15 @@ export function RegisterForm() {
     <AuthPageLayout
       imageUrl="https://images.unsplash.com/photo-1523531294919-4bcd7c65e216?q=80&w=1920&auto=format&fit=crop"
       imageAlt={t('imageAlt')}
-      quote={t('quote')}
+      heroTitle={t('heroTitle')}
+      heroSubtitle={t('heroSubtitle')}
     >
       {/* Heading */}
-      <div className="mb-8">
-        <h1 className="font-display text-3xl font-semibold text-slate-900">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-3xl font-bold text-slate-900 font-display">
           {t('title')}
         </h1>
-        <p className="mt-2 text-slate-600">
+        <p className="text-[#915564]">
           {t('subtitle')}
         </p>
       </div>

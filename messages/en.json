@@ -98,23 +98,35 @@
     "currentLanguage": "current language"
   },
   "auth": {
+    "legal": {
+      "privacyPolicy": "Privacy Policy",
+      "termsOfService": "Terms of Service"
+    },
     "login": {
       "title": "Welcome back",
-      "subtitle": "Sign in to continue your wine journey",
+      "subtitle": "Please enter your details to access your account.",
       "imageAlt": "Vineyard in Valais, Switzerland",
-      "quote": "Discover the finest wines of Valais, where tradition meets excellence in every glass.",
+      "heroTitle": "Discover the soul of Swiss wine.",
+      "heroSubtitle": "Join EnCave to unlock exclusive tastings and premium winery tours.",
       "forgotPassword": "Forgot password?",
       "forgotPasswordContactSupport": "Contact support to reset your password",
       "passwordPlaceholder": "Enter your password",
       "signingIn": "Signing in...",
-      "noAccount": "Don't have an account?",
-      "createOne": "Create one"
+      "logIn": "Log In",
+      "noAccount": "New to EnCave?",
+      "createAccount": "Create an account",
+      "createOne": "Create one",
+      "rememberMe": "Remember for 30 days",
+      "orContinueWith": "Or continue with",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password"
     },
     "register": {
       "title": "Create an account",
       "subtitle": "Join EnCave and discover exceptional wine experiences",
       "imageAlt": "Terraced vineyards in the Swiss Alps",
-      "quote": "Every great wine begins with passion. Join our community of exceptional winemakers.",
+      "heroTitle": "Every great wine begins with passion.",
+      "heroSubtitle": "Join our community of exceptional winemakers and wine lovers.",
       "passwordPlaceholder": "Create a password",
       "passwordHint": "At least 8 characters with uppercase, lowercase, number, and special character",
       "confirmPassword": "Confirm password",

@@ -98,23 +98,35 @@
     "currentLanguage": "langue actuelle"
   },
   "auth": {
+    "legal": {
+      "privacyPolicy": "Politique de confidentialité",
+      "termsOfService": "Conditions d'utilisation"
+    },
     "login": {
       "title": "Bon retour",
-      "subtitle": "Connectez-vous pour continuer votre voyage viticole",
+      "subtitle": "Veuillez entrer vos informations pour accéder à votre compte.",
       "imageAlt": "Vignoble en Valais, Suisse",
-      "quote": "Découvrez les meilleurs vins du Valais, où la tradition rencontre l'excellence dans chaque verre.",
+      "heroTitle": "Découvrez l'âme du vin suisse.",
+      "heroSubtitle": "Rejoignez EnCave pour accéder à des dégustations exclusives et des visites de domaines premium.",
       "forgotPassword": "Mot de passe oublié?",
       "forgotPasswordContactSupport": "Contactez le support pour réinitialiser votre mot de passe",
       "passwordPlaceholder": "Entrez votre mot de passe",
       "signingIn": "Connexion en cours...",
-      "noAccount": "Pas encore de compte?",
-      "createOne": "Créer un compte"
+      "logIn": "Se connecter",
+      "noAccount": "Nouveau sur EnCave?",
+      "createAccount": "Créer un compte",
+      "createOne": "Créer un compte",
+      "rememberMe": "Se souvenir pendant 30 jours",
+      "orContinueWith": "Ou continuer avec",
+      "showPassword": "Afficher le mot de passe",
+      "hidePassword": "Masquer le mot de passe"
     },
     "register": {
       "title": "Créer un compte",
       "subtitle": "Rejoignez EnCave et découvrez des expériences viticoles exceptionnelles",
       "imageAlt": "Vignobles en terrasses dans les Alpes suisses",
-      "quote": "Chaque grand vin commence par la passion. Rejoignez notre communauté de vignerons exceptionnels.",
+      "heroTitle": "Chaque grand vin commence par la passion.",
+      "heroSubtitle": "Rejoignez notre communauté de vignerons et d'amateurs de vin exceptionnels.",
       "passwordPlaceholder": "Créez un mot de passe",
       "passwordHint": "Au moins 8 caractères avec majuscule, minuscule, chiffre et caractère spécial",
       "confirmPassword": "Confirmer le mot de passe",

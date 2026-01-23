@@ -98,23 +98,35 @@
     "currentLanguage": "aktuelle Sprache"
   },
   "auth": {
+    "legal": {
+      "privacyPolicy": "Datenschutzrichtlinie",
+      "termsOfService": "Nutzungsbedingungen"
+    },
     "login": {
       "title": "Willkommen zuruck",
-      "subtitle": "Melden Sie sich an, um Ihre Weinreise fortzusetzen",
+      "subtitle": "Bitte geben Sie Ihre Daten ein, um auf Ihr Konto zuzugreifen.",
       "imageAlt": "Weinberg im Wallis, Schweiz",
-      "quote": "Entdecken Sie die besten Weine des Wallis, wo Tradition auf Exzellenz in jedem Glas trifft.",
+      "heroTitle": "Entdecken Sie die Seele des Schweizer Weins.",
+      "heroSubtitle": "Treten Sie EnCave bei, um exklusive Verkostungen und Premium-Weintouren freizuschalten.",
       "forgotPassword": "Passwort vergessen?",
       "forgotPasswordContactSupport": "Kontaktieren Sie den Support, um Ihr Passwort zuruckzusetzen",
       "passwordPlaceholder": "Geben Sie Ihr Passwort ein",
       "signingIn": "Anmeldung...",
-      "noAccount": "Noch kein Konto?",
-      "createOne": "Konto erstellen"
+      "logIn": "Anmelden",
+      "noAccount": "Neu bei EnCave?",
+      "createAccount": "Konto erstellen",
+      "createOne": "Konto erstellen",
+      "rememberMe": "30 Tage merken",
+      "orContinueWith": "Oder fortfahren mit",
+      "showPassword": "Passwort anzeigen",
+      "hidePassword": "Passwort verbergen"
     },
     "register": {
       "title": "Konto erstellen",
       "subtitle": "Treten Sie EnCave bei und entdecken Sie aussergewohnliche Weinerlebnisse",
       "imageAlt": "Terrassierte Weinberge in den Schweizer Alpen",
-      "quote": "Jeder grossartige Wein beginnt mit Leidenschaft. Treten Sie unserer Gemeinschaft aussergewohnlicher Winzer bei.",
+      "heroTitle": "Jeder grossartige Wein beginnt mit Leidenschaft.",
+      "heroSubtitle": "Treten Sie unserer Gemeinschaft aussergewohnlicher Winzer und Weinliebhaber bei.",
       "passwordPlaceholder": "Passwort erstellen",
       "passwordHint": "Mindestens 8 Zeichen mit Gross-, Kleinbuchstaben, Zahl und Sonderzeichen",
       "confirmPassword": "Passwort bestatigen",
