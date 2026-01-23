@@ -656,6 +656,90 @@ export async function archiveExperience(
 }
 
 /**
+ * Delete an experience permanently
+ */
+export async function deleteExperience(
+  experienceId: string
+): Promise<ActionResult<{ deleted: boolean }>> {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return {
+        success: false,
+        error: { code: 'UNAUTHORIZED', message: 'Please sign in to continue' },
+      };
+    }
+
+    const winery = await db.winery.findUnique({
+      where: { userId: session.user.id },
+      select: { id: true, status: true, slug: true },
+    });
+
+    if (!winery || winery.status !== 'VERIFIED') {
+      return {
+        success: false,
+        error: { code: 'FORBIDDEN', message: 'Access denied' },
+      };
+    }
+
+    const experience = await db.experience.findFirst({
+      where: { id: experienceId, wineryId: winery.id },
+      select: {
+        id: true,
+        slug: true,
+        _count: {
+          select: {
+            bookings: {
+              where: { status: { in: ['PENDING_PAYMENT', 'CONFIRMED'] } },
+            },
+          },
+        },
+      },
+    });
+
+    if (!experience) {
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Experience not found' },
+      };
+    }
+
+    // Prevent deletion if there are active bookings
+    if (experience._count.bookings > 0) {
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Cannot delete experience with active bookings. Archive it instead.',
+        },
+      };
+    }
+
+    // Delete the experience (cascade will handle related records)
+    await db.experience.delete({
+      where: { id: experienceId },
+    });
+
+    // Invalidate caches
+    invalidateExperienceCaches(winery.slug, experience.slug);
+
+    return {
+      success: true,
+      data: { deleted: true },
+    };
+  } catch (error) {
+    console.error('deleteExperience error:', error);
+    return {
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Something went wrong. Please try again.',
+      },
+    };
+  }
+}
+
+/**
  * Duplicate an experience (creates copy with DRAFT status)
  */
 export async function duplicateExperience(

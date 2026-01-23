@@ -1,16 +1,20 @@
 'use client';
 
-import { useState, useMemo, memo } from 'react';
-import { useQueryState } from 'nuqs';
+import { useState, useMemo, memo, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { BookingStatus } from '@prisma/client';
-import { ChevronDown, ChevronUp, ArrowUpDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { MoreVertical, Check, X, Users, Loader2 } from 'lucide-react';
 import { BookingStatusBadge } from './BookingStatusBadge';
-import { BookingRowExpanded } from './BookingRowExpanded';
-import { BookingQuickActions } from './BookingQuickActions';
 import { ClientDetailsModal } from './ClientDetailsModal';
-import { Pagination } from '@/components/shared/Pagination';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { approveBooking, rejectBooking } from '@/server/actions/booking-dashboard';
+import { toast } from 'sonner';
 
 interface BookingWithExperience {
   id: string;
@@ -35,12 +39,28 @@ interface BookingsTableProps {
   bookings: BookingWithExperience[];
 }
 
-type SortField = 'date' | 'totalPrice' | 'guestCount';
+const DEFAULT_PAGE_SIZE = 5;
 
-const DEFAULT_PAGE_SIZE = 20;
+/**
+ * Get initials from a name (first letter of first and last name)
+ */
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) {
+    return parts[0]?.substring(0, 2).toUpperCase() ?? '';
+  }
+  return `${parts[0]?.[0] ?? ''}${parts[parts.length - 1]?.[0] ?? ''}`.toUpperCase();
+}
 
+/**
+ * Bookings table component matching US-UI-09 mockup.
+ * Features: Avatar with initials fallback, inline approve/reject for pending,
+ * context menu for other statuses, and simplified pagination.
+ */
 function BookingsTableComponent({ bookings }: BookingsTableProps) {
-  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const router = useRouter();
+  const [, startTransition] = useTransition();
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [clientModalData, setClientModalData] = useState<{
     name: string;
     email: string;
@@ -49,23 +69,15 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-
-  const [sortField, setSortField] = useQueryState('sort', {
-    defaultValue: 'date',
-    shallow: true,
-  });
-  const [sortOrder, setSortOrder] = useQueryState('order', {
-    defaultValue: 'asc',
-    shallow: true,
-  });
+  const pageSize = DEFAULT_PAGE_SIZE;
 
   // Calculate paginated data
   const totalPages = Math.ceil(bookings.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, bookings.length);
   const paginatedBookings = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
     return bookings.slice(startIndex, startIndex + pageSize);
-  }, [bookings, currentPage, pageSize]);
+  }, [bookings, startIndex, pageSize]);
 
   // Reset to page 1 when bookings change
   useMemo(() => {
@@ -74,218 +86,220 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
     }
   }, [currentPage, totalPages]);
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    setExpandedRows(new Set()); // Collapse all rows when changing page
+  const handleApprove = async (bookingId: string) => {
+    setPendingAction(`approve-${bookingId}`);
+    startTransition(async () => {
+      try {
+        const result = await approveBooking(bookingId);
+        if (result.success) {
+          toast.success('Booking confirmed');
+          router.refresh();
+        } else {
+          toast.error(result.error.message);
+        }
+      } catch {
+        toast.error('Failed to approve booking');
+      } finally {
+        setPendingAction(null);
+      }
+    });
   };
 
-  const handlePageSizeChange = (size: number) => {
-    setPageSize(size);
-    setCurrentPage(1);
-    setExpandedRows(new Set());
+  const handleReject = async (bookingId: string) => {
+    setPendingAction(`reject-${bookingId}`);
+    startTransition(async () => {
+      try {
+        const result = await rejectBooking(bookingId);
+        if (result.success) {
+          toast.success('Booking rejected');
+          router.refresh();
+        } else {
+          toast.error(result.error.message);
+        }
+      } catch {
+        toast.error('Failed to reject booking');
+      } finally {
+        setPendingAction(null);
+      }
+    });
   };
-
-  const toggleRow = (id: string) => {
-    const newExpanded = new Set(expandedRows);
-    if (newExpanded.has(id)) {
-      newExpanded.delete(id);
-    } else {
-      newExpanded.add(id);
-    }
-    setExpandedRows(newExpanded);
-  };
-
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortOrder('asc');
-    }
-  };
-
-  const SortButton = ({
-    field,
-    children,
-  }: {
-    field: SortField;
-    children: React.ReactNode;
-  }) => (
-    <button
-      onClick={() => handleSort(field)}
-      className="flex items-center gap-1 text-xs font-medium uppercase tracking-wider text-slate-500 hover:text-slate-700"
-    >
-      {children}
-      <ArrowUpDown
-        className={cn('h-3 w-3', sortField === field && 'text-burgundy-600')}
-      />
-    </button>
-  );
 
   return (
     <>
-      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-        {/* Table Header */}
-        <div className="hidden border-b border-slate-200 bg-slate-50 px-6 py-3 md:grid md:grid-cols-[1fr_100px_1.2fr_1fr_80px_100px_100px_48px]">
-          <SortButton field="date">Date</SortButton>
-          <span className="text-xs font-medium uppercase tracking-wider text-slate-500">
-            Time
-          </span>
-          <span className="text-xs font-medium uppercase tracking-wider text-slate-500">
-            Experience
-          </span>
-          <span className="text-xs font-medium uppercase tracking-wider text-slate-500">
-            Client
-          </span>
-          <SortButton field="guestCount">Guests</SortButton>
-          <span className="text-xs font-medium uppercase tracking-wider text-slate-500">
-            Status
-          </span>
-          <SortButton field="totalPrice">Amount</SortButton>
-          <span className="sr-only">Actions</span>
+      <div className="bg-white rounded-xl border border-[#e5d2d7] shadow-sm overflow-hidden">
+        {/* Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-[#e5d2d7]">
+                <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564]">
+                  Booking Info
+                </th>
+                <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564]">
+                  Client
+                </th>
+                <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564]">
+                  Experience
+                </th>
+                <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564]">
+                  Guests
+                </th>
+                <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564]">
+                  Status
+                </th>
+                <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564] text-right">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#f2e9eb]">
+              {paginatedBookings.map((booking) => {
+                const bookingDate = new Date(booking.date);
+                const isPendingStatus = booking.status === BookingStatus.PENDING_PAYMENT;
+                const initials = getInitials(booking.visitorName);
+                const isApproving = pendingAction === `approve-${booking.id}`;
+                const isRejecting = pendingAction === `reject-${booking.id}`;
+
+                return (
+                  <tr key={booking.id} className="group hover:bg-[#fbf9f9] transition-colors">
+                    {/* Booking Info */}
+                    <td className="py-4 px-6">
+                      <div className="flex flex-col">
+                        <span className="text-[#1a0f12] font-bold text-sm">
+                          {format(bookingDate, 'MMM d, yyyy')}
+                        </span>
+                        <span className="text-[#915564] text-xs">
+                          {booking.timeSlot}
+                        </span>
+                      </div>
+                    </td>
+
+                    {/* Client */}
+                    <td className="py-4 px-6">
+                      <div className="flex items-center gap-3">
+                        <div className="size-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0">
+                          {initials}
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-[#1a0f12] text-sm font-semibold truncate">
+                            {booking.visitorName}
+                          </span>
+                          <span className="text-[#915564] text-xs truncate">
+                            {booking.visitorEmail}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Experience */}
+                    <td className="py-4 px-6">
+                      <span className="text-[#1a0f12] text-sm font-medium">
+                        {booking.experience.title}
+                      </span>
+                    </td>
+
+                    {/* Guests */}
+                    <td className="py-4 px-6">
+                      <div className="flex items-center gap-1 text-[#1a0f12] text-sm">
+                        <Users className="h-4 w-4 text-[#915564]" />
+                        {booking.guestCount} {booking.guestCount === 1 ? 'Person' : 'People'}
+                      </div>
+                    </td>
+
+                    {/* Status */}
+                    <td className="py-4 px-6">
+                      <BookingStatusBadge status={booking.status} />
+                    </td>
+
+                    {/* Actions */}
+                    <td className="py-4 px-6 text-right">
+                      {isPendingStatus ? (
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => handleApprove(booking.id)}
+                            disabled={isApproving || isRejecting}
+                            className="p-1.5 rounded-lg text-green-600 hover:bg-green-50 transition-colors disabled:opacity-50"
+                            title="Approve"
+                          >
+                            {isApproving ? (
+                              <Loader2 className="h-5 w-5 animate-spin" />
+                            ) : (
+                              <Check className="h-5 w-5" />
+                            )}
+                          </button>
+                          <button
+                            onClick={() => handleReject(booking.id)}
+                            disabled={isApproving || isRejecting}
+                            className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
+                            title="Reject"
+                          >
+                            {isRejecting ? (
+                              <Loader2 className="h-5 w-5 animate-spin" />
+                            ) : (
+                              <X className="h-5 w-5" />
+                            )}
+                          </button>
+                        </div>
+                      ) : (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="p-2 rounded-lg text-[#915564] hover:bg-[#f2e9eb] hover:text-primary transition-colors">
+                              <MoreVertical className="h-5 w-5" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem
+                              onClick={() =>
+                                setClientModalData({
+                                  name: booking.visitorName,
+                                  email: booking.visitorEmail,
+                                  phone: booking.visitorPhone,
+                                })
+                              }
+                            >
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                window.location.href = `mailto:${booking.visitorEmail}`;
+                              }}
+                            >
+                              Contact Client
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
 
-        {/* Table Body */}
-        <div className="divide-y divide-slate-200">
-          {paginatedBookings.map((booking) => {
-            const isExpanded = expandedRows.has(booking.id);
-            const bookingDate = new Date(booking.date);
-
-            return (
-              <div key={booking.id} className="group">
-                {/* Main Row */}
-                <div
-                  className={cn(
-                    'cursor-pointer px-6 py-4 transition-colors hover:bg-slate-50',
-                    isExpanded && 'bg-slate-50'
-                  )}
-                  onClick={() => toggleRow(booking.id)}
-                >
-                  {/* Desktop Layout */}
-                  <div className="hidden items-center md:grid md:grid-cols-[1fr_100px_1.2fr_1fr_80px_100px_100px_48px]">
-                    <div className="flex items-center gap-2">
-                      {isExpanded ? (
-                        <ChevronUp className="h-4 w-4 text-slate-400" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4 text-slate-400" />
-                      )}
-                      <span className="text-sm font-medium text-slate-900">
-                        {format(bookingDate, 'MMM d, yyyy')}
-                      </span>
-                    </div>
-                    <span className="text-sm text-slate-600">
-                      {booking.timeSlot}
-                    </span>
-                    <span className="truncate text-sm text-slate-900">
-                      {booking.experience.title}
-                    </span>
-                    <span className="truncate text-sm text-slate-600">
-                      {booking.visitorName}
-                    </span>
-                    <span className="text-sm text-slate-600">
-                      {booking.guestCount}
-                    </span>
-                    <BookingStatusBadge status={booking.status} />
-                    <span className="text-sm font-medium text-slate-900">
-                      CHF {(booking.totalPrice / 100).toFixed(2)}
-                    </span>
-                    <div onClick={(e) => e.stopPropagation()}>
-                      <BookingQuickActions
-                        bookingId={booking.id}
-                        status={booking.status}
-                        date={booking.date}
-                        timeSlot={booking.timeSlot}
-                        visitorEmail={booking.visitorEmail}
-                        onViewClient={() =>
-                          setClientModalData({
-                            name: booking.visitorName,
-                            email: booking.visitorEmail,
-                            phone: booking.visitorPhone,
-                          })
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  {/* Mobile Layout */}
-                  <div className="md:hidden">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-2">
-                        {isExpanded ? (
-                          <ChevronUp className="mt-0.5 h-4 w-4 text-slate-400" />
-                        ) : (
-                          <ChevronDown className="mt-0.5 h-4 w-4 text-slate-400" />
-                        )}
-                        <div>
-                          <p className="text-sm font-medium text-slate-900">
-                            {booking.experience.title}
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            {format(bookingDate, 'MMM d, yyyy')} at{' '}
-                            {booking.timeSlot}
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            {booking.visitorName} &middot; {booking.guestCount}{' '}
-                            guest{booking.guestCount !== 1 ? 's' : ''}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="text-right">
-                          <p className="text-sm font-medium text-slate-900">
-                            CHF {(booking.totalPrice / 100).toFixed(2)}
-                          </p>
-                          <BookingStatusBadge status={booking.status} />
-                        </div>
-                        <div onClick={(e) => e.stopPropagation()}>
-                          <BookingQuickActions
-                            bookingId={booking.id}
-                            status={booking.status}
-                            date={booking.date}
-                            timeSlot={booking.timeSlot}
-                            visitorEmail={booking.visitorEmail}
-                            onViewClient={() =>
-                              setClientModalData({
-                                name: booking.visitorName,
-                                email: booking.visitorEmail,
-                                phone: booking.visitorPhone,
-                              })
-                            }
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Expanded Content */}
-                {isExpanded && (
-                  <BookingRowExpanded
-                    visitorEmail={booking.visitorEmail}
-                    visitorPhone={booking.visitorPhone}
-                    reference={booking.reference}
-                  />
-                )}
-              </div>
-            );
-          })}
+        {/* Pagination Footer */}
+        <div className="bg-white px-6 py-4 border-t border-[#e5d2d7] flex items-center justify-between">
+          <span className="text-sm text-[#915564]">
+            Showing {startIndex + 1} to {endIndex} of {bookings.length} results
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1 rounded-lg border border-[#e5d2d7] text-[#915564] text-sm hover:bg-[#f2e9eb] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 rounded-lg border border-[#e5d2d7] text-[#915564] text-sm hover:bg-[#f2e9eb] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
-
-      {/* Pagination */}
-      {bookings.length > DEFAULT_PAGE_SIZE && (
-        <div className="mt-4">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalItems={bookings.length}
-            pageSize={pageSize}
-            onPageChange={handlePageChange}
-            onPageSizeChange={handlePageSizeChange}
-            pageSizeOptions={[10, 20, 50]}
-          />
-        </div>
-      )}
 
       {/* Client Details Modal */}
       <ClientDetailsModal

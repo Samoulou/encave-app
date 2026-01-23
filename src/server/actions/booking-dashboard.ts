@@ -11,6 +11,147 @@ import {
 } from '@/server/queries/booking.queries';
 
 /**
+ * Approve a pending booking (change status to CONFIRMED)
+ */
+export async function approveBooking(
+  bookingId: string
+): Promise<ActionResult<{ status: BookingStatus }>> {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return {
+        success: false,
+        error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
+      };
+    }
+
+    // Get winery for the user
+    const winery = await db.winery.findUnique({
+      where: { userId: session.user.id },
+      select: { id: true },
+    });
+
+    if (!winery) {
+      return {
+        success: false,
+        error: { code: 'FORBIDDEN', message: 'Not a winery owner' },
+      };
+    }
+
+    // Get booking and verify ownership
+    const booking = await db.booking.findFirst({
+      where: { id: bookingId, wineryId: winery.id },
+    });
+
+    if (!booking) {
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Booking not found' },
+      };
+    }
+
+    // Verify booking is PENDING_PAYMENT
+    if (booking.status !== BookingStatus.PENDING_PAYMENT) {
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Only pending bookings can be approved',
+        },
+      };
+    }
+
+    // Update status to CONFIRMED
+    await db.booking.update({
+      where: { id: bookingId },
+      data: { status: BookingStatus.CONFIRMED },
+    });
+
+    // TODO: Send confirmation email to client
+
+    return { success: true, data: { status: BookingStatus.CONFIRMED } };
+  } catch (error) {
+    console.error('approveBooking error:', error);
+    return {
+      success: false,
+      error: { code: 'INTERNAL_ERROR', message: 'Failed to approve booking' },
+    };
+  }
+}
+
+/**
+ * Reject a pending booking (change status to CANCELLED_BY_WINERY)
+ */
+export async function rejectBooking(
+  bookingId: string
+): Promise<ActionResult<{ status: BookingStatus }>> {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return {
+        success: false,
+        error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
+      };
+    }
+
+    // Get winery for the user
+    const winery = await db.winery.findUnique({
+      where: { userId: session.user.id },
+      select: { id: true },
+    });
+
+    if (!winery) {
+      return {
+        success: false,
+        error: { code: 'FORBIDDEN', message: 'Not a winery owner' },
+      };
+    }
+
+    // Get booking and verify ownership
+    const booking = await db.booking.findFirst({
+      where: { id: bookingId, wineryId: winery.id },
+    });
+
+    if (!booking) {
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Booking not found' },
+      };
+    }
+
+    // Verify booking is PENDING_PAYMENT
+    if (booking.status !== BookingStatus.PENDING_PAYMENT) {
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Only pending bookings can be rejected',
+        },
+      };
+    }
+
+    // Update status to CANCELLED_BY_WINERY
+    await db.booking.update({
+      where: { id: bookingId },
+      data: {
+        status: BookingStatus.CANCELLED_BY_WINERY,
+        cancelledAt: new Date(),
+      },
+    });
+
+    // TODO: Send rejection email to client with reason
+
+    return { success: true, data: { status: BookingStatus.CANCELLED_BY_WINERY } };
+  } catch (error) {
+    console.error('rejectBooking error:', error);
+    return {
+      success: false,
+      error: { code: 'INTERNAL_ERROR', message: 'Failed to reject booking' },
+    };
+  }
+}
+
+/**
  * Mark a booking as completed (for past bookings only)
  */
 export async function markBookingCompleted(

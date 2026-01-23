@@ -6,28 +6,37 @@ interface StatusBadgeProps {
   className?: string;
 }
 
-const STATUS_STYLES = {
-  DRAFT: 'bg-gray-100 text-gray-800',
-  PUBLISHED: 'bg-green-100 text-green-800',
-  ARCHIVED: 'bg-amber-100 text-amber-800',
-} as const;
-
-const STATUS_LABELS = {
-  DRAFT: 'Draft',
-  PUBLISHED: 'Published',
-  ARCHIVED: 'Archived',
+const STATUS_CONFIG = {
+  DRAFT: {
+    label: 'Draft',
+    badge: 'bg-gray-100 text-gray-600 border-gray-200',
+    dot: 'bg-gray-400',
+  },
+  PUBLISHED: {
+    label: 'Published',
+    badge: 'bg-green-100 text-green-700 border-green-200',
+    dot: 'bg-green-500',
+  },
+  ARCHIVED: {
+    label: 'Archived',
+    badge: 'bg-amber-100 text-amber-700 border-amber-200',
+    dot: 'bg-amber-500',
+  },
 } as const;
 
 export function StatusBadge({ status, className }: StatusBadgeProps) {
+  const config = STATUS_CONFIG[status];
+
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
-        STATUS_STYLES[status],
+        'inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold border backdrop-blur-sm',
+        config.badge,
         className
       )}
     >
-      {STATUS_LABELS[status]}
+      <span className={cn('w-1.5 h-1.5 rounded-full mr-1.5', config.dot)} />
+      {config.label}
     </span>
   );
 }

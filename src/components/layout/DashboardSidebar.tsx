@@ -3,24 +3,37 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import { Calendar, Sparkles, Building2, Menu, X, TrendingUp, Settings, Home, Wine } from 'lucide-react';
+import {
+  Home,
+  PartyPopper,
+  Calendar,
+  MessageSquare,
+  Settings,
+  Menu,
+  X,
+  Wine,
+} from 'lucide-react';
 import { useState, useCallback, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
 interface DashboardSidebarProps {
   wineryName: string;
+  userName?: string;
 }
 
 const sidebarLinks = [
+  { href: '/dashboard', labelKey: 'dashboard', icon: Home, exact: true },
+  { href: '/dashboard/experiences', labelKey: 'experiences', icon: PartyPopper },
   { href: '/dashboard/bookings', labelKey: 'bookings', icon: Calendar },
-  { href: '/dashboard/earnings', labelKey: 'earnings', icon: TrendingUp },
-  { href: '/dashboard/experiences', labelKey: 'experiences', icon: Sparkles },
-  { href: '/dashboard/winery/profile', labelKey: 'wineryProfile', icon: Building2 },
-  { href: '/dashboard/settings/notifications', labelKey: 'settings', icon: Settings },
+  { href: '/dashboard/messages', labelKey: 'messages', icon: MessageSquare },
+  { href: '/dashboard/settings', labelKey: 'settings', icon: Settings },
 ];
 
-export function DashboardSidebar({ wineryName }: DashboardSidebarProps) {
+export function DashboardSidebar({
+  wineryName,
+  userName,
+}: DashboardSidebarProps) {
   const pathname = usePathname();
   const locale = useLocale();
   const router = useRouter();
@@ -45,20 +58,25 @@ export function DashboardSidebar({ wineryName }: DashboardSidebarProps) {
 
   return (
     <>
-      {/* Mobile menu button */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="fixed top-24 left-4 z-50 md:hidden"
-        onClick={() => setIsMobileOpen(!isMobileOpen)}
-        aria-label={isMobileOpen ? t('closeMenu') : t('openMenu')}
-      >
-        {isMobileOpen ? (
-          <X className="h-5 w-5" aria-hidden="true" />
-        ) : (
-          <Menu className="h-5 w-5" aria-hidden="true" />
-        )}
-      </Button>
+      {/* Mobile Header */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between p-4 border-b border-[#e5dbdd] bg-[#f8f6f6]">
+        <Link href={`/${locale}`} className="flex items-center gap-2">
+          <Wine className="h-5 w-5 text-primary" aria-hidden="true" />
+          <span className="font-bold">EnCave</span>
+        </Link>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setIsMobileOpen(!isMobileOpen)}
+          aria-label={isMobileOpen ? t('closeMenu') : t('openMenu')}
+        >
+          {isMobileOpen ? (
+            <X className="h-5 w-5" aria-hidden="true" />
+          ) : (
+            <Menu className="h-5 w-5" aria-hidden="true" />
+          )}
+        </Button>
+      </div>
 
       {/* Mobile overlay */}
       {isMobileOpen && (
@@ -72,99 +90,85 @@ export function DashboardSidebar({ wineryName }: DashboardSidebarProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed left-0 top-0 z-40 h-screen w-64 border-r border-stone-200 bg-white transition-transform duration-300 ease-in-out',
+          'fixed left-0 top-0 z-40 h-screen w-64 flex-shrink-0 border-r border-[#e5dbdd] bg-[#f8f6f6] flex flex-col justify-between p-4 transition-transform duration-300 ease-in-out',
           'md:translate-x-0',
           isMobileOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        <div className="flex h-full flex-col">
-          {/* Logo header - links to home */}
-          <div className="border-b border-stone-200 px-6 py-4">
+        <div className="flex flex-col gap-8">
+          {/* Brand */}
+          <div className="flex items-center gap-3 px-2">
             <Link
               href={`/${locale}`}
-              className="flex items-center gap-2 group"
+              className="flex items-center gap-3"
               aria-label="Go to homepage"
             >
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-burgundy-600 text-white transition-colors group-hover:bg-burgundy-700">
+              <div className="flex items-center justify-center size-10 rounded-xl bg-primary text-white">
                 <Wine className="h-5 w-5" aria-hidden="true" />
               </div>
-              <span className="font-display text-xl font-semibold text-burgundy-800">
-                EnCave
-              </span>
+              <h1 className="text-xl font-bold tracking-tight">EnCave</h1>
             </Link>
           </div>
 
-          {/* Winery name */}
-          <div className="border-b border-stone-200 px-6 py-4">
-            <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
-              {t('yourWinery')}
-            </p>
-            <h2 className="mt-1 truncate font-display text-lg font-semibold text-burgundy-800">
-              {wineryName}
-            </h2>
-          </div>
+          {/* Nav Items */}
+          <nav className="flex flex-col gap-2" aria-label="Dashboard navigation">
+            {sidebarLinks.map((link) => {
+              const localizedHref = `/${locale}${link.href}`;
+              const isActive = link.exact
+                ? pathname === localizedHref
+                : pathname === localizedHref ||
+                  pathname.startsWith(`${localizedHref}/`);
+              const Icon = link.icon;
 
-          {/* Navigation links */}
-          <nav className="flex-1 px-4 py-6" aria-label="Dashboard navigation">
-            <ul className="space-y-1">
-              {/* Home link */}
-              <li>
+              return (
                 <Link
-                  href={`/${locale}`}
+                  key={link.href}
+                  href={localizedHref}
                   prefetch={true}
                   onClick={() => setIsMobileOpen(false)}
-                  onMouseEnter={() => handlePrefetch(`/${locale}`)}
-                  onFocus={() => handlePrefetch(`/${locale}`)}
-                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 hover:bg-stone-50 hover:text-burgundy-700 transition-colors"
+                  onMouseEnter={() => handlePrefetch(localizedHref)}
+                  onFocus={() => handlePrefetch(localizedHref)}
+                  className={cn(
+                    'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group',
+                    isActive
+                      ? 'bg-primary/10 text-primary'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  )}
+                  aria-current={isActive ? 'page' : undefined}
                 >
-                  <Home
-                    className="h-5 w-5 flex-shrink-0 text-slate-400"
+                  <Icon
+                    className={cn(
+                      'h-5 w-5 transition-colors',
+                      isActive
+                        ? 'text-primary'
+                        : 'text-gray-500 group-hover:text-primary'
+                    )}
                     aria-hidden="true"
                   />
-                  {t('backToHome')}
+                  <span
+                    className={cn('text-sm', isActive ? 'font-bold' : 'font-medium')}
+                  >
+                    {t(link.labelKey)}
+                  </span>
                 </Link>
-              </li>
-
-              <li className="pt-2">
-                <div className="border-t border-stone-200 pt-3" />
-              </li>
-
-              {sidebarLinks.map((link) => {
-                const localizedHref = `/${locale}${link.href}`;
-                const isActive =
-                  pathname === localizedHref || pathname.startsWith(`${localizedHref}/`);
-                const Icon = link.icon;
-
-                return (
-                  <li key={link.href}>
-                    <Link
-                      href={localizedHref}
-                      prefetch={true}
-                      onClick={() => setIsMobileOpen(false)}
-                      onMouseEnter={() => handlePrefetch(localizedHref)}
-                      onFocus={() => handlePrefetch(localizedHref)}
-                      className={cn(
-                        'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-                        isActive
-                          ? 'bg-burgundy-50 text-burgundy-700'
-                          : 'text-slate-600 hover:bg-stone-50 hover:text-burgundy-700'
-                      )}
-                      aria-current={isActive ? 'page' : undefined}
-                    >
-                      <Icon
-                        className={cn(
-                          'h-5 w-5 flex-shrink-0',
-                          isActive ? 'text-burgundy-600' : 'text-slate-400'
-                        )}
-                        aria-hidden="true"
-                      />
-                      {t(link.labelKey)}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
+              );
+            })}
           </nav>
+        </div>
+
+        {/* User Profile */}
+        <div className="flex items-center gap-3 px-3 py-3 rounded-lg border border-transparent hover:border-[#e5dbdd] cursor-pointer transition-all">
+          <div className="relative size-10 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+            <div className="w-full h-full flex items-center justify-center text-gray-500 font-medium">
+              {userName?.charAt(0)?.toUpperCase() || 'W'}
+            </div>
+          </div>
+          <div className="flex flex-col min-w-0">
+            <p className="text-sm font-bold leading-tight truncate">
+              {userName || 'Winemaker'}
+            </p>
+            <p className="text-xs text-gray-500 truncate">{wineryName}</p>
+          </div>
         </div>
       </aside>
     </>

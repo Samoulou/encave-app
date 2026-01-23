@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Download, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { exportBookingsToCSV } from '@/server/actions/booking-dashboard';
 import { toast } from 'sonner';
 import { BookingStatus } from '@prisma/client';
@@ -61,19 +60,17 @@ export function ExportCSVButton() {
   };
 
   return (
-    <Button
-      variant="outline"
-      size="sm"
+    <button
       onClick={handleExport}
       disabled={isExporting}
-      className="gap-2"
+      className="flex items-center gap-2 h-10 px-4 rounded-lg border border-[#e5d2d7] bg-white text-[#1a0f12] text-sm font-bold hover:bg-gray-50 transition-colors disabled:opacity-50"
     >
       {isExporting ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
+        <Loader2 className="h-5 w-5 animate-spin" />
       ) : (
-        <Download className="h-4 w-4" />
+        <Download className="h-5 w-5" />
       )}
-      Export CSV
-    </Button>
+      <span>Export CSV</span>
+    </button>
   );
 }

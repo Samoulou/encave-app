@@ -1,32 +1,54 @@
 import { BookingStatus } from '@prisma/client';
 import { cn } from '@/lib/utils';
 
+/**
+ * Status badge configuration matching US-UI-09 mockup.
+ * Each status has specific colors for background, text, border, and dot.
+ */
 const STATUS_CONFIG: Record<
   BookingStatus,
-  { color: string; label: string }
+  { bg: string; text: string; border: string; dot: string; label: string }
 > = {
-  [BookingStatus.PENDING_PAYMENT]: {
-    color: 'bg-yellow-100 text-yellow-800',
-    label: 'Pending',
-  },
   [BookingStatus.CONFIRMED]: {
-    color: 'bg-green-100 text-green-800',
+    bg: 'bg-[#ecfdf5]',
+    text: 'text-[#047857]',
+    border: 'border-[#d1fae5]',
+    dot: 'bg-[#047857]',
     label: 'Confirmed',
   },
-  [BookingStatus.COMPLETED]: {
-    color: 'bg-blue-100 text-blue-800',
-    label: 'Completed',
+  [BookingStatus.PENDING_PAYMENT]: {
+    bg: 'bg-[#fffbeb]',
+    text: 'text-[#b45309]',
+    border: 'border-[#fef3c7]',
+    dot: 'bg-[#b45309]',
+    label: 'Pending',
   },
   [BookingStatus.CANCELLED_BY_CLIENT]: {
-    color: 'bg-gray-100 text-gray-800',
+    bg: 'bg-[#fef2f2]',
+    text: 'text-[#991b1b]',
+    border: 'border-[#fee2e2]',
+    dot: 'bg-[#991b1b]',
     label: 'Cancelled',
   },
   [BookingStatus.CANCELLED_BY_WINERY]: {
-    color: 'bg-gray-100 text-gray-800',
+    bg: 'bg-[#fef2f2]',
+    text: 'text-[#991b1b]',
+    border: 'border-[#fee2e2]',
+    dot: 'bg-[#991b1b]',
     label: 'Cancelled',
   },
+  [BookingStatus.COMPLETED]: {
+    bg: 'bg-[#eff6ff]',
+    text: 'text-[#1d4ed8]',
+    border: 'border-[#dbeafe]',
+    dot: 'bg-[#1d4ed8]',
+    label: 'Completed',
+  },
   [BookingStatus.NO_SHOW]: {
-    color: 'bg-red-100 text-red-800',
+    bg: 'bg-[#f3f4f6]',
+    text: 'text-[#374151]',
+    border: 'border-[#e5e7eb]',
+    dot: 'bg-[#374151]',
     label: 'No-Show',
   },
 };
@@ -36,17 +58,23 @@ interface BookingStatusBadgeProps {
   className?: string;
 }
 
+/**
+ * Status badge component with dot indicator matching US-UI-09 mockup.
+ */
 export function BookingStatusBadge({ status, className }: BookingStatusBadgeProps) {
   const config = STATUS_CONFIG[status];
 
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
-        config.color,
+        'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border',
+        config.bg,
+        config.text,
+        config.border,
         className
       )}
     >
+      <span className={cn('size-1.5 rounded-full', config.dot)} />
       {config.label}
     </span>
   );

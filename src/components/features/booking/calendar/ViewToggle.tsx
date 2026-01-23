@@ -1,54 +1,45 @@
 'use client';
 
 import { useQueryState } from 'nuqs';
-import { List, CalendarDays, CalendarRange } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { List, CalendarDays } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export type ViewMode = 'list' | 'calendar' | 'week';
 
+/**
+ * Toggle between list and calendar views.
+ * Matches the mockup design from US-UI-09.
+ */
 export function ViewToggle() {
   const [view, setView] = useQueryState('view', { shallow: false });
   const currentView = (view as ViewMode) || 'list';
 
   return (
-    <div className="inline-flex rounded-md border border-slate-200 bg-white p-1">
-      <Button
-        variant="ghost"
-        size="sm"
+    <div className="bg-[#f8f6f6] p-1 rounded-lg flex items-center">
+      <button
         className={cn(
-          'h-8 px-3',
-          currentView === 'list' && 'bg-slate-100'
+          'px-4 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2',
+          currentView === 'list'
+            ? 'bg-white text-[#1a0f12] shadow-sm font-bold'
+            : 'text-[#915564] hover:text-[#1a0f12]'
         )}
         onClick={() => setView(null)}
-        title="List view"
       >
         <List className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
+        List View
+      </button>
+      <button
         className={cn(
-          'h-8 px-3',
-          currentView === 'calendar' && 'bg-slate-100'
+          'px-4 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2',
+          currentView === 'calendar'
+            ? 'bg-white text-[#1a0f12] shadow-sm font-bold'
+            : 'text-[#915564] hover:text-[#1a0f12]'
         )}
         onClick={() => setView('calendar')}
-        title="Month view"
       >
         <CalendarDays className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        className={cn(
-          'h-8 px-3',
-          currentView === 'week' && 'bg-slate-100'
-        )}
-        onClick={() => setView('week')}
-        title="Week view"
-      >
-        <CalendarRange className="h-4 w-4" />
-      </Button>
+        Calendar
+      </button>
     </div>
   );
 }

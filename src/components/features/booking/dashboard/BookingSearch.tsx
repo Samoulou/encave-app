@@ -2,10 +2,12 @@
 
 import { useQueryState } from 'nuqs';
 import { Search, X, Loader2 } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { useRef, useEffect, useCallback, useState, useTransition } from 'react';
 
+/**
+ * Search input for filtering bookings by client name or email.
+ * Matches the mockup design from US-UI-09.
+ */
 export function BookingSearch() {
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useQueryState('search', {
@@ -57,30 +59,31 @@ export function BookingSearch() {
   };
 
   return (
-    <div className="relative">
-      {isPending ? (
-        <Loader2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-burgundy-600 animate-spin" />
-      ) : (
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-      )}
-      <Input
+    <div className="relative flex-1 max-w-md group">
+      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#915564]">
+        {isPending ? (
+          <Loader2 className="h-5 w-5 animate-spin" />
+        ) : (
+          <Search className="h-5 w-5" />
+        )}
+      </div>
+      <input
         ref={inputRef}
         type="text"
-        placeholder="Search by client name or reference..."
+        placeholder="Search by client name, email..."
         value={localValue}
         onChange={handleChange}
-        className="h-9 w-full pl-9 pr-8 sm:w-[280px]"
+        className="block w-full pl-10 pr-8 py-2.5 rounded-lg bg-[#f8f6f6] border-transparent focus:border-primary focus:bg-white focus:ring-0 text-sm text-[#1a0f12] placeholder-[#915564] transition-all"
       />
       {localValue && !isPending && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute right-1 top-1/2 h-6 w-6 -translate-y-1/2"
+        <button
+          type="button"
+          className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-[#915564] hover:text-[#1a0f12] hover:bg-[#f2e9eb] transition-colors"
           onClick={clearSearch}
         >
-          <X className="h-3 w-3" />
+          <X className="h-4 w-4" />
           <span className="sr-only">Clear search</span>
-        </Button>
+        </button>
       )}
     </div>
   );

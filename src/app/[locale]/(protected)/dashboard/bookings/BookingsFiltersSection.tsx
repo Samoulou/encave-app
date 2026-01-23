@@ -1,7 +1,6 @@
 import {
   BookingFilters,
   BookingSearch,
-  ExportCSVButton,
 } from '@/components/features/booking/dashboard';
 import { getWineryExperiencesForFilter } from '@/server/queries/booking.queries';
 import { CalendarViewWrapper } from './CalendarViewWrapper';
@@ -11,21 +10,21 @@ interface BookingsFiltersSectionProps {
 }
 
 /**
- * Async server component for booking filters.
+ * Async server component for booking filters toolbar.
  * Fetches experience options for the filter dropdown.
  * Designed to stream independently from the table.
+ * Layout: Search | Filter Button | View Toggle (List/Calendar)
  */
 export async function BookingsFiltersSection({ wineryId }: BookingsFiltersSectionProps) {
   const experiences = await getWineryExperiencesForFilter(wineryId);
 
   return (
-    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-      <BookingFilters experiences={experiences} />
-      <div className="flex items-center gap-3">
+    <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-2 rounded-xl border border-[#e5d2d7]">
+      <div className="flex items-center gap-2 flex-1 min-w-[300px]">
         <BookingSearch />
-        <ExportCSVButton />
-        <CalendarViewWrapper viewToggleOnly />
+        <BookingFilters experiences={experiences} />
       </div>
+      <CalendarViewWrapper viewToggleOnly />
     </div>
   );
 }

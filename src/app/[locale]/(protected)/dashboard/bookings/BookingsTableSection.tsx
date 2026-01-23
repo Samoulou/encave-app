@@ -99,26 +99,15 @@ export async function BookingsTableSection({ wineryId, params }: BookingsTableSe
   return (
     <>
       {viewMode === 'list' ? (
-        <>
-          {/* Results Info */}
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-slate-600">
-              {bookings.length} booking{bookings.length !== 1 ? 's' : ''}
-              {Object.keys(filters).length > 0 && ' (filtered)'}
+        bookings.length > 0 ? (
+          <BookingsTable bookings={bookings} />
+        ) : (
+          <div className="bg-white rounded-xl border border-[#e5d2d7] p-8 text-center">
+            <p className="text-[#915564]">
+              No bookings match your current filters.
             </p>
           </div>
-
-          {/* Bookings Table */}
-          {bookings.length > 0 ? (
-            <BookingsTable bookings={bookings} />
-          ) : (
-            <div className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center">
-              <p className="text-slate-600">
-                No bookings match your current filters.
-              </p>
-            </div>
-          )}
-        </>
+        )
       ) : (
         <CalendarViewWrapper
           viewMode={viewMode}

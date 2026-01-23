@@ -3,7 +3,7 @@
 import { useTransition } from 'react';
 import { useQueryState, parseAsArrayOf, parseAsString } from 'nuqs';
 import { BookingStatus } from '@prisma/client';
-import { Filter, X, Loader2 } from 'lucide-react';
+import { Filter, Loader2 } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -11,7 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import {
   DropdownMenu,
@@ -19,6 +18,7 @@ import {
   DropdownMenuContent,
   DropdownMenuCheckboxItem,
   DropdownMenuSeparator,
+  DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
 import { format, parseISO } from 'date-fns';
 
@@ -37,9 +37,13 @@ const STATUS_OPTIONS = [
   { value: BookingStatus.CANCELLED_BY_CLIENT, label: 'Cancelled by Client' },
   { value: BookingStatus.CANCELLED_BY_WINERY, label: 'Cancelled by Winery' },
   { value: BookingStatus.NO_SHOW, label: 'No-Show' },
-  { value: BookingStatus.PENDING_PAYMENT, label: 'Pending Payment' },
+  { value: BookingStatus.PENDING_PAYMENT, label: 'Pending' },
 ];
 
+/**
+ * Filter controls for bookings dashboard.
+ * Simplified design matching US-UI-09 mockup.
+ */
 export function BookingFilters({ experiences }: BookingFiltersProps) {
   const [isPending, startTransition] = useTransition();
 
@@ -54,11 +58,12 @@ export function BookingFilters({ experiences }: BookingFiltersProps) {
   const [dateFrom, setDateFrom] = useQueryState('from', transitionOptions);
   const [dateTo, setDateTo] = useQueryState('to', transitionOptions);
 
-  const hasFilters =
-    (statusFilter && statusFilter.length > 0) ||
-    experienceFilter ||
-    dateFrom ||
-    dateTo;
+  const activeFilterCount = [
+    statusFilter && statusFilter.length > 0,
+    experienceFilter,
+    dateFrom,
+    dateTo,
+  ].filter(Boolean).length;
 
   const clearFilters = () => {
     setStatusFilter(null);
@@ -78,144 +83,122 @@ export function BookingFilters({ experiences }: BookingFiltersProps) {
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      {/* Status Filter */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm" className="gap-2">
-            {isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Filter className="h-4 w-4" />
-            )}
-            Status
-            {statusFilter && statusFilter.length > 0 && (
-              <span className="ml-1 rounded-full bg-burgundy-100 px-2 py-0.5 text-xs text-burgundy-700">
-                {statusFilter.length}
-              </span>
-            )}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-56">
-          {STATUS_OPTIONS.map((option) => (
-            <DropdownMenuCheckboxItem
-              key={option.value}
-              checked={statusFilter?.includes(option.value) ?? false}
-              onCheckedChange={() => toggleStatus(option.value)}
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          className="flex items-center gap-2 h-10 px-4 rounded-lg border border-transparent hover:bg-[#f8f6f6] text-[#915564] text-sm font-bold transition-colors"
+        >
+          {isPending ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            <Filter className="h-5 w-5" />
+          )}
+          Filter
+          {activeFilterCount > 0 && (
+            <span className="ml-1 flex items-center justify-center h-5 min-w-[20px] px-1.5 rounded-full bg-primary text-white text-xs font-bold">
+              {activeFilterCount}
+            </span>
+          )}
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-72">
+        {/* Status Filters */}
+        <DropdownMenuLabel className="text-[#915564] text-xs uppercase tracking-wider">
+          Status
+        </DropdownMenuLabel>
+        {STATUS_OPTIONS.map((option) => (
+          <DropdownMenuCheckboxItem
+            key={option.value}
+            checked={statusFilter?.includes(option.value) ?? false}
+            onCheckedChange={() => toggleStatus(option.value)}
+          >
+            {option.label}
+          </DropdownMenuCheckboxItem>
+        ))}
+
+        {/* Experience Filter */}
+        {experiences.length > 0 && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="text-[#915564] text-xs uppercase tracking-wider">
+              Experience
+            </DropdownMenuLabel>
+            <div className="px-2 py-1">
+              <Select
+                value={experienceFilter ?? 'all'}
+                onValueChange={(value) =>
+                  setExperienceFilter(value === 'all' ? null : value)
+                }
+              >
+                <SelectTrigger className="h-9 w-full">
+                  <SelectValue placeholder="All experiences" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All experiences</SelectItem>
+                  {experiences.map((exp) => (
+                    <SelectItem key={exp.id} value={exp.id}>
+                      {exp.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </>
+        )}
+
+        {/* Date Range */}
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel className="text-[#915564] text-xs uppercase tracking-wider">
+          Date Range
+        </DropdownMenuLabel>
+        <div className="px-2 py-1 flex gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex-1 h-9 px-3 text-sm rounded-lg border border-[#e5d2d7] bg-white hover:bg-[#f8f6f6] text-left truncate">
+                {dateFrom ? format(parseISO(dateFrom), 'MMM d') : 'From'}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-auto p-0">
+              <Calendar
+                mode="single"
+                selected={dateFrom ? parseISO(dateFrom) : undefined}
+                onSelect={(date) =>
+                  setDateFrom(date ? format(date, 'yyyy-MM-dd') : null)
+                }
+              />
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex-1 h-9 px-3 text-sm rounded-lg border border-[#e5d2d7] bg-white hover:bg-[#f8f6f6] text-left truncate">
+                {dateTo ? format(parseISO(dateTo), 'MMM d') : 'To'}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-auto p-0">
+              <Calendar
+                mode="single"
+                selected={dateTo ? parseISO(dateTo) : undefined}
+                onSelect={(date) =>
+                  setDateTo(date ? format(date, 'yyyy-MM-dd') : null)
+                }
+              />
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {/* Clear All */}
+        {activeFilterCount > 0 && (
+          <>
+            <DropdownMenuSeparator />
+            <button
+              onClick={clearFilters}
+              className="w-full px-2 py-2 text-sm text-[#915564] hover:text-primary hover:bg-[#f8f6f6] text-left transition-colors"
             >
-              {option.label}
-            </DropdownMenuCheckboxItem>
-          ))}
-          {statusFilter && statusFilter.length > 0 && (
-            <>
-              <DropdownMenuSeparator />
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start"
-                onClick={() => setStatusFilter(null)}
-              >
-                Clear status filter
-              </Button>
-            </>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      {/* Experience Filter */}
-      {experiences.length > 0 && (
-        <Select
-          value={experienceFilter ?? 'all'}
-          onValueChange={(value) =>
-            setExperienceFilter(value === 'all' ? null : value)
-          }
-        >
-          <SelectTrigger className="h-9 w-[180px]">
-            <SelectValue placeholder="All experiences" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All experiences</SelectItem>
-            {experiences.map((exp) => (
-              <SelectItem key={exp.id} value={exp.id}>
-                {exp.title}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      )}
-
-      {/* Date From Filter */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm">
-            {dateFrom ? format(parseISO(dateFrom), 'MMM d, yyyy') : 'From date'}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-auto p-0">
-          <Calendar
-            mode="single"
-            selected={dateFrom ? parseISO(dateFrom) : undefined}
-            onSelect={(date) =>
-              setDateFrom(date ? format(date, 'yyyy-MM-dd') : null)
-            }
-          />
-          {dateFrom && (
-            <div className="border-t p-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full"
-                onClick={() => setDateFrom(null)}
-              >
-                Clear
-              </Button>
-            </div>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      {/* Date To Filter */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm">
-            {dateTo ? format(parseISO(dateTo), 'MMM d, yyyy') : 'To date'}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-auto p-0">
-          <Calendar
-            mode="single"
-            selected={dateTo ? parseISO(dateTo) : undefined}
-            onSelect={(date) =>
-              setDateTo(date ? format(date, 'yyyy-MM-dd') : null)
-            }
-          />
-          {dateTo && (
-            <div className="border-t p-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full"
-                onClick={() => setDateTo(null)}
-              >
-                Clear
-              </Button>
-            </div>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      {/* Clear All Filters */}
-      {hasFilters && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={clearFilters}
-          className="gap-1 text-slate-500 hover:text-slate-700"
-        >
-          <X className="h-4 w-4" />
-          Clear all
-        </Button>
-      )}
-    </div>
+              Clear all filters
+            </button>
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

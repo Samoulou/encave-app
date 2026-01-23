@@ -1,30 +1,29 @@
-import Link from 'next/link';
 import { db } from '@/server/db';
-import { ExperiencesList } from '@/components/features/experience/ExperiencesList';
-import { ExperiencesSortSelect } from '@/components/features/experience/ExperiencesSortSelect';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Plus, Wine } from 'lucide-react';
-import type { Prisma } from '@prisma/client';
+import { ExperienceFilters, type FilterStatus } from '@/components/features/experience/ExperienceFilters';
+import { ExperienceManagementCard } from '@/components/features/experience/ExperienceManagementCard';
+import { CreateExperienceCard } from '@/components/features/experience/CreateExperienceCard';
+import { ExperiencesPagination } from '@/components/features/experience/ExperiencesPagination';
+import type { Prisma, ExperienceStatus } from '@prisma/client';
 
-type SortOption = 'newest' | 'oldest' | 'alphabetical' | 'status';
+const ITEMS_PER_PAGE = 11; // 11 + 1 create card = 12 total in grid
 
 interface ExperiencesContentProps {
   wineryId: string;
-  sort: SortOption;
+  filter: FilterStatus;
+  search: string;
+  page: number;
 }
 
-function getOrderBy(sort: SortOption): Prisma.ExperienceOrderByWithRelationInput {
-  switch (sort) {
-    case 'oldest':
-      return { createdAt: 'asc' };
-    case 'alphabetical':
-      return { title: 'asc' };
-    case 'status':
-      return { status: 'asc' };
-    case 'newest':
+function getStatusFilter(filter: FilterStatus): ExperienceStatus | undefined {
+  switch (filter) {
+    case 'published':
+      return 'PUBLISHED';
+    case 'drafts':
+      return 'DRAFT';
+    case 'archived':
+      return 'ARCHIVED';
     default:
-      return { createdAt: 'desc' };
+      return undefined;
   }
 }
 
@@ -32,59 +31,72 @@ function getOrderBy(sort: SortOption): Prisma.ExperienceOrderByWithRelationInput
  * Async server component that fetches experiences data.
  * Designed to be wrapped in Suspense for streaming/progressive loading.
  */
-export async function ExperiencesContent({ wineryId, sort }: ExperiencesContentProps) {
-  const experiences = await db.experience.findMany({
-    where: { wineryId },
-    orderBy: getOrderBy(sort),
-    select: {
-      id: true,
-      title: true,
-      slug: true,
-      type: true,
-      duration: true,
-      price: true,
-      status: true,
-      coverPhoto: true,
-      updatedAt: true,
-    },
-  });
+export async function ExperiencesContent({
+  wineryId,
+  filter,
+  search,
+  page,
+}: ExperiencesContentProps) {
+  const statusFilter = getStatusFilter(filter);
 
-  if (experiences.length === 0) {
-    return (
-      <Card className="border-dashed">
-        <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-burgundy-100">
-            <Wine className="h-8 w-8 text-burgundy-600" />
-          </div>
-          <h3 className="font-display text-xl font-semibold text-slate-900">
-            No experiences yet
-          </h3>
-          <p className="mt-2 max-w-sm text-slate-600">
-            Create your first experience to attract visitors and start accepting
-            bookings.
-          </p>
-          <Button asChild className="mt-6 gap-2">
-            <Link href="/dashboard/experiences/new">
-              <Plus className="h-4 w-4" />
-              Create Your First Experience
-            </Link>
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
+  // Build where clause
+  const where: Prisma.ExperienceWhereInput = {
+    wineryId,
+    ...(statusFilter && { status: statusFilter }),
+    ...(search && {
+      title: { contains: search, mode: 'insensitive' },
+    }),
+  };
+
+  // Get counts for filter badges (run in parallel)
+  const [experiences, totalCount, publishedCount, draftsCount, archivedCount] =
+    await Promise.all([
+      db.experience.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * ITEMS_PER_PAGE,
+        take: ITEMS_PER_PAGE,
+        select: {
+          id: true,
+          title: true,
+          duration: true,
+          price: true,
+          maxCapacity: true,
+          status: true,
+          coverPhoto: true,
+        },
+      }),
+      db.experience.count({ where }),
+      db.experience.count({ where: { wineryId, status: 'PUBLISHED' } }),
+      db.experience.count({ where: { wineryId, status: 'DRAFT' } }),
+      db.experience.count({ where: { wineryId, status: 'ARCHIVED' } }),
+    ]);
+
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
   return (
-    <>
-      {/* Sort Controls */}
-      <div className="mb-6 flex items-center justify-between">
-        <p className="text-sm text-slate-600">
-          {experiences.length} experience{experiences.length !== 1 ? 's' : ''}
-        </p>
-        <ExperiencesSortSelect currentSort={sort} />
+    <div className="flex flex-col gap-8">
+      {/* Filters & Search */}
+      <ExperienceFilters
+        publishedCount={publishedCount}
+        draftsCount={draftsCount}
+        archivedCount={archivedCount}
+      />
+
+      {/* Card Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        {experiences.map((experience) => (
+          <ExperienceManagementCard key={experience.id} experience={experience} />
+        ))}
+
+        {/* Always show create card on first page when not filtering */}
+        {page === 1 && <CreateExperienceCard />}
       </div>
 
-      <ExperiencesList experiences={experiences} />
-    </>
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <ExperiencesPagination currentPage={page} totalPages={totalPages} />
+      )}
+    </div>
   );
 }

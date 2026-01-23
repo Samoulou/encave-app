@@ -1,34 +1,36 @@
 'use client';
 
 import Link from 'next/link';
-import { useLocale, useTranslations } from 'next-intl';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { CalendarX, Sparkles } from 'lucide-react';
+import { useLocale } from 'next-intl';
+import { CalendarX2, Sparkles } from 'lucide-react';
 
+/**
+ * Empty state for bookings dashboard when there are no bookings.
+ * Matches the mockup design from US-UI-09.
+ */
 export function BookingsEmptyState() {
-  const t = useTranslations('bookings');
   const locale = useLocale();
 
   return (
-    <Card className="border-dashed">
-      <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100">
-          <CalendarX className="h-8 w-8 text-slate-400" />
+    <div className="bg-white rounded-xl border border-[#e5d2d7] shadow-sm">
+      <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-[#f2e9eb]">
+          <CalendarX2 className="h-10 w-10 text-[#915564]" />
         </div>
-        <h3 className="font-display text-xl font-semibold text-slate-900">
-          {t('empty.title')}
+        <h3 className="text-xl font-bold text-[#1a0f12]">
+          No bookings yet
         </h3>
-        <p className="mt-2 max-w-sm text-slate-600">
-          {t('empty.description')}
+        <p className="mt-2 max-w-md text-[#915564]">
+          When customers book your experiences, they&apos;ll appear here.
         </p>
-        <Button asChild className="mt-6 gap-2">
-          <Link href={`/${locale}/dashboard/experiences`}>
-            <Sparkles className="h-4 w-4" />
-            {t('empty.action')}
-          </Link>
-        </Button>
-      </CardContent>
-    </Card>
+        <Link
+          href={`/${locale}/dashboard/experiences`}
+          className="mt-8 inline-flex items-center gap-2 h-10 px-6 rounded-lg bg-primary hover:bg-primary/90 text-white text-sm font-bold transition-colors"
+        >
+          <Sparkles className="h-4 w-4" />
+          Manage Experiences
+        </Link>
+      </div>
+    </div>
   );
 }
