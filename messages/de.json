@@ -129,6 +129,39 @@
   "home": {
     "title": "Entdecken Sie Walliser Weinerlebnisse",
     "subtitle": "Buchen Sie einzigartige Weinverkostungen direkt bei Schweizer Winzern. Erkunden Sie Weinkeller, kosten Sie aussergewohnliche Weine und schaffen Sie unvergessliche Erinnerungen.",
+    "heroTitle": "Entdecken Sie die Geheimnisse des",
+    "heroTitleHighlight": "Wallis",
+    "heroSubtitle": "Entdecken und buchen Sie exklusive Weinverkostungen im Herzen der Schweizer Alpen. Von versteckten Kellern bis zu Grand-Cru-Weinbergen.",
+    "heroImageAlt": "Weinberge an den Hangen des Wallis",
+    "searchLocationPlaceholder": "Wohin? (z.B. Sitten, Siders)",
+    "searchDatePlaceholder": "Datum hinzufugen",
+    "searchButton": "Suchen",
+    "curatedForYou": "Fur Sie ausgewahlt",
+    "popularExperiences": "Beliebte Erlebnisse",
+    "perPerson": "Person",
+    "bookNow": "Jetzt buchen",
+    "viewAllExperiences": "Alle Erlebnisse ansehen",
+    "howItWorks": {
+      "title": "So funktioniert EnCave",
+      "subtitle": "Ihre Reise zu den besten Schweizer Weinen ist nur drei Schritte entfernt.",
+      "step1": {
+        "title": "Entdecken",
+        "description": "Durchstobern Sie eine kuratierte Auswahl versteckter Juwelen und erstklassiger Weinguter im Walliser Tal."
+      },
+      "step2": {
+        "title": "Buchen",
+        "description": "Wahlen Sie Ihre Daten, passen Sie Ihre Gruppengrosse an und sichern Sie sich sofort Ihren Platz online."
+      },
+      "step3": {
+        "title": "Geniessen",
+        "description": "Kommen Sie am Weinberg an, treffen Sie den Winzer und geniessen Sie ein unvergessliches Verkostungserlebnis."
+      }
+    },
+    "ctaTitle": "Bereit, das Aussergewohnliche zu kosten?",
+    "ctaSubtitle": "Schliessen Sie sich Tausenden von Weinliebhabern an, die die verborgenen Schatze des Wallis erkunden.",
+    "ctaImageAlt": "Stimmungsvoller Weinberg bei Sonnenuntergang",
+    "ctaButton": "Starten Sie Ihre Reise",
+    "becomePartner": "Partner werden",
     "discoverSection": "Entdecken",
     "wineExperiences": "Weinerlebnisse",
     "wineExperiencesDescription": "Entdecken Sie Verkostungen, Kellerbesuche, Workshops und Weinbergtouren in der wunderschonen Walliser Region.",
@@ -138,10 +171,7 @@
     "meetWinemakers": "Unsere Winzer kennenlernen",
     "readyToExplore": "Bereit zu entdecken?",
     "startJourney": "Beginnen Sie noch heute Ihre Reise durch die Welt der Schweizer Weine.",
-    "viewAllExperiences": "Alle Erlebnisse ansehen",
-    "becomePartner": "Partner werden",
-    "searchPlaceholder": "Weinerlebnisse suchen...",
-    "searchButton": "Suchen"
+    "searchPlaceholder": "Weinerlebnisse suchen..."
   },
   "experience": {
     "types": {

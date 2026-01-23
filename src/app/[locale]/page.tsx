@@ -1,15 +1,17 @@
-import { Sparkles, Building2, ArrowRight } from 'lucide-react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import Image from 'next/image';
 import { Link } from '@/i18n/navigation';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { HealthStatus } from '@/components/shared/HealthStatus';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { JsonLd } from '@/components/shared/JsonLd';
 import { generateHomeMetadata } from '@/lib/seo';
 import { getBaseUrl } from '@/lib/env';
-import { HeroLocationSearch } from '@/components/features/search/HeroLocationSearch';
+import { HeroSearchBar } from '@/components/features/home/HeroSearchBar';
+import { PopularExperiences } from '@/components/features/home/PopularExperiences';
+import { HowItWorks } from '@/components/features/home/HowItWorks';
+import { getFeaturedExperiences } from '@/server/queries/experience.queries';
 import type { Locale } from '@/i18n/routing';
 
 type Props = {
@@ -27,6 +29,9 @@ export default async function Home({ params }: Props) {
   const t = await getTranslations('home');
 
   const baseUrl = getBaseUrl();
+
+  // Fetch featured experiences for the homepage
+  const featuredExperiences = await getFeaturedExperiences(3);
 
   // SEO-003: Organization schema for home page
   const organizationSchema = {
@@ -56,125 +61,91 @@ export default async function Home({ params }: Props) {
   return (
     <>
     <JsonLd data={organizationSchema} />
-    <div className="min-h-screen bg-cream-50">
+    <div className="min-h-screen bg-background">
       <Header />
 
       {/* Hero Section with Background Image */}
-      <section className="relative overflow-hidden bg-burgundy-900">
-        {/* Background Image with Overlay */}
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: `url('https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?q=80&w=1920&auto=format&fit=crop')`,
-          }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-br from-burgundy-900/90 via-burgundy-800/85 to-burgundy-900/90" />
-        </div>
-
-        {/* Decorative pattern overlay */}
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          }} />
+      <section className="relative h-[500px] md:h-[600px] w-full flex items-center justify-center overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0 z-0">
+          {/* Gradient Overlay */}
+          <div
+            className="absolute inset-0 z-10"
+            style={{
+              background: 'linear-gradient(135deg, rgba(32, 18, 22, 0.4) 0%, rgba(205, 45, 85, 0.5) 100%)',
+            }}
+          />
+          <Image
+            src="https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?q=80&w=1920&auto=format&fit=crop"
+            alt={t('heroImageAlt')}
+            fill
+            className="object-cover object-center"
+            priority
+            sizes="100vw"
+          />
         </div>
 
         {/* Hero Content */}
-        <div className="relative mx-auto max-w-6xl px-6 py-20 lg:px-8 lg:py-28">
-          <div className="text-center max-w-3xl mx-auto">
-            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-display-lg text-white mb-4 drop-shadow-lg">
-              {t('title')}
-            </h1>
-            <p className="text-lg sm:text-xl text-cream-100/90 mb-10 max-w-2xl mx-auto">
-              {t('subtitle')}
-            </p>
+        <div className="relative z-20 w-full max-w-4xl px-4 text-center">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-6 leading-tight tracking-tight drop-shadow-sm">
+            {t('heroTitle')} <span className="text-secondary">{t('heroTitleHighlight')}</span>
+          </h1>
+          <p className="text-lg md:text-xl text-white/90 mb-10 max-w-2xl mx-auto font-medium drop-shadow-sm">
+            {t('heroSubtitle')}
+          </p>
 
-            {/* Quick Search with Location Autocomplete */}
-            <HeroLocationSearch
-              searchPlaceholder={t('searchPlaceholder')}
-              buttonText={t('searchButton')}
-            />
-          </div>
+          {/* Search Bar */}
+          <HeroSearchBar />
         </div>
       </section>
 
-      <main id="main-content" className="flex flex-col items-center px-6 py-16 lg:px-8 lg:py-24">
+      <main id="main-content" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-24">
+        {/* Popular Experiences Section */}
+        <PopularExperiences experiences={featuredExperiences} />
 
-        {/* Discovery Section */}
-        <section className="w-full max-w-4xl mx-auto mb-16" aria-labelledby="discover-heading">
-          <h2 id="discover-heading" className="sr-only">{t('discoverSection')}</h2>
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* Experiences CTA */}
-            <Card className="group overflow-hidden rounded-xl shadow-warm hover:-translate-y-1 hover:shadow-warm-lg transition-all duration-300">
-              <CardContent className="p-0">
-                <Link href="/experiences" className="block p-6 sm:p-8">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-burgundy-100 text-burgundy-600 group-hover:bg-burgundy-600 group-hover:text-white transition-colors">
-                      <Sparkles className="h-6 w-6" aria-hidden="true" />
-                    </div>
-                    <h3 className="font-display text-xl font-semibold text-slate-900">
-                      {t('wineExperiences')}
-                    </h3>
-                  </div>
-                  <p className="text-slate-600 mb-6">
-                    {t('wineExperiencesDescription')}
-                  </p>
-                  <span className="inline-flex items-center gap-2 text-burgundy-600 font-medium group-hover:gap-3 transition-all">
-                    {t('browseExperiences')}
-                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                  </span>
-                </Link>
-              </CardContent>
-            </Card>
+        {/* How It Works Section */}
+        <HowItWorks />
 
-            {/* Wineries CTA */}
-            <Card className="group overflow-hidden rounded-xl shadow-warm hover:-translate-y-1 hover:shadow-warm-lg transition-all duration-300">
-              <CardContent className="p-0">
-                <Link href="/wineries" className="block p-6 sm:p-8">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-burgundy-100 text-burgundy-600 group-hover:bg-burgundy-600 group-hover:text-white transition-colors">
-                      <Building2 className="h-6 w-6" aria-hidden="true" />
-                    </div>
-                    <h3 className="font-display text-xl font-semibold text-slate-900">
-                      {t('ourWineries')}
-                    </h3>
-                  </div>
-                  <p className="text-slate-600 mb-6">
-                    {t('ourWineriesDescription')}
-                  </p>
-                  <span className="inline-flex items-center gap-2 text-burgundy-600 font-medium group-hover:gap-3 transition-all">
-                    {t('meetWinemakers')}
-                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                  </span>
-                </Link>
-              </CardContent>
-            </Card>
+        {/* CTA Banner Section */}
+        <section className="relative rounded-3xl overflow-hidden">
+          <div className="absolute inset-0 bg-[#201216]">
+            <Image
+              src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=1920&auto=format&fit=crop"
+              alt={t('ctaImageAlt')}
+              fill
+              className="object-cover opacity-40 mix-blend-overlay"
+              sizes="100vw"
+            />
           </div>
-        </section>
-
-        {/* CTA Section */}
-        <section className="text-center max-w-2xl mx-auto mb-16">
-          <h2 className="font-display text-2xl sm:text-display-md text-slate-900 mb-4">
-            {t('readyToExplore')}
-          </h2>
-          <p className="text-slate-600 mb-8">
-            {t('startJourney')}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" asChild>
-              <Link href="/experiences">
-                {t('viewAllExperiences')}
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild>
-              <Link href="/register?winemaker=true">
-                {t('becomePartner')}
-              </Link>
-            </Button>
+          <div className="relative z-10 px-6 py-20 text-center">
+            <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-6">
+              {t('ctaTitle')}
+            </h2>
+            <p className="text-lg text-white/80 mb-8 max-w-xl mx-auto">
+              {t('ctaSubtitle')}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button size="lg" asChild className="bg-primary hover:bg-[#a62444] shadow-lg">
+                <Link href="/experiences">
+                  {t('ctaButton')}
+                </Link>
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                asChild
+                className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white border-white/30"
+              >
+                <Link href="/register?winemaker=true">
+                  {t('becomePartner')}
+                </Link>
+              </Button>
+            </div>
           </div>
         </section>
 
         {/* Health Status (for development) */}
-        <div className="mt-8">
+        <div className="mt-8 flex justify-center">
           <HealthStatus />
         </div>
       </main>

@@ -129,6 +129,39 @@
   "home": {
     "title": "Découvrez les expériences viticoles du Valais",
     "subtitle": "Réservez des dégustations uniques directement avec les vignerons suisses. Explorez les caves, goûtez des vins exceptionnels et créez des souvenirs inoubliables.",
+    "heroTitle": "Découvrez les secrets du",
+    "heroTitleHighlight": "Valais",
+    "heroSubtitle": "Découvrez et réservez des dégustations de vins exclusives au cœur des Alpes suisses. Des caves cachées aux grands crus des vignobles.",
+    "heroImageAlt": "Vignobles sur les collines valaisannes",
+    "searchLocationPlaceholder": "Où? (ex: Sion, Sierre)",
+    "searchDatePlaceholder": "Ajouter des dates",
+    "searchButton": "Rechercher",
+    "curatedForYou": "Sélection pour vous",
+    "popularExperiences": "Expériences populaires",
+    "perPerson": "personne",
+    "bookNow": "Réserver",
+    "viewAllExperiences": "Voir toutes les expériences",
+    "howItWorks": {
+      "title": "Comment fonctionne EnCave",
+      "subtitle": "Votre voyage vers les meilleurs vins suisses n'est qu'à trois étapes.",
+      "step1": {
+        "title": "Découvrez",
+        "description": "Parcourez une sélection de perles cachées et de domaines primés à travers la vallée du Valais."
+      },
+      "step2": {
+        "title": "Réservez",
+        "description": "Choisissez vos dates, personnalisez la taille de votre groupe et réservez instantanément en ligne."
+      },
+      "step3": {
+        "title": "Savourez",
+        "description": "Arrivez au vignoble, rencontrez le vigneron et profitez d'une expérience de dégustation inoubliable."
+      }
+    },
+    "ctaTitle": "Prêt à goûter l'extraordinaire?",
+    "ctaSubtitle": "Rejoignez des milliers d'amateurs de vin explorant les trésors cachés du Valais.",
+    "ctaImageAlt": "Vignoble au coucher du soleil",
+    "ctaButton": "Commencer votre voyage",
+    "becomePartner": "Devenir partenaire",
     "discoverSection": "Découvrir",
     "wineExperiences": "Expériences viticoles",
     "wineExperiencesDescription": "Explorez les dégustations, visites de caves, ateliers et tours de vignobles à travers la magnifique région du Valais.",
@@ -138,10 +171,7 @@
     "meetWinemakers": "Rencontrer nos vignerons",
     "readyToExplore": "Prêt à explorer?",
     "startJourney": "Commencez votre voyage à travers le monde des vins suisses aujourd'hui.",
-    "viewAllExperiences": "Voir toutes les expériences",
-    "becomePartner": "Devenir partenaire",
-    "searchPlaceholder": "Rechercher des expériences viticoles...",
-    "searchButton": "Rechercher"
+    "searchPlaceholder": "Rechercher des expériences viticoles..."
   },
   "experience": {
     "types": {

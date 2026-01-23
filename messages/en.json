@@ -129,6 +129,39 @@
   "home": {
     "title": "Discover Valais Wine Experiences",
     "subtitle": "Book unique wine tasting experiences directly with Swiss winemakers. Explore cellars, taste exceptional wines, and create unforgettable memories.",
+    "heroTitle": "Uncork the Secrets of",
+    "heroTitleHighlight": "Valais",
+    "heroSubtitle": "Discover and book exclusive wine tastings in the heart of the Swiss Alps. From hidden cellars to grand cru vineyards.",
+    "heroImageAlt": "Vineyards on hillside in Valais",
+    "searchLocationPlaceholder": "Where to? (e.g., Sion, Sierre)",
+    "searchDatePlaceholder": "Add dates",
+    "searchButton": "Search",
+    "curatedForYou": "Curated For You",
+    "popularExperiences": "Popular Experiences",
+    "perPerson": "person",
+    "bookNow": "Book Now",
+    "viewAllExperiences": "View All Experiences",
+    "howItWorks": {
+      "title": "How EnCave Works",
+      "subtitle": "Your journey to the best Swiss wines is just three steps away.",
+      "step1": {
+        "title": "Discover",
+        "description": "Browse a curated selection of hidden gems and top-rated wineries across the Valais valley."
+      },
+      "step2": {
+        "title": "Book",
+        "description": "Select your dates, customize your group size, and secure your spot instantly online."
+      },
+      "step3": {
+        "title": "Savor",
+        "description": "Arrive at the vineyard, meet the winemaker, and enjoy an unforgettable tasting experience."
+      }
+    },
+    "ctaTitle": "Ready to taste the extraordinary?",
+    "ctaSubtitle": "Join thousands of wine lovers exploring the hidden treasures of Valais.",
+    "ctaImageAlt": "Dark moody vineyard sunset",
+    "ctaButton": "Start Your Journey",
+    "becomePartner": "Become a Partner",
     "discoverSection": "Discover",
     "wineExperiences": "Wine Experiences",
     "wineExperiencesDescription": "Explore tastings, cellar visits, workshops, and vineyard tours across the beautiful Valais region.",
@@ -138,10 +171,7 @@
     "meetWinemakers": "Meet our winemakers",
     "readyToExplore": "Ready to explore?",
     "startJourney": "Start your journey through the world of Swiss wines today.",
-    "viewAllExperiences": "View All Experiences",
-    "becomePartner": "Become a Partner",
-    "searchPlaceholder": "Search wine experiences...",
-    "searchButton": "Search"
+    "searchPlaceholder": "Search wine experiences..."
   },
   "experience": {
     "types": {
