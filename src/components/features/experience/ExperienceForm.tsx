@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import Image from 'next/image';
-import { X, Camera, Wine, Clock, Users, Banknote } from 'lucide-react';
+import { X, Camera, Wine, Clock, Users, Banknote, HelpCircle } from 'lucide-react';
 import {
   createExperienceSchema,
   type CreateExperienceInput,
@@ -17,6 +17,7 @@ import {
   createExperience,
   uploadExperienceImage,
   deleteUploadedImage,
+  publishExperience,
 } from '@/server/actions/experience';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,7 +38,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { ImageUpload } from '@/components/shared/ImageUpload';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
 interface GalleryImage {
@@ -81,6 +96,9 @@ export function ExperienceForm() {
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [uploadingGalleryIndex, setUploadingGalleryIndex] = useState<number | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showPublishDialog, setShowPublishDialog] = useState(false);
+  const [createdExperienceId, setCreatedExperienceId] = useState<string | null>(null);
+  const [isPublishing, setIsPublishing] = useState(false);
 
   const form = useForm<CreateExperienceInput>({
     resolver: zodResolver(createExperienceSchema),
@@ -189,8 +207,9 @@ export function ExperienceForm() {
           className: 'bg-cream-50 border-gold-200',
         });
         setHasUnsavedChanges(false);
-        // Redirect to dashboard on success (AC 11)
-        router.push('/dashboard/experiences');
+        // Show publish prompt dialog instead of redirecting immediately
+        setCreatedExperienceId(result.data.experienceId);
+        setShowPublishDialog(true);
       } else {
         toast.error(result.error.message);
       }
@@ -199,7 +218,34 @@ export function ExperienceForm() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [coverPhoto, galleryImages, router]);
+  }, [coverPhoto, galleryImages]);
+
+  const handlePublishNow = async () => {
+    if (!createdExperienceId) return;
+
+    setIsPublishing(true);
+    try {
+      const result = await publishExperience(createdExperienceId);
+      if (result.success) {
+        toast.success('Experience published!', {
+          description: 'Your experience is now visible to visitors.',
+        });
+      } else {
+        toast.error(result.error.message);
+      }
+    } catch {
+      toast.error('Failed to publish. You can publish it later from the dashboard.');
+    } finally {
+      setIsPublishing(false);
+      setShowPublishDialog(false);
+      router.push('/dashboard/experiences');
+    }
+  };
+
+  const handleKeepAsDraft = () => {
+    setShowPublishDialog(false);
+    router.push('/dashboard/experiences');
+  };
 
   // Calculate description character count
   const descriptionValue = form.watch('description');
@@ -457,11 +503,11 @@ export function ExperienceForm() {
                       />
                     </FormControl>
                     <FormDescription className="flex justify-between">
-                      <span>Minimum 100 characters required</span>
+                      <span>Minimum 20 characters recommended</span>
                       <span className={cn(
-                        descriptionLength < 100 ? 'text-amber-600' : 'text-green-600'
+                        descriptionLength < 20 ? 'text-amber-600' : 'text-green-600'
                       )}>
-                        {descriptionLength} / 100 min
+                        {descriptionLength} characters
                       </span>
                     </FormDescription>
                     <FormMessage />
@@ -515,7 +561,17 @@ export function ExperienceForm() {
                   <FormItem>
                     <FormLabel className="text-base font-medium flex items-center gap-2">
                       <Users className="h-4 w-4" />
-                      Min Guests
+                      Min Booking Size
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <HelpCircle className="h-4 w-4 text-slate-400 cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <p>The minimum number of guests required per booking. Visitors cannot book for fewer than this number.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -633,6 +689,42 @@ export function ExperienceForm() {
           </div>
         </form>
       </Form>
+
+      {/* Publish Prompt Dialog */}
+      <Dialog open={showPublishDialog} onOpenChange={setShowPublishDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Experience Created!</DialogTitle>
+            <DialogDescription>
+              Your experience has been saved as a draft. Would you like to publish it now so visitors can see it?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col gap-2 sm:flex-row">
+            <Button
+              variant="outline"
+              onClick={handleKeepAsDraft}
+              disabled={isPublishing}
+              className="w-full sm:w-auto"
+            >
+              Keep as Draft
+            </Button>
+            <Button
+              onClick={handlePublishNow}
+              disabled={isPublishing}
+              className="w-full sm:w-auto"
+            >
+              {isPublishing ? (
+                <>
+                  <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  Publishing...
+                </>
+              ) : (
+                'Publish Now'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

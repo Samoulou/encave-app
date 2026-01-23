@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import Image from 'next/image';
-import { X, Camera, Wine, Clock, Users, Banknote } from 'lucide-react';
+import { X, Camera, Wine, Clock, Users, Banknote, HelpCircle } from 'lucide-react';
 import {
   createExperienceSchema,
   type CreateExperienceInput,
@@ -38,6 +38,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ImageUpload } from '@/components/shared/ImageUpload';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import type { ExperienceType } from '@prisma/client';
 
@@ -484,15 +490,15 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
                       />
                     </FormControl>
                     <FormDescription className="flex justify-between">
-                      <span>Minimum 100 characters required</span>
+                      <span>Minimum 20 characters recommended</span>
                       <span
                         className={cn(
-                          descriptionLength < 100
+                          descriptionLength < 20
                             ? 'text-amber-600'
                             : 'text-green-600'
                         )}
                       >
-                        {descriptionLength} / 100 min
+                        {descriptionLength} characters
                       </span>
                     </FormDescription>
                     <FormMessage />
@@ -549,7 +555,17 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
                   <FormItem>
                     <FormLabel className="text-base font-medium flex items-center gap-2">
                       <Users className="h-4 w-4" />
-                      Min Guests
+                      Min Booking Size
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <HelpCircle className="h-4 w-4 text-slate-400 cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <p>The minimum number of guests required per booking. Visitors cannot book for fewer than this number.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </FormLabel>
                     <FormControl>
                       <Input

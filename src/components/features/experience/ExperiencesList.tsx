@@ -214,7 +214,7 @@ export function ExperiencesList({ experiences }: ExperiencesListProps) {
                   <DropdownMenuContent align="end" className="w-48">
                     <DropdownMenuItem asChild>
                       <Link
-                        href={`/experience/${experience.slug}`}
+                        href={`/dashboard/experiences/${experience.id}/preview`}
                         target="_blank"
                         className="cursor-pointer"
                       >

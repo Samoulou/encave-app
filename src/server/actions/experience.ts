@@ -684,7 +684,10 @@ export async function duplicateExperience(
 
     const experience = await db.experience.findFirst({
       where: { id: experienceId, wineryId: winery.id },
-      include: { galleryImages: { orderBy: { order: 'asc' } } },
+      include: {
+        galleryImages: { orderBy: { order: 'asc' } },
+        availabilitySlots: { orderBy: { dayOfWeek: 'asc' } },
+      },
     });
 
     if (!experience) {
@@ -729,6 +732,19 @@ export async function duplicateExperience(
             experienceId: newExperience.id,
             url: img.url,
             order: index,
+          })),
+        });
+      }
+
+      // Copy availability slots (AC8)
+      if (experience.availabilitySlots.length > 0) {
+        await tx.availabilitySlot.createMany({
+          data: experience.availabilitySlots.map((slot) => ({
+            experienceId: newExperience.id,
+            dayOfWeek: slot.dayOfWeek,
+            startTime: slot.startTime,
+            endTime: slot.endTime,
+            isActive: slot.isActive,
           })),
         });
       }
@@ -884,6 +900,127 @@ export async function deleteUploadedImage(
     };
   } catch (error) {
     console.error('deleteUploadedImage error:', error);
+    return {
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Something went wrong. Please try again.',
+      },
+    };
+  }
+}
+
+/**
+ * Get an experience for preview (owner only, any status)
+ */
+export async function getExperienceForPreview(
+  experienceId: string
+): Promise<ActionResult<{
+  id: string;
+  title: string;
+  slug: string;
+  type: string;
+  description: string;
+  duration: number;
+  price: number;
+  minCapacity: number;
+  maxCapacity: number;
+  coverPhoto: string;
+  status: string;
+  galleryImages: { id: string; url: string; order: number }[];
+  availabilitySlots: { id: string; dayOfWeek: number; startTime: string; endTime: string; isActive: boolean }[];
+  winery: {
+    id: string;
+    name: string;
+    slug: string;
+    commune: string;
+    address: string;
+    coverPhoto: string | null;
+    latitude: number | null;
+    longitude: number | null;
+    stripeOnboardingComplete: boolean;
+  };
+}>> {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return {
+        success: false,
+        error: { code: 'UNAUTHORIZED', message: 'Please sign in to continue' },
+      };
+    }
+
+    const winery = await db.winery.findUnique({
+      where: { userId: session.user.id },
+      select: { id: true },
+    });
+
+    if (!winery) {
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Winery not found' },
+      };
+    }
+
+    const experience = await db.experience.findFirst({
+      where: { id: experienceId, wineryId: winery.id },
+      include: {
+        winery: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            commune: true,
+            address: true,
+            coverPhoto: true,
+            latitude: true,
+            longitude: true,
+            stripeOnboardingComplete: true,
+          },
+        },
+        galleryImages: { orderBy: { order: 'asc' } },
+        availabilitySlots: { orderBy: { dayOfWeek: 'asc' } },
+      },
+    });
+
+    if (!experience) {
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Experience not found' },
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        id: experience.id,
+        title: experience.title,
+        slug: experience.slug,
+        type: experience.type,
+        description: experience.description,
+        duration: experience.duration,
+        price: experience.price,
+        minCapacity: experience.minCapacity,
+        maxCapacity: experience.maxCapacity,
+        coverPhoto: experience.coverPhoto,
+        status: experience.status,
+        galleryImages: experience.galleryImages.map((img) => ({
+          id: img.id,
+          url: img.url,
+          order: img.order,
+        })),
+        availabilitySlots: experience.availabilitySlots.map((slot) => ({
+          id: slot.id,
+          dayOfWeek: slot.dayOfWeek,
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+          isActive: slot.isActive,
+        })),
+        winery: experience.winery,
+      },
+    };
+  } catch (error) {
+    console.error('getExperienceForPreview error:', error);
     return {
       success: false,
       error: {
