@@ -3,18 +3,54 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
-import { ArrowLeft, Loader2, AlertCircle, RefreshCw, Users } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Loader2, AlertCircle, RefreshCw, Users, Wine, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Breadcrumb } from '@/components/shared/Breadcrumb';
-import { BookingSummary } from '@/components/features/booking';
-import { CheckoutForm } from '@/components/features/checkout/CheckoutForm';
+import { ContactDetailsSection } from '@/components/features/checkout/ContactDetailsSection';
+import { OrderSummary } from '@/components/features/checkout/OrderSummary';
+import { MobileOrderSummary } from '@/components/features/checkout/MobileOrderSummary';
+import { TrustBadges } from '@/components/features/checkout/TrustBadges';
 import { getExperienceForBooking, checkAvailability, type ExperienceForBooking } from '@/server/actions/booking';
+import { createBookingAndCheckout } from '@/server/actions/checkout';
+import { formatCHF } from '@/lib/utils/currency';
 
 // BUG-013: Periodic recheck interval (60 seconds)
 const AVAILABILITY_RECHECK_INTERVAL_MS = 60000;
+
+// Phone validation - accepts Swiss and international formats
+const phoneRegex = /^(\+41|0041|0)?[1-9][0-9]{8}$|^\+?[1-9]\d{6,14}$/;
+
+const checkoutFormSchema = z.object({
+  firstName: z.string().min(2, 'First name must be at least 2 characters'),
+  lastName: z.string().min(2, 'Last name must be at least 2 characters'),
+  email: z.string().email('Invalid email address'),
+  phone: z.string().regex(phoneRegex, 'Invalid phone number'),
+  cardholderName: z.string().min(2, 'Cardholder name is required'),
+});
+
+type CheckoutFormData = z.infer<typeof checkoutFormSchema>;
+
+// Card brand icons
+function VisaIcon() {
+  return (
+    <div className="w-8 h-5 bg-[#1a1f71] rounded flex items-center justify-center">
+      <span className="text-[8px] font-bold text-white">VISA</span>
+    </div>
+  );
+}
+
+function MastercardIcon() {
+  return (
+    <div className="w-8 h-5 bg-gray-100 rounded flex items-center justify-center gap-0.5">
+      <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
+      <div className="w-2.5 h-2.5 rounded-full bg-yellow-500 -ml-1" />
+    </div>
+  );
+}
 
 export default function CheckoutPage() {
   const params = useParams<{ slug: string; locale: string }>();
@@ -22,13 +58,14 @@ export default function CheckoutPage() {
   const locale = useLocale();
   const t = useTranslations('checkout');
   const tBooking = useTranslations('booking');
-  const tNav = useTranslations('nav');
+  const tErrors = useTranslations('errors');
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const [experience, setExperience] = useState<ExperienceForBooking | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // BUG-003 & BUG-013: Availability state
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
@@ -48,6 +85,14 @@ export default function CheckoutPage() {
   // Validate required params
   const guestCount = guests ? parseInt(guests, 10) : null;
   const hasValidParams = date && time && guestCount && guestCount > 0;
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<CheckoutFormData>({
+    resolver: zodResolver(checkoutFormSchema),
+  });
 
   useEffect(() => {
     if (!slug) return;
@@ -117,9 +162,8 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (!experience || !hasValidParams) return;
 
-    // Set up periodic recheck
     recheckIntervalRef.current = setInterval(() => {
-      validateAvailability(experience.id, false); // Silent recheck
+      validateAvailability(experience.id, false);
     }, AVAILABILITY_RECHECK_INTERVAL_MS);
 
     return () => {
@@ -136,11 +180,42 @@ export default function CheckoutPage() {
     }
   }, [experience, validateAvailability]);
 
+  const onSubmit = async (data: CheckoutFormData) => {
+    if (!experience || !date || !time || !guestCount) return;
+
+    setSubmitError(null);
+
+    try {
+      const result = await createBookingAndCheckout({
+        experienceId: experience.id,
+        wineryId: experience.winery.id,
+        date,
+        timeSlot: time,
+        guestCount,
+        visitorName: `${data.firstName} ${data.lastName}`,
+        visitorEmail: data.email,
+        visitorPhone: data.phone.replace(/\s/g, ''),
+      });
+
+      if (result.success) {
+        router.push(result.data.checkoutUrl);
+      } else {
+        setSubmitError(result.error.message);
+      }
+    } catch {
+      setSubmitError(tErrors('somethingWentWrong'));
+    }
+  };
+
+  // BUG-003: Form is disabled if capacity is exceeded or still checking
+  const isFormDisabled = capacityExceeded || isCheckingAvailability;
+
   if (isLoading) {
     return (
-      <div className="container mx-auto max-w-4xl px-4 py-12">
+      <div className="min-h-screen bg-[#f8f6f6]">
+        <CheckoutHeaderComponent />
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin text-burgundy-600" />
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       </div>
     );
@@ -148,186 +223,332 @@ export default function CheckoutPage() {
 
   if (error || !experience) {
     return (
-      <div className="container mx-auto max-w-4xl px-4 py-12">
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error || t('experienceNotFound')}</AlertDescription>
-        </Alert>
+      <div className="min-h-screen bg-[#f8f6f6]">
+        <CheckoutHeaderComponent />
+        <main className="flex-grow w-full px-4 md:px-10 py-10">
+          <div className="mx-auto max-w-7xl">
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error || t('experienceNotFound')}</AlertDescription>
+            </Alert>
+          </div>
+        </main>
       </div>
     );
   }
 
   if (!hasValidParams) {
     return (
-      <div className="container mx-auto max-w-4xl px-4 py-12">
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{t('invalidBookingParams')}</AlertDescription>
-        </Alert>
-        <div className="mt-4">
-          <Button asChild variant="outline">
-            <Link href={`/${locale}/experiences/${slug}/book`}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              {t('backToBooking')}
-            </Link>
-          </Button>
-        </div>
+      <div className="min-h-screen bg-[#f8f6f6]">
+        <CheckoutHeaderComponent />
+        <main className="flex-grow w-full px-4 md:px-10 py-10">
+          <div className="mx-auto max-w-7xl">
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{t('invalidBookingParams')}</AlertDescription>
+            </Alert>
+            <div className="mt-4">
+              <Button asChild variant="outline">
+                <Link href={`/${locale}/experiences/${slug}/book`}>
+                  {t('backToBooking')}
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
 
   const totalPrice = experience.price * guestCount;
 
-  // BUG-003: Form is disabled if capacity is exceeded or still checking
-  const isFormDisabled = capacityExceeded || isCheckingAvailability;
+  return (
+    <div className="min-h-screen bg-[#f8f6f6] flex flex-col">
+      {/* Simplified Header */}
+      <CheckoutHeaderComponent />
 
-  // Breadcrumb items
-  const breadcrumbItems = [
-    { label: tNav('home'), href: '/' },
-    { label: t('experiences'), href: '/experiences' },
-    { label: experience.title, href: `/experiences/${slug}` },
-    { label: t('checkout') },
-  ];
+      <main className="flex-grow w-full px-4 md:px-10 py-10">
+        <div className="mx-auto max-w-7xl">
+          {/* Page Heading */}
+          <div className="mb-8">
+            <h1 className="text-3xl md:text-4xl font-bold text-[#1a0f12] mb-2">
+              {t('pageTitle')}
+            </h1>
+            <p className="text-[#915564]">{t('pageSubtitle')}</p>
+          </div>
+
+          {/* Error Alerts */}
+          {paymentError && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                {paymentError === 'cancelled' ? t('paymentCancelled') : t('paymentFailed')}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {availabilityError && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="flex items-center justify-between">
+                <span>{availabilityError}</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRetryAvailability}
+                  disabled={isCheckingAvailability}
+                  className="ml-2"
+                >
+                  {isCheckingAvailability ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-1" />
+                      Retry
+                    </>
+                  )}
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {capacityExceeded && remainingCapacity !== null && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>{t('capacityExceeded')}</AlertTitle>
+              <AlertDescription>
+                {t('capacityExceededMessage', { requested: guestCount, available: remainingCapacity })}
+                <div className="mt-3">
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={`/${locale}/experiences/${slug}/book?date=${date}&time=${time}&guests=${remainingCapacity}`}>
+                      {t('adjustGuestCount')}
+                    </Link>
+                  </Button>
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {isCheckingAvailability && remainingCapacity === null && (
+            <Alert className="mb-6 border-primary/20 bg-primary/5">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <AlertDescription className="text-[#1a0f12]">
+                {t('verifyingAvailability')}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Mobile Order Summary (Collapsible) */}
+          <div className="mb-6">
+            <MobileOrderSummary
+              experienceTitle={experience.title}
+              experienceImage={experience.coverPhoto}
+              location={experience.winery.commune || 'Valais'}
+              date={date}
+              time={time}
+              duration={experience.duration ? experience.duration / 60 : undefined}
+              guestCount={guestCount}
+              pricePerPerson={experience.price}
+              serviceFee={0}
+            />
+          </div>
+
+          {/* Main Grid Layout */}
+          <form onSubmit={handleSubmit(onSubmit)} data-testid="checkout-form">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+              {/* Left Column: Forms */}
+              <div className="lg:col-span-7 flex flex-col gap-8">
+                {/* Contact Details Section */}
+                <fieldset disabled={isFormDisabled || isSubmitting}>
+                  <ContactDetailsSection
+                    register={register}
+                    errors={errors}
+                    isSubmitting={isSubmitting || isFormDisabled}
+                  />
+                </fieldset>
+
+                {/* Payment Method Section */}
+                <fieldset disabled={isFormDisabled || isSubmitting}>
+                  <section className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-[#e5d2d7]">
+                    {/* Section Header */}
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                          </svg>
+                        </div>
+                        <h3 className="text-xl font-bold text-[#1a0f12]">{t('paymentMethod')}</h3>
+                      </div>
+                      <div className="flex gap-2 opacity-60">
+                        <VisaIcon />
+                        <MastercardIcon />
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      {/* Card Information - Combined Input */}
+                      <div className="flex flex-col w-full">
+                        <label htmlFor="cardNumber" className="text-[#1a0f12] text-sm font-medium pb-2">
+                          {t('cardInformation')}
+                        </label>
+                        <div className="relative flex items-center w-full rounded-lg border border-[#e5d2d7] bg-[#fbf9f9] px-4 h-12 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all">
+                          <svg className="h-5 w-5 text-[#915564] mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                          </svg>
+                          <input
+                            id="cardNumber"
+                            type="text"
+                            placeholder={t('cardNumberPlaceholder')}
+                            className="flex-1 bg-transparent border-none focus:ring-0 focus:outline-none text-[#1a0f12] placeholder:text-[#915564]/60 text-base min-w-0"
+                            disabled={isSubmitting || isFormDisabled}
+                          />
+                          <div className="flex items-center border-l border-[#e5d2d7] ml-2 pl-2">
+                            <input
+                              type="text"
+                              placeholder="MM/YY"
+                              className="w-16 bg-transparent border-none focus:ring-0 focus:outline-none text-[#1a0f12] placeholder:text-[#915564]/60 text-center text-base"
+                              disabled={isSubmitting || isFormDisabled}
+                            />
+                          </div>
+                          <div className="flex items-center border-l border-[#e5d2d7] ml-2 pl-2">
+                            <input
+                              type="text"
+                              placeholder="CVC"
+                              className="w-12 bg-transparent border-none focus:ring-0 focus:outline-none text-[#1a0f12] placeholder:text-[#915564]/60 text-center text-base"
+                              disabled={isSubmitting || isFormDisabled}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Cardholder Name */}
+                      <div className="flex flex-col w-full">
+                        <label htmlFor="cardholderName" className="text-[#1a0f12] text-sm font-medium pb-2">
+                          {t('cardholderName')}
+                        </label>
+                        <input
+                          id="cardholderName"
+                          placeholder={t('cardholderNamePlaceholder')}
+                          autoComplete="cc-name"
+                          disabled={isSubmitting || isFormDisabled}
+                          className="h-12 w-full rounded-lg border border-[#e5d2d7] bg-[#fbf9f9] px-4 text-[#1a0f12] placeholder:text-[#915564]/60 focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
+                          {...register('cardholderName')}
+                        />
+                        {errors.cardholderName && (
+                          <p className="text-sm text-red-500 mt-1">{errors.cardholderName.message}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Trust Badge */}
+                    <div className="mt-8 flex items-center justify-center gap-2 p-3 bg-[#f2e9eb]/50 rounded-lg border border-[#e5d2d7]">
+                      <Lock className="h-4 w-4 text-[#1a0f12]" aria-hidden="true" />
+                      <span className="text-sm font-medium text-[#1a0f12]">{t('securePaymentStripe')}</span>
+                    </div>
+
+                    {/* Submit Error */}
+                    {submitError && (
+                      <div className="mt-4 rounded-md bg-red-50 p-4">
+                        <p className="text-sm text-red-700">{submitError}</p>
+                      </div>
+                    )}
+
+                    {/* CTA Button */}
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting || isFormDisabled}
+                      className="w-full mt-6 bg-primary hover:bg-[#a62444] text-white h-14 rounded-lg font-bold text-lg shadow-lg shadow-primary/20 transition-all group"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                          {t('processing')}
+                        </>
+                      ) : (
+                        <>
+                          <span>{t('confirmAndPay', { amount: formatCHF(totalPrice) })}</span>
+                          <svg className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                          </svg>
+                        </>
+                      )}
+                    </Button>
+
+                    {/* Terms Text */}
+                    <p className="mt-4 text-center text-xs text-[#915564]">
+                      {t('termsAgreement')}
+                    </p>
+                  </section>
+                </fieldset>
+              </div>
+
+              {/* Right Column: Summary (Sticky) - Desktop Only */}
+              <aside className="hidden lg:block lg:col-span-5">
+                <div className="sticky top-24">
+                  <OrderSummary
+                    experienceTitle={experience.title}
+                    experienceImage={experience.coverPhoto}
+                    location={experience.winery.commune || 'Valais'}
+                    date={date}
+                    time={time}
+                    duration={experience.duration ? experience.duration / 60 : undefined}
+                    guestCount={guestCount}
+                    pricePerPerson={experience.price}
+                    serviceFee={0}
+                  />
+
+                  {/* Capacity Status Indicator */}
+                  {remainingCapacity !== null && !capacityExceeded && (
+                    <div className="mt-4 p-4 rounded-lg border border-green-200 bg-green-50">
+                      <div className="flex items-center gap-2 text-green-800">
+                        <Users className="h-4 w-4" />
+                        <span className="text-sm font-medium">
+                          {tBooking('remainingCapacity', { count: remainingCapacity })}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  <TrustBadges />
+                </div>
+              </aside>
+            </div>
+          </form>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+// Inline Header Component for Client-side rendering
+function CheckoutHeaderComponent() {
+  const t = useTranslations('checkout');
+  const locale = useLocale();
 
   return (
-    <div className="container mx-auto max-w-4xl px-4 py-8">
-      {/* Breadcrumb */}
-      <div className="mb-6">
-        <Breadcrumb items={breadcrumbItems} />
-      </div>
-
-      {/* Back link */}
-      <div className="mb-6">
-        <Button asChild variant="ghost" size="sm">
-          <Link href={`/${locale}/experiences/${slug}/book?date=${date}&time=${time}&guests=${guests}`}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            {t('backToBooking')}
-          </Link>
-        </Button>
-      </div>
-
-      {/* Payment error alert */}
-      {paymentError && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            {paymentError === 'cancelled' ? t('paymentCancelled') : t('paymentFailed')}
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* BUG-003: Availability error alert */}
-      {availabilityError && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription className="flex items-center justify-between">
-            <span>{availabilityError}</span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRetryAvailability}
-              disabled={isCheckingAvailability}
-              className="ml-2"
-            >
-              {isCheckingAvailability ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  <RefreshCw className="h-4 w-4 mr-1" />
-                  Retry
-                </>
-              )}
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* BUG-003: Capacity exceeded alert */}
-      {capacityExceeded && remainingCapacity !== null && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>{t('capacityExceeded')}</AlertTitle>
-          <AlertDescription>
-            {t('capacityExceededMessage', { requested: guestCount, available: remainingCapacity })}
-            <div className="mt-3">
-              <Button asChild variant="outline" size="sm">
-                <Link href={`/${locale}/experiences/${slug}/book?date=${date}&time=${time}&guests=${remainingCapacity}`}>
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  {t('adjustGuestCount')}
-                </Link>
-              </Button>
-            </div>
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* BUG-003: Initial availability check loading state */}
-      {isCheckingAvailability && remainingCapacity === null && (
-        <Alert className="mb-6 border-burgundy-200 bg-burgundy-50">
-          <Loader2 className="h-4 w-4 animate-spin text-burgundy-600" />
-          <AlertDescription className="text-burgundy-800">
-            {t('verifyingAvailability')}
-          </AlertDescription>
-        </Alert>
-      )}
-
-      <div className="grid gap-8 lg:grid-cols-3">
-        {/* Left Column - Checkout Form */}
-        <div className="lg:col-span-2">
-          <Card
-            className={isFormDisabled ? 'opacity-60' : ''}
-            aria-disabled={isFormDisabled}
-          >
-            <fieldset disabled={isFormDisabled}>
-              <CardHeader>
-                <CardTitle>{t('guestDetails')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CheckoutForm
-                  experienceId={experience.id}
-                  wineryId={experience.winery.id}
-                  date={date}
-                  time={time}
-                  guestCount={guestCount}
-                  totalPrice={totalPrice}
-                />
-              </CardContent>
-            </fieldset>
-          </Card>
-        </div>
-
-        {/* Right Column - Booking Summary */}
-        <div className="lg:col-span-1">
-          <div className="sticky top-6 space-y-4">
-            <Card data-testid="checkout-summary">
-              <CardContent className="p-6">
-                <BookingSummary
-                  experienceTitle={experience.title}
-                  wineryName={experience.winery.name}
-                  date={date}
-                  time={time}
-                  guests={guestCount}
-                  totalPrice={totalPrice}
-                />
-              </CardContent>
-            </Card>
-
-            {/* BUG-003: Capacity status indicator */}
-            {remainingCapacity !== null && !capacityExceeded && (
-              <Card className="border-green-200 bg-green-50">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 text-green-800">
-                    <Users className="h-4 w-4" />
-                    <span className="text-sm font-medium">
-                      {tBooking('remainingCapacity', { count: remainingCapacity })}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+    <header className="sticky top-0 z-50 w-full border-b border-[#f2e9eb] bg-[#f8f6f6]/95 backdrop-blur-sm px-4 md:px-10 py-4">
+      <div className="mx-auto max-w-7xl flex items-center justify-between">
+        {/* Logo */}
+        <Link
+          href={`/${locale}`}
+          className="flex items-center gap-3 group"
+          aria-label="EnCave - Go to homepage"
+        >
+          <div className="flex h-8 w-8 items-center justify-center text-primary">
+            <Wine className="h-8 w-8" aria-hidden="true" />
           </div>
+          <span className="text-[#1a0f12] text-xl font-bold tracking-tight">
+            EnCave
+          </span>
+        </Link>
+
+        {/* Secure Checkout Badge */}
+        <div className="flex items-center gap-2 text-[#915564] text-sm font-medium bg-[#f2e9eb] px-3 py-1.5 rounded-full">
+          <Lock className="h-4 w-4" aria-hidden="true" />
+          <span>{t('secureCheckout')}</span>
         </div>
       </div>
-    </div>
+    </header>
   );
 }
