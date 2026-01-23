@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Winemaker Dashboard - Earnings</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#cd2d55",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#201216",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#2d1a20",
+                        "text-main-light": "#1a0f12",
+                        "text-main-dark": "#f2e9eb",
+                        "text-secondary-light": "#915564",
+                        "text-secondary-dark": "#d1aeb7",
+                        "border-light": "#e5d2d7",
+                        "border-dark": "#4a2a32",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Hide scrollbar for cleaner UI */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-text-main-light dark:text-text-main-dark transition-colors duration-200">
+<div class="flex h-screen w-full overflow-hidden">
+<!-- Side Navigation -->
+<aside class="hidden w-72 flex-col border-r border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark lg:flex">
+<div class="flex h-16 items-center border-b border-border-light dark:border-border-dark px-6">
+<div class="flex items-center gap-2 text-primary">
+<span class="material-symbols-outlined filled text-3xl">wine_bar</span>
+<span class="text-xl font-extrabold tracking-tight text-text-main-light dark:text-text-main-dark">EnCave</span>
+</div>
+</div>
+<div class="flex flex-1 flex-col justify-between overflow-y-auto p-4">
+<div class="flex flex-col gap-6">
+<!-- User Profile Snippet -->
+<div class="flex items-center gap-3 rounded-xl bg-surface-light dark:bg-surface-dark p-3 shadow-sm border border-border-light dark:border-border-dark">
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-10 flex-shrink-0" data-alt="Portrait of the winemaker profile picture" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBBW0ZPgfhengHYTTF1urboR-EUXegKqteRIxHHclq9-H5NQs0sJFIeIr1a4yujQEc50yfLcD6pS34UDI8OvAbQq5JhiPd8B3uYVdUQ_oQxtU4EUFKjiklBgl1Bj-bQEXNhU7R6EYli9IQ_h5I6ot6P99N9j0z1Hplz6tWVA5hL_cYhVsTK_FFzbNt4pvJ8nLS-QgQyR3GdwJzS7mQYTywibgi58EE9Bi-7ZPseiUzXtqrVO4cxOZE-YHL1amzpKRLs5gs4SwqxHkI");'></div>
+<div class="flex flex-col min-w-0">
+<h1 class="text-sm font-bold truncate">Valais Vineyards</h1>
+<p class="text-text-secondary-light dark:text-text-secondary-dark text-xs font-medium">Partner • Verified</p>
+</div>
+</div>
+<!-- Navigation Links -->
+<nav class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary-light dark:text-text-secondary-dark hover:bg-border-light/50 dark:hover:bg-border-dark/50 transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-sm font-medium">Overview</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary-light dark:text-text-secondary-dark hover:bg-border-light/50 dark:hover:bg-border-dark/50 transition-colors" href="#">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="text-sm font-medium">Bookings</span>
+</a>
+<!-- Active State -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 dark:bg-primary/20 text-primary" href="#">
+<span class="material-symbols-outlined filled">payments</span>
+<span class="text-sm font-bold">Earnings</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary-light dark:text-text-secondary-dark hover:bg-border-light/50 dark:hover:bg-border-dark/50 transition-colors" href="#">
+<span class="material-symbols-outlined">wine_bar</span>
+<span class="text-sm font-medium">My Wines</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary-light dark:text-text-secondary-dark hover:bg-border-light/50 dark:hover:bg-border-dark/50 transition-colors" href="#">
+<span class="material-symbols-outlined">reviews</span>
+<span class="text-sm font-medium">Reviews</span>
+</a>
+</nav>
+</div>
+<div class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary-light dark:text-text-secondary-dark hover:bg-border-light/50 dark:hover:bg-border-dark/50 transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary-light dark:text-text-secondary-dark hover:bg-border-light/50 dark:hover:bg-border-dark/50 transition-colors" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="text-sm font-medium">Support</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- Main Content Wrapper -->
+<main class="flex flex-1 flex-col h-full relative overflow-hidden">
+<!-- Top Header (Mobile menu trigger + standard header items) -->
+<header class="flex h-16 items-center justify-between border-b border-border-light dark:border-border-dark px-6 lg:px-8 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md sticky top-0 z-20">
+<div class="flex items-center gap-4 lg:hidden">
+<button class="text-text-main-light dark:text-text-main-dark p-1">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<span class="text-lg font-bold">EnCave</span>
+</div>
+<!-- Breadcrumbs (Desktop) -->
+<div class="hidden lg:flex items-center gap-2 text-sm">
+<a class="text-text-secondary-light dark:text-text-secondary-dark hover:text-primary transition-colors" href="#">Dashboard</a>
+<span class="text-text-secondary-light dark:text-text-secondary-dark/50">/</span>
+<span class="font-medium text-text-main-light dark:text-text-main-dark">Earnings</span>
+</div>
+<!-- Right Actions -->
+<div class="flex items-center gap-4 ml-auto">
+<button class="relative flex items-center justify-center size-10 rounded-full hover:bg-border-light dark:hover:bg-border-dark transition-colors text-text-main-light dark:text-text-main-dark">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+<span class="absolute top-2.5 right-2.5 size-2 rounded-full bg-primary border-2 border-background-light dark:border-background-dark"></span>
+</button>
+<button class="flex items-center justify-center size-10 rounded-full hover:bg-border-light dark:hover:bg-border-dark transition-colors text-text-main-light dark:text-text-main-dark">
+<span class="material-symbols-outlined text-[20px]">chat_bubble</span>
+</button>
+</div>
+</header>
+<!-- Scrollable Content -->
+<div class="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark p-6 lg:p-10 scroll-smooth">
+<div class="mx-auto max-w-6xl flex flex-col gap-8">
+<!-- Page Header Section -->
+<div class="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+<div class="flex flex-col gap-2">
+<h1 class="text-3xl md:text-4xl font-black tracking-tight text-text-main-light dark:text-text-main-dark">Earnings</h1>
+<p class="text-text-secondary-light dark:text-text-secondary-dark text-base">Track your revenue streams and payout history.</p>
+</div>
+<div class="flex items-center gap-3">
+<div class="relative">
+<select class="appearance-none bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark text-text-main-light dark:text-text-main-dark text-sm rounded-lg focus:ring-primary focus:border-primary block w-40 p-2.5 pr-8 cursor-pointer font-medium shadow-sm">
+<option>This Month</option>
+<option>Last Month</option>
+<option selected="">This Year</option>
+<option>All Time</option>
+</select>
+<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-text-secondary-light">
+<span class="material-symbols-outlined text-sm">expand_more</span>
+</div>
+</div>
+<button class="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white font-bold py-2.5 px-5 rounded-lg transition-all shadow-md hover:shadow-lg active:scale-95">
+<span class="material-symbols-outlined text-sm">download</span>
+<span class="text-sm">Export Report</span>
+</button>
+</div>
+</div>
+<!-- KPI Cards Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<!-- Card 1 -->
+<div class="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-border-light dark:border-border-dark shadow-sm flex flex-col justify-between h-40 group hover:border-primary/30 transition-colors">
+<div class="flex items-center justify-between">
+<p class="text-text-secondary-light dark:text-text-secondary-dark font-medium text-sm">Total Earnings (Oct)</p>
+<div class="p-2 bg-primary/10 rounded-lg text-primary">
+<span class="material-symbols-outlined text-xl">account_balance_wallet</span>
+</div>
+</div>
+<div>
+<h3 class="text-3xl font-extrabold text-text-main-light dark:text-text-main-dark mt-2 tabular-nums">CHF 4,250.00</h3>
+<div class="flex items-center gap-1 mt-2 text-sm text-green-600 dark:text-green-400 font-bold">
+<span class="material-symbols-outlined text-base">trending_up</span>
+<span>12.5%</span>
+<span class="text-text-secondary-light dark:text-text-secondary-dark font-normal ml-1">vs last month</span>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-border-light dark:border-border-dark shadow-sm flex flex-col justify-between h-40 group hover:border-primary/30 transition-colors">
+<div class="flex items-center justify-between">
+<p class="text-text-secondary-light dark:text-text-secondary-dark font-medium text-sm">Year to Date</p>
+<div class="p-2 bg-primary/10 rounded-lg text-primary">
+<span class="material-symbols-outlined text-xl">calendar_today</span>
+</div>
+</div>
+<div>
+<h3 class="text-3xl font-extrabold text-text-main-light dark:text-text-main-dark mt-2 tabular-nums">CHF 45,900.00</h3>
+<div class="flex items-center gap-1 mt-2 text-sm text-text-secondary-light dark:text-text-secondary-dark font-medium">
+<span class="material-symbols-outlined text-base">info</span>
+<span>Gross Revenue</span>
+</div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface-light dark:bg-surface-dark p-6 rounded-xl border border-border-light dark:border-border-dark shadow-sm flex flex-col justify-between h-40 group hover:border-primary/30 transition-colors">
+<div class="flex items-center justify-between">
+<p class="text-text-secondary-light dark:text-text-secondary-dark font-medium text-sm">Pending Payouts</p>
+<div class="p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg text-yellow-600 dark:text-yellow-500">
+<span class="material-symbols-outlined text-xl">pending</span>
+</div>
+</div>
+<div>
+<h3 class="text-3xl font-extrabold text-text-main-light dark:text-text-main-dark mt-2 tabular-nums">CHF 1,200.00</h3>
+<div class="flex items-center gap-1 mt-2 text-sm text-text-secondary-light dark:text-text-secondary-dark font-medium">
+<span>Est. arrival:</span>
+<span class="text-text-main-light dark:text-text-main-dark font-bold">Oct 28</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Chart Section -->
+<div class="bg-surface-light dark:bg-surface-dark p-6 lg:p-8 rounded-xl border border-border-light dark:border-border-dark shadow-sm">
+<div class="flex items-center justify-between mb-8">
+<div>
+<h2 class="text-lg font-bold text-text-main-light dark:text-text-main-dark">Revenue Evolution</h2>
+<p class="text-sm text-text-secondary-light dark:text-text-secondary-dark">Gross revenue vs Net payout over the last 6 months</p>
+</div>
+<div class="flex items-center gap-4 text-xs font-medium">
+<div class="flex items-center gap-2">
+<span class="size-3 rounded-full bg-primary"></span>
+<span class="text-text-secondary-light dark:text-text-secondary-dark">Gross</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="size-3 rounded-full bg-gray-300 dark:bg-gray-600"></span>
+<span class="text-text-secondary-light dark:text-text-secondary-dark">Net Payout</span>
+</div>
+</div>
+</div>
+<!-- Simulated Chart Area -->
+<div class="w-full h-[320px] relative">
+<!-- Y Axis Labels -->
+<div class="absolute left-0 top-0 bottom-8 w-12 flex flex-col justify-between text-xs text-text-secondary-light dark:text-text-secondary-dark text-right pr-2">
+<span>10k</span>
+<span>7.5k</span>
+<span>5k</span>
+<span>2.5k</span>
+<span>0</span>
+</div>
+<!-- Chart Area -->
+<div class="absolute left-14 right-0 top-2 bottom-8">
+<!-- Grid Lines -->
+<div class="w-full h-full flex flex-col justify-between">
+<div class="w-full h-px bg-border-light/50 dark:bg-border-dark/50 border-t border-dashed border-border-light dark:border-border-dark"></div>
+<div class="w-full h-px bg-border-light/50 dark:bg-border-dark/50 border-t border-dashed border-border-light dark:border-border-dark"></div>
+<div class="w-full h-px bg-border-light/50 dark:bg-border-dark/50 border-t border-dashed border-border-light dark:border-border-dark"></div>
+<div class="w-full h-px bg-border-light/50 dark:bg-border-dark/50 border-t border-dashed border-border-light dark:border-border-dark"></div>
+<div class="w-full h-px bg-border-light/50 dark:bg-border-dark/50 border-b border-border-light dark:border-border-dark"></div>
+</div>
+<!-- SVG Paths -->
+<svg class="absolute inset-0 w-full h-full overflow-visible" preserveaspectratio="none" viewbox="0 0 100 100">
+<!-- Gradient Defs -->
+<defs>
+<lineargradient id="chartGradient" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#cd2d55" stop-opacity="0.2"></stop>
+<stop offset="100%" stop-color="#cd2d55" stop-opacity="0"></stop>
+</lineargradient>
+</defs>
+<!-- Area Fill -->
+<path d="M0,100 L0,70 Q16,60 32,50 T64,30 T100,10 L100,100 Z" fill="url(#chartGradient)"></path>
+<!-- Line Stroke -->
+<path d="M0,70 Q16,60 32,50 T64,30 T100,10" fill="none" stroke="#cd2d55" stroke-linecap="round" stroke-width="3" vector-effect="non-scaling-stroke"></path>
+<!-- Interaction Point Simulation -->
+<g class="group">
+<circle class="hidden group-hover:block transition-all duration-200" cx="64" cy="30" fill="#fff" r="1.5" stroke="#cd2d55" stroke-width="1" vector-effect="non-scaling-stroke"></circle>
+<circle class="cursor-pointer hover:r-8 transition-all duration-200" cx="64" cy="30" fill="#cd2d55" r="6" stroke="#fff" stroke-width="2" vector-effect="non-scaling-stroke">
+<title>Aug: CHF 8,400</title>
+</circle>
+</g>
+</svg>
+</div>
+<!-- X Axis Labels -->
+<div class="absolute left-14 right-0 bottom-0 h-6 flex justify-between text-xs text-text-secondary-light dark:text-text-secondary-dark pt-2">
+<span>May</span>
+<span>Jun</span>
+<span>Jul</span>
+<span>Aug</span>
+<span>Sep</span>
+<span>Oct</span>
+</div>
+</div>
+</div>
+<!-- Transactions Table -->
+<div class="flex flex-col gap-4">
+<div class="flex items-center justify-between">
+<h2 class="text-xl font-bold text-text-main-light dark:text-text-main-dark">Recent Transactions</h2>
+<button class="text-primary text-sm font-bold hover:underline">View All</button>
+</div>
+<div class="w-full overflow-x-auto rounded-xl border border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark shadow-sm">
+<table class="w-full text-left text-sm whitespace-nowrap">
+<thead class="bg-gray-50 dark:bg-surface-dark border-b border-border-light dark:border-border-dark text-text-secondary-light dark:text-text-secondary-dark font-medium uppercase text-xs tracking-wider">
+<tr>
+<th class="px-6 py-4" scope="col">Date</th>
+<th class="px-6 py-4" scope="col">Booking ID</th>
+<th class="px-6 py-4" scope="col">Experience</th>
+<th class="px-6 py-4" scope="col">Customer</th>
+<th class="px-6 py-4 text-right" scope="col">Amount</th>
+<th class="px-6 py-4 text-center" scope="col">Status</th>
+<th class="px-6 py-4" scope="col"></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-border-light dark:divide-border-dark text-text-main-light dark:text-text-main-dark">
+<!-- Row 1 -->
+<tr class="hover:bg-background-light dark:hover:bg-white/5 transition-colors">
+<td class="px-6 py-4 font-medium">Oct 24, 2023</td>
+<td class="px-6 py-4 text-text-secondary-light dark:text-text-secondary-dark font-mono text-xs">#BK-8392</td>
+<td class="px-6 py-4">Grand Cru Tasting</td>
+<td class="px-6 py-4 flex items-center gap-2">
+<div class="size-6 rounded-full bg-gray-200 bg-center bg-cover" data-alt="Small avatar of user Sarah" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDNWB7wRaCKx3qKhiIa5DOeq4kJXbmCXBrEffE1cla2mE3wv538YHgT18VtCd9eXK0o4mJ90Fj8JTySb6mFPOCQwCgxps6quMEAJ01JlyHRgkcR0FKM1OTkYoJy6eMsEgSjR1J7CGfgT8FCSKzRgGe0Sm9UCjljNK9L1N1ia97kN4P2uHrqyC5xrc4lnYWS7LxXtXfgjdsWqBiHRJguLtc3uDsNmmNDnyGJtZaoqsvq-GredWVuEwSjYxThixsSMelFOeR4ELiHvGM");'></div>
+<span>Sarah Jenkins</span>
+</td>
+<td class="px-6 py-4 text-right font-bold tabular-nums">CHF 150.00</td>
+<td class="px-6 py-4 text-center">
+<span class="inline-flex items-center gap-1 rounded-full bg-green-50 dark:bg-green-900/20 px-2.5 py-1 text-xs font-bold text-green-700 dark:text-green-400">
+<span class="size-1.5 rounded-full bg-green-600 dark:bg-green-400"></span>
+                                                Paid
+                                            </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-text-secondary-light hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-background-light dark:hover:bg-white/5 transition-colors">
+<td class="px-6 py-4 font-medium">Oct 23, 2023</td>
+<td class="px-6 py-4 text-text-secondary-light dark:text-text-secondary-dark font-mono text-xs">#BK-8391</td>
+<td class="px-6 py-4">Vineyard Sunset Walk</td>
+<td class="px-6 py-4 flex items-center gap-2">
+<div class="size-6 rounded-full bg-gray-200 bg-center bg-cover" data-alt="Small avatar of user Marcus" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuChAruhBtwQIV5VAgznmRGItsRQ6-jLjNJCkv5dPfYdw7CN_adLrBNd_ep9VtmOCeEo7Nru4hkLZI_GsN7nDwVg_sl1VdeaFvul5tiX8ARsQQXMURvAkUKMP8CXD5u0hYIUJQGybvtHFXHFZbFuL45zHxpsFoCB-NoTUYoWYrqKrU66hmc1WDrRTvtEDzhpbBNBxWvOKwwAUfkpye234UUHc2lWmXS-5XkPa_Cj9PczS0Fg_P-Oes0r1VeQg6jVVtzfstIZqlxCtTg");'></div>
+<span>Marcus Weber</span>
+</td>
+<td class="px-6 py-4 text-right font-bold tabular-nums">CHF 320.00</td>
+<td class="px-6 py-4 text-center">
+<span class="inline-flex items-center gap-1 rounded-full bg-green-50 dark:bg-green-900/20 px-2.5 py-1 text-xs font-bold text-green-700 dark:text-green-400">
+<span class="size-1.5 rounded-full bg-green-600 dark:bg-green-400"></span>
+                                                Paid
+                                            </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-text-secondary-light hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-background-light dark:hover:bg-white/5 transition-colors">
+<td class="px-6 py-4 font-medium">Oct 21, 2023</td>
+<td class="px-6 py-4 text-text-secondary-light dark:text-text-secondary-dark font-mono text-xs">#BK-8388</td>
+<td class="px-6 py-4">Private Cellar Tour</td>
+<td class="px-6 py-4 flex items-center gap-2">
+<div class="size-6 rounded-full bg-gray-200 bg-center bg-cover" data-alt="Small avatar of user Elara" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCPXmLJvoibi1cU69P1KqhO-FX0GclLX-1UtE_96Y-pzjR5Ij2n4CGLsjMNOhnfqV_l4csXaPx_V6qTHh-tnAIQQDyJYYKXbhKL576eI_1a3tpSifp8hc773EWKwNYak8xuSpf8HtW6OraopFMUf6HvZmBkh4ejCQaIYczmN6RlPwTyEEHcO5Klh4dXhmvZ-_8mnBbD1DlpnU5lJAIa2eKSgYeej3IW04PM-PviZgZx-mjYYAfQpMtyhH-nl8Yi41TYnNeuvC7QHYE");'></div>
+<span>Elara Vance</span>
+</td>
+<td class="px-6 py-4 text-right font-bold tabular-nums">CHF 600.00</td>
+<td class="px-6 py-4 text-center">
+<span class="inline-flex items-center gap-1 rounded-full bg-yellow-50 dark:bg-yellow-900/20 px-2.5 py-1 text-xs font-bold text-yellow-700 dark:text-yellow-500">
+<span class="size-1.5 rounded-full bg-yellow-600 dark:bg-yellow-500 animate-pulse"></span>
+                                                Pending
+                                            </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-text-secondary-light hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-background-light dark:hover:bg-white/5 transition-colors">
+<td class="px-6 py-4 font-medium">Oct 19, 2023</td>
+<td class="px-6 py-4 text-text-secondary-light dark:text-text-secondary-dark font-mono text-xs">#BK-8375</td>
+<td class="px-6 py-4">Group Tasting Event</td>
+<td class="px-6 py-4 flex items-center gap-2">
+<div class="size-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
+                                                CW
+                                            </div>
+<span>Corporate Wine Ltd.</span>
+</td>
+<td class="px-6 py-4 text-right font-bold tabular-nums">CHF 1,200.00</td>
+<td class="px-6 py-4 text-center">
+<span class="inline-flex items-center gap-1 rounded-full bg-gray-100 dark:bg-gray-800 px-2.5 py-1 text-xs font-bold text-gray-600 dark:text-gray-400">
+                                                Refunded
+                                            </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-text-secondary-light hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

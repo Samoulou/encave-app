@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Create New Experience - EnCave</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#cd2d55",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#201216",
+                        "stone-border": "#e7e5e4", // Custom stone border color
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.375rem", 
+                        "lg": "0.5rem", 
+                        "xl": "0.75rem", 
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #e5e7eb;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #d1d5db;
+        }
+        
+        .stone-card {
+            background-color: white;
+            border: 1px solid #e7e5e4;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+        
+        .dark .stone-card {
+            background-color: #201216;
+            border-color: #442a30;
+        }
+        
+        /* Rich Text Toolbar button styles */
+        .rte-btn {
+            padding: 0.25rem;
+            border-radius: 0.25rem;
+            color: #6b7280;
+            transition: all 0.2s;
+        }
+        .rte-btn:hover {
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white h-screen flex overflow-hidden">
+<!-- Sidebar Navigation -->
+<aside class="w-64 flex-shrink-0 bg-white dark:bg-[#1a0f12] border-r border-stone-border dark:border-[#442a30] flex flex-col z-20 hidden md:flex h-full">
+<!-- Brand -->
+<div class="h-16 flex items-center px-6 border-b border-stone-border dark:border-[#442a30]">
+<div class="flex items-center gap-3 text-[#1a0f12] dark:text-white">
+<div class="size-6 text-primary">
+<svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M8.57829 8.57829C5.52816 11.6284 3.451 15.5145 2.60947 19.7452C1.76794 23.9758 2.19984 28.361 3.85056 32.3462C5.50128 36.3314 8.29667 39.7376 11.8832 42.134C15.4698 44.5305 19.6865 45.8096 24 45.8096C28.3135 45.8096 32.5302 44.5305 36.1168 42.134C39.7033 39.7375 42.4987 36.3314 44.1494 32.3462C45.8002 28.361 46.2321 23.9758 45.3905 19.7452C44.549 15.5145 42.4718 11.6284 39.4217 8.57829L24 24L8.57829 8.57829Z" fill="currentColor"></path>
+</svg>
+</div>
+<h2 class="text-lg font-bold leading-tight tracking-tight">EnCave</h2>
+</div>
+</div>
+<!-- Winery Profile Summary -->
+<div class="p-4 border-b border-stone-border dark:border-[#442a30]">
+<div class="flex gap-3 items-center">
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-10 border border-stone-200" data-alt="Winery logo showing a stylized grape cluster" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCgL0ZRWIR9nf5KtyImItVpVwV0Wwuj2WioS55fbFF_F8N2InodwCLUk77H1lhA2exhReL0Pznann4ZyvFEAqmA_T-FZpT_San2uK_Yl19FFUN8YfdR7Fj1QW2OV5b8aVd2cpM6B8U3VssRIiK6gmD-UoZXdO0uFNUpaWvsFBRQCI2GKdh53yM0ESFCtb8atMI2v4c7QpUw90GB8MDsFktguNvqo6DfeueGH6vORTKHLduTwOpkGsd18V6NMHTqJJ34Id6mudd7HFg");'></div>
+<div class="flex flex-col overflow-hidden">
+<h1 class="text-sm font-bold truncate">Valais Winery</h1>
+<p class="text-primary text-xs font-medium">Premium Plan</p>
+</div>
+</div>
+</div>
+<!-- Navigation Links -->
+<nav class="flex-1 overflow-y-auto p-4 flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-stone-50 hover:text-slate-900 transition-colors dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-white" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary dark:bg-primary/20 dark:text-white" href="#">
+<span class="material-symbols-outlined text-[20px] fill-1">wine_bar</span>
+<span class="text-sm font-medium">Experiences</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-stone-50 hover:text-slate-900 transition-colors dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-white" href="#">
+<span class="material-symbols-outlined text-[20px]">calendar_month</span>
+<span class="text-sm font-medium">Bookings</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-stone-50 hover:text-slate-900 transition-colors dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-white" href="#">
+<span class="material-symbols-outlined text-[20px]">chat_bubble</span>
+<span class="text-sm font-medium">Messages</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-stone-50 hover:text-slate-900 transition-colors dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-white" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+</nav>
+<!-- Bottom Actions -->
+<div class="p-4 border-t border-stone-border dark:border-[#442a30]">
+<button class="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-slate-500 hover:bg-stone-50 hover:text-slate-700 transition-colors text-sm dark:text-slate-400 dark:hover:bg-white/5">
+<span class="material-symbols-outlined text-[20px]">logout</span>
+                Logout
+            </button>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col min-w-0 overflow-hidden relative bg-background-light dark:bg-background-dark">
+<!-- Top Header Mobile Only / Breadcrumbs -->
+<header class="h-16 flex items-center justify-between px-6 md:px-10 border-b border-stone-border bg-white/80 backdrop-blur-md sticky top-0 z-10 dark:bg-[#201216]/90 dark:border-[#442a30]">
+<div class="flex items-center gap-4 overflow-hidden">
+<!-- Mobile Menu Button -->
+<button class="md:hidden p-1 text-slate-600 dark:text-slate-300">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<!-- Breadcrumbs -->
+<nav class="flex items-center text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis">
+<a class="text-slate-500 hover:text-slate-800 transition-colors dark:text-slate-400 dark:hover:text-white" href="#">Dashboard</a>
+<span class="text-slate-300 mx-2 text-lg dark:text-slate-600">/</span>
+<a class="text-slate-500 hover:text-slate-800 transition-colors dark:text-slate-400 dark:hover:text-white" href="#">Experiences</a>
+<span class="text-slate-300 mx-2 text-lg dark:text-slate-600">/</span>
+<span class="text-slate-900 font-semibold dark:text-white">New</span>
+</nav>
+</div>
+<div class="flex items-center gap-3">
+<div class="hidden sm:flex text-xs text-slate-400 font-medium items-center gap-1.5 bg-stone-100 dark:bg-white/5 px-3 py-1.5 rounded-full">
+<span class="block size-2 rounded-full bg-emerald-500"></span>
+                    Draft Auto-Saved
+                </div>
+<button class="size-9 flex items-center justify-center rounded-full hover:bg-stone-100 text-slate-600 transition-colors dark:text-slate-300 dark:hover:bg-white/10">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+</button>
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-9 border border-stone-200" data-alt="User profile avatar of a smiling man" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAVIKFgz2lOHrxEMjdM23-YWyG9j_QBpZm5ltTqgIeNur3QrikYGGz4tGSFWsipMEQhiABj9J3UJ-lPCs6COkvYtsDGNfFiDlf4J8kVcWDgGq_oOxS1SD9dJbXp-PV4ZisqV-cIS8-IkhWISmHIj03w5fpD-__t2H1MLwYpRbu7p_La-YbruSg1YfbPRLzQI1cOxSLKQJeqr2VDtjuK8ZAr75csbo4WZMvPnTxDqKFB9TBEK9IykBswlFy27EctJlybiRATrjJ8TlI");'></div>
+</div>
+</header>
+<!-- Scrollable Content -->
+<div class="flex-1 overflow-y-auto scroll-smooth">
+<div class="max-w-[1200px] mx-auto px-6 md:px-10 py-8">
+<!-- Page Title & Main Actions -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+<div class="max-w-xl">
+<h1 class="text-3xl md:text-4xl font-extrabold text-[#1a0f12] dark:text-white tracking-tight mb-2">Create New Experience</h1>
+<p class="text-slate-500 dark:text-slate-400 text-base">Fill in the details to list your wine experience on the marketplace.</p>
+</div>
+<div class="flex items-center gap-3 shrink-0">
+<button class="h-10 px-5 rounded-lg border border-stone-300 bg-white text-slate-700 font-bold text-sm hover:bg-stone-50 transition-colors shadow-sm dark:bg-transparent dark:text-white dark:border-stone-600 dark:hover:bg-white/5">
+                            Save Draft
+                        </button>
+<button class="h-10 px-5 rounded-lg bg-primary text-white font-bold text-sm shadow-md shadow-primary/20 hover:bg-primary/90 transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">publish</span>
+                            Publish
+                        </button>
+</div>
+</div>
+<!-- Content Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<!-- Left Column: Form Sections -->
+<div class="lg:col-span-8 flex flex-col gap-8">
+<!-- Section 1: General Info -->
+<section class="stone-card rounded-xl p-6 md:p-8 scroll-mt-24" id="general">
+<h2 class="text-xl font-bold text-[#1a0f12] dark:text-white mb-6 flex items-center gap-2">
+<span class="bg-primary/10 text-primary p-1.5 rounded-md flex items-center justify-center dark:bg-primary/20">
+<span class="material-symbols-outlined text-[20px]">info</span>
+</span>
+                                General Info
+                            </h2>
+<div class="space-y-6">
+<div>
+<label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Experience Title</label>
+<input class="w-full bg-slate-50 dark:bg-[#2a1a20] border border-stone-200 dark:border-[#442a30] rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all dark:text-white placeholder:text-slate-400" placeholder="e.g. Sunset Vineyard Tasting &amp; Tour" type="text"/>
+</div>
+<div>
+<label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Experience Type</label>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+<label class="cursor-pointer">
+<input checked="" class="peer sr-only" name="type" type="radio"/>
+<div class="border border-stone-200 bg-slate-50 rounded-lg p-3 text-center hover:bg-slate-100 peer-checked:bg-primary peer-checked:text-white peer-checked:border-primary transition-all dark:bg-[#2a1a20] dark:border-[#442a30] dark:peer-checked:bg-primary">
+<span class="material-symbols-outlined block mb-1">wine_bar</span>
+<span class="text-sm font-medium">Tasting</span>
+</div>
+</label>
+<label class="cursor-pointer">
+<input class="peer sr-only" name="type" type="radio"/>
+<div class="border border-stone-200 bg-slate-50 rounded-lg p-3 text-center hover:bg-slate-100 peer-checked:bg-primary peer-checked:text-white peer-checked:border-primary transition-all dark:bg-[#2a1a20] dark:border-[#442a30] dark:peer-checked:bg-primary">
+<span class="material-symbols-outlined block mb-1">tour</span>
+<span class="text-sm font-medium">Tour</span>
+</div>
+</label>
+<label class="cursor-pointer">
+<input class="peer sr-only" name="type" type="radio"/>
+<div class="border border-stone-200 bg-slate-50 rounded-lg p-3 text-center hover:bg-slate-100 peer-checked:bg-primary peer-checked:text-white peer-checked:border-primary transition-all dark:bg-[#2a1a20] dark:border-[#442a30] dark:peer-checked:bg-primary">
+<span class="material-symbols-outlined block mb-1">restaurant</span>
+<span class="text-sm font-medium">Dinner</span>
+</div>
+</label>
+<label class="cursor-pointer">
+<input class="peer sr-only" name="type" type="radio"/>
+<div class="border border-stone-200 bg-slate-50 rounded-lg p-3 text-center hover:bg-slate-100 peer-checked:bg-primary peer-checked:text-white peer-checked:border-primary transition-all dark:bg-[#2a1a20] dark:border-[#442a30] dark:peer-checked:bg-primary">
+<span class="material-symbols-outlined block mb-1">school</span>
+<span class="text-sm font-medium">Class</span>
+</div>
+</label>
+</div>
+</div>
+<div>
+<label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Description</label>
+<div class="border border-stone-200 dark:border-[#442a30] rounded-lg bg-slate-50 dark:bg-[#2a1a20] overflow-hidden focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-all">
+<div class="flex items-center gap-1 border-b border-stone-200 dark:border-[#442a30] p-2 bg-white dark:bg-[#2a1a20]">
+<button class="rte-btn" title="Bold"><span class="material-symbols-outlined text-[18px]">format_bold</span></button>
+<button class="rte-btn" title="Italic"><span class="material-symbols-outlined text-[18px]">format_italic</span></button>
+<button class="rte-btn" title="Underline"><span class="material-symbols-outlined text-[18px]">format_underlined</span></button>
+<div class="w-px h-4 bg-stone-300 mx-1"></div>
+<button class="rte-btn" title="Bullet List"><span class="material-symbols-outlined text-[18px]">format_list_bulleted</span></button>
+<button class="rte-btn" title="Numbered List"><span class="material-symbols-outlined text-[18px]">format_list_numbered</span></button>
+</div>
+<textarea class="w-full bg-transparent border-none p-4 min-h-[140px] outline-none text-sm leading-relaxed dark:text-white placeholder:text-slate-400" placeholder="Describe the experience in detail. What can guests expect?"></textarea>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 2: Details -->
+<section class="stone-card rounded-xl p-6 md:p-8 scroll-mt-24" id="details">
+<h2 class="text-xl font-bold text-[#1a0f12] dark:text-white mb-6 flex items-center gap-2">
+<span class="bg-primary/10 text-primary p-1.5 rounded-md flex items-center justify-center dark:bg-primary/20">
+<span class="material-symbols-outlined text-[20px]">tune</span>
+</span>
+                                Details
+                            </h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div>
+<label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Duration</label>
+<div class="relative">
+<input class="w-full bg-slate-50 dark:bg-[#2a1a20] border border-stone-200 dark:border-[#442a30] rounded-lg pl-4 pr-12 py-3 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all dark:text-white" placeholder="2.5" type="number"/>
+<div class="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 font-medium">Hrs</div>
+</div>
+</div>
+<div>
+<label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Price per Person</label>
+<div class="relative">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 font-medium">CHF</span>
+<input class="w-full bg-slate-50 dark:bg-[#2a1a20] border border-stone-200 dark:border-[#442a30] rounded-lg pl-12 pr-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all dark:text-white" placeholder="45.00" type="number"/>
+</div>
+</div>
+<div>
+<label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Max Capacity</label>
+<div class="relative">
+<input class="w-full bg-slate-50 dark:bg-[#2a1a20] border border-stone-200 dark:border-[#442a30] rounded-lg pl-4 pr-12 py-3 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all dark:text-white" placeholder="12" type="number"/>
+<div class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
+<span class="material-symbols-outlined text-[20px]">group</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 3: Media -->
+<section class="stone-card rounded-xl p-6 md:p-8 scroll-mt-24" id="media">
+<div class="flex justify-between items-center mb-6">
+<h2 class="text-xl font-bold text-[#1a0f12] dark:text-white flex items-center gap-2">
+<span class="bg-primary/10 text-primary p-1.5 rounded-md flex items-center justify-center dark:bg-primary/20">
+<span class="material-symbols-outlined text-[20px]">image</span>
+</span>
+                                    Media
+                                </h2>
+<span class="text-xs text-slate-500 bg-slate-100 dark:bg-white/10 px-2 py-1 rounded">Max 5MB per file</span>
+</div>
+<div class="border-2 border-dashed border-stone-300 dark:border-stone-600 rounded-xl p-10 flex flex-col items-center justify-center text-center bg-stone-50/50 dark:bg-white/5 hover:bg-stone-50 hover:border-primary/50 transition-colors cursor-pointer group">
+<div class="bg-white dark:bg-[#2a1a20] p-4 rounded-full shadow-sm mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-primary text-4xl">cloud_upload</span>
+</div>
+<p class="text-slate-900 font-bold mb-1 dark:text-white">Click to upload or drag and drop</p>
+<p class="text-slate-500 text-sm">SVG, PNG, JPG or GIF (max. 800x400px)</p>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
+<div class="relative aspect-[4/3] rounded-lg overflow-hidden group border border-stone-200 dark:border-[#442a30]">
+<div class="bg-cover bg-center h-full w-full" data-alt="Close up of wine glasses" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD2S3zH5gbA-3BdWKCaNVomX3RE23eRjRYEpL7UV5o_YIga54kaAM1ilKNh6PvC6Ket7gj5kSwXmB6akeH-SaSQujlv1ZP6n2CYEIRhMshu8Aa5Nehb5_VjZmrNCJSVcAzvHNl7OPhX7sYkB6s-DYB_dAIqpIJNx85iGwgSVGtEtkZbicSv148QttQuHslgixJcV6eReZZEcm7fHAKcvShJok_T_55MbswkjNNlTG658yx_1vH7Pj_riwRop02tBm4uyAxrUEnDDV0");'></div>
+<div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+<button class="p-1.5 bg-white text-rose-600 rounded-full hover:bg-rose-50"><span class="material-symbols-outlined text-[18px]">delete</span></button>
+<button class="p-1.5 bg-white text-slate-700 rounded-full hover:bg-slate-50"><span class="material-symbols-outlined text-[18px]">visibility</span></button>
+</div>
+<div class="absolute top-2 left-2 bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm">COVER</div>
+</div>
+<div class="relative aspect-[4/3] rounded-lg overflow-hidden group border border-stone-200 dark:border-[#442a30]">
+<div class="bg-cover bg-center h-full w-full" data-alt="Vineyard landscape" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCUDswLYUpnV5fjrqNdkRNe1ngy13awXX0QAKkLDn7Xc9dVnPwdXEC3MXgV6VT_Nd3NnibHuKJda4q0wXKeH9DP4d2NtCWDX9e3CHwqkVpEu0vZeO2qZLJXyHn2cFbJsGrbjE_qswZBkU39QEf1HcldySfMY7VY7KevbAMLS54CTzneOp7qJ4WS_X_L2WtdonD9BM5-yb9PQCZjMDVYovVdDeiPcA30ZixUsaXPpmu3hK-1l539LilrDjLBxbGOmRPH62QeoCa3gtU");'></div>
+<div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+<button class="p-1.5 bg-white text-rose-600 rounded-full hover:bg-rose-50"><span class="material-symbols-outlined text-[18px]">delete</span></button>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 4: Availability -->
+<section class="stone-card rounded-xl p-6 md:p-8 scroll-mt-24" id="availability">
+<h2 class="text-xl font-bold text-[#1a0f12] dark:text-white mb-6 flex items-center gap-2">
+<span class="bg-primary/10 text-primary p-1.5 rounded-md flex items-center justify-center dark:bg-primary/20">
+<span class="material-symbols-outlined text-[20px]">calendar_clock</span>
+</span>
+                                Availability
+                            </h2>
+<div class="space-y-4">
+<!-- Slot Item -->
+<div class="bg-stone-50 dark:bg-[#2a1a20] rounded-lg p-4 border border-stone-200 dark:border-[#442a30]">
+<div class="flex flex-wrap gap-2 mb-4">
+<div class="px-3 py-1 bg-primary text-white text-xs font-bold rounded">Mon</div>
+<div class="px-3 py-1 bg-white dark:bg-white/10 text-slate-400 text-xs font-bold rounded border border-stone-200 dark:border-transparent">Tue</div>
+<div class="px-3 py-1 bg-primary text-white text-xs font-bold rounded">Wed</div>
+<div class="px-3 py-1 bg-white dark:bg-white/10 text-slate-400 text-xs font-bold rounded border border-stone-200 dark:border-transparent">Thu</div>
+<div class="px-3 py-1 bg-primary text-white text-xs font-bold rounded">Fri</div>
+<div class="px-3 py-1 bg-white dark:bg-white/10 text-slate-400 text-xs font-bold rounded border border-stone-200 dark:border-transparent">Sat</div>
+<div class="px-3 py-1 bg-white dark:bg-white/10 text-slate-400 text-xs font-bold rounded border border-stone-200 dark:border-transparent">Sun</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 bg-white dark:bg-[#1a0f12] px-3 py-2 rounded border border-stone-200 dark:border-[#442a30]">
+<span class="material-symbols-outlined text-slate-400 text-sm">schedule</span>
+<span class="text-sm font-medium">09:00</span>
+<span class="text-slate-300">-</span>
+<span class="text-sm font-medium">11:30</span>
+</div>
+<div class="flex items-center gap-2 bg-white dark:bg-[#1a0f12] px-3 py-2 rounded border border-stone-200 dark:border-[#442a30]">
+<span class="material-symbols-outlined text-slate-400 text-sm">schedule</span>
+<span class="text-sm font-medium">14:00</span>
+<span class="text-slate-300">-</span>
+<span class="text-sm font-medium">16:30</span>
+</div>
+<button class="ml-auto text-primary text-sm font-bold hover:underline">Edit</button>
+</div>
+</div>
+<button class="w-full py-3 border-2 border-dashed border-stone-300 dark:border-stone-600 rounded-lg text-slate-500 font-bold text-sm flex items-center justify-center gap-2 hover:border-primary hover:text-primary transition-colors">
+<span class="material-symbols-outlined">add</span>
+                                    Add Schedule Pattern
+                                </button>
+</div>
+</section>
+<!-- Section 5: Location -->
+<section class="stone-card rounded-xl p-6 md:p-8 scroll-mt-24" id="location">
+<h2 class="text-xl font-bold text-[#1a0f12] dark:text-white mb-6 flex items-center gap-2">
+<span class="bg-primary/10 text-primary p-1.5 rounded-md flex items-center justify-center dark:bg-primary/20">
+<span class="material-symbols-outlined text-[20px]">location_on</span>
+</span>
+                                Location
+                            </h2>
+<div class="flex flex-col md:flex-row gap-6">
+<div class="flex-1 space-y-4">
+<div>
+<label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Street Address</label>
+<div class="relative">
+<input class="w-full bg-slate-50 dark:bg-[#2a1a20] border border-stone-200 dark:border-[#442a30] rounded-lg pl-10 pr-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all dark:text-white" type="text" value="Route de la Vidondée 2"/>
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Zip Code</label>
+<input class="w-full bg-slate-50 dark:bg-[#2a1a20] border border-stone-200 dark:border-[#442a30] rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all dark:text-white" type="text" value="1908"/>
+</div>
+<div>
+<label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">City</label>
+<input class="w-full bg-slate-50 dark:bg-[#2a1a20] border border-stone-200 dark:border-[#442a30] rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all dark:text-white" type="text" value="Riddes"/>
+</div>
+</div>
+</div>
+<div class="w-full md:w-1/3 aspect-video md:aspect-square bg-slate-200 rounded-lg overflow-hidden border border-stone-200 relative dark:border-[#442a30]">
+<div class="w-full h-full bg-cover bg-center" data-alt="Map showing location in Valais" data-location="Valais, Switzerland" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA-Dr_dztEVw2zzq5LmDRH-_fiVqz2RH47qpWSTR-o8MAW2TwGLE4jWyrK2on72Lt2s-6e0incxYJQkzr34zVkAMMOe8KgTu4PYq1EZubmRm1zB38DSxJdSzbJQXlH5_6UWqZCfpzHiCqCWPsB6IMouM0vgIZoCd9Mkqo05OFwq-eQTnR8oVzrDrF0D4_3NpJYoWyKibI0kh5aGAF1SOQDn0WH7qI3KcIu6d_fgHJ-_7J0-UDRJ0jPuPyX-KT5X08Ih6k0ze9e5sCg");'></div>
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="bg-primary text-white p-2 rounded-full shadow-lg transform -translate-y-2">
+<span class="material-symbols-outlined block">location_on</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Column: Sticky Navigation & Status -->
+<div class="lg:col-span-4 lg:sticky lg:top-24 space-y-6">
+<!-- Status Card -->
+<div class="stone-card rounded-xl p-6">
+<h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4">Publish Status</h3>
+<div class="flex items-center justify-between mb-4">
+<span class="font-medium text-[#1a0f12] dark:text-white">Visible on marketplace</span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-stone-200 peer-focus:outline-none rounded-full peer dark:bg-stone-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="p-3 bg-amber-50 border border-amber-100 rounded text-amber-800 text-xs leading-relaxed dark:bg-amber-900/20 dark:border-amber-900/30 dark:text-amber-200">
+<span class="material-symbols-outlined align-middle text-sm mr-1">warning</span>
+                                Your experience is currently in <strong>Draft</strong> mode. Publish to start accepting bookings.
+                            </div>
+</div>
+<!-- Quick Navigation -->
+<div class="stone-card rounded-xl p-0 overflow-hidden">
+<div class="p-4 border-b border-stone-100 bg-stone-50/50 dark:bg-white/5 dark:border-white/5">
+<h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Form Sections</h3>
+</div>
+<div class="flex flex-col">
+<a class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-stone-50 border-l-2 border-primary bg-stone-50 transition-colors dark:text-white dark:bg-white/10 dark:hover:bg-white/15" href="#general">
+<span class="material-symbols-outlined text-primary text-[18px]">info</span>
+                                    General Info
+                                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-500 hover:bg-stone-50 hover:text-slate-900 border-l-2 border-transparent transition-colors dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/5" href="#details">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+                                    Details
+                                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-500 hover:bg-stone-50 hover:text-slate-900 border-l-2 border-transparent transition-colors dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/5" href="#media">
+<span class="material-symbols-outlined text-[18px]">image</span>
+                                    Media
+                                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-500 hover:bg-stone-50 hover:text-slate-900 border-l-2 border-transparent transition-colors dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/5" href="#availability">
+<span class="material-symbols-outlined text-[18px]">calendar_clock</span>
+                                    Availability
+                                </a>
+<a class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-500 hover:bg-stone-50 hover:text-slate-900 border-l-2 border-transparent transition-colors dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/5" href="#location">
+<span class="material-symbols-outlined text-[18px]">location_on</span>
+                                    Location
+                                </a>
+</div>
+</div>
+<!-- Help Widget -->
+<div class="rounded-xl p-5 bg-indigo-900 text-white relative overflow-hidden group cursor-pointer">
+<div class="absolute -right-4 -top-4 bg-white/10 size-24 rounded-full group-hover:scale-110 transition-transform"></div>
+<h3 class="font-bold relative z-10 mb-1">Need Help?</h3>
+<p class="text-indigo-200 text-sm relative z-10 mb-3">Check our guide on how to create the perfect wine experience listing.</p>
+<span class="text-xs font-bold underline relative z-10">Read Guide -&gt;</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

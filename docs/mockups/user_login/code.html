@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>EnCave - User Login</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#cd2d55",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#201216",
+                        "text-dark": "#1a0f12",
+                        "text-light": "#e5d2d7",
+                        "accent-pink": "#915564",
+                        "border-color": "#e5d2d7",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for a cleaner look if needed */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #e5d2d7;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #cd2d55;
+        }
+        
+        /* Glassmorphism utility for floating elements */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-text-dark dark:text-text-light antialiased min-h-screen flex flex-col md:flex-row overflow-hidden">
+<!-- Left Panel: Hero Image -->
+<div class="hidden md:flex w-1/2 lg:w-[55%] h-screen relative bg-background-dark overflow-hidden">
+<div class="absolute inset-0 bg-center bg-cover bg-no-repeat transform scale-105 transition-transform duration-[20s] hover:scale-100 ease-out" data-alt="Scenic vineyard landscape in Valais Switzerland with mountains" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCVeFQD0L9wKf5J6Hy2hGZYD6uqYU8RJ9-8gFS_kZlRUoz89SHkFyNuHiWXs_OAs8Iv52FiXjy3_4oERTqqoeDlLfERJGoTRL-RTQmqBhTEufO0AvH5M7HaAlRNlUtScFVRKOvyDM2k6bpefMiGFyv6Z3ZM-21J2tA031Vnduk8sLoLdra9cEXxAIGOLB8FcPrfDOHYW0uIzo_r0IIdG8RACf4pRSMpVebYrSk2V3mKsJq7khOGAwkphVDmOCDdEmksy9IQ_zqFx38");'>
+</div>
+<div class="absolute inset-0 bg-gradient-to-t from-background-dark/80 via-transparent to-transparent"></div>
+<!-- Optional Overlay Content -->
+<div class="absolute bottom-12 left-12 max-w-md text-white z-10">
+<div class="flex items-center gap-2 mb-4 opacity-80">
+<span class="material-symbols-outlined text-[20px]">location_on</span>
+<span class="text-sm font-medium tracking-wide uppercase">Valais, Switzerland</span>
+</div>
+<h2 class="text-4xl font-bold leading-tight mb-2">Discover the soul of Swiss wine.</h2>
+<p class="text-lg opacity-80 font-light">Join EnCave to unlock exclusive tastings and premium winery tours.</p>
+</div>
+</div>
+<!-- Right Panel: Login Form -->
+<div class="w-full md:w-1/2 lg:w-[45%] h-screen overflow-y-auto flex flex-col relative bg-background-light dark:bg-background-dark transition-colors duration-300">
+<!-- Mobile Header Image (Visible only on small screens) -->
+<div class="md:hidden h-48 w-full bg-cover bg-center relative" data-alt="Close up of grapes in a vineyard" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCw4Tx-jPmJCPi2S2BAExHYlY7mz1AKfGWHJP1Ai_qDNG5DB7T6zMx2BzeOXWAQ5SnZQvIGK9Z_UMTFTmd0SzTtP_2TqdpPdPeGJkZST5EjPqgA__N0V6p1P4JLUPYNrBxbTkJVgZcMIAmfRfgRhE6hyaITKLBc50OMRvakGNYgOgcUI3ASWrZerDr00XUTZ_46Sp_I9t6XkHMyau78By2tut9BHSdNWXIbjjKtj82pyXOaJO_GX_11gDuWDDG0sYqNRWhPXCAaMFw");'>
+<div class="absolute inset-0 bg-gradient-to-b from-transparent to-background-light dark:to-background-dark"></div>
+</div>
+<div class="flex-1 flex flex-col justify-center px-6 sm:px-12 lg:px-24 py-12">
+<div class="w-full max-w-[420px] mx-auto flex flex-col gap-8">
+<!-- Logo & Header -->
+<div class="flex flex-col gap-2">
+<div class="flex items-center gap-2 mb-6 text-primary">
+<span class="material-symbols-outlined text-[32px]">wine_bar</span>
+<span class="text-2xl font-bold tracking-tight text-text-dark dark:text-white">EnCave</span>
+</div>
+<h1 class="text-3xl font-bold text-text-dark dark:text-white">Welcome back</h1>
+<p class="text-accent-pink dark:text-gray-400">Please enter your details to access your account.</p>
+</div>
+<!-- Form -->
+<form class="flex flex-col gap-5">
+<!-- Email Field -->
+<div class="flex flex-col gap-2">
+<label class="text-sm font-medium text-text-dark dark:text-gray-200" for="email">Email Address</label>
+<div class="relative group">
+<input class="w-full h-12 px-4 rounded-lg border border-border-color bg-white dark:bg-white/5 dark:border-white/10 text-text-dark dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-gray-400" id="email" placeholder="name@example.com" type="email"/>
+<div class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">mail</span>
+</div>
+</div>
+</div>
+<!-- Password Field -->
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-center">
+<label class="text-sm font-medium text-text-dark dark:text-gray-200" for="password">Password</label>
+<a class="text-sm font-medium text-primary hover:text-primary/80 hover:underline transition-all" href="#">Forgot password?</a>
+</div>
+<div class="relative group">
+<input class="w-full h-12 px-4 rounded-lg border border-border-color bg-white dark:bg-white/5 dark:border-white/10 text-text-dark dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-gray-400" id="password" placeholder="••••••••" type="password"/>
+<div class="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-400 hover:text-text-dark dark:hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</div>
+</div>
+</div>
+<!-- Checkbox -->
+<div class="flex items-center gap-3 py-1">
+<div class="flex items-center h-5">
+<input class="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-primary/30 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-primary/50 dark:ring-offset-gray-800 text-primary" id="remember" type="checkbox"/>
+</div>
+<label class="text-sm font-medium text-gray-900 dark:text-gray-300" for="remember">Remember for 30 days</label>
+</div>
+<!-- Submit Button -->
+<button class="mt-2 w-full h-12 bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm shadow-primary/30" type="button">
+                        Log In
+                    </button>
+<!-- Divider -->
+<div class="relative flex py-2 items-center">
+<div class="flex-grow border-t border-border-color dark:border-white/10"></div>
+<span class="flex-shrink-0 mx-4 text-sm text-gray-400">Or continue with</span>
+<div class="flex-grow border-t border-border-color dark:border-white/10"></div>
+</div>
+<!-- Social Login -->
+<div class="grid grid-cols-2 gap-3">
+<button class="flex items-center justify-center gap-2 h-11 px-4 border border-border-color dark:border-white/10 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-colors bg-white dark:bg-transparent" type="button">
+<svg class="w-5 h-5" fill="none" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
+<path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
+<path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"></path>
+<path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path>
+</svg>
+<span class="text-sm font-medium text-text-dark dark:text-white">Google</span>
+</button>
+<button class="flex items-center justify-center gap-2 h-11 px-4 border border-border-color dark:border-white/10 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-colors bg-white dark:bg-transparent" type="button">
+<svg class="w-5 h-5 text-black dark:text-white" fill="currentColor" viewbox="0 0 24 24">
+<path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.78 1.18-.19 2.31-.89 3.51-.84 1.54.06 2.7.79 3.44 1.92-3.04 1.8-2.53 6.64.49 7.84-.25.75-.58 1.5-.95 2.22-.36.73-.78 1.37-1.57 2.05zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"></path>
+</svg>
+<span class="text-sm font-medium text-text-dark dark:text-white">Apple</span>
+</button>
+</div>
+</form>
+<!-- Footer Sign Up -->
+<div class="text-center mt-4">
+<p class="text-sm text-gray-500 dark:text-gray-400">
+                        New to EnCave? 
+                        <a class="font-semibold text-primary hover:text-primary/80 hover:underline transition-all" href="#">Create an account</a>
+</p>
+</div>
+</div>
+<!-- Bottom Legal Links (Subtle) -->
+<div class="mt-12 flex justify-center gap-6 text-xs text-gray-400">
+<a class="hover:text-gray-600 dark:hover:text-gray-300 transition-colors" href="#">Privacy Policy</a>
+<a class="hover:text-gray-600 dark:hover:text-gray-300 transition-colors" href="#">Terms of Service</a>
+</div>
+</div>
+</div>
+</body></html>
