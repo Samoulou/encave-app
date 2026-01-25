@@ -103,15 +103,15 @@ test.describe('Parcours Guest - Page de Détail', () => {
     expect(canBook).toBe(true);
   });
 
-  test('cliquer sur "Book Now" navigue vers la réservation', async ({ page }) => {
+  test('cliquer sur "Book Now" scrolle vers le widget de réservation', async ({ page }) => {
     const detailPage = new ExperienceDetailPage(page);
     await detailPage.navigate(testExperience.slug);
 
     // Cliquer sur Book Now
     await detailPage.clickBookNow();
 
-    // Vérifier la navigation
-    await expect(page).toHaveURL(/\/book$/);
+    // Vérifier que le widget de réservation est visible
+    await expect(detailPage.bookingWidget).toBeVisible();
   });
 
   test('une expérience sans Stripe affiche "Coming Soon"', async ({ page }) => {
@@ -131,7 +131,7 @@ test.describe('Parcours Guest - Page de Détail', () => {
 });
 
 test.describe('Parcours Guest - Sélection de Réservation', () => {
-  test('la page de réservation affiche le calendrier', async ({ page }) => {
+  test('la page experience affiche le calendrier de réservation', async ({ page }) => {
     const bookingPage = new BookingPage(page);
     await bookingPage.navigate(testExperience.slug);
 
@@ -350,10 +350,10 @@ test.describe('Parcours Complet - Happy Path', () => {
     if (canBook) {
       await detailPage.clickBookNow();
 
-      // 4. SÉLECTION DATE/HEURE/GUESTS
+      // 4. SÉLECTION DATE/HEURE/GUESTS (booking widget is now on experience page)
       const bookingPage = new BookingPage(page);
 
-      // Attendre que le calendrier soit prêt
+      // Attendre que le calendrier soit prêt (widget is on experience page)
       await expect(bookingPage.calendar).toBeVisible();
 
       // Sélectionner une date disponible (on utilise une date future)

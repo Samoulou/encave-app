@@ -1,5 +1,5 @@
-import { describe, it, expect, afterEach } from 'vitest';
-import { render, screen, cleanup } from '@testing-library/react';
+import { describe, it, expect, afterEach, vi } from 'vitest';
+import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 import { BookingCTA } from '@/components/features/experience/BookingCTA';
 
@@ -24,6 +24,7 @@ function renderWithI18n(ui: React.ReactElement) {
 describe('BookingCTA', () => {
   afterEach(() => {
     cleanup();
+    vi.restoreAllMocks();
   });
 
   describe('when Stripe is not connected', () => {
@@ -104,7 +105,12 @@ describe('BookingCTA', () => {
   });
 
   describe('when Stripe is connected', () => {
-    it('renders book button as enabled link', () => {
+    it('renders book button as enabled and scrolls to booking widget on click', () => {
+      // Mock scrollIntoView
+      const scrollIntoViewMock = vi.fn();
+      const mockElement = { scrollIntoView: scrollIntoViewMock };
+      vi.spyOn(document, 'getElementById').mockReturnValue(mockElement as unknown as HTMLElement);
+
       renderWithI18n(
         <BookingCTA
           price={5000}
@@ -113,9 +119,14 @@ describe('BookingCTA', () => {
         />
       );
 
-      const link = screen.getByRole('link', { name: /Book This Experience/i });
-      expect(link).toBeDefined();
-      expect(link.getAttribute('href')).toBe('/experiences/test-experience/book');
+      const button = screen.getByRole('button', { name: /Book This Experience/i });
+      expect(button).toBeDefined();
+      expect(button.hasAttribute('disabled')).toBe(false);
+
+      // Click the button and verify scroll
+      fireEvent.click(button);
+      expect(document.getElementById).toHaveBeenCalledWith('booking-widget');
+      expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
     });
 
     it('does not show coming soon message', () => {

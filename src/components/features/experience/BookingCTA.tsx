@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from 'next-intl';
@@ -13,11 +12,18 @@ interface BookingCTAProps {
   stripeConnected: boolean;
 }
 
-export function BookingCTA({ price, experienceSlug, stripeConnected }: BookingCTAProps) {
+export function BookingCTA({ price, stripeConnected }: BookingCTAProps) {
   const [showTooltip, setShowTooltip] = useState(false);
   const t = useTranslations('booking');
 
   const isBookingEnabled = stripeConnected;
+
+  const handleScrollToBooking = () => {
+    const bookingWidget = document.getElementById('booking-widget');
+    if (bookingWidget) {
+      bookingWidget.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   return (
     <div className="rounded-xl bg-white p-6 shadow-warm" data-testid="booking-cta">
@@ -30,11 +36,9 @@ export function BookingCTA({ price, experienceSlug, stripeConnected }: BookingCT
       {/* CTA Button */}
       <div className="relative mt-6">
         {isBookingEnabled ? (
-          <Button size="lg" className="w-full" asChild>
-            <Link href={`/experiences/${experienceSlug}/book`}>
-              <Calendar className="mr-2 h-5 w-5" />
-              {t('bookNow')}
-            </Link>
+          <Button size="lg" className="w-full" onClick={handleScrollToBooking}>
+            <Calendar className="mr-2 h-5 w-5" />
+            {t('bookNow')}
           </Button>
         ) : (
           <>

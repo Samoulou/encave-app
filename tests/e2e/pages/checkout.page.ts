@@ -342,7 +342,7 @@ export class CheckoutPage extends BasePage {
    */
   async clickAdjustBooking() {
     await this.adjustBookingLink.click();
-    await this.page.waitForURL(/\/book/);
+    await this.page.waitForURL(/\/experiences\/[^/]+(\?|$)/);
   }
 
   /**

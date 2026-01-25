@@ -28,6 +28,7 @@ export class ExperienceDetailPage extends BasePage {
   readonly bookingCta: Locator;
   readonly price: Locator;
   readonly bookNowButton: Locator;
+  readonly bookingWidget: Locator;
   readonly comingSoonBadge: Locator;
 
   // Sidebar - Winery info
@@ -70,7 +71,8 @@ export class ExperienceDetailPage extends BasePage {
     // Booking CTA
     this.bookingCta = page.getByTestId('booking-cta');
     this.price = page.getByTestId('experience-price');
-    this.bookNowButton = page.getByRole('link', { name: /book now/i });
+    this.bookNowButton = page.getByRole('button', { name: /book now/i });
+    this.bookingWidget = page.getByTestId('booking-widget');
     this.comingSoonBadge = page.getByText(/coming soon/i);
 
     // Winery card
@@ -149,8 +151,7 @@ export class ExperienceDetailPage extends BasePage {
     if (!isVisible) return false;
 
     // Check if it's not disabled
-    const isDisabled = await this.bookNowButton.getAttribute('aria-disabled');
-    return isDisabled !== 'true';
+    return this.bookNowButton.isEnabled();
   }
 
   /**
@@ -161,11 +162,12 @@ export class ExperienceDetailPage extends BasePage {
   }
 
   /**
-   * Click the Book Now button to start booking
+   * Click the Book Now button to scroll to the booking widget
    */
   async clickBookNow() {
     await this.bookNowButton.click();
-    await this.page.waitForURL(/\/book$/);
+    // Wait for booking widget to be in view
+    await this.bookingWidget.waitFor({ state: 'visible' });
   }
 
   /**

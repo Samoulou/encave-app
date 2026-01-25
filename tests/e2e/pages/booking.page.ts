@@ -2,8 +2,8 @@ import { Page, Locator } from '@playwright/test';
 import { BasePage } from './base.page';
 
 /**
- * Page Object for the Booking page
- * Route: /experiences/[slug]/book
+ * Page Object for the Booking functionality
+ * The booking form is now integrated into the experience detail page: /experiences/[slug]
  */
 export class BookingPage extends BasePage {
   // Experience summary card
@@ -111,11 +111,11 @@ export class BookingPage extends BasePage {
   }
 
   /**
-   * Navigate to booking page for an experience
+   * Navigate to experience page with booking widget
    */
   async navigate(slug: string) {
-    await this.goto(`/experiences/${slug}/book`, {
-      waitForSelector: '[role="application"]',
+    await this.goto(`/experiences/${slug}`, {
+      waitForSelector: '[data-testid="booking-widget"]',
     });
   }
 
@@ -131,7 +131,7 @@ export class BookingPage extends BasePage {
     if (params.time) searchParams.set('time', params.time);
     if (params.guests) searchParams.set('guests', String(params.guests));
 
-    const url = `/experiences/${slug}/book?${searchParams.toString()}`;
+    const url = `/experiences/${slug}?${searchParams.toString()}`;
     await this.goto(url);
   }
 
@@ -422,11 +422,11 @@ export class BookingPage extends BasePage {
   }
 
   /**
-   * Click back to return to experience detail
+   * Click back to return to experience list
    */
   async goBack() {
     await this.backButton.click();
-    await this.page.waitForURL(/\/experiences\/[^/]+$/);
+    await this.page.waitForURL(/\/experiences/);
   }
 
   // === COMPLETE BOOKING SELECTION ===

@@ -1,71 +1,33 @@
-import { notFound, redirect } from 'next/navigation';
-import { getExperienceForBooking } from '@/server/actions/booking';
-import { BookingWidget } from '@/components/features/booking/BookingWidget';
-import { Breadcrumb } from '@/components/shared/Breadcrumb';
-import { getTranslations } from 'next-intl/server';
-import { getBaseUrl } from '@/lib/env';
-import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 
 interface BookingPageProps {
   params: Promise<{ slug: string; locale: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
-export async function generateMetadata({
-  params,
-}: BookingPageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const result = await getExperienceForBooking(slug);
+/**
+ * The /book page has been consolidated into the experience page.
+ * This page now redirects to the experience page while preserving query params
+ * for backwards compatibility.
+ */
+export default async function BookingPage({ params, searchParams }: BookingPageProps) {
+  const { slug, locale } = await params;
+  const resolvedSearchParams = await searchParams;
 
-  if (!result.success) {
-    return { title: 'Book Experience | EnCave' };
+  // Build query string from search params
+  const queryString = new URLSearchParams();
+  for (const [key, value] of Object.entries(resolvedSearchParams)) {
+    if (value !== undefined) {
+      if (Array.isArray(value)) {
+        value.forEach((v) => queryString.append(key, v));
+      } else {
+        queryString.set(key, value);
+      }
+    }
   }
 
-  return {
-    title: `Book ${result.data.title} | EnCave`,
-    description: `Book your ${result.data.title} experience with ${result.data.winery.name}`,
-  };
-}
+  const queryPart = queryString.toString();
+  const redirectUrl = `/${locale}/experiences/${slug}${queryPart ? `?${queryPart}` : ''}`;
 
-export default async function BookingPage({ params }: BookingPageProps) {
-  const { slug } = await params;
-  const [t, result] = await Promise.all([
-    getTranslations('booking'),
-    getExperienceForBooking(slug),
-  ]);
-
-  if (!result.success) {
-    notFound();
-  }
-
-  const experience = result.data;
-
-  // If winery hasn't completed Stripe onboarding, redirect back
-  if (!experience.winery.stripeOnboardingComplete) {
-    redirect(`/experiences/${slug}`);
-  }
-
-  const baseUrl = getBaseUrl();
-
-  const breadcrumbItems = [
-    { label: 'Home', href: '/' },
-    { label: 'Experiences', href: '/experiences' },
-    { label: experience.title, href: `/experiences/${slug}` },
-    { label: t('bookNow') },
-  ];
-
-  return (
-    <div className="min-h-screen bg-cream-50">
-      {/* Header */}
-      <div className="border-b border-stone-200/60 bg-white">
-        <div className="mx-auto max-w-4xl px-6 py-4 lg:px-8">
-          <Breadcrumb items={breadcrumbItems} baseUrl={baseUrl} />
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="mx-auto max-w-4xl px-6 py-8 lg:px-8 lg:py-12">
-        <BookingWidget experience={experience} />
-      </div>
-    </div>
-  );
+  redirect(redirectUrl);
 }

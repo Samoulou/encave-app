@@ -29,28 +29,9 @@ const checkoutFormSchema = z.object({
   lastName: z.string().min(2, 'Last name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
   phone: z.string().regex(phoneRegex, 'Invalid phone number'),
-  cardholderName: z.string().min(2, 'Cardholder name is required'),
 });
 
 type CheckoutFormData = z.infer<typeof checkoutFormSchema>;
-
-// Card brand icons
-function VisaIcon() {
-  return (
-    <div className="w-8 h-5 bg-[#1a1f71] rounded flex items-center justify-center">
-      <span className="text-[8px] font-bold text-white">VISA</span>
-    </div>
-  );
-}
-
-function MastercardIcon() {
-  return (
-    <div className="w-8 h-5 bg-gray-100 rounded flex items-center justify-center gap-0.5">
-      <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
-      <div className="w-2.5 h-2.5 rounded-full bg-yellow-500 -ml-1" />
-    </div>
-  );
-}
 
 export default function CheckoutPage() {
   const params = useParams<{ slug: string; locale: string }>();
@@ -134,9 +115,9 @@ export default function CheckoutPage() {
           setCapacityExceeded(false);
         }
 
-        // If no capacity at all, redirect back to booking
+        // If no capacity at all, redirect back to experience page
         if (result.data.remainingCapacity === 0) {
-          router.push(`/${locale}/experiences/${slug}/book?error=no_availability&date=${date}&time=${time}`);
+          router.push(`/${locale}/experiences/${slug}?error=no_availability&date=${date}&time=${time}`);
           return;
         }
       } else {
@@ -249,7 +230,7 @@ export default function CheckoutPage() {
             </Alert>
             <div className="mt-4">
               <Button asChild variant="outline">
-                <Link href={`/${locale}/experiences/${slug}/book`}>
+                <Link href={`/${locale}/experiences/${slug}`}>
                   {t('backToBooking')}
                 </Link>
               </Button>
@@ -320,7 +301,7 @@ export default function CheckoutPage() {
                 {t('capacityExceededMessage', { requested: guestCount, available: remainingCapacity })}
                 <div className="mt-3">
                   <Button asChild variant="outline" size="sm">
-                    <Link href={`/${locale}/experiences/${slug}/book?date=${date}&time=${time}&guests=${remainingCapacity}`}>
+                    <Link href={`/${locale}/experiences/${slug}?date=${date}&time=${time}&guests=${remainingCapacity}`}>
                       {t('adjustGuestCount')}
                     </Link>
                   </Button>
@@ -356,7 +337,7 @@ export default function CheckoutPage() {
           {/* Main Grid Layout */}
           <form onSubmit={handleSubmit(onSubmit)} data-testid="checkout-form">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
-              {/* Left Column: Forms */}
+              {/* Left Column: Contact Form & Payment Button */}
               <div className="lg:col-span-7 flex flex-col gap-8">
                 {/* Contact Details Section */}
                 <fieldset disabled={isFormDisabled || isSubmitting}>
@@ -367,120 +348,47 @@ export default function CheckoutPage() {
                   />
                 </fieldset>
 
-                {/* Payment Method Section */}
-                <fieldset disabled={isFormDisabled || isSubmitting}>
-                  <section className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-[#e5d2d7]">
-                    {/* Section Header */}
-                    <div className="flex items-center justify-between mb-6">
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">
-                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                          </svg>
-                        </div>
-                        <h3 className="text-xl font-bold text-[#1a0f12]">{t('paymentMethod')}</h3>
-                      </div>
-                      <div className="flex gap-2 opacity-60">
-                        <VisaIcon />
-                        <MastercardIcon />
-                      </div>
+                {/* Payment Section - Simplified for Stripe redirect */}
+                <section className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-[#e5d2d7]">
+                  {/* Trust Badge */}
+                  <div className="flex items-center justify-center gap-2 p-3 bg-[#f2e9eb]/50 rounded-lg border border-[#e5d2d7] mb-6">
+                    <Lock className="h-4 w-4 text-[#1a0f12]" aria-hidden="true" />
+                    <span className="text-sm font-medium text-[#1a0f12]">{t('securePaymentStripe')}</span>
+                  </div>
+
+                  {/* Submit Error */}
+                  {submitError && (
+                    <div className="mb-4 rounded-md bg-red-50 p-4">
+                      <p className="text-sm text-red-700">{submitError}</p>
                     </div>
+                  )}
 
-                    <div className="space-y-4">
-                      {/* Card Information - Combined Input */}
-                      <div className="flex flex-col w-full">
-                        <label htmlFor="cardNumber" className="text-[#1a0f12] text-sm font-medium pb-2">
-                          {t('cardInformation')}
-                        </label>
-                        <div className="relative flex items-center w-full rounded-lg border border-[#e5d2d7] bg-[#fbf9f9] px-4 h-12 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all">
-                          <svg className="h-5 w-5 text-[#915564] mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                          </svg>
-                          <input
-                            id="cardNumber"
-                            type="text"
-                            placeholder={t('cardNumberPlaceholder')}
-                            className="flex-1 bg-transparent border-none focus:ring-0 focus:outline-none text-[#1a0f12] placeholder:text-[#915564]/60 text-base min-w-0"
-                            disabled={isSubmitting || isFormDisabled}
-                          />
-                          <div className="flex items-center border-l border-[#e5d2d7] ml-2 pl-2">
-                            <input
-                              type="text"
-                              placeholder="MM/YY"
-                              className="w-16 bg-transparent border-none focus:ring-0 focus:outline-none text-[#1a0f12] placeholder:text-[#915564]/60 text-center text-base"
-                              disabled={isSubmitting || isFormDisabled}
-                            />
-                          </div>
-                          <div className="flex items-center border-l border-[#e5d2d7] ml-2 pl-2">
-                            <input
-                              type="text"
-                              placeholder="CVC"
-                              className="w-12 bg-transparent border-none focus:ring-0 focus:outline-none text-[#1a0f12] placeholder:text-[#915564]/60 text-center text-base"
-                              disabled={isSubmitting || isFormDisabled}
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Cardholder Name */}
-                      <div className="flex flex-col w-full">
-                        <label htmlFor="cardholderName" className="text-[#1a0f12] text-sm font-medium pb-2">
-                          {t('cardholderName')}
-                        </label>
-                        <input
-                          id="cardholderName"
-                          placeholder={t('cardholderNamePlaceholder')}
-                          autoComplete="cc-name"
-                          disabled={isSubmitting || isFormDisabled}
-                          className="h-12 w-full rounded-lg border border-[#e5d2d7] bg-[#fbf9f9] px-4 text-[#1a0f12] placeholder:text-[#915564]/60 focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
-                          {...register('cardholderName')}
-                        />
-                        {errors.cardholderName && (
-                          <p className="text-sm text-red-500 mt-1">{errors.cardholderName.message}</p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Trust Badge */}
-                    <div className="mt-8 flex items-center justify-center gap-2 p-3 bg-[#f2e9eb]/50 rounded-lg border border-[#e5d2d7]">
-                      <Lock className="h-4 w-4 text-[#1a0f12]" aria-hidden="true" />
-                      <span className="text-sm font-medium text-[#1a0f12]">{t('securePaymentStripe')}</span>
-                    </div>
-
-                    {/* Submit Error */}
-                    {submitError && (
-                      <div className="mt-4 rounded-md bg-red-50 p-4">
-                        <p className="text-sm text-red-700">{submitError}</p>
-                      </div>
+                  {/* CTA Button - Redirects to Stripe */}
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting || isFormDisabled}
+                    className="w-full bg-primary hover:bg-[#a62444] text-white h-14 rounded-lg font-bold text-lg shadow-lg shadow-primary/20 transition-all group"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        {t('processing')}
+                      </>
+                    ) : (
+                      <>
+                        <span>{t('confirmAndPay', { amount: formatCHF(totalPrice) })}</span>
+                        <svg className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                      </>
                     )}
+                  </Button>
 
-                    {/* CTA Button */}
-                    <Button
-                      type="submit"
-                      disabled={isSubmitting || isFormDisabled}
-                      className="w-full mt-6 bg-primary hover:bg-[#a62444] text-white h-14 rounded-lg font-bold text-lg shadow-lg shadow-primary/20 transition-all group"
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                          {t('processing')}
-                        </>
-                      ) : (
-                        <>
-                          <span>{t('confirmAndPay', { amount: formatCHF(totalPrice) })}</span>
-                          <svg className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                          </svg>
-                        </>
-                      )}
-                    </Button>
-
-                    {/* Terms Text */}
-                    <p className="mt-4 text-center text-xs text-[#915564]">
-                      {t('termsAgreement')}
-                    </p>
-                  </section>
-                </fieldset>
+                  {/* Terms Text */}
+                  <p className="mt-4 text-center text-xs text-[#915564]">
+                    {t('termsAgreement')}
+                  </p>
+                </section>
               </div>
 
               {/* Right Column: Summary (Sticky) - Desktop Only */}

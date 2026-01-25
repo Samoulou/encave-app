@@ -1,12 +1,15 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import Link from 'next/link';
+import { useState, useMemo, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Calendar, ChevronRight, Minus, Plus } from 'lucide-react';
+import { parseAsString, parseAsInteger, useQueryStates } from 'nuqs';
+import { ChevronRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatCHF } from '@/lib/utils/currency';
-import { cn } from '@/lib/utils';
+import { BookingDatePicker } from '@/components/features/booking/BookingDatePicker';
+import { TimeSlotSelector } from '@/components/features/booking/TimeSlotSelector';
+import { GuestCountInput } from '@/components/features/booking/GuestCountInput';
 
 interface AvailabilitySlot {
   dayOfWeek: number;
@@ -18,65 +21,95 @@ interface AvailabilitySlot {
 interface BookingWidgetProps {
   price: number;
   experienceSlug: string;
+  experienceId: string;
   stripeConnected: boolean;
   minCapacity: number;
   maxCapacity: number;
   availabilitySlots?: AvailabilitySlot[];
 }
 
-// Format time from 24h to display format
-function formatTime(time: string): string {
-  const [hours] = time.split(':');
-  return `${hours}:00`;
-}
-
-// Get available times from slots for display
-function getDisplayTimes(slots: AvailabilitySlot[]): string[] {
-  const times = new Set<string>();
-  slots.forEach((slot) => {
-    if (slot.isActive) {
-      times.add(formatTime(slot.startTime));
-    }
-  });
-  return Array.from(times).slice(0, 4); // Show max 4 time slots
-}
-
 export function BookingWidget({
   price,
   experienceSlug,
+  experienceId,
   stripeConnected,
   minCapacity,
   maxCapacity,
   availabilitySlots = [],
 }: BookingWidgetProps) {
   const t = useTranslations('booking');
-  const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [guests, setGuests] = useState(Math.max(2, minCapacity));
+  const router = useRouter();
 
+  // URL state persistence using nuqs
+  const [queryState, setQueryState] = useQueryStates({
+    date: parseAsString,
+    time: parseAsString,
+    guests: parseAsInteger.withDefault(Math.max(2, minCapacity)),
+  });
+
+  const [remainingCapacity, setRemainingCapacity] = useState<number | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { date, time, guests } = queryState;
   const isBookingEnabled = stripeConnected;
-  const displayTimes = useMemo(
-    () => getDisplayTimes(availabilitySlots),
+
+  // Available days based on availability slots
+  const availableDays = useMemo(
+    () => new Set(availabilitySlots.filter(s => s.isActive).map((slot) => slot.dayOfWeek)),
     [availabilitySlots]
   );
 
+  // Check if form is valid
+  const isValid = date && time &&
+    guests >= minCapacity &&
+    guests <= maxCapacity &&
+    (remainingCapacity === null || guests <= remainingCapacity);
+
   const totalPrice = price * guests;
 
-  const decreaseGuests = () => {
-    if (guests > minCapacity) {
-      setGuests(guests - 1);
-    }
-  };
+  const handleDateChange = useCallback(
+    (newDate: string | null) => {
+      setQueryState({ date: newDate });
+      setRemainingCapacity(null);
+    },
+    [setQueryState]
+  );
 
-  const increaseGuests = () => {
-    if (guests < maxCapacity) {
-      setGuests(guests + 1);
-    }
+  const handleTimeChange = useCallback(
+    (newTime: string | null) => {
+      setQueryState({ time: newTime });
+    },
+    [setQueryState]
+  );
+
+  const handleGuestsChange = useCallback(
+    (newGuests: number) => {
+      setQueryState({ guests: newGuests });
+    },
+    [setQueryState]
+  );
+
+  const handleCapacityUpdate = useCallback((capacity: number | null) => {
+    setRemainingCapacity(capacity);
+  }, []);
+
+  const handleContinue = () => {
+    if (!isValid || !isBookingEnabled) return;
+
+    setIsSubmitting(true);
+    const params = new URLSearchParams({
+      date: date!,
+      time: time!,
+      guests: guests.toString(),
+    });
+    router.push(`/experiences/${experienceSlug}/checkout?${params.toString()}`);
   };
 
   return (
     <div
       className="sticky top-28 bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] p-6 lg:p-8"
       data-testid="booking-widget"
+      id="booking-widget"
     >
       {/* Price Header */}
       <div className="flex justify-between items-end mb-6">
@@ -88,115 +121,95 @@ export function BookingWidget({
             </span>
           </div>
         </div>
-        <div className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded">
-          AVAILABLE
-        </div>
+        {isBookingEnabled && (
+          <div className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded">
+            AVAILABLE
+          </div>
+        )}
       </div>
 
-      <form
-        className="flex flex-col gap-5"
-        onSubmit={(e) => e.preventDefault()}
-      >
-        {/* Date Picker (Simplified - links to booking page) */}
+      <div className="flex flex-col gap-5">
+        {/* Date Picker */}
         <div className="space-y-2">
           <label className="block text-sm font-semibold text-[#1a0f12]">
             {t('selectDate')}
           </label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Calendar className="h-5 w-5 text-gray-400" />
-            </div>
-            <input
-              type="text"
-              className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-lg focus:ring-primary focus:border-primary bg-background-light text-sm text-[#1a0f12]"
-              placeholder="Select a date"
-              readOnly
-            />
-          </div>
+          <BookingDatePicker
+            selectedDate={date}
+            onDateChange={handleDateChange}
+            availableDays={availableDays}
+          />
         </div>
 
         {/* Time Slots */}
-        {displayTimes.length > 0 && (
+        {date && (
           <div className="space-y-2">
             <label className="block text-sm font-semibold text-[#1a0f12]">
               {t('selectTime')}
             </label>
-            <div className="grid grid-cols-2 gap-3">
-              {displayTimes.map((time) => (
-                <button
-                  key={time}
-                  type="button"
-                  onClick={() => setSelectedTime(time)}
-                  className={cn(
-                    'border-2 py-2 rounded-lg text-sm font-medium transition-all',
-                    selectedTime === time
-                      ? 'border-primary bg-primary/5 text-primary'
-                      : 'border-gray-200 hover:border-primary text-gray-600'
-                  )}
-                >
-                  {time}
-                </button>
-              ))}
-            </div>
+            <TimeSlotSelector
+              experienceId={experienceId}
+              selectedDate={date}
+              selectedTime={time}
+              onTimeChange={handleTimeChange}
+              onCapacityUpdate={handleCapacityUpdate}
+            />
           </div>
         )}
 
         {/* Guests */}
-        <div className="space-y-2">
-          <label className="block text-sm font-semibold text-[#1a0f12]">
-            {t('selectGuests')}
-          </label>
-          <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-background-light">
-            <span className="text-sm text-gray-600">Adults</span>
-            <div className="flex items-center gap-4">
-              <button
-                type="button"
-                onClick={decreaseGuests}
-                disabled={guests <= minCapacity}
-                className="size-8 rounded-full bg-white shadow-sm border border-gray-200 flex items-center justify-center hover:bg-gray-50 text-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                aria-label={t('decreaseGuests')}
-              >
-                <Minus className="h-4 w-4" />
-              </button>
-              <span className="text-base font-semibold w-4 text-center">
-                {guests}
-              </span>
-              <button
-                type="button"
-                onClick={increaseGuests}
-                disabled={guests >= maxCapacity}
-                className="size-8 rounded-full bg-white shadow-sm border border-gray-200 flex items-center justify-center hover:bg-gray-50 text-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                aria-label={t('increaseGuests')}
-              >
-                <Plus className="h-4 w-4" />
-              </button>
-            </div>
+        {time && (
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-[#1a0f12]">
+              {t('selectGuests')}
+            </label>
+            <GuestCountInput
+              value={guests}
+              onChange={handleGuestsChange}
+              min={minCapacity}
+              max={remainingCapacity !== null ? Math.min(maxCapacity, remainingCapacity) : maxCapacity}
+              isLoading={false}
+              remainingCapacity={remainingCapacity}
+            />
           </div>
-        </div>
+        )}
 
-        <hr className="border-dashed border-gray-200 my-2" />
+        {/* Show total when form is partially filled */}
+        {date && (
+          <>
+            <hr className="border-dashed border-gray-200 my-2" />
 
-        {/* Total */}
-        <div className="flex justify-between items-center mb-2">
-          <span className="font-bold text-lg text-[#1a0f12]">
-            {t('totalPrice')}
-          </span>
-          <span className="font-bold text-xl text-primary" data-testid="booking-total">
-            {formatCHF(totalPrice)}
-          </span>
-        </div>
+            {/* Total */}
+            <div className="flex justify-between items-center mb-2">
+              <span className="font-bold text-lg text-[#1a0f12]">
+                {t('totalPrice')}
+              </span>
+              <span className="font-bold text-xl text-primary" data-testid="booking-total">
+                {formatCHF(totalPrice)}
+              </span>
+            </div>
+          </>
+        )}
 
         {/* Book Button */}
         {isBookingEnabled ? (
           <Button
             size="lg"
             className="w-full bg-primary hover:bg-[#b02245] text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/20 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 h-auto"
-            asChild
+            disabled={!isValid || isSubmitting}
+            onClick={handleContinue}
           >
-            <Link href={`/experiences/${experienceSlug}/book?guests=${guests}`}>
-              <span>{t('bookExperience')}</span>
-              <ChevronRight className="h-4 w-4" />
-            </Link>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>{t('continueToPayment')}</span>
+              </>
+            ) : (
+              <>
+                <span>{isValid ? t('continueToPayment') : t('bookExperience')}</span>
+                <ChevronRight className="h-4 w-4" />
+              </>
+            )}
           </Button>
         ) : (
           <Button
@@ -209,10 +222,12 @@ export function BookingWidget({
           </Button>
         )}
 
-        <p className="text-xs text-center text-gray-400 mt-2">
-          Free cancellation up to 24h before.
-        </p>
-      </form>
+        {isBookingEnabled && (
+          <p className="text-xs text-center text-gray-400 mt-2">
+            Free cancellation up to 24h before.
+          </p>
+        )}
+      </div>
 
       {/* Coming Soon Badge - Only show when booking not enabled */}
       {!isBookingEnabled && (

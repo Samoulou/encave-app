@@ -216,6 +216,7 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
               <BookingWidget
                 price={experience.price}
                 experienceSlug={experience.slug}
+                experienceId={experience.id}
                 stripeConnected={experience.winery.stripeOnboardingComplete}
                 minCapacity={experience.minCapacity}
                 maxCapacity={experience.maxCapacity}
@@ -238,7 +239,11 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
         <MobileBookingBar
           price={experience.price}
           experienceSlug={experience.slug}
+          experienceId={experience.id}
           stripeConnected={experience.winery.stripeOnboardingComplete}
+          minCapacity={experience.minCapacity}
+          maxCapacity={experience.maxCapacity}
+          availabilitySlots={experience.availabilitySlots}
         />
       </main>
     </>
