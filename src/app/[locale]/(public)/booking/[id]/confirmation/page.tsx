@@ -83,25 +83,27 @@ export default async function ConfirmationPage({ params }: ConfirmationPageProps
   // Pending Payment State
   if (isPending) {
     return (
-      <div className="container mx-auto max-w-3xl px-4 py-12">
-        <div className="text-center mb-8">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-yellow-100">
-            <Clock className="h-10 w-10 text-yellow-600" />
+      <div className="flex-1 flex justify-center py-10 px-4 md:px-10">
+        <div className="w-full max-w-3xl">
+          <div className="text-center mb-8">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-yellow-100">
+              <Clock className="h-10 w-10 text-yellow-600" />
+            </div>
+            <h1 className="text-3xl font-bold text-[#1a0f12] mb-2">
+              {t('paymentPending')}
+            </h1>
+            <p className="text-[#915564]">{t('paymentPendingDescription')}</p>
           </div>
-          <h1 className="font-display text-3xl font-bold text-foreground mb-2">
-            {t('paymentPending')}
-          </h1>
-          <p className="text-muted-foreground">{t('paymentPendingDescription')}</p>
-        </div>
 
-        <Card className="mb-6">
-          <CardContent className="p-6 text-center">
-            <p className="text-sm text-muted-foreground mb-1">{t('bookingReference')}</p>
-            <p className="text-2xl font-mono font-bold text-primary">
-              {booking.reference}
-            </p>
-          </CardContent>
-        </Card>
+          <Card className="mb-6 border-[#e5d2d7]">
+            <CardContent className="p-6 text-center">
+              <p className="text-sm text-[#915564] mb-1">{t('bookingReference')}</p>
+              <p className="text-2xl font-mono font-bold text-primary">
+                {booking.reference}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
@@ -176,10 +178,10 @@ export default async function ConfirmationPage({ params }: ConfirmationPageProps
       </div>
 
       {/* Bottom CTA Bar */}
-      <div className="fixed bottom-0 left-0 right-0 w-full flex justify-center py-8 pb-12 bg-gradient-to-t from-background to-transparent pointer-events-none">
+      <div className="fixed bottom-0 left-0 right-0 w-full flex justify-center py-8 pb-12 bg-gradient-to-t from-[#f8f6f6] to-transparent pointer-events-none">
         <Link
           href={`/${locale}/experiences`}
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors font-semibold pointer-events-auto"
+          className="inline-flex items-center gap-2 text-[#915564] hover:text-primary transition-colors font-semibold pointer-events-auto"
         >
           <ArrowLeft className="size-4" />
           {t('returnToExperiences')}
