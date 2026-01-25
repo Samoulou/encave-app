@@ -1,12 +1,39 @@
+import dynamic from 'next/dynamic';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
-import { EditExperienceForm } from '@/components/features/experience/EditExperienceForm';
-import { AvailabilityScheduleBuilder } from '@/components/features/experience/AvailabilityScheduleBuilder';
+import { Skeleton } from '@/components/shared/Skeleton';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Calendar } from 'lucide-react';
+
+// Dynamic imports for heavy form components
+const EditExperienceForm = dynamic(
+  () => import('@/components/features/experience/EditExperienceForm').then(mod => mod.EditExperienceForm),
+  {
+    loading: () => (
+      <div className="space-y-6">
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-32 w-full" />
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-48 w-full" />
+      </div>
+    ),
+  }
+);
+
+const AvailabilityScheduleBuilder = dynamic(
+  () => import('@/components/features/experience/AvailabilityScheduleBuilder').then(mod => mod.AvailabilityScheduleBuilder),
+  {
+    loading: () => (
+      <div className="space-y-4">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    ),
+  }
+);
 
 interface PageProps {
   params: Promise<{ id: string }>;

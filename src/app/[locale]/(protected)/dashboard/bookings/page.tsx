@@ -30,15 +30,14 @@ interface PageProps {
 }
 
 export default async function BookingsDashboardPage({ searchParams }: PageProps) {
-  const session = await auth();
+  // Parallelize auth and searchParams - they don't depend on each other
+  const [session, params] = await Promise.all([auth(), searchParams]);
 
   if (!session?.user) {
     redirect('/login');
   }
 
-  const params = await searchParams;
-
-  // Get winery for the user - needed for auth check
+  // Get winery for the user - needs session.user.id
   const winery = await db.winery.findUnique({
     where: { userId: session.user.id },
     select: { id: true },

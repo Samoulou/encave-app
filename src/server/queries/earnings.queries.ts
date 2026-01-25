@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { db } from '@/server/db';
 import { BookingStatus, Prisma } from '@prisma/client';
 import {
@@ -143,9 +144,10 @@ function getTransactionStatus(
 }
 
 /**
- * Get earnings summary for dashboard cards
+ * Get earnings summary for dashboard cards.
+ * Wrapped with React.cache for request-level deduplication.
  */
-export async function getEarningsSummary(wineryId: string): Promise<EarningsSummary> {
+export const getEarningsSummary = cache(async function getEarningsSummary(wineryId: string): Promise<EarningsSummary> {
   const now = new Date();
   const monthStart = startOfMonth(now);
   const monthEnd = endOfMonth(now);
@@ -234,12 +236,13 @@ export async function getEarningsSummary(wineryId: string): Promise<EarningsSumm
     nextPayoutDate,
     currentMonthLabel: format(now, 'MMM'),
   };
-}
+});
 
 /**
- * Get monthly earnings for chart (last N months)
+ * Get monthly earnings for chart (last N months).
+ * Wrapped with React.cache for request-level deduplication.
  */
-export async function getMonthlyEarnings(
+export const getMonthlyEarnings = cache(async function getMonthlyEarnings(
   wineryId: string,
   months: number = 6
 ): Promise<MonthlyEarning[]> {
@@ -274,12 +277,13 @@ export async function getMonthlyEarnings(
   }
 
   return results;
-}
+});
 
 /**
- * Get transactions with filters
+ * Get transactions with filters.
+ * Wrapped with React.cache for request-level deduplication.
  */
-export async function getTransactions(
+export const getTransactions = cache(async function getTransactions(
   wineryId: string,
   filters?: TransactionFilters
 ): Promise<Transaction[]> {
@@ -361,12 +365,13 @@ export async function getTransactions(
   }
 
   return transactions;
-}
+});
 
 /**
- * Get year-to-date summary
+ * Get year-to-date summary.
+ * Wrapped with React.cache for request-level deduplication.
  */
-export async function getYearToDateSummary(wineryId: string): Promise<YearToDateSummary> {
+export const getYearToDateSummary = cache(async function getYearToDateSummary(wineryId: string): Promise<YearToDateSummary> {
   const now = new Date();
   const yearStart = startOfYear(now);
   const yearEnd = endOfYear(now);
@@ -396,12 +401,13 @@ export async function getYearToDateSummary(wineryId: string): Promise<YearToDate
     totalBookings: nonRefunded.length,
     refundedAmount: refunded.reduce((sum, b) => sum + (b.refundAmount || 0), 0),
   };
-}
+});
 
 /**
- * Get experiences for filter dropdown
+ * Get experiences for filter dropdown.
+ * Wrapped with React.cache for request-level deduplication.
  */
-export async function getWineryExperiencesForEarnings(
+export const getWineryExperiencesForEarnings = cache(async function getWineryExperiencesForEarnings(
   wineryId: string
 ): Promise<{ id: string; title: string }[]> {
   return db.experience.findMany({
@@ -409,4 +415,4 @@ export async function getWineryExperiencesForEarnings(
     select: { id: true, title: true },
     orderBy: { title: 'asc' },
   });
-}
+});

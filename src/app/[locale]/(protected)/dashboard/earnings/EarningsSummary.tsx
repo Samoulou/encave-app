@@ -1,4 +1,4 @@
-import { EarningsSummaryCards } from '@/components/features/earnings';
+import { EarningsSummaryCards } from '@/components/features/earnings/EarningsSummaryCards';
 import { getEarningsSummary } from '@/server/queries/earnings.queries';
 
 interface EarningsSummaryProps {

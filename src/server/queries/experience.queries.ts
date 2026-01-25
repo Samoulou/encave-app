@@ -1,5 +1,6 @@
 'use server';
 
+import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
 import { db } from '@/server/db';
 import { ExperienceType, ExperienceStatus, Prisma } from '@prisma/client';
@@ -239,9 +240,9 @@ export async function searchExperiences(
 
 /**
  * Get distinct communes that have published experiences.
- * Cached for 10 minutes.
+ * Cached for 10 minutes. Wrapped with React.cache for request deduplication.
  */
-export const getExperienceCommunes = unstable_cache(
+export const getExperienceCommunes = cache(unstable_cache(
   async (): Promise<string[]> => {
     const wineries = await db.winery.findMany({
       where: {
@@ -273,13 +274,13 @@ export const getExperienceCommunes = unstable_cache(
     revalidate: 600, // 10 minutes
     tags: ['experiences', 'wineries'],
   }
-);
+));
 
 /**
  * Get min/max price range for experiences.
- * Cached for 10 minutes.
+ * Cached for 10 minutes. Wrapped with React.cache for request deduplication.
  */
-export const getExperiencePriceRange = unstable_cache(
+export const getExperiencePriceRange = cache(unstable_cache(
   async (): Promise<{ min: number; max: number }> => {
     const result = await db.experience.aggregate({
       where: {
@@ -311,13 +312,13 @@ export const getExperiencePriceRange = unstable_cache(
     revalidate: 600, // 10 minutes
     tags: ['experiences'],
   }
-);
+));
 
 /**
  * Get a single experience by slug.
- * Cached for 5 minutes.
+ * Cached for 5 minutes. Wrapped with React.cache for request deduplication.
  */
-export const getExperienceBySlug = unstable_cache(
+export const getExperienceBySlug = cache(unstable_cache(
   async (slug: string) => {
     return db.experience.findFirst({
       where: {
@@ -356,13 +357,13 @@ export const getExperienceBySlug = unstable_cache(
     revalidate: 300, // 5 minutes
     tags: ['experiences'],
   }
-);
+));
 
 /**
  * Get related experiences (same winery or same type).
- * Cached for 5 minutes.
+ * Cached for 5 minutes. Wrapped with React.cache for request deduplication.
  */
-export const getRelatedExperiences = unstable_cache(
+export const getRelatedExperiences = cache(unstable_cache(
   async (
     experienceId: string,
     wineryId: string,
@@ -423,13 +424,13 @@ export const getRelatedExperiences = unstable_cache(
     revalidate: 300, // 5 minutes
     tags: ['experiences'],
   }
-);
+));
 
 /**
  * Get featured experiences for landing pages.
- * Cached for 5 minutes.
+ * Cached for 5 minutes. Wrapped with React.cache for request deduplication.
  */
-export const getFeaturedExperiences = unstable_cache(
+export const getFeaturedExperiences = cache(unstable_cache(
   async (limit: number = 6) => {
     return db.experience.findMany({
       where: {
@@ -455,13 +456,13 @@ export const getFeaturedExperiences = unstable_cache(
     revalidate: 300, // 5 minutes
     tags: ['experiences'],
   }
-);
+));
 
 /**
  * Get all published experience slugs (for sitemap/static generation).
- * Cached for 1 hour.
+ * Cached for 1 hour. Wrapped with React.cache for request deduplication.
  */
-export const getAllPublishedExperienceSlugs = unstable_cache(
+export const getAllPublishedExperienceSlugs = cache(unstable_cache(
   async () => {
     const experiences = await db.experience.findMany({
       where: {
@@ -477,4 +478,4 @@ export const getAllPublishedExperienceSlugs = unstable_cache(
     revalidate: 3600, // 1 hour
     tags: ['experiences'],
   }
-);
+));

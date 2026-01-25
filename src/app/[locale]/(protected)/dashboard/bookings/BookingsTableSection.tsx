@@ -1,9 +1,7 @@
 import { BookingStatus } from '@prisma/client';
 import { startOfMonth, parseISO } from 'date-fns';
-import {
-  BookingsTable,
-  BookingsEmptyState,
-} from '@/components/features/booking/dashboard';
+import { BookingsTable } from '@/components/features/booking/dashboard/BookingsTable';
+import { BookingsEmptyState } from '@/components/features/booking/dashboard/BookingsEmptyState';
 import {
   getWineryBookings,
   getBookingSummary,

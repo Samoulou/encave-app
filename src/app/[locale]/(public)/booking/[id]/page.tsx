@@ -20,11 +20,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { db } from '@/server/db';
 import { getBookingByToken } from '@/server/actions/booking';
 import { BookingStatus } from '@prisma/client';
-import {
-  AddToCalendar,
-  CancellationPolicy,
-  CancelBookingButton,
-} from '@/components/features/booking';
+import { AddToCalendar } from '@/components/features/booking/AddToCalendar';
+import { CancellationPolicy } from '@/components/features/booking/CancellationPolicy';
+import { CancelBookingButton } from '@/components/features/booking/CancelBookingButton';
 import { formatCHF } from '@/lib/utils/currency';
 import { cn } from '@/lib/utils';
 

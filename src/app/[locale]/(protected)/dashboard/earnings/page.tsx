@@ -5,7 +5,7 @@ import { db } from '@/server/db';
 import { redirect } from 'next/navigation';
 import { AlertTriangle } from 'lucide-react';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
-import { EarningsPageHeader } from '@/components/features/earnings';
+import { EarningsPageHeader } from '@/components/features/earnings/EarningsPageHeader';
 import { Skeleton, SkeletonContainer } from '@/components/shared/Skeleton';
 import { EarningsSummary } from './EarningsSummary';
 import { EarningsChartsSection } from './EarningsChartsSection';
@@ -25,15 +25,14 @@ interface PageProps {
 }
 
 export default async function EarningsPage({ searchParams }: PageProps) {
-  const session = await auth();
+  // Parallelize auth and searchParams - they don't depend on each other
+  const [session, params] = await Promise.all([auth(), searchParams]);
 
   if (!session?.user) {
     redirect('/login');
   }
 
-  const params = await searchParams;
-
-  // Get winery for the user - needed for auth check and Stripe status
+  // Get winery for the user - needs session.user.id
   const winery = await db.winery.findUnique({
     where: { userId: session.user.id },
     select: { id: true, stripeOnboardingComplete: true },

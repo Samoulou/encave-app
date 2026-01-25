@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useLocale } from 'next-intl';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ExportCSVButton } from '@/components/features/booking/dashboard';
+import { ExportCSVButton } from '@/components/features/booking/dashboard/ExportCSVButton';
 
 /**
  * Page header for the bookings dashboard.

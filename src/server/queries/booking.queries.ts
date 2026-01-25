@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { db } from '@/server/db';
 import { BookingStatus, Prisma } from '@prisma/client';
 import {
@@ -70,9 +71,10 @@ export interface ExperienceOption {
 }
 
 /**
- * Get bookings for a winery with optional filters and sorting
+ * Get bookings for a winery with optional filters and sorting.
+ * Wrapped with React.cache for request-level deduplication.
  */
-export async function getWineryBookings(
+export const getWineryBookings = cache(async function getWineryBookings(
   wineryId: string,
   filters?: BookingFilters,
   sort?: BookingSortOptions
@@ -150,12 +152,13 @@ export async function getWineryBookings(
   });
 
   return bookings;
-}
+});
 
 /**
- * Get summary statistics for dashboard cards
+ * Get summary statistics for dashboard cards.
+ * Wrapped with React.cache for request-level deduplication.
  */
-export async function getBookingSummary(wineryId: string): Promise<BookingSummary> {
+export const getBookingSummary = cache(async function getBookingSummary(wineryId: string): Promise<BookingSummary> {
   const now = new Date();
 
   // Use local-to-UTC conversion for database comparison
@@ -229,12 +232,13 @@ export async function getBookingSummary(wineryId: string): Promise<BookingSummar
     monthGuests: monthStats._sum.guestCount ?? 0,
     totalGuests: totalStats._sum.guestCount ?? 0,
   };
-}
+});
 
 /**
- * Get distinct experiences for filter dropdown
+ * Get distinct experiences for filter dropdown.
+ * Wrapped with React.cache for request-level deduplication.
  */
-export async function getWineryExperiencesForFilter(
+export const getWineryExperiencesForFilter = cache(async function getWineryExperiencesForFilter(
   wineryId: string
 ): Promise<ExperienceOption[]> {
   const experiences = await db.experience.findMany({
@@ -247,12 +251,13 @@ export async function getWineryExperiencesForFilter(
   });
 
   return experiences;
-}
+});
 
 /**
- * Get booking history for a specific client with a winery
+ * Get booking history for a specific client with a winery.
+ * Wrapped with React.cache for request-level deduplication.
  */
-export async function getClientHistoryWithWinery(
+export const getClientHistoryWithWinery = cache(async function getClientHistoryWithWinery(
   wineryId: string,
   visitorEmail: string
 ): Promise<BookingWithExperience[]> {
@@ -289,12 +294,13 @@ export async function getClientHistoryWithWinery(
   });
 
   return bookings;
-}
+});
 
 /**
- * Get a single booking with full details for the winery owner
+ * Get a single booking with full details for the winery owner.
+ * Wrapped with React.cache for request-level deduplication.
  */
-export async function getBookingForWinery(
+export const getBookingForWinery = cache(async function getBookingForWinery(
   bookingId: string,
   wineryId: string
 ): Promise<BookingWithExperience | null> {
@@ -330,4 +336,4 @@ export async function getBookingForWinery(
   });
 
   return booking;
-}
+});

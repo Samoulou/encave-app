@@ -1,7 +1,5 @@
-import {
-  BookingFilters,
-  BookingSearch,
-} from '@/components/features/booking/dashboard';
+import { BookingFilters } from '@/components/features/booking/dashboard/BookingFilters';
+import { BookingSearch } from '@/components/features/booking/dashboard/BookingSearch';
 import { getWineryExperiencesForFilter } from '@/server/queries/booking.queries';
 import { CalendarViewWrapper } from './CalendarViewWrapper';
 

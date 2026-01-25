@@ -4,7 +4,9 @@ import { useCallback, useEffect, useRef } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { BookingStatus, ExperienceType } from '@prisma/client';
-import { ViewToggle, CalendarView, WeekView } from '@/components/features/booking/calendar';
+import { ViewToggle } from '@/components/features/booking/calendar/ViewToggle';
+import { CalendarView } from '@/components/features/booking/calendar/CalendarView';
+import { WeekView } from '@/components/features/booking/calendar/WeekView';
 
 const POLLING_INTERVAL = 60_000; // 60 seconds
 

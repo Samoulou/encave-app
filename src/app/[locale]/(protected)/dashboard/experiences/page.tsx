@@ -21,18 +21,18 @@ interface PageProps {
 }
 
 export default async function ExperiencesDashboardPage({ searchParams }: PageProps) {
-  const session = await auth();
+  // Parallelize auth and searchParams - they don't depend on each other
+  const [session, params] = await Promise.all([auth(), searchParams]);
 
   if (!session?.user) {
     redirect('/login');
   }
 
-  const params = await searchParams;
   const filter = (params.filter as FilterStatus) || 'all';
   const search = params.q || '';
   const page = Math.max(1, parseInt(params.page || '1', 10));
 
-  // Get winery ID for auth check only
+  // Get winery ID for auth check only - needs session.user.id
   const winery = await db.winery.findUnique({
     where: { userId: session.user.id },
     select: { id: true },

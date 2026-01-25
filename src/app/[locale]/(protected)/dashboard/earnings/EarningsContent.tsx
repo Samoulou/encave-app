@@ -1,11 +1,9 @@
-import {
-  EarningsSummaryCards,
-  EarningsChart,
-  TransactionFilters,
-  TransactionTable,
-  YearToDateSummary,
-  PayoutScheduleInfo,
-} from '@/components/features/earnings';
+import { EarningsSummaryCards } from '@/components/features/earnings/EarningsSummaryCards';
+import { EarningsChart } from '@/components/features/earnings/EarningsChart';
+import { TransactionFilters } from '@/components/features/earnings/TransactionFilters';
+import { TransactionTable } from '@/components/features/earnings/TransactionTable';
+import { YearToDateSummary } from '@/components/features/earnings/YearToDateSummary';
+import { PayoutScheduleInfo } from '@/components/features/earnings/PayoutScheduleInfo';
 import {
   getEarningsSummary,
   getMonthlyEarnings,

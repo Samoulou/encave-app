@@ -1,4 +1,4 @@
-import { EarningsChart } from '@/components/features/earnings';
+import { EarningsChart } from '@/components/features/earnings/EarningsChart';
 import { getMonthlyEarnings } from '@/server/queries/earnings.queries';
 
 interface EarningsChartsSectionProps {

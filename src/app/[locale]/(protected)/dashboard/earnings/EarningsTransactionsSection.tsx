@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { TransactionTable } from '@/components/features/earnings';
+import { TransactionTable } from '@/components/features/earnings/TransactionTable';
 import {
   getTransactions,
   type TransactionFilters as TransactionFiltersType,

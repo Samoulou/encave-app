@@ -1,13 +1,11 @@
 import { BookingStatus } from '@prisma/client';
 import { startOfMonth, parseISO } from 'date-fns';
-import {
-  BookingSummaryCards,
-  BookingFilters,
-  BookingSearch,
-  BookingsTable,
-  BookingsEmptyState,
-  ExportCSVButton,
-} from '@/components/features/booking/dashboard';
+import { BookingSummaryCards } from '@/components/features/booking/dashboard/BookingSummaryCards';
+import { BookingFilters } from '@/components/features/booking/dashboard/BookingFilters';
+import { BookingSearch } from '@/components/features/booking/dashboard/BookingSearch';
+import { BookingsTable } from '@/components/features/booking/dashboard/BookingsTable';
+import { BookingsEmptyState } from '@/components/features/booking/dashboard/BookingsEmptyState';
+import { ExportCSVButton } from '@/components/features/booking/dashboard/ExportCSVButton';
 import {
   getWineryBookings,
   getBookingSummary,

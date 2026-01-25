@@ -1,4 +1,4 @@
-import { BookingSummaryCards } from '@/components/features/booking/dashboard';
+import { BookingSummaryCards } from '@/components/features/booking/dashboard/BookingSummaryCards';
 import { getBookingSummary } from '@/server/queries/booking.queries';
 
 interface BookingsSummaryProps {
