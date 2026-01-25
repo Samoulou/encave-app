@@ -323,7 +323,6 @@
     "capacityExceeded": "Kapazitat uberschritten",
     "capacityExceededMessage": "Sie haben {requested} Gaste angefragt, aber nur {available} Platze sind fur diesen Zeitraum verfugbar.",
     "adjustGuestCount": "Gastezahl anpassen",
-    "secureCheckout": "Sichere Kasse",
     "pageTitle": "Buchung abschliessen",
     "pageSubtitle": "Bitte uberprufen Sie Ihre Angaben und bestatigen Sie die Zahlung, um Ihren Platz zu sichern.",
     "contactDetails": "Kontaktdaten",

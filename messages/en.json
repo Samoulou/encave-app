@@ -323,7 +323,6 @@
     "capacityExceeded": "Capacity Exceeded",
     "capacityExceededMessage": "You requested {requested} guests, but only {available} spots are available for this time slot.",
     "adjustGuestCount": "Adjust guest count",
-    "secureCheckout": "Secure Checkout",
     "pageTitle": "Finalize your booking",
     "pageSubtitle": "Please review your details and confirm payment to secure your spot.",
     "contactDetails": "Contact Details",

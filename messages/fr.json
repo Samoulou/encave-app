@@ -323,7 +323,6 @@
     "capacityExceeded": "Capacité dépassée",
     "capacityExceededMessage": "Vous avez demandé {requested} personnes, mais seulement {available} places sont disponibles pour ce créneau.",
     "adjustGuestCount": "Ajuster le nombre de personnes",
-    "secureCheckout": "Paiement sécurisé",
     "pageTitle": "Finalisez votre réservation",
     "pageSubtitle": "Veuillez vérifier vos informations et confirmer le paiement pour réserver votre place.",
     "contactDetails": "Coordonnées",

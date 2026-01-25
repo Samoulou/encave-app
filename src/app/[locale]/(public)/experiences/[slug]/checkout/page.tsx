@@ -6,7 +6,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2, AlertCircle, RefreshCw, Users, Wine, Lock } from 'lucide-react';
+import { Loader2, AlertCircle, RefreshCw, Users, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -193,50 +193,41 @@ export default function CheckoutPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#f8f6f6]">
-        <CheckoutHeaderComponent />
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   if (error || !experience) {
     return (
-      <div className="min-h-screen bg-[#f8f6f6]">
-        <CheckoutHeaderComponent />
-        <main className="flex-grow w-full px-4 md:px-10 py-10">
-          <div className="mx-auto max-w-7xl">
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error || t('experienceNotFound')}</AlertDescription>
-            </Alert>
-          </div>
-        </main>
+      <div className="w-full px-4 md:px-10 py-10">
+        <div className="mx-auto max-w-7xl">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error || t('experienceNotFound')}</AlertDescription>
+          </Alert>
+        </div>
       </div>
     );
   }
 
   if (!hasValidParams) {
     return (
-      <div className="min-h-screen bg-[#f8f6f6]">
-        <CheckoutHeaderComponent />
-        <main className="flex-grow w-full px-4 md:px-10 py-10">
-          <div className="mx-auto max-w-7xl">
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{t('invalidBookingParams')}</AlertDescription>
-            </Alert>
-            <div className="mt-4">
-              <Button asChild variant="outline">
-                <Link href={`/${locale}/experiences/${slug}`}>
-                  {t('backToBooking')}
-                </Link>
-              </Button>
-            </div>
+      <div className="w-full px-4 md:px-10 py-10">
+        <div className="mx-auto max-w-7xl">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{t('invalidBookingParams')}</AlertDescription>
+          </Alert>
+          <div className="mt-4">
+            <Button asChild variant="outline">
+              <Link href={`/${locale}/experiences/${slug}`}>
+                {t('backToBooking')}
+              </Link>
+            </Button>
           </div>
-        </main>
+        </div>
       </div>
     );
   }
@@ -244,11 +235,7 @@ export default function CheckoutPage() {
   const totalPrice = experience.price * guestCount;
 
   return (
-    <div className="min-h-screen bg-[#f8f6f6] flex flex-col">
-      {/* Simplified Header */}
-      <CheckoutHeaderComponent />
-
-      <main className="flex-grow w-full px-4 md:px-10 py-10">
+    <div className="w-full px-4 md:px-10 py-10">
         <div className="mx-auto max-w-7xl">
           {/* Page Heading */}
           <div className="mb-8">
@@ -424,39 +411,6 @@ export default function CheckoutPage() {
             </div>
           </form>
         </div>
-      </main>
-    </div>
-  );
-}
-
-// Inline Header Component for Client-side rendering
-function CheckoutHeaderComponent() {
-  const t = useTranslations('checkout');
-  const locale = useLocale();
-
-  return (
-    <header className="sticky top-0 z-50 w-full border-b border-[#f2e9eb] bg-[#f8f6f6]/95 backdrop-blur-sm px-4 md:px-10 py-4">
-      <div className="mx-auto max-w-7xl flex items-center justify-between">
-        {/* Logo */}
-        <Link
-          href={`/${locale}`}
-          className="flex items-center gap-3 group"
-          aria-label="EnCave - Go to homepage"
-        >
-          <div className="flex h-8 w-8 items-center justify-center text-primary">
-            <Wine className="h-8 w-8" aria-hidden="true" />
-          </div>
-          <span className="text-[#1a0f12] text-xl font-bold tracking-tight">
-            EnCave
-          </span>
-        </Link>
-
-        {/* Secure Checkout Badge */}
-        <div className="flex items-center gap-2 text-[#915564] text-sm font-medium bg-[#f2e9eb] px-3 py-1.5 rounded-full">
-          <Lock className="h-4 w-4" aria-hidden="true" />
-          <span>{t('secureCheckout')}</span>
-        </div>
       </div>
-    </header>
   );
 }
