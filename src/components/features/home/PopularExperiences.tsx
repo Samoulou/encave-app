@@ -58,7 +58,7 @@ export async function PopularExperiences({ experiences }: PopularExperiencesProp
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {experiences.map((experience) => (
+        {experiences.map((experience, index) => (
           <Link
             key={experience.id}
             href={`/experiences/${experience.slug}`}
@@ -72,8 +72,10 @@ export async function PopularExperiences({ experiences }: PopularExperiencesProp
                 fill
                 className="object-cover transform group-hover:scale-105 transition-transform duration-500"
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                placeholder="blur"
-                blurDataURL={IMAGE_PLACEHOLDERS.card}
+                priority={index === 0}
+                loading={index === 0 ? 'eager' : 'lazy'}
+                placeholder={index === 0 ? undefined : 'blur'}
+                blurDataURL={index === 0 ? undefined : IMAGE_PLACEHOLDERS.card}
               />
               {/* Rating Badge */}
               <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-md text-xs font-bold text-foreground shadow-sm flex items-center gap-1">

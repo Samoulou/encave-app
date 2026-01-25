@@ -14,14 +14,12 @@ export const metadata: Metadata = {
   manifest: '/manifest.json',
   icons: {
     icon: [
-      { url: '/icons/icon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon.ico', sizes: '32x32' },
       { url: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
     ],
     apple: [
-      { url: '/icons/icon-152x152.png', sizes: '152x152', type: 'image/png' },
       { url: '/icons/icon-180x180.png', sizes: '180x180', type: 'image/png' },
     ],
-    shortcut: '/favicon.ico',
   },
   appleWebApp: {
     capable: true,

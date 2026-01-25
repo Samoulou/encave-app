@@ -34,8 +34,8 @@ export function HealthStatus() {
 
   if (error) {
     return (
-      <div className="flex items-center gap-2 text-sm text-red-600">
-        <span className="h-2 w-2 rounded-full bg-red-500" />
+      <div className="flex items-center gap-2 text-sm text-red-700">
+        <span className="h-2 w-2 rounded-full bg-red-600" />
         <span>Service unavailable</span>
       </div>
     );
@@ -43,7 +43,7 @@ export function HealthStatus() {
 
   if (!health) {
     return (
-      <div className="flex items-center gap-2 text-sm text-slate-500">
+      <div className="flex items-center gap-2 text-sm text-slate-600">
         <span className="h-2 w-2 animate-pulse rounded-full bg-slate-400" />
         <span>Checking status...</span>
       </div>
@@ -51,8 +51,8 @@ export function HealthStatus() {
   }
 
   return (
-    <div className="flex items-center gap-2 text-sm text-green-600">
-      <span className="h-2 w-2 rounded-full bg-green-500" />
+    <div className="flex items-center gap-2 text-sm text-green-700">
+      <span className="h-2 w-2 rounded-full bg-green-600" />
       <span>All systems operational</span>
     </div>
   );
