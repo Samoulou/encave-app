@@ -1,5 +1,6 @@
 import { CalendarCheck, CalendarClock, PieChart, TrendingUp, TrendingDown } from 'lucide-react';
 import type { BookingSummary } from '@/server/queries/booking.queries';
+import { cn } from '@/lib/utils';
 
 interface BookingSummaryCardsProps {
   summary: BookingSummary;
@@ -36,11 +37,12 @@ export function BookingSummaryCards({ summary }: BookingSummaryCardsProps) {
           <p className="text-[#1a0f12] text-3xl font-bold">{summary.monthCount}</p>
           {trendPercentage !== 0 && (
             <span
-              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold ${
+              className={cn(
+                'inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold',
                 trendIsPositive
                   ? 'text-[#078859] bg-[#078859]/10'
                   : 'text-red-600 bg-red-600/10'
-              }`}
+              )}
             >
               {trendIsPositive ? (
                 <TrendingUp className="h-3.5 w-3.5" />

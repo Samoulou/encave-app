@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { Calendar, ChevronRight, Minus, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatCHF } from '@/lib/utils/currency';
+import { cn } from '@/lib/utils';
 
 interface AvailabilitySlot {
   dayOfWeek: number;
@@ -126,11 +127,12 @@ export function BookingWidget({
                   key={time}
                   type="button"
                   onClick={() => setSelectedTime(time)}
-                  className={`border-2 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={cn(
+                    'border-2 py-2 rounded-lg text-sm font-medium transition-all',
                     selectedTime === time
                       ? 'border-primary bg-primary/5 text-primary'
                       : 'border-gray-200 hover:border-primary text-gray-600'
-                  }`}
+                  )}
                 >
                   {time}
                 </button>

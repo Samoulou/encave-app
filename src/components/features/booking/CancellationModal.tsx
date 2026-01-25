@@ -18,6 +18,7 @@ import { Label } from '@/components/ui/label';
 import { cancelBooking, getCancellationInfo } from '@/server/actions/booking';
 import { toast } from 'sonner';
 import { formatCHF } from '@/lib/utils/currency';
+import { cn } from '@/lib/utils';
 
 interface CancellationModalProps {
   isOpen: boolean;
@@ -110,11 +111,12 @@ export function CancellationModal({
           <div className="space-y-4 py-4">
             {/* Refund eligibility status */}
             <div
-              className={`rounded-lg p-4 ${
+              className={cn(
+                'rounded-lg p-4',
                 cancellationInfo?.isEligibleForRefund
                   ? 'bg-green-50 border border-green-200'
                   : 'bg-amber-50 border border-amber-200'
-              }`}
+              )}
             >
               <div className="flex items-start gap-3">
                 {cancellationInfo?.isEligibleForRefund ? (
@@ -124,11 +126,12 @@ export function CancellationModal({
                 )}
                 <div>
                   <p
-                    className={`font-medium ${
+                    className={cn(
+                      'font-medium',
                       cancellationInfo?.isEligibleForRefund
                         ? 'text-green-800'
                         : 'text-amber-800'
-                    }`}
+                    )}
                   >
                     {cancellationInfo?.isEligibleForRefund
                       ? t('refundEligible')
@@ -156,11 +159,12 @@ export function CancellationModal({
             <div className="flex items-center justify-between py-3 border-t border-b border-stone-200">
               <span className="text-slate-600">{t('refundAmount')}</span>
               <span
-                className={`text-lg font-bold ${
+                className={cn(
+                  'text-lg font-bold',
                   cancellationInfo?.isEligibleForRefund
                     ? 'text-green-600'
                     : 'text-slate-400'
-                }`}
+                )}
               >
                 {cancellationInfo?.isEligibleForRefund
                   ? formatCHF(totalPrice)

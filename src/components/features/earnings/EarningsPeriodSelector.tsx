@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 
 export type EarningsPeriod = 'this_month' | 'last_month' | 'this_year' | 'all_time';
 
@@ -49,9 +50,10 @@ export function EarningsPeriodSelector({
   return (
     <Select value={optimisticPeriod} onValueChange={handlePeriodChange}>
       <SelectTrigger
-        className={`w-40 h-10 bg-white border-[#e5d2d7] text-[#1a0f12] font-medium shadow-sm ${
-          isPending ? 'opacity-70' : ''
-        }`}
+        className={cn(
+          'w-40 h-10 bg-white border-[#e5d2d7] text-[#1a0f12] font-medium shadow-sm',
+          isPending && 'opacity-70'
+        )}
       >
         <SelectValue placeholder="Select period" />
       </SelectTrigger>

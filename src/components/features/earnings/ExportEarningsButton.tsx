@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { exportEarningsCSV, exportEarningsPDF } from '@/server/actions/earnings';
 import { getStripeDashboardLink } from '@/server/actions/stripe';
 import type { TransactionFilters } from '@/server/queries/earnings.queries';
+import { cn } from '@/lib/utils';
 
 interface ExportEarningsButtonProps {
   variant?: 'outline' | 'primary';
@@ -134,9 +135,9 @@ export function ExportEarningsButton({ variant = 'outline' }: ExportEarningsButt
           }
         >
           {isLoading ? (
-            <Loader2 className={isPrimary ? 'h-4 w-4 animate-spin' : 'mr-2 h-4 w-4 animate-spin'} />
+            <Loader2 className={cn('h-4 w-4 animate-spin', !isPrimary && 'mr-2')} />
           ) : (
-            <Download className={isPrimary ? 'h-4 w-4' : 'mr-2 h-4 w-4'} />
+            <Download className={cn('h-4 w-4', !isPrimary && 'mr-2')} />
           )}
           <span className="text-sm">{isPrimary ? 'Export Report' : 'Export'}</span>
         </Button>

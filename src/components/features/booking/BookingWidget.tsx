@@ -9,6 +9,7 @@ import { Calendar, Clock, Users, ArrowRight, Loader2, AlertCircle } from 'lucide
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { cn } from '@/lib/utils';
 import { BookingDatePicker } from './BookingDatePicker';
 import { TimeSlotSelector } from './TimeSlotSelector';
 import { GuestCountInput } from './GuestCountInput';
@@ -168,7 +169,7 @@ export function BookingWidget({ experience }: BookingWidgetProps) {
 
         {/* Time Selection */}
         <Card
-          className={!date ? 'opacity-60' : ''}
+          className={cn(!date && 'opacity-60')}
           aria-disabled={!date}
           data-testid="time-slot-section"
         >
@@ -198,7 +199,7 @@ export function BookingWidget({ experience }: BookingWidgetProps) {
 
         {/* Guest Count */}
         <Card
-          className={!time ? 'opacity-60' : ''}
+          className={cn(!time && 'opacity-60')}
           aria-disabled={!time}
           data-testid="guest-count-section"
         >

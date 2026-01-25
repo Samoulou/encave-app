@@ -2,6 +2,7 @@ import { Wallet, Calendar, Clock, TrendingUp, TrendingDown, Info } from 'lucide-
 import { format } from 'date-fns';
 import { formatCHF } from '@/lib/utils/currency';
 import type { EarningsSummary } from '@/server/queries/earnings.queries';
+import { cn } from '@/lib/utils';
 
 interface EarningsSummaryCardsProps {
   summary: EarningsSummary;
@@ -42,9 +43,10 @@ export function EarningsSummaryCards({ summary }: EarningsSummaryCardsProps) {
           </h3>
           {summary.lastMonth > 0 && (
             <div
-              className={`flex items-center gap-1 mt-2 text-sm font-bold ${
+              className={cn(
+                'flex items-center gap-1 mt-2 text-sm font-bold',
                 trendIsPositive ? 'text-green-600' : 'text-red-600'
-              }`}
+              )}
             >
               {trendIsPositive ? (
                 <TrendingUp className="h-4 w-4" />

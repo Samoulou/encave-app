@@ -26,6 +26,7 @@ import {
   CancelBookingButton,
 } from '@/components/features/booking';
 import { formatCHF } from '@/lib/utils/currency';
+import { cn } from '@/lib/utils';
 
 interface BookingPageProps {
   params: Promise<{ id: string; locale: string }>;
@@ -133,7 +134,7 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
             {t('bookingDetails')}
           </h1>
           <span
-            className={`inline-block mt-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}
+            className={cn('inline-block mt-1 px-2 py-1 rounded-full text-xs font-medium', getStatusColor(booking.status))}
           >
             {booking.status.replace(/_/g, ' ')}
           </span>

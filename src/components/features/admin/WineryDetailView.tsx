@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -119,13 +120,12 @@ export function WineryDetailView({ winery }: WineryDetailViewProps) {
                   {winery.commune}, Valais
                 </span>
                 <span
-                  className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
-                    winery.status === 'PENDING'
-                      ? 'bg-amber-100 text-amber-700'
-                      : winery.status === 'VERIFIED'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-red-100 text-red-700'
-                  }`}
+                  className={cn(
+                    'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold',
+                    winery.status === 'PENDING' && 'bg-amber-100 text-amber-700',
+                    winery.status === 'VERIFIED' && 'bg-green-100 text-green-700',
+                    winery.status === 'REJECTED' && 'bg-red-100 text-red-700'
+                  )}
                 >
                   {winery.status}
                 </span>

@@ -7,11 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { formatCHF } from '@/lib/utils/currency';
+import { cn } from '@/lib/utils';
 
 // Card brand icons (simplified SVG placeholders)
 function VisaIcon({ className }: { className?: string }) {
   return (
-    <div className={`w-8 h-5 bg-[#1a1f71] rounded flex items-center justify-center ${className}`}>
+    <div className={cn('w-8 h-5 bg-[#1a1f71] rounded flex items-center justify-center', className)}>
       <span className="text-[8px] font-bold text-white">VISA</span>
     </div>
   );
@@ -19,7 +20,7 @@ function VisaIcon({ className }: { className?: string }) {
 
 function MastercardIcon({ className }: { className?: string }) {
   return (
-    <div className={`w-8 h-5 bg-gray-100 rounded flex items-center justify-center gap-0.5 ${className}`}>
+    <div className={cn('w-8 h-5 bg-gray-100 rounded flex items-center justify-center gap-0.5', className)}>
       <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
       <div className="w-2.5 h-2.5 rounded-full bg-yellow-500 -ml-1" />
     </div>

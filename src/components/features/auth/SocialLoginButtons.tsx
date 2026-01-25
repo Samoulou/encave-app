@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { signIn } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -62,7 +63,7 @@ export function SocialLoginButtons({ showApple = true }: SocialLoginButtonsProps
       </div>
 
       {/* Social Login Buttons */}
-      <div className={`grid gap-3 ${showApple ? 'grid-cols-2' : 'grid-cols-1'}`}>
+      <div className={cn('grid gap-3', showApple ? 'grid-cols-2' : 'grid-cols-1')}>
         <Button
           type="button"
           variant="outline"

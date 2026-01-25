@@ -1,4 +1,5 @@
 import { Calendar } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface AvailabilitySlot {
   id: string;
@@ -77,11 +78,12 @@ export function AvailabilityPreview({ slots }: AvailabilityPreviewProps) {
           return (
             <div
               key={day}
-              className={`flex h-10 w-10 items-center justify-center rounded-lg text-xs font-medium ${
+              className={cn(
+                'flex h-10 w-10 items-center justify-center rounded-lg text-xs font-medium',
                 isAvailable
                   ? 'bg-burgundy-100 text-burgundy-800'
                   : 'bg-stone-100 text-stone-400'
-              }`}
+              )}
               title={DAY_NAMES[day]}
             >
               {SHORT_DAY_NAMES[day]}
