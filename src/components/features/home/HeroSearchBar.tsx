@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
-import { MapPin, Calendar, Search } from 'lucide-react';
+import { Calendar, Search } from 'lucide-react';
 import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
@@ -39,14 +39,11 @@ export function HeroSearchBar() {
       <div className="bg-white dark:bg-[#2a1a1f] p-2 rounded-xl shadow-2xl flex flex-col md:flex-row items-center gap-2">
         {/* Location Input */}
         <div className="flex-1 w-full md:w-auto relative group">
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-primary z-10 pointer-events-none">
-            <MapPin className="h-5 w-5" />
-          </div>
           <LocationAutocomplete
             value={selectedLocation}
             onChange={setSelectedLocation}
             placeholder={t('searchLocationPlaceholder')}
-            className="[&_input]:h-14 [&_input]:pl-12 [&_input]:pr-4 [&_input]:border-0 [&_input]:bg-transparent [&_input]:focus-visible:ring-0 [&_input]:font-medium [&_input]:rounded-lg [&_input]:hover:bg-gray-50 dark:[&_input]:hover:bg-white/5 [&_input]:transition-colors"
+            className="[&_input]:h-14 [&_input]:border-0 [&_input]:bg-transparent [&_input]:focus-visible:ring-0 [&_input]:font-medium [&_input]:rounded-lg [&_input]:hover:bg-gray-50 dark:[&_input]:hover:bg-white/5 [&_input]:transition-colors"
           />
         </div>
 
