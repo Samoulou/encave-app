@@ -7,11 +7,11 @@ import {
   Home,
   PartyPopper,
   Calendar,
-  MessageSquare,
   Settings,
   Menu,
   X,
   Wine,
+  Wallet,
 } from 'lucide-react';
 import { useState, useCallback, useEffect } from 'react';
 import { cn } from '@/lib/utils';
@@ -26,7 +26,7 @@ const sidebarLinks = [
   { href: '/dashboard', labelKey: 'dashboard', icon: Home, exact: true },
   { href: '/dashboard/experiences', labelKey: 'experiences', icon: PartyPopper },
   { href: '/dashboard/bookings', labelKey: 'bookings', icon: Calendar },
-  { href: '/dashboard/messages', labelKey: 'messages', icon: MessageSquare },
+  { href: '/dashboard/earnings', labelKey: 'earnings', icon: Wallet },
   { href: '/dashboard/settings', labelKey: 'settings', icon: Settings },
 ];
 
