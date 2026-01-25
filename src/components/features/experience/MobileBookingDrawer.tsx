@@ -26,7 +26,7 @@ interface AvailabilitySlot {
 
 interface MobileBookingDrawerProps {
   isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
+  onOpenChange: (_open: boolean) => void;
   price: number;
   experienceSlug: string;
   experienceId: string;
