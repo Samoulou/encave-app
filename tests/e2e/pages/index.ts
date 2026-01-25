@@ -16,3 +16,11 @@ export { BookingPage } from './booking.page';
 export { CheckoutPage, type VisitorFormData } from './checkout.page';
 export { ConfirmationPage, type BookingStatus } from './confirmation.page';
 export { BookingManagementPage } from './booking-management.page';
+export {
+  LoginPage,
+  RegisterPage,
+  AuthHeader,
+  type UserRole,
+  type LoginFormData,
+  type RegisterFormData,
+} from './auth.page';
