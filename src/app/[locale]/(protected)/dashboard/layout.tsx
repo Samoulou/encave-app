@@ -9,8 +9,7 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth();
-  const locale = await getLocale();
+  const [session, locale] = await Promise.all([auth(), getLocale()]);
 
   if (!session?.user) {
     redirect(`/${locale}/login`);

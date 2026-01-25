@@ -48,29 +48,29 @@ export async function GET() {
 
     for (const winery of wineries) {
       try {
-        // Get last week's completed bookings
-        const lastWeekBookings = await db.booking.findMany({
-          where: {
-            wineryId: winery.id,
-            status: BookingStatus.COMPLETED,
-            date: {
-              gte: lastWeekStart,
-              lte: lastWeekEnd,
+        // Get last week's and this week's bookings in parallel
+        const [lastWeekBookings, thisWeekBookings] = await Promise.all([
+          db.booking.findMany({
+            where: {
+              wineryId: winery.id,
+              status: BookingStatus.COMPLETED,
+              date: {
+                gte: lastWeekStart,
+                lte: lastWeekEnd,
+              },
             },
-          },
-        });
-
-        // Get this week's upcoming bookings
-        const thisWeekBookings = await db.booking.findMany({
-          where: {
-            wineryId: winery.id,
-            status: BookingStatus.CONFIRMED,
-            date: {
-              gte: thisWeekStart,
-              lte: thisWeekEnd,
+          }),
+          db.booking.findMany({
+            where: {
+              wineryId: winery.id,
+              status: BookingStatus.CONFIRMED,
+              date: {
+                gte: thisWeekStart,
+                lte: thisWeekEnd,
+              },
             },
-          },
-        });
+          }),
+        ]);
 
         // Calculate stats
         const lastWeekStats = {

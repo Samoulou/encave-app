@@ -162,9 +162,11 @@ export async function registerAction(
       };
     }
 
-    // Hash password and create user
-    const passwordHash = await hashPassword(password);
-    const preferredLocale = await getPreferredLocale();
+    // Hash password and get locale in parallel
+    const [passwordHash, preferredLocale] = await Promise.all([
+      hashPassword(password),
+      getPreferredLocale(),
+    ]);
 
     const user = await db.user.create({
       data: {

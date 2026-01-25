@@ -31,8 +31,10 @@ async function getRecentPending() {
 }
 
 export default async function AdminDashboard() {
-  const stats = await getWineryStats();
-  const recentPending = await getRecentPending();
+  const [stats, recentPending] = await Promise.all([
+    getWineryStats(),
+    getRecentPending(),
+  ]);
 
   return (
     <div className="container py-10">

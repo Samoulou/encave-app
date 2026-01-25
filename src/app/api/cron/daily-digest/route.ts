@@ -44,37 +44,37 @@ export async function GET() {
 
     for (const winery of wineries) {
       try {
-        // Get today's bookings
-        const todayBookings = await db.booking.findMany({
-          where: {
-            wineryId: winery.id,
-            status: BookingStatus.CONFIRMED,
-            date: {
-              gte: today,
-              lte: todayEnd,
+        // Get today's and tomorrow's bookings in parallel
+        const [todayBookings, tomorrowBookings] = await Promise.all([
+          db.booking.findMany({
+            where: {
+              wineryId: winery.id,
+              status: BookingStatus.CONFIRMED,
+              date: {
+                gte: today,
+                lte: todayEnd,
+              },
             },
-          },
-          include: {
-            experience: true,
-          },
-          orderBy: { timeSlot: 'asc' },
-        });
-
-        // Get tomorrow's bookings
-        const tomorrowBookings = await db.booking.findMany({
-          where: {
-            wineryId: winery.id,
-            status: BookingStatus.CONFIRMED,
-            date: {
-              gte: tomorrow,
-              lte: tomorrowEnd,
+            include: {
+              experience: true,
             },
-          },
-          include: {
-            experience: true,
-          },
-          orderBy: { timeSlot: 'asc' },
-        });
+            orderBy: { timeSlot: 'asc' },
+          }),
+          db.booking.findMany({
+            where: {
+              wineryId: winery.id,
+              status: BookingStatus.CONFIRMED,
+              date: {
+                gte: tomorrow,
+                lte: tomorrowEnd,
+              },
+            },
+            include: {
+              experience: true,
+            },
+            orderBy: { timeSlot: 'asc' },
+          }),
+        ]);
 
         // Skip if no bookings today or tomorrow
         if (todayBookings.length === 0 && tomorrowBookings.length === 0) {

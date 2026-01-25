@@ -3,13 +3,19 @@ import { Manrope, JetBrains_Mono } from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
+import dynamic from 'next/dynamic';
 import { Toaster } from '@/components/ui/sonner';
 import { SkipLink } from '@/components/shared/SkipLink';
-import { Analytics } from '@/components/shared/Analytics';
 import { ProgressBarProvider } from '@/components/shared/ProgressBarProvider';
 import { NavigationLoader } from '@/components/shared/NavigationLoader';
 import { routing, type Locale } from '@/i18n/routing';
 import '../globals.css';
+
+// Defer analytics loading until after hydration (bundle-defer-third-party)
+const Analytics = dynamic(
+  () => import('@/components/shared/Analytics').then((mod) => mod.Analytics),
+  { ssr: false }
+);
 
 const manrope = Manrope({
   subsets: ['latin'],

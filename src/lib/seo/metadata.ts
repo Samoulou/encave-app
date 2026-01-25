@@ -78,8 +78,10 @@ export async function generatePageMetadata({
   images = [],
   noIndex = false,
 }: GenerateMetadataOptions): Promise<Metadata> {
-  const t = await getTranslations({ locale, namespace });
-  const tMeta = await getTranslations({ locale, namespace: 'metadata' });
+  const [t, tMeta] = await Promise.all([
+    getTranslations({ locale, namespace }),
+    getTranslations({ locale, namespace: 'metadata' }),
+  ]);
 
   const title = t(titleKey, titleParams);
   const description = t(descriptionKey, descriptionParams);
@@ -159,7 +161,10 @@ export async function generateExperienceDetailMetadata(
   description: string,
   coverPhoto?: string
 ): Promise<Metadata> {
-  const t = await getTranslations({ locale, namespace: 'metadata.experienceDetail' });
+  const [t, tMeta] = await Promise.all([
+    getTranslations({ locale, namespace: 'metadata.experienceDetail' }),
+    getTranslations({ locale, namespace: 'metadata' }),
+  ]);
 
   // Truncate description to 160 characters for meta description
   const metaDescription = description.length > 160
@@ -169,7 +174,6 @@ export async function generateExperienceDetailMetadata(
   const canonicalUrl = generateCanonicalUrl(locale, `/experiences/${slug}`);
   const alternates = generateAlternateLinks(`/experiences/${slug}`);
   const ogLocale = generateOgLocale(locale);
-  const tMeta = await getTranslations({ locale, namespace: 'metadata' });
 
   return {
     title: t('title', { title }),
@@ -220,7 +224,10 @@ export async function generateWineryDetailMetadata(
   description: string,
   coverPhoto?: string
 ): Promise<Metadata> {
-  const t = await getTranslations({ locale, namespace: 'metadata.wineryDetail' });
+  const [t, tMeta] = await Promise.all([
+    getTranslations({ locale, namespace: 'metadata.wineryDetail' }),
+    getTranslations({ locale, namespace: 'metadata' }),
+  ]);
 
   // Truncate description to 160 characters for meta description
   const metaDescription = description.length > 160
@@ -230,7 +237,6 @@ export async function generateWineryDetailMetadata(
   const canonicalUrl = generateCanonicalUrl(locale, `/wineries/${slug}`);
   const alternates = generateAlternateLinks(`/wineries/${slug}`);
   const ogLocale = generateOgLocale(locale);
-  const tMeta = await getTranslations({ locale, namespace: 'metadata' });
 
   return {
     title: t('title', { name }),

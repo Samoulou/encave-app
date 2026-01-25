@@ -28,9 +28,10 @@ export async function generateMetadata({
 
 export default async function BookingPage({ params }: BookingPageProps) {
   const { slug } = await params;
-  const t = await getTranslations('booking');
-
-  const result = await getExperienceForBooking(slug);
+  const [t, result] = await Promise.all([
+    getTranslations('booking'),
+    getExperienceForBooking(slug),
+  ]);
 
   if (!result.success) {
     notFound();
