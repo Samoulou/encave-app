@@ -3,6 +3,7 @@
 import { useState, useMemo, memo } from 'react';
 import { format } from 'date-fns';
 import { MoreVertical } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,6 +34,8 @@ function getInitials(name: string): string {
 }
 
 function TransactionTableComponent({ transactions }: TransactionTableProps) {
+  const t = useTranslations('earnings.transactions');
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
@@ -63,7 +66,7 @@ function TransactionTableComponent({ transactions }: TransactionTableProps) {
   if (transactions.length === 0) {
     return (
       <div className="rounded-xl border border-[#e5d2d7] bg-white p-8 text-center shadow-sm">
-        <p className="text-[#915564]">No transactions found.</p>
+        <p className="text-[#915564]">{t('noTransactions')}</p>
       </div>
     );
   }
@@ -75,22 +78,22 @@ function TransactionTableComponent({ transactions }: TransactionTableProps) {
           <thead className="bg-gray-50 border-b border-[#e5d2d7] text-[#915564] font-medium uppercase text-xs tracking-wider">
             <tr>
               <th scope="col" className="px-6 py-4">
-                Date
+                {t('date')}
               </th>
               <th scope="col" className="px-6 py-4">
-                Booking ID
+                {t('bookingId')}
               </th>
               <th scope="col" className="px-6 py-4">
-                Experience
+                {t('experience')}
               </th>
               <th scope="col" className="px-6 py-4">
-                Customer
+                {t('customer')}
               </th>
               <th scope="col" className="px-6 py-4 text-right">
-                Amount
+                {t('amount')}
               </th>
               <th scope="col" className="px-6 py-4 text-center">
-                Status
+                {t('status')}
               </th>
               <th scope="col" className="px-6 py-4">
                 <span className="sr-only">Actions</span>
@@ -156,12 +159,12 @@ function TransactionTableComponent({ transactions }: TransactionTableProps) {
                         className="h-8 w-8 text-[#915564] hover:text-primary hover:bg-transparent"
                       >
                         <MoreVertical className="h-5 w-5" />
-                        <span className="sr-only">Open menu</span>
+                        <span className="sr-only">{t('openMenu')}</span>
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem>View Details</DropdownMenuItem>
-                      <DropdownMenuItem>Download Receipt</DropdownMenuItem>
+                      <DropdownMenuItem>{t('viewDetails')}</DropdownMenuItem>
+                      <DropdownMenuItem>{t('downloadReceipt')}</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </td>

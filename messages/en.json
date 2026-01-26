@@ -255,6 +255,73 @@
       "description": "Are you sure you want to archive \"{title}\"? This experience will no longer be visible to visitors. You can restore it later if needed.",
       "archiving": "Archiving...",
       "archiveButton": "Archive"
+    },
+    "uploading": "Uploading...",
+    "unsavedChanges": "Unsaved changes",
+    "removeCoverPhoto": "Remove cover photo",
+    "removeGalleryImage": "Remove gallery image {index}",
+    "minBookingSize": "Min Booking Size",
+    "minBookingSizeTooltip": "The minimum number of guests required per booking. Visitors cannot book for fewer than this number.",
+    "descriptionMinRecommended": "Minimum 20 characters recommended",
+    "characters": "{count} characters",
+    "publishDialog": {
+      "title": "Experience Created!",
+      "description": "Your experience has been saved as a draft. Would you like to publish it now so visitors can see it?",
+      "keepAsDraft": "Keep as Draft",
+      "publishNow": "Publish Now",
+      "publishing": "Publishing..."
+    },
+    "failedToPublish": "Failed to publish. You can publish it later from the dashboard.",
+    "deleteModal": {
+      "title": "Delete Experience",
+      "description": "Are you sure you want to delete \"{title}\"? This action cannot be undone. All associated bookings and data will be permanently removed.",
+      "deleting": "Deleting...",
+      "deleteButton": "Delete"
+    },
+    "timeSlots": {
+      "noConfigured": "No time slots configured",
+      "addSlot": "Add Time Slot",
+      "addAnotherSlot": "Add Another Slot",
+      "startPlaceholder": "Start",
+      "endPlaceholder": "End",
+      "to": "to",
+      "toggleActive": "Toggle slot {index} active",
+      "removeSlot": "Remove slot {index}"
+    },
+    "filters": {
+      "all": "All",
+      "published": "Published",
+      "drafts": "Drafts",
+      "archived": "Archived",
+      "searchPlaceholder": "Search experiences by name..."
+    },
+    "sort": {
+      "sortBy": "Sort by",
+      "newestFirst": "Newest First",
+      "oldestFirst": "Oldest First",
+      "alphabetical": "Alphabetical",
+      "byStatus": "By Status"
+    },
+    "availability": {
+      "title": "Availability",
+      "noConfigured": "No availability configured",
+      "noConfiguredDescription": "Select a day below and add time slots to define when visitors can book this experience.",
+      "publishedNoSlots": "This experience is published but has no available time slots. Visitors cannot book until you configure availability.",
+      "selectDay": "Select Day",
+      "copyToAllDays": "Copy to All Days",
+      "copyDialog": {
+        "title": "Copy Slots to All Days",
+        "description": "This will replace all existing slots on every day with the slots from {day}. This action cannot be undone."
+      },
+      "dayTimeSlots": "{day} Time Slots",
+      "weeklyPreview": "Weekly Schedule Preview",
+      "slotsOverlap": "Time slots overlap. Please adjust the times.",
+      "fixOverlapsBeforeSaving": "Please fix overlapping slots on {day} before saving",
+      "noSlotsToCopy": "No slots to copy from this day",
+      "copiedSlots": "Copied {count} slot(s) to all days",
+      "savedSuccessfully": "Availability saved successfully",
+      "saving": "Saving...",
+      "saveAvailability": "Save Availability"
     }
   },
   "booking": {
@@ -465,7 +532,30 @@
     "coverPhotoUpdated": "Cover photo updated",
     "coverPhotoRemoved": "Cover photo removed",
     "galleryImageAdded": "Gallery image added",
-    "galleryImageRemoved": "Gallery image removed"
+    "galleryImageRemoved": "Gallery image removed",
+    "uploading": "Uploading...",
+    "unsavedChanges": "Unsaved changes",
+    "saving": "Saving...",
+    "saveChanges": "Save Changes",
+    "coverPhotoRecommendedFull": "Recommended: 1920 x 1080 pixels (16:9 aspect ratio). Max 5MB, JPEG or PNG.",
+    "galleryHelpFull": "Square images work best. You can drag photos to reorder them (coming soon).",
+    "uploadCoverPhoto": "Upload cover photo",
+    "swissFormatShort": "Swiss format: +41 XX XXX XX XX",
+    "onboarding": {
+      "congratulations": "Congratulations!",
+      "submittedForVerification": "Your winery <strong>{name}</strong> has been submitted for verification.",
+      "whatHappensNext": "What happens next?",
+      "step1Title": "Application received",
+      "step1Description": "Your winery details are now in our system",
+      "step2Title": "Review in progress",
+      "step2Description": "Our team will verify your information",
+      "step3Title": "Notification of decision",
+      "step3Description": "You'll be notified once your winery is approved",
+      "checkInbox": "Check your inbox",
+      "confirmationEmailSent": "We've sent a confirmation email to <strong>{email}</strong>",
+      "expectedResponse": "Expected response within <strong>{hours}</strong> hours",
+      "returnToHomepage": "Return to homepage"
+    }
   },
   "dashboard": {
     "title": "Dashboard",
@@ -474,6 +564,49 @@
     "noExperiences": "No experiences yet",
     "createFirstExperience": "Create your first experience to start receiving bookings.",
     "statistics": "Statistics"
+  },
+  "earnings": {
+    "title": "Earnings",
+    "period": {
+      "selectPeriod": "Select period",
+      "thisMonth": "This Month",
+      "lastMonth": "Last Month",
+      "thisYear": "This Year",
+      "allTime": "All Time"
+    },
+    "summary": {
+      "totalEarnings": "Total Earnings",
+      "grossRevenue": "Gross Revenue",
+      "pendingPayouts": "Pending Payouts",
+      "vsLastMonth": "vs last month",
+      "estArrival": "Est. arrival:",
+      "yearToDate": "Year to Date"
+    },
+    "transactions": {
+      "title": "Transactions",
+      "noTransactions": "No transactions found.",
+      "date": "Date",
+      "bookingId": "Booking ID",
+      "experience": "Experience",
+      "customer": "Customer",
+      "amount": "Amount",
+      "status": "Status",
+      "openMenu": "Open menu",
+      "viewDetails": "View Details",
+      "downloadReceipt": "Download Receipt"
+    },
+    "filters": {
+      "allMonths": "All months",
+      "allExperiences": "All experiences",
+      "allStatus": "All status",
+      "paid": "Paid",
+      "pending": "Pending",
+      "refunded": "Refunded"
+    },
+    "search": {
+      "placeholder": "Search by client name, email...",
+      "clear": "Clear search"
+    }
   },
   "calendar": {
     "blocked": "Blocked",
@@ -491,13 +624,16 @@
     "unblockError": "Failed to unblock date"
   },
   "admin": {
-    "title": "Administration",
+    "title": "Admin Dashboard",
+    "subtitle": "Manage winery verifications and platform settings",
     "pendingReview": "Pending Review",
     "verified": "Verified",
     "rejected": "Rejected",
     "totalWineries": "Total Wineries",
     "showingPending": "Showing {count} pending {count, plural, =1 {winery} other {wineries}}",
     "filterByCommune": "Filter by commune",
+    "allCommunes": "All communes",
+    "commune": "Commune",
     "newest": "Newest",
     "oldest": "Oldest",
     "wineryName": "Winery Name",
@@ -505,8 +641,45 @@
     "submitted": "Submitted",
     "actions": "Actions",
     "review": "Review",
+    "viewAll": "View all",
     "allCaughtUp": "All caught up!",
-    "noPendingWineries": "No pending wineries to review."
+    "noPendingWineries": "No pending wineries to review.",
+    "recentPending": "Recent Pending",
+    "recentPendingDescription": "Latest winery registrations awaiting review",
+    "quickActions": "Quick Actions",
+    "quickActionsDescription": "Common administrative tasks",
+    "reviewPendingWineries": "Review pending wineries",
+    "wineryInformation": "Winery Information",
+    "applicantInformation": "Applicant Information",
+    "photos": "Photos",
+    "imageCount": "{count} {count, plural, =1 {image} other {images}}",
+    "cover": "Cover",
+    "description": "Description",
+    "address": "Address",
+    "phone": "Phone",
+    "wineryEmail": "Winery Email",
+    "name": "Name",
+    "notProvided": "Not provided",
+    "accountEmail": "Account Email",
+    "registrationDate": "Registration Date",
+    "verifiedAt": "Verified At",
+    "rejectionReason": "Rejection Reason",
+    "rejectionReasonRequired": "Please provide a reason for rejection (required)",
+    "rejectionReasonPlaceholder": "Explain why this winery registration is being rejected...",
+    "confirmRejection": "Confirm Rejection",
+    "approve": "Approve",
+    "reject": "Reject",
+    "approveWinery": "Approve Winery",
+    "rejectWinery": "Reject Winery",
+    "approveConfirmation": "Are you sure you want to approve {name}? This will make the winery visible in the public directory.",
+    "rejectConfirmation": "Are you sure you want to reject {name}? The applicant will be notified with the provided reason.",
+    "approving": "Approving...",
+    "rejecting": "Rejecting...",
+    "yesApprove": "Yes, Approve",
+    "yesReject": "Yes, Reject",
+    "wineryApprovedSuccess": "Winery approved successfully",
+    "wineryRejectedSuccess": "Winery rejected",
+    "pleaseProvideRejectionReason": "Please provide a reason for rejection"
   },
   "search": {
     "placeholder": "Search experiences, wineries...",

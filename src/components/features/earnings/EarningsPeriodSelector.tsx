@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTransition, useOptimistic } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   Select,
   SelectContent,
@@ -13,12 +14,12 @@ import { cn } from '@/lib/utils';
 
 export type EarningsPeriod = 'this_month' | 'last_month' | 'this_year' | 'all_time';
 
-const PERIOD_OPTIONS: { value: EarningsPeriod; label: string }[] = [
-  { value: 'this_month', label: 'This Month' },
-  { value: 'last_month', label: 'Last Month' },
-  { value: 'this_year', label: 'This Year' },
-  { value: 'all_time', label: 'All Time' },
-];
+const PERIOD_KEYS: Record<EarningsPeriod, string> = {
+  this_month: 'thisMonth',
+  last_month: 'lastMonth',
+  this_year: 'thisYear',
+  all_time: 'allTime',
+};
 
 interface EarningsPeriodSelectorProps {
   defaultValue?: EarningsPeriod;
@@ -30,6 +31,7 @@ export function EarningsPeriodSelector({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  const t = useTranslations('earnings.period');
 
   const currentPeriod = (searchParams.get('period') as EarningsPeriod) || defaultValue;
   const [optimisticPeriod, setOptimisticPeriod] = useOptimistic(currentPeriod);
@@ -47,6 +49,8 @@ export function EarningsPeriodSelector({
     });
   };
 
+  const periodOptions: EarningsPeriod[] = ['this_month', 'last_month', 'this_year', 'all_time'];
+
   return (
     <Select value={optimisticPeriod} onValueChange={handlePeriodChange}>
       <SelectTrigger
@@ -55,12 +59,12 @@ export function EarningsPeriodSelector({
           isPending && 'opacity-70'
         )}
       >
-        <SelectValue placeholder="Select period" />
+        <SelectValue placeholder={t('selectPeriod')} />
       </SelectTrigger>
       <SelectContent>
-        {PERIOD_OPTIONS.map((option) => (
-          <SelectItem key={option.value} value={option.value}>
-            {option.label}
+        {periodOptions.map((value) => (
+          <SelectItem key={value} value={value}>
+            {t(PERIOD_KEYS[value])}
           </SelectItem>
         ))}
       </SelectContent>

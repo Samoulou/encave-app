@@ -1,6 +1,7 @@
 'use client';
 
 import { Plus, Trash2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -33,6 +34,8 @@ export function TimeSlotPicker({
   onChange,
   hasOverlap = false,
 }: TimeSlotPickerProps) {
+  const t = useTranslations('experience.timeSlots');
+
   const handleAddSlot = () => {
     // Find first available time
     const usedStartTimes = new Set(slots.map((s) => s.startTime));
@@ -81,7 +84,7 @@ export function TimeSlotPicker({
   if (slots.length === 0) {
     return (
       <div className="flex flex-col items-center gap-3 py-4">
-        <p className="text-sm text-slate-500">No time slots configured</p>
+        <p className="text-sm text-slate-500">{t('noConfigured')}</p>
         <Button
           type="button"
           variant="outline"
@@ -90,7 +93,7 @@ export function TimeSlotPicker({
           className="gap-2"
         >
           <Plus className="h-4 w-4" />
-          Add Time Slot
+          {t('addSlot')}
         </Button>
       </div>
     );
@@ -111,7 +114,7 @@ export function TimeSlotPicker({
           <Switch
             checked={slot.isActive}
             onCheckedChange={(checked) => handleToggleActive(slot.id, checked)}
-            aria-label={`Toggle slot ${index + 1} active`}
+            aria-label={t('toggleActive', { index: index + 1 })}
           />
 
           {/* Start Time */}
@@ -120,7 +123,7 @@ export function TimeSlotPicker({
             onValueChange={(value) => handleUpdateSlot(slot.id, { startTime: value })}
           >
             <SelectTrigger className="w-[110px] h-9">
-              <SelectValue placeholder="Start" />
+              <SelectValue placeholder={t('startPlaceholder')} />
             </SelectTrigger>
             <SelectContent>
               {TIME_SLOTS.map((time) => (
@@ -131,7 +134,7 @@ export function TimeSlotPicker({
             </SelectContent>
           </Select>
 
-          <span className="text-slate-400">to</span>
+          <span className="text-slate-400">{t('to')}</span>
 
           {/* End Time */}
           <Select
@@ -139,7 +142,7 @@ export function TimeSlotPicker({
             onValueChange={(value) => handleUpdateSlot(slot.id, { endTime: value })}
           >
             <SelectTrigger className="w-[110px] h-9">
-              <SelectValue placeholder="End" />
+              <SelectValue placeholder={t('endPlaceholder')} />
             </SelectTrigger>
             <SelectContent>
               {TIME_SLOTS.filter((time) => time > slot.startTime).map((time) => (
@@ -162,7 +165,7 @@ export function TimeSlotPicker({
             size="icon"
             onClick={() => handleRemoveSlot(slot.id)}
             className="h-9 w-9 text-slate-400 hover:text-red-600"
-            aria-label={`Remove slot ${index + 1}`}
+            aria-label={t('removeSlot', { index: index + 1 })}
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -178,7 +181,7 @@ export function TimeSlotPicker({
         className="gap-2 mt-2"
       >
         <Plus className="h-4 w-4" />
-        Add Another Slot
+        {t('addAnotherSlot')}
       </Button>
     </div>
   );

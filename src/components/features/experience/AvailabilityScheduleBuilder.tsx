@@ -24,6 +24,7 @@ import {
   type AvailabilitySlotInput,
 } from '@/server/actions/availability';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 interface AvailabilityScheduleBuilderProps {
   experienceId: string;
@@ -40,6 +41,8 @@ export function AvailabilityScheduleBuilder({
   experienceDuration,
   experienceStatus,
 }: AvailabilityScheduleBuilderProps) {
+  const t = useTranslations('experience.availability');
+  const tCommon = useTranslations('common');
   const [slotsByDay, setSlotsByDay] = useState<DaySlots>({});
   const [selectedDay, setSelectedDay] = useState<number>(1); // Monday
   const [isLoading, setIsLoading] = useState(true);
@@ -106,7 +109,7 @@ export function AvailabilityScheduleBuilder({
 
     const sourceSlots = slotsByDay[copyFromDay] ?? [];
     if (sourceSlots.length === 0) {
-      toast.error('No slots to copy from this day');
+      toast.error(t('noSlotsToCopy'));
       return;
     }
 
@@ -122,7 +125,7 @@ export function AvailabilityScheduleBuilder({
     setSlotsByDay(newSlotsByDay);
     setHasChanges(true);
     setCopyFromDay(null);
-    toast.success(`Copied ${sourceSlots.length} slot(s) to all days`);
+    toast.success(t('copiedSlots', { count: sourceSlots.length }));
   };
 
   // Save changes
@@ -130,7 +133,7 @@ export function AvailabilityScheduleBuilder({
     // Check for overlaps
     for (const day of DAYS_OF_WEEK_ORDERED) {
       if (getDayOverlapStatus(day.value)) {
-        toast.error(`Please fix overlapping slots on ${day.label} before saving`);
+        toast.error(t('fixOverlapsBeforeSaving', { day: day.label }));
         return;
       }
     }
@@ -147,7 +150,7 @@ export function AvailabilityScheduleBuilder({
     const result = await updateAvailabilitySlots(experienceId, allSlots);
 
     if (result.success) {
-      toast.success('Availability saved successfully');
+      toast.success(t('savedSuccessfully'));
       setHasChanges(false);
       // Reload to get server-generated IDs
       const reloaded = await getAvailabilitySlots(experienceId);
@@ -193,10 +196,9 @@ export function AvailabilityScheduleBuilder({
         <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
           <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
           <div>
-            <p className="font-medium text-amber-800">No availability configured</p>
+            <p className="font-medium text-amber-800">{t('noConfigured')}</p>
             <p className="text-sm text-amber-700 mt-1">
-              This experience is published but has no available time slots. Visitors cannot book
-              until you configure availability.
+              {t('publishedNoSlots')}
             </p>
           </div>
         </div>
@@ -206,9 +208,9 @@ export function AvailabilityScheduleBuilder({
       {!hasAnySlots && !showPublishedWarning && (
         <div className="rounded-xl border-2 border-dashed border-stone-300 bg-stone-50 p-8 text-center">
           <Calendar className="h-12 w-12 text-stone-400 mx-auto mb-4" />
-          <h3 className="font-semibold text-slate-900 mb-2">No availability configured</h3>
+          <h3 className="font-semibold text-slate-900 mb-2">{t('noConfigured')}</h3>
           <p className="text-sm text-slate-600 max-w-md mx-auto">
-            Select a day below and add time slots to define when visitors can book this experience.
+            {t('noConfiguredDescription')}
           </p>
         </div>
       )}
@@ -216,7 +218,7 @@ export function AvailabilityScheduleBuilder({
       {/* Day Selector */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-medium text-slate-900">Select Day</h3>
+          <h3 className="font-medium text-slate-900">{t('selectDay')}</h3>
           {hasAnySlots && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -228,22 +230,20 @@ export function AvailabilityScheduleBuilder({
                   onClick={() => setCopyFromDay(selectedDay)}
                 >
                   <Copy className="h-4 w-4" />
-                  Copy to All Days
+                  {t('copyToAllDays')}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Copy Slots to All Days</AlertDialogTitle>
+                  <AlertDialogTitle>{t('copyDialog.title')}</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This will replace all existing slots on every day with the slots from{' '}
-                    {DAYS_OF_WEEK_ORDERED.find((d) => d.value === selectedDay)?.label}.
-                    This action cannot be undone.
+                    {t('copyDialog.description', { day: DAYS_OF_WEEK_ORDERED.find((d) => d.value === selectedDay)?.label })}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogCancel>{tCommon('buttons.cancel')}</AlertDialogCancel>
                   <AlertDialogAction onClick={handleCopyToAllDays}>
-                    Copy to All Days
+                    {t('copyToAllDays')}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -295,7 +295,7 @@ export function AvailabilityScheduleBuilder({
       {/* Time Slot Picker for Selected Day */}
       <div className="rounded-xl border border-stone-200 bg-white p-6">
         <h4 className="font-medium text-slate-900 mb-4">
-          {DAYS_OF_WEEK_ORDERED.find((d) => d.value === selectedDay)?.label} Time Slots
+          {t('dayTimeSlots', { day: DAYS_OF_WEEK_ORDERED.find((d) => d.value === selectedDay)?.label })}
         </h4>
         <TimeSlotPicker
           slots={slotsByDay[selectedDay] ?? []}
@@ -306,14 +306,14 @@ export function AvailabilityScheduleBuilder({
         {getDayOverlapStatus(selectedDay) && (
           <p className="mt-3 text-sm text-red-600 flex items-center gap-2">
             <AlertTriangle className="h-4 w-4" />
-            Time slots overlap. Please adjust the times.
+            {t('slotsOverlap')}
           </p>
         )}
       </div>
 
       {/* Weekly Preview */}
       <div>
-        <h3 className="font-medium text-slate-900 mb-4">Weekly Schedule Preview</h3>
+        <h3 className="font-medium text-slate-900 mb-4">{t('weeklyPreview')}</h3>
         <WeeklyCalendarPreview
           slots={allSlots.map((s) => ({
             dayOfWeek: s.dayOfWeek,
@@ -330,7 +330,7 @@ export function AvailabilityScheduleBuilder({
           {hasChanges && (
             <span className="flex items-center gap-2 text-amber-600">
               <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500" />
-              Unsaved changes
+              {tCommon('unsavedChanges')}
             </span>
           )}
         </div>
@@ -343,12 +343,12 @@ export function AvailabilityScheduleBuilder({
           {isSaving ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              Saving...
+              {t('saving')}
             </>
           ) : (
             <>
               <Save className="h-4 w-4" />
-              Save Availability
+              {t('saveAvailability')}
             </>
           )}
         </Button>

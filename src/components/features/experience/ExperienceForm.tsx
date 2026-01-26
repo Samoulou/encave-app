@@ -54,6 +54,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 interface GalleryImage {
   id: string;
@@ -90,6 +91,8 @@ function SectionHeader({
 
 export function ExperienceForm() {
   const router = useRouter();
+  const t = useTranslations('experience');
+  const tCommon = useTranslations('common');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [coverPhoto, setCoverPhoto] = useState<string | null>(null);
   const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
@@ -191,7 +194,7 @@ export function ExperienceForm() {
   const onSubmit = useCallback(async (data: CreateExperienceInput) => {
     // Validate cover photo (AC 7)
     if (!coverPhoto) {
-      toast.error('Please upload a cover photo');
+      toast.error(t('pleaseUploadCover'));
       return;
     }
 
@@ -202,8 +205,8 @@ export function ExperienceForm() {
       const result = await createExperience(data, coverPhoto, galleryUrls);
 
       if (result.success) {
-        toast.success('Experience created successfully', {
-          description: 'Your experience has been saved as a draft.',
+        toast.success(t('createdSuccessfully'), {
+          description: t('savedAsDraft'),
           className: 'bg-cream-50 border-gold-200',
         });
         setHasUnsavedChanges(false);
@@ -214,11 +217,11 @@ export function ExperienceForm() {
         toast.error(result.error.message);
       }
     } catch {
-      toast.error('Something went wrong. Please try again.');
+      toast.error(tCommon('errors.somethingWentWrong'));
     } finally {
       setIsSubmitting(false);
     }
-  }, [coverPhoto, galleryImages]);
+  }, [coverPhoto, galleryImages, t, tCommon]);
 
   const handlePublishNow = async () => {
     if (!createdExperienceId) return;
@@ -227,14 +230,14 @@ export function ExperienceForm() {
     try {
       const result = await publishExperience(createdExperienceId);
       if (result.success) {
-        toast.success('Experience published!', {
-          description: 'Your experience is now visible to visitors.',
+        toast.success(t('publishedSuccess'), {
+          description: t('publishedDescription'),
         });
       } else {
         toast.error(result.error.message);
       }
     } catch {
-      toast.error('Failed to publish. You can publish it later from the dashboard.');
+      toast.error(t('failedToPublish'));
     } finally {
       setIsPublishing(false);
       setShowPublishDialog(false);
@@ -261,8 +264,8 @@ export function ExperienceForm() {
       <section className="space-y-6">
         <SectionHeader
           icon={<Camera className="h-5 w-5" />}
-          title="Cover Photo"
-          description="This image will be the main visual for your experience"
+          title={t('coverPhoto')}
+          description={t('coverPhotoDescription')}
         />
 
         <div className="relative">
@@ -305,7 +308,7 @@ export function ExperienceForm() {
                   type="button"
                   className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-red-600 shadow-lg opacity-0 transition-all hover:bg-red-50 group-hover:opacity-100"
                   onClick={() => handleCoverPhotoChange(null)}
-                  aria-label="Remove cover photo"
+                  aria-label={t('removeCoverPhoto')}
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -327,7 +330,7 @@ export function ExperienceForm() {
                   return url;
                 }}
                 aspectRatio="16/9"
-                placeholder="Upload cover photo"
+                placeholder={t('coverPhoto')}
                 variant="empty"
                 className="h-full w-full"
               />
@@ -348,7 +351,7 @@ export function ExperienceForm() {
                 d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            Required. Recommended: 1920 x 1080 pixels (16:9 aspect ratio). Max 5MB, JPEG or PNG.
+            {t('coverPhotoRequired')}
           </p>
         </div>
       </section>
@@ -366,8 +369,8 @@ export function ExperienceForm() {
               />
             </svg>
           }
-          title="Gallery Photos"
-          description={`Add more photos to showcase your experience (${galleryImages.length}/${maxGalleryImages})`}
+          title={t('galleryPhotos')}
+          description={t('galleryPhotosDescription', { count: galleryImages.length, max: maxGalleryImages })}
         />
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-6">
@@ -378,7 +381,7 @@ export function ExperienceForm() {
             >
               <Image
                 src={image.url}
-                alt={`Gallery image ${index + 1}`}
+                alt={t('galleryImageAlt', { index: index + 1 })}
                 fill
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                 sizes="(max-width: 640px) 50vw, (max-width: 768px) 25vw, 200px"
@@ -388,7 +391,7 @@ export function ExperienceForm() {
                   type="button"
                   className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-red-600 shadow-lg transition-colors hover:bg-red-50"
                   onClick={() => handleRemoveGalleryImage(image.id, image.url)}
-                  aria-label={`Remove gallery image ${index + 1}`}
+                  aria-label={t('removeGalleryImage', { index: index + 1 })}
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -409,7 +412,7 @@ export function ExperienceForm() {
               {uploadingGalleryIndex === galleryImages.length + index ? (
                 <div className="flex h-full w-full flex-col items-center justify-center">
                   <div className="h-8 w-8 animate-spin rounded-full border-4 border-burgundy-600 border-t-transparent" />
-                  <p className="mt-3 text-sm font-medium text-burgundy-600">Uploading...</p>
+                  <p className="mt-3 text-sm font-medium text-burgundy-600">{t('uploading')}</p>
                 </div>
               ) : (
                 <ImageUpload
@@ -427,7 +430,7 @@ export function ExperienceForm() {
         </div>
 
         <p className="text-sm text-slate-500">
-          Optional. Square images work best. Up to 8 photos allowed.
+          {t('galleryHelp')}
         </p>
       </section>
 
@@ -438,8 +441,8 @@ export function ExperienceForm() {
           <section className="space-y-6">
             <SectionHeader
               icon={<Wine className="h-5 w-5" />}
-              title="Experience Details"
-              description="Tell visitors about your wine experience"
+              title={t('experienceDetails')}
+              description={t('tellVisitors')}
             />
 
             <div className="space-y-6">
@@ -448,16 +451,16 @@ export function ExperienceForm() {
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium">Title</FormLabel>
+                    <FormLabel className="text-base font-medium">{t('title')}</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="e.g., Grand Cru Wine Tasting Experience"
+                        placeholder={t('titlePlaceholder')}
                         maxLength={100}
                         {...field}
                       />
                     </FormControl>
                     <FormDescription>
-                      Maximum 100 characters. Make it descriptive and appealing.
+                      {t('titleHelp')}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -469,17 +472,17 @@ export function ExperienceForm() {
                 name="type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium">Experience Type</FormLabel>
+                    <FormLabel className="text-base font-medium">{t('experienceType')}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select experience type" />
+                          <SelectValue placeholder={t('selectType')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {EXPERIENCE_TYPE_OPTIONS.map((option) => (
                           <SelectItem key={option.value} value={option.value}>
-                            {option.label}
+                            {t(`types.${option.value}`)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -494,20 +497,20 @@ export function ExperienceForm() {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium">Description</FormLabel>
+                    <FormLabel className="text-base font-medium">{t('description')}</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Describe your experience in detail. What will visitors see, taste, and learn? What makes this experience special?"
+                        placeholder={t('descriptionPlaceholder')}
                         className="min-h-[180px] resize-none"
                         {...field}
                       />
                     </FormControl>
                     <FormDescription className="flex justify-between">
-                      <span>Minimum 20 characters recommended</span>
+                      <span>{t('descriptionMinRecommended')}</span>
                       <span className={cn(
                         descriptionLength < 20 ? 'text-amber-600' : 'text-green-600'
                       )}>
-                        {descriptionLength} characters
+                        {t('characters', { count: descriptionLength })}
                       </span>
                     </FormDescription>
                     <FormMessage />
@@ -521,8 +524,8 @@ export function ExperienceForm() {
           <section className="space-y-6">
             <SectionHeader
               icon={<Clock className="h-5 w-5" />}
-              title="Duration & Capacity"
-              description="Set the timing and group size for your experience"
+              title={t('durationAndCapacity')}
+              description={t('durationCapacityDescription')}
             />
 
             <div className="grid gap-6 sm:grid-cols-3">
@@ -531,14 +534,14 @@ export function ExperienceForm() {
                 name="duration"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium">Duration</FormLabel>
+                    <FormLabel className="text-base font-medium">{t('duration')}</FormLabel>
                     <Select
                       onValueChange={(value) => field.onChange(parseInt(value))}
                       defaultValue={field.value?.toString()}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select duration" />
+                          <SelectValue placeholder={t('selectDuration')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -561,14 +564,14 @@ export function ExperienceForm() {
                   <FormItem>
                     <FormLabel className="text-base font-medium flex items-center gap-2">
                       <Users className="h-4 w-4" />
-                      Min Booking Size
+                      {t('minBookingSize')}
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <HelpCircle className="h-4 w-4 text-slate-400 cursor-help" />
                           </TooltipTrigger>
                           <TooltipContent className="max-w-xs">
-                            <p>The minimum number of guests required per booking. Visitors cannot book for fewer than this number.</p>
+                            <p>{t('minBookingSizeTooltip')}</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -594,7 +597,7 @@ export function ExperienceForm() {
                   <FormItem>
                     <FormLabel className="text-base font-medium flex items-center gap-2">
                       <Users className="h-4 w-4" />
-                      Max Guests
+                      {t('maxGuestsLabel')}
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -616,8 +619,8 @@ export function ExperienceForm() {
           <section className="space-y-6">
             <SectionHeader
               icon={<Banknote className="h-5 w-5" />}
-              title="Pricing"
-              description="Set the price per person for your experience"
+              title={t('pricing')}
+              description={t('pricingDescription')}
             />
 
             <FormField
@@ -625,7 +628,7 @@ export function ExperienceForm() {
               name="price"
               render={({ field }) => (
                 <FormItem className="max-w-xs">
-                  <FormLabel className="text-base font-medium">Price per Person (CHF)</FormLabel>
+                  <FormLabel className="text-base font-medium">{t('pricePerPerson')}</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
@@ -643,7 +646,7 @@ export function ExperienceForm() {
                     </div>
                   </FormControl>
                   <FormDescription>
-                    Price must be greater than 0
+                    {t('priceMustBePositive')}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -657,7 +660,7 @@ export function ExperienceForm() {
               {hasUnsavedChanges && (
                 <span className="flex items-center gap-2 text-amber-600">
                   <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500" />
-                  Unsaved changes
+                  {t('unsavedChanges')}
                 </span>
               )}
             </div>
@@ -668,7 +671,7 @@ export function ExperienceForm() {
                 onClick={() => router.back()}
                 disabled={isSubmitting}
               >
-                Cancel
+                {tCommon('buttons.cancel')}
               </Button>
               <Button
                 type="submit"
@@ -679,10 +682,10 @@ export function ExperienceForm() {
                 {isSubmitting ? (
                   <>
                     <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                    Creating...
+                    {t('creating')}
                   </>
                 ) : (
-                  'Create Experience'
+                  t('createExperience')
                 )}
               </Button>
             </div>
@@ -694,9 +697,9 @@ export function ExperienceForm() {
       <Dialog open={showPublishDialog} onOpenChange={setShowPublishDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Experience Created!</DialogTitle>
+            <DialogTitle>{t('publishDialog.title')}</DialogTitle>
             <DialogDescription>
-              Your experience has been saved as a draft. Would you like to publish it now so visitors can see it?
+              {t('publishDialog.description')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-col gap-2 sm:flex-row">
@@ -706,7 +709,7 @@ export function ExperienceForm() {
               disabled={isPublishing}
               className="w-full sm:w-auto"
             >
-              Keep as Draft
+              {t('publishDialog.keepAsDraft')}
             </Button>
             <Button
               onClick={handlePublishNow}
@@ -716,10 +719,10 @@ export function ExperienceForm() {
               {isPublishing ? (
                 <>
                   <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  Publishing...
+                  {t('publishDialog.publishing')}
                 </>
               ) : (
-                'Publish Now'
+                t('publishDialog.publishNow')
               )}
             </Button>
           </DialogFooter>

@@ -1,5 +1,8 @@
+'use client';
+
 import { Wallet, Calendar, Clock, TrendingUp, TrendingDown, Info } from 'lucide-react';
 import { format } from 'date-fns';
+import { useTranslations } from 'next-intl';
 import { formatCHF } from '@/lib/utils/currency';
 import type { EarningsSummary } from '@/server/queries/earnings.queries';
 import { cn } from '@/lib/utils';
@@ -16,6 +19,8 @@ interface EarningsSummaryCardsProps {
  * 3. Pending Payouts (with estimated arrival)
  */
 export function EarningsSummaryCards({ summary }: EarningsSummaryCardsProps) {
+  const t = useTranslations('earnings.summary');
+
   // Calculate trend percentage
   const trendPercentage =
     summary.lastMonth > 0
@@ -31,7 +36,7 @@ export function EarningsSummaryCards({ summary }: EarningsSummaryCardsProps) {
       <div className="flex flex-col justify-between h-40 p-6 bg-white rounded-xl border border-[#e5d2d7] shadow-sm group hover:border-primary/30 transition-colors">
         <div className="flex items-center justify-between">
           <p className="text-[#915564] text-sm font-medium">
-            Total Earnings ({summary.currentMonthLabel})
+            {t('totalEarnings')} ({summary.currentMonthLabel})
           </p>
           <div className="p-2 bg-primary/10 rounded-lg text-primary">
             <Wallet className="h-5 w-5" />
@@ -57,7 +62,7 @@ export function EarningsSummaryCards({ summary }: EarningsSummaryCardsProps) {
                 {trendIsPositive ? '+' : ''}
                 {trendPercentage.toFixed(1)}%
               </span>
-              <span className="text-[#915564] font-normal ml-1">vs last month</span>
+              <span className="text-[#915564] font-normal ml-1">{t('vsLastMonth')}</span>
             </div>
           )}
         </div>
@@ -66,7 +71,7 @@ export function EarningsSummaryCards({ summary }: EarningsSummaryCardsProps) {
       {/* Card 2 - Year to Date */}
       <div className="flex flex-col justify-between h-40 p-6 bg-white rounded-xl border border-[#e5d2d7] shadow-sm group hover:border-primary/30 transition-colors">
         <div className="flex items-center justify-between">
-          <p className="text-[#915564] text-sm font-medium">Year to Date</p>
+          <p className="text-[#915564] text-sm font-medium">{t('yearToDate')}</p>
           <div className="p-2 bg-primary/10 rounded-lg text-primary">
             <Calendar className="h-5 w-5" />
           </div>
@@ -77,7 +82,7 @@ export function EarningsSummaryCards({ summary }: EarningsSummaryCardsProps) {
           </h3>
           <div className="flex items-center gap-1 mt-2 text-sm text-[#915564] font-medium">
             <Info className="h-4 w-4" />
-            <span>Gross Revenue</span>
+            <span>{t('grossRevenue')}</span>
           </div>
         </div>
       </div>
@@ -85,7 +90,7 @@ export function EarningsSummaryCards({ summary }: EarningsSummaryCardsProps) {
       {/* Card 3 - Pending Payouts */}
       <div className="flex flex-col justify-between h-40 p-6 bg-white rounded-xl border border-[#e5d2d7] shadow-sm group hover:border-primary/30 transition-colors">
         <div className="flex items-center justify-between">
-          <p className="text-[#915564] text-sm font-medium">Pending Payouts</p>
+          <p className="text-[#915564] text-sm font-medium">{t('pendingPayouts')}</p>
           <div className="p-2 bg-yellow-50 rounded-lg text-yellow-600">
             <Clock className="h-5 w-5" />
           </div>
@@ -95,7 +100,7 @@ export function EarningsSummaryCards({ summary }: EarningsSummaryCardsProps) {
             {formatCHF(summary.pendingPayout)}
           </h3>
           <div className="flex items-center gap-1 mt-2 text-sm text-[#915564] font-medium">
-            <span>Est. arrival:</span>
+            <span>{t('estArrival')}</span>
             <span className="text-[#1a0f12] font-bold">
               {summary.nextPayoutDate
                 ? format(summary.nextPayoutDate, 'MMM d')
