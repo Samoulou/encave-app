@@ -14,6 +14,8 @@ import { LocationSection } from '@/components/features/experience/LocationSectio
 import { BookingWidget } from '@/components/features/experience/BookingWidget';
 import { MobileBookingBar } from '@/components/features/experience/MobileBookingBar';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
+import { Header } from '@/components/layout/Header';
+import { Footer } from '@/components/layout/Footer';
 import { RelatedExperiencesSection } from './RelatedExperiencesSection';
 import { JsonLd } from '@/components/shared/JsonLd';
 import { Skeleton } from '@/components/shared/Skeleton';
@@ -159,10 +161,11 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
   ];
 
   return (
-    <>
+    <div className="min-h-screen bg-background-light">
+      <Header />
       <JsonLd data={eventSchema} />
 
-      <main className="flex-grow w-full bg-background-light min-h-screen pb-24 lg:pb-8">
+      <main className="flex-grow w-full pb-24 lg:pb-8">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Breadcrumbs */}
           <nav className="flex items-center text-sm mb-6 overflow-x-auto whitespace-nowrap">
@@ -246,7 +249,8 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
           availabilitySlots={experience.availabilitySlots}
         />
       </main>
-    </>
+      <Footer />
+    </div>
   );
 }
 
