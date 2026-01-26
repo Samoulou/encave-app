@@ -1,4 +1,4 @@
-import { MapPin, Car, Train } from 'lucide-react';
+import { Car, Train } from 'lucide-react';
 import {
   getMapEmbedUrl,
   VALAIS_FALLBACK_MAP_URL,
@@ -55,14 +55,6 @@ export function LocationSection({
           loading="lazy"
           referrerPolicy="no-referrer"
         />
-        {/* Map Marker Overlay */}
-        {hasCoordinates && (
-          <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-            <div className="bg-white p-2 rounded-full shadow-xl">
-              <MapPin className="h-7 w-7 text-primary" />
-            </div>
-          </div>
-        )}
       </a>
 
       {/* Additional Info */}
