@@ -113,7 +113,7 @@ export async function geocodeWineryAddress(
 }
 
 /**
- * Generate OpenStreetMap embed URL with marker
+ * Generate Google Maps embed URL
  * @param latitude Latitude coordinate
  * @param longitude Longitude coordinate
  * @param zoom Zoom level (default 15 for street-level view)
@@ -124,22 +124,7 @@ export function getMapEmbedUrl(
   longitude: number,
   zoom: number = 15
 ): string {
-  // Calculate bounding box based on zoom
-  // Higher zoom = smaller bbox
-  const delta = 0.01 / (zoom / 10);
-
-  const bbox = {
-    minLon: longitude - delta,
-    minLat: latitude - delta,
-    maxLon: longitude + delta,
-    maxLat: latitude + delta,
-  };
-
-  return (
-    `https://www.openstreetmap.org/export/embed.html?` +
-    `bbox=${bbox.minLon},${bbox.minLat},${bbox.maxLon},${bbox.maxLat}` +
-    `&layer=mapnik&marker=${latitude},${longitude}`
-  );
+  return `https://maps.google.com/maps?q=${latitude},${longitude}&z=${zoom}&output=embed`;
 }
 
 /**
@@ -166,5 +151,4 @@ export function getGoogleMapsUrl(
  * Used when coordinates are unavailable
  */
 export const VALAIS_FALLBACK_MAP_URL =
-  'https://www.openstreetmap.org/export/embed.html?' +
-  'bbox=7.0,46.0,8.0,46.5&layer=mapnik';
+  'https://maps.google.com/maps?q=Valais,Switzerland&z=10&output=embed';
