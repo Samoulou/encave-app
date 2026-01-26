@@ -9,8 +9,8 @@ import { ExperienceDetailHeader } from '@/components/features/experience/Experie
 import { ExperienceDetailGallery } from '@/components/features/experience/ExperienceDetailGallery';
 import { QuickFacts } from '@/components/features/experience/QuickFacts';
 import { AboutSection } from '@/components/features/experience/AboutSection';
-import { WhatsIncluded } from '@/components/features/experience/WhatsIncluded';
 import { LocationSection } from '@/components/features/experience/LocationSection';
+import { AvailabilityDisplay } from '@/components/features/experience/AvailabilityDisplay';
 import { BookingWidget } from '@/components/features/experience/BookingWidget';
 import { MobileBookingBar } from '@/components/features/experience/MobileBookingBar';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
@@ -120,16 +120,17 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
       name: experience.winery.name,
       address: {
         '@type': 'PostalAddress',
-        streetAddress: experience.winery.address,
-        addressLocality: experience.winery.commune,
+        streetAddress: experience.address || experience.winery.address,
+        addressLocality: experience.city || experience.winery.commune,
+        postalCode: experience.zipCode || undefined,
         addressRegion: 'Valais',
         addressCountry: 'CH',
       },
-      ...(experience.winery.latitude && experience.winery.longitude && {
+      ...((experience.latitude || experience.winery.latitude) && (experience.longitude || experience.winery.longitude) && {
         geo: {
           '@type': 'GeoCoordinates',
-          latitude: experience.winery.latitude,
-          longitude: experience.winery.longitude,
+          latitude: experience.latitude || experience.winery.latitude,
+          longitude: experience.longitude || experience.winery.longitude,
         },
       }),
     },
@@ -201,16 +202,18 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
               {/* About Section */}
               <AboutSection description={experience.description} />
 
-              {/* What's Included */}
-              <WhatsIncluded type={experience.type} />
+              {/* Availability Schedule */}
+              {experience.availabilitySlots && experience.availabilitySlots.length > 0 && (
+                <AvailabilityDisplay slots={experience.availabilitySlots} />
+              )}
 
               {/* Location Map */}
               <LocationSection
-                address={experience.winery.address}
-                commune={experience.winery.commune}
+                address={experience.address || experience.winery.address}
+                commune={experience.city || experience.winery.commune}
                 wineryName={experience.winery.name}
-                latitude={experience.winery.latitude}
-                longitude={experience.winery.longitude}
+                latitude={experience.latitude || experience.winery.latitude}
+                longitude={experience.longitude || experience.winery.longitude}
               />
             </div>
 
