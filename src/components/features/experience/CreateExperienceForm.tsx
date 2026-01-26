@@ -111,9 +111,11 @@ interface GalleryImage {
   isCover?: boolean;
 }
 
+type DayOfWeek = 'MON' | 'TUE' | 'WED' | 'THU' | 'FRI' | 'SAT' | 'SUN';
+
 interface AvailabilitySlot {
   id: string;
-  days: string[];
+  days: DayOfWeek[];
   timeSlots: { start: string; end: string }[];
 }
 
@@ -298,7 +300,9 @@ export function CreateExperienceForm() {
           latitude: location.latitude,
           longitude: location.longitude,
         },
-        availabilitySlots: availabilitySlots.filter((slot) => slot.days.length > 0 && slot.timeSlots.length > 0),
+        availabilitySlots: availabilitySlots
+          .filter((slot) => slot.days.length > 0 && slot.timeSlots.length > 0)
+          .map(({ days, timeSlots }) => ({ days, timeSlots })),
       };
 
       const result = await createExperience(dataWithExtras, coverPhoto, galleryUrls);
@@ -342,7 +346,9 @@ export function CreateExperienceForm() {
             latitude: location.latitude,
             longitude: location.longitude,
           },
-          availabilitySlots: availabilitySlots.filter((slot) => slot.days.length > 0 && slot.timeSlots.length > 0),
+          availabilitySlots: availabilitySlots
+            .filter((slot) => slot.days.length > 0 && slot.timeSlots.length > 0)
+            .map(({ days, timeSlots }) => ({ days, timeSlots })),
         };
 
         const result = await createExperience(dataWithExtras, coverPhoto, galleryUrls);
