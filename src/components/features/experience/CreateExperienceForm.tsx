@@ -65,6 +65,16 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { AddressAutocomplete } from './AddressAutocomplete';
+
+interface AddressData {
+  street: string;
+  city: string;
+  zipCode: string;
+  latitude: number | null;
+  longitude: number | null;
+  fullAddress: string;
+}
 
 // Experience type options with icons
 const EXPERIENCE_TYPES = [
@@ -149,10 +159,13 @@ export function CreateExperienceForm() {
   ]);
 
   // Location state
-  const [location, setLocation] = useState({
+  const [location, setLocation] = useState<AddressData>({
     street: '',
-    zipCode: '',
     city: '',
+    zipCode: '',
+    latitude: null,
+    longitude: null,
+    fullAddress: '',
   });
 
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
@@ -275,7 +288,20 @@ export function CreateExperienceForm() {
         return;
       }
 
-      const result = await createExperience(data, coverPhoto, galleryUrls);
+      // Add location and availability to the data
+      const dataWithExtras = {
+        ...data,
+        location: {
+          street: location.street,
+          city: location.city,
+          zipCode: location.zipCode,
+          latitude: location.latitude,
+          longitude: location.longitude,
+        },
+        availabilitySlots: availabilitySlots.filter((slot) => slot.days.length > 0 && slot.timeSlots.length > 0),
+      };
+
+      const result = await createExperience(dataWithExtras, coverPhoto, galleryUrls);
 
       if (result.success) {
         setLastSaved(new Date());
@@ -290,7 +316,7 @@ export function CreateExperienceForm() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [form, galleryImages]);
+  }, [form, galleryImages, location, availabilitySlots]);
 
   const onSubmit = useCallback(
     async (data: CreateExperienceInput) => {
@@ -305,7 +331,21 @@ export function CreateExperienceForm() {
 
       try {
         const galleryUrls = galleryImages.filter((img) => !img.isCover).map((img) => img.url);
-        const result = await createExperience(data, coverPhoto, galleryUrls);
+
+        // Add location and availability to the data
+        const dataWithExtras = {
+          ...data,
+          location: {
+            street: location.street,
+            city: location.city,
+            zipCode: location.zipCode,
+            latitude: location.latitude,
+            longitude: location.longitude,
+          },
+          availabilitySlots: availabilitySlots.filter((slot) => slot.days.length > 0 && slot.timeSlots.length > 0),
+        };
+
+        const result = await createExperience(dataWithExtras, coverPhoto, galleryUrls);
 
         if (result.success) {
           toast.success('Experience created successfully');
@@ -333,7 +373,7 @@ export function CreateExperienceForm() {
         setIsSubmitting(false);
       }
     },
-    [galleryImages, isPublishEnabled, router]
+    [galleryImages, isPublishEnabled, router, location, availabilitySlots]
   );
 
   const handlePublishNow = async () => {
@@ -830,59 +870,62 @@ export function CreateExperienceForm() {
                   <SectionHeader icon={MapPin} title="Location" />
                   <div className="flex flex-col md:flex-row gap-6">
                     <div className="flex-1 space-y-4">
-                      {/* Street Address */}
+                      {/* Address Autocomplete */}
                       <div>
                         <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
-                          Street Address
+                          Address
                         </label>
-                        <div className="relative">
-                          <Input
-                            type="text"
-                            placeholder="Route de la Vidondée 2"
-                            className="bg-slate-50 border-stone-200 h-12 pl-10"
-                            value={location.street}
-                            onChange={(e) => setLocation((prev) => ({ ...prev, street: e.target.value }))}
-                          />
-                          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                        </div>
+                        <AddressAutocomplete
+                          value={location}
+                          onChange={setLocation}
+                          placeholder="Search for an address in Valais..."
+                        />
+                        <p className="text-xs text-slate-400 mt-1">
+                          Start typing to search for an address
+                        </p>
                       </div>
 
-                      {/* Zip & City */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
-                            Zip Code
-                          </label>
-                          <Input
-                            type="text"
-                            placeholder="1908"
-                            className="bg-slate-50 border-stone-200 h-12"
-                            value={location.zipCode}
-                            onChange={(e) => setLocation((prev) => ({ ...prev, zipCode: e.target.value }))}
-                          />
+                      {/* Display selected address details */}
+                      {location.street && (
+                        <div className="bg-slate-50 rounded-lg p-4 border border-stone-200">
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+                            Selected Address
+                          </h4>
+                          <div className="space-y-1 text-sm text-slate-700">
+                            {location.street && <p>{location.street}</p>}
+                            <p>
+                              {[location.zipCode, location.city].filter(Boolean).join(' ')}
+                            </p>
+                            {location.latitude && location.longitude && (
+                              <p className="text-xs text-slate-400">
+                                Coordinates: {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+                              </p>
+                            )}
+                          </div>
                         </div>
-                        <div>
-                          <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
-                            City
-                          </label>
-                          <Input
-                            type="text"
-                            placeholder="Riddes"
-                            className="bg-slate-50 border-stone-200 h-12"
-                            value={location.city}
-                            onChange={(e) => setLocation((prev) => ({ ...prev, city: e.target.value }))}
-                          />
-                        </div>
-                      </div>
+                      )}
                     </div>
 
                     {/* Map Preview */}
                     <div className="w-full md:w-1/3 aspect-video md:aspect-square bg-slate-200 rounded-lg overflow-hidden border border-stone-200 relative">
-                      <div className="w-full h-full bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center">
-                        <div className="bg-primary text-white p-2 rounded-full shadow-lg">
-                          <MapPin className="h-5 w-5" />
+                      {location.latitude && location.longitude ? (
+                        <iframe
+                          title="Location preview"
+                          src={`https://maps.google.com/maps?q=${location.latitude},${location.longitude}&z=15&output=embed`}
+                          className="w-full h-full border-0"
+                          loading="lazy"
+                          referrerPolicy="no-referrer-when-downgrade"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center">
+                          <div className="text-center">
+                            <div className="bg-primary text-white p-2 rounded-full shadow-lg mx-auto mb-2">
+                              <MapPin className="h-5 w-5" />
+                            </div>
+                            <p className="text-xs text-slate-500">Select an address to preview</p>
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   </div>
                 </section>

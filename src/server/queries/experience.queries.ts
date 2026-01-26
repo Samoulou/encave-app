@@ -328,7 +328,25 @@ export const getExperienceBySlug = cache(unstable_cache(
           status: 'VERIFIED',
         },
       },
-      include: {
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        description: true,
+        type: true,
+        duration: true,
+        price: true,
+        minCapacity: true,
+        maxCapacity: true,
+        coverPhoto: true,
+        status: true,
+        wineryId: true,
+        // Experience-specific location fields
+        address: true,
+        city: true,
+        zipCode: true,
+        latitude: true,
+        longitude: true,
         winery: {
           select: {
             id: true,
