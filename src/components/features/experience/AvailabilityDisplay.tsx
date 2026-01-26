@@ -12,7 +12,6 @@ interface AvailabilityDisplayProps {
 }
 
 const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-const DAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 function formatTime(time: string): string {
   const [hours, minutes] = time.split(':');
