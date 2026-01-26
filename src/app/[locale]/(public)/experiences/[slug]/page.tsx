@@ -9,7 +9,6 @@ import { ExperienceDetailHeader } from '@/components/features/experience/Experie
 import { ExperienceDetailGallery } from '@/components/features/experience/ExperienceDetailGallery';
 import { QuickFacts } from '@/components/features/experience/QuickFacts';
 import { AboutSection } from '@/components/features/experience/AboutSection';
-import { WhatsIncluded } from '@/components/features/experience/WhatsIncluded';
 import { LocationSection } from '@/components/features/experience/LocationSection';
 import { AvailabilityDisplay } from '@/components/features/experience/AvailabilityDisplay';
 import { BookingWidget } from '@/components/features/experience/BookingWidget';
@@ -202,9 +201,6 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
 
               {/* About Section */}
               <AboutSection description={experience.description} />
-
-              {/* What's Included */}
-              <WhatsIncluded type={experience.type} />
 
               {/* Availability Schedule */}
               {experience.availabilitySlots && experience.availabilitySlots.length > 0 && (

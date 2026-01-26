@@ -1,4 +1,3 @@
-import { Car, Train } from 'lucide-react';
 import {
   getMapEmbedUrl,
   VALAIS_FALLBACK_MAP_URL,
@@ -57,17 +56,6 @@ export function LocationSection({
         />
       </a>
 
-      {/* Additional Info */}
-      <div className="mt-4 flex gap-6 text-sm">
-        <div className="flex items-center gap-2 text-gray-600">
-          <Car className="h-5 w-5" />
-          <span>Free parking available</span>
-        </div>
-        <div className="flex items-center gap-2 text-gray-600">
-          <Train className="h-5 w-5" />
-          <span>Near {commune} station</span>
-        </div>
-      </div>
     </section>
   );
 }

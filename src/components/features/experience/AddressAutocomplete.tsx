@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { MapPin, Loader2, X } from 'lucide-react';
+import { MapPin, Loader2, X, AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
@@ -49,6 +49,8 @@ export function AddressAutocomplete({
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [error, setError] = useState<string | null>(null);
+  const [noResults, setNoResults] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -67,41 +69,43 @@ export function AddressAutocomplete({
   const searchAddress = useCallback(async (searchQuery: string) => {
     if (searchQuery.length < 3) {
       setSuggestions([]);
+      setNoResults(false);
+      setError(null);
       return;
     }
 
     setIsLoading(true);
-    try {
-      // Add Switzerland context for better results
-      const searchWithContext = searchQuery.includes('Switzerland')
-        ? searchQuery
-        : `${searchQuery}, Valais, Switzerland`;
+    setError(null);
+    setNoResults(false);
 
+    try {
+      // Use server-side proxy to avoid CORS and User-Agent issues
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?` +
-          new URLSearchParams({
-            q: searchWithContext,
-            format: 'json',
-            limit: '5',
-            addressdetails: '1',
-            countrycodes: 'ch',
-          }),
-        {
-          headers: {
-            'User-Agent': 'EnCave/1.0 (https://encave.ch)',
-          },
-        }
+        `/api/geocode/search?q=${encodeURIComponent(searchQuery)}`
       );
 
-      if (response.ok) {
-        const data = (await response.json()) as NominatimResult[];
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Search failed');
+      }
+
+      const data = await response.json();
+
+      if (Array.isArray(data)) {
         setSuggestions(data);
         setIsOpen(data.length > 0);
+        setNoResults(data.length === 0);
         setSelectedIndex(-1);
+      } else if (data.error) {
+        throw new Error(data.error);
+      } else {
+        setSuggestions([]);
+        setNoResults(true);
       }
-    } catch (error) {
-      console.error('Address search error:', error);
+    } catch (err) {
+      console.error('Address search error:', err);
       setSuggestions([]);
+      setError('Unable to search addresses. Please try again or enter manually.');
     } finally {
       setIsLoading(false);
     }
@@ -170,6 +174,8 @@ export function AddressAutocomplete({
   const handleClear = () => {
     setQuery('');
     setSuggestions([]);
+    setError(null);
+    setNoResults(false);
     onChange({
       street: '',
       city: '',
@@ -228,6 +234,23 @@ export function AddressAutocomplete({
               <span className="text-slate-700 line-clamp-2">{result.display_name}</span>
             </button>
           ))}
+        </div>
+      )}
+
+      {/* No results message */}
+      {noResults && !isLoading && query.length >= 3 && (
+        <div className="absolute z-50 w-full mt-1 bg-white border border-stone-200 rounded-lg shadow-lg p-4">
+          <p className="text-sm text-slate-500 text-center">
+            No addresses found. Try a different search or enter the address manually below.
+          </p>
+        </div>
+      )}
+
+      {/* Error message */}
+      {error && (
+        <div className="flex items-center gap-2 mt-2 text-sm text-red-600">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <span>{error}</span>
         </div>
       )}
     </div>
