@@ -33,7 +33,7 @@ interface AddressData {
 
 interface AddressAutocompleteProps {
   value: AddressData;
-  onChange: (data: AddressData) => void;
+  onChange: (_data: AddressData) => void;
   placeholder?: string;
   className?: string;
 }
