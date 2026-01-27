@@ -193,7 +193,7 @@ export default function ComingSoonPage() {
             Des expériences pour tous les goûts
           </h2>
           <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-            Du novice curieux à l'œnophile averti, trouvez l'expérience qui vous correspond
+            Du novice curieux à l&apos;œnophile averti, trouvez l&apos;expérience qui vous correspond
           </p>
         </div>
 
@@ -225,7 +225,7 @@ export default function ComingSoonPage() {
               Une plateforme pensée pour tous
             </h2>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              EnCave simplifie la découverte et la réservation d'expériences viticoles
+              EnCave simplifie la découverte et la réservation d&apos;expériences viticoles
             </p>
           </div>
 
@@ -314,7 +314,7 @@ export default function ComingSoonPage() {
             Prêt à découvrir les trésors du Valais ?
           </h2>
           <p className="text-lg text-white/80 mb-8 max-w-xl mx-auto">
-            Inscrivez-vous pour être notifié dès le lancement et bénéficier d'offres exclusives.
+            Inscrivez-vous pour être notifié dès le lancement et bénéficier d&apos;offres exclusives.
           </p>
 
           {isSubscribed ? (
