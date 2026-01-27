@@ -325,3 +325,12 @@ model EmailLog {
   @@index([recipientId])
   @@map("email_logs")
 }
+
+model NewsletterSubscription {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  source    String   @default("coming-soon") // Where the subscription came from
+  createdAt DateTime @default(now())
+
+  @@map("newsletter_subscriptions")
+}
