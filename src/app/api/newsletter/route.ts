@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
 
     if (!result.success) {
       return NextResponse.json(
-        { error: result.error.errors[0]?.message || 'Données invalides' },
+        { error: result.error.issues[0]?.message || 'Données invalides' },
         { status: 400 }
       );
     }
