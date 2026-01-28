@@ -1,5 +1,5 @@
 import { EarningsSummaryCards } from '@/components/features/earnings/EarningsSummaryCards';
-import { EarningsChart } from '@/components/features/earnings/EarningsChart';
+import { EarningsChartLazy } from '@/components/features/earnings/EarningsChartLazy';
 import { TransactionFilters } from '@/components/features/earnings/TransactionFilters';
 import { TransactionTable } from '@/components/features/earnings/TransactionTable';
 import { YearToDateSummary } from '@/components/features/earnings/YearToDateSummary';
@@ -60,7 +60,7 @@ export async function EarningsContent({ wineryId, params }: EarningsContentProps
 
       {/* Chart and YTD Summary */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <EarningsChart data={monthlyEarnings} />
+        <EarningsChartLazy data={monthlyEarnings} />
         <YearToDateSummary summary={ytdSummary} />
       </div>
 
