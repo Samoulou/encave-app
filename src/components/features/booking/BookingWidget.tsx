@@ -132,11 +132,11 @@ export function BookingWidget({ experience }: BookingWidgetProps) {
               </p>
               <div className="mt-4 flex flex-wrap gap-4 text-sm text-slate-600">
                 <span className="flex items-center gap-1.5" data-testid="experience-duration">
-                  <Clock className="h-4 w-4" />
+                  <Clock className="h-4 w-4" aria-hidden="true" />
                   {experience.duration} min
                 </span>
                 <span className="flex items-center gap-1.5" data-testid="capacity-range">
-                  <Users className="h-4 w-4" />
+                  <Users className="h-4 w-4" aria-hidden="true" />
                   {/* BUG-032 FIX: Use capacityRange key to avoid "8-10 10 personnes" */}
                   {t('capacityRange', { min: experience.minCapacity, max: experience.maxCapacity })}
                 </span>
@@ -150,7 +150,7 @@ export function BookingWidget({ experience }: BookingWidgetProps) {
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-burgundy-100">
-                <Calendar className="h-5 w-5 text-burgundy-600" />
+                <Calendar className="h-5 w-5 text-burgundy-600" aria-hidden="true" />
               </div>
               <div>
                 <h2 className="font-semibold text-slate-900">{t('selectDate')}</h2>
@@ -177,7 +177,7 @@ export function BookingWidget({ experience }: BookingWidgetProps) {
             <CardContent className="p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-burgundy-100">
-                  <Clock className="h-5 w-5 text-burgundy-600" />
+                  <Clock className="h-5 w-5 text-burgundy-600" aria-hidden="true" />
                 </div>
                 <div>
                   <h2 className="font-semibold text-slate-900">{t('selectTime')}</h2>
@@ -207,7 +207,7 @@ export function BookingWidget({ experience }: BookingWidgetProps) {
             <CardContent className="p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-burgundy-100">
-                  <Users className="h-5 w-5 text-burgundy-600" />
+                  <Users className="h-5 w-5 text-burgundy-600" aria-hidden="true" />
                 </div>
                 <div>
                   <h2 className="font-semibold text-slate-900">{t('selectGuests')}</h2>
@@ -262,7 +262,7 @@ export function BookingWidget({ experience }: BookingWidgetProps) {
           {/* BUG-003b: Capacity Exceeded Warning */}
           {capacityExceeded && (
             <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
+              <AlertCircle className="h-4 w-4" aria-hidden="true" />
               <AlertDescription>
                 {t('capacityExceeded', { remaining: remainingCapacity })}
               </AlertDescription>
@@ -278,13 +278,13 @@ export function BookingWidget({ experience }: BookingWidgetProps) {
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" aria-hidden="true" />
                 {t('continueToPayment')}
               </>
             ) : (
               <>
                 {t('continueToPayment')}
-                <ArrowRight className="ml-2 h-5 w-5" />
+                <ArrowRight className="ml-2 h-5 w-5" aria-hidden="true" />
               </>
             )}
           </Button>

@@ -1,5 +1,6 @@
 export { EarningsSummaryCards } from './EarningsSummaryCards';
 export { EarningsChart } from './EarningsChart';
+export { EarningsChartLazy } from './EarningsChartLazy';
 export { TransactionStatusBadge } from './TransactionStatusBadge';
 export { PayoutBreakdownTooltip } from './PayoutBreakdownTooltip';
 export { TransactionFilters } from './TransactionFilters';

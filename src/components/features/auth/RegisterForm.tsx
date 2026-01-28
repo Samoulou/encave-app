@@ -221,7 +221,7 @@ export function RegisterForm() {
                 </FormControl>
                 <div className="space-y-1 leading-none">
                   <FormLabel className="flex cursor-pointer items-center gap-2">
-                    <Wine className="h-4 w-4 text-burgundy-600" />
+                    <Wine className="h-4 w-4 text-burgundy-600" aria-hidden="true" />
                     {t('iAmWinemaker')}
                   </FormLabel>
                   <p className="text-sm text-slate-500">

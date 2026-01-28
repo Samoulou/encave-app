@@ -1,4 +1,4 @@
-import { EarningsChart } from '@/components/features/earnings/EarningsChart';
+import { EarningsChartLazy } from '@/components/features/earnings/EarningsChartLazy';
 import { getMonthlyEarnings } from '@/server/queries/earnings.queries';
 
 interface EarningsChartsSectionProps {
@@ -8,9 +8,10 @@ interface EarningsChartsSectionProps {
 /**
  * Async server component for earnings chart.
  * Fetches monthly earnings for the Revenue Evolution chart.
+ * Uses lazy-loaded chart component to defer recharts (~200KB) until render.
  */
 export async function EarningsChartsSection({ wineryId }: EarningsChartsSectionProps) {
   const monthlyEarnings = await getMonthlyEarnings(wineryId, 6);
 
-  return <EarningsChart data={monthlyEarnings} />;
+  return <EarningsChartLazy data={monthlyEarnings} />;
 }

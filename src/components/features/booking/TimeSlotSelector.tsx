@@ -23,6 +23,7 @@ export function TimeSlotSelector({
   onCapacityUpdate,
 }: TimeSlotSelectorProps) {
   const t = useTranslations('booking');
+  const tCommon = useTranslations('common');
   const [slots, setSlots] = useState<TimeSlotAvailability[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -89,7 +90,7 @@ export function TimeSlotSelector({
   if (!selectedDate) {
     return (
       <div className="flex flex-col items-center justify-center py-8 text-slate-400">
-        <Clock className="h-12 w-12 mb-2 opacity-50" />
+        <Clock className="h-12 w-12 mb-2 opacity-50" aria-hidden="true" />
         <p className="text-sm">{t('selectDateFirst')}</p>
       </div>
     );
@@ -98,7 +99,8 @@ export function TimeSlotSelector({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8" data-testid="time-slot-loading">
-        <Loader2 className="h-8 w-8 animate-spin text-burgundy-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-burgundy-600" aria-hidden="true" />
+        <span className="sr-only">{tCommon('loading')}</span>
       </div>
     );
   }
@@ -114,10 +116,10 @@ export function TimeSlotSelector({
           disabled={isLoading}
         >
           {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
           ) : (
             <>
-              <RefreshCw className="h-4 w-4 mr-1" />
+              <RefreshCw className="h-4 w-4 mr-1" aria-hidden="true" />
               Retry
             </>
           )}
@@ -129,7 +131,7 @@ export function TimeSlotSelector({
   if (slots.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-8 text-slate-400">
-        <Clock className="h-12 w-12 mb-2 opacity-50" />
+        <Clock className="h-12 w-12 mb-2 opacity-50" aria-hidden="true" />
         <p className="text-sm">{t('noAvailability')}</p>
       </div>
     );
