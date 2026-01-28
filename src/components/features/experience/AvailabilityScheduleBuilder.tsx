@@ -237,7 +237,7 @@ export function AvailabilityScheduleBuilder({
                 <AlertDialogHeader>
                   <AlertDialogTitle>{t('copyDialog.title')}</AlertDialogTitle>
                   <AlertDialogDescription>
-                    {t('copyDialog.description', { day: DAYS_OF_WEEK_ORDERED.find((d) => d.value === selectedDay)?.label })}
+                    {t('copyDialog.description', { day: DAYS_OF_WEEK_ORDERED.find((d) => d.value === selectedDay)?.label ?? '' })}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -295,7 +295,7 @@ export function AvailabilityScheduleBuilder({
       {/* Time Slot Picker for Selected Day */}
       <div className="rounded-xl border border-stone-200 bg-white p-6">
         <h4 className="font-medium text-slate-900 mb-4">
-          {t('dayTimeSlots', { day: DAYS_OF_WEEK_ORDERED.find((d) => d.value === selectedDay)?.label })}
+          {t('dayTimeSlots', { day: DAYS_OF_WEEK_ORDERED.find((d) => d.value === selectedDay)?.label ?? '' })}
         </h4>
         <TimeSlotPicker
           slots={slotsByDay[selectedDay] ?? []}
