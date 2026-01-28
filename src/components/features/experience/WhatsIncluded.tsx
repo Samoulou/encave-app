@@ -1,4 +1,7 @@
+'use client';
+
 import { CheckCircle } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { ExperienceType } from '@prisma/client';
 
 interface WhatsIncludedProps {
@@ -6,46 +9,24 @@ interface WhatsIncludedProps {
   inclusions?: string[];
 }
 
-// Default inclusions based on experience type
-const DEFAULT_INCLUSIONS: Record<ExperienceType, string[]> = {
-  TASTING: [
-    'Guided wine tasting',
-    'Selection of premium wines',
-    'Tasting notes & pairing suggestions',
-    'Water and bread palette cleansers',
-  ],
-  CELLAR_VISIT: [
-    'Guided cellar tour',
-    'Wine tasting session',
-    'History and winemaking explanation',
-    'Complimentary tasting glass',
-  ],
-  WORKSHOP: [
-    'Expert-led workshop',
-    'All materials included',
-    'Wine tasting',
-    'Certificate of participation',
-  ],
-  VINEYARD_TOUR: [
-    'Guided vineyard walk',
-    'Wine tasting session',
-    'Local terroir education',
-    'Panoramic views',
-  ],
-  FOOD_PAIRING: [
-    'Wine tasting selection',
-    'Local cheese & meat platter',
-    'Expert pairing guidance',
-    'Tasting notes',
-  ],
+// Keys for default inclusions based on experience type
+const INCLUSION_KEYS: Record<ExperienceType, string[]> = {
+  TASTING: ['guidedTasting', 'premiumWines', 'tastingNotes', 'paletteCleansers'],
+  CELLAR_VISIT: ['guidedTour', 'tastingSession', 'historyExplanation', 'complimentaryGlass'],
+  WORKSHOP: ['expertLed', 'materialsIncluded', 'wineTasting', 'certificate'],
+  VINEYARD_TOUR: ['guidedWalk', 'tastingSession', 'terroirEducation', 'panoramicViews'],
+  FOOD_PAIRING: ['wineSelection', 'localPlatter', 'pairingGuidance', 'tastingNotes'],
 };
 
 export function WhatsIncluded({ type, inclusions }: WhatsIncludedProps) {
-  const items = inclusions ?? DEFAULT_INCLUSIONS[type] ?? DEFAULT_INCLUSIONS.TASTING;
+  const t = useTranslations('experience');
+
+  // If custom inclusions are provided, use them; otherwise use translated defaults
+  const items = inclusions ?? INCLUSION_KEYS[type]?.map(key => t(`inclusions.${type}.${key}`)) ?? [];
 
   return (
     <section>
-      <h3 className="text-2xl font-bold mb-6 text-[#1a0f12]">What&apos;s included</h3>
+      <h3 className="text-2xl font-bold mb-6 text-[#1a0f12]">{t('whatsIncluded')}</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {items.map((item, index) => (
           <div key={index} className="flex items-start gap-3">

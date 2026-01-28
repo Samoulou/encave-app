@@ -187,9 +187,62 @@
     "searchPlaceholder": "Weinerlebnisse suchen..."
   },
   "experience": {
+    "aboutTitle": "Über dieses Erlebnis",
+    "capacityRange": "{min}-{max} Personen",
+    "capacitySingle": "{count, plural, =1 {# Person} other {# Personen}}",
+    "maxGuests2": "Max {count} Gäste",
+    "reviews": "{count, plural, =1 {# Bewertung} other {# Bewertungen}}",
+    "whatsIncluded": "Was ist enthalten",
+    "youMightAlsoLike": "Das könnte Ihnen auch gefallen",
+    "viewWineryProfile": "Weingut-Profil ansehen",
+    "whereYoullBe": "Wo Sie sein werden",
+    "freeParking": "Kostenlose Parkplätze verfügbar",
+    "nearStation": "In der Nähe des Bahnhofs {commune}",
+    "pricePerPersonLabel": "Preis pro Person",
+    "available": "VERFÜGBAR",
+    "freeCancellation": "Kostenlose Stornierung bis 24h vorher.",
+    "inclusions": {
+      "TASTING": {
+        "guidedTasting": "Geführte Weinverkostung",
+        "premiumWines": "Auswahl an Premium-Weinen",
+        "tastingNotes": "Verkostungsnotizen und Paarungsvorschläge",
+        "paletteCleansers": "Wasser und Brot zur Gaumenreinigung"
+      },
+      "CELLAR_VISIT": {
+        "guidedTour": "Geführte Kellerbesichtigung",
+        "tastingSession": "Weinverkostung",
+        "historyExplanation": "Geschichte und Weinherstellung erklärt",
+        "complimentaryGlass": "Gratis Verkostungsglas"
+      },
+      "WORKSHOP": {
+        "expertLed": "Von Experten geleiteter Workshop",
+        "materialsIncluded": "Alle Materialien inklusive",
+        "wineTasting": "Weinverkostung",
+        "certificate": "Teilnahmezertifikat"
+      },
+      "VINEYARD_TOUR": {
+        "guidedWalk": "Geführter Spaziergang durch den Weinberg",
+        "tastingSession": "Weinverkostung",
+        "terroirEducation": "Lokale Terroir-Bildung",
+        "panoramicViews": "Panoramablick"
+      },
+      "FOOD_PAIRING": {
+        "wineSelection": "Weinverkostungsauswahl",
+        "localPlatter": "Lokale Käse- und Fleischplatte",
+        "pairingGuidance": "Experten-Paarungsberatung",
+        "tastingNotes": "Verkostungsnotizen"
+      }
+    },
     "types": {
       "TASTING": "Verkostung",
       "CELLAR_VISIT": "Kellerbesuch",
+      "WORKSHOP": "Workshop",
+      "VINEYARD_TOUR": "Weinbergtour",
+      "FOOD_PAIRING": "Wein-Speisen-Pairing"
+    },
+    "typesDetailed": {
+      "TASTING": "Weinverkostung",
+      "CELLAR_VISIT": "Geführte Tour",
       "WORKSHOP": "Workshop",
       "VINEYARD_TOUR": "Weinbergtour",
       "FOOD_PAIRING": "Wein-Speisen-Pairing"

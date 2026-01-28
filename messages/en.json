@@ -187,9 +187,62 @@
     "searchPlaceholder": "Search wine experiences..."
   },
   "experience": {
+    "aboutTitle": "About This Experience",
+    "capacityRange": "{min}-{max} people",
+    "capacitySingle": "{count, plural, =1 {# person} other {# people}}",
+    "maxGuests2": "Max {count} Guests",
+    "reviews": "{count, plural, =1 {# Review} other {# Reviews}}",
+    "whatsIncluded": "What's included",
+    "youMightAlsoLike": "You might also like",
+    "viewWineryProfile": "View winery profile",
+    "whereYoullBe": "Where you'll be",
+    "freeParking": "Free parking available",
+    "nearStation": "Near {commune} station",
+    "pricePerPersonLabel": "Price per person",
+    "available": "AVAILABLE",
+    "freeCancellation": "Free cancellation up to 24h before.",
+    "inclusions": {
+      "TASTING": {
+        "guidedTasting": "Guided wine tasting",
+        "premiumWines": "Selection of premium wines",
+        "tastingNotes": "Tasting notes & pairing suggestions",
+        "paletteCleansers": "Water and bread palette cleansers"
+      },
+      "CELLAR_VISIT": {
+        "guidedTour": "Guided cellar tour",
+        "tastingSession": "Wine tasting session",
+        "historyExplanation": "History and winemaking explanation",
+        "complimentaryGlass": "Complimentary tasting glass"
+      },
+      "WORKSHOP": {
+        "expertLed": "Expert-led workshop",
+        "materialsIncluded": "All materials included",
+        "wineTasting": "Wine tasting",
+        "certificate": "Certificate of participation"
+      },
+      "VINEYARD_TOUR": {
+        "guidedWalk": "Guided vineyard walk",
+        "tastingSession": "Wine tasting session",
+        "terroirEducation": "Local terroir education",
+        "panoramicViews": "Panoramic views"
+      },
+      "FOOD_PAIRING": {
+        "wineSelection": "Wine tasting selection",
+        "localPlatter": "Local cheese & meat platter",
+        "pairingGuidance": "Expert pairing guidance",
+        "tastingNotes": "Tasting notes"
+      }
+    },
     "types": {
       "TASTING": "Tasting",
       "CELLAR_VISIT": "Cellar Visit",
+      "WORKSHOP": "Workshop",
+      "VINEYARD_TOUR": "Vineyard Tour",
+      "FOOD_PAIRING": "Food Pairing"
+    },
+    "typesDetailed": {
+      "TASTING": "Wine Tasting",
+      "CELLAR_VISIT": "Guided Tour",
       "WORKSHOP": "Workshop",
       "VINEYARD_TOUR": "Vineyard Tour",
       "FOOD_PAIRING": "Food Pairing"

@@ -38,6 +38,7 @@ export function BookingWidget({
   availabilitySlots = [],
 }: BookingWidgetProps) {
   const t = useTranslations('booking');
+  const tExp = useTranslations('experience');
   const router = useRouter();
 
   // URL state persistence using nuqs
@@ -114,7 +115,7 @@ export function BookingWidget({
       {/* Price Header */}
       <div className="flex justify-between items-end mb-6">
         <div>
-          <p className="text-sm text-gray-500">Price per person</p>
+          <p className="text-sm text-gray-500">{tExp('pricePerPersonLabel')}</p>
           <div className="flex items-baseline gap-1">
             <span className="text-2xl font-bold text-[#1a0f12]" data-testid="booking-price">
               {formatCHF(price)}
@@ -123,7 +124,7 @@ export function BookingWidget({
         </div>
         {isBookingEnabled && (
           <div className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded">
-            AVAILABLE
+            {tExp('available')}
           </div>
         )}
       </div>
@@ -224,7 +225,7 @@ export function BookingWidget({
 
         {isBookingEnabled && (
           <p className="text-xs text-center text-gray-400 mt-2">
-            Free cancellation up to 24h before.
+            {tExp('freeCancellation')}
           </p>
         )}
       </div>

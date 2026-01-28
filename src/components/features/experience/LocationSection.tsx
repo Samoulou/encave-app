@@ -1,3 +1,7 @@
+'use client';
+
+import { MapPin } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import {
   getMapEmbedUrl,
   VALAIS_FALLBACK_MAP_URL,
@@ -18,6 +22,8 @@ export function LocationSection({
   latitude,
   longitude,
 }: LocationSectionProps) {
+  const t = useTranslations('experience');
+
   const fullAddress = `${address}, ${commune}, Valais, Switzerland`;
   const hasCoordinates = latitude != null && longitude != null;
 
@@ -34,7 +40,7 @@ export function LocationSection({
   return (
     <section data-testid="location-section">
       <h3 className="text-2xl font-bold mb-4 text-[#1a0f12]">
-        Where you&apos;ll be
+        {t('whereYoullBe')}
       </h3>
       <p className="text-gray-600 mb-4" data-testid="winery-address">
         {fullAddress}
@@ -54,8 +60,15 @@ export function LocationSection({
           loading="lazy"
           referrerPolicy="no-referrer"
         />
+        {/* Map Marker Overlay */}
+        {hasCoordinates && (
+          <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+            <div className="bg-white p-2 rounded-full shadow-xl">
+              <MapPin className="h-7 w-7 text-primary" />
+            </div>
+          </div>
+        )}
       </a>
-
     </section>
   );
 }

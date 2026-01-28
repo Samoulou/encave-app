@@ -1,6 +1,9 @@
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
 import { MapPin, Clock, Wine } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { ExperienceType } from '@prisma/client';
 import { formatCHF } from '@/lib/utils/currency';
 import { IMAGE_PLACEHOLDERS } from '@/lib/image-placeholder';
@@ -24,31 +27,25 @@ interface RelatedExperiencesProps {
   experiences: RelatedExperience[];
 }
 
-const TYPE_LABELS: Record<ExperienceType, string> = {
-  TASTING: 'Wine Tasting',
-  CELLAR_VISIT: 'Cellar Visit',
-  WORKSHOP: 'Workshop',
-  VINEYARD_TOUR: 'Vineyard Tour',
-  FOOD_PAIRING: 'Food Pairing',
-};
-
-function formatDuration(minutes: number): string {
-  if (minutes < 60) {
-    return `${minutes} min`;
-  }
-  const hours = Math.floor(minutes / 60);
-  const remainingMinutes = minutes % 60;
-  if (remainingMinutes === 0) {
-    return `${hours}h`;
-  }
-  return `${hours}h ${remainingMinutes}min`;
-}
-
 export function RelatedExperiences({ experiences }: RelatedExperiencesProps) {
+  const t = useTranslations('experience');
+
+  const formatDuration = (minutes: number): string => {
+    if (minutes < 60) {
+      return t('durationMinutes', { count: minutes });
+    }
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    if (remainingMinutes === 0) {
+      return t('durationFormat', { count: hours });
+    }
+    return `${t('durationFormat', { count: hours })} ${t('durationMinutes', { count: remainingMinutes })}`;
+  };
+
   return (
     <section data-testid="related-experiences">
       <h2 className="font-display text-2xl font-semibold text-slate-900">
-        You might also like
+        {t('youMightAlsoLike')}
       </h2>
 
       <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -80,7 +77,7 @@ export function RelatedExperiences({ experiences }: RelatedExperiencesProps) {
 
               {/* Type Badge */}
               <span className="absolute left-3 top-3 rounded-full bg-gold-400 px-2.5 py-1 text-xs font-medium text-gold-950">
-                {TYPE_LABELS[experience.type]}
+                {t(`types.${experience.type}`)}
               </span>
 
               {/* Price */}

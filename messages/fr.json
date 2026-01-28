@@ -187,9 +187,62 @@
     "searchPlaceholder": "Rechercher des expériences viticoles..."
   },
   "experience": {
+    "aboutTitle": "À propos de cette expérience",
+    "capacityRange": "{min}-{max} personnes",
+    "capacitySingle": "{count, plural, =1 {# personne} other {# personnes}}",
+    "maxGuests2": "Max {count} personnes",
+    "reviews": "{count, plural, =1 {# avis} other {# avis}}",
+    "whatsIncluded": "Ce qui est inclus",
+    "youMightAlsoLike": "Vous aimerez aussi",
+    "viewWineryProfile": "Voir le profil du domaine",
+    "whereYoullBe": "Où vous serez",
+    "freeParking": "Parking gratuit disponible",
+    "nearStation": "Proche de la gare de {commune}",
+    "pricePerPersonLabel": "Prix par personne",
+    "available": "DISPONIBLE",
+    "freeCancellation": "Annulation gratuite jusqu'à 24h avant.",
+    "inclusions": {
+      "TASTING": {
+        "guidedTasting": "Dégustation guidée",
+        "premiumWines": "Sélection de vins premium",
+        "tastingNotes": "Notes de dégustation et suggestions d'accords",
+        "paletteCleansers": "Eau et pain pour nettoyer le palais"
+      },
+      "CELLAR_VISIT": {
+        "guidedTour": "Visite guidée de la cave",
+        "tastingSession": "Séance de dégustation",
+        "historyExplanation": "Histoire et explication de la vinification",
+        "complimentaryGlass": "Verre de dégustation offert"
+      },
+      "WORKSHOP": {
+        "expertLed": "Atelier animé par un expert",
+        "materialsIncluded": "Tout le matériel inclus",
+        "wineTasting": "Dégustation de vin",
+        "certificate": "Certificat de participation"
+      },
+      "VINEYARD_TOUR": {
+        "guidedWalk": "Promenade guidée dans le vignoble",
+        "tastingSession": "Séance de dégustation",
+        "terroirEducation": "Découverte du terroir local",
+        "panoramicViews": "Vues panoramiques"
+      },
+      "FOOD_PAIRING": {
+        "wineSelection": "Sélection de vins à déguster",
+        "localPlatter": "Plateau de fromages et charcuteries locales",
+        "pairingGuidance": "Conseils d'accord expert",
+        "tastingNotes": "Notes de dégustation"
+      }
+    },
     "types": {
       "TASTING": "Dégustation",
       "CELLAR_VISIT": "Visite de cave",
+      "WORKSHOP": "Atelier",
+      "VINEYARD_TOUR": "Visite du vignoble",
+      "FOOD_PAIRING": "Accord mets-vins"
+    },
+    "typesDetailed": {
+      "TASTING": "Dégustation de vin",
+      "CELLAR_VISIT": "Visite guidée",
       "WORKSHOP": "Atelier",
       "VINEYARD_TOUR": "Visite du vignoble",
       "FOOD_PAIRING": "Accord mets-vins"
