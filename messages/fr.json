@@ -453,6 +453,8 @@
     "paymentMethod": "Moyen de paiement",
     "cardInformation": "Informations de carte",
     "cardNumberPlaceholder": "Numéro de carte",
+    "cardExpiry": "Date d'expiration",
+    "cardCvc": "Code de sécurité",
     "cardholderName": "Nom du titulaire",
     "cardholderNamePlaceholder": "Nom sur la carte",
     "securePaymentStripe": "Paiement sécurisé par Stripe",

@@ -453,6 +453,8 @@
     "paymentMethod": "Zahlungsmethode",
     "cardInformation": "Karteninformationen",
     "cardNumberPlaceholder": "Kartennummer",
+    "cardExpiry": "Ablaufdatum",
+    "cardCvc": "Sicherheitscode",
     "cardholderName": "Name des Karteninhabers",
     "cardholderNamePlaceholder": "Name auf der Karte",
     "securePaymentStripe": "Sichere Zahlung uber Stripe",

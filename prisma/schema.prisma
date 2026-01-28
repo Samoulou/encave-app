@@ -182,6 +182,12 @@ model Experience {
   minCapacity Int
   maxCapacity Int
   coverPhoto  String
+  // Location fields (optional - falls back to winery address if not set)
+  address     String?          // Street address
+  city        String?          // City/commune
+  zipCode     String?          // Postal code
+  latitude    Float?           // Geocoded latitude
+  longitude   Float?           // Geocoded longitude
   status      ExperienceStatus @default(DRAFT)
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
@@ -318,4 +324,13 @@ model EmailLog {
   @@index([type, createdAt])
   @@index([recipientId])
   @@map("email_logs")
+}
+
+model NewsletterSubscription {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  source    String   @default("coming-soon") // Where the subscription came from
+  createdAt DateTime @default(now())
+
+  @@map("newsletter_subscriptions")
 }

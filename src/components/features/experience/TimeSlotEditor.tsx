@@ -1,0 +1,106 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Check, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+
+interface TimeSlotEditorProps {
+  start: string;
+  end: string;
+  onSave: (_startTime: string, _endTime: string) => void;
+  onCancel: () => void;
+}
+
+/**
+ * Converts a time string (HH:MM) to total minutes since midnight.
+ */
+function timeToMinutes(time: string): number {
+  const [hours, minutes] = time.split(':').map(Number);
+  return (hours ?? 0) * 60 + (minutes ?? 0);
+}
+
+/**
+ * Validates that a time slot has end > start and minimum 30 minutes duration.
+ */
+function isValidTimeSlot(start: string, end: string): boolean {
+  const startMinutes = timeToMinutes(start);
+  const endMinutes = timeToMinutes(end);
+  return endMinutes > startMinutes && endMinutes - startMinutes >= 30;
+}
+
+export function TimeSlotEditor({ start, end, onSave, onCancel }: TimeSlotEditorProps) {
+  const [startTime, setStartTime] = useState(start);
+  const [endTime, setEndTime] = useState(end);
+  const [error, setError] = useState<string | null>(null);
+
+  // Validate whenever times change
+  useEffect(() => {
+    if (!startTime || !endTime) {
+      setError(null);
+      return;
+    }
+    if (!isValidTimeSlot(startTime, endTime)) {
+      const startMinutes = timeToMinutes(startTime);
+      const endMinutes = timeToMinutes(endTime);
+      if (endMinutes <= startMinutes) {
+        setError('End time must be after start time');
+      } else {
+        setError('Minimum duration is 30 minutes');
+      }
+    } else {
+      setError(null);
+    }
+  }, [startTime, endTime]);
+
+  const handleSave = () => {
+    if (!isValidTimeSlot(startTime, endTime)) {
+      return;
+    }
+    onSave(startTime, endTime);
+  };
+
+  return (
+    <div className="flex items-center gap-2 bg-white px-3 py-2 rounded border border-primary">
+      <Input
+        type="time"
+        value={startTime}
+        onChange={(e) => setStartTime(e.target.value)}
+        className="w-28 h-8 text-sm"
+        aria-label="Start time"
+      />
+      <span className="text-slate-400">-</span>
+      <Input
+        type="time"
+        value={endTime}
+        onChange={(e) => setEndTime(e.target.value)}
+        className="w-28 h-8 text-sm"
+        aria-label="End time"
+      />
+      <Button
+        type="button"
+        size="sm"
+        variant="ghost"
+        onClick={handleSave}
+        disabled={!!error}
+        className="h-8 w-8 p-0 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+        aria-label="Save time slot"
+      >
+        <Check className="h-4 w-4" />
+      </Button>
+      <Button
+        type="button"
+        size="sm"
+        variant="ghost"
+        onClick={onCancel}
+        className="h-8 w-8 p-0 text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+        aria-label="Cancel editing"
+      >
+        <X className="h-4 w-4" />
+      </Button>
+      {error && (
+        <span className="text-xs text-red-500 ml-2">{error}</span>
+      )}
+    </div>
+  );
+}

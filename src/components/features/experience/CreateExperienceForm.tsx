@@ -25,6 +25,7 @@ import {
   AlertTriangle,
   Send,
   Save,
+  X,
 } from 'lucide-react';
 import {
   createExperienceSchema,
@@ -65,6 +66,17 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { AddressAutocomplete } from './AddressAutocomplete';
+import { TimeSlotEditor } from './TimeSlotEditor';
+
+interface AddressData {
+  street: string;
+  city: string;
+  zipCode: string;
+  latitude: number | null;
+  longitude: number | null;
+  fullAddress: string;
+}
 
 // Experience type options with icons
 const EXPERIENCE_TYPES = [
@@ -101,9 +113,11 @@ interface GalleryImage {
   isCover?: boolean;
 }
 
+type DayOfWeek = 'MON' | 'TUE' | 'WED' | 'THU' | 'FRI' | 'SAT' | 'SUN';
+
 interface AvailabilitySlot {
   id: string;
-  days: string[];
+  days: DayOfWeek[];
   timeSlots: { start: string; end: string }[];
 }
 
@@ -112,12 +126,12 @@ function SectionHeader({
   icon: Icon,
   title,
 }: {
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string; 'aria-hidden'?: boolean | 'true' | 'false' }>;
   title: string;
 }) {
   return (
     <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-      <span className="bg-primary/10 text-primary p-1.5 rounded-md flex items-center justify-center">
+      <span className="bg-primary/10 text-primary p-1.5 rounded-md flex items-center justify-center" aria-hidden="true">
         <Icon className="h-5 w-5" />
       </span>
       {title}
@@ -148,11 +162,20 @@ export function CreateExperienceForm() {
     },
   ]);
 
+  // Track which time slot is being edited: { slotId, timeSlotIndex }
+  const [editingTimeSlot, setEditingTimeSlot] = useState<{
+    slotId: string;
+    timeSlotIndex: number;
+  } | null>(null);
+
   // Location state
-  const [location, setLocation] = useState({
+  const [location, setLocation] = useState<AddressData>({
     street: '',
-    zipCode: '',
     city: '',
+    zipCode: '',
+    latitude: null,
+    longitude: null,
+    fullAddress: '',
   });
 
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
@@ -275,7 +298,22 @@ export function CreateExperienceForm() {
         return;
       }
 
-      const result = await createExperience(data, coverPhoto, galleryUrls);
+      // Add location and availability to the data
+      const dataWithExtras = {
+        ...data,
+        location: {
+          street: location.street,
+          city: location.city,
+          zipCode: location.zipCode,
+          latitude: location.latitude,
+          longitude: location.longitude,
+        },
+        availabilitySlots: availabilitySlots
+          .filter((slot) => slot.days.length > 0 && slot.timeSlots.length > 0)
+          .map(({ days, timeSlots }) => ({ days, timeSlots })),
+      };
+
+      const result = await createExperience(dataWithExtras, coverPhoto, galleryUrls);
 
       if (result.success) {
         setLastSaved(new Date());
@@ -290,7 +328,7 @@ export function CreateExperienceForm() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [form, galleryImages]);
+  }, [form, galleryImages, location, availabilitySlots]);
 
   const onSubmit = useCallback(
     async (data: CreateExperienceInput) => {
@@ -305,7 +343,23 @@ export function CreateExperienceForm() {
 
       try {
         const galleryUrls = galleryImages.filter((img) => !img.isCover).map((img) => img.url);
-        const result = await createExperience(data, coverPhoto, galleryUrls);
+
+        // Add location and availability to the data
+        const dataWithExtras = {
+          ...data,
+          location: {
+            street: location.street,
+            city: location.city,
+            zipCode: location.zipCode,
+            latitude: location.latitude,
+            longitude: location.longitude,
+          },
+          availabilitySlots: availabilitySlots
+            .filter((slot) => slot.days.length > 0 && slot.timeSlots.length > 0)
+            .map(({ days, timeSlots }) => ({ days, timeSlots })),
+        };
+
+        const result = await createExperience(dataWithExtras, coverPhoto, galleryUrls);
 
         if (result.success) {
           toast.success('Experience created successfully');
@@ -333,7 +387,7 @@ export function CreateExperienceForm() {
         setIsSubmitting(false);
       }
     },
-    [galleryImages, isPublishEnabled, router]
+    [galleryImages, isPublishEnabled, router, location, availabilitySlots]
   );
 
   const handlePublishNow = async () => {
@@ -361,6 +415,99 @@ export function CreateExperienceForm() {
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+  };
+
+  // ===== Availability Handlers =====
+
+  const handleEditTimeSlot = (slotId: string, timeSlotIndex: number) => {
+    setEditingTimeSlot({ slotId, timeSlotIndex });
+  };
+
+  const handleSaveTimeSlot = (start: string, end: string) => {
+    if (!editingTimeSlot) return;
+
+    setAvailabilitySlots((prev) =>
+      prev.map((slot) =>
+        slot.id === editingTimeSlot.slotId
+          ? {
+              ...slot,
+              timeSlots: slot.timeSlots.map((ts, idx) =>
+                idx === editingTimeSlot.timeSlotIndex ? { start, end } : ts
+              ),
+            }
+          : slot
+      )
+    );
+    setEditingTimeSlot(null);
+    setHasUnsavedChanges(true);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingTimeSlot(null);
+  };
+
+  const handleDeleteTimeSlot = (slotId: string, timeSlotIndex: number) => {
+    setAvailabilitySlots((prev) => {
+      const slot = prev.find((s) => s.id === slotId);
+      if (!slot) return prev;
+
+      // If only one time slot, remove entire pattern
+      if (slot.timeSlots.length === 1) {
+        // If this is the last pattern, show warning and keep it
+        if (prev.length === 1) {
+          toast.error('At least one schedule pattern is required');
+          return prev;
+        }
+        return prev.filter((s) => s.id !== slotId);
+      }
+
+      // Otherwise, just remove the time slot
+      return prev.map((s) =>
+        s.id === slotId
+          ? { ...s, timeSlots: s.timeSlots.filter((_, idx) => idx !== timeSlotIndex) }
+          : s
+      );
+    });
+    setHasUnsavedChanges(true);
+  };
+
+  const handleAddTimeSlot = (slotId: string) => {
+    setAvailabilitySlots((prev) =>
+      prev.map((slot) => {
+        if (slot.id !== slotId) return slot;
+
+        // Calculate a sensible default time based on existing slots
+        const lastSlot = slot.timeSlots[slot.timeSlots.length - 1];
+        let newStart = '10:00';
+        let newEnd = '12:00';
+
+        if (lastSlot) {
+          // Try to add 2 hours after the last slot's end time
+          const [hours, minutes] = lastSlot.end.split(':').map(Number);
+          const newStartHours = (hours ?? 0) + 1;
+          if (newStartHours < 22) {
+            newStart = `${newStartHours.toString().padStart(2, '0')}:${(minutes ?? 0).toString().padStart(2, '0')}`;
+            const newEndHours = newStartHours + 2;
+            newEnd = `${Math.min(newEndHours, 23).toString().padStart(2, '0')}:${(minutes ?? 0).toString().padStart(2, '0')}`;
+          }
+        }
+
+        return {
+          ...slot,
+          timeSlots: [...slot.timeSlots, { start: newStart, end: newEnd }],
+        };
+      })
+    );
+    setHasUnsavedChanges(true);
+  };
+
+  const handleDeletePattern = (slotId: string) => {
+    if (availabilitySlots.length === 1) {
+      toast.error('At least one schedule pattern is required');
+      return;
+    }
+    setAvailabilitySlots((prev) => prev.filter((s) => s.id !== slotId));
+    setHasUnsavedChanges(true);
   };
 
   const maxGalleryImages = 5;
@@ -477,7 +624,7 @@ export function CreateExperienceForm() {
                                           : 'border-stone-200 bg-slate-50 hover:bg-slate-100'
                                       )}
                                     >
-                                      <Icon className="h-5 w-5 mx-auto mb-1" />
+                                      <Icon className="h-5 w-5 mx-auto mb-1" aria-hidden="true" />
                                       <span className="text-sm font-medium">{type.label}</span>
                                     </div>
                                   </label>
@@ -506,31 +653,31 @@ export function CreateExperienceForm() {
                                 <button
                                   type="button"
                                   className="p-1 rounded text-slate-500 hover:bg-slate-100 hover:text-slate-900"
-                                  title="Bold"
+                                  aria-label="Bold"
                                 >
-                                  <span className="font-bold text-sm">B</span>
+                                  <span className="font-bold text-sm" aria-hidden="true">B</span>
                                 </button>
                                 <button
                                   type="button"
                                   className="p-1 rounded text-slate-500 hover:bg-slate-100 hover:text-slate-900"
-                                  title="Italic"
+                                  aria-label="Italic"
                                 >
-                                  <span className="italic text-sm">I</span>
+                                  <span className="italic text-sm" aria-hidden="true">I</span>
                                 </button>
                                 <button
                                   type="button"
                                   className="p-1 rounded text-slate-500 hover:bg-slate-100 hover:text-slate-900"
-                                  title="Underline"
+                                  aria-label="Underline"
                                 >
-                                  <span className="underline text-sm">U</span>
+                                  <span className="underline text-sm" aria-hidden="true">U</span>
                                 </button>
-                                <div className="w-px h-4 bg-stone-300 mx-1" />
+                                <div className="w-px h-4 bg-stone-300 mx-1" aria-hidden="true" />
                                 <button
                                   type="button"
                                   className="p-1 rounded text-slate-500 hover:bg-slate-100 hover:text-slate-900"
-                                  title="Bullet List"
+                                  aria-label="Bullet list"
                                 >
-                                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                                   </svg>
                                 </button>
@@ -636,7 +783,7 @@ export function CreateExperienceForm() {
                                 {...field}
                                 onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
                               />
-                              <Users className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                              <Users className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" aria-hidden="true" />
                             </div>
                           </FormControl>
                           <FormMessage />
@@ -677,7 +824,7 @@ export function CreateExperienceForm() {
                       }}
                     />
                     <div className="bg-white p-4 rounded-full shadow-sm mb-4 group-hover:scale-110 transition-transform">
-                      <Upload className="text-primary h-10 w-10" />
+                      <Upload className="text-primary h-10 w-10" aria-hidden="true" />
                     </div>
                     <p className="text-slate-900 font-bold mb-1">Click to upload or drag and drop</p>
                     <p className="text-slate-500 text-sm">SVG, PNG, JPG or GIF (max. 800x400px)</p>
@@ -703,14 +850,16 @@ export function CreateExperienceForm() {
                               type="button"
                               className="p-1.5 bg-white text-rose-600 rounded-full hover:bg-rose-50"
                               onClick={() => handleRemoveGalleryImage(image.id, image.url)}
+                              aria-label={`Remove image ${index + 1}`}
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className="h-4 w-4" aria-hidden="true" />
                             </button>
                             <button
                               type="button"
                               className="p-1.5 bg-white text-slate-700 rounded-full hover:bg-slate-50"
+                              aria-label={`Preview image ${index + 1}`}
                             >
-                              <Eye className="h-4 w-4" />
+                              <Eye className="h-4 w-4" aria-hidden="true" />
                             </button>
                           </div>
                           {image.isCover && (
@@ -740,59 +889,111 @@ export function CreateExperienceForm() {
                         key={slot.id}
                         className="bg-slate-50 rounded-lg p-4 border border-stone-200"
                       >
-                        {/* Day Selector */}
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          {DAYS_OF_WEEK.map((day) => {
-                            const isSelected = slot.days.includes(day.value);
-                            return (
-                              <button
-                                key={day.value}
-                                type="button"
-                                className={cn(
-                                  'px-3 py-1 text-xs font-bold rounded transition-colors',
-                                  isSelected
-                                    ? 'bg-primary text-white'
-                                    : 'bg-white text-slate-400 border border-stone-200'
-                                )}
-                                onClick={() => {
-                                  setAvailabilitySlots((prev) =>
-                                    prev.map((s) =>
-                                      s.id === slot.id
-                                        ? {
-                                            ...s,
-                                            days: isSelected
-                                              ? s.days.filter((d) => d !== day.value)
-                                              : [...s.days, day.value],
-                                          }
-                                        : s
-                                    )
-                                  );
-                                }}
-                              >
-                                {day.label}
-                              </button>
-                            );
-                          })}
+                        {/* Pattern Header with Delete */}
+                        <div className="flex items-center justify-between mb-4">
+                          {/* Day Selector */}
+                          <div className="flex flex-wrap gap-2">
+                            {DAYS_OF_WEEK.map((day) => {
+                              const isSelected = slot.days.includes(day.value);
+                              return (
+                                <button
+                                  key={day.value}
+                                  type="button"
+                                  className={cn(
+                                    'px-3 py-1 text-xs font-bold rounded transition-colors',
+                                    isSelected
+                                      ? 'bg-primary text-white'
+                                      : 'bg-white text-slate-400 border border-stone-200'
+                                  )}
+                                  onClick={() => {
+                                    setAvailabilitySlots((prev) =>
+                                      prev.map((s) =>
+                                        s.id === slot.id
+                                          ? {
+                                              ...s,
+                                              days: isSelected
+                                                ? s.days.filter((d) => d !== day.value)
+                                                : [...s.days, day.value],
+                                            }
+                                          : s
+                                      )
+                                    );
+                                    setHasUnsavedChanges(true);
+                                  }}
+                                >
+                                  {day.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          {/* Delete Pattern Button */}
+                          <button
+                            type="button"
+                            onClick={() => handleDeletePattern(slot.id)}
+                            className="text-slate-400 hover:text-red-500 transition-colors p-1"
+                            aria-label="Delete schedule pattern"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
                         </div>
 
                         {/* Time Slots */}
-                        <div className="flex items-center gap-4">
-                          {slot.timeSlots.map((timeSlot, idx) => (
-                            <div
-                              key={idx}
-                              className="flex items-center gap-2 bg-white px-3 py-2 rounded border border-stone-200"
-                            >
-                              <Clock className="h-4 w-4 text-slate-400" />
-                              <span className="text-sm font-medium">{timeSlot.start}</span>
-                              <span className="text-slate-300">-</span>
-                              <span className="text-sm font-medium">{timeSlot.end}</span>
-                            </div>
-                          ))}
+                        <div className="flex flex-wrap items-center gap-3">
+                          {slot.timeSlots.map((timeSlot, idx) => {
+                            const isEditing =
+                              editingTimeSlot?.slotId === slot.id &&
+                              editingTimeSlot?.timeSlotIndex === idx;
+
+                            if (isEditing) {
+                              return (
+                                <TimeSlotEditor
+                                  key={idx}
+                                  start={timeSlot.start}
+                                  end={timeSlot.end}
+                                  onSave={handleSaveTimeSlot}
+                                  onCancel={handleCancelEdit}
+                                />
+                              );
+                            }
+
+                            return (
+                              <div
+                                key={idx}
+                                className="flex items-center gap-2 bg-white px-3 py-2 rounded border border-stone-200 group"
+                              >
+                                <Clock className="h-4 w-4 text-slate-400" aria-hidden="true" />
+                                <span className="text-sm font-medium">{timeSlot.start}</span>
+                                <span className="text-slate-300">-</span>
+                                <span className="text-sm font-medium">{timeSlot.end}</span>
+                                {/* Edit Button */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleEditTimeSlot(slot.id, idx)}
+                                  className="ml-2 text-primary text-xs font-bold hover:underline opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  Edit
+                                </button>
+                                {/* Delete Time Slot Button */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteTimeSlot(slot.id, idx)}
+                                  className="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  aria-label="Delete time slot"
+                                >
+                                  <X className="h-4 w-4" aria-hidden="true" />
+                                </button>
+                              </div>
+                            );
+                          })}
+
+                          {/* Add Time Slot Button */}
                           <button
                             type="button"
-                            className="ml-auto text-primary text-sm font-bold hover:underline"
+                            onClick={() => handleAddTimeSlot(slot.id)}
+                            className="flex items-center gap-1 px-3 py-2 text-sm text-primary font-medium hover:bg-primary/5 rounded border border-dashed border-primary/30 transition-colors"
                           >
-                            Edit
+                            <Plus className="h-4 w-4" aria-hidden="true" />
+                            Add time
                           </button>
                         </div>
                       </div>
@@ -811,9 +1012,10 @@ export function CreateExperienceForm() {
                             timeSlots: [{ start: '10:00', end: '12:00' }],
                           },
                         ]);
+                        setHasUnsavedChanges(true);
                       }}
                     >
-                      <Plus className="h-4 w-4" />
+                      <Plus className="h-4 w-4" aria-hidden="true" />
                       Add Schedule Pattern
                     </button>
                   </div>
@@ -828,62 +1030,41 @@ export function CreateExperienceForm() {
                   className="bg-white border border-stone-200 rounded-xl p-6 md:p-8 scroll-mt-24 shadow-sm"
                 >
                   <SectionHeader icon={MapPin} title="Location" />
-                  <div className="flex flex-col md:flex-row gap-6">
-                    <div className="flex-1 space-y-4">
-                      {/* Street Address */}
-                      <div>
-                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
-                          Street Address
-                        </label>
-                        <div className="relative">
-                          <Input
-                            type="text"
-                            placeholder="Route de la Vidondée 2"
-                            className="bg-slate-50 border-stone-200 h-12 pl-10"
-                            value={location.street}
-                            onChange={(e) => setLocation((prev) => ({ ...prev, street: e.target.value }))}
-                          />
-                          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                        </div>
-                      </div>
-
-                      {/* Zip & City */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
-                            Zip Code
-                          </label>
-                          <Input
-                            type="text"
-                            placeholder="1908"
-                            className="bg-slate-50 border-stone-200 h-12"
-                            value={location.zipCode}
-                            onChange={(e) => setLocation((prev) => ({ ...prev, zipCode: e.target.value }))}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
-                            City
-                          </label>
-                          <Input
-                            type="text"
-                            placeholder="Riddes"
-                            className="bg-slate-50 border-stone-200 h-12"
-                            value={location.city}
-                            onChange={(e) => setLocation((prev) => ({ ...prev, city: e.target.value }))}
-                          />
-                        </div>
-                      </div>
+                  <div className="space-y-4">
+                    {/* Address Autocomplete */}
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+                        Address
+                      </label>
+                      <AddressAutocomplete
+                        value={location}
+                        onChange={setLocation}
+                        placeholder="Search for an address..."
+                      />
+                      <p className="text-xs text-slate-400 mt-1">
+                        Start typing to search for an address
+                      </p>
                     </div>
 
-                    {/* Map Preview */}
-                    <div className="w-full md:w-1/3 aspect-video md:aspect-square bg-slate-200 rounded-lg overflow-hidden border border-stone-200 relative">
-                      <div className="w-full h-full bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center">
-                        <div className="bg-primary text-white p-2 rounded-full shadow-lg">
-                          <MapPin className="h-5 w-5" />
+                    {/* Display selected address details */}
+                    {location.street && (
+                      <div className="bg-slate-50 rounded-lg p-4 border border-stone-200">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+                          Selected Address
+                        </h4>
+                        <div className="space-y-1 text-sm text-slate-700">
+                          {location.street && <p>{location.street}</p>}
+                          <p>
+                            {[location.zipCode, location.city].filter(Boolean).join(' ')}
+                          </p>
+                          {location.latitude && location.longitude && (
+                            <p className="text-xs text-slate-400">
+                              Coordinates: {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+                            </p>
+                          )}
                         </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </section>
               </form>
@@ -905,7 +1086,7 @@ export function CreateExperienceForm() {
                 />
               </div>
               <div className="p-3 bg-amber-50 border border-amber-100 rounded text-amber-800 text-xs leading-relaxed flex items-start gap-2">
-                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" aria-hidden="true" />
                 <span>
                   Your experience is currently in <strong>Draft</strong> mode. Publish to start
                   accepting bookings.
@@ -936,7 +1117,7 @@ export function CreateExperienceForm() {
                           : 'text-slate-500 hover:bg-stone-50 hover:text-slate-900 border-transparent'
                       )}
                     >
-                      <Icon className={cn('h-4 w-4', isActive && 'text-primary')} />
+                      <Icon className={cn('h-4 w-4', isActive && 'text-primary')} aria-hidden="true" />
                       {section.label}
                     </button>
                   );

@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Clock, Users, Copy, Trash2, Edit, MoreVertical } from 'lucide-react';
+import { Clock, Users, Copy, Trash2, Edit, MoreVertical, Send, EyeOff, Archive } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -18,6 +18,9 @@ import { DeleteConfirmModal } from './DeleteConfirmModal';
 import {
   duplicateExperience,
   deleteExperience,
+  publishExperience,
+  unpublishExperience,
+  archiveExperience,
 } from '@/server/actions/experience';
 import type { ExperienceStatus } from '@prisma/client';
 import { cn } from '@/lib/utils';
@@ -53,6 +56,48 @@ export function ExperienceManagementCard({
 
   const formatPrice = (cents: number): string => {
     return `CHF ${(cents / 100).toFixed(2)}`;
+  };
+
+  const handlePublish = async () => {
+    startTransition(async () => {
+      const result = await publishExperience(experience.id);
+      if (result.success) {
+        toast.success('Experience published', {
+          description: 'Your experience is now visible to visitors.',
+        });
+        router.refresh();
+      } else {
+        toast.error(result.error.message);
+      }
+    });
+  };
+
+  const handleUnpublish = async () => {
+    startTransition(async () => {
+      const result = await unpublishExperience(experience.id);
+      if (result.success) {
+        toast.success('Experience unpublished', {
+          description: 'Your experience is now a draft.',
+        });
+        router.refresh();
+      } else {
+        toast.error(result.error.message);
+      }
+    });
+  };
+
+  const handleArchive = async () => {
+    startTransition(async () => {
+      const result = await archiveExperience(experience.id);
+      if (result.success) {
+        toast.success('Experience archived', {
+          description: 'Your experience has been archived.',
+        });
+        router.refresh();
+      } else {
+        toast.error(result.error.message);
+      }
+    });
   };
 
   const handleDuplicate = async () => {
@@ -127,6 +172,26 @@ export function ExperienceManagementCard({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-40">
+                {experience.status === 'DRAFT' && (
+                  <DropdownMenuItem
+                    onClick={handlePublish}
+                    disabled={isPending}
+                    className="cursor-pointer text-green-600 focus:text-green-600"
+                  >
+                    <Send className="mr-2 h-4 w-4" />
+                    Publish
+                  </DropdownMenuItem>
+                )}
+                {experience.status === 'PUBLISHED' && (
+                  <DropdownMenuItem
+                    onClick={handleUnpublish}
+                    disabled={isPending}
+                    className="cursor-pointer"
+                  >
+                    <EyeOff className="mr-2 h-4 w-4" />
+                    Unpublish
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem
                   onClick={handleDuplicate}
                   disabled={isPending}
@@ -135,6 +200,19 @@ export function ExperienceManagementCard({
                   <Copy className="mr-2 h-4 w-4" />
                   Duplicate
                 </DropdownMenuItem>
+                {experience.status !== 'ARCHIVED' && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={handleArchive}
+                      disabled={isPending}
+                      className="cursor-pointer text-amber-600 focus:text-amber-600"
+                    >
+                      <Archive className="mr-2 h-4 w-4" />
+                      Archive
+                    </DropdownMenuItem>
+                  </>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => setDeleteModalOpen(true)}

@@ -453,6 +453,8 @@
     "paymentMethod": "Payment Method",
     "cardInformation": "Card Information",
     "cardNumberPlaceholder": "Card number",
+    "cardExpiry": "Card expiry date",
+    "cardCvc": "Card security code",
     "cardholderName": "Cardholder Name",
     "cardholderNamePlaceholder": "Name on card",
     "securePaymentStripe": "Secure payment processed by Stripe",

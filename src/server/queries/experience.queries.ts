@@ -57,6 +57,52 @@ export interface PaginatedSearchResult {
   hasLocationSearch: boolean;
 }
 
+export interface ExperienceDetail {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  type: ExperienceType;
+  duration: number;
+  price: number;
+  minCapacity: number;
+  maxCapacity: number;
+  coverPhoto: string;
+  status: ExperienceStatus;
+  wineryId: string;
+  // Experience-specific location fields
+  address: string | null;
+  city: string | null;
+  zipCode: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  winery: {
+    id: string;
+    name: string;
+    slug: string;
+    commune: string;
+    address: string;
+    coverPhoto: string | null;
+    latitude: number | null;
+    longitude: number | null;
+    stripeOnboardingComplete: boolean;
+  };
+  galleryImages: Array<{
+    id: string;
+    url: string;
+    order: number;
+    experienceId: string;
+  }>;
+  availabilitySlots: Array<{
+    id: string;
+    experienceId: string;
+    dayOfWeek: number;
+    startTime: string;
+    endTime: string;
+    isActive: boolean;
+  }>;
+}
+
 function getOrderBy(
   sort?: string
 ): Prisma.ExperienceOrderByWithRelationInput | Prisma.ExperienceOrderByWithRelationInput[] {
@@ -319,7 +365,7 @@ export const getExperiencePriceRange = cache(unstable_cache(
  * Cached for 5 minutes. Wrapped with React.cache for request deduplication.
  */
 export const getExperienceBySlug = cache(unstable_cache(
-  async (slug: string) => {
+  async (slug: string): Promise<ExperienceDetail | null> => {
     return db.experience.findFirst({
       where: {
         slug,
@@ -328,7 +374,25 @@ export const getExperienceBySlug = cache(unstable_cache(
           status: 'VERIFIED',
         },
       },
-      include: {
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        description: true,
+        type: true,
+        duration: true,
+        price: true,
+        minCapacity: true,
+        maxCapacity: true,
+        coverPhoto: true,
+        status: true,
+        wineryId: true,
+        // Experience-specific location fields
+        address: true,
+        city: true,
+        zipCode: true,
+        latitude: true,
+        longitude: true,
         winery: {
           select: {
             id: true,

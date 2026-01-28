@@ -33,6 +33,30 @@ export const experienceTypeValues = EXPERIENCE_TYPE_OPTIONS.map(
 ) as [string, ...string[]];
 
 /**
+ * Schema for availability time slot
+ */
+export const availabilitySlotSchema = z.object({
+  days: z.array(z.enum(['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'])),
+  timeSlots: z.array(
+    z.object({
+      start: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time format'),
+      end: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time format'),
+    })
+  ),
+});
+
+/**
+ * Schema for location/address
+ */
+export const locationSchema = z.object({
+  street: z.string().optional(),
+  city: z.string().optional(),
+  zipCode: z.string().optional(),
+  latitude: z.number().nullable().optional(),
+  longitude: z.number().nullable().optional(),
+});
+
+/**
  * Schema for creating a new experience
  * Validation rules per AC 6:
  * - Title: required, max 100 chars
@@ -74,6 +98,10 @@ export const createExperienceSchema = z
       .number()
       .int('Maximum capacity must be a whole number')
       .min(1, 'Maximum capacity must be at least 1'),
+    // Location fields (optional)
+    location: locationSchema.optional(),
+    // Availability slots
+    availabilitySlots: z.array(availabilitySlotSchema).optional(),
   })
   .refine((data) => data.maxCapacity >= data.minCapacity, {
     message: 'Maximum capacity must be greater than or equal to minimum capacity',

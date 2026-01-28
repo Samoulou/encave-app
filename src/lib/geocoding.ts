@@ -113,7 +113,7 @@ export async function geocodeWineryAddress(
 }
 
 /**
- * Generate OpenStreetMap embed URL with marker
+ * Generate OpenStreetMap embed URL
  * @param latitude Latitude coordinate
  * @param longitude Longitude coordinate
  * @param zoom Zoom level (default 15 for street-level view)
@@ -124,22 +124,10 @@ export function getMapEmbedUrl(
   longitude: number,
   zoom: number = 15
 ): string {
-  // Calculate bounding box based on zoom
-  // Higher zoom = smaller bbox
-  const delta = 0.01 / (zoom / 10);
-
-  const bbox = {
-    minLon: longitude - delta,
-    minLat: latitude - delta,
-    maxLon: longitude + delta,
-    maxLat: latitude + delta,
-  };
-
-  return (
-    `https://www.openstreetmap.org/export/embed.html?` +
-    `bbox=${bbox.minLon},${bbox.minLat},${bbox.maxLon},${bbox.maxLat}` +
-    `&layer=mapnik&marker=${latitude},${longitude}`
-  );
+  // Calculate bounding box for the embed (roughly 0.01 degrees around the point)
+  const delta = 0.005 * (18 - zoom); // Adjust delta based on zoom
+  const bbox = `${longitude - delta},${latitude - delta},${longitude + delta},${latitude + delta}`;
+  return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${latitude},${longitude}`;
 }
 
 /**
@@ -166,5 +154,4 @@ export function getGoogleMapsUrl(
  * Used when coordinates are unavailable
  */
 export const VALAIS_FALLBACK_MAP_URL =
-  'https://www.openstreetmap.org/export/embed.html?' +
-  'bbox=7.0,46.0,8.0,46.5&layer=mapnik';
+  'https://www.openstreetmap.org/export/embed.html?bbox=6.8,45.9,8.0,46.5&layer=mapnik';

@@ -190,7 +190,7 @@ export async function createExperience(
       };
     }
 
-    const { title, type, description, duration, price, minCapacity, maxCapacity } =
+    const { title, type, description, duration, price, minCapacity, maxCapacity, location, availabilitySlots } =
       validated.data;
 
     // 4. Generate unique slug within winery (AC 9)
@@ -207,6 +207,12 @@ export async function createExperience(
       select: { slug: true },
     });
 
+    // Helper to convert day string to number (0 = Sunday, 6 = Saturday)
+    const dayToNumber = (day: string): number => {
+      const days: Record<string, number> = { SUN: 0, MON: 1, TUE: 2, WED: 3, THU: 4, FRI: 5, SAT: 6 };
+      return days[day] ?? 0;
+    };
+
     const experience = await db.$transaction(async (tx) => {
       const newExperience = await tx.experience.create({
         data: {
@@ -221,6 +227,12 @@ export async function createExperience(
           maxCapacity,
           coverPhoto: coverPhotoUrl,
           status: 'DRAFT',
+          // Location fields
+          address: location?.street || null,
+          city: location?.city || null,
+          zipCode: location?.zipCode || null,
+          latitude: location?.latitude || null,
+          longitude: location?.longitude || null,
         },
       });
 
@@ -233,6 +245,31 @@ export async function createExperience(
             order: index,
           })),
         });
+      }
+
+      // Add availability slots if provided
+      if (availabilitySlots && availabilitySlots.length > 0) {
+        const slotsToCreate: { experienceId: string; dayOfWeek: number; startTime: string; endTime: string; isActive: boolean }[] = [];
+
+        for (const slot of availabilitySlots) {
+          for (const day of slot.days) {
+            for (const timeSlot of slot.timeSlots) {
+              slotsToCreate.push({
+                experienceId: newExperience.id,
+                dayOfWeek: dayToNumber(day),
+                startTime: timeSlot.start,
+                endTime: timeSlot.end,
+                isActive: true,
+              });
+            }
+          }
+        }
+
+        if (slotsToCreate.length > 0) {
+          await tx.availabilitySlot.createMany({
+            data: slotsToCreate,
+          });
+        }
       }
 
       return newExperience;

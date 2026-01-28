@@ -9,11 +9,13 @@ import { ExperienceDetailHeader } from '@/components/features/experience/Experie
 import { ExperienceDetailGallery } from '@/components/features/experience/ExperienceDetailGallery';
 import { QuickFacts } from '@/components/features/experience/QuickFacts';
 import { AboutSection } from '@/components/features/experience/AboutSection';
-import { WhatsIncluded } from '@/components/features/experience/WhatsIncluded';
 import { LocationSection } from '@/components/features/experience/LocationSection';
+import { AvailabilityDisplay } from '@/components/features/experience/AvailabilityDisplay';
 import { BookingWidget } from '@/components/features/experience/BookingWidget';
 import { MobileBookingBar } from '@/components/features/experience/MobileBookingBar';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
+import { Header } from '@/components/layout/Header';
+import { Footer } from '@/components/layout/Footer';
 import { RelatedExperiencesSection } from './RelatedExperiencesSection';
 import { JsonLd } from '@/components/shared/JsonLd';
 import { Skeleton } from '@/components/shared/Skeleton';
@@ -118,16 +120,17 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
       name: experience.winery.name,
       address: {
         '@type': 'PostalAddress',
-        streetAddress: experience.winery.address,
-        addressLocality: experience.winery.commune,
+        streetAddress: experience.address || experience.winery.address,
+        addressLocality: experience.city || experience.winery.commune,
+        postalCode: experience.zipCode || undefined,
         addressRegion: 'Valais',
         addressCountry: 'CH',
       },
-      ...(experience.winery.latitude && experience.winery.longitude && {
+      ...((experience.latitude || experience.winery.latitude) && (experience.longitude || experience.winery.longitude) && {
         geo: {
           '@type': 'GeoCoordinates',
-          latitude: experience.winery.latitude,
-          longitude: experience.winery.longitude,
+          latitude: experience.latitude || experience.winery.latitude,
+          longitude: experience.longitude || experience.winery.longitude,
         },
       }),
     },
@@ -159,10 +162,11 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
   ];
 
   return (
-    <>
+    <div className="min-h-screen bg-background-light">
+      <Header />
       <JsonLd data={eventSchema} />
 
-      <main className="flex-grow w-full bg-background-light min-h-screen pb-24 lg:pb-8">
+      <main className="flex-grow w-full pb-24 lg:pb-8">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Breadcrumbs */}
           <nav className="flex items-center text-sm mb-6 overflow-x-auto whitespace-nowrap">
@@ -198,16 +202,18 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
               {/* About Section */}
               <AboutSection description={experience.description} />
 
-              {/* What's Included */}
-              <WhatsIncluded type={experience.type} />
+              {/* Availability Schedule */}
+              {experience.availabilitySlots && experience.availabilitySlots.length > 0 && (
+                <AvailabilityDisplay slots={experience.availabilitySlots} />
+              )}
 
               {/* Location Map */}
               <LocationSection
-                address={experience.winery.address}
-                commune={experience.winery.commune}
+                address={experience.address || experience.winery.address}
+                commune={experience.city || experience.winery.commune}
                 wineryName={experience.winery.name}
-                latitude={experience.winery.latitude}
-                longitude={experience.winery.longitude}
+                latitude={experience.latitude || experience.winery.latitude}
+                longitude={experience.longitude || experience.winery.longitude}
               />
             </div>
 
@@ -246,7 +252,8 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
           availabilitySlots={experience.availabilitySlots}
         />
       </main>
-    </>
+      <Footer />
+    </div>
   );
 }
 
