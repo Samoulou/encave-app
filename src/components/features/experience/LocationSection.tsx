@@ -1,4 +1,7 @@
+'use client';
+
 import { MapPin, Car, Train } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import {
   getMapEmbedUrl,
   VALAIS_FALLBACK_MAP_URL,
@@ -19,6 +22,8 @@ export function LocationSection({
   latitude,
   longitude,
 }: LocationSectionProps) {
+  const t = useTranslations('experience');
+
   const fullAddress = `${address}, ${commune}, Valais, Switzerland`;
   const hasCoordinates = latitude != null && longitude != null;
 
@@ -35,7 +40,7 @@ export function LocationSection({
   return (
     <section data-testid="location-section">
       <h3 className="text-2xl font-bold mb-4 text-[#1a0f12]">
-        Where you&apos;ll be
+        {t('whereYoullBe')}
       </h3>
       <p className="text-gray-600 mb-4" data-testid="winery-address">
         {fullAddress}
@@ -69,11 +74,11 @@ export function LocationSection({
       <div className="mt-4 flex gap-6 text-sm">
         <div className="flex items-center gap-2 text-gray-600">
           <Car className="h-5 w-5" />
-          <span>Free parking available</span>
+          <span>{t('freeParking')}</span>
         </div>
         <div className="flex items-center gap-2 text-gray-600">
           <Train className="h-5 w-5" />
-          <span>Near {commune} station</span>
+          <span>{t('nearStation', { commune })}</span>
         </div>
       </div>
     </section>

@@ -1,6 +1,9 @@
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
 import { MapPin, ArrowRight, Wine } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { IMAGE_PLACEHOLDERS } from '@/lib/image-placeholder';
 
 interface WineryInfoCardProps {
@@ -16,6 +19,8 @@ export function WineryInfoCard({
   commune,
   coverPhoto,
 }: WineryInfoCardProps) {
+  const t = useTranslations('experience');
+
   return (
     <div className="overflow-hidden rounded-xl bg-white shadow-warm" data-testid="winery-info-card">
       {/* Cover Image */}
@@ -52,7 +57,7 @@ export function WineryInfoCard({
           href={`/wineries/${slug}`}
           className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-burgundy-600 transition-colors hover:text-burgundy-800"
         >
-          View winery profile
+          {t('viewWineryProfile')}
           <ArrowRight className="h-4 w-4" />
         </Link>
       </div>
