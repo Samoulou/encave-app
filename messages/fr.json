@@ -255,6 +255,73 @@
       "description": "Êtes-vous sûr de vouloir archiver \"{title}\"? Cette expérience ne sera plus visible par les visiteurs. Vous pourrez la restaurer plus tard si nécessaire.",
       "archiving": "Archivage...",
       "archiveButton": "Archiver"
+    },
+    "uploading": "Téléchargement...",
+    "unsavedChanges": "Modifications non enregistrées",
+    "removeCoverPhoto": "Supprimer la photo de couverture",
+    "removeGalleryImage": "Supprimer l'image de galerie {index}",
+    "minBookingSize": "Réservation min.",
+    "minBookingSizeTooltip": "Le nombre minimum de personnes requis par réservation. Les visiteurs ne peuvent pas réserver pour moins de ce nombre.",
+    "descriptionMinRecommended": "Minimum 20 caractères recommandés",
+    "characters": "{count} caractères",
+    "publishDialog": {
+      "title": "Expérience créée!",
+      "description": "Votre expérience a été enregistrée comme brouillon. Voulez-vous la publier maintenant pour qu'elle soit visible par les visiteurs?",
+      "keepAsDraft": "Garder comme brouillon",
+      "publishNow": "Publier maintenant",
+      "publishing": "Publication..."
+    },
+    "failedToPublish": "Échec de la publication. Vous pouvez la publier plus tard depuis le tableau de bord.",
+    "deleteModal": {
+      "title": "Supprimer l'expérience",
+      "description": "Êtes-vous sûr de vouloir supprimer \"{title}\"? Cette action est irréversible. Toutes les réservations et données associées seront définitivement supprimées.",
+      "deleting": "Suppression...",
+      "deleteButton": "Supprimer"
+    },
+    "timeSlots": {
+      "noConfigured": "Aucun créneau horaire configuré",
+      "addSlot": "Ajouter un créneau",
+      "addAnotherSlot": "Ajouter un autre créneau",
+      "startPlaceholder": "Début",
+      "endPlaceholder": "Fin",
+      "to": "à",
+      "toggleActive": "Activer/désactiver le créneau {index}",
+      "removeSlot": "Supprimer le créneau {index}"
+    },
+    "filters": {
+      "all": "Tous",
+      "published": "Publiés",
+      "drafts": "Brouillons",
+      "archived": "Archivés",
+      "searchPlaceholder": "Rechercher des expériences par nom..."
+    },
+    "sort": {
+      "sortBy": "Trier par",
+      "newestFirst": "Plus récents",
+      "oldestFirst": "Plus anciens",
+      "alphabetical": "Alphabétique",
+      "byStatus": "Par statut"
+    },
+    "availability": {
+      "title": "Disponibilité",
+      "noConfigured": "Aucune disponibilité configurée",
+      "noConfiguredDescription": "Sélectionnez un jour ci-dessous et ajoutez des créneaux horaires pour définir quand les visiteurs peuvent réserver cette expérience.",
+      "publishedNoSlots": "Cette expérience est publiée mais n'a pas de créneaux horaires disponibles. Les visiteurs ne peuvent pas réserver tant que vous n'avez pas configuré la disponibilité.",
+      "selectDay": "Sélectionner un jour",
+      "copyToAllDays": "Copier vers tous les jours",
+      "copyDialog": {
+        "title": "Copier les créneaux vers tous les jours",
+        "description": "Cela remplacera tous les créneaux existants de chaque jour par les créneaux de {day}. Cette action ne peut pas être annulée."
+      },
+      "dayTimeSlots": "Créneaux horaires du {day}",
+      "weeklyPreview": "Aperçu du planning hebdomadaire",
+      "slotsOverlap": "Les créneaux horaires se chevauchent. Veuillez ajuster les heures.",
+      "fixOverlapsBeforeSaving": "Veuillez corriger les chevauchements de créneaux le {day} avant d'enregistrer",
+      "noSlotsToCopy": "Aucun créneau à copier depuis ce jour",
+      "copiedSlots": "{count} créneau(x) copié(s) vers tous les jours",
+      "savedSuccessfully": "Disponibilité enregistrée avec succès",
+      "saving": "Enregistrement...",
+      "saveAvailability": "Enregistrer la disponibilité"
     }
   },
   "booking": {
@@ -467,7 +534,30 @@
     "coverPhotoUpdated": "Photo de couverture mise à jour",
     "coverPhotoRemoved": "Photo de couverture supprimée",
     "galleryImageAdded": "Image de galerie ajoutée",
-    "galleryImageRemoved": "Image de galerie supprimée"
+    "galleryImageRemoved": "Image de galerie supprimée",
+    "uploading": "Téléchargement...",
+    "unsavedChanges": "Modifications non enregistrées",
+    "saving": "Enregistrement...",
+    "saveChanges": "Enregistrer",
+    "coverPhotoRecommendedFull": "Recommandé : 1920 x 1080 pixels (ratio 16:9). Max 5 Mo, JPEG ou PNG.",
+    "galleryHelpFull": "Les images carrées fonctionnent mieux. Vous pouvez faire glisser les photos pour les réorganiser (bientôt disponible).",
+    "uploadCoverPhoto": "Télécharger la photo de couverture",
+    "swissFormatShort": "Format suisse: +41 XX XXX XX XX",
+    "onboarding": {
+      "congratulations": "Félicitations!",
+      "submittedForVerification": "Votre domaine <strong>{name}</strong> a été soumis pour vérification.",
+      "whatHappensNext": "Que se passe-t-il ensuite?",
+      "step1Title": "Demande reçue",
+      "step1Description": "Les détails de votre domaine sont maintenant dans notre système",
+      "step2Title": "Examen en cours",
+      "step2Description": "Notre équipe vérifiera vos informations",
+      "step3Title": "Notification de décision",
+      "step3Description": "Vous serez notifié une fois votre domaine approuvé",
+      "checkInbox": "Vérifiez votre boîte de réception",
+      "confirmationEmailSent": "Nous avons envoyé un email de confirmation à <strong>{email}</strong>",
+      "expectedResponse": "Réponse attendue sous <strong>{hours}</strong> heures",
+      "returnToHomepage": "Retour à l'accueil"
+    }
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -476,6 +566,49 @@
     "noExperiences": "Pas encore d'expériences",
     "createFirstExperience": "Créez votre première expérience pour commencer à recevoir des réservations.",
     "statistics": "Statistiques"
+  },
+  "earnings": {
+    "title": "Revenus",
+    "period": {
+      "selectPeriod": "Sélectionner la période",
+      "thisMonth": "Ce mois-ci",
+      "lastMonth": "Mois dernier",
+      "thisYear": "Cette année",
+      "allTime": "Tout le temps"
+    },
+    "summary": {
+      "totalEarnings": "Revenus totaux",
+      "grossRevenue": "Revenu brut",
+      "pendingPayouts": "Paiements en attente",
+      "vsLastMonth": "vs mois dernier",
+      "estArrival": "Arrivée prévue:",
+      "yearToDate": "Depuis le début de l'année"
+    },
+    "transactions": {
+      "title": "Transactions",
+      "noTransactions": "Aucune transaction trouvée.",
+      "date": "Date",
+      "bookingId": "ID de réservation",
+      "experience": "Expérience",
+      "customer": "Client",
+      "amount": "Montant",
+      "status": "Statut",
+      "openMenu": "Ouvrir le menu",
+      "viewDetails": "Voir les détails",
+      "downloadReceipt": "Télécharger le reçu"
+    },
+    "filters": {
+      "allMonths": "Tous les mois",
+      "allExperiences": "Toutes les expériences",
+      "allStatus": "Tous les statuts",
+      "paid": "Payé",
+      "pending": "En attente",
+      "refunded": "Remboursé"
+    },
+    "search": {
+      "placeholder": "Rechercher par nom de client, email...",
+      "clear": "Effacer la recherche"
+    }
   },
   "calendar": {
     "blocked": "Bloqué",
@@ -493,13 +626,16 @@
     "unblockError": "Échec du déblocage de la date"
   },
   "admin": {
-    "title": "Administration",
+    "title": "Tableau de bord Admin",
+    "subtitle": "Gérez les vérifications des domaines et les paramètres de la plateforme",
     "pendingReview": "En attente de validation",
     "verified": "Vérifié",
     "rejected": "Rejeté",
     "totalWineries": "Total des domaines",
     "showingPending": "Affichage de {count} {count, plural, =1 {domaine en attente} other {domaines en attente}}",
     "filterByCommune": "Filtrer par commune",
+    "allCommunes": "Toutes les communes",
+    "commune": "Commune",
     "newest": "Plus récents",
     "oldest": "Plus anciens",
     "wineryName": "Nom du domaine",
@@ -507,8 +643,45 @@
     "submitted": "Soumis",
     "actions": "Actions",
     "review": "Examiner",
+    "viewAll": "Voir tout",
     "allCaughtUp": "Tout est à jour!",
-    "noPendingWineries": "Aucun domaine en attente de validation."
+    "noPendingWineries": "Aucun domaine en attente de validation.",
+    "recentPending": "En attente récemment",
+    "recentPendingDescription": "Dernières inscriptions de domaines en attente de validation",
+    "quickActions": "Actions rapides",
+    "quickActionsDescription": "Tâches administratives courantes",
+    "reviewPendingWineries": "Examiner les domaines en attente",
+    "wineryInformation": "Informations du domaine",
+    "applicantInformation": "Informations du demandeur",
+    "photos": "Photos",
+    "imageCount": "{count} {count, plural, =1 {image} other {images}}",
+    "cover": "Couverture",
+    "description": "Description",
+    "address": "Adresse",
+    "phone": "Téléphone",
+    "wineryEmail": "Email du domaine",
+    "name": "Nom",
+    "notProvided": "Non fourni",
+    "accountEmail": "Email du compte",
+    "registrationDate": "Date d'inscription",
+    "verifiedAt": "Vérifié le",
+    "rejectionReason": "Motif du refus",
+    "rejectionReasonRequired": "Veuillez fournir un motif de refus (obligatoire)",
+    "rejectionReasonPlaceholder": "Expliquez pourquoi cette inscription de domaine est refusée...",
+    "confirmRejection": "Confirmer le refus",
+    "approve": "Approuver",
+    "reject": "Refuser",
+    "approveWinery": "Approuver le domaine",
+    "rejectWinery": "Refuser le domaine",
+    "approveConfirmation": "Êtes-vous sûr de vouloir approuver {name}? Cela rendra le domaine visible dans l'annuaire public.",
+    "rejectConfirmation": "Êtes-vous sûr de vouloir refuser {name}? Le demandeur sera notifié avec le motif fourni.",
+    "approving": "Approbation...",
+    "rejecting": "Refus...",
+    "yesApprove": "Oui, Approuver",
+    "yesReject": "Oui, Refuser",
+    "wineryApprovedSuccess": "Domaine approuvé avec succès",
+    "wineryRejectedSuccess": "Domaine refusé",
+    "pleaseProvideRejectionReason": "Veuillez fournir un motif de refus"
   },
   "search": {
     "placeholder": "Rechercher des expériences, domaines...",

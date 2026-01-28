@@ -3,6 +3,7 @@
 import { useState, useTransition, useEffect, useOptimistic } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Search } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
@@ -22,6 +23,7 @@ export function ExperienceFilters({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  const t = useTranslations('experience.filters');
 
   const currentFilter = (searchParams.get('filter') as FilterStatus) || 'all';
   const currentSearch = searchParams.get('q') || '';
@@ -77,11 +79,11 @@ export function ExperienceFilters({
     return () => clearTimeout(timer);
   }, [searchValue, currentSearch, router, searchParams]);
 
-  const filters: { key: FilterStatus; label: string; count?: number }[] = [
-    { key: 'all', label: 'All' },
-    { key: 'published', label: 'Published', count: publishedCount },
-    { key: 'drafts', label: 'Drafts', count: draftsCount },
-    { key: 'archived', label: 'Archived', count: archivedCount },
+  const filters: { key: FilterStatus; labelKey: 'all' | 'published' | 'drafts' | 'archived'; count?: number }[] = [
+    { key: 'all', labelKey: 'all' },
+    { key: 'published', labelKey: 'published', count: publishedCount },
+    { key: 'drafts', labelKey: 'drafts', count: draftsCount },
+    { key: 'archived', labelKey: 'archived', count: archivedCount },
   ];
 
   return (
@@ -100,7 +102,7 @@ export function ExperienceFilters({
           type="text"
           value={searchValue}
           onChange={(e) => handleSearchChange(e.target.value)}
-          placeholder="Search experiences by name..."
+          placeholder={t('searchPlaceholder')}
           className="pl-10 border-none bg-[#f8f6f6] focus:ring-2 focus:ring-primary/50"
         />
       </div>
@@ -118,7 +120,7 @@ export function ExperienceFilters({
                 : 'bg-[#f8f6f6] text-gray-600 hover:bg-gray-200'
             )}
           >
-            {filter.label}
+            {t(filter.labelKey)}
             {filter.count !== undefined && (
               <span className="ml-1 opacity-60">{filter.count}</span>
             )}

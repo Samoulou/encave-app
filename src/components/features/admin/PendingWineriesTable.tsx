@@ -13,6 +13,7 @@ import {
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { ArrowUpDown, Eye, MapPin, Wine } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { useTranslations } from 'next-intl';
 
 interface PendingWinery {
   id: string;
@@ -33,6 +34,7 @@ export function PendingWineriesTable({
   wineries,
   communes,
 }: PendingWineriesTableProps) {
+  const t = useTranslations('admin');
   const [communeFilter, setCommuneFilter] = useState<string>('all');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
@@ -49,18 +51,18 @@ export function PendingWineriesTable({
       <CardHeader className="border-b border-stone-100">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-slate-600">
-            Showing <span className="font-semibold text-burgundy-700">{filteredWineries.length}</span> pending winer{filteredWineries.length === 1 ? 'y' : 'ies'}
+            {t('showingPending', { count: filteredWineries.length })}
           </p>
           <div className="flex items-center gap-3">
             <Select value={communeFilter} onValueChange={setCommuneFilter}>
               <SelectTrigger className="w-[180px] border-stone-200 bg-white shadow-sm hover:border-burgundy-300 focus:border-burgundy-400 focus:ring-burgundy-400/20">
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-burgundy-500" />
-                  <SelectValue placeholder="Filter by commune" />
+                  <SelectValue placeholder={t('filterByCommune')} />
                 </div>
               </SelectTrigger>
               <SelectContent className="border-stone-200 bg-white shadow-lg">
-                <SelectItem value="all" className="focus:bg-burgundy-50 focus:text-burgundy-900">All communes</SelectItem>
+                <SelectItem value="all" className="focus:bg-burgundy-50 focus:text-burgundy-900">{t('allCommunes')}</SelectItem>
                 {communes.map((commune) => (
                   <SelectItem key={commune} value={commune} className="focus:bg-burgundy-50 focus:text-burgundy-900">
                     {commune}
@@ -75,7 +77,7 @@ export function PendingWineriesTable({
               className="hover:border-burgundy-300 hover:bg-burgundy-50"
             >
               <ArrowUpDown className="mr-2 h-4 w-4" />
-              {sortOrder === 'desc' ? 'Newest' : 'Oldest'}
+              {sortOrder === 'desc' ? t('newest') : t('oldest')}
             </Button>
           </div>
         </div>
@@ -86,9 +88,9 @@ export function PendingWineriesTable({
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
               <Wine className="h-8 w-8 text-green-600" />
             </div>
-            <p className="font-medium text-slate-900">All caught up!</p>
+            <p className="font-medium text-slate-900">{t('allCaughtUp')}</p>
             <p className="mt-1 text-sm text-slate-500">
-              No pending wineries to review.
+              {t('noPendingWineries')}
             </p>
           </div>
         ) : (
@@ -96,11 +98,11 @@ export function PendingWineriesTable({
             <table className="w-full">
               <thead>
                 <tr className="bg-stone-50/80 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  <th className="px-6 py-4">Winery Name</th>
-                  <th className="px-6 py-4">Commune</th>
-                  <th className="px-6 py-4">Applicant</th>
-                  <th className="px-6 py-4">Submitted</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
+                  <th className="px-6 py-4">{t('wineryName')}</th>
+                  <th className="px-6 py-4">{t('commune')}</th>
+                  <th className="px-6 py-4">{t('applicant')}</th>
+                  <th className="px-6 py-4">{t('submitted')}</th>
+                  <th className="px-6 py-4 text-right">{t('actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
@@ -125,7 +127,7 @@ export function PendingWineriesTable({
                       <Link href={`/admin/wineries/${winery.id}`}>
                         <Button size="sm">
                           <Eye className="mr-2 h-4 w-4" />
-                          Review
+                          {t('review')}
                         </Button>
                       </Link>
                     </td>

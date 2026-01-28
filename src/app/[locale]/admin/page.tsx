@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowRight, Clock, MapPin, ClipboardList, Wine } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { getTranslations } from 'next-intl/server';
 
 async function getWineryStats() {
   const [pending, verified, rejected, total] = await Promise.all([
@@ -31,17 +32,18 @@ async function getRecentPending() {
 }
 
 export default async function AdminDashboard() {
-  const [stats, recentPending] = await Promise.all([
+  const [stats, recentPending, t] = await Promise.all([
     getWineryStats(),
     getRecentPending(),
+    getTranslations('admin'),
   ]);
 
   return (
     <div className="container py-10">
       <div className="mb-8">
-        <h1 className="font-display text-display-md text-burgundy-700">Admin Dashboard</h1>
+        <h1 className="font-display text-display-md text-burgundy-700">{t('title')}</h1>
         <p className="mt-2 text-slate-600">
-          Manage winery verifications and platform settings
+          {t('subtitle')}
         </p>
       </div>
 
@@ -57,16 +59,16 @@ export default async function AdminDashboard() {
                   <Clock className="h-5 w-5 text-amber-600" />
                 </div>
                 <div>
-                  <CardTitle className="font-display">Recent Pending</CardTitle>
+                  <CardTitle className="font-display">{t('recentPending')}</CardTitle>
                   <CardDescription>
-                    Latest winery registrations awaiting review
+                    {t('recentPendingDescription')}
                   </CardDescription>
                 </div>
               </div>
               {stats.pending > 0 && (
                 <Link href="/admin/wineries/pending">
                   <Button variant="outline" size="sm">
-                    View all
+                    {t('viewAll')}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
@@ -80,7 +82,7 @@ export default async function AdminDashboard() {
                   <Wine className="h-6 w-6 text-green-600" />
                 </div>
                 <p className="text-sm text-slate-500">
-                  No pending wineries to review.
+                  {t('noPendingWineries')}
                 </p>
               </div>
             ) : (
@@ -101,7 +103,7 @@ export default async function AdminDashboard() {
                       </p>
                     </div>
                     <Link href={`/admin/wineries/${winery.id}`}>
-                      <Button size="sm">Review</Button>
+                      <Button size="sm">{t('review')}</Button>
                     </Link>
                   </div>
                 ))}
@@ -118,8 +120,8 @@ export default async function AdminDashboard() {
                 <ClipboardList className="h-5 w-5 text-burgundy-600" />
               </div>
               <div>
-                <CardTitle className="font-display">Quick Actions</CardTitle>
-                <CardDescription>Common administrative tasks</CardDescription>
+                <CardTitle className="font-display">{t('quickActions')}</CardTitle>
+                <CardDescription>{t('quickActionsDescription')}</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -127,7 +129,7 @@ export default async function AdminDashboard() {
             <Link href="/admin/wineries/pending" className="block">
               <Button variant="outline" className="w-full justify-start h-12 hover:border-burgundy-300 hover:bg-burgundy-50">
                 <Clock className="mr-3 h-4 w-4 text-amber-500" />
-                Review pending wineries
+                {t('reviewPendingWineries')}
                 {stats.pending > 0 && (
                   <span className="ml-auto flex h-6 min-w-6 items-center justify-center rounded-full bg-burgundy-600 px-2 text-xs font-semibold text-white">
                     {stats.pending}

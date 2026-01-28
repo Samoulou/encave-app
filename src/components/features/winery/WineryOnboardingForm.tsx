@@ -30,12 +30,15 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 const MAX_DESCRIPTION_LENGTH = 500;
 const MIN_DESCRIPTION_LENGTH = 50;
 
 export function WineryOnboardingForm() {
   const router = useRouter();
+  const t = useTranslations('winery');
+  const tCommon = useTranslations('common');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -67,7 +70,7 @@ export function WineryOnboardingForm() {
         setError(result.error.message);
       }
     } catch {
-      setError('Something went wrong. Please try again.');
+      setError(tCommon('errors.somethingWentWrong'));
     } finally {
       setIsLoading(false);
     }
@@ -86,7 +89,7 @@ export function WineryOnboardingForm() {
         <section className="space-y-6">
           <div className="flex items-center gap-3 rounded-lg bg-burgundy-50 px-4 py-3">
             <span className="text-xl">🍷</span>
-            <h2 className="font-semibold text-burgundy-900">Winery Information</h2>
+            <h2 className="font-semibold text-burgundy-900">{t('wineryInformation')}</h2>
           </div>
 
           <div className="space-y-6 pl-1">
@@ -95,9 +98,9 @@ export function WineryOnboardingForm() {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Winery Name</FormLabel>
+                  <FormLabel>{t('wineryName')}</FormLabel>
                   <FormControl>
-                    <Input placeholder="Domaine des Vignes" {...field} />
+                    <Input placeholder={t('wineryNamePlaceholder')} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -109,10 +112,10 @@ export function WineryOnboardingForm() {
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>{t('description')}</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Tell visitors about your winery, your history, and what makes your wines special..."
+                      placeholder={t('descriptionPlaceholder')}
                       className="min-h-[140px] resize-none"
                       maxLength={MAX_DESCRIPTION_LENGTH}
                       {...field}
@@ -120,7 +123,7 @@ export function WineryOnboardingForm() {
                   </FormControl>
                   <div className="flex items-center justify-between">
                     <FormDescription>
-                      Describe your winery, wines, and what visitors can expect.
+                      {t('descriptionHelp')}
                     </FormDescription>
                     <span
                       className={cn(
@@ -149,7 +152,7 @@ export function WineryOnboardingForm() {
         <section className="space-y-6">
           <div className="flex items-center gap-3 rounded-lg bg-gold-50 px-4 py-3">
             <span className="text-xl">📍</span>
-            <h2 className="font-semibold text-gold-900">Location</h2>
+            <h2 className="font-semibold text-gold-900">{t('location')}</h2>
           </div>
 
           <div className="space-y-6 pl-1">
@@ -158,9 +161,9 @@ export function WineryOnboardingForm() {
               name="address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Address</FormLabel>
+                  <FormLabel>{t('address')}</FormLabel>
                   <FormControl>
-                    <Input placeholder="Rue du Vignoble 12" {...field} />
+                    <Input placeholder={t('addressPlaceholder')} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -172,14 +175,14 @@ export function WineryOnboardingForm() {
               name="commune"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Commune</FormLabel>
+                  <FormLabel>{t('commune')}</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select your commune" />
+                        <SelectValue placeholder={t('communePlaceholder')} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -204,7 +207,7 @@ export function WineryOnboardingForm() {
         <section className="space-y-6">
           <div className="flex items-center gap-3 rounded-lg bg-slate-100 px-4 py-3">
             <span className="text-xl">📞</span>
-            <h2 className="font-semibold text-slate-900">Contact</h2>
+            <h2 className="font-semibold text-slate-900">{t('contact')}</h2>
           </div>
 
           <div className="space-y-6 pl-1">
@@ -213,12 +216,12 @@ export function WineryOnboardingForm() {
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Contact Phone</FormLabel>
+                  <FormLabel>{t('contactPhone')}</FormLabel>
                   <FormControl>
-                    <Input placeholder="+41 27 123 45 67" {...field} />
+                    <Input placeholder={t('phonePlaceholder')} {...field} />
                   </FormControl>
                   <FormDescription>
-                    Swiss phone format: +41 XX XXX XX XX or 0XX XXX XX XX
+                    {t('phoneHelp')}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -233,9 +236,9 @@ export function WineryOnboardingForm() {
             type="submit"
             className="w-full sm:w-auto sm:min-w-[200px] sm:mx-auto sm:block"
             isLoading={isLoading}
-            loadingText="Submitting..."
+            loadingText={t('submitting')}
           >
-            Continue
+            {t('continue')}
           </Button>
         </div>
       </form>

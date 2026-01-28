@@ -252,9 +252,76 @@
     "archivedDescription": "Ihr Erlebnis wurde archiviert.",
     "archiveModal": {
       "title": "Erlebnis archivieren",
-      "description": "Sind Sie sicher, dass Sie \"{title}\" archivieren mochten? Dieses Erlebnis wird fur Besucher nicht mehr sichtbar sein. Sie konnen es spater bei Bedarf wiederherstellen.",
-      "archiving": "Archivieren...",
+      "description": "Sind Sie sicher, dass Sie \"{title}\" archivieren möchten? Dieses Erlebnis wird für Besucher nicht mehr sichtbar sein. Sie können es später bei Bedarf wiederherstellen.",
+      "archiving": "Wird archiviert...",
       "archiveButton": "Archivieren"
+    },
+    "uploading": "Wird hochgeladen...",
+    "unsavedChanges": "Ungespeicherte Änderungen",
+    "removeCoverPhoto": "Titelbild entfernen",
+    "removeGalleryImage": "Galeriebild {index} entfernen",
+    "minBookingSize": "Min. Buchungsgröße",
+    "minBookingSizeTooltip": "Die Mindestanzahl an Personen pro Buchung. Besucher können nicht für weniger als diese Anzahl buchen.",
+    "descriptionMinRecommended": "Mindestens 20 Zeichen empfohlen",
+    "characters": "{count} Zeichen",
+    "publishDialog": {
+      "title": "Erlebnis erstellt!",
+      "description": "Ihr Erlebnis wurde als Entwurf gespeichert. Möchten Sie es jetzt veröffentlichen, damit es für Besucher sichtbar wird?",
+      "keepAsDraft": "Als Entwurf behalten",
+      "publishNow": "Jetzt veröffentlichen",
+      "publishing": "Wird veröffentlicht..."
+    },
+    "failedToPublish": "Veröffentlichung fehlgeschlagen. Sie können es später vom Dashboard aus veröffentlichen.",
+    "deleteModal": {
+      "title": "Erlebnis löschen",
+      "description": "Sind Sie sicher, dass Sie \"{title}\" löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden. Alle zugehörigen Buchungen und Daten werden dauerhaft entfernt.",
+      "deleting": "Wird gelöscht...",
+      "deleteButton": "Löschen"
+    },
+    "timeSlots": {
+      "noConfigured": "Keine Zeitfenster konfiguriert",
+      "addSlot": "Zeitfenster hinzufügen",
+      "addAnotherSlot": "Weiteres Zeitfenster hinzufügen",
+      "startPlaceholder": "Start",
+      "endPlaceholder": "Ende",
+      "to": "bis",
+      "toggleActive": "Zeitfenster {index} aktivieren/deaktivieren",
+      "removeSlot": "Zeitfenster {index} entfernen"
+    },
+    "filters": {
+      "all": "Alle",
+      "published": "Veröffentlicht",
+      "drafts": "Entwürfe",
+      "archived": "Archiviert",
+      "searchPlaceholder": "Erlebnisse nach Namen suchen..."
+    },
+    "sort": {
+      "sortBy": "Sortieren nach",
+      "newestFirst": "Neueste zuerst",
+      "oldestFirst": "Älteste zuerst",
+      "alphabetical": "Alphabetisch",
+      "byStatus": "Nach Status"
+    },
+    "availability": {
+      "title": "Verfügbarkeit",
+      "noConfigured": "Keine Verfügbarkeit konfiguriert",
+      "noConfiguredDescription": "Wählen Sie unten einen Tag aus und fügen Sie Zeitfenster hinzu, um festzulegen, wann Besucher dieses Erlebnis buchen können.",
+      "publishedNoSlots": "Dieses Erlebnis ist veröffentlicht, hat aber keine verfügbaren Zeitfenster. Besucher können nicht buchen, bis Sie die Verfügbarkeit konfigurieren.",
+      "selectDay": "Tag auswählen",
+      "copyToAllDays": "Auf alle Tage kopieren",
+      "copyDialog": {
+        "title": "Zeitfenster auf alle Tage kopieren",
+        "description": "Dies ersetzt alle vorhandenen Zeitfenster an jedem Tag durch die Zeitfenster von {day}. Diese Aktion kann nicht rückgängig gemacht werden."
+      },
+      "dayTimeSlots": "Zeitfenster für {day}",
+      "weeklyPreview": "Wochenvorschau",
+      "slotsOverlap": "Zeitfenster überlappen sich. Bitte passen Sie die Zeiten an.",
+      "fixOverlapsBeforeSaving": "Bitte beheben Sie die Überlappungen am {day} vor dem Speichern",
+      "noSlotsToCopy": "Keine Zeitfenster zum Kopieren von diesem Tag",
+      "copiedSlots": "{count} Zeitfenster auf alle Tage kopiert",
+      "savedSuccessfully": "Verfügbarkeit erfolgreich gespeichert",
+      "saving": "Wird gespeichert...",
+      "saveAvailability": "Verfügbarkeit speichern"
     }
   },
   "booking": {
@@ -466,8 +533,31 @@
     "changesSaved": "Ihre Anderungen wurden gespeichert.",
     "coverPhotoUpdated": "Titelbild aktualisiert",
     "coverPhotoRemoved": "Titelbild entfernt",
-    "galleryImageAdded": "Galeriebild hinzugefugt",
-    "galleryImageRemoved": "Galeriebild entfernt"
+    "galleryImageAdded": "Galeriebild hinzugefügt",
+    "galleryImageRemoved": "Galeriebild entfernt",
+    "uploading": "Wird hochgeladen...",
+    "unsavedChanges": "Ungespeicherte Änderungen",
+    "saving": "Wird gespeichert...",
+    "saveChanges": "Speichern",
+    "coverPhotoRecommendedFull": "Empfohlen: 1920 x 1080 Pixel (16:9-Format). Max 5 MB, JPEG oder PNG.",
+    "galleryHelpFull": "Quadratische Bilder funktionieren am besten. Drag & Drop zum Neuordnen (bald verfügbar).",
+    "uploadCoverPhoto": "Titelbild hochladen",
+    "swissFormatShort": "Schweizer Format: +41 XX XXX XX XX",
+    "onboarding": {
+      "congratulations": "Herzlichen Glückwunsch!",
+      "submittedForVerification": "Ihr Weingut <strong>{name}</strong> wurde zur Überprüfung eingereicht.",
+      "whatHappensNext": "Was passiert als Nächstes?",
+      "step1Title": "Antrag eingegangen",
+      "step1Description": "Die Details Ihres Weinguts befinden sich jetzt in unserem System",
+      "step2Title": "Überprüfung läuft",
+      "step2Description": "Unser Team wird Ihre Informationen überprüfen",
+      "step3Title": "Entscheidungsbenachrichtigung",
+      "step3Description": "Sie werden benachrichtigt, sobald Ihr Weingut genehmigt wird",
+      "checkInbox": "Überprüfen Sie Ihren Posteingang",
+      "confirmationEmailSent": "Wir haben eine Bestätigungs-E-Mail an <strong>{email}</strong> gesendet",
+      "expectedResponse": "Erwartete Antwort innerhalb von <strong>{hours}</strong> Stunden",
+      "returnToHomepage": "Zurück zur Startseite"
+    }
   },
   "dashboard": {
     "title": "Dashboard",
@@ -476,6 +566,49 @@
     "noExperiences": "Noch keine Erlebnisse",
     "createFirstExperience": "Erstellen Sie Ihr erstes Erlebnis, um Buchungen zu erhalten.",
     "statistics": "Statistiken"
+  },
+  "earnings": {
+    "title": "Einnahmen",
+    "period": {
+      "selectPeriod": "Zeitraum wählen",
+      "thisMonth": "Dieser Monat",
+      "lastMonth": "Letzter Monat",
+      "thisYear": "Dieses Jahr",
+      "allTime": "Gesamte Zeit"
+    },
+    "summary": {
+      "totalEarnings": "Gesamteinnahmen",
+      "grossRevenue": "Bruttoumsatz",
+      "pendingPayouts": "Ausstehende Auszahlungen",
+      "vsLastMonth": "vs. letzter Monat",
+      "estArrival": "Geschätzte Ankunft:",
+      "yearToDate": "Jahr bis heute"
+    },
+    "transactions": {
+      "title": "Transaktionen",
+      "noTransactions": "Keine Transaktionen gefunden.",
+      "date": "Datum",
+      "bookingId": "Buchungs-ID",
+      "experience": "Erlebnis",
+      "customer": "Kunde",
+      "amount": "Betrag",
+      "status": "Status",
+      "openMenu": "Menü öffnen",
+      "viewDetails": "Details anzeigen",
+      "downloadReceipt": "Quittung herunterladen"
+    },
+    "filters": {
+      "allMonths": "Alle Monate",
+      "allExperiences": "Alle Erlebnisse",
+      "allStatus": "Alle Status",
+      "paid": "Bezahlt",
+      "pending": "Ausstehend",
+      "refunded": "Erstattet"
+    },
+    "search": {
+      "placeholder": "Nach Kundenname, E-Mail suchen...",
+      "clear": "Suche löschen"
+    }
   },
   "calendar": {
     "blocked": "Gesperrt",
@@ -493,22 +626,62 @@
     "unblockError": "Datum konnte nicht entsperrt werden"
   },
   "admin": {
-    "title": "Administration",
-    "pendingReview": "Ausstehende Uberprufung",
+    "title": "Admin-Dashboard",
+    "subtitle": "Weingut-Verifizierungen und Plattformeinstellungen verwalten",
+    "pendingReview": "Ausstehende Überprüfung",
     "verified": "Verifiziert",
     "rejected": "Abgelehnt",
-    "totalWineries": "Gesamtzahl Weinguter",
-    "showingPending": "{count} {count, plural, =1 {ausstehendes Weingut} other {ausstehende Weinguter}} werden angezeigt",
+    "totalWineries": "Gesamtzahl Weingüter",
+    "showingPending": "{count} {count, plural, =1 {ausstehendes Weingut} other {ausstehende Weingüter}} werden angezeigt",
     "filterByCommune": "Nach Gemeinde filtern",
+    "allCommunes": "Alle Gemeinden",
+    "commune": "Gemeinde",
     "newest": "Neueste",
-    "oldest": "Alteste",
+    "oldest": "Älteste",
     "wineryName": "Name des Weinguts",
     "applicant": "Antragsteller",
     "submitted": "Eingereicht",
     "actions": "Aktionen",
-    "review": "Uberprufen",
+    "review": "Überprüfen",
+    "viewAll": "Alle anzeigen",
     "allCaughtUp": "Alles erledigt!",
-    "noPendingWineries": "Keine ausstehenden Weinguter zur Uberprufung."
+    "noPendingWineries": "Keine ausstehenden Weingüter zur Überprüfung.",
+    "recentPending": "Kürzlich ausstehend",
+    "recentPendingDescription": "Neueste Weingut-Anmeldungen, die auf Überprüfung warten",
+    "quickActions": "Schnellaktionen",
+    "quickActionsDescription": "Häufige administrative Aufgaben",
+    "reviewPendingWineries": "Ausstehende Weingüter überprüfen",
+    "wineryInformation": "Weingut-Informationen",
+    "applicantInformation": "Antragsteller-Informationen",
+    "photos": "Fotos",
+    "imageCount": "{count} {count, plural, =1 {Bild} other {Bilder}}",
+    "cover": "Titelbild",
+    "description": "Beschreibung",
+    "address": "Adresse",
+    "phone": "Telefon",
+    "wineryEmail": "E-Mail des Weinguts",
+    "name": "Name",
+    "notProvided": "Nicht angegeben",
+    "accountEmail": "Konto-E-Mail",
+    "registrationDate": "Registrierungsdatum",
+    "verifiedAt": "Verifiziert am",
+    "rejectionReason": "Ablehnungsgrund",
+    "rejectionReasonRequired": "Bitte geben Sie einen Ablehnungsgrund an (erforderlich)",
+    "rejectionReasonPlaceholder": "Erklären Sie, warum diese Weingut-Anmeldung abgelehnt wird...",
+    "confirmRejection": "Ablehnung bestätigen",
+    "approve": "Genehmigen",
+    "reject": "Ablehnen",
+    "approveWinery": "Weingut genehmigen",
+    "rejectWinery": "Weingut ablehnen",
+    "approveConfirmation": "Sind Sie sicher, dass Sie {name} genehmigen möchten? Das Weingut wird im öffentlichen Verzeichnis sichtbar.",
+    "rejectConfirmation": "Sind Sie sicher, dass Sie {name} ablehnen möchten? Der Antragsteller wird mit dem angegebenen Grund benachrichtigt.",
+    "approving": "Wird genehmigt...",
+    "rejecting": "Wird abgelehnt...",
+    "yesApprove": "Ja, genehmigen",
+    "yesReject": "Ja, ablehnen",
+    "wineryApprovedSuccess": "Weingut erfolgreich genehmigt",
+    "wineryRejectedSuccess": "Weingut abgelehnt",
+    "pleaseProvideRejectionReason": "Bitte geben Sie einen Ablehnungsgrund an"
   },
   "search": {
     "placeholder": "Erlebnisse, Weinguter suchen...",

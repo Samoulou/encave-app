@@ -40,6 +40,7 @@ import {
 } from '@/components/ui/select';
 import { ImageUpload } from '@/components/shared/ImageUpload';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 interface GalleryImage {
   id: string;
@@ -90,6 +91,8 @@ function SectionHeader({
 
 export function WineryProfileForm({ winery }: WineryProfileFormProps) {
   const router = useRouter();
+  const t = useTranslations('winery');
+  const tCommon = useTranslations('common');
   const [isSaving, setIsSaving] = useState(false);
   const [coverPhoto, setCoverPhoto] = useState<string | null>(winery.coverPhoto);
   const [galleryImages, setGalleryImages] = useState<GalleryImage[]>(
@@ -137,8 +140,8 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
       const result = await updateWineryProfile(data);
 
       if (result.success) {
-        toast.success('Profile updated successfully', {
-          description: 'Your changes have been saved.',
+        toast.success(t('profileUpdated'), {
+          description: t('changesSaved'),
           className: 'bg-cream-50 border-gold-200',
         });
         setHasUnsavedChanges(false);
@@ -147,11 +150,11 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
         toast.error(result.error.message);
       }
     } catch {
-      toast.error('Something went wrong. Please try again.');
+      toast.error(tCommon('errors.somethingWentWrong'));
     } finally {
       setIsSaving(false);
     }
-  }, [router]);
+  }, [router, t, tCommon]);
 
   async function handleImageUpload(file: File): Promise<string> {
     const formData = new FormData();
@@ -172,7 +175,7 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
     const result = await updateWineryCoverPhoto(url);
 
     if (result.success) {
-      toast.success(url ? 'Cover photo updated' : 'Cover photo removed', {
+      toast.success(url ? t('coverPhotoUpdated') : t('coverPhotoRemoved'), {
         className: 'bg-cream-50 border-gold-200',
       });
       router.refresh();
@@ -194,7 +197,7 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
         ...prev,
         { id: result.data.id, url, order: result.data.order },
       ]);
-      toast.success('Gallery image added', {
+      toast.success(t('galleryImageAdded'), {
         className: 'bg-cream-50 border-gold-200',
       });
       router.refresh();
@@ -212,7 +215,7 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
 
     if (result.success) {
       setGalleryImages((prev) => prev.filter((img) => img.id !== imageId));
-      toast.success('Gallery image removed', {
+      toast.success(t('galleryImageRemoved'), {
         className: 'bg-cream-50 border-gold-200',
       });
       router.refresh();
@@ -231,8 +234,8 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
       <section className="space-y-6">
         <SectionHeader
           icon={<Camera className="h-5 w-5" />}
-          title="Cover Photo"
-          description="This image appears at the top of your public profile"
+          title={t('coverPhoto')}
+          description={t('coverPhotoDescription')}
         />
 
         <div className="relative">
@@ -282,7 +285,7 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
                 onChange={handleCoverPhotoChange}
                 onUpload={handleImageUpload}
                 aspectRatio="16/9"
-                placeholder="Upload cover photo"
+                placeholder={t('uploadCoverPhoto')}
                 variant="empty"
                 className="h-full w-full"
               />
@@ -304,7 +307,7 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
                 d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            Recommended: 1920 x 1080 pixels (16:9 aspect ratio). Max 5MB, JPEG or PNG.
+            {t('coverPhotoRecommendedFull')}
           </p>
         </div>
       </section>
@@ -322,8 +325,8 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
               />
             </svg>
           }
-          title="Gallery Photos"
-          description={`Showcase your winery with up to 6 photos (${galleryImages.length}/6)`}
+          title={t('galleryPhotos')}
+          description={t('galleryPhotosDescription', { count: galleryImages.length })}
         />
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6">
@@ -335,7 +338,7 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
             >
               <Image
                 src={image.url}
-                alt={`Gallery image ${index + 1}`}
+                alt={t('galleryImageAlt', { index: index + 1 })}
                 fill
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                 sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 280px"
@@ -346,7 +349,7 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
                 <button
                   type="button"
                   className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-slate-600 shadow-lg transition-colors hover:bg-white"
-                  aria-label="Drag to reorder (coming soon)"
+                  aria-label={t('dragToReorder')}
                   disabled
                 >
                   <GripVertical className="h-5 w-5" aria-hidden="true" />
@@ -356,7 +359,7 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
                   type="button"
                   className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-red-600 shadow-lg transition-colors hover:bg-red-50"
                   onClick={() => handleRemoveGalleryImage(image.id)}
-                  aria-label={`Remove gallery image ${index + 1}`}
+                  aria-label={t('removeGalleryImage', { index: index + 1 })}
                 >
                   <X className="h-5 w-5" aria-hidden="true" />
                 </button>
@@ -378,7 +381,7 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
               {uploadingGalleryIndex === galleryImages.length + index ? (
                 <div className="flex h-full w-full flex-col items-center justify-center">
                   <div className="h-8 w-8 animate-spin rounded-full border-4 border-burgundy-600 border-t-transparent" />
-                  <p className="mt-3 text-sm font-medium text-burgundy-600">Uploading...</p>
+                  <p className="mt-3 text-sm font-medium text-burgundy-600">{t('uploading')}</p>
                 </div>
               ) : (
                 <ImageUpload
@@ -396,7 +399,7 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
         </div>
 
         <p className="text-sm text-slate-500">
-          Square images work best. You can drag photos to reorder them (coming soon).
+          {t('galleryHelpFull')}
         </p>
       </section>
 
@@ -413,8 +416,8 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
               />
             </svg>
           }
-          title="Winery Information"
-          description="Tell visitors about your winery and what makes it special"
+          title={t('wineryInformation')}
+          description={t('tellVisitors')}
         />
 
         <Form {...form}>
@@ -424,16 +427,16 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-base font-medium">Description</FormLabel>
+                  <FormLabel className="text-base font-medium">{t('description')}</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Tell visitors about your winery, your history, and what makes your wines special..."
+                      placeholder={t('descriptionPlaceholder')}
                       className="min-h-[180px] resize-none"
                       {...field}
                     />
                   </FormControl>
                   <FormDescription>
-                    Minimum 50 characters. Describe your winery, wines, and what visitors can expect.
+                    {t('descriptionMinLength')}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -461,10 +464,10 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
                 </div>
                 <div>
                   <h2 className="font-display text-xl font-semibold text-slate-900">
-                    Contact Details
+                    {t('contactDetails')}
                   </h2>
                   <p className="mt-1 text-sm text-slate-600">
-                    How visitors can find and contact you
+                    {t('contactDetailsDescription')}
                   </p>
                 </div>
               </div>
@@ -475,9 +478,9 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
                   name="address"
                   render={({ field }) => (
                     <FormItem className="sm:col-span-2">
-                      <FormLabel className="text-base font-medium">Address</FormLabel>
+                      <FormLabel className="text-base font-medium">{t('address')}</FormLabel>
                       <FormControl>
-                        <Input placeholder="Rue du Vignoble 12" {...field} />
+                        <Input placeholder={t('addressPlaceholder')} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -489,14 +492,14 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
                   name="commune"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-base font-medium">Commune</FormLabel>
+                      <FormLabel className="text-base font-medium">{t('commune')}</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select your commune" />
+                            <SelectValue placeholder={t('communePlaceholder')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -517,12 +520,12 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-base font-medium">Contact Phone</FormLabel>
+                      <FormLabel className="text-base font-medium">{t('contactPhone')}</FormLabel>
                       <FormControl>
-                        <Input placeholder="+41 27 123 45 67" {...field} />
+                        <Input placeholder={t('phonePlaceholder')} {...field} />
                       </FormControl>
                       <FormDescription>
-                        Swiss format: +41 XX XXX XX XX
+                        {t('swissFormatShort')}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -537,7 +540,7 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
                 {hasUnsavedChanges && (
                   <span className="flex items-center gap-2 text-amber-600">
                     <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500" />
-                    Unsaved changes
+                    {t('unsavedChanges')}
                   </span>
                 )}
               </div>
@@ -550,10 +553,10 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
                 {isSaving ? (
                   <>
                     <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                    Saving...
+                    {t('saving')}
                   </>
                 ) : (
-                  'Save Changes'
+                  t('saveChanges')
                 )}
               </Button>
             </div>
