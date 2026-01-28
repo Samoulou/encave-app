@@ -149,7 +149,7 @@ export function LoginForm() {
                       {...field}
                     />
                     <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
-                      <Mail className="h-5 w-5" />
+                      <Mail className="h-5 w-5" aria-hidden="true" />
                     </div>
                   </div>
                 </FormControl>

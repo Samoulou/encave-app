@@ -126,12 +126,12 @@ function SectionHeader({
   icon: Icon,
   title,
 }: {
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string; 'aria-hidden'?: boolean | 'true' | 'false' }>;
   title: string;
 }) {
   return (
     <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-      <span className="bg-primary/10 text-primary p-1.5 rounded-md flex items-center justify-center">
+      <span className="bg-primary/10 text-primary p-1.5 rounded-md flex items-center justify-center" aria-hidden="true">
         <Icon className="h-5 w-5" />
       </span>
       {title}
@@ -624,7 +624,7 @@ export function CreateExperienceForm() {
                                           : 'border-stone-200 bg-slate-50 hover:bg-slate-100'
                                       )}
                                     >
-                                      <Icon className="h-5 w-5 mx-auto mb-1" />
+                                      <Icon className="h-5 w-5 mx-auto mb-1" aria-hidden="true" />
                                       <span className="text-sm font-medium">{type.label}</span>
                                     </div>
                                   </label>
@@ -653,31 +653,31 @@ export function CreateExperienceForm() {
                                 <button
                                   type="button"
                                   className="p-1 rounded text-slate-500 hover:bg-slate-100 hover:text-slate-900"
-                                  title="Bold"
+                                  aria-label="Bold"
                                 >
-                                  <span className="font-bold text-sm">B</span>
+                                  <span className="font-bold text-sm" aria-hidden="true">B</span>
                                 </button>
                                 <button
                                   type="button"
                                   className="p-1 rounded text-slate-500 hover:bg-slate-100 hover:text-slate-900"
-                                  title="Italic"
+                                  aria-label="Italic"
                                 >
-                                  <span className="italic text-sm">I</span>
+                                  <span className="italic text-sm" aria-hidden="true">I</span>
                                 </button>
                                 <button
                                   type="button"
                                   className="p-1 rounded text-slate-500 hover:bg-slate-100 hover:text-slate-900"
-                                  title="Underline"
+                                  aria-label="Underline"
                                 >
-                                  <span className="underline text-sm">U</span>
+                                  <span className="underline text-sm" aria-hidden="true">U</span>
                                 </button>
-                                <div className="w-px h-4 bg-stone-300 mx-1" />
+                                <div className="w-px h-4 bg-stone-300 mx-1" aria-hidden="true" />
                                 <button
                                   type="button"
                                   className="p-1 rounded text-slate-500 hover:bg-slate-100 hover:text-slate-900"
-                                  title="Bullet List"
+                                  aria-label="Bullet list"
                                 >
-                                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                                   </svg>
                                 </button>
@@ -783,7 +783,7 @@ export function CreateExperienceForm() {
                                 {...field}
                                 onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
                               />
-                              <Users className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                              <Users className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" aria-hidden="true" />
                             </div>
                           </FormControl>
                           <FormMessage />
@@ -824,7 +824,7 @@ export function CreateExperienceForm() {
                       }}
                     />
                     <div className="bg-white p-4 rounded-full shadow-sm mb-4 group-hover:scale-110 transition-transform">
-                      <Upload className="text-primary h-10 w-10" />
+                      <Upload className="text-primary h-10 w-10" aria-hidden="true" />
                     </div>
                     <p className="text-slate-900 font-bold mb-1">Click to upload or drag and drop</p>
                     <p className="text-slate-500 text-sm">SVG, PNG, JPG or GIF (max. 800x400px)</p>
@@ -850,14 +850,16 @@ export function CreateExperienceForm() {
                               type="button"
                               className="p-1.5 bg-white text-rose-600 rounded-full hover:bg-rose-50"
                               onClick={() => handleRemoveGalleryImage(image.id, image.url)}
+                              aria-label={`Remove image ${index + 1}`}
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className="h-4 w-4" aria-hidden="true" />
                             </button>
                             <button
                               type="button"
                               className="p-1.5 bg-white text-slate-700 rounded-full hover:bg-slate-50"
+                              aria-label={`Preview image ${index + 1}`}
                             >
-                              <Eye className="h-4 w-4" />
+                              <Eye className="h-4 w-4" aria-hidden="true" />
                             </button>
                           </div>
                           {image.isCover && (
@@ -959,7 +961,7 @@ export function CreateExperienceForm() {
                                 key={idx}
                                 className="flex items-center gap-2 bg-white px-3 py-2 rounded border border-stone-200 group"
                               >
-                                <Clock className="h-4 w-4 text-slate-400" />
+                                <Clock className="h-4 w-4 text-slate-400" aria-hidden="true" />
                                 <span className="text-sm font-medium">{timeSlot.start}</span>
                                 <span className="text-slate-300">-</span>
                                 <span className="text-sm font-medium">{timeSlot.end}</span>
@@ -978,7 +980,7 @@ export function CreateExperienceForm() {
                                   className="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                                   aria-label="Delete time slot"
                                 >
-                                  <X className="h-4 w-4" />
+                                  <X className="h-4 w-4" aria-hidden="true" />
                                 </button>
                               </div>
                             );
@@ -990,7 +992,7 @@ export function CreateExperienceForm() {
                             onClick={() => handleAddTimeSlot(slot.id)}
                             className="flex items-center gap-1 px-3 py-2 text-sm text-primary font-medium hover:bg-primary/5 rounded border border-dashed border-primary/30 transition-colors"
                           >
-                            <Plus className="h-4 w-4" />
+                            <Plus className="h-4 w-4" aria-hidden="true" />
                             Add time
                           </button>
                         </div>
@@ -1013,7 +1015,7 @@ export function CreateExperienceForm() {
                         setHasUnsavedChanges(true);
                       }}
                     >
-                      <Plus className="h-4 w-4" />
+                      <Plus className="h-4 w-4" aria-hidden="true" />
                       Add Schedule Pattern
                     </button>
                   </div>
@@ -1084,7 +1086,7 @@ export function CreateExperienceForm() {
                 />
               </div>
               <div className="p-3 bg-amber-50 border border-amber-100 rounded text-amber-800 text-xs leading-relaxed flex items-start gap-2">
-                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" aria-hidden="true" />
                 <span>
                   Your experience is currently in <strong>Draft</strong> mode. Publish to start
                   accepting bookings.
@@ -1115,7 +1117,7 @@ export function CreateExperienceForm() {
                           : 'text-slate-500 hover:bg-stone-50 hover:text-slate-900 border-transparent'
                       )}
                     >
-                      <Icon className={cn('h-4 w-4', isActive && 'text-primary')} />
+                      <Icon className={cn('h-4 w-4', isActive && 'text-primary')} aria-hidden="true" />
                       {section.label}
                     </button>
                   );

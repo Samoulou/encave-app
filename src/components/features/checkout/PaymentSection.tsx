@@ -74,23 +74,36 @@ export function PaymentSection({
             <CreditCard className="h-5 w-5 text-[#915564] mr-3 flex-shrink-0" aria-hidden="true" />
             <input
               id="cardNumber"
+              name="cardNumber"
               type="text"
+              inputMode="numeric"
+              autoComplete="cc-number"
               placeholder={t('cardNumberPlaceholder')}
               className="flex-1 bg-transparent border-none focus:ring-0 focus:outline-none text-[#1a0f12] placeholder:text-[#915564]/60 text-base min-w-0"
               disabled={isSubmitting}
             />
             <div className="flex items-center border-l border-[#e5d2d7] ml-2 pl-2">
               <input
+                id="cardExpiry"
+                name="cardExpiry"
                 type="text"
+                inputMode="numeric"
+                autoComplete="cc-exp"
                 placeholder="MM/YY"
+                aria-label={t('cardExpiry')}
                 className="w-16 bg-transparent border-none focus:ring-0 focus:outline-none text-[#1a0f12] placeholder:text-[#915564]/60 text-center text-base"
                 disabled={isSubmitting}
               />
             </div>
             <div className="flex items-center border-l border-[#e5d2d7] ml-2 pl-2">
               <input
+                id="cardCvc"
+                name="cardCvc"
                 type="text"
+                inputMode="numeric"
+                autoComplete="cc-csc"
                 placeholder="CVC"
+                aria-label={t('cardCvc')}
                 className="w-12 bg-transparent border-none focus:ring-0 focus:outline-none text-[#1a0f12] placeholder:text-[#915564]/60 text-center text-base"
                 disabled={isSubmitting}
               />
@@ -132,7 +145,7 @@ export function PaymentSection({
       >
         {isSubmitting ? (
           <>
-            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+            <Loader2 className="mr-2 h-5 w-5 animate-spin" aria-hidden="true" />
             {t('processing')}
           </>
         ) : (
