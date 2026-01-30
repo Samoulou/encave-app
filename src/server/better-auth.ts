@@ -9,9 +9,20 @@ import bcrypt from 'bcryptjs';
 function getTrustedOrigins(): string[] {
   const origins: string[] = [];
 
-  // Add configured URL
+  // Add configured URL (production domain)
   if (process.env.BETTER_AUTH_URL) {
     origins.push(process.env.BETTER_AUTH_URL);
+  }
+
+  // Add Vercel URLs (automatically provided by Vercel)
+  if (process.env.VERCEL_URL) {
+    origins.push(`https://${process.env.VERCEL_URL}`);
+  }
+  if (process.env.VERCEL_BRANCH_URL) {
+    origins.push(`https://${process.env.VERCEL_BRANCH_URL}`);
+  }
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    origins.push(`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`);
   }
 
   // In development, add common localhost ports
