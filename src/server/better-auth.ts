@@ -1,6 +1,9 @@
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
+import bcrypt from 'bcryptjs';
 import { db } from '@/server/db';
+
+const SALT_ROUNDS = 10;
 
 /**
  * Build trusted origins dynamically from environment
@@ -80,9 +83,13 @@ export const auth = betterAuth({
     },
   },
 
-  // Email/password authentication
+  // Email/password authentication with bcrypt (matches seed data)
   emailAndPassword: {
     enabled: true,
+    password: {
+      hash: (password) => bcrypt.hash(password, SALT_ROUNDS),
+      verify: ({ password, hash }) => bcrypt.compare(password, hash),
+    },
   },
 
   // Custom user fields - included in session automatically
