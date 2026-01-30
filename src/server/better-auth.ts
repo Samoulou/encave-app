@@ -1,7 +1,6 @@
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { db } from '@/server/db';
-import bcrypt from 'bcryptjs';
 
 /**
  * Build trusted origins dynamically from environment
@@ -84,24 +83,31 @@ export const auth = betterAuth({
   // Email/password authentication
   emailAndPassword: {
     enabled: true,
-    // Use bcryptjs for password hashing (compatible with existing hashes)
-    password: {
-      hash: async (password: string) => {
-        return bcrypt.hash(password, 10);
+  },
+
+  // Custom user fields - included in session automatically
+  user: {
+    additionalFields: {
+      role: {
+        type: 'string',
+        defaultValue: 'CLIENT',
       },
-      verify: async ({ password, hash }: { password: string; hash: string }) => {
-        return bcrypt.compare(password, hash);
+      preferredLocale: {
+        type: 'string',
+        defaultValue: 'FR',
       },
     },
   },
 
+  // Rate limiting for security
+  rateLimit: {
+    enabled: true,
+    window: 60, // 1 minute window
+    max: 10, // max 10 requests per window
+  },
+
   // OAuth providers - only included if credentials are configured
   socialProviders: getSocialProviders(),
-
-  // User configuration
-  // Note: role and preferredLocale are custom fields with defaults defined in Prisma schema.
-  // Better Auth doesn't need to know about them - Prisma handles the defaults.
-  // The auth() wrapper in src/server/auth.ts fetches them from DB when needed.
 
   // Account linking - allow linking without email verification
   account: {

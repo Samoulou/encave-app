@@ -1,6 +1,5 @@
 import { headers } from 'next/headers';
 import { auth as betterAuth } from '@/server/better-auth';
-import { db } from '@/server/db';
 import type { UserRole, Locale } from '@prisma/client';
 
 /**
@@ -13,13 +12,16 @@ export interface Session {
     email: string;
     name: string | null;
     role: UserRole;
-    preferredLocale?: Locale;
+    preferredLocale: Locale;
   };
 }
 
 /**
  * Get the current session using Better Auth's API
  * This maintains the same API as the previous NextAuth `auth()` function
+ *
+ * Note: role and preferredLocale are defined as additionalFields in Better Auth config,
+ * so they are included in the session automatically - no extra DB query needed.
  */
 export async function auth(): Promise<Session | null> {
   try {
@@ -31,22 +33,11 @@ export async function auth(): Promise<Session | null> {
       return null;
     }
 
-    // Better Auth session includes basic user info, but we need role and preferredLocale
-    // which are custom fields. Fetch them from the database.
-    const user = await db.user.findUnique({
-      where: { id: session.user.id },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        preferredLocale: true,
-      },
-    });
-
-    if (!user) {
-      return null;
-    }
+    // additionalFields (role, preferredLocale) are included in session.user
+    const user = session.user as typeof session.user & {
+      role: UserRole;
+      preferredLocale: Locale;
+    };
 
     return {
       user: {
