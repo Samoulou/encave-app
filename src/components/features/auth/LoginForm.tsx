@@ -8,7 +8,7 @@ import { Mail, Eye, EyeOff } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Link, useRouter } from '@/i18n/navigation';
 import { loginSchema, type LoginInput } from '@/lib/validators/auth';
-import { loginAction } from '@/server/actions/auth';
+import { signIn } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -65,40 +65,37 @@ export function LoginForm() {
     setError(null);
 
     try {
-      const result = await loginAction(data.email, data.password);
+      // Use Better Auth client to sign in - this properly sets signed cookies
+      const result = await signIn.email({
+        email: data.email,
+        password: data.password,
+        rememberMe,
+      });
 
-      if (result.success) {
-        // Check for callback URL (from middleware) or returnUrl parameter
-        const callbackUrl =
-          searchParams.get('callbackUrl') || searchParams.get('returnUrl');
-
-        // Determine redirect destination
-        let redirectPath: string;
-
-        if (callbackUrl && isValidReturnUrl(callbackUrl)) {
-          // Use callback URL if valid (for protected page access)
-          redirectPath = callbackUrl;
-        } else {
-          // Role-based redirect
-          switch (result.data.role) {
-            case 'WINEMAKER':
-              redirectPath = '/dashboard/bookings';
-              break;
-            case 'ADMIN':
-              redirectPath = '/admin';
-              break;
-            case 'CLIENT':
-            default:
-              redirectPath = '/dashboard';
-              break;
-          }
-        }
-
-        router.push(redirectPath);
-        router.refresh();
-      } else {
-        setError(result.error.message);
+      if (result.error) {
+        // Handle Better Auth errors
+        setError(result.error.message || t('invalidCredentials'));
+        return;
       }
+
+      // Check for callback URL (from middleware) or returnUrl parameter
+      const callbackUrl =
+        searchParams.get('callbackUrl') || searchParams.get('returnUrl');
+
+      // Determine redirect destination
+      let redirectPath: string;
+
+      if (callbackUrl && isValidReturnUrl(callbackUrl)) {
+        // Use callback URL if valid (for protected page access)
+        redirectPath = callbackUrl;
+      } else {
+        // Default redirect - server will handle role-based redirect if needed
+        // For now, redirect to home and let middleware handle protected routes
+        redirectPath = '/';
+      }
+
+      router.push(redirectPath);
+      router.refresh();
     } catch {
       setError(tCommon('errors.somethingWentWrong'));
     } finally {

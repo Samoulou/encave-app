@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
-import { logoutAction } from '@/server/actions/auth';
+import { signOut } from '@/lib/auth-client';
 
 interface UserMenuProps {
   userName: string | null;
@@ -14,7 +14,7 @@ export function UserMenu({ userName }: UserMenuProps) {
   const t = useTranslations('nav');
 
   async function handleLogout() {
-    await logoutAction();
+    await signOut();
     router.push('/');
     router.refresh();
   }

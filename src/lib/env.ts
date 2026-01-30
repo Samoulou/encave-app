@@ -4,11 +4,17 @@ const envSchema = z.object({
   // Database
   DATABASE_URL: z.string().url(),
 
-  // Authentication (supports both AUTH_* and NEXTAUTH_* for compatibility)
-  AUTH_SECRET: z.string().min(32).optional(),
-  AUTH_URL: z.string().url().optional(),
-  NEXTAUTH_SECRET: z.string().min(32).optional(),
-  NEXTAUTH_URL: z.string().url().optional(),
+  // Authentication (Better Auth)
+  // BETTER_AUTH_SECRET is required in production
+  BETTER_AUTH_SECRET: z.string().min(32).optional(),
+  BETTER_AUTH_URL: z.string().url().optional(),
+  NEXT_PUBLIC_BETTER_AUTH_URL: z.string().url().optional(),
+
+  // OAuth Providers
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  APPLE_CLIENT_ID: z.string().optional(),
+  APPLE_CLIENT_SECRET: z.string().optional(),
 
   // Vercel automatic environment variables
   VERCEL_URL: z.string().optional(),
@@ -58,24 +64,26 @@ function getEnv() {
     throw new Error('Invalid environment variables');
   }
 
-  return parsed.data;
+  const data = parsed.data;
+
+  // BETTER_AUTH_SECRET is required in production
+  if (data.NODE_ENV === 'production' && !data.BETTER_AUTH_SECRET) {
+    console.error('❌ BETTER_AUTH_SECRET is required in production');
+    throw new Error('BETTER_AUTH_SECRET is required in production');
+  }
+
+  return data;
 }
 
 export const env = getEnv();
 
 /**
  * Get the base URL for the application.
- * Priority: AUTH_URL > NEXTAUTH_URL > VERCEL_URL > localhost
+ * Priority: BETTER_AUTH_URL > VERCEL_URL > localhost
  */
 export function getBaseUrl(): string {
-  // Explicit AUTH_URL takes priority (NextAuth v5)
-  if (env.AUTH_URL) {
-    return env.AUTH_URL;
-  }
-
-  // Fallback to NEXTAUTH_URL (NextAuth v4 compatibility)
-  if (env.NEXTAUTH_URL) {
-    return env.NEXTAUTH_URL;
+  if (env.BETTER_AUTH_URL) {
+    return env.BETTER_AUTH_URL;
   }
 
   // On Vercel, use the automatic VERCEL_URL
