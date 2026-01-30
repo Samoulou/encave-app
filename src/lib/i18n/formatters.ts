@@ -23,14 +23,18 @@ export function formatDate(
 ): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
 
-  const defaultOptions: Intl.DateTimeFormatOptions = {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    ...options,
-  };
+  // If dateStyle or timeStyle is provided, don't use default component options
+  // as they are mutually exclusive with individual date/time components
+  const finalOptions: Intl.DateTimeFormatOptions = options?.dateStyle || options?.timeStyle
+    ? options
+    : {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        ...options,
+      };
 
-  return new Intl.DateTimeFormat(LOCALE_MAP[locale], defaultOptions).format(dateObj);
+  return new Intl.DateTimeFormat(LOCALE_MAP[locale], finalOptions).format(dateObj);
 }
 
 /**
