@@ -1,29 +1,14 @@
 import { createAuthClient } from 'better-auth/react';
 
 /**
- * Get the base URL for auth API calls
- * In production, use empty string (relative URL) to use same origin
- * This avoids CSP issues and works with Vercel preview deployments
- */
-function getBaseURL(): string {
-  // Explicit URL takes priority (useful for cross-domain setups)
-  if (process.env.NEXT_PUBLIC_BETTER_AUTH_URL) {
-    return process.env.NEXT_PUBLIC_BETTER_AUTH_URL;
-  }
-  // In browser, use empty string for relative URLs (same origin)
-  if (typeof window !== 'undefined') {
-    return '';
-  }
-  // SSR fallback (rarely used for auth client)
-  return 'http://localhost:3000';
-}
-
-/**
  * Better Auth client for React components
- * Use these hooks and functions in client components
+ *
+ * IMPORTANT: Set NEXT_PUBLIC_BETTER_AUTH_URL in Vercel environment variables
+ * Production: https://encave.ch
+ * Preview: Will use the deployment URL automatically via Vercel system env vars
  */
 export const authClient = createAuthClient({
-  baseURL: getBaseURL(),
+  baseURL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL,
 });
 
 // Export individual functions for easier imports
