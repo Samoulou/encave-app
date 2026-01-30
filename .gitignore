@@ -46,6 +46,9 @@ next-env.d.ts
 .vscode
 .claude/
 .agents/
+.agent/
+.cursor/
+.gemini/
 
 # Prisma
 /src/generated/prisma

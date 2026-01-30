@@ -1,86 +1,77 @@
-import NextAuth from 'next-auth';
-import Credentials from 'next-auth/providers/credentials';
+import { headers } from 'next/headers';
+import { auth as betterAuth } from '@/server/better-auth';
 import { db } from '@/server/db';
-import { verifyPassword } from '@/server/password';
-import { loginSchema } from '@/lib/validators/auth';
-import type { UserRole } from '@prisma/client';
+import type { UserRole, Locale } from '@prisma/client';
 
-declare module 'next-auth' {
-  // eslint-disable-next-line no-unused-vars
-  interface Session {
-    user: {
-      id: string;
-      email: string;
-      name: string | null;
-      role: UserRole;
-    };
-  }
-
-  // eslint-disable-next-line no-unused-vars
-  interface User {
+/**
+ * Session type that matches the previous NextAuth session shape
+ * for backward compatibility with existing code
+ */
+export interface Session {
+  user: {
+    id: string;
+    email: string;
+    name: string | null;
     role: UserRole;
+    preferredLocale?: Locale;
+  };
+}
+
+/**
+ * Get the current session using Better Auth's API
+ * This maintains the same API as the previous NextAuth `auth()` function
+ */
+export async function auth(): Promise<Session | null> {
+  try {
+    const session = await betterAuth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session?.user) {
+      return null;
+    }
+
+    // Better Auth session includes basic user info, but we need role and preferredLocale
+    // which are custom fields. Fetch them from the database.
+    const user = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        preferredLocale: true,
+      },
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        preferredLocale: user.preferredLocale,
+      },
+    };
+  } catch (error) {
+    console.error('Auth error:', error);
+    return null;
   }
 }
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
-  session: {
-    strategy: 'jwt',
-    maxAge: 7 * 24 * 60 * 60, // 7 days
-  },
-  pages: {
-    signIn: '/login',
-  },
-  providers: [
-    Credentials({
-      name: 'credentials',
-      credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' },
-      },
-      async authorize(credentials) {
-        const validated = loginSchema.safeParse(credentials);
-        if (!validated.success) {
-          return null;
-        }
-
-        const { email, password } = validated.data;
-
-        const user = await db.user.findUnique({
-          where: { email },
-        });
-
-        if (!user || !user.passwordHash) {
-          return null;
-        }
-
-        const isValid = await verifyPassword(password, user.passwordHash);
-        if (!isValid) {
-          return null;
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-        };
-      },
-    }),
-  ],
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.role = user.role;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id as string;
-        session.user.role = token.role as UserRole;
-      }
-      return session;
-    },
-  },
-});
+/**
+ * Sign out using Better Auth's API
+ */
+export async function signOutSession(): Promise<void> {
+  try {
+    await betterAuth.api.signOut({
+      headers: await headers(),
+    });
+  } catch (error) {
+    console.error('Sign out error:', error);
+  }
+}

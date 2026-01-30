@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Menu, Wine } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
@@ -13,6 +14,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { LocaleSwitcher } from '@/components/shared/LocaleSwitcher';
+import { signOut } from '@/lib/auth-client';
 
 interface MobileNavProps {
   isAuthenticated: boolean;
@@ -22,9 +24,17 @@ interface MobileNavProps {
 
 export function MobileNav({ isAuthenticated, userName, userRole }: MobileNavProps) {
   const [open, setOpen] = useState(false);
+  const router = useRouter();
   const t = useTranslations('nav');
 
   const closeMenu = () => setOpen(false);
+
+  async function handleLogout() {
+    await signOut();
+    closeMenu();
+    router.push('/');
+    router.refresh();
+  }
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -98,13 +108,12 @@ export function MobileNav({ isAuthenticated, userName, userRole }: MobileNavProp
               <p className="text-sm text-slate-500 px-3">
                 {t('welcome', { name: userName || t('user') })}
               </p>
-              <Link
-                href="/api/auth/signout"
-                onClick={closeMenu}
-                className="text-lg font-medium text-slate-700 hover:text-burgundy-600 hover:bg-burgundy-50 transition-colors py-3 px-3 rounded-lg"
+              <button
+                onClick={handleLogout}
+                className="text-left text-lg font-medium text-slate-700 hover:text-burgundy-600 hover:bg-burgundy-50 transition-colors py-3 px-3 rounded-lg"
               >
                 {t('signOut')}
-              </Link>
+              </button>
             </>
           ) : (
             <div className="flex flex-col gap-3 px-3">

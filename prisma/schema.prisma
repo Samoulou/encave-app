@@ -53,14 +53,15 @@ enum Locale {
 }
 
 model User {
-  id              String    @id @default(cuid())
-  email           String    @unique
-  emailVerified   DateTime?
+  id              String   @id @default(cuid())
+  email           String   @unique
+  emailVerified   Boolean  @default(false)
   name            String?
-  passwordHash    String?
   image           String?
+  // Custom fields (not part of Better Auth core schema)
   role            UserRole  @default(CLIENT)
   preferredLocale Locale    @default(FR)
+  // Timestamps
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -118,30 +119,39 @@ model WineryGalleryImage {
 }
 
 model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
+  id        String @id @default(cuid())
+  userId    String
+  // Better Auth primary fields
+  accountId  String  // Provider's user ID
+  providerId String  // Provider name (e.g., "google", "credential")
+  // Password for credential accounts (Better Auth stores password here, not in user table)
+  password  String?
+  // OAuth tokens
+  accessToken           String?   @db.Text
+  refreshToken          String?   @db.Text
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  idToken               String?   @db.Text
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([provider, providerAccountId])
+  @@unique([providerId, accountId])
   @@map("accounts")
 }
 
 model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
+  id        String   @id @default(cuid())
+  token     String   @unique // Better Auth session token
+  userId    String
+  expiresAt DateTime // Better Auth expiration
+  ipAddress String?  // Better Auth client IP
+  userAgent String?  // Better Auth user agent
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -155,6 +165,18 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map("verification_tokens")
+}
+
+// Better Auth verification table
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String   // Email or other identifier
+  value      String   // Verification code/token
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  @@map("verifications")
 }
 
 model VerificationLog {

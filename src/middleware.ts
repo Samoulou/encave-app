@@ -69,8 +69,9 @@ export default async function middleware(request: NextRequest) {
   // We'll check for the session token in cookies
 
 
-  const sessionToken = request.cookies.get('authjs.session-token')?.value ||
-    request.cookies.get('__Secure-authjs.session-token')?.value;
+  // Better Auth session cookie names
+  const sessionToken = request.cookies.get('better-auth.session_token')?.value ||
+    request.cookies.get('__Secure-better-auth.session_token')?.value;
 
 
 

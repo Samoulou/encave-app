@@ -8,7 +8,7 @@ import { Wine } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Link, useRouter } from '@/i18n/navigation';
 import { registerSchema, type RegisterInput } from '@/lib/validators/auth';
-import { registerAction, loginAction } from '@/server/actions/auth';
+import { signUp, signIn } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -52,44 +52,45 @@ export function RegisterForm() {
     setError(null);
 
     try {
-      // Add timeout to prevent indefinite hanging
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Request timeout')), 30000);
+      // Use Better Auth client to sign up
+      const result = await signUp.email({
+        email: data.email,
+        password: data.password,
+        name: data.name,
       });
 
-      const result = await Promise.race([
-        registerAction(data),
-        timeoutPromise,
-      ]);
-
-      if (result.success) {
-        // Auto-login after registration
-        const loginResult = await Promise.race([
-          loginAction(data.email, data.password),
-          timeoutPromise,
-        ]);
-        if (loginResult.success) {
-          // Redirect winemakers to onboarding, clients to dashboard
-          if (data.isWinemaker) {
-            router.push('/onboarding/winery');
-          } else {
-            router.push('/dashboard');
-          }
-          router.refresh();
+      if (result.error) {
+        // Handle Better Auth errors
+        if (result.error.code === 'USER_ALREADY_EXISTS') {
+          setError(t('emailExists'));
         } else {
-          // Registration succeeded but login failed, redirect to login
-          router.push('/login');
+          setError(result.error.message || tCommon('errors.somethingWentWrong'));
         }
-      } else {
-        setError(result.error.message);
+        return;
       }
+
+      // Auto-login after registration
+      const loginResult = await signIn.email({
+        email: data.email,
+        password: data.password,
+      });
+
+      if (loginResult.error) {
+        // Registration succeeded but login failed, redirect to login
+        router.push('/login');
+        return;
+      }
+
+      // Redirect winemakers to onboarding, clients to dashboard
+      if (data.isWinemaker) {
+        router.push('/onboarding/winery');
+      } else {
+        router.push('/dashboard');
+      }
+      router.refresh();
     } catch (err) {
       console.error('Registration error:', err);
-      if (err instanceof Error && err.message === 'Request timeout') {
-        setError('La requête a pris trop de temps. Veuillez réessayer.');
-      } else {
-        setError(tCommon('errors.somethingWentWrong'));
-      }
+      setError(tCommon('errors.somethingWentWrong'));
     } finally {
       setIsLoading(false);
     }
