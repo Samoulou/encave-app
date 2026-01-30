@@ -1,10 +1,13 @@
 'use client';
 
 import { Calendar, Users, MapPin, Info } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { format, parseISO } from 'date-fns';
+import { fr, de, enUS } from 'date-fns/locale';
 import Image from 'next/image';
 import { formatCHF } from '@/lib/utils/currency';
+
+const localeMap = { fr, de, en: enUS } as const;
 
 interface OrderSummaryProps {
   experienceTitle: string;
@@ -44,9 +47,11 @@ export function OrderSummary({
 }: OrderSummaryProps) {
   const t = useTranslations('checkout');
   const tBooking = useTranslations('booking');
+  const locale = useLocale();
+  const dateLocale = localeMap[locale as keyof typeof localeMap] || enUS;
 
   const parsedDate = parseISO(date);
-  const formattedDate = format(parsedDate, 'EEE, MMM d');
+  const formattedDate = format(parsedDate, 'EEE, d MMM', { locale: dateLocale });
   const subtotal = pricePerPerson * guestCount;
   const total = subtotal + serviceFee;
 
@@ -119,7 +124,7 @@ export function OrderSummary({
         <div className="pt-6 space-y-3">
           <div className="flex justify-between text-[#1a0f12]">
             <span>
-              {formatCHF(pricePerPerson)} × {guestCount} {tBooking('guests', { count: guestCount }).toLowerCase()}
+              {formatCHF(pricePerPerson)} × {tBooking('guests', { count: guestCount })}
             </span>
             <span>{formatCHF(subtotal)}</span>
           </div>

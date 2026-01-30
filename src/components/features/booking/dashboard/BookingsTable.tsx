@@ -2,9 +2,9 @@
 
 import { useState, useMemo, memo, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { format } from 'date-fns';
 import { BookingStatus } from '@prisma/client';
 import { MoreVertical, Check, X, Users, Loader2 } from 'lucide-react';
+import { useTranslations, useLocale } from 'next-intl';
 import { BookingStatusBadge } from './BookingStatusBadge';
 import { ClientDetailsModal } from './ClientDetailsModal';
 import {
@@ -15,6 +15,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { approveBooking, rejectBooking } from '@/server/actions/booking-dashboard';
 import { toast } from 'sonner';
+import { formatDate } from '@/lib/i18n/formatters';
+import type { Locale } from '@/i18n/routing';
 
 interface BookingWithExperience {
   id: string;
@@ -59,6 +61,8 @@ function getInitials(name: string): string {
  */
 function BookingsTableComponent({ bookings }: BookingsTableProps) {
   const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations('bookings');
   const [, startTransition] = useTransition();
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [clientModalData, setClientModalData] = useState<{
@@ -92,13 +96,13 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
       try {
         const result = await approveBooking(bookingId);
         if (result.success) {
-          toast.success('Booking confirmed');
+          toast.success(t('toast.confirmed'));
           router.refresh();
         } else {
           toast.error(result.error.message);
         }
       } catch {
-        toast.error('Failed to approve booking');
+        toast.error(t('toast.approveFailed'));
       } finally {
         setPendingAction(null);
       }
@@ -111,13 +115,13 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
       try {
         const result = await rejectBooking(bookingId);
         if (result.success) {
-          toast.success('Booking rejected');
+          toast.success(t('toast.rejected'));
           router.refresh();
         } else {
           toast.error(result.error.message);
         }
       } catch {
-        toast.error('Failed to reject booking');
+        toast.error(t('toast.rejectFailed'));
       } finally {
         setPendingAction(null);
       }
@@ -133,22 +137,22 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
             <thead>
               <tr className="border-b border-[#e5d2d7]">
                 <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564]">
-                  Booking Info
+                  {t('columns.bookingInfo')}
                 </th>
                 <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564]">
-                  Client
+                  {t('columns.client')}
                 </th>
                 <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564]">
-                  Experience
+                  {t('columns.experience')}
                 </th>
                 <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564]">
-                  Guests
+                  {t('columns.guests')}
                 </th>
                 <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564]">
-                  Status
+                  {t('columns.status')}
                 </th>
                 <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564] text-right">
-                  Actions
+                  {t('columns.actions')}
                 </th>
               </tr>
             </thead>
@@ -166,7 +170,7 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
                     <td className="py-4 px-6">
                       <div className="flex flex-col">
                         <span className="text-[#1a0f12] font-bold text-sm">
-                          {format(bookingDate, 'MMM d, yyyy')}
+                          {formatDate(bookingDate, locale as Locale, { dateStyle: 'medium' })}
                         </span>
                         <span className="text-[#915564] text-xs">
                           {booking.timeSlot}
@@ -202,7 +206,7 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-1 text-[#1a0f12] text-sm">
                         <Users className="h-4 w-4 text-[#915564]" />
-                        {booking.guestCount} {booking.guestCount === 1 ? 'Person' : 'People'}
+                        {t('guestCount', { count: booking.guestCount })}
                       </div>
                     </td>
 
@@ -219,7 +223,7 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
                             onClick={() => handleApprove(booking.id)}
                             disabled={isApproving || isRejecting}
                             className="p-1.5 rounded-lg text-green-600 hover:bg-green-50 transition-colors disabled:opacity-50"
-                            title="Approve"
+                            title={t('actions.approve')}
                           >
                             {isApproving ? (
                               <Loader2 className="h-5 w-5 animate-spin" />
@@ -231,7 +235,7 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
                             onClick={() => handleReject(booking.id)}
                             disabled={isApproving || isRejecting}
                             className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
-                            title="Reject"
+                            title={t('actions.reject')}
                           >
                             {isRejecting ? (
                               <Loader2 className="h-5 w-5 animate-spin" />
@@ -257,14 +261,14 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
                                 })
                               }
                             >
-                              View Details
+                              {t('actions.viewDetails')}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => {
                                 window.location.href = `mailto:${booking.visitorEmail}`;
                               }}
                             >
-                              Contact Client
+                              {t('actions.contactClient')}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -280,7 +284,7 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
         {/* Pagination Footer */}
         <div className="bg-white px-6 py-4 border-t border-[#e5d2d7] flex items-center justify-between">
           <span className="text-sm text-[#915564]">
-            Showing {startIndex + 1} to {endIndex} of {bookings.length} results
+            {t('pagination.showing', { from: startIndex + 1, to: endIndex, total: bookings.length })}
           </span>
           <div className="flex gap-2">
             <button
@@ -288,14 +292,14 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
               disabled={currentPage === 1}
               className="px-3 py-1 rounded-lg border border-[#e5d2d7] text-[#915564] text-sm hover:bg-[#f2e9eb] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Previous
+              {t('pagination.previous')}
             </button>
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
               className="px-3 py-1 rounded-lg border border-[#e5d2d7] text-[#915564] text-sm hover:bg-[#f2e9eb] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Next
+              {t('pagination.next')}
             </button>
           </div>
         </div>

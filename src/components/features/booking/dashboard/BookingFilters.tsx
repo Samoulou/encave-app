@@ -4,6 +4,7 @@ import { useTransition } from 'react';
 import { useQueryState, parseAsArrayOf, parseAsString } from 'nuqs';
 import { BookingStatus } from '@prisma/client';
 import { Filter, Loader2 } from 'lucide-react';
+import { useTranslations, useLocale } from 'next-intl';
 import {
   Select,
   SelectContent,
@@ -21,6 +22,7 @@ import {
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
 import { format, parseISO } from 'date-fns';
+import { fr, de, enUS } from 'date-fns/locale';
 
 interface ExperienceOption {
   id: string;
@@ -32,19 +34,25 @@ interface BookingFiltersProps {
 }
 
 const STATUS_OPTIONS = [
-  { value: BookingStatus.CONFIRMED, label: 'Confirmed' },
-  { value: BookingStatus.COMPLETED, label: 'Completed' },
-  { value: BookingStatus.CANCELLED_BY_CLIENT, label: 'Cancelled by Client' },
-  { value: BookingStatus.CANCELLED_BY_WINERY, label: 'Cancelled by Winery' },
-  { value: BookingStatus.NO_SHOW, label: 'No-Show' },
-  { value: BookingStatus.PENDING_PAYMENT, label: 'Pending' },
+  { value: BookingStatus.CONFIRMED, labelKey: 'confirmed' },
+  { value: BookingStatus.COMPLETED, labelKey: 'completed' },
+  { value: BookingStatus.CANCELLED_BY_CLIENT, labelKey: 'cancelledByClient' },
+  { value: BookingStatus.CANCELLED_BY_WINERY, labelKey: 'cancelledByWinery' },
+  { value: BookingStatus.NO_SHOW, labelKey: 'noShow' },
+  { value: BookingStatus.PENDING_PAYMENT, labelKey: 'pending' },
 ];
+
+const localeMap = { fr, de, en: enUS };
 
 /**
  * Filter controls for bookings dashboard.
  * Simplified design matching US-UI-09 mockup.
  */
 export function BookingFilters({ experiences }: BookingFiltersProps) {
+  const t = useTranslations('bookings');
+  const tStatus = useTranslations('bookings.status');
+  const locale = useLocale();
+  const dateLocale = localeMap[locale as keyof typeof localeMap] || enUS;
   const [isPending, startTransition] = useTransition();
 
   // Use nuqs with startTransition for non-blocking URL updates
@@ -93,7 +101,7 @@ export function BookingFilters({ experiences }: BookingFiltersProps) {
           ) : (
             <Filter className="h-5 w-5" />
           )}
-          Filter
+          {t('filters.filter')}
           {activeFilterCount > 0 && (
             <span className="ml-1 flex items-center justify-center h-5 min-w-[20px] px-1.5 rounded-full bg-primary text-white text-xs font-bold">
               {activeFilterCount}
@@ -104,7 +112,7 @@ export function BookingFilters({ experiences }: BookingFiltersProps) {
       <DropdownMenuContent align="start" className="w-72">
         {/* Status Filters */}
         <DropdownMenuLabel className="text-[#915564] text-xs uppercase tracking-wider">
-          Status
+          {t('filters.status')}
         </DropdownMenuLabel>
         {STATUS_OPTIONS.map((option) => (
           <DropdownMenuCheckboxItem
@@ -112,7 +120,7 @@ export function BookingFilters({ experiences }: BookingFiltersProps) {
             checked={statusFilter?.includes(option.value) ?? false}
             onCheckedChange={() => toggleStatus(option.value)}
           >
-            {option.label}
+            {tStatus(option.labelKey)}
           </DropdownMenuCheckboxItem>
         ))}
 
@@ -121,7 +129,7 @@ export function BookingFilters({ experiences }: BookingFiltersProps) {
           <>
             <DropdownMenuSeparator />
             <DropdownMenuLabel className="text-[#915564] text-xs uppercase tracking-wider">
-              Experience
+              {t('filters.experience')}
             </DropdownMenuLabel>
             <div className="px-2 py-1">
               <Select
@@ -131,10 +139,10 @@ export function BookingFilters({ experiences }: BookingFiltersProps) {
                 }
               >
                 <SelectTrigger className="h-9 w-full">
-                  <SelectValue placeholder="All experiences" />
+                  <SelectValue placeholder={t('filters.allExperiences')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All experiences</SelectItem>
+                  <SelectItem value="all">{t('filters.allExperiences')}</SelectItem>
                   {experiences.map((exp) => (
                     <SelectItem key={exp.id} value={exp.id}>
                       {exp.title}
@@ -149,18 +157,19 @@ export function BookingFilters({ experiences }: BookingFiltersProps) {
         {/* Date Range */}
         <DropdownMenuSeparator />
         <DropdownMenuLabel className="text-[#915564] text-xs uppercase tracking-wider">
-          Date Range
+          {t('filters.dateRange')}
         </DropdownMenuLabel>
         <div className="px-2 py-1 flex gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex-1 h-9 px-3 text-sm rounded-lg border border-[#e5d2d7] bg-white hover:bg-[#f8f6f6] text-left truncate">
-                {dateFrom ? format(parseISO(dateFrom), 'MMM d') : 'From'}
+                {dateFrom ? format(parseISO(dateFrom), 'MMM d', { locale: dateLocale }) : t('filters.from')}
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-auto p-0">
               <Calendar
                 mode="single"
+                locale={dateLocale}
                 selected={dateFrom ? parseISO(dateFrom) : undefined}
                 onSelect={(date) =>
                   setDateFrom(date ? format(date, 'yyyy-MM-dd') : null)
@@ -171,12 +180,13 @@ export function BookingFilters({ experiences }: BookingFiltersProps) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex-1 h-9 px-3 text-sm rounded-lg border border-[#e5d2d7] bg-white hover:bg-[#f8f6f6] text-left truncate">
-                {dateTo ? format(parseISO(dateTo), 'MMM d') : 'To'}
+                {dateTo ? format(parseISO(dateTo), 'MMM d', { locale: dateLocale }) : t('filters.to')}
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-auto p-0">
               <Calendar
                 mode="single"
+                locale={dateLocale}
                 selected={dateTo ? parseISO(dateTo) : undefined}
                 onSelect={(date) =>
                   setDateTo(date ? format(date, 'yyyy-MM-dd') : null)
@@ -194,7 +204,7 @@ export function BookingFilters({ experiences }: BookingFiltersProps) {
               onClick={clearFilters}
               className="w-full px-2 py-2 text-sm text-[#915564] hover:text-primary hover:bg-[#f8f6f6] text-left transition-colors"
             >
-              Clear all filters
+              {t('filters.clearAll')}
             </button>
           </>
         )}

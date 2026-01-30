@@ -1,4 +1,7 @@
+'use client';
+
 import { CalendarCheck, CalendarClock, PieChart, TrendingUp, TrendingDown } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { BookingSummary } from '@/server/queries/booking.queries';
 import { cn } from '@/lib/utils';
 
@@ -12,6 +15,8 @@ interface BookingSummaryCardsProps {
  * Matches the mockup design from US-UI-09.
  */
 export function BookingSummaryCards({ summary }: BookingSummaryCardsProps) {
+  const t = useTranslations('bookings.summary');
+
   // Calculate trend percentage (mock for now - would need previous period data)
   const trendPercentage = summary.monthCount > 0 ? 12 : 0;
   const trendIsPositive = trendPercentage >= 0;
@@ -29,7 +34,7 @@ export function BookingSummaryCards({ summary }: BookingSummaryCardsProps) {
       <div className="flex flex-col gap-1 p-5 bg-white rounded-xl border border-[#e5d2d7] shadow-sm">
         <div className="flex items-center justify-between">
           <p className="text-[#915564] text-sm font-medium uppercase tracking-wider">
-            Total Bookings
+            {t('totalBookings')}
           </p>
           <CalendarCheck className="h-5 w-5 text-[#915564]" />
         </div>
@@ -60,7 +65,7 @@ export function BookingSummaryCards({ summary }: BookingSummaryCardsProps) {
       <div className="flex flex-col gap-1 p-5 bg-white rounded-xl border border-[#e5d2d7] shadow-sm">
         <div className="flex items-center justify-between">
           <p className="text-[#915564] text-sm font-medium uppercase tracking-wider">
-            Upcoming (7 Days)
+            {t('upcoming')}
           </p>
           <CalendarClock className="h-5 w-5 text-[#915564]" />
         </div>
@@ -73,14 +78,14 @@ export function BookingSummaryCards({ summary }: BookingSummaryCardsProps) {
       <div className="flex flex-col gap-1 p-5 bg-white rounded-xl border border-[#e5d2d7] shadow-sm">
         <div className="flex items-center justify-between">
           <p className="text-[#915564] text-sm font-medium uppercase tracking-wider">
-            Occupancy Rate
+            {t('occupancyRate')}
           </p>
           <PieChart className="h-5 w-5 text-[#915564]" />
         </div>
         <div className="flex flex-col gap-2 mt-2">
           <div className="flex items-baseline justify-between">
             <p className="text-[#1a0f12] text-3xl font-bold">{occupancyRate}%</p>
-            <span className="text-sm text-[#915564]">Avg. this month</span>
+            <span className="text-sm text-[#915564]">{t('avgThisMonth')}</span>
           </div>
           <div className="w-full h-1.5 bg-[#f2e9eb] rounded-full overflow-hidden">
             <div

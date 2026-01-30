@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Download, ExternalLink, Loader2, FileText } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -21,6 +22,7 @@ interface ExportEarningsButtonProps {
 }
 
 export function ExportEarningsButton({ variant = 'outline' }: ExportEarningsButtonProps) {
+  const t = useTranslations('earnings');
   const [isExporting, setIsExporting] = useState(false);
   const [isExportingPDF, setIsExportingPDF] = useState(false);
   const [isOpeningStripe, setIsOpeningStripe] = useState(false);
@@ -56,12 +58,12 @@ export function ExportEarningsButton({ variant = 'outline' }: ExportEarningsButt
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
 
-        toast.success('Earnings exported successfully');
+        toast.success(t('toast.exportSuccess'));
       } else if (!result.success) {
-        toast.error(result.error?.message || 'Failed to export earnings');
+        toast.error(result.error?.message || t('toast.exportFailed'));
       }
     } catch {
-      toast.error('Failed to export earnings');
+      toast.error(t('export.failed'));
     } finally {
       setIsExporting(false);
     }
@@ -75,10 +77,10 @@ export function ExportEarningsButton({ variant = 'outline' }: ExportEarningsButt
       if (result.success && result.data?.url) {
         window.open(result.data.url, '_blank');
       } else if (!result.success) {
-        toast.error(result.error?.message || 'Failed to open Stripe dashboard');
+        toast.error(result.error?.message || t('toast.stripeDashboardFailed'));
       }
     } catch {
-      toast.error('Failed to open Stripe dashboard');
+      toast.error(t('toast.stripeDashboardFailed'));
     } finally {
       setIsOpeningStripe(false);
     }
@@ -108,12 +110,12 @@ export function ExportEarningsButton({ variant = 'outline' }: ExportEarningsButt
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
 
-        toast.success('PDF statement downloaded successfully');
+        toast.success(t('toast.pdfDownloadSuccess'));
       } else if (!result.success) {
-        toast.error(result.error?.message || 'Failed to generate PDF');
+        toast.error(result.error?.message || t('toast.pdfGenerationFailed'));
       }
     } catch {
-      toast.error('Failed to generate PDF statement');
+      toast.error(t('toast.pdfGenerationFailed'));
     } finally {
       setIsExportingPDF(false);
     }
@@ -139,21 +141,21 @@ export function ExportEarningsButton({ variant = 'outline' }: ExportEarningsButt
           ) : (
             <Download className={cn('h-4 w-4', !isPrimary && 'mr-2')} />
           )}
-          <span className="text-sm">{isPrimary ? 'Export Report' : 'Export'}</span>
+          <span className="text-sm">{isPrimary ? t('export.exportReport') : t('export.export')}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={handleExportPDF} disabled={isExportingPDF}>
           <FileText className="mr-2 h-4 w-4" />
-          Download PDF Statement
+          {t('export.downloadPDF')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleExportCSV} disabled={isExporting}>
           <Download className="mr-2 h-4 w-4" />
-          Download CSV
+          {t('export.downloadCSV')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleOpenStripe} disabled={isOpeningStripe}>
           <ExternalLink className="mr-2 h-4 w-4" />
-          View in Stripe
+          {t('export.viewInStripe')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

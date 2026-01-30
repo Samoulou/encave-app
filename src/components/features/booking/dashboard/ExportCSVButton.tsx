@@ -3,12 +3,14 @@
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Download, Loader2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { exportBookingsToCSV } from '@/server/actions/booking-dashboard';
 import { toast } from 'sonner';
 import { BookingStatus } from '@prisma/client';
 
 export function ExportCSVButton() {
   const searchParams = useSearchParams();
+  const t = useTranslations('bookings');
   const [isExporting, setIsExporting] = useState(false);
 
   const handleExport = async () => {
@@ -47,13 +49,13 @@ export function ExportCSVButton() {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
 
-        toast.success('Bookings exported successfully');
+        toast.success(t('toast.exportSuccess'));
       } else {
         toast.error(result.error.message);
       }
     } catch (error) {
       console.error('Export failed:', error);
-      toast.error('Failed to export bookings. Please try again.');
+      toast.error(t('toast.exportFailed'));
     } finally {
       setIsExporting(false);
     }
@@ -70,7 +72,7 @@ export function ExportCSVButton() {
       ) : (
         <Download className="h-5 w-5" />
       )}
-      <span>Export CSV</span>
+      <span>{t('export.csv')}</span>
     </button>
   );
 }

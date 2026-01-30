@@ -24,11 +24,16 @@
     "labels": {
       "email": "Email address",
       "password": "Password",
-      "name": "Name"
+      "name": "Name",
+      "phone": "Phone"
+    },
+    "columns": {
+      "actions": "Actions"
     },
     "placeholders": {
       "email": "name@example.com",
-      "name": "Your name"
+      "name": "Your name",
+      "password": "••••••••"
     },
     "errors": {
       "somethingWentWrong": "Something went wrong. Please try again."
@@ -40,6 +45,26 @@
       "pending": "Pending",
       "verified": "Verified",
       "rejected": "Rejected"
+    },
+    "days": {
+      "full": {
+        "0": "Sunday",
+        "1": "Monday",
+        "2": "Tuesday",
+        "3": "Wednesday",
+        "4": "Thursday",
+        "5": "Friday",
+        "6": "Saturday"
+      },
+      "short": {
+        "0": "Sun",
+        "1": "Mon",
+        "2": "Tue",
+        "3": "Wed",
+        "4": "Thu",
+        "5": "Fri",
+        "6": "Sat"
+      }
     },
     "time": {
       "hoursAgo": "{count, plural, =1 {# hour} other {# hours}} ago",
@@ -99,6 +124,7 @@
     "currentLanguage": "current language"
   },
   "auth": {
+    "google": "Google",
     "legal": {
       "privacyPolicy": "Privacy Policy",
       "termsOfService": "Terms of Service"
@@ -348,6 +374,34 @@
       "archived": "Archived",
       "searchPlaceholder": "Search experiences by name..."
     },
+    "notFound": "Experience Not Found",
+    "backToExperiences": "Back to Experiences",
+    "newExperience": "New Experience",
+    "generalInfo": "General Info",
+    "details": "Details",
+    "media": "Media",
+    "location": "Location",
+    "addressSearchPlaceholder": "Search for an address...",
+    "deleteSchedulePattern": "Delete schedule pattern",
+    "deleteTimeSlot": "Delete time slot",
+    "startTime": "Start time",
+    "endTime": "End time",
+    "saveTimeSlot": "Save time slot",
+    "toast": {
+      "uploadImageFailed": "Failed to upload image",
+      "titleRequired": "Please enter a title",
+      "imageRequired": "Please upload at least one image",
+      "draftSaved": "Draft saved",
+      "createdSuccess": "Experience created successfully",
+      "publishFailed": "Failed to publish",
+      "schedulePatternRequired": "At least one schedule pattern is required"
+    },
+    "editor": {
+      "bold": "Bold",
+      "italic": "Italic",
+      "underline": "Underline",
+      "bulletList": "Bullet list"
+    },
     "sort": {
       "sortBy": "Sort by",
       "newestFirst": "Newest First",
@@ -374,7 +428,14 @@
       "copiedSlots": "Copied {count} slot(s) to all days",
       "savedSuccessfully": "Availability saved successfully",
       "saving": "Saving...",
-      "saveAvailability": "Save Availability"
+      "saveAvailability": "Save Availability",
+      "noAvailabilityContact": "No availability set. Contact the winery for more information.",
+      "noScheduleContact": "No availability schedule set. Please contact the winery for booking.",
+      "activeSlotsConfigured": "{count} active {count, plural, =1 {slot} other {slots}} configured",
+      "allSlotsDisabled": "All slots are disabled - visitors cannot book",
+      "noSlotsPreview": "No availability configured. Add time slots above to preview your weekly schedule.",
+      "active": "Active",
+      "disabled": "Disabled"
     }
   },
   "booking": {
@@ -417,6 +478,82 @@
       "title": "No bookings yet",
       "description": "Share your experiences to attract visitors and start receiving bookings.",
       "action": "Manage Experiences"
+    },
+    "summary": {
+      "totalBookings": "Total Bookings",
+      "upcoming": "Upcoming (7 Days)",
+      "occupancyRate": "Occupancy Rate",
+      "avgThisMonth": "Avg. this month"
+    },
+    "columns": {
+      "bookingInfo": "Booking Info",
+      "client": "Client",
+      "experience": "Experience",
+      "guests": "Guests",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "status": {
+      "confirmed": "Confirmed",
+      "completed": "Completed",
+      "cancelledByClient": "Cancelled by Client",
+      "cancelledByWinery": "Cancelled by Winery",
+      "noShow": "No-Show",
+      "pending": "Pending"
+    },
+    "guestCount": "{count, plural, =1 {# person} other {# people}}",
+    "actions": {
+      "approve": "Approve",
+      "reject": "Reject",
+      "viewDetails": "View Details",
+      "contactClient": "Contact Client",
+      "markAsCompleted": "Mark as Completed",
+      "markAsNoShow": "Mark as No-Show"
+    },
+    "toast": {
+      "confirmed": "Booking confirmed",
+      "rejected": "Booking rejected",
+      "approveFailed": "Failed to approve booking",
+      "rejectFailed": "Failed to reject booking",
+      "markedAsCompleted": "Booking marked as completed",
+      "markedAsNoShow": "Booking marked as no-show",
+      "exportSuccess": "Bookings exported successfully",
+      "exportFailed": "Failed to export bookings. Please try again."
+    },
+    "filters": {
+      "filter": "Filter",
+      "status": "Status",
+      "experience": "Experience",
+      "allExperiences": "All experiences",
+      "dateRange": "Date Range",
+      "from": "From",
+      "to": "To",
+      "clearAll": "Clear all filters"
+    },
+    "search": {
+      "placeholder": "Search by client name, email...",
+      "clear": "Clear search"
+    },
+    "pagination": {
+      "showing": "Showing {from} to {to} of {total} results",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "export": {
+      "csv": "Export CSV",
+      "exporting": "Exporting..."
+    },
+    "addBooking": "Add Booking",
+    "reference": "Reference",
+    "views": {
+      "listView": "List View",
+      "calendarView": "Calendar"
+    },
+    "clientModal": {
+      "contactInfo": "Contact Information",
+      "bookingHistory": "Booking History",
+      "noHistory": "No previous bookings",
+      "at": "at"
     }
   },
   "checkout": {
@@ -467,7 +604,10 @@
     "cancellationPolicy": "until 24 hours before the experience. After that, a 50% fee applies.",
     "orderSummary": "Order Summary",
     "sslEncrypted": "SSL ENCRYPTED",
-    "support247": "24/7 SUPPORT"
+    "support247": "24/7 SUPPORT",
+    "expiryPlaceholder": "MM/YY",
+    "cvcPlaceholder": "CVC",
+    "availabilityCheckFailed": "Failed to verify availability. Please try again."
   },
   "confirmation": {
     "bookingConfirmed": "Booking Confirmed!",
@@ -620,6 +760,29 @@
     "createFirstExperience": "Create your first experience to start receiving bookings.",
     "statistics": "Statistics"
   },
+  "settings": {
+    "title": "Settings",
+    "accountInformation": "Account Information",
+    "accountInfo": "Account Information",
+    "role": "Role",
+    "notSet": "Not set",
+    "roleUser": "User",
+    "comingSoon": "Coming soon",
+    "sections": {
+      "notifications": {
+        "title": "Notifications",
+        "description": "Manage your email notification preferences"
+      },
+      "profile": {
+        "title": "Profile",
+        "description": "Update your personal information"
+      },
+      "language": {
+        "title": "Language",
+        "description": "Change your preferred language"
+      }
+    }
+  },
   "earnings": {
     "title": "Earnings",
     "period": {
@@ -656,11 +819,29 @@
       "allStatus": "All status",
       "paid": "Paid",
       "pending": "Pending",
-      "refunded": "Refunded"
+      "refunded": "Refunded",
+      "clear": "Clear"
     },
     "search": {
       "placeholder": "Search by client name, email...",
       "clear": "Clear search"
+    },
+    "recentTransactions": "Recent Transactions",
+    "taxInformation": "Tax Information",
+    "completeStripeSetup": "Complete Stripe Setup",
+    "toast": {
+      "exportSuccess": "Earnings exported successfully",
+      "exportFailed": "Failed to export earnings",
+      "stripeDashboardFailed": "Failed to open Stripe dashboard",
+      "pdfDownloadSuccess": "PDF statement downloaded successfully",
+      "pdfGenerationFailed": "Failed to generate PDF"
+    },
+    "export": {
+      "export": "Export",
+      "exportReport": "Export Report",
+      "downloadPDF": "Download PDF Statement",
+      "downloadCSV": "Download CSV",
+      "viewInStripe": "View in Stripe"
     }
   },
   "calendar": {
@@ -676,7 +857,10 @@
     "blockedSuccess": "Blocked {count} experiences for {date}",
     "unblockedSuccess": "Unblocked {count} experiences for {date}",
     "blockError": "Failed to block date",
-    "unblockError": "Failed to unblock date"
+    "unblockError": "Failed to unblock date",
+    "today": "Today",
+    "bookingCount": "Booking count",
+    "experienceTypes": "Experience Types:"
   },
   "admin": {
     "title": "Admin Dashboard",
@@ -798,6 +982,13 @@
     "noWineries": "No wineries found",
     "noResults": "No results",
     "tryAgain": "Try again with different terms"
+  },
+  "wineries": {
+    "comingSoon": "Winemakers coming soon...",
+    "filterByCommune": "Filter by commune"
+  },
+  "onboarding": {
+    "step": "Step {current} of {total}"
   },
   "metadata": {
     "siteName": "EnCave",

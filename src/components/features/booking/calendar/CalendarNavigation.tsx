@@ -2,7 +2,11 @@
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, addMonths, subMonths, addWeeks, subWeeks } from 'date-fns';
+import { fr, de, enUS } from 'date-fns/locale';
+import { useTranslations, useLocale } from 'next-intl';
 import { Button } from '@/components/ui/button';
+
+const localeMap = { fr, de, en: enUS };
 
 interface CalendarNavigationProps {
   currentDate: Date;
@@ -15,6 +19,10 @@ export function CalendarNavigation({
   onDateChange,
   viewMode,
 }: CalendarNavigationProps) {
+  const t = useTranslations('calendar');
+  const locale = useLocale();
+  const dateLocale = localeMap[locale as keyof typeof localeMap] || enUS;
+
   const handlePrevious = () => {
     if (viewMode === 'calendar') {
       onDateChange(subMonths(currentDate, 1));
@@ -44,7 +52,7 @@ export function CalendarNavigation({
         size="sm"
         onClick={handleToday}
       >
-        Today
+        {t('today')}
       </Button>
       <div className="flex items-center">
         <Button
@@ -65,7 +73,7 @@ export function CalendarNavigation({
         </Button>
       </div>
       <h2 className="text-lg font-semibold text-slate-900">
-        {format(currentDate, displayFormat)}
+        {format(currentDate, displayFormat, { locale: dateLocale })}
       </h2>
     </div>
   );

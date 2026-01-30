@@ -2,8 +2,10 @@
 
 import { useEffect, useState, useTransition } from 'react';
 import { format } from 'date-fns';
+import { fr, de, enUS } from 'date-fns/locale';
 import { BookingStatus } from '@prisma/client';
 import { Mail, Phone, History, Loader2 } from 'lucide-react';
+import { useTranslations, useLocale } from 'next-intl';
 import {
   Dialog,
   DialogContent,
@@ -12,6 +14,8 @@ import {
 } from '@/components/ui/dialog';
 import { BookingStatusBadge } from './BookingStatusBadge';
 import { getClientHistory } from '@/server/actions/booking-dashboard';
+
+const localeMap = { fr, de, en: enUS };
 
 interface ClientBooking {
   id: string;
@@ -39,6 +43,10 @@ export function ClientDetailsModal({
   visitorEmail,
   visitorPhone,
 }: ClientDetailsModalProps) {
+  const t = useTranslations('bookings.clientModal');
+  const tCommon = useTranslations('bookings');
+  const locale = useLocale();
+  const dateLocale = localeMap[locale as keyof typeof localeMap] || enUS;
   const [bookings, setBookings] = useState<ClientBooking[]>([]);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -69,7 +77,7 @@ export function ClientDetailsModal({
           {/* Contact Info */}
           <div className="space-y-3">
             <h3 className="text-sm font-medium text-slate-900">
-              Contact Information
+              {t('contactInfo')}
             </h3>
             <div className="space-y-2">
               <a
@@ -93,7 +101,7 @@ export function ClientDetailsModal({
           <div className="space-y-3">
             <h3 className="flex items-center gap-2 text-sm font-medium text-slate-900">
               <History className="h-4 w-4" />
-              Booking History
+              {t('bookingHistory')}
             </h3>
 
             {isPending ? (
@@ -103,7 +111,7 @@ export function ClientDetailsModal({
             ) : error ? (
               <p className="text-sm text-red-600">{error}</p>
             ) : bookings.length === 0 ? (
-              <p className="text-sm text-slate-500">No previous bookings</p>
+              <p className="text-sm text-slate-500">{t('noHistory')}</p>
             ) : (
               <div className="max-h-64 space-y-2 overflow-y-auto">
                 {bookings.map((booking) => (
@@ -117,12 +125,11 @@ export function ClientDetailsModal({
                           {booking.experience.title}
                         </p>
                         <p className="text-xs text-slate-500">
-                          {format(new Date(booking.date), 'MMM d, yyyy')} at{' '}
+                          {format(new Date(booking.date), 'PPP', { locale: dateLocale })} {t('at')}{' '}
                           {booking.timeSlot}
                         </p>
                         <p className="text-xs text-slate-500">
-                          {booking.guestCount} guest
-                          {booking.guestCount !== 1 ? 's' : ''} &middot; CHF{' '}
+                          {tCommon('guestCount', { count: booking.guestCount })} &middot; CHF{' '}
                           {(booking.totalPrice / 100).toFixed(2)}
                         </p>
                       </div>

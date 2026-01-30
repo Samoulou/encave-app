@@ -1,4 +1,7 @@
+'use client';
+
 import { Calendar } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 
 interface AvailabilitySlot {
@@ -12,18 +15,6 @@ interface AvailabilitySlot {
 interface AvailabilityPreviewProps {
   slots: AvailabilitySlot[];
 }
-
-const DAY_NAMES = [
-  'Sunday',
-  'Monday',
-  'Tuesday',
-  'Wednesday',
-  'Thursday',
-  'Friday',
-  'Saturday',
-];
-
-const SHORT_DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 function formatTime(time: string): string {
   // Convert "HH:mm" to more readable format
@@ -46,16 +37,20 @@ function groupSlotsByDay(
 }
 
 export function AvailabilityPreview({ slots }: AvailabilityPreviewProps) {
+  const t = useTranslations('experience.availability');
+  const tDaysFull = useTranslations('common.days.full');
+  const tDaysShort = useTranslations('common.days.short');
+
   if (slots.length === 0) {
     return (
       <section className="rounded-xl bg-white p-6 shadow-warm lg:p-8" data-testid="availability-preview">
         <h2 className="font-display text-xl font-semibold text-slate-900">
-          Availability
+          {t('title')}
         </h2>
         <div className="mt-4 flex items-center gap-3 rounded-lg bg-amber-50 p-4 text-amber-800">
           <Calendar className="h-5 w-5 shrink-0" />
           <p className="text-sm">
-            No availability schedule set. Please contact the winery for booking.
+            {t('noScheduleContact')}
           </p>
         </div>
       </section>
@@ -68,7 +63,7 @@ export function AvailabilityPreview({ slots }: AvailabilityPreviewProps) {
   return (
     <section className="rounded-xl bg-white p-6 shadow-warm lg:p-8" data-testid="availability-preview">
       <h2 className="font-display text-xl font-semibold text-slate-900">
-        Availability
+        {t('title')}
       </h2>
 
       {/* Days indicator - visual representation */}
@@ -84,9 +79,9 @@ export function AvailabilityPreview({ slots }: AvailabilityPreviewProps) {
                   ? 'bg-burgundy-100 text-burgundy-800'
                   : 'bg-stone-100 text-stone-400'
               )}
-              title={DAY_NAMES[day]}
+              title={tDaysFull(String(day))}
             >
-              {SHORT_DAY_NAMES[day]}
+              {tDaysShort(String(day))}
             </div>
           );
         })}
@@ -102,7 +97,7 @@ export function AvailabilityPreview({ slots }: AvailabilityPreviewProps) {
               className="flex items-start gap-4 border-b border-stone-100 pb-3 last:border-0"
             >
               <span className="w-24 shrink-0 text-sm font-medium text-slate-700">
-                {DAY_NAMES[day]}
+                {tDaysFull(String(day))}
               </span>
               <div className="flex flex-wrap gap-2">
                 {daySlots.map((slot) => (

@@ -24,11 +24,16 @@
     "labels": {
       "email": "E-Mail-Adresse",
       "password": "Passwort",
-      "name": "Name"
+      "name": "Name",
+      "phone": "Telefon"
+    },
+    "columns": {
+      "actions": "Aktionen"
     },
     "placeholders": {
       "email": "name@beispiel.com",
-      "name": "Ihr Name"
+      "name": "Ihr Name",
+      "password": "••••••••"
     },
     "errors": {
       "somethingWentWrong": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut."
@@ -40,6 +45,26 @@
       "pending": "Ausstehend",
       "verified": "Verifiziert",
       "rejected": "Abgelehnt"
+    },
+    "days": {
+      "full": {
+        "0": "Sonntag",
+        "1": "Montag",
+        "2": "Dienstag",
+        "3": "Mittwoch",
+        "4": "Donnerstag",
+        "5": "Freitag",
+        "6": "Samstag"
+      },
+      "short": {
+        "0": "So",
+        "1": "Mo",
+        "2": "Di",
+        "3": "Mi",
+        "4": "Do",
+        "5": "Fr",
+        "6": "Sa"
+      }
     },
     "time": {
       "hoursAgo": "vor {count, plural, =1 {# Stunde} other {# Stunden}}",
@@ -99,6 +124,7 @@
     "currentLanguage": "aktuelle Sprache"
   },
   "auth": {
+    "google": "Google",
     "legal": {
       "privacyPolicy": "Datenschutzrichtlinie",
       "termsOfService": "Nutzungsbedingungen"
@@ -348,6 +374,34 @@
       "archived": "Archiviert",
       "searchPlaceholder": "Erlebnisse nach Namen suchen..."
     },
+    "notFound": "Erlebnis nicht gefunden",
+    "backToExperiences": "Zurück zu Erlebnissen",
+    "newExperience": "Neues Erlebnis",
+    "generalInfo": "Allgemeine Informationen",
+    "details": "Details",
+    "media": "Medien",
+    "location": "Standort",
+    "addressSearchPlaceholder": "Adresse suchen...",
+    "deleteSchedulePattern": "Zeitplan löschen",
+    "deleteTimeSlot": "Zeitfenster löschen",
+    "startTime": "Startzeit",
+    "endTime": "Endzeit",
+    "saveTimeSlot": "Zeitfenster speichern",
+    "toast": {
+      "uploadImageFailed": "Bild-Upload fehlgeschlagen",
+      "titleRequired": "Bitte geben Sie einen Titel ein",
+      "imageRequired": "Bitte laden Sie mindestens ein Bild hoch",
+      "draftSaved": "Entwurf gespeichert",
+      "createdSuccess": "Erlebnis erfolgreich erstellt",
+      "publishFailed": "Veröffentlichung fehlgeschlagen",
+      "schedulePatternRequired": "Mindestens ein Zeitfenster ist erforderlich"
+    },
+    "editor": {
+      "bold": "Fett",
+      "italic": "Kursiv",
+      "underline": "Unterstrichen",
+      "bulletList": "Aufzählung"
+    },
     "sort": {
       "sortBy": "Sortieren nach",
       "newestFirst": "Neueste zuerst",
@@ -374,7 +428,14 @@
       "copiedSlots": "{count} Zeitfenster auf alle Tage kopiert",
       "savedSuccessfully": "Verfügbarkeit erfolgreich gespeichert",
       "saving": "Wird gespeichert...",
-      "saveAvailability": "Verfügbarkeit speichern"
+      "saveAvailability": "Verfügbarkeit speichern",
+      "noAvailabilityContact": "Keine Verfügbarkeit festgelegt. Kontaktieren Sie das Weingut für weitere Informationen.",
+      "noScheduleContact": "Kein Verfügbarkeitsplan festgelegt. Bitte kontaktieren Sie das Weingut für eine Buchung.",
+      "activeSlotsConfigured": "{count} {count, plural, =1 {aktives Zeitfenster} other {aktive Zeitfenster}} konfiguriert",
+      "allSlotsDisabled": "Alle Zeitfenster sind deaktiviert - Besucher können nicht buchen",
+      "noSlotsPreview": "Keine Verfügbarkeit konfiguriert. Fügen Sie oben Zeitfenster hinzu, um Ihren Wochenplan anzuzeigen.",
+      "active": "Aktiv",
+      "disabled": "Deaktiviert"
     }
   },
   "booking": {
@@ -417,6 +478,82 @@
       "title": "Noch keine Buchungen",
       "description": "Teilen Sie Ihre Erlebnisse, um Besucher anzuziehen und Buchungen zu erhalten.",
       "action": "Erlebnisse verwalten"
+    },
+    "summary": {
+      "totalBookings": "Gesamtbuchungen",
+      "upcoming": "Kommend (7 Tage)",
+      "occupancyRate": "Auslastungsrate",
+      "avgThisMonth": "Durchschn. diesen Monat"
+    },
+    "columns": {
+      "bookingInfo": "Buchungsinfo",
+      "client": "Kunde",
+      "experience": "Erlebnis",
+      "guests": "Gäste",
+      "status": "Status",
+      "actions": "Aktionen"
+    },
+    "status": {
+      "confirmed": "Bestätigt",
+      "completed": "Abgeschlossen",
+      "cancelledByClient": "Vom Kunden storniert",
+      "cancelledByWinery": "Vom Weingut storniert",
+      "noShow": "Nicht erschienen",
+      "pending": "Ausstehend"
+    },
+    "guestCount": "{count, plural, =1 {# Person} other {# Personen}}",
+    "actions": {
+      "approve": "Genehmigen",
+      "reject": "Ablehnen",
+      "viewDetails": "Details anzeigen",
+      "contactClient": "Kunde kontaktieren",
+      "markAsCompleted": "Als abgeschlossen markieren",
+      "markAsNoShow": "Als nicht erschienen markieren"
+    },
+    "toast": {
+      "confirmed": "Buchung bestätigt",
+      "rejected": "Buchung abgelehnt",
+      "approveFailed": "Buchung konnte nicht genehmigt werden",
+      "rejectFailed": "Buchung konnte nicht abgelehnt werden",
+      "markedAsCompleted": "Buchung als abgeschlossen markiert",
+      "markedAsNoShow": "Buchung als nicht erschienen markiert",
+      "exportSuccess": "Buchungen erfolgreich exportiert",
+      "exportFailed": "Export der Buchungen fehlgeschlagen. Bitte erneut versuchen."
+    },
+    "filters": {
+      "filter": "Filtern",
+      "status": "Status",
+      "experience": "Erlebnis",
+      "allExperiences": "Alle Erlebnisse",
+      "dateRange": "Zeitraum",
+      "from": "Von",
+      "to": "Bis",
+      "clearAll": "Alle Filter löschen"
+    },
+    "search": {
+      "placeholder": "Nach Kundenname, E-Mail suchen...",
+      "clear": "Suche löschen"
+    },
+    "pagination": {
+      "showing": "Zeige {from} bis {to} von {total} Ergebnissen",
+      "previous": "Zurück",
+      "next": "Weiter"
+    },
+    "export": {
+      "csv": "CSV exportieren",
+      "exporting": "Wird exportiert..."
+    },
+    "addBooking": "Buchung hinzufügen",
+    "reference": "Referenz",
+    "views": {
+      "listView": "Listenansicht",
+      "calendarView": "Kalender"
+    },
+    "clientModal": {
+      "contactInfo": "Kontaktdaten",
+      "bookingHistory": "Buchungsverlauf",
+      "noHistory": "Keine früheren Buchungen",
+      "at": "um"
     }
   },
   "checkout": {
@@ -467,7 +604,10 @@
     "cancellationPolicy": "bis 24 Stunden vor dem Erlebnis. Danach fallen 50% Gebuhr an.",
     "orderSummary": "Bestellubersicht",
     "sslEncrypted": "SSL VERSCHLUSSELT",
-    "support247": "24/7 SUPPORT"
+    "support247": "24/7 SUPPORT",
+    "expiryPlaceholder": "MM/JJ",
+    "cvcPlaceholder": "CVC",
+    "availabilityCheckFailed": "Verfügbarkeitsprüfung fehlgeschlagen. Bitte erneut versuchen."
   },
   "confirmation": {
     "bookingConfirmed": "Buchung bestatigt!",
@@ -620,6 +760,29 @@
     "createFirstExperience": "Erstellen Sie Ihr erstes Erlebnis, um Buchungen zu erhalten.",
     "statistics": "Statistiken"
   },
+  "settings": {
+    "title": "Einstellungen",
+    "accountInformation": "Kontoinformationen",
+    "accountInfo": "Kontoinformationen",
+    "role": "Rolle",
+    "notSet": "Nicht festgelegt",
+    "roleUser": "Benutzer",
+    "comingSoon": "Demnächst verfügbar",
+    "sections": {
+      "notifications": {
+        "title": "Benachrichtigungen",
+        "description": "Verwalten Sie Ihre E-Mail-Benachrichtigungseinstellungen"
+      },
+      "profile": {
+        "title": "Profil",
+        "description": "Aktualisieren Sie Ihre persönlichen Daten"
+      },
+      "language": {
+        "title": "Sprache",
+        "description": "Ändern Sie Ihre bevorzugte Sprache"
+      }
+    }
+  },
   "earnings": {
     "title": "Einnahmen",
     "period": {
@@ -656,11 +819,29 @@
       "allStatus": "Alle Status",
       "paid": "Bezahlt",
       "pending": "Ausstehend",
-      "refunded": "Erstattet"
+      "refunded": "Erstattet",
+      "clear": "Löschen"
     },
     "search": {
       "placeholder": "Nach Kundenname, E-Mail suchen...",
       "clear": "Suche löschen"
+    },
+    "recentTransactions": "Letzte Transaktionen",
+    "taxInformation": "Steuerinformationen",
+    "completeStripeSetup": "Stripe-Einrichtung abschliessen",
+    "toast": {
+      "exportSuccess": "Einnahmen erfolgreich exportiert",
+      "exportFailed": "Export der Einnahmen fehlgeschlagen",
+      "stripeDashboardFailed": "Stripe-Dashboard konnte nicht geöffnet werden",
+      "pdfDownloadSuccess": "PDF-Auszug erfolgreich heruntergeladen",
+      "pdfGenerationFailed": "PDF-Erstellung fehlgeschlagen"
+    },
+    "export": {
+      "export": "Exportieren",
+      "exportReport": "Bericht exportieren",
+      "downloadPDF": "PDF-Auszug herunterladen",
+      "downloadCSV": "CSV herunterladen",
+      "viewInStripe": "In Stripe anzeigen"
     }
   },
   "calendar": {
@@ -676,7 +857,10 @@
     "blockedSuccess": "{count} Erlebnisse fur {date} gesperrt",
     "unblockedSuccess": "{count} Erlebnisse fur {date} entsperrt",
     "blockError": "Datum konnte nicht gesperrt werden",
-    "unblockError": "Datum konnte nicht entsperrt werden"
+    "unblockError": "Datum konnte nicht entsperrt werden",
+    "today": "Heute",
+    "bookingCount": "Buchungsanzahl",
+    "experienceTypes": "Erlebnisarten:"
   },
   "admin": {
     "title": "Admin-Dashboard",
@@ -798,6 +982,13 @@
     "noWineries": "Keine Weinguter gefunden",
     "noResults": "Keine Ergebnisse",
     "tryAgain": "Versuchen Sie es mit anderen Begriffen"
+  },
+  "wineries": {
+    "comingSoon": "Winzer bald verfügbar...",
+    "filterByCommune": "Nach Gemeinde filtern"
+  },
+  "onboarding": {
+    "step": "Schritt {current} von {total}"
   },
   "metadata": {
     "siteName": "EnCave",

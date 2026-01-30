@@ -43,6 +43,8 @@ export function AvailabilityScheduleBuilder({
 }: AvailabilityScheduleBuilderProps) {
   const t = useTranslations('experience.availability');
   const tCommon = useTranslations('common');
+  const tDaysFull = useTranslations('common.days.full');
+  const tDaysShort = useTranslations('common.days.short');
   const [slotsByDay, setSlotsByDay] = useState<DaySlots>({});
   const [selectedDay, setSelectedDay] = useState<number>(1); // Monday
   const [isLoading, setIsLoading] = useState(true);
@@ -133,7 +135,7 @@ export function AvailabilityScheduleBuilder({
     // Check for overlaps
     for (const day of DAYS_OF_WEEK_ORDERED) {
       if (getDayOverlapStatus(day.value)) {
-        toast.error(t('fixOverlapsBeforeSaving', { day: day.label }));
+        toast.error(t('fixOverlapsBeforeSaving', { day: tDaysFull(String(day.value)) }));
         return;
       }
     }
@@ -237,7 +239,7 @@ export function AvailabilityScheduleBuilder({
                 <AlertDialogHeader>
                   <AlertDialogTitle>{t('copyDialog.title')}</AlertDialogTitle>
                   <AlertDialogDescription>
-                    {t('copyDialog.description', { day: DAYS_OF_WEEK_ORDERED.find((d) => d.value === selectedDay)?.label ?? '' })}
+                    {t('copyDialog.description', { day: tDaysFull(String(selectedDay)) })}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -273,7 +275,7 @@ export function AvailabilityScheduleBuilder({
                     : 'border-stone-200 bg-stone-50 text-slate-500 hover:border-stone-300'
                 )}
               >
-                {day.shortLabel}
+                {tDaysShort(String(day.value))}
                 {hasSlots && (
                   <span
                     className={cn(
@@ -295,7 +297,7 @@ export function AvailabilityScheduleBuilder({
       {/* Time Slot Picker for Selected Day */}
       <div className="rounded-xl border border-stone-200 bg-white p-6">
         <h4 className="font-medium text-slate-900 mb-4">
-          {t('dayTimeSlots', { day: DAYS_OF_WEEK_ORDERED.find((d) => d.value === selectedDay)?.label ?? '' })}
+          {t('dayTimeSlots', { day: tDaysFull(String(selectedDay)) })}
         </h4>
         <TimeSlotPicker
           slots={slotsByDay[selectedDay] ?? []}

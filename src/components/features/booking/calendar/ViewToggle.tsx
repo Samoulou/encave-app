@@ -2,6 +2,7 @@
 
 import { useQueryState } from 'nuqs';
 import { List, CalendarDays } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 
 export type ViewMode = 'list' | 'calendar' | 'week';
@@ -11,6 +12,7 @@ export type ViewMode = 'list' | 'calendar' | 'week';
  * Matches the mockup design from US-UI-09.
  */
 export function ViewToggle() {
+  const t = useTranslations('bookings.views');
   const [view, setView] = useQueryState('view', { shallow: false });
   const currentView = (view as ViewMode) || 'list';
 
@@ -26,7 +28,7 @@ export function ViewToggle() {
         onClick={() => setView(null)}
       >
         <List className="h-4 w-4" />
-        List View
+        {t('listView')}
       </button>
       <button
         className={cn(
@@ -38,7 +40,7 @@ export function ViewToggle() {
         onClick={() => setView('calendar')}
       >
         <CalendarDays className="h-4 w-4" />
-        Calendar
+        {t('calendarView')}
       </button>
     </div>
   );

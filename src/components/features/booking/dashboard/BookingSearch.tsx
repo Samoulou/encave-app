@@ -3,12 +3,14 @@
 import { useQueryState } from 'nuqs';
 import { Search, X, Loader2 } from 'lucide-react';
 import { useRef, useEffect, useCallback, useState, useTransition } from 'react';
+import { useTranslations } from 'next-intl';
 
 /**
  * Search input for filtering bookings by client name or email.
  * Matches the mockup design from US-UI-09.
  */
 export function BookingSearch() {
+  const t = useTranslations('bookings');
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useQueryState('search', {
     shallow: false,
@@ -70,7 +72,7 @@ export function BookingSearch() {
       <input
         ref={inputRef}
         type="text"
-        placeholder="Search by client name, email..."
+        placeholder={t('search.placeholder')}
         value={localValue}
         onChange={handleChange}
         className="block w-full pl-10 pr-8 py-2.5 rounded-lg bg-[#f8f6f6] border-transparent focus:border-primary focus:bg-white focus:ring-0 text-sm text-[#1a0f12] placeholder-[#915564] transition-all"
@@ -82,7 +84,7 @@ export function BookingSearch() {
           onClick={clearSearch}
         >
           <X className="h-4 w-4" />
-          <span className="sr-only">Clear search</span>
+          <span className="sr-only">{t('search.clear')}</span>
         </button>
       )}
     </div>

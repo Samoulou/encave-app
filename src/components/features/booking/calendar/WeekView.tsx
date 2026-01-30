@@ -8,8 +8,10 @@ import {
   eachDayOfInterval,
   isToday,
 } from 'date-fns';
+import { fr, de, enUS } from 'date-fns/locale';
 import { BookingStatus, ExperienceType } from '@prisma/client';
 import { Users } from 'lucide-react';
+import { useTranslations, useLocale } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -17,6 +19,8 @@ import { CalendarNavigation } from './CalendarNavigation';
 import { DayDetailPanel } from './DayDetailPanel';
 import { BookingTooltip } from './BookingTooltip';
 import { EXPERIENCE_TYPE_COLORS } from '@/lib/constants/experience-type-colors';
+
+const localeMap = { fr, de, en: enUS };
 
 interface CalendarBooking {
   id: string;
@@ -68,6 +72,10 @@ export function WeekView({
   onBookingClick,
   onRefresh,
 }: WeekViewProps) {
+  const t = useTranslations('calendar');
+  const tExp = useTranslations('experience.types');
+  const locale = useLocale();
+  const dateLocale = localeMap[locale as keyof typeof localeMap] || enUS;
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   const weekDays = useMemo(() => {
@@ -134,7 +142,7 @@ export function WeekView({
                     )}
                   >
                     <div className="text-xs font-medium text-slate-500">
-                      {format(date, 'EEE')}
+                      {format(date, 'EEE', { locale: dateLocale })}
                     </div>
                     <div
                       className={cn(
@@ -155,7 +163,7 @@ export function WeekView({
                       </div>
                     )}
                     {isBlocked && (
-                      <div className="mt-1 text-[10px] text-red-500">Blocked</div>
+                      <div className="mt-1 text-[10px] text-red-500">{t('blocked')}</div>
                     )}
                   </button>
                 );
@@ -216,14 +224,14 @@ export function WeekView({
 
         {/* Legend */}
         <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-slate-500">
-          <span className="font-medium">Experience Types:</span>
+          <span className="font-medium">{t('experienceTypes')}</span>
           {Object.entries(EXPERIENCE_TYPE_COLORS).map(([type, color]) => (
             <div key={type} className="flex items-center gap-1.5">
               <span
                 className="inline-block h-3 w-3 rounded"
                 style={{ backgroundColor: color }}
               />
-              <span>{type.replace('_', ' ')}</span>
+              <span>{tExp(type)}</span>
             </div>
           ))}
         </div>

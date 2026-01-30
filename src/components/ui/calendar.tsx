@@ -3,9 +3,13 @@
 import * as React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { DayPicker } from 'react-day-picker';
+import { fr, de, enUS } from 'date-fns/locale';
+import { useLocale } from 'next-intl';
 
 import { cn } from '@/lib/utils';
 import { buttonVariants } from '@/components/ui/button';
+
+const localeMap = { fr, de, en: enUS } as const;
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
@@ -15,9 +19,13 @@ function Calendar({
   showOutsideDays = true,
   ...props
 }: CalendarProps) {
+  const currentLocale = useLocale();
+  const dateLocale = localeMap[currentLocale as keyof typeof localeMap] || enUS;
+
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
+      locale={dateLocale}
       className={cn('p-3 max-w-full overflow-x-auto', className)}
       classNames={{
         months: 'flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0',

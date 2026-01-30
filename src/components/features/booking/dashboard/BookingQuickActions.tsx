@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { BookingStatus } from '@prisma/client';
 import { MoreHorizontal, CheckCircle, XCircle, User, Loader2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -35,6 +36,7 @@ export function BookingQuickActions({
   onViewClient,
 }: BookingQuickActionsProps) {
   const router = useRouter();
+  const t = useTranslations('bookings');
   const [isPending, startTransition] = useTransition();
   const [pendingAction, setPendingAction] = useState<string | null>(null);
 
@@ -52,7 +54,7 @@ export function BookingQuickActions({
     startTransition(async () => {
       const result = await markBookingCompleted(bookingId);
       if (result.success) {
-        toast.success('Booking marked as completed');
+        toast.success(t('toast.markedAsCompleted'));
         router.refresh();
       } else {
         toast.error(result.error.message);
@@ -66,7 +68,7 @@ export function BookingQuickActions({
     startTransition(async () => {
       const result = await markBookingNoShow(bookingId);
       if (result.success) {
-        toast.success('Booking marked as no-show');
+        toast.success(t('toast.markedAsNoShow'));
         router.refresh();
       } else {
         toast.error(result.error.message);
@@ -89,13 +91,13 @@ export function BookingQuickActions({
           ) : (
             <MoreHorizontal className="h-4 w-4" />
           )}
-          <span className="sr-only">Actions</span>
+          <span className="sr-only">{t('columns.actions')}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         <DropdownMenuItem onClick={onViewClient}>
           <User className="mr-2 h-4 w-4" />
-          View Client
+          {t('actions.viewDetails')}
         </DropdownMenuItem>
 
         {canUpdateStatus && (
@@ -106,7 +108,7 @@ export function BookingQuickActions({
               disabled={pendingAction === 'completed'}
             >
               <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
-              Mark as Completed
+              {t('actions.markAsCompleted')}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={handleMarkNoShow}
@@ -114,7 +116,7 @@ export function BookingQuickActions({
               className="text-red-600 focus:text-red-600"
             >
               <XCircle className="mr-2 h-4 w-4" />
-              Mark as No-Show
+              {t('actions.markAsNoShow')}
             </DropdownMenuItem>
           </>
         )}

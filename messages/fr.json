@@ -24,11 +24,16 @@
     "labels": {
       "email": "Adresse e-mail",
       "password": "Mot de passe",
-      "name": "Nom"
+      "name": "Nom",
+      "phone": "Téléphone"
+    },
+    "columns": {
+      "actions": "Actions"
     },
     "placeholders": {
       "email": "nom@exemple.com",
-      "name": "Votre nom"
+      "name": "Votre nom",
+      "password": "••••••••"
     },
     "errors": {
       "somethingWentWrong": "Une erreur est survenue. Veuillez réessayer."
@@ -40,6 +45,26 @@
       "pending": "En attente",
       "verified": "Vérifié",
       "rejected": "Rejeté"
+    },
+    "days": {
+      "full": {
+        "0": "Dimanche",
+        "1": "Lundi",
+        "2": "Mardi",
+        "3": "Mercredi",
+        "4": "Jeudi",
+        "5": "Vendredi",
+        "6": "Samedi"
+      },
+      "short": {
+        "0": "Dim",
+        "1": "Lun",
+        "2": "Mar",
+        "3": "Mer",
+        "4": "Jeu",
+        "5": "Ven",
+        "6": "Sam"
+      }
     },
     "time": {
       "hoursAgo": "il y a {count, plural, =1 {# heure} other {# heures}}",
@@ -99,6 +124,7 @@
     "currentLanguage": "langue actuelle"
   },
   "auth": {
+    "google": "Google",
     "legal": {
       "privacyPolicy": "Politique de confidentialité",
       "termsOfService": "Conditions d'utilisation"
@@ -348,6 +374,34 @@
       "archived": "Archivés",
       "searchPlaceholder": "Rechercher des expériences par nom..."
     },
+    "notFound": "Expérience non trouvée",
+    "backToExperiences": "Retour aux expériences",
+    "newExperience": "Nouvelle expérience",
+    "generalInfo": "Informations générales",
+    "details": "Détails",
+    "media": "Médias",
+    "location": "Localisation",
+    "addressSearchPlaceholder": "Rechercher une adresse...",
+    "deleteSchedulePattern": "Supprimer le créneau",
+    "deleteTimeSlot": "Supprimer le créneau horaire",
+    "startTime": "Heure de début",
+    "endTime": "Heure de fin",
+    "saveTimeSlot": "Enregistrer le créneau",
+    "toast": {
+      "uploadImageFailed": "Échec du téléchargement de l'image",
+      "titleRequired": "Veuillez entrer un titre",
+      "imageRequired": "Veuillez télécharger au moins une image",
+      "draftSaved": "Brouillon enregistré",
+      "createdSuccess": "Expérience créée avec succès",
+      "publishFailed": "Échec de la publication",
+      "schedulePatternRequired": "Au moins un créneau horaire est requis"
+    },
+    "editor": {
+      "bold": "Gras",
+      "italic": "Italique",
+      "underline": "Souligné",
+      "bulletList": "Liste à puces"
+    },
     "sort": {
       "sortBy": "Trier par",
       "newestFirst": "Plus récents",
@@ -374,7 +428,14 @@
       "copiedSlots": "{count} créneau(x) copié(s) vers tous les jours",
       "savedSuccessfully": "Disponibilité enregistrée avec succès",
       "saving": "Enregistrement...",
-      "saveAvailability": "Enregistrer la disponibilité"
+      "saveAvailability": "Enregistrer la disponibilité",
+      "noAvailabilityContact": "Aucune disponibilité définie. Contactez le domaine pour plus d'informations.",
+      "noScheduleContact": "Aucun planning de disponibilité défini. Veuillez contacter le domaine pour réserver.",
+      "activeSlotsConfigured": "{count} {count, plural, =1 {créneau actif configuré} other {créneaux actifs configurés}}",
+      "allSlotsDisabled": "Tous les créneaux sont désactivés - les visiteurs ne peuvent pas réserver",
+      "noSlotsPreview": "Aucune disponibilité configurée. Ajoutez des créneaux horaires ci-dessus pour prévisualiser votre planning hebdomadaire.",
+      "active": "Actif",
+      "disabled": "Désactivé"
     }
   },
   "booking": {
@@ -417,6 +478,82 @@
       "title": "Pas encore de réservations",
       "description": "Partagez vos expériences pour attirer des visiteurs et recevoir vos premières réservations.",
       "action": "Gérer les expériences"
+    },
+    "summary": {
+      "totalBookings": "Total des réservations",
+      "upcoming": "À venir (7 jours)",
+      "occupancyRate": "Taux d'occupation",
+      "avgThisMonth": "Moy. ce mois"
+    },
+    "columns": {
+      "bookingInfo": "Info réservation",
+      "client": "Client",
+      "experience": "Expérience",
+      "guests": "Invités",
+      "status": "Statut",
+      "actions": "Actions"
+    },
+    "status": {
+      "confirmed": "Confirmé",
+      "completed": "Terminé",
+      "cancelledByClient": "Annulé par le client",
+      "cancelledByWinery": "Annulé par le domaine",
+      "noShow": "Absent",
+      "pending": "En attente"
+    },
+    "guestCount": "{count, plural, =1 {# personne} other {# personnes}}",
+    "actions": {
+      "approve": "Approuver",
+      "reject": "Refuser",
+      "viewDetails": "Voir les détails",
+      "contactClient": "Contacter le client",
+      "markAsCompleted": "Marquer comme terminé",
+      "markAsNoShow": "Marquer comme absent"
+    },
+    "toast": {
+      "confirmed": "Réservation confirmée",
+      "rejected": "Réservation refusée",
+      "approveFailed": "Échec de l'approbation de la réservation",
+      "rejectFailed": "Échec du refus de la réservation",
+      "markedAsCompleted": "Réservation marquée comme terminée",
+      "markedAsNoShow": "Réservation marquée comme absente",
+      "exportSuccess": "Réservations exportées avec succès",
+      "exportFailed": "Échec de l'export des réservations. Veuillez réessayer."
+    },
+    "filters": {
+      "filter": "Filtrer",
+      "status": "Statut",
+      "experience": "Expérience",
+      "allExperiences": "Toutes les expériences",
+      "dateRange": "Période",
+      "from": "Du",
+      "to": "Au",
+      "clearAll": "Effacer tous les filtres"
+    },
+    "search": {
+      "placeholder": "Rechercher par nom, email...",
+      "clear": "Effacer la recherche"
+    },
+    "pagination": {
+      "showing": "Affichage de {from} à {to} sur {total} résultats",
+      "previous": "Précédent",
+      "next": "Suivant"
+    },
+    "export": {
+      "csv": "Exporter CSV",
+      "exporting": "Export en cours..."
+    },
+    "addBooking": "Ajouter une réservation",
+    "reference": "Référence",
+    "views": {
+      "listView": "Vue liste",
+      "calendarView": "Calendrier"
+    },
+    "clientModal": {
+      "contactInfo": "Coordonnées",
+      "bookingHistory": "Historique des réservations",
+      "noHistory": "Aucune réservation précédente",
+      "at": "à"
     }
   },
   "checkout": {
@@ -467,7 +604,10 @@
     "cancellationPolicy": "jusqu'à 24 heures avant l'expérience. Après, des frais de 50% s'appliquent.",
     "orderSummary": "Récapitulatif",
     "sslEncrypted": "CHIFFRÉ SSL",
-    "support247": "SUPPORT 24/7"
+    "support247": "SUPPORT 24/7",
+    "expiryPlaceholder": "MM/AA",
+    "cvcPlaceholder": "CVC",
+    "availabilityCheckFailed": "Échec de la vérification de disponibilité. Veuillez réessayer."
   },
   "confirmation": {
     "bookingConfirmed": "Réservation confirmée !",
@@ -620,6 +760,29 @@
     "createFirstExperience": "Créez votre première expérience pour commencer à recevoir des réservations.",
     "statistics": "Statistiques"
   },
+  "settings": {
+    "title": "Paramètres",
+    "accountInformation": "Informations du compte",
+    "accountInfo": "Informations du compte",
+    "role": "Rôle",
+    "notSet": "Non défini",
+    "roleUser": "Utilisateur",
+    "comingSoon": "Bientôt disponible",
+    "sections": {
+      "notifications": {
+        "title": "Notifications",
+        "description": "Gérez vos préférences de notifications email"
+      },
+      "profile": {
+        "title": "Profil",
+        "description": "Mettez à jour vos informations personnelles"
+      },
+      "language": {
+        "title": "Langue",
+        "description": "Changez votre langue préférée"
+      }
+    }
+  },
   "earnings": {
     "title": "Revenus",
     "period": {
@@ -656,11 +819,29 @@
       "allStatus": "Tous les statuts",
       "paid": "Payé",
       "pending": "En attente",
-      "refunded": "Remboursé"
+      "refunded": "Remboursé",
+      "clear": "Effacer"
     },
     "search": {
       "placeholder": "Rechercher par nom de client, email...",
       "clear": "Effacer la recherche"
+    },
+    "recentTransactions": "Transactions récentes",
+    "taxInformation": "Informations fiscales",
+    "completeStripeSetup": "Compléter la configuration Stripe",
+    "toast": {
+      "exportSuccess": "Revenus exportés avec succès",
+      "exportFailed": "Échec de l'export des revenus",
+      "stripeDashboardFailed": "Échec de l'ouverture du tableau de bord Stripe",
+      "pdfDownloadSuccess": "Relevé PDF téléchargé avec succès",
+      "pdfGenerationFailed": "Échec de la génération du PDF"
+    },
+    "export": {
+      "export": "Exporter",
+      "exportReport": "Exporter le rapport",
+      "downloadPDF": "Télécharger le relevé PDF",
+      "downloadCSV": "Télécharger CSV",
+      "viewInStripe": "Voir dans Stripe"
     }
   },
   "calendar": {
@@ -676,7 +857,10 @@
     "blockedSuccess": "{count} expériences bloquées pour le {date}",
     "unblockedSuccess": "{count} expériences débloquées pour le {date}",
     "blockError": "Échec du blocage de la date",
-    "unblockError": "Échec du déblocage de la date"
+    "unblockError": "Échec du déblocage de la date",
+    "today": "Aujourd'hui",
+    "bookingCount": "Nombre de réservations",
+    "experienceTypes": "Types d'expériences:"
   },
   "admin": {
     "title": "Tableau de bord Admin",
@@ -798,6 +982,13 @@
     "noWineries": "Aucun domaine trouvé",
     "noResults": "Aucun résultat",
     "tryAgain": "Réessayez avec des termes différents"
+  },
+  "wineries": {
+    "comingSoon": "Vignerons bientôt disponibles...",
+    "filterByCommune": "Filtrer par commune"
+  },
+  "onboarding": {
+    "step": "Étape {current} sur {total}"
   },
   "metadata": {
     "siteName": "EnCave",

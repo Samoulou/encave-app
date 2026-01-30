@@ -1,7 +1,10 @@
 'use client';
 
-import { DAYS_OF_WEEK_ORDERED } from '@/lib/constants/time-slots';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
+
+// Days ordered Monday-Sunday for European convention
+const DAYS_ORDER = [1, 2, 3, 4, 5, 6, 0] as const;
 
 interface Slot {
   dayOfWeek: number;
@@ -15,6 +18,9 @@ interface WeeklyCalendarPreviewProps {
 }
 
 export function WeeklyCalendarPreview({ slots }: WeeklyCalendarPreviewProps) {
+  const t = useTranslations('experience.availability');
+  const tDaysShort = useTranslations('common.days.short');
+
   // Group slots by day
   const slotsByDay: Record<number, Slot[]> = {};
   for (const slot of slots) {
@@ -41,7 +47,7 @@ export function WeeklyCalendarPreview({ slots }: WeeklyCalendarPreviewProps) {
     return (
       <div className="rounded-xl border-2 border-dashed border-stone-300 bg-stone-50 p-8 text-center">
         <p className="text-slate-500">
-          No availability configured. Add time slots above to preview your weekly schedule.
+          {t('noSlotsPreview')}
         </p>
       </div>
     );
@@ -51,25 +57,25 @@ export function WeeklyCalendarPreview({ slots }: WeeklyCalendarPreviewProps) {
     <div className="rounded-xl border border-stone-200 bg-white overflow-hidden">
       {/* Header */}
       <div className="grid grid-cols-7 border-b border-stone-200 bg-stone-50">
-        {DAYS_OF_WEEK_ORDERED.map((day) => (
+        {DAYS_ORDER.map((dayValue) => (
           <div
-            key={day.value}
+            key={dayValue}
             className="px-2 py-3 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider"
           >
-            {day.shortLabel}
+            {tDaysShort(String(dayValue))}
           </div>
         ))}
       </div>
 
       {/* Calendar Grid */}
       <div className="grid grid-cols-7 min-h-[120px]">
-        {DAYS_OF_WEEK_ORDERED.map((day) => {
-          const daySlots = slotsByDay[day.value] ?? [];
+        {DAYS_ORDER.map((dayValue) => {
+          const daySlots = slotsByDay[dayValue] ?? [];
           const hasSlots = daySlots.length > 0;
 
           return (
             <div
-              key={day.value}
+              key={dayValue}
               className={cn(
                 'border-r border-stone-100 last:border-r-0 p-2 min-h-[100px]',
                 hasSlots ? 'bg-white' : 'bg-stone-50/50'
@@ -83,14 +89,14 @@ export function WeeklyCalendarPreview({ slots }: WeeklyCalendarPreviewProps) {
                 <div className="space-y-1.5">
                   {daySlots.map((slot: Slot, idx: number) => (
                     <div
-                      key={`${day.value}-${idx}`}
+                      key={`${dayValue}-${idx}`}
                       className={cn(
                         'rounded px-1.5 py-1 text-center text-xs font-medium transition-colors',
                         slot.isActive
                           ? 'bg-burgundy-100 text-burgundy-700 border border-burgundy-200'
                           : 'bg-stone-100 text-stone-400 line-through'
                       )}
-                      title={slot.isActive ? 'Active' : 'Disabled'}
+                      title={slot.isActive ? t('active') : t('disabled')}
                     >
                       <div className="truncate">
                         {slot.startTime}
@@ -112,12 +118,12 @@ export function WeeklyCalendarPreview({ slots }: WeeklyCalendarPreviewProps) {
         {hasActiveSlots ? (
           <span className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-green-500" />
-            {slots.filter((s) => s.isActive).length} active slot(s) configured
+            {t('activeSlotsConfigured', { count: slots.filter((s) => s.isActive).length })}
           </span>
         ) : (
           <span className="flex items-center gap-2 text-amber-600">
             <span className="h-2 w-2 rounded-full bg-amber-500" />
-            All slots are disabled - visitors cannot book
+            {t('allSlotsDisabled')}
           </span>
         )}
       </div>

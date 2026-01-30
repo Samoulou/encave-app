@@ -2,13 +2,13 @@
 
 import { ExperienceType } from '@prisma/client';
 import { Clock, Users } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { ExperienceTypeDot } from './ExperienceTypeDot';
-import { EXPERIENCE_TYPE_LABELS } from '@/lib/constants/experience-type-colors';
 
 interface BookingTooltipProps {
   children: React.ReactNode;
@@ -25,6 +25,9 @@ interface BookingTooltipProps {
 }
 
 export function BookingTooltip({ children, booking }: BookingTooltipProps) {
+  const t = useTranslations('bookings');
+  const tExp = useTranslations('experience.types');
+
   return (
     <Tooltip>
       <TooltipTrigger asChild>{children}</TooltipTrigger>
@@ -45,11 +48,11 @@ export function BookingTooltip({ children, booking }: BookingTooltipProps) {
             </div>
             <div className="flex items-center gap-1">
               <Users className="h-3 w-3" />
-              <span>{booking.guestCount} guests</span>
+              <span>{t('guestCount', { count: booking.guestCount })}</span>
             </div>
           </div>
           <div className="text-xs text-slate-400">
-            {EXPERIENCE_TYPE_LABELS[booking.experience.type]}
+            {tExp(booking.experience.type)}
           </div>
         </div>
       </TooltipContent>
