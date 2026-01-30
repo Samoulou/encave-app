@@ -49,6 +49,15 @@ export async function auth(): Promise<Session | null> {
       },
     };
   } catch (error) {
+    // Handle static rendering - headers() throws during SSG/ISR
+    if (
+      error instanceof Error &&
+      (error.message.includes('DYNAMIC_SERVER_USAGE') ||
+        error.message.includes('Dynamic server usage') ||
+        (error as { digest?: string }).digest === 'DYNAMIC_SERVER_USAGE')
+    ) {
+      return null;
+    }
     console.error('Auth error:', error);
     return null;
   }
