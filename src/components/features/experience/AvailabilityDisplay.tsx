@@ -18,9 +18,7 @@ function formatTime(time: string): string {
   const [hours, minutes] = time.split(':');
   const h = parseInt(hours || '0', 10);
   const m = minutes || '00';
-  const ampm = h >= 12 ? 'PM' : 'AM';
-  const hour12 = h % 12 || 12;
-  return `${hour12}:${m} ${ampm}`;
+  return `${h.toString().padStart(2, '0')}:${m}`;
 }
 
 export function AvailabilityDisplay({ slots }: AvailabilityDisplayProps) {

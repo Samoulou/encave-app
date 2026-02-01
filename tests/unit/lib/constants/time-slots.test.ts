@@ -163,25 +163,25 @@ describe('hasOverlappingSlots', () => {
 });
 
 describe('formatTimeDisplay', () => {
-  it('formats morning times correctly', () => {
-    expect(formatTimeDisplay('08:00')).toBe('8:00 AM');
-    expect(formatTimeDisplay('09:30')).toBe('9:30 AM');
-    expect(formatTimeDisplay('11:00')).toBe('11:00 AM');
+  it('formats morning times in 24-hour format', () => {
+    expect(formatTimeDisplay('08:00')).toBe('08:00');
+    expect(formatTimeDisplay('09:30')).toBe('09:30');
+    expect(formatTimeDisplay('11:00')).toBe('11:00');
   });
 
   it('formats noon correctly', () => {
-    expect(formatTimeDisplay('12:00')).toBe('12:00 PM');
-    expect(formatTimeDisplay('12:30')).toBe('12:30 PM');
+    expect(formatTimeDisplay('12:00')).toBe('12:00');
+    expect(formatTimeDisplay('12:30')).toBe('12:30');
   });
 
-  it('formats afternoon times correctly', () => {
-    expect(formatTimeDisplay('13:00')).toBe('1:00 PM');
-    expect(formatTimeDisplay('14:30')).toBe('2:30 PM');
-    expect(formatTimeDisplay('20:00')).toBe('8:00 PM');
+  it('formats afternoon times in 24-hour format', () => {
+    expect(formatTimeDisplay('13:00')).toBe('13:00');
+    expect(formatTimeDisplay('14:30')).toBe('14:30');
+    expect(formatTimeDisplay('20:00')).toBe('20:00');
   });
 
   it('formats midnight correctly', () => {
-    expect(formatTimeDisplay('00:00')).toBe('12:00 AM');
-    expect(formatTimeDisplay('00:30')).toBe('12:30 AM');
+    expect(formatTimeDisplay('00:00')).toBe('00:00');
+    expect(formatTimeDisplay('00:30')).toBe('00:30');
   });
 });

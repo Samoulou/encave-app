@@ -72,13 +72,11 @@ export function hasOverlappingSlots(
 }
 
 /**
- * Format time for display (e.g., "09:00" -> "9:00 AM")
+ * Format time for display in 24-hour format (e.g., "09:00" -> "09:00")
  */
 export function formatTimeDisplay(time: string): string {
   const [hours, minutes] = time.split(':').map(Number);
   const h = hours ?? 0;
   const m = minutes ?? 0;
-  const period = h >= 12 ? 'PM' : 'AM';
-  const displayHour = h === 0 ? 12 : h > 12 ? h - 12 : h;
-  return `${displayHour}:${m.toString().padStart(2, '0')} ${period}`;
+  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
 }

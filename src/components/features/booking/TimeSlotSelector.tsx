@@ -77,14 +77,12 @@ export function TimeSlotSelector({
     onCapacityUpdate(slot.remainingCapacity);
   };
 
-  // Format time for display (e.g., "10:00" -> "10:00 AM")
+  // Format time for display in 24-hour format (e.g., "10:00" -> "10:00")
   const formatTime = (time: string) => {
     const parts = time.split(':');
     const hours = Number(parts[0] ?? 0);
     const minutes = Number(parts[1] ?? 0);
-    const period = hours >= 12 ? 'PM' : 'AM';
-    const displayHours = hours % 12 || 12;
-    return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
   };
 
   if (!selectedDate) {
