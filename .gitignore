@@ -44,7 +44,8 @@ next-env.d.ts
 # IDE
 .idea
 .vscode
-.claude/
+.claude/*
+!.claude/commands/
 .agents/
 .agent/
 .cursor/
