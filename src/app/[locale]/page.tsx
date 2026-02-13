@@ -76,7 +76,7 @@ export default async function Home({ params }: Props) {
             }}
           />
           <Image
-            src="https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?q=80&w=1920&auto=format&fit=crop"
+            src="/images/herobanner-image.jpg"
             alt={t('heroImageAlt')}
             fill
             className="object-cover object-center"
