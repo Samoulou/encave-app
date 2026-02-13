@@ -23,12 +23,24 @@ Implement the User Story: **$ARGUMENTS**
    - `docs/architecture/design-system.md`
    - `docs/architecture/performance-patterns.md`
 4. Locate the story file for the requested US in `docs/stories/` (search by story number or title match)
-5. If no story file exists, announce this and proceed to Phase 1 to create one
-6. If a story file exists, assess its status and skip to the appropriate phase
+5. **Route based on story status:**
+
+| Story Status | Action |
+|---|---|
+| **Not found** | Announce "No story file found" → proceed to **Phase 1** (Bob creates it) |
+| **Draft** | Story exists but not approved → **Skip Phase 1 creation**. Orchestrator reviews the draft, requests changes if needed, then sets status to "Approved" → proceed to **Phase 2** |
+| **Approved** | Story already approved → **Skip Phase 1 entirely** → proceed to **Phase 2** |
+| **In Progress** | Dev started but didn't finish → **Skip to Phase 3** with James to resume implementation from where it stopped (check which tasks are already `[x]`) |
+| **Review** | Dev finished, awaiting QA → **Skip to Phase 4** with Quinn for code review & QA gate |
+| **Done** | Story fully complete → Announce "Story {id} is already Done. Nothing to implement." and **HALT** |
+
+6. Announce the detected status and chosen route to the user before proceeding
 
 ## Phase 1: Story Preparation (Agent: Bob — Scrum Master)
 
 **PLAN MODE FIRST**: Before any action, create a plan for story creation.
+
+> **This phase is SKIPPED if Phase 0 detected an existing story with status Draft, Approved, In Progress, Review, or Done.** Only executes when no story file exists.
 
 ### Instructions for Bob (SM):
 - Read the relevant epic file from `docs/prd/` matching the story number
