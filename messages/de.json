@@ -1354,5 +1354,56 @@
       "degustation": "Verkostung im Wallis",
       "cepages": "Walliser Rebsorten"
     }
+  },
+  "clientDashboard": {
+    "nav": {
+      "myBookings": "Meine Buchungen",
+      "myProfile": "Mein Profil",
+      "openMenu": "Menü öffnen",
+      "closeMenu": "Menü schliessen"
+    },
+    "bookings": {
+      "title": "Meine Buchungen",
+      "upcoming": "Bevorstehend",
+      "past": "Vergangene",
+      "noUpcoming": "Keine bevorstehenden Buchungen",
+      "noUpcomingDescription": "Sie haben keine geplanten Weinerlebnisse. Durchstöbern Sie unsere Auswahl für Ihr nächstes Abenteuer.",
+      "noPast": "Keine vergangenen Buchungen",
+      "noPastDescription": "Sie haben noch kein Weingut besucht. Buchen Sie noch heute Ihr erstes Erlebnis!",
+      "browseExperiences": "Erlebnisse durchsuchen"
+    },
+    "bookingCard": {
+      "guests": "{count, plural, =1 {# Gast} other {# Gäste}}",
+      "reference": "Referenz",
+      "price": "Gesamtbetrag",
+      "winery": "Weingut",
+      "cancel": "Buchung stornieren",
+      "bookAgain": "Erneut buchen",
+      "showDetails": "Details anzeigen",
+      "hideDetails": "Details ausblenden"
+    },
+    "cancel": {
+      "title": "Buchung stornieren",
+      "confirmMessage": "Möchten Sie Ihre Buchung für \"{title}\" wirklich stornieren?",
+      "refundPolicy": "Stornierungsrichtlinie",
+      "refundPolicyDetail": "Volle Rückerstattung bei Stornierung mehr als 24 Stunden vor dem Erlebnis. Keine Rückerstattung innerhalb von 24 Stunden.",
+      "keepBooking": "Buchung behalten",
+      "confirm": "Stornierung bestätigen",
+      "cancelling": "Wird storniert...",
+      "successWithRefund": "Buchung storniert. Eine Rückerstattung von CHF {amount} wird innerhalb von 5-10 Werktagen bearbeitet.",
+      "successNoRefund": "Buchung storniert. Keine Rückerstattung möglich, da das Erlebnis innerhalb von 24 Stunden stattfindet.",
+      "error": "Stornierung fehlgeschlagen. Bitte versuchen Sie es erneut."
+    },
+    "profile": {
+      "title": "Mein Profil",
+      "name": "Name",
+      "email": "E-Mail",
+      "emailReadonly": "E-Mail-Adresse kann nicht geändert werden",
+      "language": "Bevorzugte Sprache",
+      "save": "Änderungen speichern",
+      "saving": "Wird gespeichert...",
+      "saved": "Profil erfolgreich aktualisiert",
+      "error": "Profil konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut."
+    }
   }
 }

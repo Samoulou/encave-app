@@ -53,3 +53,6 @@ next-env.d.ts
 # Prisma
 /src/generated/prisma
 tmpclaude-*
+_bmad/
+_bmad-output/
+.bmad-core/

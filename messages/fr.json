@@ -1349,5 +1349,56 @@
       "degustation": "Dégustation en Valais",
       "cepages": "Cépages Valaisans"
     }
+  },
+  "clientDashboard": {
+    "nav": {
+      "myBookings": "Mes réservations",
+      "myProfile": "Mon profil",
+      "openMenu": "Ouvrir le menu",
+      "closeMenu": "Fermer le menu"
+    },
+    "bookings": {
+      "title": "Mes réservations",
+      "upcoming": "A venir",
+      "past": "Passées",
+      "noUpcoming": "Aucune réservation à venir",
+      "noUpcomingDescription": "Vous n'avez aucune expérience viticole prévue. Parcourez notre sélection pour trouver votre prochaine aventure.",
+      "noPast": "Aucune réservation passée",
+      "noPastDescription": "Vous n'avez encore visité aucun domaine. Réservez votre première expérience dès aujourd'hui !",
+      "browseExperiences": "Parcourir les expériences"
+    },
+    "bookingCard": {
+      "guests": "{count, plural, =1 {# invité} other {# invités}}",
+      "reference": "Référence",
+      "price": "Total payé",
+      "winery": "Domaine",
+      "cancel": "Annuler la réservation",
+      "bookAgain": "Réserver à nouveau",
+      "showDetails": "Afficher les détails",
+      "hideDetails": "Masquer les détails"
+    },
+    "cancel": {
+      "title": "Annuler la réservation",
+      "confirmMessage": "Êtes-vous sûr de vouloir annuler votre réservation pour \"{title}\" ?",
+      "refundPolicy": "Politique d'annulation",
+      "refundPolicyDetail": "Remboursement intégral si annulé plus de 24 heures avant l'expérience. Aucun remboursement dans les 24 heures.",
+      "keepBooking": "Garder la réservation",
+      "confirm": "Confirmer l'annulation",
+      "cancelling": "Annulation en cours...",
+      "successWithRefund": "Réservation annulée. Un remboursement de CHF {amount} sera traité dans les 5 à 10 jours ouvrables.",
+      "successNoRefund": "Réservation annulée. Aucun remboursement n'est disponible car l'expérience est dans moins de 24 heures.",
+      "error": "Échec de l'annulation. Veuillez réessayer."
+    },
+    "profile": {
+      "title": "Mon profil",
+      "name": "Nom",
+      "email": "E-mail",
+      "emailReadonly": "L'adresse e-mail ne peut pas être modifiée",
+      "language": "Langue préférée",
+      "save": "Enregistrer les modifications",
+      "saving": "Enregistrement...",
+      "saved": "Profil mis à jour avec succès",
+      "error": "Échec de la mise à jour du profil. Veuillez réessayer."
+    }
   }
 }

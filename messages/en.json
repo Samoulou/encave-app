@@ -1349,5 +1349,56 @@
       "degustation": "Tasting in Valais",
       "cepages": "Valais Grape Varieties"
     }
+  },
+  "clientDashboard": {
+    "nav": {
+      "myBookings": "My Bookings",
+      "myProfile": "My Profile",
+      "openMenu": "Open menu",
+      "closeMenu": "Close menu"
+    },
+    "bookings": {
+      "title": "My Bookings",
+      "upcoming": "Upcoming",
+      "past": "Past",
+      "noUpcoming": "No upcoming bookings",
+      "noUpcomingDescription": "You don't have any upcoming wine experiences. Browse our selection to find your next adventure.",
+      "noPast": "No past bookings",
+      "noPastDescription": "You haven't visited any wineries yet. Book your first experience today!",
+      "browseExperiences": "Browse Experiences"
+    },
+    "bookingCard": {
+      "guests": "{count, plural, =1 {# guest} other {# guests}}",
+      "reference": "Reference",
+      "price": "Total paid",
+      "winery": "Winery",
+      "cancel": "Cancel Booking",
+      "bookAgain": "Book Again",
+      "showDetails": "Show details",
+      "hideDetails": "Hide details"
+    },
+    "cancel": {
+      "title": "Cancel Booking",
+      "confirmMessage": "Are you sure you want to cancel your booking for \"{title}\"?",
+      "refundPolicy": "Cancellation Policy",
+      "refundPolicyDetail": "Full refund if cancelled more than 24 hours before the experience. No refund within 24 hours.",
+      "keepBooking": "Keep Booking",
+      "confirm": "Confirm Cancellation",
+      "cancelling": "Cancelling...",
+      "successWithRefund": "Booking cancelled. A refund of CHF {amount} will be processed within 5-10 business days.",
+      "successNoRefund": "Booking cancelled. No refund is available as the experience is within 24 hours.",
+      "error": "Failed to cancel booking. Please try again."
+    },
+    "profile": {
+      "title": "My Profile",
+      "name": "Name",
+      "email": "Email",
+      "emailReadonly": "Email address cannot be changed",
+      "language": "Preferred Language",
+      "save": "Save Changes",
+      "saving": "Saving...",
+      "saved": "Profile updated successfully",
+      "error": "Failed to update profile. Please try again."
+    }
   }
 }
