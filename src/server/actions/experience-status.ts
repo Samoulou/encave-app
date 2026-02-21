@@ -5,7 +5,7 @@ import { db } from '@/server/db';
 import { generateSlug, ensureUniqueSlug } from '@/lib/utils/slug';
 import type { ActionResult } from '@/types/actions';
 import { logError } from '@/lib/logger';
-import { invalidateExperienceCaches, createExperienceSlugChecker } from './experience-crud';
+import { invalidateExperienceCaches, createExperienceSlugChecker } from './experience-helpers';
 
 /**
  * Publish an experience (DRAFT -> PUBLISHED)

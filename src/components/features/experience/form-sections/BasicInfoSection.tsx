@@ -29,7 +29,7 @@ const EXPERIENCE_TYPES = [
 
 interface BasicInfoSectionProps {
   form: UseFormReturn<CreateExperienceInput>;
-  sectionRef: (el: HTMLElement | null) => void;
+  sectionRef: (_el: HTMLElement | null) => void;
 }
 
 export function BasicInfoSection({ form, sectionRef }: BasicInfoSectionProps) {

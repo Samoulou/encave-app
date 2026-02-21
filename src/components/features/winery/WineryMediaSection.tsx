@@ -18,10 +18,10 @@ interface WineryMediaSectionProps {
   isUploadingCover: boolean;
   uploadingGalleryIndex: number | null;
   maxGalleryImages: number;
-  onImageUpload: (file: File) => Promise<string>;
-  onCoverPhotoChange: (url: string | null) => Promise<void>;
-  onGalleryUpload: (file: File, index: number) => Promise<string>;
-  onRemoveGalleryImage: (imageId: string) => Promise<void>;
+  onImageUpload: (_file: File) => Promise<string>;
+  onCoverPhotoChange: (_url: string | null) => Promise<void>;
+  onGalleryUpload: (_file: File, _index: number) => Promise<string>;
+  onRemoveGalleryImage: (_imageId: string) => Promise<void>;
 }
 
 // Section Header Component (shared)

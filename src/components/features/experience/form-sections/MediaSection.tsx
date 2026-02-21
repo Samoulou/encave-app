@@ -7,9 +7,9 @@ interface MediaSectionProps {
   galleryImages: GalleryImage[];
   canAddMoreImages: boolean;
   uploadingIndex: number | null;
-  onGalleryUpload: (file: File, index: number) => Promise<void>;
-  onRemoveGalleryImage: (imageId: string, imageUrl: string) => void;
-  sectionRef: (el: HTMLElement | null) => void;
+  onGalleryUpload: (_file: File, _index: number) => Promise<void>;
+  onRemoveGalleryImage: (_imageId: string, _imageUrl: string) => void;
+  sectionRef: (_el: HTMLElement | null) => void;
 }
 
 export function MediaSection({

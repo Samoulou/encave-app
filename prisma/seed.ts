@@ -542,9 +542,10 @@ async function main() {
   ];
 
   for (let i = 0; i < bookingsData.length; i++) {
-    const b = bookingsData[i];
-    const { wineryId, experienceIds } = createdWineries[b.wineryIdx];
-    const experienceId = experienceIds[b.experienceIdx];
+    const b = bookingsData[i]!;
+    const winery = createdWineries[b.wineryIdx]!;
+    const { wineryId, experienceIds } = winery;
+    const experienceId = experienceIds[b.experienceIdx]!;
 
     // Look up price from the experience
     const experience = await prisma.experience.findUnique({

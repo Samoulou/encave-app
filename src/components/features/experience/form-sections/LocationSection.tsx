@@ -5,8 +5,8 @@ import type { AddressData } from './types';
 
 interface LocationSectionProps {
   location: AddressData;
-  onLocationChange: (location: AddressData) => void;
-  sectionRef: (el: HTMLElement | null) => void;
+  onLocationChange: (_location: AddressData) => void;
+  sectionRef: (_el: HTMLElement | null) => void;
 }
 
 export function LocationSection({ location, onLocationChange, sectionRef }: LocationSectionProps) {

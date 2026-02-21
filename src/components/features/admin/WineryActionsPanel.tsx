@@ -28,10 +28,10 @@ export interface WineryActionsPanelProps {
   onRejectToggle: () => void;
   onApprove: () => void;
   onReject: () => void;
-  onRejectionReasonChange: (value: string) => void;
+  onRejectionReasonChange: (_value: string) => void;
   onRejectFormCancel: () => void;
-  onApproveDialogChange: (open: boolean) => void;
-  onRejectDialogChange: (open: boolean) => void;
+  onApproveDialogChange: (_open: boolean) => void;
+  onRejectDialogChange: (_open: boolean) => void;
   onConfirmRejectionClick: () => void;
 }
 

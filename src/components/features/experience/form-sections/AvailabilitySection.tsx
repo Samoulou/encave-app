@@ -8,15 +8,15 @@ import type { AvailabilitySlot } from './types';
 interface AvailabilitySectionProps {
   availabilitySlots: AvailabilitySlot[];
   editingTimeSlot: { slotId: string; timeSlotIndex: number } | null;
-  onDayToggle: (slotId: string, dayValue: string, isSelected: boolean) => void;
-  onEditTimeSlot: (slotId: string, timeSlotIndex: number) => void;
-  onSaveTimeSlot: (start: string, end: string) => void;
+  onDayToggle: (_slotId: string, _dayValue: string, _isSelected: boolean) => void;
+  onEditTimeSlot: (_slotId: string, _timeSlotIndex: number) => void;
+  onSaveTimeSlot: (_start: string, _end: string) => void;
   onCancelEdit: () => void;
-  onDeleteTimeSlot: (slotId: string, timeSlotIndex: number) => void;
-  onAddTimeSlot: (slotId: string) => void;
-  onDeletePattern: (slotId: string) => void;
+  onDeleteTimeSlot: (_slotId: string, _timeSlotIndex: number) => void;
+  onAddTimeSlot: (_slotId: string) => void;
+  onDeletePattern: (_slotId: string) => void;
   onAddPattern: () => void;
-  sectionRef: (el: HTMLElement | null) => void;
+  sectionRef: (_el: HTMLElement | null) => void;
 }
 
 export function AvailabilitySection({

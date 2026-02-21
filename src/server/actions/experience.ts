@@ -4,8 +4,6 @@ export {
   deleteExperience,
   getExperienceForEdit,
   getExperienceForPreview,
-  invalidateExperienceCaches,
-  createExperienceSlugChecker,
 } from './experience-crud';
 
 export {

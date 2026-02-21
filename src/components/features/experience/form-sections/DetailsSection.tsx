@@ -21,7 +21,7 @@ import { SectionHeader } from './SectionHeader';
 
 interface DetailsSectionProps {
   form: UseFormReturn<CreateExperienceInput>;
-  sectionRef: (el: HTMLElement | null) => void;
+  sectionRef: (_el: HTMLElement | null) => void;
 }
 
 export function DetailsSection({ form, sectionRef }: DetailsSectionProps) {
