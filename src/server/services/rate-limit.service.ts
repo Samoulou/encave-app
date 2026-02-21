@@ -6,6 +6,7 @@
  */
 
 import { env } from '@/lib/env';
+import { logWarn, logError } from '@/lib/logger';
 
 interface RateLimitEntry {
   count: number;
@@ -20,9 +21,7 @@ const isProduction = env.NODE_ENV === 'production';
 
 // SEC-006: Enforce Redis in production
 if (isProduction && !isRedisConfigured) {
-  console.warn(
-    '⚠️ [Rate Limiter] UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are required in production for scalable rate limiting.'
-  );
+  logWarn('UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are required in production for scalable rate limiting', { action: 'rateLimitInit' });
 }
 
 // In-memory store (fallback for development)
@@ -115,7 +114,7 @@ async function checkRateLimitRedis(
       resetAt,
     };
   } catch (error) {
-    console.error('[Rate Limiter] Redis error, falling back to in-memory:', error);
+    logError('Redis error, falling back to in-memory', error, { action: 'checkRateLimitRedis' });
     // Fallback to in-memory on Redis error
     return checkRateLimitInMemory(identifier, config);
   }
@@ -196,7 +195,7 @@ export async function resetRateLimit(identifier: string): Promise<void> {
         },
       });
     } catch (error) {
-      console.error('[Rate Limiter] Failed to reset rate limit in Redis:', error);
+      logError('Failed to reset rate limit in Redis', error, { action: 'resetRateLimit' });
     }
   }
   rateLimitStore.delete(identifier);
@@ -211,4 +210,19 @@ export const AUTH_RATE_LIMIT: RateLimitConfig = {
 export const REGISTRATION_RATE_LIMIT: RateLimitConfig = {
   maxRequests: 3, // 3 registrations
   windowMs: 60 * 60 * 1000, // per hour
+};
+
+export const GEOCODE_RATE_LIMIT: RateLimitConfig = {
+  maxRequests: 30,
+  windowMs: 60 * 1000, // per minute
+};
+
+export const BOOKING_RATE_LIMIT: RateLimitConfig = {
+  maxRequests: 10,
+  windowMs: 60 * 60 * 1000, // per hour
+};
+
+export const API_RATE_LIMIT: RateLimitConfig = {
+  maxRequests: 60,
+  windowMs: 60 * 1000, // per minute
 };

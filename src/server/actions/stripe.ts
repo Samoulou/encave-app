@@ -10,6 +10,7 @@ import {
 } from '@/server/services/payment.service';
 import { env } from '@/lib/env';
 import type { ActionResult } from '@/types/actions';
+import { logError } from '@/lib/logger';
 
 /**
  * Starts the Stripe Connect onboarding flow for a winemaker
@@ -74,7 +75,7 @@ export async function startStripeOnboarding(
 
     return { success: true, data: { url: onboardingUrl } };
   } catch (error) {
-    console.error('startStripeOnboarding error:', error);
+    logError('startStripeOnboarding error', error, { action: 'startStripeOnboarding', wineryId });
     return {
       success: false,
       error: {
@@ -133,7 +134,7 @@ export async function handleStripeCallback(): Promise<
 
     return { success: true, data: { status: 'refresh' } };
   } catch (error) {
-    console.error('handleStripeCallback error:', error);
+    logError('handleStripeCallback error', error, { action: 'handleStripeCallback' });
     return {
       success: false,
       error: {
@@ -178,7 +179,7 @@ export async function getStripeDashboardLink(): Promise<
 
     return { success: true, data: { url } };
   } catch (error) {
-    console.error('getStripeDashboardLink error:', error);
+    logError('getStripeDashboardLink error', error, { action: 'getStripeDashboardLink' });
     return {
       success: false,
       error: {
@@ -223,7 +224,7 @@ export async function checkCanPublish(
 
     return { success: true, data: result };
   } catch (error) {
-    console.error('checkCanPublish error:', error);
+    logError('checkCanPublish error', error, { action: 'checkCanPublish', wineryId });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to check status' },

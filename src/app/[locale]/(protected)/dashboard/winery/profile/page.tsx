@@ -9,8 +9,21 @@ import { PaymentStatus } from '@/components/features/winery/PaymentStatus';
 import { getPaymentStatusType } from '@/lib/utils/payment-status';
 import { Button } from '@/components/ui/button';
 import { VerifiedBadge } from '@/components/shared/VerifiedBadge';
+import { generatePageMetadata } from '@/lib/seo/metadata';
+import { formatDate } from '@/lib/i18n/formatters';
+import type { Locale } from '@/i18n/routing';
 
-export default async function WineryProfilePage() {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  return generatePageMetadata({
+    locale: locale as Locale,
+    namespace: 'metadata.dashboard.wineryProfile',
+    noIndex: true,
+  });
+}
+
+export default async function WineryProfilePage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   const session = await auth();
 
   if (!session?.user) {
@@ -65,11 +78,7 @@ export default async function WineryProfilePage() {
                     />
                   </svg>
                   Last updated{' '}
-                  {new Date(winery.updatedAt).toLocaleDateString('en-CH', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
+                  {formatDate(new Date(winery.updatedAt), locale as Locale)}
                 </p>
               )}
             </div>

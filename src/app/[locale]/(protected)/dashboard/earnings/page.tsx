@@ -1,4 +1,3 @@
-import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
@@ -10,11 +9,17 @@ import { Skeleton, SkeletonContainer } from '@/components/shared/Skeleton';
 import { EarningsSummary } from './EarningsSummary';
 import { EarningsChartsSection } from './EarningsChartsSection';
 import { EarningsTransactionsSection } from './EarningsTransactionsSection';
+import { generatePageMetadata } from '@/lib/seo/metadata';
+import type { Locale } from '@/i18n/routing';
 
-export const metadata: Metadata = {
-  title: 'Earnings | EnCave Dashboard',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  return generatePageMetadata({
+    locale: locale as Locale,
+    namespace: 'metadata.dashboard.earnings',
+    noIndex: true,
+  });
+}
 
 interface PageProps {
   searchParams: Promise<{

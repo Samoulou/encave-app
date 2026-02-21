@@ -1,4 +1,3 @@
-import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
@@ -10,11 +9,17 @@ import { Skeleton } from '@/components/shared/Skeleton';
 import { Plus } from 'lucide-react';
 import { ExperiencesContent } from './ExperiencesContent';
 import type { FilterStatus } from '@/components/features/experience/ExperienceFilters';
+import { generatePageMetadata } from '@/lib/seo/metadata';
+import type { Locale } from '@/i18n/routing';
 
-export const metadata: Metadata = {
-  title: 'Manage Experiences | EnCave Dashboard',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  return generatePageMetadata({
+    locale: locale as Locale,
+    namespace: 'metadata.dashboard.experiences',
+    noIndex: true,
+  });
+}
 
 interface PageProps {
   searchParams: Promise<{ filter?: string; q?: string; page?: string }>;

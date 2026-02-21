@@ -3,6 +3,17 @@ import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { syncStripeAccountStatus } from '@/server/services/payment.service';
 import { StripeCallbackResult } from '@/components/features/winery/StripeCallbackResult';
+import { generatePageMetadata } from '@/lib/seo/metadata';
+import type { Locale } from '@/i18n/routing';
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  return generatePageMetadata({
+    locale: locale as Locale,
+    namespace: 'metadata.dashboard.stripe',
+    noIndex: true,
+  });
+}
 
 interface PageProps {
   searchParams: Promise<{ success?: string; refresh?: string }>;

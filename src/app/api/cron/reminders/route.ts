@@ -11,6 +11,7 @@ import {
 } from '@/server/services/email-log.service';
 import { addHours, subHours } from 'date-fns';
 import { BookingStatus } from '@prisma/client';
+import { logError } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -77,7 +78,7 @@ export async function GET() {
           results.reminder24h.failed++;
         }
       } catch (error) {
-        console.error(`[Cron/Reminders] Error sending 24h reminder for booking ${booking.id}:`, error);
+        logError('Error sending 24h reminder', error, { action: 'cronReminders', bookingId: booking.id });
         await logEmailFailed(
           'reminder_24h',
           booking.visitorEmail,
@@ -147,7 +148,7 @@ export async function GET() {
           results.reminder2h.failed++;
         }
       } catch (error) {
-        console.error(`[Cron/Reminders] Error sending 2h reminder for booking ${booking.id}:`, error);
+        logError('Error sending 2h reminder', error, { action: 'cronReminders', bookingId: booking.id });
         await logEmailFailed(
           'reminder_2h',
           booking.visitorEmail,
@@ -164,7 +165,7 @@ export async function GET() {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[Cron/Reminders] Error:', error);
+    logError('Reminders cron error', error, { action: 'cronReminders' });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

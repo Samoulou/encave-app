@@ -13,6 +13,7 @@ import {
   getWeekCalendarData,
 } from '@/server/queries/calendar.queries';
 import { CalendarViewWrapper } from './CalendarViewWrapper';
+import { getTranslations } from 'next-intl/server';
 
 interface BookingsTableSectionProps {
   wineryId: string;
@@ -34,6 +35,7 @@ interface BookingsTableSectionProps {
  * This is the heaviest query, designed to stream after summary and filters.
  */
 export async function BookingsTableSection({ wineryId, params }: BookingsTableSectionProps) {
+  const t = await getTranslations('bookings');
   // Parse filters from URL params
   const filters: BookingFiltersType = {};
 
@@ -102,7 +104,7 @@ export async function BookingsTableSection({ wineryId, params }: BookingsTableSe
         ) : (
           <div className="bg-white rounded-xl border border-[#e5d2d7] p-8 text-center">
             <p className="text-[#915564]">
-              No bookings match your current filters.
+              {t('filters.noResults')}
             </p>
           </div>
         )

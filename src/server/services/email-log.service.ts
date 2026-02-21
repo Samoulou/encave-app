@@ -1,4 +1,5 @@
 import { db } from '@/server/db';
+import { logError } from '@/lib/logger';
 
 type EmailLogType =
   | 'reminder_24h'
@@ -24,7 +25,7 @@ export async function logEmailSent(
       },
     });
   } catch (error) {
-    console.error('[EmailLog] Failed to log sent email:', error);
+    logError('Failed to log sent email', error, { action: 'logEmailSent' });
   }
 }
 
@@ -45,7 +46,7 @@ export async function logEmailFailed(
       },
     });
   } catch (error) {
-    console.error('[EmailLog] Failed to log failed email:', error);
+    logError('Failed to log failed email', error, { action: 'logEmailFailed' });
   }
 }
 
@@ -66,7 +67,7 @@ export async function logEmailSkipped(
       },
     });
   } catch (error) {
-    console.error('[EmailLog] Failed to log skipped email:', error);
+    logError('Failed to log skipped email', error, { action: 'logEmailSkipped' });
   }
 }
 

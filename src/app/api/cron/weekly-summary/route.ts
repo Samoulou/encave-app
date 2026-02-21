@@ -9,6 +9,7 @@ import {
 } from '@/server/services/email-log.service';
 import { startOfWeek, endOfWeek, subWeeks } from 'date-fns';
 import { BookingStatus, WineryStatus } from '@prisma/client';
+import { logError } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -110,7 +111,7 @@ export async function GET() {
           results.failed++;
         }
       } catch (error) {
-        console.error(`[Cron/WeeklySummary] Error for winery ${winery.id}:`, error);
+        logError('WeeklySummary cron error for winery', error, { action: 'cronWeeklySummary', wineryId: winery.id });
         await logEmailFailed(
           'weekly_summary',
           winery.id,
@@ -126,7 +127,7 @@ export async function GET() {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[Cron/WeeklySummary] Error:', error);
+    logError('WeeklySummary cron error', error, { action: 'cronWeeklySummary' });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

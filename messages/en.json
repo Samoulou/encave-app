@@ -476,7 +476,7 @@
   "bookings": {
     "empty": {
       "title": "No bookings yet",
-      "description": "Share your experiences to attract visitors and start receiving bookings.",
+      "description": "When customers book your experiences, they'll appear here.",
       "action": "Manage Experiences"
     },
     "summary": {
@@ -528,7 +528,8 @@
       "dateRange": "Date Range",
       "from": "From",
       "to": "To",
-      "clearAll": "Clear all filters"
+      "clearAll": "Clear all filters",
+      "noResults": "No bookings match your current filters."
     },
     "search": {
       "placeholder": "Search by client name, email...",
@@ -1021,6 +1022,100 @@
     "register": {
       "title": "Sign Up | EnCave",
       "description": "Create your EnCave account and start discovering the wine experiences of Valais."
+    },
+    "dashboard": {
+      "title": "Dashboard | EnCave",
+      "description": "Manage your wine experiences and bookings",
+      "bookings": {
+        "title": "Bookings | EnCave",
+        "description": "Manage your bookings"
+      },
+      "earnings": {
+        "title": "Earnings | EnCave",
+        "description": "View your earnings"
+      },
+      "experiences": {
+        "title": "My Experiences | EnCave",
+        "description": "Manage your wine experiences"
+      },
+      "newExperience": {
+        "title": "New Experience | EnCave",
+        "description": "Create a new wine experience"
+      },
+      "editExperience": {
+        "title": "Edit Experience | EnCave",
+        "description": "Edit your wine experience"
+      },
+      "previewExperience": {
+        "title": "Preview Experience | EnCave",
+        "description": "Preview your wine experience"
+      },
+      "myBookings": {
+        "title": "My Bookings | EnCave",
+        "description": "View your booked experiences"
+      },
+      "profile": {
+        "title": "Profile | EnCave",
+        "description": "Manage your profile"
+      },
+      "settings": {
+        "title": "Settings | EnCave",
+        "description": "Account settings"
+      },
+      "notifications": {
+        "title": "Notifications | EnCave",
+        "description": "Notification preferences"
+      },
+      "stripe": {
+        "title": "Stripe Setup | EnCave",
+        "description": "Configure your payment settings"
+      },
+      "wineryProfile": {
+        "title": "Winery Profile | EnCave",
+        "description": "Manage your winery profile"
+      }
+    },
+    "onboarding": {
+      "title": "Winery Registration | EnCave",
+      "description": "Register your winery",
+      "confirmation": {
+        "title": "Registration Submitted | EnCave",
+        "description": "Your winery registration has been submitted"
+      }
+    },
+    "admin": {
+      "title": "Admin Dashboard | EnCave",
+      "description": "Platform administration",
+      "pending": {
+        "title": "Pending Wineries | EnCave",
+        "description": "Review pending winery registrations"
+      },
+      "wineryDetail": {
+        "title": "Winery Review | EnCave",
+        "description": "Review winery details"
+      }
+    },
+    "booking": {
+      "detail": {
+        "title": "Booking Details | EnCave",
+        "description": "View your booking details"
+      },
+      "confirmation": {
+        "title": "Booking Confirmed | EnCave",
+        "description": "Your booking has been confirmed"
+      },
+      "book": {
+        "title": "Book Experience | EnCave",
+        "description": "Book a wine experience"
+      },
+      "checkout": {
+        "title": "Checkout | EnCave",
+        "description": "Complete your booking"
+      }
+    },
+    "unsubscribe": {
+      "title": "Unsubscribe | EnCave",
+      "description": "Manage your email preferences"
     }
   },
   "about": {

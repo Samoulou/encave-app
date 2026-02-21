@@ -8,6 +8,7 @@ import {
   sendWineryRejectedEmail,
 } from '@/server/services/email.service';
 import type { ActionResult } from '@/types/actions';
+import { logError, logWarn } from '@/lib/logger';
 
 const ApproveWinerySchema = z.object({
   wineryId: z.string().min(1, 'Winery ID is required'),
@@ -102,7 +103,7 @@ export async function approveWinery(
       winery.user.preferredLocale
     );
     if (!emailSent) {
-      console.warn(`[approveWinery] Failed to send approval email to ${winery.user.email} for winery ${wineryId}`);
+      logWarn('Failed to send approval email', { action: 'approveWinery', wineryId, email: winery.user.email });
     }
 
     return {
@@ -110,7 +111,7 @@ export async function approveWinery(
       data: { verifiedAt: now },
     };
   } catch (error) {
-    console.error('approveWinery error:', error);
+    logError('approveWinery error', error, { action: 'approveWinery', wineryId });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Something went wrong' },
@@ -209,7 +210,7 @@ export async function rejectWinery(
       winery.user.preferredLocale
     );
     if (!emailSent) {
-      console.warn(`[rejectWinery] Failed to send rejection email to ${winery.user.email} for winery ${wineryId}`);
+      logWarn('Failed to send rejection email', { action: 'rejectWinery', wineryId, email: winery.user.email });
     }
 
     return {
@@ -217,7 +218,7 @@ export async function rejectWinery(
       data: { rejectedAt: now },
     };
   } catch (error) {
-    console.error('rejectWinery error:', error);
+    logError('rejectWinery error', error, { action: 'rejectWinery', wineryId });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Something went wrong' },

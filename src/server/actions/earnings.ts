@@ -4,6 +4,7 @@ import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { format } from 'date-fns';
 import type { ActionResult } from '@/types/actions';
+import { logError } from '@/lib/logger';
 import {
   getTransactions,
   getYearToDateSummary,
@@ -78,7 +79,7 @@ export async function exportEarningsCSV(
       data: { csv, filename },
     };
   } catch (error) {
-    console.error('exportEarningsCSV error:', error);
+    logError('exportEarningsCSV error', error, { action: 'exportEarningsCSV' });
     return {
       success: false,
       error: {
@@ -151,7 +152,7 @@ export async function exportEarningsPDF(): Promise<ActionResult<ExportPDFResult>
       data: { pdf, filename },
     };
   } catch (error) {
-    console.error('exportEarningsPDF error:', error);
+    logError('exportEarningsPDF error', error, { action: 'exportEarningsPDF' });
     return {
       success: false,
       error: {

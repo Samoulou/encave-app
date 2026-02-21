@@ -9,6 +9,7 @@ import {
 } from '@/server/services/email-log.service';
 import { startOfDay, endOfDay, addDays } from 'date-fns';
 import { BookingStatus, WineryStatus } from '@prisma/client';
+import { logError } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -112,7 +113,7 @@ export async function GET() {
           results.failed++;
         }
       } catch (error) {
-        console.error(`[Cron/DailyDigest] Error for winery ${winery.id}:`, error);
+        logError('DailyDigest cron error for winery', error, { action: 'cronDailyDigest', wineryId: winery.id });
         await logEmailFailed(
           'daily_digest',
           winery.id,
@@ -128,7 +129,7 @@ export async function GET() {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[Cron/DailyDigest] Error:', error);
+    logError('DailyDigest cron error', error, { action: 'cronDailyDigest' });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

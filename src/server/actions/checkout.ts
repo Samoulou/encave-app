@@ -9,6 +9,8 @@ import type { ActionResult } from '@/types/actions';
 import { BookingStatus } from '@prisma/client';
 import { timeSlotSchema } from '@/lib/validators/booking';
 import { env } from '@/lib/env';
+import { checkRateLimit, BOOKING_RATE_LIMIT } from '@/server/services/rate-limit.service';
+import { logError } from '@/lib/logger';
 
 /**
  * Generate booking reference using cuid2 for guaranteed uniqueness.
@@ -58,6 +60,15 @@ export async function createBookingAndCheckout(
       visitorEmail,
       visitorPhone,
     } = validated.data;
+
+    // Rate limit by visitor email to prevent booking abuse
+    const rateLimitResult = await checkRateLimit(`booking:${visitorEmail}`, BOOKING_RATE_LIMIT);
+    if (!rateLimitResult.success) {
+      return {
+        success: false,
+        error: { code: 'RATE_LIMITED', message: 'Too many booking attempts. Please try again later.' },
+      };
+    }
 
     // Get experience and winery details
     const experience = await db.experience.findUnique({
@@ -216,7 +227,7 @@ export async function createBookingAndCheckout(
       },
     };
   } catch (error) {
-    console.error('createBookingAndCheckout error:', error);
+    logError('createBookingAndCheckout error', error, { action: 'createBookingAndCheckout' });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to create booking' },
@@ -294,7 +305,7 @@ export async function getBookingByReference(
       },
     };
   } catch (error) {
-    console.error('getBookingByReference error:', error);
+    logError('getBookingByReference error', error, { action: 'getBookingByReference' });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to get booking' },
@@ -376,7 +387,7 @@ export async function getBookingById(
       },
     };
   } catch (error) {
-    console.error('getBookingById error:', error);
+    logError('getBookingById error', error, { action: 'getBookingById' });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to get booking' },

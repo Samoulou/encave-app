@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { CalendarX2, Sparkles } from 'lucide-react';
 
 /**
@@ -10,6 +10,7 @@ import { CalendarX2, Sparkles } from 'lucide-react';
  */
 export function BookingsEmptyState() {
   const locale = useLocale();
+  const t = useTranslations('bookings.empty');
 
   return (
     <div className="bg-white rounded-xl border border-[#e5d2d7] shadow-sm">
@@ -18,17 +19,17 @@ export function BookingsEmptyState() {
           <CalendarX2 className="h-10 w-10 text-[#915564]" />
         </div>
         <h3 className="text-xl font-bold text-[#1a0f12]">
-          No bookings yet
+          {t('title')}
         </h3>
         <p className="mt-2 max-w-md text-[#915564]">
-          When customers book your experiences, they&apos;ll appear here.
+          {t('description')}
         </p>
         <Link
           href={`/${locale}/dashboard/experiences`}
           className="mt-8 inline-flex items-center gap-2 h-10 px-6 rounded-lg bg-primary hover:bg-primary/90 text-white text-sm font-bold transition-colors"
         >
           <Sparkles className="h-4 w-4" />
-          Manage Experiences
+          {t('action')}
         </Link>
       </div>
     </div>

@@ -45,7 +45,7 @@ export function generateICalEvent(event: CalendarEventData): string | null {
   const result = createEvent(icsEvent);
 
   if (result.error) {
-    console.error('Error generating iCal event:', result.error);
+    // Error generating iCal event - return null to caller
     return null;
   }
 

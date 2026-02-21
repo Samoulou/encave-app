@@ -16,6 +16,8 @@ import {
   X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatDate } from '@/lib/i18n/formatters';
+import type { Locale } from '@/i18n/routing';
 import { Button } from '@/components/ui/button';
 import { BookingStatusBadge } from '@/components/features/booking/dashboard/BookingStatusBadge';
 import { cancelClientBooking } from '@/server/actions/client.actions';
@@ -40,7 +42,7 @@ export function ClientBookingCard({ booking, variant }: ClientBookingCardProps) 
     refundAmount?: number | null;
   } | null>(null);
 
-  const formattedDate = new Date(booking.date).toLocaleDateString(locale, {
+  const formattedDate = formatDate(new Date(booking.date), locale as Locale, {
     weekday: 'long',
     year: 'numeric',
     month: 'long',

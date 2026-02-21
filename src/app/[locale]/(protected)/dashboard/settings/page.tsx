@@ -1,15 +1,20 @@
-import type { Metadata } from 'next';
 import { auth } from '@/server/auth';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { Bell, User, Languages, ChevronRight, LucideIcon } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { getTranslations } from 'next-intl/server';
+import { generatePageMetadata } from '@/lib/seo/metadata';
+import type { Locale } from '@/i18n/routing';
 
-export const metadata: Metadata = {
-  title: 'Settings | EnCave Dashboard',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  return generatePageMetadata({
+    locale: locale as Locale,
+    namespace: 'metadata.dashboard.settings',
+    noIndex: true,
+  });
+}
 
 interface SettingsSection {
   key: string;

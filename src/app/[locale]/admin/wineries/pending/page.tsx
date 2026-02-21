@@ -2,6 +2,17 @@ import { db } from '@/server/db';
 import { PendingWineriesTable } from '@/components/features/admin/PendingWineriesTable';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import { generatePageMetadata } from '@/lib/seo/metadata';
+import type { Locale } from '@/i18n/routing';
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  return generatePageMetadata({
+    locale: locale as Locale,
+    namespace: 'metadata.admin.pending',
+    noIndex: true,
+  });
+}
 
 async function getPendingWineries() {
   return db.winery.findMany({

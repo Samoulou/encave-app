@@ -476,7 +476,7 @@
   "bookings": {
     "empty": {
       "title": "Pas encore de réservations",
-      "description": "Partagez vos expériences pour attirer des visiteurs et recevoir vos premières réservations.",
+      "description": "Lorsque des clients réservent vos expériences, elles apparaîtront ici.",
       "action": "Gérer les expériences"
     },
     "summary": {
@@ -528,7 +528,8 @@
       "dateRange": "Période",
       "from": "Du",
       "to": "Au",
-      "clearAll": "Effacer tous les filtres"
+      "clearAll": "Effacer tous les filtres",
+      "noResults": "Aucune réservation ne correspond à vos filtres actuels."
     },
     "search": {
       "placeholder": "Rechercher par nom, email...",
@@ -1021,6 +1022,100 @@
     "register": {
       "title": "Inscription | EnCave",
       "description": "Créez votre compte EnCave et commencez à découvrir les expériences viticoles du Valais."
+    },
+    "dashboard": {
+      "title": "Tableau de bord | EnCave",
+      "description": "Gérez vos expériences viticoles et réservations",
+      "bookings": {
+        "title": "Réservations | EnCave",
+        "description": "Gérez vos réservations"
+      },
+      "earnings": {
+        "title": "Revenus | EnCave",
+        "description": "Consultez vos revenus"
+      },
+      "experiences": {
+        "title": "Mes expériences | EnCave",
+        "description": "Gérez vos expériences viticoles"
+      },
+      "newExperience": {
+        "title": "Nouvelle expérience | EnCave",
+        "description": "Créez une nouvelle expérience viticole"
+      },
+      "editExperience": {
+        "title": "Modifier l'expérience | EnCave",
+        "description": "Modifiez votre expérience viticole"
+      },
+      "previewExperience": {
+        "title": "Aperçu de l'expérience | EnCave",
+        "description": "Prévisualisez votre expérience viticole"
+      },
+      "myBookings": {
+        "title": "Mes réservations | EnCave",
+        "description": "Consultez vos expériences réservées"
+      },
+      "profile": {
+        "title": "Profil | EnCave",
+        "description": "Gérez votre profil"
+      },
+      "settings": {
+        "title": "Paramètres | EnCave",
+        "description": "Paramètres du compte"
+      },
+      "notifications": {
+        "title": "Notifications | EnCave",
+        "description": "Préférences de notifications"
+      },
+      "stripe": {
+        "title": "Configuration Stripe | EnCave",
+        "description": "Configurez vos paramètres de paiement"
+      },
+      "wineryProfile": {
+        "title": "Profil du domaine | EnCave",
+        "description": "Gérez le profil de votre domaine"
+      }
+    },
+    "onboarding": {
+      "title": "Inscription du domaine | EnCave",
+      "description": "Enregistrez votre domaine",
+      "confirmation": {
+        "title": "Inscription soumise | EnCave",
+        "description": "Votre inscription de domaine a été soumise"
+      }
+    },
+    "admin": {
+      "title": "Tableau de bord admin | EnCave",
+      "description": "Administration de la plateforme",
+      "pending": {
+        "title": "Domaines en attente | EnCave",
+        "description": "Examinez les inscriptions de domaines en attente"
+      },
+      "wineryDetail": {
+        "title": "Examen du domaine | EnCave",
+        "description": "Examinez les détails du domaine"
+      }
+    },
+    "booking": {
+      "detail": {
+        "title": "Détails de la réservation | EnCave",
+        "description": "Consultez les détails de votre réservation"
+      },
+      "confirmation": {
+        "title": "Réservation confirmée | EnCave",
+        "description": "Votre réservation a été confirmée"
+      },
+      "book": {
+        "title": "Réserver une expérience | EnCave",
+        "description": "Réservez une expérience viticole"
+      },
+      "checkout": {
+        "title": "Paiement | EnCave",
+        "description": "Finalisez votre réservation"
+      }
+    },
+    "unsubscribe": {
+      "title": "Désabonnement | EnCave",
+      "description": "Gérez vos préférences de messagerie"
     }
   },
   "about": {

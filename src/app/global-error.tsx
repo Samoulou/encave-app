@@ -11,52 +11,122 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Log error to console (will be captured by Sentry when configured)
     console.error('Global error:', error);
   }, [error]);
 
   return (
     <html lang="en">
-      <body className="font-sans antialiased">
-        <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4">
-          <div className="w-full max-w-md text-center">
-            {/* Error Icon */}
-            <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-red-100">
-              <AlertTriangle className="h-12 w-12 text-red-600" aria-hidden="true" />
+      <body
+        style={{
+          margin: 0,
+          fontFamily:
+            '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+          WebkitFontSmoothing: 'antialiased',
+          MozOsxFontSmoothing: 'grayscale',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            minHeight: '100vh',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#f8fafc',
+            padding: '0 1rem',
+          }}
+        >
+          <div style={{ width: '100%', maxWidth: '28rem', textAlign: 'center' }}>
+            <div
+              style={{
+                margin: '0 auto 1.5rem',
+                display: 'flex',
+                height: '6rem',
+                width: '6rem',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '9999px',
+                backgroundColor: '#fee2e2',
+              }}
+            >
+              <AlertTriangle
+                style={{ height: '3rem', width: '3rem', color: '#dc2626' }}
+                aria-hidden="true"
+              />
             </div>
 
-            {/* Title & Description */}
-            <h1 className="text-4xl font-bold text-slate-900">
+            <h1
+              style={{
+                fontSize: '2.25rem',
+                fontWeight: 700,
+                color: '#0f172a',
+                margin: 0,
+              }}
+            >
               Something went wrong
             </h1>
-            <p className="mt-3 text-lg text-slate-600">
+            <p
+              style={{
+                marginTop: '0.75rem',
+                fontSize: '1.125rem',
+                color: '#475569',
+              }}
+            >
               We&apos;re sorry, an unexpected error occurred. Please try again.
             </p>
 
-            {/* Error Digest (for debugging) */}
             {error.digest && (
-              <p className="mt-4 font-mono text-xs text-slate-400">
+              <p
+                style={{
+                  marginTop: '1rem',
+                  fontFamily: 'monospace',
+                  fontSize: '0.75rem',
+                  color: '#94a3b8',
+                }}
+              >
                 Error ID: {error.digest}
               </p>
             )}
 
-            {/* Action Button */}
-            <div className="mt-8">
+            <div style={{ marginTop: '2rem' }}>
               <button
                 onClick={() => reset()}
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-slate-900 px-6 text-sm font-medium text-white transition-colors hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2"
+                style={{
+                  display: 'inline-flex',
+                  height: '2.75rem',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  borderRadius: '0.5rem',
+                  backgroundColor: '#0f172a',
+                  padding: '0 1.5rem',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  color: '#ffffff',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
               >
-                <RefreshCw className="h-4 w-4" />
+                <RefreshCw style={{ height: '1rem', width: '1rem' }} />
                 Try again
               </button>
             </div>
 
-            {/* Support Contact */}
-            <div className="mt-10 text-sm text-slate-600">
+            <div
+              style={{
+                marginTop: '2.5rem',
+                fontSize: '0.875rem',
+                color: '#475569',
+              }}
+            >
               If the problem persists, contact us at{' '}
               <a
                 href="mailto:support@encave.ch"
-                className="font-medium text-slate-900 underline"
+                style={{
+                  fontWeight: 500,
+                  color: '#0f172a',
+                  textDecoration: 'underline',
+                }}
               >
                 support@encave.ch
               </a>

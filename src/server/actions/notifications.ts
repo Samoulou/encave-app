@@ -7,6 +7,7 @@ import {
   type NotificationPreferencesInput,
 } from '@/lib/validators/notifications';
 import type { ActionResult } from '@/types/actions';
+import { logError } from '@/lib/logger';
 
 export async function updateNotificationPreferences(
   input: NotificationPreferencesInput
@@ -66,7 +67,7 @@ export async function updateNotificationPreferences(
       data: { updatedAt: preferences.updatedAt },
     };
   } catch (error) {
-    console.error('[Notifications] Error updating preferences:', error);
+    logError('Error updating notification preferences', error, { action: 'updateNotificationPreferences' });
     return {
       success: false,
       error: {
@@ -142,7 +143,7 @@ export async function getNotificationPreferences(): Promise<
       },
     };
   } catch (error) {
-    console.error('[Notifications] Error getting preferences:', error);
+    logError('Error getting notification preferences', error, { action: 'getNotificationPreferences' });
     return {
       success: false,
       error: {

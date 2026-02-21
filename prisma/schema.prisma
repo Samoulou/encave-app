@@ -221,6 +221,7 @@ model Experience {
   blockedDates      BlockedDate[]
 
   @@unique([wineryId, slug])
+  @@index([wineryId])
   @@index([status])
   @@index([type])
   @@index([price])
@@ -289,6 +290,8 @@ model Booking {
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
 
+  @@index([experienceId])
+  @@index([wineryId])
   @@index([experienceId, date, timeSlot])
   @@index([wineryId, date])
   @@index([status])

@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next';
 import { locales, defaultLocale } from '@/i18n/routing';
 import { getAllPublishedExperienceSlugs } from '@/server/queries/experience.queries';
 import { getAllVerifiedWinerySlugs } from '@/server/queries/winery.queries';
+import { logError } from '@/lib/logger';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://encave.ch';
 
@@ -75,7 +76,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       entries.push(...createEntry(`/experiences/${slug}`, 'weekly', 0.8));
     }
   } catch (error) {
-    console.error('Error fetching experience slugs for sitemap:', error);
+    logError('Error fetching experience slugs for sitemap', error, { action: 'sitemap' });
   }
 
   // Dynamic pages - wineries
@@ -85,7 +86,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       entries.push(...createEntry(`/wineries/${slug}`, 'weekly', 0.8));
     }
   } catch (error) {
-    console.error('Error fetching winery slugs for sitemap:', error);
+    logError('Error fetching winery slugs for sitemap', error, { action: 'sitemap' });
   }
 
   return entries;

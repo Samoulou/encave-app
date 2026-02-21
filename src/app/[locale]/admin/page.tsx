@@ -6,6 +6,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ArrowRight, Clock, MapPin, ClipboardList, Wine } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { getTranslations } from 'next-intl/server';
+import { generatePageMetadata } from '@/lib/seo/metadata';
+import type { Locale } from '@/i18n/routing';
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  return generatePageMetadata({
+    locale: locale as Locale,
+    namespace: 'metadata.admin',
+    noIndex: true,
+  });
+}
 
 async function getWineryStats() {
   const [pending, verified, rejected, total] = await Promise.all([

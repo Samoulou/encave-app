@@ -1,10 +1,15 @@
-import type { Metadata } from 'next';
 import { ClientBookingsPage } from '@/components/features/client-dashboard/ClientBookingsPage';
+import { generatePageMetadata } from '@/lib/seo/metadata';
+import type { Locale } from '@/i18n/routing';
 
-export const metadata: Metadata = {
-  title: 'My Bookings | EnCave',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  return generatePageMetadata({
+    locale: locale as Locale,
+    namespace: 'metadata.dashboard.myBookings',
+    noIndex: true,
+  });
+}
 
 export default function MyBookingsPage() {
   return <ClientBookingsPage />;

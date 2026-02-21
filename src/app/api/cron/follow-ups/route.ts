@@ -8,6 +8,7 @@ import {
 } from '@/server/services/email-log.service';
 import { subHours } from 'date-fns';
 import { BookingStatus } from '@prisma/client';
+import { logError } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -82,7 +83,7 @@ export async function GET() {
           results.failed++;
         }
       } catch (error) {
-        console.error(`[Cron/FollowUps] Error for booking ${booking.id}:`, error);
+        logError('FollowUps cron error for booking', error, { action: 'cronFollowUps', bookingId: booking.id });
         await logEmailFailed(
           'follow_up',
           booking.visitorEmail,
@@ -99,7 +100,7 @@ export async function GET() {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[Cron/FollowUps] Error:', error);
+    logError('FollowUps cron error', error, { action: 'cronFollowUps' });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

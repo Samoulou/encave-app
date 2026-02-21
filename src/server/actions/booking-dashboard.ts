@@ -5,10 +5,15 @@ import { auth } from '@/server/auth';
 import { BookingStatus } from '@prisma/client';
 import { format } from 'date-fns';
 import type { ActionResult } from '@/types/actions';
+import { logError } from '@/lib/logger';
 import {
   getWineryBookings,
   type BookingFilters,
 } from '@/server/queries/booking.queries';
+import {
+  sendBookingConfirmationEmail,
+  sendBookingCancellationEmail,
+} from '@/server/services/email.service';
 
 /**
  * Approve a pending booking (change status to CONFIRMED)
@@ -41,6 +46,10 @@ export async function approveBooking(
     // Get booking and verify ownership
     const booking = await db.booking.findFirst({
       where: { id: bookingId, wineryId: winery.id },
+      include: {
+        experience: { select: { title: true, duration: true } },
+        winery: { select: { name: true } },
+      },
     });
 
     if (!booking) {
@@ -67,11 +76,25 @@ export async function approveBooking(
       data: { status: BookingStatus.CONFIRMED },
     });
 
-    // TODO: Send confirmation email to client
+    // Send confirmation email to client (non-blocking)
+    sendBookingConfirmationEmail(booking.visitorEmail, {
+      guestName: booking.visitorName,
+      experienceTitle: booking.experience.title,
+      wineryName: booking.winery.name,
+      date: booking.date,
+      guestCount: booking.guestCount,
+      duration: booking.experience.duration,
+      totalPrice: booking.totalPrice,
+      bookingRef: booking.reference,
+    }).catch((error) => {
+      logError('Failed to send booking confirmation email', error, {
+        bookingId,
+      });
+    });
 
     return { success: true, data: { status: BookingStatus.CONFIRMED } };
   } catch (error) {
-    console.error('approveBooking error:', error);
+    logError('approveBooking error', error, { action: 'approveBooking', bookingId });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to approve booking' },
@@ -110,6 +133,10 @@ export async function rejectBooking(
     // Get booking and verify ownership
     const booking = await db.booking.findFirst({
       where: { id: bookingId, wineryId: winery.id },
+      include: {
+        experience: { select: { title: true } },
+        winery: { select: { name: true } },
+      },
     });
 
     if (!booking) {
@@ -139,11 +166,23 @@ export async function rejectBooking(
       },
     });
 
-    // TODO: Send rejection email to client with reason
+    // Send cancellation email to client (non-blocking)
+    sendBookingCancellationEmail(booking.visitorEmail, {
+      guestName: booking.visitorName,
+      experienceTitle: booking.experience.title,
+      wineryName: booking.winery.name,
+      date: booking.date,
+      totalPrice: booking.totalPrice,
+      bookingRef: booking.reference,
+    }).catch((error) => {
+      logError('Failed to send booking rejection email', error, {
+        bookingId,
+      });
+    });
 
     return { success: true, data: { status: BookingStatus.CANCELLED_BY_WINERY } };
   } catch (error) {
-    console.error('rejectBooking error:', error);
+    logError('rejectBooking error', error, { action: 'rejectBooking', bookingId });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to reject booking' },
@@ -225,7 +264,7 @@ export async function markBookingCompleted(
 
     return { success: true, data: { status: BookingStatus.COMPLETED } };
   } catch (error) {
-    console.error('markBookingCompleted error:', error);
+    logError('markBookingCompleted error', error, { action: 'markBookingCompleted', bookingId });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to update booking status' },
@@ -307,7 +346,7 @@ export async function markBookingNoShow(
 
     return { success: true, data: { status: BookingStatus.NO_SHOW } };
   } catch (error) {
-    console.error('markBookingNoShow error:', error);
+    logError('markBookingNoShow error', error, { action: 'markBookingNoShow', bookingId });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to update booking status' },
@@ -414,7 +453,7 @@ export async function exportBookingsToCSV(
 
     return { success: true, data: { csvData, filename } };
   } catch (error) {
-    console.error('exportBookingsToCSV error:', error);
+    logError('exportBookingsToCSV error', error, { action: 'exportBookingsToCSV' });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to export bookings' },
@@ -486,7 +525,7 @@ export async function getClientHistory(
 
     return { success: true, data: { bookings } };
   } catch (error) {
-    console.error('getClientHistory error:', error);
+    logError('getClientHistory error', error, { action: 'getClientHistory' });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to get client history' },

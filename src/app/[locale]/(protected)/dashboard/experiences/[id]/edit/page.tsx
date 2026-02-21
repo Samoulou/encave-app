@@ -7,6 +7,17 @@ import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuar
 import { Skeleton } from '@/components/shared/Skeleton';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Calendar } from 'lucide-react';
+import { generatePageMetadata } from '@/lib/seo/metadata';
+import type { Locale } from '@/i18n/routing';
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  return generatePageMetadata({
+    locale: locale as Locale,
+    namespace: 'metadata.dashboard.editExperience',
+    noIndex: true,
+  });
+}
 
 // Dynamic imports for heavy form components
 const EditExperienceForm = dynamic(

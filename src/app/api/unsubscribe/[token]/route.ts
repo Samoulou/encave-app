@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { db } from '@/server/db';
+import { logError } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -89,7 +90,7 @@ export async function GET(
       new URL(`/unsubscribe?status=success&type=${type}`, request.url)
     );
   } catch (error) {
-    console.error('[Unsubscribe] Error:', error);
+    logError('Unsubscribe error', error, { action: 'unsubscribe' });
     return NextResponse.redirect(
       new URL('/unsubscribe?status=error', request.url)
     );

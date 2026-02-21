@@ -25,6 +25,17 @@ import { CancellationPolicy } from '@/components/features/booking/CancellationPo
 import { CancelBookingButton } from '@/components/features/booking/CancelBookingButton';
 import { formatCHF } from '@/lib/utils/currency';
 import { cn } from '@/lib/utils';
+import { generatePageMetadata } from '@/lib/seo/metadata';
+import type { Locale } from '@/i18n/routing';
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  return generatePageMetadata({
+    locale: locale as Locale,
+    namespace: 'metadata.booking.detail',
+    noIndex: true,
+  });
+}
 
 interface BookingPageProps {
   params: Promise<{ id: string; locale: string }>;

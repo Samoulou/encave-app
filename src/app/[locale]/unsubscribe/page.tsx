@@ -1,6 +1,17 @@
 import Link from 'next/link';
 import { CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { generatePageMetadata } from '@/lib/seo/metadata';
+import type { Locale } from '@/i18n/routing';
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  return generatePageMetadata({
+    locale: locale as Locale,
+    namespace: 'metadata.unsubscribe',
+    noIndex: true,
+  });
+}
 
 interface PageProps {
   searchParams: Promise<{

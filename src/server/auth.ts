@@ -1,6 +1,7 @@
 import { headers } from 'next/headers';
 import { auth as betterAuth } from '@/server/better-auth';
 import type { UserRole, Locale } from '@prisma/client';
+import { logError } from '@/lib/logger';
 
 /**
  * Session type that matches the previous NextAuth session shape
@@ -58,7 +59,7 @@ export async function auth(): Promise<Session | null> {
     ) {
       return null;
     }
-    console.error('Auth error:', error);
+    logError('Auth error', error, { action: 'auth' });
     return null;
   }
 }
@@ -72,6 +73,6 @@ export async function signOutSession(): Promise<void> {
       headers: await headers(),
     });
   } catch (error) {
-    console.error('Sign out error:', error);
+    logError('Sign out error', error, { action: 'signOutSession' });
   }
 }

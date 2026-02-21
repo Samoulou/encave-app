@@ -36,6 +36,7 @@ export function CancellationModal({
   totalPrice,
 }: CancellationModalProps) {
   const t = useTranslations('cancellation');
+  const tCommon = useTranslations('common');
   const router = useRouter();
 
   const [isConfirmed, setIsConfirmed] = useState(false);
@@ -102,7 +103,7 @@ export function CancellationModal({
         </DialogHeader>
 
         {isLoading ? (
-          <div className="py-8 text-center text-slate-500">Loading...</div>
+          <div className="py-8 text-center text-slate-500">{tCommon('loading')}</div>
         ) : cancellationInfo && !cancellationInfo.canCancel ? (
           <div className="py-4">
             <p className="text-sm text-red-600">{cancellationInfo.reason}</p>

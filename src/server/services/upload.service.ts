@@ -1,4 +1,5 @@
 import { put, del } from '@vercel/blob';
+import { logError } from '@/lib/logger';
 import {
   validateImageFile as sharedValidateImageFile,
   WINERY_ALLOWED_TYPES,
@@ -29,7 +30,7 @@ export async function deleteImage(url: string): Promise<void> {
     await del(url);
   } catch (error) {
     // Log but don't throw - image might already be deleted
-    console.error('Failed to delete image:', error);
+    logError('Failed to delete image', error, { action: 'deleteImage' });
   }
 }
 

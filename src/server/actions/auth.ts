@@ -13,6 +13,7 @@
 
 import { headers } from 'next/headers';
 import { auth } from '@/server/better-auth';
+import { logError } from '@/lib/logger';
 
 /**
  * Sign out the current user (server-side)
@@ -26,6 +27,6 @@ export async function logoutAction(): Promise<void> {
       headers: headersList,
     });
   } catch (error) {
-    console.error('Logout error:', error);
+    logError('Logout error', error, { action: 'logoutAction' });
   }
 }

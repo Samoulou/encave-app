@@ -4,6 +4,8 @@
  * https://nominatim.org/release-docs/develop/api/Search/
  */
 
+import { logError, logWarn } from '@/lib/logger';
+
 interface GeocodingResult {
   latitude: number;
   longitude: number;
@@ -47,16 +49,14 @@ export async function geocodeAddress(
     );
 
     if (!response.ok) {
-      console.error(
-        `Geocoding API error: ${response.status} ${response.statusText}`
-      );
+      logError(`Geocoding API error: ${response.status} ${response.statusText}`, undefined, { action: 'geocodeAddress' });
       return null;
     }
 
     const data = (await response.json()) as NominatimResponse[];
 
     if (data.length === 0) {
-      console.warn(`No geocoding results for address: ${address}`);
+      logWarn(`No geocoding results for address: ${address}`, { action: 'geocodeAddress' });
       return null;
     }
 
@@ -71,7 +71,7 @@ export async function geocodeAddress(
       displayName: result.display_name,
     };
   } catch (error) {
-    console.error('Geocoding error:', error);
+    logError('Geocoding error', error, { action: 'geocodeAddress' });
     return null;
   }
 }
@@ -100,9 +100,7 @@ export async function geocodeWineryAddress(
   const fallbackResult = await geocodeAddress(`${commune}, Valais, Switzerland`);
 
   if (fallbackResult) {
-    console.warn(
-      `Full address geocoding failed, using commune center for: ${address}, ${commune}`
-    );
+    logWarn(`Full address geocoding failed, using commune center for: ${address}, ${commune}`, { action: 'geocodeWineryAddress' });
     return {
       latitude: fallbackResult.latitude,
       longitude: fallbackResult.longitude,

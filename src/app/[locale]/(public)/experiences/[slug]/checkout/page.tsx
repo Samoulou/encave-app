@@ -6,6 +6,17 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { getExperienceForBooking } from '@/server/actions/booking';
 import { CheckoutClient } from './CheckoutClient';
+import { generatePageMetadata } from '@/lib/seo/metadata';
+import type { Locale } from '@/i18n/routing';
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  return generatePageMetadata({
+    locale: locale as Locale,
+    namespace: 'metadata.booking.checkout',
+    noIndex: true,
+  });
+}
 
 interface PageProps {
   params: Promise<{ slug: string; locale: string }>;

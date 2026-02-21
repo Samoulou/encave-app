@@ -12,6 +12,7 @@ import {
   sendWinemakerCancellationEmail,
 } from '@/server/services/email.service';
 import { processRefund } from '@/server/services/payment.service';
+import { logError } from '@/lib/logger';
 
 const CheckAvailabilitySchema = z.object({
   experienceId: z.string(),
@@ -81,7 +82,7 @@ export async function checkAvailability(
       },
     };
   } catch (error) {
-    console.error('checkAvailability error:', error);
+    logError('checkAvailability error', error, { action: 'checkAvailability' });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to check availability' },
@@ -155,7 +156,7 @@ export async function getTimeSlotsForDate(
 
     return { success: true, data: slots };
   } catch (error) {
-    console.error('getTimeSlotsForDate error:', error);
+    logError('getTimeSlotsForDate error', error, { action: 'getTimeSlotsForDate', experienceId });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to get time slots' },
@@ -239,7 +240,7 @@ export async function getExperienceForBooking(
       },
     };
   } catch (error) {
-    console.error('getExperienceForBooking error:', error);
+    logError('getExperienceForBooking error', error, { action: 'getExperienceForBooking' });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to get experience' },
@@ -313,7 +314,7 @@ export async function resendConfirmationEmail(
 
     return { success: true, data: { sent } };
   } catch (error) {
-    console.error('resendConfirmationEmail error:', error);
+    logError('resendConfirmationEmail error', error, { action: 'resendConfirmationEmail', bookingId });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to resend email' },
@@ -407,7 +408,7 @@ export async function getBookingByToken(
       },
     };
   } catch (error) {
-    console.error('getBookingByToken error:', error);
+    logError('getBookingByToken error', error, { action: 'getBookingByToken' });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to get booking' },
@@ -510,7 +511,7 @@ export async function cancelBooking(
         refundAmount = refundResult.amount;
         stripeRefundId = refundResult.refundId;
       } catch (refundError) {
-        console.error('Refund processing error:', refundError);
+        logError('Refund processing error', refundError, { action: 'cancelBooking', bookingId });
         return {
           success: false,
           error: {
@@ -574,7 +575,7 @@ export async function cancelBooking(
       },
     };
   } catch (error) {
-    console.error('cancelBooking error:', error);
+    logError('cancelBooking error', error, { action: 'cancelBooking', bookingId });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to cancel booking' },
@@ -661,7 +662,7 @@ export async function getCancellationInfo(
       },
     };
   } catch (error) {
-    console.error('getCancellationInfo error:', error);
+    logError('getCancellationInfo error', error, { action: 'getCancellationInfo', bookingId });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to get cancellation info' },

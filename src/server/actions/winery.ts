@@ -16,6 +16,7 @@ import {
   WINERY_ALLOWED_TYPES,
 } from '@/lib/validators/image';
 import type { ActionResult } from '@/types/actions';
+import { logError, logWarn } from '@/lib/logger';
 
 /**
  * Check if a winery slug already exists
@@ -110,7 +111,7 @@ export async function createWinery(
       coordinates = await geocodeWineryAddress(address, commune);
     } catch (geocodeError) {
       // Log but don't fail - geocoding is optional
-      console.warn('Geocoding failed for new winery:', geocodeError);
+      logWarn('Geocoding failed for new winery', { action: 'createWinery', error: geocodeError });
     }
 
     // 8. Create winery and update user role in a transaction
@@ -146,7 +147,7 @@ export async function createWinery(
       data: { wineryId: winery.id, slug: winery.slug },
     };
   } catch (error) {
-    console.error('createWinery error:', error);
+    logError('createWinery error', error, { action: 'createWinery' });
     return {
       success: false,
       error: {
@@ -220,7 +221,7 @@ export async function updateWineryProfile(
         const newCommune = validated.data.commune ?? winery.commune;
         coordinates = await geocodeWineryAddress(newAddress, newCommune);
       } catch (geocodeError) {
-        console.warn('Geocoding failed for winery update:', geocodeError);
+        logWarn('Geocoding failed for winery update', { action: 'updateWineryProfile', error: geocodeError });
       }
     }
 
@@ -242,7 +243,7 @@ export async function updateWineryProfile(
       data: { updatedAt: updated.updatedAt },
     };
   } catch (error) {
-    console.error('updateWineryProfile error:', error);
+    logError('updateWineryProfile error', error, { action: 'updateWineryProfile' });
     return {
       success: false,
       error: {
@@ -306,7 +307,7 @@ export async function uploadWineryImage(
       data: { url: blob.url },
     };
   } catch (error) {
-    console.error('uploadWineryImage error:', error);
+    logError('uploadWineryImage error', error, { action: 'uploadWineryImage' });
     return {
       success: false,
       error: {
@@ -362,7 +363,7 @@ export async function updateWineryCoverPhoto(
       data: { updatedAt: updated.updatedAt },
     };
   } catch (error) {
-    console.error('updateWineryCoverPhoto error:', error);
+    logError('updateWineryCoverPhoto error', error, { action: 'updateWineryCoverPhoto' });
     return {
       success: false,
       error: {
@@ -427,7 +428,7 @@ export async function addGalleryImage(
       data: { id: image.id, order: image.order },
     };
   } catch (error) {
-    console.error('addGalleryImage error:', error);
+    logError('addGalleryImage error', error, { action: 'addGalleryImage' });
     return {
       success: false,
       error: {
@@ -496,7 +497,7 @@ export async function removeGalleryImage(
       data: { removed: true },
     };
   } catch (error) {
-    console.error('removeGalleryImage error:', error);
+    logError('removeGalleryImage error', error, { action: 'removeGalleryImage' });
     return {
       success: false,
       error: {

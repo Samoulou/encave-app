@@ -5,6 +5,17 @@ import Link from 'next/link';
 import { ArrowLeft, Wine } from 'lucide-react';
 import { WineryOnboardingForm } from '@/components/features/winery/WineryOnboardingForm';
 import { AnimatedProgressBar } from '@/components/shared/AnimatedProgressBar';
+import { generatePageMetadata } from '@/lib/seo/metadata';
+import type { Locale } from '@/i18n/routing';
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  return generatePageMetadata({
+    locale: locale as Locale,
+    namespace: 'metadata.onboarding',
+    noIndex: true,
+  });
+}
 
 export default async function WineryOnboardingPage() {
   const session = await auth();

@@ -15,6 +15,17 @@ import {
   ModifyBookingCard,
   ConfirmationActions,
 } from '@/components/features/booking/confirmation';
+import { generatePageMetadata } from '@/lib/seo/metadata';
+import type { Locale } from '@/i18n/routing';
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  return generatePageMetadata({
+    locale: locale as Locale,
+    namespace: 'metadata.booking.confirmation',
+    noIndex: true,
+  });
+}
 
 interface ConfirmationPageProps {
   params: Promise<{ id: string; locale: string }>;

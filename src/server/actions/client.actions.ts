@@ -7,6 +7,7 @@ import { db } from '@/server/db';
 import { auth } from '@/server/auth';
 import { BookingStatus, Locale } from '@prisma/client';
 import type { ActionResult } from '@/types/actions';
+import { logError } from '@/lib/logger';
 import { processRefund } from '@/server/services/payment.service';
 import {
   sendBookingCancellationEmail,
@@ -110,7 +111,7 @@ export async function cancelClientBooking(
         refundAmount = refundResult.amount;
         stripeRefundId = refundResult.refundId;
       } catch (refundError) {
-        console.error('Refund processing error:', refundError);
+        logError('Refund processing error', refundError, { action: 'cancelClientBooking', bookingId });
         return {
           success: false,
           error: {
@@ -173,7 +174,7 @@ export async function cancelClientBooking(
       },
     };
   } catch (error) {
-    console.error('cancelClientBooking error:', error);
+    logError('cancelClientBooking error', error, { action: 'cancelClientBooking', bookingId });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to cancel booking' },
@@ -223,7 +224,7 @@ export async function updateClientProfile(
       data: { name, preferredLocale },
     };
   } catch (error) {
-    console.error('updateClientProfile error:', error);
+    logError('updateClientProfile error', error, { action: 'updateClientProfile' });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to update profile' },

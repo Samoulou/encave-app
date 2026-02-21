@@ -1,4 +1,3 @@
-import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
@@ -9,11 +8,18 @@ import { BookingsSummary } from './BookingsSummary';
 import { BookingsFiltersSection } from './BookingsFiltersSection';
 import { BookingsTableSection } from './BookingsTableSection';
 import { BookingsPageHeader } from './BookingsPageHeader';
+import { generatePageMetadata } from '@/lib/seo/metadata';
+import type { Locale } from '@/i18n/routing';
 
-export const metadata: Metadata = {
-  title: 'Bookings | EnCave Dashboard',
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  return generatePageMetadata({
+    locale: locale as Locale,
+    path: '/dashboard/bookings',
+    namespace: 'metadata.dashboard.bookings',
+    noIndex: true,
+  });
+}
 
 interface PageProps {
   searchParams: Promise<{

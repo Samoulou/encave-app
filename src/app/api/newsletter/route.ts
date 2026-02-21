@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/server/db';
 import { checkRateLimit, type RateLimitConfig } from '@/server/services/rate-limit.service';
+import { logError } from '@/lib/logger';
 
 const newsletterSchema = z.object({
   email: z.string().email('Adresse email invalide'),
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('[Newsletter] Error:', error);
+    logError('Newsletter subscription error', error, { action: 'newsletter' });
     return NextResponse.json(
       { error: 'Une erreur est survenue. Veuillez réessayer.' },
       { status: 500 }
