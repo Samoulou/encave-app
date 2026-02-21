@@ -110,7 +110,8 @@
     "earnings": "Einnahmen",
     "settings": "Einstellungen",
     "messages": "Nachrichten",
-    "backToHome": "Zuruck zur Startseite"
+    "backToHome": "Zuruck zur Startseite",
+    "myBookings": "Meine Buchungen"
   },
   "locale": {
     "fr": "Francais",
@@ -655,7 +656,8 @@
     "needToModify": "Änderung erforderlich?",
     "modifyDescription": "Sie können Ihre Buchung bis zu 24 Stunden vor dem Erlebnis stornieren oder verschieben.",
     "manageBooking": "Buchung verwalten",
-    "returnToExperiences": "Zurück zu Erlebnissen"
+    "returnToExperiences": "Zurück zu Erlebnissen",
+    "viewMyBookings": "Meine Buchungen ansehen"
   },
   "cancellation": {
     "title": "Stornierungsbedingungen",

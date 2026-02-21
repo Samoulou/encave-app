@@ -20,7 +20,6 @@ export async function generateMetadata({ params }: WineriesPageProps): Promise<M
 }
 
 export default async function WineriesPage({
-  params,
   searchParams,
 }: WineriesPageProps) {
   const [{ commune }, t] = await Promise.all([

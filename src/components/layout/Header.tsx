@@ -41,6 +41,9 @@ export async function Header() {
           {userRole === 'WINEMAKER' && (
             <NavLink href="/dashboard">{t('dashboard')}</NavLink>
           )}
+          {userRole === 'CLIENT' && (
+            <NavLink href="/dashboard/my-bookings">{t('myBookings')}</NavLink>
+          )}
         </nav>
 
         {/* Desktop auth section - hidden on mobile */}
@@ -48,7 +51,7 @@ export async function Header() {
           <LocaleSwitcher />
           <div className="h-5 w-px bg-slate-200" aria-hidden="true" />
           {session?.user ? (
-            <UserMenu userName={session.user.name} />
+            <UserMenu userName={session.user.name} userRole={userRole} />
           ) : (
             <div className="flex items-center gap-3">
               <Button variant="ghost" asChild>

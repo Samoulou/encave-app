@@ -110,7 +110,8 @@
     "earnings": "Earnings",
     "settings": "Settings",
     "messages": "Messages",
-    "backToHome": "Back to Home"
+    "backToHome": "Back to Home",
+    "myBookings": "My Bookings"
   },
   "locale": {
     "fr": "Francais",
@@ -655,7 +656,8 @@
     "needToModify": "Need to modify?",
     "modifyDescription": "You can cancel or reschedule your booking up to 24 hours before the experience.",
     "manageBooking": "Manage Booking",
-    "returnToExperiences": "Return to Experiences"
+    "returnToExperiences": "Return to Experiences",
+    "viewMyBookings": "View My Bookings"
   },
   "cancellation": {
     "title": "Cancellation Policy",

@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { format } from 'date-fns';
-import { ArrowLeft, Clock } from 'lucide-react';
+import { ArrowLeft, CalendarCheck, Clock } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { db } from '@/server/db';
 import { BookingStatus } from '@prisma/client';
@@ -189,13 +189,20 @@ export default async function ConfirmationPage({ params }: ConfirmationPageProps
       </div>
 
       {/* Bottom CTA Bar */}
-      <div className="fixed bottom-0 left-0 right-0 w-full flex justify-center py-8 pb-12 bg-gradient-to-t from-[#f8f6f6] to-transparent pointer-events-none">
+      <div className="fixed bottom-0 left-0 right-0 w-full flex justify-center gap-6 py-8 pb-12 bg-gradient-to-t from-[#f8f6f6] to-transparent pointer-events-none">
         <Link
           href={`/${locale}/experiences`}
           className="inline-flex items-center gap-2 text-[#915564] hover:text-primary transition-colors font-semibold pointer-events-auto"
         >
           <ArrowLeft className="size-4" />
           {t('returnToExperiences')}
+        </Link>
+        <Link
+          href={`/${locale}/dashboard/my-bookings`}
+          className="inline-flex items-center gap-2 text-[#915564] hover:text-primary transition-colors font-semibold pointer-events-auto"
+        >
+          <CalendarCheck className="size-4" />
+          {t('viewMyBookings')}
         </Link>
       </div>
     </div>

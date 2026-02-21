@@ -100,6 +100,15 @@ export function MobileNav({ isAuthenticated, userName, userRole }: MobileNavProp
               {t('dashboard')}
             </Link>
           )}
+          {userRole === 'CLIENT' && (
+            <Link
+              href="/dashboard/my-bookings"
+              onClick={closeMenu}
+              className="text-lg font-medium text-slate-700 hover:text-burgundy-600 hover:bg-burgundy-50 transition-colors py-3 px-3 rounded-lg"
+            >
+              {t('myBookings')}
+            </Link>
+          )}
 
           <div className="border-t border-stone-200 my-4" aria-hidden="true" />
 

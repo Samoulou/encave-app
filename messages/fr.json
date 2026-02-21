@@ -110,7 +110,8 @@
     "earnings": "Revenus",
     "settings": "Paramètres",
     "messages": "Messages",
-    "backToHome": "Retour à l'accueil"
+    "backToHome": "Retour à l'accueil",
+    "myBookings": "Mes réservations"
   },
   "locale": {
     "fr": "Français",
@@ -655,7 +656,8 @@
     "needToModify": "Besoin de modifier ?",
     "modifyDescription": "Vous pouvez annuler ou reporter votre réservation jusqu'à 24 heures avant l'expérience.",
     "manageBooking": "Gérer la réservation",
-    "returnToExperiences": "Retour aux expériences"
+    "returnToExperiences": "Retour aux expériences",
+    "viewMyBookings": "Voir mes réservations"
   },
   "cancellation": {
     "title": "Conditions d'annulation",
