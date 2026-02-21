@@ -375,6 +375,7 @@
       "searchPlaceholder": "Rechercher des expériences par nom..."
     },
     "notFound": "Expérience non trouvée",
+    "upTo": "Jusqu'à {count}",
     "backToExperiences": "Retour aux expériences",
     "newExperience": "Nouvelle expérience",
     "generalInfo": "Informations générales",
@@ -737,6 +738,15 @@
     "galleryHelpFull": "Les images carrées fonctionnent mieux. Vous pouvez faire glisser les photos pour les réorganiser (bientôt disponible).",
     "uploadCoverPhoto": "Télécharger la photo de couverture",
     "swissFormatShort": "Format suisse: +41 XX XXX XX XX",
+    "backToAllWineries": "Retour aux domaines",
+    "aboutTheWinery": "À propos du domaine",
+    "gallery": "Galerie",
+    "viewOnMap": "Voir sur la carte",
+    "comingSoonTitle": "Bientôt : Réserver des expériences",
+    "comingSoonDescription": "Les dégustations et visites seront bientôt disponibles à la réservation.",
+    "notFoundTitle": "Domaine non trouvé",
+    "experiences": "Expériences",
+    "noExperiences": "Aucune expérience disponible pour le moment.",
     "onboarding": {
       "congratulations": "Félicitations!",
       "submittedForVerification": "Votre domaine <strong>{name}</strong> a été soumis pour vérification.",
@@ -948,7 +958,15 @@
     "experiencesFound": "expériences trouvées",
     "pageOf": "page {page} sur {totalPages}",
     "sortBy": "Trier par",
-    "noExperiencesAtLocation": "Aucune expérience à {location}, mais découvrez ces caves à proximité"
+    "noExperiencesAtLocation": "Aucune expérience à {location}, mais découvrez ces caves à proximité",
+    "sort": {
+      "distance": "Distance",
+      "relevance": "Pertinence",
+      "priceLowToHigh": "Prix : croissant",
+      "priceHighToLow": "Prix : décroissant",
+      "newestFirst": "Plus récents"
+    },
+    "loadingExperiences": "Chargement des expériences viticoles..."
   },
   "errors": {
     "somethingWentWrong": "Une erreur s'est produite!",
@@ -986,7 +1004,14 @@
   },
   "wineries": {
     "comingSoon": "Vignerons bientôt disponibles...",
-    "filterByCommune": "Filtrer par commune"
+    "filterByCommune": "Filtrer par commune",
+    "title": "Domaines en Valais",
+    "subtitle": "Découvrez des vignerons d'exception dans la première région viticole de Suisse. Chaque domaine propose des expériences uniques ancrées dans des siècles de tradition.",
+    "showingCount": "Affichage de {count} {count, plural, =1 {domaine} other {domaines}}",
+    "discover": "Découvrir",
+    "allCommunes": "Toutes les communes",
+    "emptyDescription": "Nous travaillons avec les vignerons locaux pour vous proposer des expériences incroyables. Revenez bientôt !",
+    "heroImageAlt": "Vignobles en Valais, Suisse"
   },
   "onboarding": {
     "step": "Étape {current} sur {total}"
@@ -1444,6 +1469,17 @@
       "degustation": "Dégustation en Valais",
       "cepages": "Cépages Valaisans"
     }
+  },
+  "footer": {
+    "allRightsReserved": "Tous droits réservés.",
+    "navigation": "Navigation",
+    "legal": "Mentions légales",
+    "brandDescription": "Plateforme de réservation d'expériences viticoles en Valais, Suisse."
+  },
+  "healthStatus": {
+    "serviceUnavailable": "Service indisponible",
+    "checkingStatus": "Vérification en cours...",
+    "allSystemsOperational": "Tous les systèmes opérationnels"
   },
   "clientDashboard": {
     "nav": {

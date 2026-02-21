@@ -1,11 +1,13 @@
-import Link from 'next/link';
+import Image from 'next/image';
+import { Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
-import { Wine, Mail } from 'lucide-react';
+import { Mail } from 'lucide-react';
 
 export function Footer() {
   const t = useTranslations('landing.footer');
   const tNav = useTranslations('nav');
   const tLegal = useTranslations('legal');
+  const tFooter = useTranslations('footer');
 
   return (
     <footer className="bg-slate-900 text-slate-300">
@@ -14,17 +16,22 @@ export function Footer() {
           {/* Brand */}
           <div className="sm:col-span-2 lg:col-span-1">
             <Link href="/" className="flex items-center gap-2">
-              <Wine className="h-6 w-6 text-burgundy-400" aria-hidden="true" />
-              <span className="font-display text-xl font-bold text-white">EnCave</span>
+              <Image
+                src="/icons/encave-logo.png"
+                alt="EnCave"
+                width={160}
+                height={46}
+                className="h-11 w-auto brightness-0 invert"
+              />
             </Link>
             <p className="mt-4 text-sm text-slate-400 max-w-xs">
-              Plateforme de réservation d&apos;expériences viticoles en Valais, Suisse.
+              {tFooter('brandDescription')}
             </p>
           </div>
 
           {/* Navigation */}
           <div>
-            <h3 className="font-display text-sm font-semibold text-white mb-4">Navigation</h3>
+            <h3 className="font-display text-sm font-semibold text-white mb-4">{tFooter('navigation')}</h3>
             <ul className="space-y-3 text-sm">
               <li>
                 <Link href="/" className="hover:text-white transition-colors">
@@ -68,7 +75,7 @@ export function Footer() {
 
           {/* Legal */}
           <div>
-            <h3 className="font-display text-sm font-semibold text-white mb-4">Legal</h3>
+            <h3 className="font-display text-sm font-semibold text-white mb-4">{tFooter('legal')}</h3>
             <ul className="space-y-3 text-sm">
               <li>
                 <Link href="/legal/privacy" className="hover:text-white transition-colors">
@@ -92,7 +99,7 @@ export function Footer() {
         {/* Bottom */}
         <div className="mt-12 pt-8 border-t border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-sm text-slate-400">
-            © {new Date().getFullYear()} EnCave. All rights reserved.
+            © {new Date().getFullYear()} EnCave. {tFooter('allRightsReserved')}
           </p>
           <a
             href="mailto:samuel@encave.ch"

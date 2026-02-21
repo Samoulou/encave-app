@@ -49,6 +49,12 @@ const securityHeaders = [
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  experimental: {
+    // Externalize pino and thread-stream to prevent worker path resolution issues
+    // when Next.js bundles them into vendor-chunks (thread-stream spawns workers
+    // using __dirname which breaks when bundled)
+    serverComponentsExternalPackages: ['pino', 'pino-pretty', 'thread-stream'],
+  },
   images: {
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [

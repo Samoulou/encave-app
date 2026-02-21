@@ -2,7 +2,8 @@ import dynamic from 'next/dynamic';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { redirect, notFound } from 'next/navigation';
-import Link from 'next/link';
+import { getLocale } from 'next-intl/server';
+import { Link } from '@/i18n/navigation';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
 import { Skeleton } from '@/components/shared/Skeleton';
 import { Button } from '@/components/ui/button';
@@ -54,7 +55,8 @@ export default async function EditExperiencePage({ params }: PageProps) {
   const session = await auth();
 
   if (!session?.user) {
-    redirect('/login');
+    const locale = await getLocale();
+    redirect(`/${locale}/login`);
   }
 
   const { id } = await params;
@@ -66,11 +68,13 @@ export default async function EditExperiencePage({ params }: PageProps) {
   });
 
   if (!winery) {
-    redirect('/onboarding/winery');
+    const locale = await getLocale();
+    redirect(`/${locale}/onboarding/winery`);
   }
 
   if (winery.status !== 'VERIFIED') {
-    redirect('/dashboard');
+    const locale = await getLocale();
+    redirect(`/${locale}/dashboard`);
   }
 
   // Get experience

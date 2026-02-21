@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 interface HealthResponse {
   status: string;
@@ -8,6 +9,7 @@ interface HealthResponse {
 }
 
 export function HealthStatus() {
+  const t = useTranslations('healthStatus');
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [error, setError] = useState<boolean>(false);
 
@@ -36,7 +38,7 @@ export function HealthStatus() {
     return (
       <div className="flex items-center gap-2 text-sm text-red-700">
         <span className="h-2 w-2 rounded-full bg-red-600" />
-        <span>Service unavailable</span>
+        <span>{t('serviceUnavailable')}</span>
       </div>
     );
   }
@@ -45,7 +47,7 @@ export function HealthStatus() {
     return (
       <div className="flex items-center gap-2 text-sm text-slate-600">
         <span className="h-2 w-2 animate-pulse rounded-full bg-slate-400" />
-        <span>Checking status...</span>
+        <span>{t('checkingStatus')}</span>
       </div>
     );
   }
@@ -53,7 +55,7 @@ export function HealthStatus() {
   return (
     <div className="flex items-center gap-2 text-sm text-green-700">
       <span className="h-2 w-2 rounded-full bg-green-600" />
-      <span>All systems operational</span>
+      <span>{t('allSystemsOperational')}</span>
     </div>
   );
 }

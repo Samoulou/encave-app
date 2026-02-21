@@ -1,5 +1,6 @@
 import { auth } from '@/server/auth';
 import { redirect } from 'next/navigation';
+import { getLocale } from 'next-intl/server';
 
 export default async function AuthLayout({
   children,
@@ -10,7 +11,8 @@ export default async function AuthLayout({
 
   // Redirect to home if already logged in
   if (session?.user) {
-    redirect('/');
+    const locale = await getLocale();
+    redirect(`/${locale}`);
   }
 
   return <>{children}</>;

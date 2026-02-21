@@ -1,7 +1,8 @@
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
+import { getLocale } from 'next-intl/server';
+import { Link } from '@/i18n/navigation';
 import { Clock, Mail, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SuccessCheckmark } from '@/components/shared/SuccessCheckmark';
@@ -23,7 +24,8 @@ export default async function WineryConfirmationPage() {
   const session = await auth();
 
   if (!session?.user) {
-    redirect('/login');
+    const locale = await getLocale();
+    redirect(`/${locale}/login`);
   }
 
   // Get the user's winery
@@ -31,13 +33,15 @@ export default async function WineryConfirmationPage() {
     where: { userId: session.user.id },
   });
 
+  const locale = await getLocale();
+
   if (!winery) {
-    redirect('/onboarding/winery');
+    redirect(`/${locale}/onboarding/winery`);
   }
 
   // If already verified, redirect to dashboard
   if (winery.status === 'VERIFIED') {
-    redirect('/dashboard');
+    redirect(`/${locale}/dashboard`);
   }
 
   const t = await getTranslations('winery.onboarding');

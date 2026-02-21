@@ -9,7 +9,7 @@ interface ExperienceDetailHeaderProps {
   wineryName: string;
   winerySlug: string;
   commune: string;
-  rating?: number;
+  rating?: number | null;
   reviewCount?: number;
 }
 
@@ -18,7 +18,7 @@ export function ExperienceDetailHeader({
   wineryName,
   winerySlug,
   commune,
-  rating = 4.9,
+  rating,
   reviewCount = 0,
 }: ExperienceDetailHeaderProps) {
   const t = useTranslations('experience');
@@ -35,14 +35,18 @@ export function ExperienceDetailHeader({
         >
           {wineryName}
         </Link>
-        <span className="text-gray-300">•</span>
-        <div className="flex items-center gap-1">
-          <Star className="h-[18px] w-[18px] text-yellow-500 fill-yellow-500" />
-          <span className="font-bold text-[#1a0f12]">{rating.toFixed(1)}</span>
-          {reviewCount > 0 && (
-            <span className="text-gray-500">({t('reviews', { count: reviewCount })})</span>
-          )}
-        </div>
+        {rating != null && rating > 0 && (
+          <>
+            <span className="text-gray-300">•</span>
+            <div className="flex items-center gap-1">
+              <Star className="h-[18px] w-[18px] text-yellow-500 fill-yellow-500" />
+              <span className="font-bold text-[#1a0f12]">{rating.toFixed(1)}</span>
+              {reviewCount > 0 && (
+                <span className="text-gray-500">({t('reviews', { count: reviewCount })})</span>
+              )}
+            </div>
+          </>
+        )}
         <span className="text-gray-300">•</span>
         <div className="flex items-center gap-1 text-gray-500">
           <MapPin className="h-[18px] w-[18px]" />

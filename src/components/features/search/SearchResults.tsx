@@ -15,12 +15,12 @@ import type { ExperienceSearchResult } from '@/server/queries/experience.queries
 
 type SortOption = 'relevance' | 'price_asc' | 'price_desc' | 'newest' | 'distance';
 
-const SORT_OPTIONS: { value: SortOption; label: string; locationOnly?: boolean }[] = [
-  { value: 'distance', label: 'Distance', locationOnly: true },
-  { value: 'relevance', label: 'Relevance' },
-  { value: 'price_asc', label: 'Price: Low to High' },
-  { value: 'price_desc', label: 'Price: High to Low' },
-  { value: 'newest', label: 'Newest First' },
+const SORT_OPTIONS: { value: SortOption; labelKey: string; locationOnly?: boolean }[] = [
+  { value: 'distance', labelKey: 'sort.distance', locationOnly: true },
+  { value: 'relevance', labelKey: 'sort.relevance' },
+  { value: 'price_asc', labelKey: 'sort.priceLowToHigh' },
+  { value: 'price_desc', labelKey: 'sort.priceHighToLow' },
+  { value: 'newest', labelKey: 'sort.newestFirst' },
 ];
 
 interface PaginationInfo {
@@ -93,7 +93,7 @@ export function SearchResults({
             <SelectContent>
               {availableSortOptions.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
-                  {option.label}
+                  {t(option.labelKey)}
                 </SelectItem>
               ))}
             </SelectContent>

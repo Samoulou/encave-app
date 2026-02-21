@@ -1,7 +1,8 @@
 import { auth } from '@/server/auth';
 import { redirect } from 'next/navigation';
+import { getLocale } from 'next-intl/server';
+import { Link } from '@/i18n/navigation';
 import { db } from '@/server/db';
-import Link from 'next/link';
 import { Home, Building2, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -19,7 +20,8 @@ export default async function AdminLayout({
   const session = await auth();
 
   if (!session?.user || session.user.role !== 'ADMIN') {
-    redirect('/');
+    const locale = await getLocale();
+    redirect(`/${locale}`);
   }
 
   const pendingCount = await getPendingCount();

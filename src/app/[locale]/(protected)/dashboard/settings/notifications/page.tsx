@@ -1,5 +1,6 @@
 import { auth } from '@/server/auth';
 import { redirect } from 'next/navigation';
+import { getLocale } from 'next-intl/server';
 import { getNotificationPreferences } from '@/server/actions/notifications';
 import { NotificationPreferencesForm } from '@/components/features/settings/NotificationPreferencesForm';
 import { generatePageMetadata } from '@/lib/seo/metadata';
@@ -18,13 +19,15 @@ export default async function NotificationsPage() {
   const session = await auth();
 
   if (!session?.user) {
-    redirect('/login');
+    const locale = await getLocale();
+    redirect(`/${locale}/login`);
   }
 
   const result = await getNotificationPreferences();
 
   if (!result.success) {
-    redirect('/dashboard');
+    const locale = await getLocale();
+    redirect(`/${locale}/dashboard`);
   }
 
   return (

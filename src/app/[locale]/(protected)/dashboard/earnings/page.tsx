@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { redirect } from 'next/navigation';
+import { getLocale } from 'next-intl/server';
 import { AlertTriangle } from 'lucide-react';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
 import { EarningsPageHeader } from '@/components/features/earnings/EarningsPageHeader';
@@ -34,7 +35,8 @@ export default async function EarningsPage({ searchParams }: PageProps) {
   const [session, params] = await Promise.all([auth(), searchParams]);
 
   if (!session?.user) {
-    redirect('/login');
+    const locale = await getLocale();
+    redirect(`/${locale}/login`);
   }
 
   // Get winery for the user - needs session.user.id
@@ -44,7 +46,8 @@ export default async function EarningsPage({ searchParams }: PageProps) {
   });
 
   if (!winery) {
-    redirect('/onboarding/winery');
+    const locale = await getLocale();
+    redirect(`/${locale}/onboarding/winery`);
   }
 
   return (

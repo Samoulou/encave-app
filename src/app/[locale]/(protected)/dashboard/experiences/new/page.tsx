@@ -1,6 +1,7 @@
 import dynamic from 'next/dynamic';
 import { auth } from '@/server/auth';
 import { redirect } from 'next/navigation';
+import { getLocale } from 'next-intl/server';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
 import { Skeleton } from '@/components/shared/Skeleton';
 import { generatePageMetadata } from '@/lib/seo/metadata';
@@ -35,7 +36,8 @@ export default async function NewExperiencePage() {
   const session = await auth();
 
   if (!session?.user) {
-    redirect('/login');
+    const locale = await getLocale();
+    redirect(`/${locale}/login`);
   }
 
   return (

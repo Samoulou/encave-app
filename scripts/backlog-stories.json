@@ -1,0 +1,278 @@
+[
+  {
+    "id": "BUG-001",
+    "branch": "fix/bug-001-experience-detail-crash",
+    "phase": 1,
+    "title": "Page Experience Detail - Crash Serveur (500)"
+  },
+  {
+    "id": "BUG-002",
+    "branch": "fix/bug-002-auth-redirect-loop",
+    "phase": 1,
+    "title": "Boucle de Redirection Auth (Session Expiree)"
+  },
+  {
+    "id": "US-TECH-002",
+    "branch": "fix/tech-002-refactor-middleware-auth",
+    "phase": 1,
+    "title": "Refactorer le middleware auth"
+  },
+  {
+    "id": "US-TECH-003",
+    "branch": "fix/tech-003-protected-layout-locale-redirect",
+    "phase": 1,
+    "title": "Protected layout - redirect avec locale"
+  },
+  {
+    "id": "US-TECH-004",
+    "branch": "fix/tech-004-auth-layout-locale-redirect",
+    "phase": 1,
+    "title": "Auth layout - redirect avec locale"
+  },
+  {
+    "id": "BUG-003",
+    "branch": "fix/bug-003-footer-locale-links",
+    "phase": 1,
+    "title": "Liens Footer Sans Prefixe de Locale"
+  },
+  {
+    "id": "BUG-004",
+    "branch": "fix/bug-004-experience-cards-locale",
+    "phase": 1,
+    "title": "Liens Experience Cards Sans Locale"
+  },
+  {
+    "id": "BUG-005",
+    "branch": "fix/bug-005-winery-cards-locale",
+    "phase": 1,
+    "title": "Liens Winery Cards Sans Locale"
+  },
+  {
+    "id": "BUG-008",
+    "branch": "fix/bug-008-back-home-locale",
+    "phase": 1,
+    "title": "Retour a l'accueil sans locale"
+  },
+  {
+    "id": "US-UX-005",
+    "branch": "fix/ux-005-winery-detail-header-footer",
+    "phase": 1,
+    "title": "Header/Footer sur Winery Detail"
+  },
+  {
+    "id": "US-I18N-001",
+    "branch": "feat/i18n-001-translate-experiences-listing",
+    "phase": 2,
+    "title": "Traduire la page Experiences Listing"
+  },
+  {
+    "id": "US-I18N-002",
+    "branch": "feat/i18n-002-translate-wineries-listing",
+    "phase": 2,
+    "title": "Traduire la page Wineries Listing"
+  },
+  {
+    "id": "US-I18N-003",
+    "branch": "feat/i18n-003-translate-winery-detail",
+    "phase": 2,
+    "title": "Traduire la page Winery Detail"
+  },
+  {
+    "id": "US-I18N-004",
+    "branch": "feat/i18n-004-translate-homepage-residual",
+    "phase": 2,
+    "title": "Traduire les elements residuels Homepage"
+  },
+  {
+    "id": "US-I18N-005",
+    "branch": "feat/i18n-005-translate-breadcrumbs",
+    "phase": 2,
+    "title": "Traduire les Breadcrumbs"
+  },
+  {
+    "id": "US-I18N-006",
+    "branch": "feat/i18n-006-translate-seo-badges",
+    "phase": 2,
+    "title": "Traduire les badges type d'experience (SEO)"
+  },
+  {
+    "id": "US-UX-001",
+    "branch": "feat/ux-001-winery-experiences-display",
+    "phase": 2,
+    "title": "Afficher les experiences sur la page Winery Detail"
+  },
+  {
+    "id": "US-UX-003",
+    "branch": "fix/ux-003-remove-fake-ratings",
+    "phase": 2,
+    "title": "Retirer les notes factices ou afficher Nouveau"
+  },
+  {
+    "id": "US-UX-002",
+    "branch": "feat/ux-002-image-fallback-placeholder",
+    "phase": 2,
+    "title": "Fallback/Placeholder pour images cassees"
+  },
+  {
+    "id": "US-UX-004",
+    "branch": "feat/ux-004-legal-pages-formatting",
+    "phase": 2,
+    "title": "Formatage des pages legales"
+  },
+  {
+    "id": "US-FEAT-002",
+    "branch": "feat/feat-002-cookie-consent-gdpr",
+    "phase": 3,
+    "title": "Cookie Consent Banner (GDPR)"
+  },
+  {
+    "id": "US-UX-006",
+    "branch": "feat/ux-006-forgot-password-flow",
+    "phase": 3,
+    "title": "Flow automatise Mot de passe oublie"
+  },
+  {
+    "id": "US-FEAT-006",
+    "branch": "feat/feat-006-self-service-cancellation",
+    "phase": 3,
+    "title": "Annulation self-service"
+  },
+  {
+    "id": "US-UX-007",
+    "branch": "feat/ux-007-functional-search-bar",
+    "phase": 3,
+    "title": "Barre de recherche fonctionnelle"
+  },
+  {
+    "id": "US-FEAT-005",
+    "branch": "feat/feat-005-search-results-page",
+    "phase": 3,
+    "title": "Resultats de recherche"
+  },
+  {
+    "id": "US-FEAT-007",
+    "branch": "feat/feat-007-date-availability-filter",
+    "phase": 3,
+    "title": "Filtrage par disponibilite/date"
+  },
+  {
+    "id": "US-FEAT-001",
+    "branch": "feat/feat-001-review-rating-system",
+    "phase": 4,
+    "title": "Systeme d'avis et notes"
+  },
+  {
+    "id": "US-FEAT-004",
+    "branch": "feat/feat-004-map-view",
+    "phase": 4,
+    "title": "Vue carte/map pour explorer"
+  },
+  {
+    "id": "US-FEAT-003",
+    "branch": "feat/feat-003-multilingual-content",
+    "phase": 4,
+    "title": "Contenu multilingue experiences"
+  },
+  {
+    "id": "US-TECH-005",
+    "branch": "feat/tech-005-cdn-image-migration",
+    "phase": 4,
+    "title": "Migration images vers CDN propre"
+  },
+  {
+    "id": "US-FEAT-008",
+    "branch": "feat/feat-008-favorites-wishlist",
+    "phase": 4,
+    "title": "Favoris / Wishlist"
+  },
+  {
+    "id": "US-FEAT-009",
+    "branch": "feat/feat-009-social-sharing",
+    "phase": 4,
+    "title": "Partage social"
+  },
+  {
+    "id": "US-FEAT-010",
+    "branch": "feat/feat-010-winery-photo-gallery",
+    "phase": 4,
+    "title": "Galerie photos domaine"
+  },
+  {
+    "id": "US-FEAT-011",
+    "branch": "feat/feat-011-social-proof",
+    "phase": 4,
+    "title": "Social proof / Temoignages"
+  },
+  {
+    "id": "US-FEAT-012",
+    "branch": "feat/feat-012-email-template",
+    "phase": 4,
+    "title": "Template email de confirmation visuel"
+  },
+  {
+    "id": "US-FEAT-013",
+    "branch": "feat/feat-013-homepage-faq",
+    "phase": 4,
+    "title": "FAQ sur la Homepage"
+  },
+  {
+    "id": "US-FEAT-014",
+    "branch": "feat/feat-014-user-avatar-upload",
+    "phase": 4,
+    "title": "Upload avatar profil utilisateur"
+  },
+  {
+    "id": "US-FEAT-015",
+    "branch": "feat/feat-015-gift-cards",
+    "phase": 5,
+    "title": "Cartes cadeaux / Bons"
+  },
+  {
+    "id": "US-FEAT-016",
+    "branch": "feat/feat-016-group-booking-request",
+    "phase": 5,
+    "title": "Demande de reservation groupe"
+  },
+  {
+    "id": "US-FEAT-017",
+    "branch": "feat/feat-017-blog",
+    "phase": 5,
+    "title": "Blog / Contenu editorial"
+  },
+  {
+    "id": "US-FEAT-018",
+    "branch": "feat/feat-018-push-notifications",
+    "phase": 5,
+    "title": "Notifications push"
+  },
+  {
+    "id": "US-FEAT-019",
+    "branch": "feat/feat-019-loyalty-program",
+    "phase": 5,
+    "title": "Programme fidelite"
+  },
+  {
+    "id": "US-FEAT-020",
+    "branch": "feat/feat-020-personalized-recommendations",
+    "phase": 5,
+    "title": "Recommandations personnalisees"
+  },
+  {
+    "id": "US-FEAT-021",
+    "branch": "feat/feat-021-live-chat",
+    "phase": 5,
+    "title": "Chat en direct"
+  },
+  {
+    "id": "US-FEAT-022",
+    "branch": "feat/feat-022-dark-mode",
+    "phase": 5,
+    "title": "Mode sombre"
+  },
+  {
+    "id": "US-TECH-001",
+    "branch": "feat/tech-001-nextjs-15-migration",
+    "phase": 5,
+    "title": "Mise a jour Next.js 14 -> 15"
+  }
+]

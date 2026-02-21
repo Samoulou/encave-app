@@ -1,4 +1,4 @@
-import { Wine } from 'lucide-react';
+import Image from 'next/image';
 import { getTranslations } from 'next-intl/server';
 import { auth } from '@/server/auth';
 import { Link } from '@/i18n/navigation';
@@ -21,12 +21,14 @@ export async function Header() {
           className="flex items-center gap-2 group"
           aria-label={t('goToHomepage')}
         >
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-burgundy-600 text-white transition-colors group-hover:bg-burgundy-700">
-            <Wine className="h-5 w-5" aria-hidden="true" />
-          </div>
-          <span className="font-display text-2xl font-semibold text-burgundy-800">
-            EnCave
-          </span>
+          <Image
+            src="/icons/encave-logo.png"
+            alt="EnCave"
+            width={200}
+            height={56}
+            className="h-14 w-auto"
+            priority
+          />
         </Link>
 
         <nav aria-label={t('mainNavigation')} className="hidden md:flex items-center gap-8">

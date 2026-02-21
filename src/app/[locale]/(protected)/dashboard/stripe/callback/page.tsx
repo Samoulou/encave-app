@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { getLocale } from 'next-intl/server';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { syncStripeAccountStatus } from '@/server/services/payment.service';
@@ -23,7 +24,8 @@ export default async function StripeCallbackPage({ searchParams }: PageProps) {
   const session = await auth();
 
   if (!session?.user) {
-    redirect('/login');
+    const locale = await getLocale();
+    redirect(`/${locale}/login`);
   }
 
   const params = await searchParams;
@@ -41,7 +43,8 @@ export default async function StripeCallbackPage({ searchParams }: PageProps) {
   });
 
   if (!winery?.stripeAccountId) {
-    redirect('/dashboard');
+    const locale = await getLocale();
+    redirect(`/${locale}/dashboard`);
   }
 
   // Sync status from Stripe

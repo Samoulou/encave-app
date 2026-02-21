@@ -11,8 +11,7 @@ const protectedPatterns = ['/dashboard', '/onboarding'];
 // Routes that require ADMIN role (without locale prefix)
 const adminPatterns = ['/admin'];
 
-// Routes that should redirect to home if already authenticated (without locale prefix)
-const authPatterns = ['/login', '/register'];
+// Auth routes (login/register) — access control handled server-side in (auth)/layout.tsx
 
 // Helper to extract pathname without locale prefix
 function getPathnameWithoutLocale(pathname: string): string {
@@ -85,10 +84,6 @@ export default async function middleware(request: NextRequest) {
   const isAdminRoute = adminPatterns.some((route) =>
     pathnameWithoutLocale.startsWith(route)
   );
-  const isAuthRoute = authPatterns.some((route) =>
-    pathnameWithoutLocale.startsWith(route)
-  );
-
   // Redirect unauthenticated users from protected routes to login
   if ((isProtectedRoute || isAdminRoute) && !isLoggedIn) {
     const loginUrl = new URL(`/${locale}/login`, request.url);
@@ -96,10 +91,9 @@ export default async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Redirect authenticated users from auth routes to home
-  if (isAuthRoute && isLoggedIn) {
-    return NextResponse.redirect(new URL(`/${locale}`, request.url));
-  }
+  // Note: Auth route access control (redirect if already logged in) is handled
+  // server-side in (auth)/layout.tsx via session validation, not cookie presence.
+  // This avoids redirect loops when session cookies are expired but still present.
 
   // Note: Admin role check requires session data which needs server-side check
   // This will be handled in the admin layout for now

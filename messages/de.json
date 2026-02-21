@@ -375,6 +375,7 @@
       "searchPlaceholder": "Erlebnisse nach Namen suchen..."
     },
     "notFound": "Erlebnis nicht gefunden",
+    "upTo": "Bis zu {count}",
     "backToExperiences": "Zurück zu Erlebnissen",
     "newExperience": "Neues Erlebnis",
     "generalInfo": "Allgemeine Informationen",
@@ -737,6 +738,15 @@
     "galleryHelpFull": "Quadratische Bilder funktionieren am besten. Drag & Drop zum Neuordnen (bald verfügbar).",
     "uploadCoverPhoto": "Titelbild hochladen",
     "swissFormatShort": "Schweizer Format: +41 XX XXX XX XX",
+    "backToAllWineries": "Zurück zu allen Weingütern",
+    "aboutTheWinery": "Über das Weingut",
+    "gallery": "Galerie",
+    "viewOnMap": "Auf Karte anzeigen",
+    "comingSoonTitle": "Demnächst: Erlebnisse buchen",
+    "comingSoonDescription": "Weinverkostungen und Touren werden bald buchbar sein.",
+    "notFoundTitle": "Weingut nicht gefunden",
+    "experiences": "Erlebnisse",
+    "noExperiences": "Noch keine Erlebnisse verfügbar.",
     "onboarding": {
       "congratulations": "Herzlichen Glückwunsch!",
       "submittedForVerification": "Ihr Weingut <strong>{name}</strong> wurde zur Überprüfung eingereicht.",
@@ -948,7 +958,15 @@
     "experiencesFound": "Erlebnisse gefunden",
     "pageOf": "Seite {page} von {totalPages}",
     "sortBy": "Sortieren nach",
-    "noExperiencesAtLocation": "Keine Erlebnisse in {location}, aber entdecken Sie nahegelegene Weinguter"
+    "noExperiencesAtLocation": "Keine Erlebnisse in {location}, aber entdecken Sie nahegelegene Weingüter",
+    "sort": {
+      "distance": "Entfernung",
+      "relevance": "Relevanz",
+      "priceLowToHigh": "Preis: aufsteigend",
+      "priceHighToLow": "Preis: absteigend",
+      "newestFirst": "Neueste zuerst"
+    },
+    "loadingExperiences": "Weinerlebnisse werden geladen..."
   },
   "errors": {
     "somethingWentWrong": "Etwas ist schiefgelaufen!",
@@ -986,7 +1004,14 @@
   },
   "wineries": {
     "comingSoon": "Winzer bald verfügbar...",
-    "filterByCommune": "Nach Gemeinde filtern"
+    "filterByCommune": "Nach Gemeinde filtern",
+    "title": "Weingüter im Wallis",
+    "subtitle": "Entdecken Sie aussergewöhnliche Winzer in der führenden Weinregion der Schweiz. Jedes Weingut bietet einzigartige Erlebnisse, verwurzelt in jahrhundertealter Tradition.",
+    "showingCount": "Zeige {count} {count, plural, =1 {Weingut} other {Weingüter}}",
+    "discover": "Entdecken",
+    "allCommunes": "Alle Gemeinden",
+    "emptyDescription": "Wir arbeiten mit lokalen Winzern zusammen, um Ihnen grossartige Erlebnisse zu bieten. Schauen Sie bald wieder vorbei!",
+    "heroImageAlt": "Weinberge im Wallis, Schweiz"
   },
   "onboarding": {
     "step": "Schritt {current} von {total}"
@@ -1449,6 +1474,17 @@
       "degustation": "Verkostung im Wallis",
       "cepages": "Walliser Rebsorten"
     }
+  },
+  "footer": {
+    "allRightsReserved": "Alle Rechte vorbehalten.",
+    "navigation": "Navigation",
+    "legal": "Rechtliches",
+    "brandDescription": "Buchungsplattform für Weinerlebnisse im Wallis, Schweiz."
+  },
+  "healthStatus": {
+    "serviceUnavailable": "Dienst nicht verfügbar",
+    "checkingStatus": "Status wird überprüft...",
+    "allSystemsOperational": "Alle Systeme betriebsbereit"
   },
   "clientDashboard": {
     "nav": {

@@ -1,6 +1,7 @@
 import { auth } from '@/server/auth';
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
+import { getLocale } from 'next-intl/server';
+import { Link } from '@/i18n/navigation';
 import { Bell, User, Languages, ChevronRight, LucideIcon } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { getTranslations } from 'next-intl/server';
@@ -48,7 +49,8 @@ export default async function SettingsPage() {
   const tCommon = await getTranslations('common');
 
   if (!session?.user) {
-    redirect('/login');
+    const locale = await getLocale();
+    redirect(`/${locale}/login`);
   }
 
   return (

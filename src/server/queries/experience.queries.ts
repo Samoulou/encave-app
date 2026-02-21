@@ -491,6 +491,44 @@ export const getRelatedExperiences = cache(unstable_cache(
 ));
 
 /**
+ * Get published experiences for a specific winery.
+ * Cached for 5 minutes. Wrapped with React.cache for request deduplication.
+ */
+export const getExperiencesByWineryId = cache(unstable_cache(
+  async (wineryId: string, limit: number = 6) => {
+    return db.experience.findMany({
+      where: {
+        wineryId,
+        status: ExperienceStatus.PUBLISHED,
+      },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        type: true,
+        duration: true,
+        price: true,
+        coverPhoto: true,
+        winery: {
+          select: {
+            name: true,
+            slug: true,
+            commune: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
+  },
+  ['experiences-by-winery'],
+  {
+    revalidate: 300, // 5 minutes
+    tags: ['experiences'],
+  }
+));
+
+/**
  * Get featured experiences for landing pages.
  * Cached for 5 minutes. Wrapped with React.cache for request deduplication.
  */

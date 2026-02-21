@@ -1,12 +1,11 @@
 'use client';
 
-import Image from 'next/image';
-import Link from 'next/link';
-import { MapPin, Clock, Wine } from 'lucide-react';
+import { Link } from '@/i18n/navigation';
+import { MapPin, Clock } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { ExperienceType } from '@prisma/client';
 import { formatCHF } from '@/lib/utils/currency';
-import { IMAGE_PLACEHOLDERS } from '@/lib/image-placeholder';
+import { ImageWithFallback } from '@/components/shared/ImageWithFallback';
 
 interface RelatedExperience {
   id: string;
@@ -25,9 +24,10 @@ interface RelatedExperience {
 
 interface RelatedExperiencesProps {
   experiences: RelatedExperience[];
+  title?: string;
 }
 
-export function RelatedExperiences({ experiences }: RelatedExperiencesProps) {
+export function RelatedExperiences({ experiences, title }: RelatedExperiencesProps) {
   const t = useTranslations('experience');
 
   const formatDuration = (minutes: number): string => {
@@ -45,7 +45,7 @@ export function RelatedExperiences({ experiences }: RelatedExperiencesProps) {
   return (
     <section data-testid="related-experiences">
       <h2 className="font-display text-2xl font-semibold text-slate-900">
-        {t('youMightAlsoLike')}
+        {title ?? t('youMightAlsoLike')}
       </h2>
 
       <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -58,21 +58,13 @@ export function RelatedExperiences({ experiences }: RelatedExperiencesProps) {
           >
             {/* Image */}
             <div className="relative aspect-[4/3] overflow-hidden">
-              {experience.coverPhoto ? (
-                <Image
-                  src={experience.coverPhoto}
-                  alt={experience.title}
-                  fill
-                  className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  placeholder="blur"
-                  blurDataURL={IMAGE_PLACEHOLDERS.card}
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-burgundy-100 to-burgundy-200">
-                  <Wine className="h-12 w-12 text-burgundy-400" />
-                </div>
-              )}
+              <ImageWithFallback
+                src={experience.coverPhoto}
+                alt={experience.title}
+                fill
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
 
               {/* Type Badge */}

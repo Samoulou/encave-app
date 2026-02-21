@@ -6,6 +6,7 @@ import {
 import { WineryCard } from '@/components/features/winery/WineryCard';
 import { CommuneFilter } from '@/components/features/winery/CommuneFilter';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { getTranslations } from 'next-intl/server';
 
 interface WineriesContentProps {
   commune?: string;
@@ -16,9 +17,10 @@ interface WineriesContentProps {
  * Designed to be wrapped in Suspense for streaming/progressive loading.
  */
 export async function WineriesContent({ commune }: WineriesContentProps) {
-  const [wineries, communes] = await Promise.all([
+  const [wineries, communes, t] = await Promise.all([
     getVerifiedWineries(commune),
     getDistinctCommunes(),
+    getTranslations('wineries'),
   ]);
 
   return (
@@ -27,7 +29,7 @@ export async function WineriesContent({ commune }: WineriesContentProps) {
       <div className="sticky top-0 z-20 border-b border-stone-200/60 bg-white/95 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4 lg:px-8">
           <span className="text-sm font-medium text-slate-600">
-            Showing <span className="text-burgundy-700">{wineries.length}</span> winer{wineries.length === 1 ? 'y' : 'ies'}
+            {t('showingCount', { count: wineries.length })}
           </span>
           {communes.length > 0 && (
             <Suspense fallback={<div className="h-11 w-[200px] bg-stone-100 rounded-lg animate-pulse" />}>
@@ -41,8 +43,8 @@ export async function WineriesContent({ commune }: WineriesContentProps) {
       <div className="mx-auto max-w-6xl px-6 py-10 lg:px-8 lg:py-12">
         {wineries.length === 0 ? (
           <EmptyState
-            title="Winemakers coming soon..."
-            description="We're working with local winemakers to bring you amazing experiences. Check back soon!"
+            title={t('comingSoon')}
+            description={t('emptyDescription')}
           />
         ) : (
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">

@@ -1,7 +1,8 @@
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
+import { getLocale } from 'next-intl/server';
+import { Link } from '@/i18n/navigation';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
 import { WineryProfileForm } from '@/components/features/winery/WineryProfileForm';
 import { StripeOnboarding } from '@/components/features/winery/StripeOnboarding';
@@ -27,7 +28,8 @@ export default async function WineryProfilePage({ params }: { params: Promise<{ 
   const session = await auth();
 
   if (!session?.user) {
-    redirect('/login');
+    const locale = await getLocale();
+    redirect(`/${locale}/login`);
   }
 
   // Get winery with gallery images and status
@@ -41,7 +43,8 @@ export default async function WineryProfilePage({ params }: { params: Promise<{ 
   });
 
   if (!winery) {
-    redirect('/onboarding/winery');
+    const locale = await getLocale();
+    redirect(`/${locale}/onboarding/winery`);
   }
 
   const isVerified = winery.status === 'VERIFIED';

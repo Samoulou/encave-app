@@ -1,14 +1,19 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { ArrowLeft, MapPin, Phone, Mail, Calendar, ExternalLink, Wine } from 'lucide-react';
 import { getWineryBySlug } from '@/server/queries/winery.queries';
+import { getExperiencesByWineryId } from '@/server/queries/experience.queries';
+import { RelatedExperiences } from '@/components/features/experience/RelatedExperiences';
 import { VerifiedBadge } from '@/components/shared/VerifiedBadge';
 import { JsonLd } from '@/components/shared/JsonLd';
 import { generateWineryDetailMetadata } from '@/lib/seo';
 import { getBaseUrl } from '@/lib/env';
 import { IMAGE_PLACEHOLDERS } from '@/lib/image-placeholder';
+import { Header } from '@/components/layout/Header';
+import { Footer } from '@/components/layout/Footer';
+import { getTranslations } from 'next-intl/server';
 import type { Locale } from '@/i18n/routing';
 
 interface WineryPageProps {
@@ -22,7 +27,8 @@ export async function generateMetadata({
   const winery = await getWineryBySlug(slug);
 
   if (!winery) {
-    return { title: 'Winery Not Found | EnCave' };
+    const t = await getTranslations('winery');
+    return { title: `${t('notFoundTitle')} | EnCave` };
   }
 
   return generateWineryDetailMetadata(
@@ -36,11 +42,16 @@ export async function generateMetadata({
 
 export default async function WineryPage({ params }: WineryPageProps) {
   const { slug } = await params;
-  const winery = await getWineryBySlug(slug);
+  const [winery, t] = await Promise.all([
+    getWineryBySlug(slug),
+    getTranslations('winery'),
+  ]);
 
   if (!winery) {
     notFound();
   }
+
+  const experiences = await getExperiencesByWineryId(winery.id);
 
   const isVerified = winery.status === 'VERIFIED';
   const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${winery.address}, ${winery.commune}, Valais, Switzerland`)}`;
@@ -77,6 +88,7 @@ export default async function WineryPage({ params }: WineryPageProps) {
     <>
       <JsonLd data={winerySchema} />
       <div className="min-h-screen bg-cream-50">
+        <Header />
         {/* Hero Section */}
       <section className="relative h-[50vh] min-h-[400px] w-full">
         {winery.coverPhoto ? (
@@ -124,10 +136,17 @@ export default async function WineryPage({ params }: WineryPageProps) {
             className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-burgundy-700 transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to all wineries
+            {t('backToAllWineries')}
           </Link>
         </div>
       </div>
+
+      {/* Experiences Section */}
+      {experiences.length > 0 && (
+        <div className="mx-auto max-w-6xl px-6 py-10 lg:px-8 lg:py-12">
+          <RelatedExperiences experiences={experiences} title={t('experiences')} />
+        </div>
+      )}
 
       {/* Content */}
       <div className="mx-auto max-w-6xl px-6 py-10 lg:px-8 lg:py-12">
@@ -137,7 +156,7 @@ export default async function WineryPage({ params }: WineryPageProps) {
             {/* About */}
             <section className="rounded-xl bg-white p-6 shadow-warm lg:p-8">
               <h2 className="font-display text-xl font-semibold text-slate-900">
-                About the Winery
+                {t('aboutTheWinery')}
               </h2>
               <div className="mt-4 prose prose-slate max-w-none">
                 <p className="whitespace-pre-wrap text-slate-600 leading-relaxed">
@@ -150,7 +169,7 @@ export default async function WineryPage({ params }: WineryPageProps) {
             {winery.galleryImages.length > 0 && (
               <section className="rounded-xl bg-white p-6 shadow-warm lg:p-8">
                 <h2 className="font-display text-xl font-semibold text-slate-900">
-                  Gallery
+                  {t('gallery')}
                 </h2>
                 <div className="mt-4 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
                   {winery.galleryImages.map((image) => (
@@ -179,7 +198,7 @@ export default async function WineryPage({ params }: WineryPageProps) {
             {/* Contact Card */}
             <div className="rounded-xl bg-white p-6 shadow-warm">
               <h2 className="font-display text-lg font-semibold text-slate-900">
-                Contact
+                {t('contact')}
               </h2>
               <div className="mt-4 space-y-4">
                 {/* Phone */}
@@ -218,28 +237,31 @@ export default async function WineryPage({ params }: WineryPageProps) {
                     <p>{winery.address}</p>
                     <p>{winery.commune}, Valais</p>
                     <span className="mt-1 inline-flex items-center gap-1 text-xs text-burgundy-600">
-                      View on map <ExternalLink className="h-3 w-3" />
+                      {t('viewOnMap')} <ExternalLink className="h-3 w-3" />
                     </span>
                   </div>
                 </a>
               </div>
             </div>
 
-            {/* Coming Soon Teaser */}
-            <div className="rounded-xl border-2 border-dashed border-gold-300 bg-gradient-to-br from-gold-50 to-gold-100/50 p-6 text-center">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gold-400/20">
-                <Calendar className="h-6 w-6 text-gold-700" />
+            {/* Experiences or Coming Soon */}
+            {experiences.length === 0 ? (
+              <div className="rounded-xl border-2 border-dashed border-gold-300 bg-gradient-to-br from-gold-50 to-gold-100/50 p-6 text-center">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gold-400/20">
+                  <Calendar className="h-6 w-6 text-gold-700" />
+                </div>
+                <h3 className="mt-4 font-display font-semibold text-gold-900">
+                  {t('comingSoonTitle')}
+                </h3>
+                <p className="mt-2 text-sm text-gold-800">
+                  {t('comingSoonDescription')}
+                </p>
               </div>
-              <h3 className="mt-4 font-display font-semibold text-gold-900">
-                Coming soon: Book experiences
-              </h3>
-              <p className="mt-2 text-sm text-gold-800">
-                Wine tastings and tours will be available for booking soon.
-              </p>
-            </div>
+            ) : null}
           </div>
         </div>
       </div>
+        <Footer />
       </div>
     </>
   );

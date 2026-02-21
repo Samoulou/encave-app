@@ -4,24 +4,29 @@ import { WineriesContent } from './WineriesContent';
 import { Skeleton } from '@/components/shared/Skeleton';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import { getTranslations } from 'next-intl/server';
+import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Metadata } from 'next';
-
-// Static metadata - no async, no blocking!
-export const metadata: Metadata = {
-  title: 'Wineries in Valais | EnCave',
-  description:
-    'Discover exceptional winemakers in Switzerland\'s premier wine region. Each winery offers unique experiences rooted in centuries of tradition.',
-};
+import type { Locale } from '@/i18n/routing';
 
 interface WineriesPageProps {
+  params: Promise<{ locale: string }>;
   searchParams: Promise<{ commune?: string }>;
 }
 
+export async function generateMetadata({ params }: WineriesPageProps): Promise<Metadata> {
+  const { locale } = await params;
+  return generatePageMetadata({ locale: locale as Locale, path: 'wineries', namespace: 'wineries' });
+}
+
 export default async function WineriesPage({
+  params,
   searchParams,
 }: WineriesPageProps) {
-  const params = await searchParams;
-  const commune = params.commune;
+  const [{ commune }, t] = await Promise.all([
+    searchParams,
+    getTranslations('wineries'),
+  ]);
 
   return (
     <div className="min-h-screen bg-cream-50">
@@ -31,7 +36,7 @@ export default async function WineriesPage({
       <section aria-labelledby="hero-heading" className="relative h-[40vh] min-h-[320px] w-full">
         <Image
           src="https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?q=80&w=1920&auto=format&fit=crop"
-          alt="Vineyards in Valais, Switzerland"
+          alt={t('heroImageAlt')}
           fill
           className="object-cover"
           priority
@@ -40,11 +45,10 @@ export default async function WineriesPage({
         <div className="absolute bottom-0 left-0 right-0 p-8 lg:p-12">
           <div className="mx-auto max-w-6xl">
             <h1 id="hero-heading" className="font-display text-display-lg text-white">
-              Wineries in Valais
+              {t('title')}
             </h1>
             <p className="mt-3 max-w-xl text-lg text-white/90">
-              Discover exceptional winemakers in Switzerland&apos;s premier wine region.
-              Each winery offers unique experiences rooted in centuries of tradition.
+              {t('subtitle')}
             </p>
           </div>
         </div>

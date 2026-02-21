@@ -2,7 +2,8 @@ import { Suspense } from 'react';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
+import { getLocale } from 'next-intl/server';
+import { Link } from '@/i18n/navigation';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/shared/Skeleton';
@@ -30,7 +31,8 @@ export default async function ExperiencesDashboardPage({ searchParams }: PagePro
   const [session, params] = await Promise.all([auth(), searchParams]);
 
   if (!session?.user) {
-    redirect('/login');
+    const locale = await getLocale();
+    redirect(`/${locale}/login`);
   }
 
   const filter = (params.filter as FilterStatus) || 'all';
@@ -44,7 +46,8 @@ export default async function ExperiencesDashboardPage({ searchParams }: PagePro
   });
 
   if (!winery) {
-    redirect('/onboarding/winery');
+    const locale = await getLocale();
+    redirect(`/${locale}/onboarding/winery`);
   }
 
   return (

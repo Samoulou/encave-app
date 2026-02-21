@@ -1,10 +1,9 @@
-import { ArrowRight, Star, Clock } from 'lucide-react';
+import { ArrowRight, Clock } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
-import Image from 'next/image';
 import { Link } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { formatCHF } from '@/lib/utils/currency';
-import { IMAGE_PLACEHOLDERS } from '@/lib/image-placeholder';
+import { ImageWithFallback } from '@/components/shared/ImageWithFallback';
 import type { ExperienceType } from '@prisma/client';
 
 interface Experience {
@@ -27,20 +26,21 @@ interface PopularExperiencesProps {
   experiences: Experience[];
 }
 
-function formatDuration(minutes: number): string {
-  if (minutes >= 60) {
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    if (remainingMinutes === 0) {
-      return `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
-    }
-    return `${hours}h ${remainingMinutes}min`;
-  }
-  return `${minutes} min`;
-}
-
 export async function PopularExperiences({ experiences }: PopularExperiencesProps) {
   const t = await getTranslations('home');
+  const tExp = await getTranslations('experience');
+
+  const formatDuration = (minutes: number): string => {
+    if (minutes >= 60) {
+      const hours = Math.floor(minutes / 60);
+      const remainingMinutes = minutes % 60;
+      if (remainingMinutes === 0) {
+        return tExp('durationFormat', { count: hours });
+      }
+      return `${hours}h ${remainingMinutes}min`;
+    }
+    return tExp('durationMinutes', { count: minutes });
+  };
 
   if (experiences.length === 0) {
     return null;
@@ -66,21 +66,18 @@ export async function PopularExperiences({ experiences }: PopularExperiencesProp
           >
             {/* Image */}
             <div className="relative h-60 overflow-hidden">
-              <Image
-                src={experience.coverPhoto || IMAGE_PLACEHOLDERS.card}
+              <ImageWithFallback
+                src={experience.coverPhoto}
                 alt={experience.title}
                 fill
                 className="object-cover transform group-hover:scale-105 transition-transform duration-500"
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 priority={index === 0}
                 loading={index === 0 ? 'eager' : 'lazy'}
-                placeholder={index === 0 ? undefined : 'blur'}
-                blurDataURL={index === 0 ? undefined : IMAGE_PLACEHOLDERS.card}
               />
-              {/* Rating Badge */}
-              <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-md text-xs font-bold text-foreground shadow-sm flex items-center gap-1">
-                <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                4.9
+              {/* Type Badge */}
+              <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-md text-xs font-bold text-foreground shadow-sm">
+                {tExp(`types.${experience.type}`)}
               </div>
             </div>
 

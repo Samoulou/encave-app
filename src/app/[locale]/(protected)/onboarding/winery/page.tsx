@@ -1,7 +1,8 @@
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
+import { getLocale } from 'next-intl/server';
+import { Link } from '@/i18n/navigation';
 import { ArrowLeft, Wine } from 'lucide-react';
 import { WineryOnboardingForm } from '@/components/features/winery/WineryOnboardingForm';
 import { AnimatedProgressBar } from '@/components/shared/AnimatedProgressBar';
@@ -21,7 +22,8 @@ export default async function WineryOnboardingPage() {
   const session = await auth();
 
   if (!session?.user) {
-    redirect('/login');
+    const locale = await getLocale();
+    redirect(`/${locale}/login`);
   }
 
   // Check if user already has a winery
@@ -30,11 +32,12 @@ export default async function WineryOnboardingPage() {
   });
 
   if (existingWinery) {
+    const locale = await getLocale();
     // Redirect based on winery status
     if (existingWinery.status === 'PENDING') {
-      redirect('/onboarding/winery/confirmation');
+      redirect(`/${locale}/onboarding/winery/confirmation`);
     } else if (existingWinery.status === 'VERIFIED') {
-      redirect('/dashboard');
+      redirect(`/${locale}/dashboard`);
     }
   }
 

@@ -1,5 +1,6 @@
 import { auth } from '@/server/auth';
 import { redirect } from 'next/navigation';
+import { getLocale } from 'next-intl/server';
 
 export default async function ProtectedLayout({
   children,
@@ -9,7 +10,8 @@ export default async function ProtectedLayout({
   const session = await auth();
 
   if (!session?.user) {
-    redirect('/login');
+    const locale = await getLocale();
+    redirect(`/${locale}/login`);
   }
 
   return <>{children}</>;

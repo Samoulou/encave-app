@@ -1,20 +1,14 @@
-import Image from 'next/image';
-import Link from 'next/link';
+'use client';
+
+import { Link } from '@/i18n/navigation';
 import { Clock, Users, MapPin, Navigation } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { formatCHF } from '@/lib/utils/currency';
-import { IMAGE_PLACEHOLDERS } from '@/lib/image-placeholder';
+import { ImageWithFallback } from '@/components/shared/ImageWithFallback';
 import { formatDistance } from '@/lib/geo-utils';
+import { useTranslations } from 'next-intl';
 import type { ExperienceType } from '@prisma/client';
-
-const TYPE_LABELS: Record<ExperienceType, string> = {
-  TASTING: 'Tasting',
-  CELLAR_VISIT: 'Cellar Visit',
-  WORKSHOP: 'Workshop',
-  VINEYARD_TOUR: 'Vineyard Tour',
-  FOOD_PAIRING: 'Food Pairing',
-};
 
 interface ExperienceCardProps {
   experience: {
@@ -37,16 +31,19 @@ interface ExperienceCardProps {
 }
 
 export function ExperienceCard({ experience, className }: ExperienceCardProps) {
+  const t = useTranslations('experience');
+  const tCommon = useTranslations('common');
+
   const formatDuration = (minutes: number): string => {
     if (minutes >= 60) {
       const hours = Math.floor(minutes / 60);
       const remainingMinutes = minutes % 60;
       if (remainingMinutes === 0) {
-        return hours === 1 ? '1 hour' : `${hours} hours`;
+        return t('durationFormat', { count: hours });
       }
       return `${hours}h ${remainingMinutes}min`;
     }
-    return `${minutes} min`;
+    return t('durationMinutes', { count: minutes });
   };
 
 
@@ -59,21 +56,17 @@ export function ExperienceCard({ experience, className }: ExperienceCardProps) {
       <Card className="overflow-hidden">
         {/* Cover Photo */}
         <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
-          {experience.coverPhoto && (
-            <Image
-              src={experience.coverPhoto}
-              alt={experience.title}
-              fill
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              placeholder="blur"
-              blurDataURL={IMAGE_PLACEHOLDERS.card}
-            />
-          )}
+          <ImageWithFallback
+            src={experience.coverPhoto}
+            alt={experience.title}
+            fill
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          />
           {/* Type Badge */}
           <div className="absolute right-3 top-3 z-10">
             <span className="rounded-full bg-white/95 px-3 py-1 text-xs font-medium text-slate-700 shadow-sm backdrop-blur-sm">
-              {TYPE_LABELS[experience.type]}
+              {t(`types.${experience.type}`)}
             </span>
           </div>
         </div>
@@ -112,7 +105,7 @@ export function ExperienceCard({ experience, className }: ExperienceCardProps) {
             </span>
             <span className="flex items-center gap-1">
               <Users className="h-4 w-4" aria-hidden="true" />
-              Up to {experience.maxCapacity}
+              {t('upTo', { count: experience.maxCapacity })}
             </span>
           </div>
 
@@ -121,7 +114,7 @@ export function ExperienceCard({ experience, className }: ExperienceCardProps) {
             <span className="text-lg font-semibold text-slate-900" data-testid="experience-price">
               {formatCHF(experience.price)}
             </span>
-            <span className="text-sm text-slate-500">per person</span>
+            <span className="text-sm text-slate-500">{tCommon('currency.perPerson')}</span>
           </div>
         </CardContent>
       </Card>

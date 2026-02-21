@@ -375,6 +375,7 @@
       "searchPlaceholder": "Search experiences by name..."
     },
     "notFound": "Experience Not Found",
+    "upTo": "Up to {count}",
     "backToExperiences": "Back to Experiences",
     "newExperience": "New Experience",
     "generalInfo": "General Info",
@@ -737,6 +738,15 @@
     "galleryHelpFull": "Square images work best. You can drag photos to reorder them (coming soon).",
     "uploadCoverPhoto": "Upload cover photo",
     "swissFormatShort": "Swiss format: +41 XX XXX XX XX",
+    "backToAllWineries": "Back to all wineries",
+    "aboutTheWinery": "About the Winery",
+    "gallery": "Gallery",
+    "viewOnMap": "View on map",
+    "comingSoonTitle": "Coming soon: Book experiences",
+    "comingSoonDescription": "Wine tastings and tours will be available for booking soon.",
+    "notFoundTitle": "Winery Not Found",
+    "experiences": "Experiences",
+    "noExperiences": "No experiences available yet.",
     "onboarding": {
       "congratulations": "Congratulations!",
       "submittedForVerification": "Your winery <strong>{name}</strong> has been submitted for verification.",
@@ -948,7 +958,15 @@
     "experiencesFound": "experiences found",
     "pageOf": "page {page} of {totalPages}",
     "sortBy": "Sort by",
-    "noExperiencesAtLocation": "No experiences at {location}, but discover nearby wineries"
+    "noExperiencesAtLocation": "No experiences at {location}, but discover nearby wineries",
+    "sort": {
+      "distance": "Distance",
+      "relevance": "Relevance",
+      "priceLowToHigh": "Price: Low to High",
+      "priceHighToLow": "Price: High to Low",
+      "newestFirst": "Newest First"
+    },
+    "loadingExperiences": "Loading wine experiences..."
   },
   "errors": {
     "somethingWentWrong": "Something went wrong!",
@@ -986,7 +1004,14 @@
   },
   "wineries": {
     "comingSoon": "Winemakers coming soon...",
-    "filterByCommune": "Filter by commune"
+    "filterByCommune": "Filter by commune",
+    "title": "Wineries in Valais",
+    "subtitle": "Discover exceptional winemakers in Switzerland's premier wine region. Each winery offers unique experiences rooted in centuries of tradition.",
+    "showingCount": "Showing {count} {count, plural, =1 {winery} other {wineries}}",
+    "discover": "Discover",
+    "allCommunes": "All communes",
+    "emptyDescription": "We're working with local winemakers to bring you amazing experiences. Check back soon!",
+    "heroImageAlt": "Vineyards in Valais, Switzerland"
   },
   "onboarding": {
     "step": "Step {current} of {total}"
@@ -1444,6 +1469,17 @@
       "degustation": "Tasting in Valais",
       "cepages": "Valais Grape Varieties"
     }
+  },
+  "footer": {
+    "allRightsReserved": "All rights reserved.",
+    "navigation": "Navigation",
+    "legal": "Legal",
+    "brandDescription": "Wine experience booking platform in Valais, Switzerland."
+  },
+  "healthStatus": {
+    "serviceUnavailable": "Service unavailable",
+    "checkingStatus": "Checking status...",
+    "allSystemsOperational": "All systems operational"
   },
   "clientDashboard": {
     "nav": {
