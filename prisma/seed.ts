@@ -249,7 +249,7 @@ const EXPERIENCES: Record<string, ExperienceData[]> = {
       price: 18000,
       minCapacity: 4,
       maxCapacity: 12,
-      coverPhoto: 'https://images.unsplash.com/photo-1570824106042-73178a263a64?w=800',
+      coverPhoto: 'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=800',
     },
   ],
 };

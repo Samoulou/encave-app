@@ -82,6 +82,7 @@ export default async function Home({ params }: Props) {
             className="object-cover object-center"
             priority
             sizes="100vw"
+            quality={60}
           />
         </div>
 

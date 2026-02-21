@@ -5,13 +5,13 @@ import { SpeedInsights } from '@vercel/speed-insights/react';
 
 /**
  * Analytics component that wraps Vercel Analytics and Speed Insights.
- * Add this to your root layout to enable analytics.
- *
- * To enable analytics:
- * 1. Install packages: npm install @vercel/analytics @vercel/speed-insights
- * 2. Enable Analytics in your Vercel project dashboard
+ * Only renders on Vercel deployments to avoid 404 console errors locally.
  */
 export function Analytics() {
+  if (!process.env.NEXT_PUBLIC_VERCEL_URL) {
+    return null;
+  }
+
   return (
     <>
       <VercelAnalytics />

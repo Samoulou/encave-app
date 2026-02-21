@@ -55,11 +55,7 @@ export default async function LocaleLayout({ children, params }: Props) {
 
   return (
     <html lang={locale} suppressHydrationWarning>
-      <head>
-        {/* Preconnect to external domains for faster resource loading */}
-        <link rel="preconnect" href="https://f68oqhh6nxobntic.public.blob.vercel-storage.com" />
-        <link rel="preconnect" href="https://images.unsplash.com" />
-      </head>
+      <head />
       <body
         className={`${manrope.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
