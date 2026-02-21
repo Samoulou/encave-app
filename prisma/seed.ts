@@ -547,7 +547,7 @@ async function main() {
     const { wineryId, experienceIds } = winery;
     const experienceId = experienceIds[b.experienceIdx]!;
 
-    // Look up price from the experience
+    // Look up price from the experienc
     const experience = await prisma.experience.findUnique({
       where: { id: experienceId },
     });
