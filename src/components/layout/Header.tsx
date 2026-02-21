@@ -51,7 +51,7 @@ export async function Header() {
           <LocaleSwitcher />
           <div className="h-5 w-px bg-slate-200" aria-hidden="true" />
           {session?.user ? (
-            <UserMenu userName={session.user.name} userRole={userRole} />
+            <UserMenu userName={session.user.name} />
           ) : (
             <div className="flex items-center gap-3">
               <Button variant="ghost" asChild>
