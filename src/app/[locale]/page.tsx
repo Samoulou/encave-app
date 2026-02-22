@@ -65,7 +65,7 @@ export default async function Home({ params }: Props) {
       <Header />
 
       {/* Hero Section with Background Image */}
-      <section className="relative h-[500px] md:h-[600px] w-full flex items-center justify-center overflow-hidden">
+      <section className="relative h-[350px] sm:h-[450px] md:h-[500px] lg:h-[600px] w-full flex items-center justify-center overflow-hidden">
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           {/* Gradient Overlay */}

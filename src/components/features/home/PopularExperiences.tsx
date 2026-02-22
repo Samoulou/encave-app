@@ -57,7 +57,7 @@ export async function PopularExperiences({ experiences }: PopularExperiencesProp
         </h3>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
         {experiences.map((experience, index) => (
           <Link
             key={experience.id}

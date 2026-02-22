@@ -23,7 +23,7 @@ export async function HowItWorks() {
   ];
 
   return (
-    <section className="bg-primary/5 dark:bg-white/5 rounded-3xl p-8 md:p-16">
+    <section className="bg-primary/5 dark:bg-white/5 rounded-3xl p-6 sm:p-8 md:p-12 lg:p-16">
       <div className="text-center mb-16">
         <h2 className="font-display text-3xl md:text-4xl font-extrabold text-foreground mb-4">
           {t('howItWorks.title')}
@@ -33,7 +33,7 @@ export async function HowItWorks() {
         </p>
       </div>
 
-      <div className="relative grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+      <div className="relative grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 text-center">
         {/* Connector Line (Desktop only) */}
         <div
           className="hidden md:block absolute top-12 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-primary/30 to-transparent -z-10"

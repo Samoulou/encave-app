@@ -93,7 +93,7 @@ export default async function ExperiencesPage({ params, searchParams }: PageProp
       </div>
 
       {/* Main Content */}
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         {/* Content with data - streams in when ready */}
         <Suspense fallback={<ContentLoadingState />}>
           <ExperiencesContent searchParams={parsedParams} />
