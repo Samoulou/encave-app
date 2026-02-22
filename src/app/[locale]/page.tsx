@@ -11,6 +11,7 @@ import { getBaseUrl } from '@/lib/env';
 import { HeroSearchBar } from '@/components/features/home/HeroSearchBar';
 import { PopularExperiences } from '@/components/features/home/PopularExperiences';
 import { HowItWorks } from '@/components/features/home/HowItWorks';
+import { FadeIn } from '@/components/shared/FadeIn';
 import { getFeaturedExperiences } from '@/server/queries/experience.queries';
 import type { Locale } from '@/i18n/routing';
 
@@ -102,12 +103,17 @@ export default async function Home({ params }: Props) {
 
       <main id="main-content" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-24">
         {/* Popular Experiences Section */}
-        <PopularExperiences experiences={featuredExperiences} />
+        <FadeIn>
+          <PopularExperiences experiences={featuredExperiences} />
+        </FadeIn>
 
         {/* How It Works Section */}
-        <HowItWorks />
+        <FadeIn>
+          <HowItWorks />
+        </FadeIn>
 
         {/* CTA Banner Section */}
+        <FadeIn>
         <section className="relative rounded-3xl overflow-hidden">
           <div className="absolute inset-0 bg-[#201216]">
             <Image
@@ -144,6 +150,7 @@ export default async function Home({ params }: Props) {
             </div>
           </div>
         </section>
+        </FadeIn>
 
         {/* Health Status (for development) */}
         <div className="mt-8 flex justify-center">

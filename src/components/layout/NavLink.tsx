@@ -37,7 +37,7 @@ export function NavLink({
       onMouseEnter={handlePrefetch}
       onFocus={handlePrefetch}
       className={cn(
-        'text-sm font-medium transition-colors',
+        'relative text-sm font-medium transition-colors group',
         isActive
           ? activeClassName || 'text-burgundy-700'
           : 'text-slate-600 hover:text-burgundy-700',
@@ -45,6 +45,14 @@ export function NavLink({
       )}
     >
       {children}
+      {/* Animated underline indicator */}
+      <span
+        className={cn(
+          'absolute -bottom-1 left-0 h-0.5 rounded-full bg-gradient-to-r from-primary to-gold-400 transition-all duration-300 ease-premium',
+          isActive ? 'w-full' : 'w-0 group-hover:w-full'
+        )}
+        aria-hidden="true"
+      />
     </Link>
   );
 }

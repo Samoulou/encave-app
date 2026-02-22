@@ -1,5 +1,6 @@
 import { Compass, CalendarPlus, Wine } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
+import { FadeIn } from '@/components/shared/FadeIn';
 
 export async function HowItWorks() {
   const t = await getTranslations('home');
@@ -43,17 +44,19 @@ export async function HowItWorks() {
         {steps.map((step, index) => {
           const Icon = step.icon;
           return (
-            <div key={index} className="relative flex flex-col items-center group">
-              <div className="w-24 h-24 bg-white dark:bg-[#2a1a1f] rounded-full shadow-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 border-2 border-primary/20">
-                <Icon className="h-12 w-12 text-primary" />
+            <FadeIn key={index} delay={index * 150}>
+              <div className="relative flex flex-col items-center group">
+                <div className="w-24 h-24 bg-white dark:bg-[#2a1a1f] rounded-full shadow-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 ease-premium border-2 border-primary/20">
+                  <Icon className="h-12 w-12 text-primary" />
+                </div>
+                <h3 className="text-xl font-bold text-foreground mb-2">
+                  {index + 1}. {step.title}
+                </h3>
+                <p className="text-muted-foreground text-sm px-4">
+                  {step.description}
+                </p>
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-2">
-                {index + 1}. {step.title}
-              </h3>
-              <p className="text-muted-foreground text-sm px-4">
-                {step.description}
-              </p>
-            </div>
+            </FadeIn>
           );
         })}
       </div>

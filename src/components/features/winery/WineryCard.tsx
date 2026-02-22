@@ -23,14 +23,14 @@ export function WineryCard({ winery }: WineryCardProps) {
 
   return (
     <Link href={`/wineries/${winery.slug}`} className="group block h-full" data-testid="winery-card">
-      <article className="h-full overflow-hidden rounded-xl border border-stone-200/60 bg-white shadow-warm transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover">
+      <article className="h-full overflow-hidden rounded-xl border border-stone-200/60 bg-white shadow-warm transition-all duration-300 ease-premium hover:-translate-y-1 hover:shadow-card-hover">
         {/* Image Container */}
         <div className="relative aspect-[4/3] w-full overflow-hidden">
           <ImageWithFallback
             src={winery.coverPhoto ?? ''}
             alt={winery.name}
             fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            className="object-cover transition-transform duration-500 ease-premium group-hover:scale-105"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
           {/* Gradient overlay */}

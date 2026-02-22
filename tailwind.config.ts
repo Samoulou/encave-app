@@ -167,6 +167,10 @@ const config: Config = {
   				'500': '#4a5a3a'
   			}
   		},
+  		transitionTimingFunction: {
+  			premium: 'cubic-bezier(0.16, 1, 0.3, 1)',
+  			spring: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
+  		},
   		boxShadow: {
   			'warm-sm': '0 1px 2px rgba(122, 27, 59, 0.05)',
   			warm: '0 1px 3px rgba(122, 27, 59, 0.08), 0 1px 2px rgba(122, 27, 59, 0.04)',
