@@ -25,7 +25,7 @@ export async function HowItWorks() {
   return (
     <section className="bg-primary/5 dark:bg-white/5 rounded-3xl p-8 md:p-16">
       <div className="text-center mb-16">
-        <h2 className="text-3xl md:text-4xl font-extrabold text-foreground mb-4">
+        <h2 className="font-display text-3xl md:text-4xl font-extrabold text-foreground mb-4">
           {t('howItWorks.title')}
         </h2>
         <p className="text-muted-foreground max-w-2xl mx-auto">

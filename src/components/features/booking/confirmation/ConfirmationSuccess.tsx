@@ -15,7 +15,7 @@ export function ConfirmationSuccess({ visitorEmail }: ConfirmationSuccessProps) 
         <div className="mb-6">
           <AnimatedCheckmark size="lg" />
         </div>
-        <h1 className="text-foreground tracking-tight text-3xl md:text-4xl font-bold leading-tight mb-3">
+        <h1 className="font-display text-foreground tracking-tight text-3xl md:text-4xl font-bold leading-tight mb-3">
           {t('successTitle')}
         </h1>
         <p className="text-muted-foreground text-lg font-normal leading-relaxed max-w-lg">

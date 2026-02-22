@@ -15,7 +15,7 @@ export function BookingsPageHeader() {
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-4">
-      <h1 className="text-[#1a0f12] text-3xl font-black tracking-[-0.033em]">
+      <h1 className="font-display text-[#1a0f12] text-3xl font-black tracking-[-0.033em]">
         Bookings
       </h1>
       <div className="flex items-center gap-3">

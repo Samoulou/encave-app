@@ -52,7 +52,7 @@ export async function PopularExperiences({ experiences }: PopularExperiencesProp
         <h2 className="text-primary font-bold tracking-wider text-sm uppercase mb-2">
           {t('curatedForYou')}
         </h2>
-        <h3 className="text-3xl md:text-4xl font-extrabold text-foreground">
+        <h3 className="font-display text-3xl md:text-4xl font-extrabold text-foreground">
           {t('popularExperiences')}
         </h3>
       </div>

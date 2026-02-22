@@ -177,7 +177,7 @@ export function CheckoutClient({
       <div className="mx-auto max-w-7xl">
         {/* Page Heading */}
         <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-[#1a0f12] mb-2">
+          <h1 className="font-display text-3xl md:text-4xl font-bold text-[#1a0f12] mb-2">
             {t('pageTitle')}
           </h1>
           <p className="text-[#915564]">{t('pageSubtitle')}</p>

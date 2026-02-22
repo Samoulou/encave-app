@@ -463,7 +463,7 @@ export function CreateExperienceForm() {
       <div className="max-w-[1200px] mx-auto px-6 md:px-10 py-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
           <div className="max-w-xl">
-            <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight mb-2">
+            <h1 className="font-display text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight mb-2">
               Create New Experience
             </h1>
             <p className="text-slate-500 text-base">

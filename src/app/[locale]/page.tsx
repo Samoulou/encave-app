@@ -88,7 +88,7 @@ export default async function Home({ params }: Props) {
 
         {/* Hero Content */}
         <div className="relative z-20 w-full max-w-4xl px-4 text-center">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-6 leading-tight tracking-tight drop-shadow-sm">
+          <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-6 leading-tight tracking-tight drop-shadow-sm">
             {t('heroTitle')} <span className="text-secondary">{t('heroTitleHighlight')}</span>
           </h1>
           <p className="text-lg md:text-xl text-white/90 mb-10 max-w-2xl mx-auto font-medium drop-shadow-sm">
@@ -119,7 +119,7 @@ export default async function Home({ params }: Props) {
             />
           </div>
           <div className="relative z-10 px-6 py-20 text-center">
-            <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-6">
+            <h2 className="font-display text-3xl md:text-5xl font-extrabold text-white mb-6">
               {t('ctaTitle')}
             </h2>
             <p className="text-lg text-white/80 mb-8 max-w-xl mx-auto">

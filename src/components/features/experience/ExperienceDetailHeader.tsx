@@ -25,7 +25,7 @@ export function ExperienceDetailHeader({
 
   return (
     <div className="mb-8">
-      <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-[#1a0f12] mb-3 leading-tight tracking-tight">
+      <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-extrabold text-[#1a0f12] mb-3 leading-tight tracking-tight">
         {title}
       </h1>
       <div className="flex flex-wrap items-center gap-4 text-sm md:text-base">

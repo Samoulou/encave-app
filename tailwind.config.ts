@@ -22,10 +22,16 @@ const config: Config = {
   	extend: {
   		fontFamily: {
   			display: [
-  				'var(--font-manrope)',
-  				'Manrope',
-  				'system-ui',
-  				'sans-serif'
+  				'var(--font-cormorant)',
+  				'Cormorant',
+  				'Georgia',
+  				'serif'
+  			],
+  			serif: [
+  				'var(--font-cormorant)',
+  				'Cormorant',
+  				'Georgia',
+  				'serif'
   			],
   			sans: [
   				'var(--font-manrope)',
@@ -44,7 +50,7 @@ const config: Config = {
   				'3.5rem',
   				{
   					lineHeight: '1.1',
-  					letterSpacing: '-0.02em',
+  					letterSpacing: '-0.01em',
   					fontWeight: '700'
   				}
   			],
@@ -52,7 +58,7 @@ const config: Config = {
   				'2.75rem',
   				{
   					lineHeight: '1.15',
-  					letterSpacing: '-0.02em',
+  					letterSpacing: '-0.01em',
   					fontWeight: '700'
   				}
   			],
@@ -60,7 +66,7 @@ const config: Config = {
   				'2.25rem',
   				{
   					lineHeight: '1.2',
-  					letterSpacing: '-0.01em',
+  					letterSpacing: '-0.005em',
   					fontWeight: '600'
   				}
   			]

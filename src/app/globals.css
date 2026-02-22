@@ -98,6 +98,16 @@ body {
   }
 }
 
+@layer base {
+  /* Smooth rendering for serif display font */
+  .font-display,
+  .font-serif {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+}
+
 @layer components {
   /* Animated gold underline link */
   .link-gold-underline {
