@@ -473,7 +473,20 @@
     "today": "Aujourd'hui",
     "bookingDetails": "Détails de la réservation",
     "decreaseGuests": "Diminuer le nombre d'invités",
-    "increaseGuests": "Augmenter le nombre d'invités"
+    "increaseGuests": "Augmenter le nombre d'invités",
+    "step": {
+      "date": "Date",
+      "session": "Séance",
+      "guests": "Invités",
+      "selectSession": "Choisir une séance"
+    },
+    "nextSession": "Suivant : Choisir une séance",
+    "nextGuests": "Suivant : Nombre de personnes",
+    "editSelection": "Modifier",
+    "sessionFull": "Complet",
+    "spotsLeft": "{count} {count, plural, =1 {place restante} other {places restantes}}",
+    "whenVisit": "Quand souhaitez-vous nous rendre visite ?",
+    "back": "Retour"
   },
   "bookings": {
     "empty": {

@@ -20,6 +20,7 @@ interface MobileBookingBarProps {
   stripeConnected: boolean;
   minCapacity: number;
   maxCapacity: number;
+  duration: number;
   availabilitySlots?: AvailabilitySlot[];
 }
 
@@ -30,6 +31,7 @@ export function MobileBookingBar({
   stripeConnected,
   minCapacity,
   maxCapacity,
+  duration,
   availabilitySlots = [],
 }: MobileBookingBarProps) {
   const t = useTranslations('booking');
@@ -50,7 +52,7 @@ export function MobileBookingBar({
           </div>
           {isBookingEnabled ? (
             <Button
-              className="bg-primary hover:bg-[#b02245] text-white font-bold px-6"
+              className="bg-primary hover:bg-primary-hover text-white font-bold px-6"
               onClick={() => setIsDrawerOpen(true)}
             >
               {t('bookNow')}
@@ -75,6 +77,7 @@ export function MobileBookingBar({
           experienceId={experienceId}
           minCapacity={minCapacity}
           maxCapacity={maxCapacity}
+          duration={duration}
           availabilitySlots={availabilitySlots}
         />
       )}

@@ -10,7 +10,6 @@ import { ExperienceDetailGallery } from '@/components/features/experience/Experi
 import { QuickFacts } from '@/components/features/experience/QuickFacts';
 import { AboutSection } from '@/components/features/experience/AboutSection';
 import { LocationSection } from '@/components/features/experience/LocationSection';
-import { AvailabilityDisplay } from '@/components/features/experience/AvailabilityDisplay';
 import { BookingWidget } from '@/components/features/experience/BookingWidget';
 import { MobileBookingBar } from '@/components/features/experience/MobileBookingBar';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
@@ -204,11 +203,6 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
               {/* About Section */}
               <AboutSection description={experience.description} />
 
-              {/* Availability Schedule */}
-              {experience.availabilitySlots && experience.availabilitySlots.length > 0 && (
-                <AvailabilityDisplay slots={experience.availabilitySlots} />
-              )}
-
               {/* Location Map */}
               <LocationSection
                 address={experience.address || experience.winery.address}
@@ -228,6 +222,7 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
                 stripeConnected={experience.winery.stripeOnboardingComplete}
                 minCapacity={experience.minCapacity}
                 maxCapacity={experience.maxCapacity}
+                duration={experience.duration}
                 availabilitySlots={experience.availabilitySlots}
               />
             </div>
@@ -251,6 +246,7 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
           stripeConnected={experience.winery.stripeOnboardingComplete}
           minCapacity={experience.minCapacity}
           maxCapacity={experience.maxCapacity}
+          duration={experience.duration}
           availabilitySlots={experience.availabilitySlots}
         />
       </main>

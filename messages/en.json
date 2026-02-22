@@ -473,7 +473,20 @@
     "today": "Today",
     "bookingDetails": "Booking Details",
     "decreaseGuests": "Decrease guests",
-    "increaseGuests": "Increase guests"
+    "increaseGuests": "Increase guests",
+    "step": {
+      "date": "Date",
+      "session": "Session",
+      "guests": "Guests",
+      "selectSession": "Select a session"
+    },
+    "nextSession": "Next: Choose session",
+    "nextGuests": "Next: Number of guests",
+    "editSelection": "Edit",
+    "sessionFull": "Full",
+    "spotsLeft": "{count} {count, plural, =1 {spot} other {spots}} left",
+    "whenVisit": "When would you like to visit?",
+    "back": "Back"
   },
   "bookings": {
     "empty": {

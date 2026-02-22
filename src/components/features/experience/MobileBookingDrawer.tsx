@@ -2,8 +2,10 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
-import { ChevronRight, Loader2 } from 'lucide-react';
+import { useTranslations, useLocale } from 'next-intl';
+import { ArrowLeft, Calendar, Clock, ChevronRight, Loader2 } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
+import { enUS, fr, de } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -16,6 +18,7 @@ import { formatCHF } from '@/lib/utils/currency';
 import { BookingDatePicker } from '@/components/features/booking/BookingDatePicker';
 import { TimeSlotSelector } from '@/components/features/booking/TimeSlotSelector';
 import { GuestCountInput } from '@/components/features/booking/GuestCountInput';
+import { BookingStepIndicator } from '@/components/features/booking/BookingStepIndicator';
 
 interface AvailabilitySlot {
   dayOfWeek: number;
@@ -32,8 +35,11 @@ interface MobileBookingDrawerProps {
   experienceId: string;
   minCapacity: number;
   maxCapacity: number;
+  duration: number;
   availabilitySlots: AvailabilitySlot[];
 }
+
+const dateLocales = { en: enUS, fr, de } as const;
 
 export function MobileBookingDrawer({
   isOpen,
@@ -43,16 +49,19 @@ export function MobileBookingDrawer({
   experienceId,
   minCapacity,
   maxCapacity,
+  duration,
   availabilitySlots,
 }: MobileBookingDrawerProps) {
   const t = useTranslations('booking');
   const router = useRouter();
+  const locale = useLocale();
 
   const [date, setDate] = useState<string | null>(null);
   const [time, setTime] = useState<string | null>(null);
   const [guests, setGuests] = useState(Math.max(2, minCapacity));
   const [remainingCapacity, setRemainingCapacity] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [mobileStep, setMobileStep] = useState<1 | 2 | 3>(1);
 
   // Available days based on availability slots
   const availableDays = useMemo(
@@ -70,11 +79,18 @@ export function MobileBookingDrawer({
 
   const handleDateChange = useCallback((newDate: string | null) => {
     setDate(newDate);
+    setTime(null);
     setRemainingCapacity(null);
+    if (newDate) {
+      setMobileStep(2);
+    }
   }, []);
 
   const handleTimeChange = useCallback((newTime: string | null) => {
     setTime(newTime);
+    if (newTime) {
+      setMobileStep(3);
+    }
   }, []);
 
   const handleGuestsChange = useCallback((newGuests: number) => {
@@ -84,6 +100,14 @@ export function MobileBookingDrawer({
   const handleCapacityUpdate = useCallback((capacity: number | null) => {
     setRemainingCapacity(capacity);
   }, []);
+
+  const handleBack = () => {
+    if (mobileStep === 2) {
+      setMobileStep(1);
+    } else if (mobileStep === 3) {
+      setMobileStep(2);
+    }
+  };
 
   const handleContinue = () => {
     if (!isValid) return;
@@ -97,36 +121,89 @@ export function MobileBookingDrawer({
     router.push(`/experiences/${experienceSlug}/checkout?${params.toString()}`);
   };
 
+  const formatTime = (t: string) => {
+    const parts = t.split(':');
+    return `${(parts[0] ?? '00').padStart(2, '0')}:${(parts[1] ?? '00').padStart(2, '0')}`;
+  };
+
+  const formatDateLabel = (dateStr: string) => {
+    try {
+      const d = parseISO(dateStr);
+      const loc = dateLocales[locale as keyof typeof dateLocales] ?? enUS;
+      return format(d, 'EEE, d MMM', { locale: loc });
+    } catch {
+      return dateStr;
+    }
+  };
+
+  // Reset state when drawer closes
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      setMobileStep(1);
+      setDate(null);
+      setTime(null);
+      setGuests(Math.max(2, minCapacity));
+      setRemainingCapacity(null);
+      setIsSubmitting(false);
+    }
+    onOpenChange(open);
+  };
+
   return (
-    <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[90vh] rounded-t-2xl overflow-y-auto">
-        <SheetHeader className="text-left pb-4">
-          <SheetTitle>{t('bookExperience')}</SheetTitle>
+    <Sheet open={isOpen} onOpenChange={handleOpenChange}>
+      <SheetContent side="bottom" className="h-[85vh] rounded-t-2xl overflow-y-auto">
+        {/* Header with back button and step dots */}
+        <SheetHeader className="text-left pb-2">
+          <div className="flex items-center gap-3">
+            {mobileStep > 1 && (
+              <button
+                onClick={handleBack}
+                className="p-1.5 -ml-1.5 rounded-lg hover:bg-stone-100 transition-colors"
+                aria-label={t('back') ?? 'Back'}
+              >
+                <ArrowLeft className="h-5 w-5 text-foreground" />
+              </button>
+            )}
+            <SheetTitle className="flex-1">{t('bookExperience')}</SheetTitle>
+          </div>
           <SheetDescription>
             <span className="text-lg font-bold text-foreground">{formatCHF(price)}</span>
-            <span className="text-gray-500 ml-1">/ {t('perPerson')}</span>
+            <span className="text-muted-foreground ml-1">/ {t('perPerson')}</span>
           </SheetDescription>
         </SheetHeader>
 
-        <div className="flex flex-col gap-5 pb-24">
-          {/* Date Picker */}
-          <div className="space-y-2">
-            <label className="block text-sm font-semibold text-foreground">
-              {t('selectDate')}
-            </label>
-            <BookingDatePicker
-              selectedDate={date}
-              onDateChange={handleDateChange}
-              availableDays={availableDays}
-            />
-          </div>
+        {/* Step indicator */}
+        <div className="py-2">
+          <BookingStepIndicator currentStep={mobileStep} />
+        </div>
 
-          {/* Time Slots */}
-          {date && (
-            <div className="space-y-2">
-              <label className="block text-sm font-semibold text-foreground">
-                {t('selectTime')}
-              </label>
+        <div className="flex flex-col pb-28">
+          {/* Step 1: Calendar */}
+          {mobileStep === 1 && (
+            <div className="space-y-4">
+              <p className="text-sm font-semibold text-foreground">
+                {t('selectDate')}
+              </p>
+              <BookingDatePicker
+                selectedDate={date}
+                onDateChange={handleDateChange}
+                availableDays={availableDays}
+              />
+            </div>
+          )}
+
+          {/* Step 2: Session cards */}
+          {mobileStep === 2 && date && (
+            <div className="space-y-4">
+              {/* Context: selected date */}
+              <div className="flex items-center gap-2 text-sm text-muted-foreground bg-stone-50 rounded-lg px-3 py-2">
+                <Calendar className="h-4 w-4 text-primary" aria-hidden="true" />
+                <span>{formatDateLabel(date)}</span>
+              </div>
+
+              <p className="text-sm font-semibold text-foreground">
+                {t('whenVisit')}
+              </p>
               <TimeSlotSelector
                 experienceId={experienceId}
                 selectedDate={date}
@@ -137,12 +214,24 @@ export function MobileBookingDrawer({
             </div>
           )}
 
-          {/* Guests */}
-          {time && (
-            <div className="space-y-2">
-              <label className="block text-sm font-semibold text-foreground">
+          {/* Step 3: Guests + Summary */}
+          {mobileStep === 3 && time && (
+            <div className="space-y-5">
+              {/* Context: selected date + time */}
+              <div className="flex flex-col gap-1.5 bg-stone-50 rounded-lg px-3 py-2.5">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Calendar className="h-4 w-4 text-primary" aria-hidden="true" />
+                  <span>{formatDateLabel(date!)}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Clock className="h-4 w-4 text-primary" aria-hidden="true" />
+                  <span>{formatTime(time)} ({duration} min)</span>
+                </div>
+              </div>
+
+              <p className="text-sm font-semibold text-foreground">
                 {t('selectGuests')}
-              </label>
+              </p>
               <GuestCountInput
                 value={guests}
                 onChange={handleGuestsChange}
@@ -151,47 +240,71 @@ export function MobileBookingDrawer({
                 isLoading={false}
                 remainingCapacity={remainingCapacity}
               />
+
+              {/* Summary card */}
+              {isValid && (
+                <>
+                  <hr className="border-dashed border-stone-200" />
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">
+                      {guests} × {formatCHF(price)}
+                    </span>
+                    <span className="font-bold text-xl text-foreground">
+                      {formatCHF(totalPrice)}
+                    </span>
+                  </div>
+                </>
+              )}
             </div>
-          )}
-
-          {/* Show total when form is partially filled */}
-          {date && (
-            <>
-              <hr className="border-dashed border-gray-200 my-2" />
-
-              {/* Total */}
-              <div className="flex justify-between items-center">
-                <span className="font-bold text-lg text-foreground">
-                  {t('totalPrice')}
-                </span>
-                <span className="font-bold text-xl text-primary">
-                  {formatCHF(totalPrice)}
-                </span>
-              </div>
-            </>
           )}
         </div>
 
         {/* Fixed bottom button */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200">
-          <Button
-            size="lg"
-            className="w-full bg-primary hover:bg-[#b02245] text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 h-auto"
-            disabled={!isValid || isSubmitting}
-            onClick={handleContinue}
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span>{t('continueToPayment')}</span>
-              </>
-            ) : (
-              <>
-                <span>{isValid ? t('continueToPayment') : t('bookExperience')}</span>
-                <ChevronRight className="h-4 w-4" />
-              </>
-            )}
-          </Button>
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-stone-200">
+          {mobileStep === 1 && (
+            <Button
+              size="lg"
+              className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 h-auto"
+              disabled={!date}
+              onClick={() => date && setMobileStep(2)}
+            >
+              <span>{t('nextSession')}</span>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          )}
+
+          {mobileStep === 2 && (
+            <Button
+              size="lg"
+              className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 h-auto"
+              disabled={!time}
+              onClick={() => time && setMobileStep(3)}
+            >
+              <span>{t('nextGuests')}</span>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          )}
+
+          {mobileStep === 3 && (
+            <Button
+              size="lg"
+              className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 h-auto"
+              disabled={!isValid || isSubmitting}
+              onClick={handleContinue}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>{t('continueToPayment')}</span>
+                </>
+              ) : (
+                <>
+                  <span>{t('continueToPayment')}</span>
+                  <ChevronRight className="h-4 w-4" />
+                </>
+              )}
+            </Button>
+          )}
         </div>
       </SheetContent>
     </Sheet>
