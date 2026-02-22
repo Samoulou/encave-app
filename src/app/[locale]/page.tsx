@@ -72,7 +72,7 @@ export default async function Home({ params }: Props) {
           <div
             className="absolute inset-0 z-10"
             style={{
-              background: 'linear-gradient(135deg, rgba(32, 18, 22, 0.4) 0%, rgba(205, 45, 85, 0.5) 100%)',
+              background: 'linear-gradient(135deg, rgba(32, 18, 22, 0.4) 0%, rgba(150, 42, 72, 0.5) 100%)',
             }}
           />
           <Image
@@ -126,7 +126,7 @@ export default async function Home({ params }: Props) {
               {t('ctaSubtitle')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" asChild className="bg-primary hover:bg-[#a62444] shadow-lg">
+              <Button size="lg" asChild className="bg-primary hover:bg-[hsl(var(--primary-hover))] shadow-lg">
                 <Link href="/experiences">
                   {t('ctaButton')}
                 </Link>

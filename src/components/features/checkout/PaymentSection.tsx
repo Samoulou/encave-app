@@ -141,7 +141,7 @@ export function PaymentSection({
         type="submit"
         onClick={onSubmit}
         disabled={isSubmitting}
-        className="w-full mt-6 bg-primary hover:bg-[#a62444] text-white h-14 rounded-lg font-bold text-lg shadow-lg shadow-primary/20 transition-all group"
+        className="w-full mt-6 bg-primary hover:bg-[hsl(var(--primary-hover))] text-white h-14 rounded-lg font-bold text-lg shadow-lg shadow-primary/20 transition-all group"
       >
         {isSubmitting ? (
           <>

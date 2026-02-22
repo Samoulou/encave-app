@@ -98,8 +98,8 @@ export function EarningsChart({ data }: EarningsChartProps) {
           >
             <defs>
               <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#cd2d55" stopOpacity={0.2} />
-                <stop offset="100%" stopColor="#cd2d55" stopOpacity={0} />
+                <stop offset="0%" stopColor="#962a48" stopOpacity={0.2} />
+                <stop offset="100%" stopColor="#962a48" stopOpacity={0} />
               </linearGradient>
               <linearGradient id="colorPayout" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#9ca3af" stopOpacity={0.15} />
@@ -153,13 +153,13 @@ export function EarningsChart({ data }: EarningsChartProps) {
               type="monotone"
               dataKey="revenueDisplay"
               name="Gross"
-              stroke="#cd2d55"
+              stroke="#962a48"
               strokeWidth={3}
               fill="url(#colorRevenue)"
               dot={false}
               activeDot={{
                 r: 6,
-                fill: '#cd2d55',
+                fill: '#962a48',
                 stroke: '#fff',
                 strokeWidth: 2,
               }}

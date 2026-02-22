@@ -26,11 +26,11 @@
   /* Border: #e5d2d7 */
   --border: 345 27% 86%;
   --input: 345 27% 86%;
-  /* Primary: #cd2d55 */
-  --primary: 345 64% 49%;
+  /* Primary: #962a48 */
+  --primary: 345 55% 37%;
   --primary-foreground: 0 0% 100%;
-  /* Primary hover: #a62444 */
-  --primary-hover: 345 64% 40%;
+  /* Primary hover: #732040 */
+  --primary-hover: 345 55% 29%;
   /* Secondary */
   --secondary: 345 12% 95%;
   --secondary-foreground: 345 26% 8%;
@@ -41,7 +41,7 @@
   --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 100%;
   /* Ring */
-  --ring: 345 64% 49%;
+  --ring: 345 55% 37%;
 
   /* Custom semantic colors */
   /* Text: #1a0f12 main, #915564 secondary */
@@ -70,13 +70,13 @@
   /* Border: #4a2a32 */
   --border: 345 28% 27%;
   --input: 345 28% 27%;
-  --primary: 345 64% 49%;
+  --primary: 345 55% 37%;
   --primary-foreground: 0 0% 100%;
   --secondary: 345 24% 18%;
   --secondary-foreground: 0 14% 97%;
   --accent: 345 24% 18%;
   --accent-foreground: 0 14% 97%;
-  --ring: 345 64% 49%;
+  --ring: 345 55% 37%;
 }
 
 body {
@@ -117,7 +117,7 @@ body {
   .link-gold-underline::after {
     content: '';
     @apply absolute bottom-0 left-0 h-0.5 w-0;
-    background: linear-gradient(to right, #f1c91d, #d4b119);
+    background: linear-gradient(to right, #c9a94e, #b8973e);
     transition: width 300ms var(--ease-out);
   }
 
@@ -138,9 +138,9 @@ body {
   .gradient-gold-subtle {
     background: linear-gradient(
       135deg,
-      rgba(241, 201, 29, 0.05),
+      rgba(201, 169, 78, 0.05),
       transparent 50%,
-      rgba(241, 201, 29, 0.03)
+      rgba(201, 169, 78, 0.03)
     );
   }
 
@@ -158,9 +158,9 @@ body {
 #nprogress .bar {
   background: linear-gradient(
     90deg,
-    #cc2d55 0%,
-    #ab2046 50%,
-    #cc2d55 100%
+    #962a48 0%,
+    #732040 50%,
+    #962a48 100%
   );
   position: fixed;
   z-index: 9999;
@@ -168,7 +168,7 @@ body {
   left: 0;
   width: 100%;
   height: 3px;
-  box-shadow: 0 0 8px rgba(204, 45, 85, 0.5);
+  box-shadow: 0 0 8px rgba(150, 42, 72, 0.5);
 }
 
 #nprogress .peg {
@@ -177,7 +177,7 @@ body {
   right: 0;
   width: 100px;
   height: 100%;
-  box-shadow: 0 0 10px #cc2d55, 0 0 5px #cc2d55;
+  box-shadow: 0 0 10px #962a48, 0 0 5px #962a48;
   opacity: 1;
   transform: rotate(3deg) translate(0px, -4px);
 }

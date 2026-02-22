@@ -10,7 +10,7 @@ export function Footer() {
   const tFooter = useTranslations('footer');
 
   return (
-    <footer className="bg-slate-900 text-slate-300">
+    <footer className="bg-[#1a1215] text-[#c4a0aa]">
       <div className="mx-auto max-w-6xl px-6 py-12 lg:py-16">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
@@ -24,7 +24,7 @@ export function Footer() {
                 className="h-11 w-auto brightness-0 invert"
               />
             </Link>
-            <p className="mt-4 text-sm text-slate-400 max-w-xs">
+            <p className="mt-4 text-sm text-[#937078] max-w-xs">
               {tFooter('brandDescription')}
             </p>
           </div>
@@ -97,13 +97,13 @@ export function Footer() {
         </div>
 
         {/* Bottom */}
-        <div className="mt-12 pt-8 border-t border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-slate-400">
+        <div className="mt-12 pt-8 border-t border-[#3a2028] flex flex-col sm:flex-row justify-between items-center gap-4">
+          <p className="text-sm text-[#937078]">
             © {new Date().getFullYear()} EnCave. {tFooter('allRightsReserved')}
           </p>
           <a
             href="mailto:samuel@encave.ch"
-            className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors"
+            className="flex items-center gap-2 text-sm text-[#937078] hover:text-white transition-colors"
           >
             <Mail className="h-4 w-4" aria-hidden="true" />
             samuel@encave.ch

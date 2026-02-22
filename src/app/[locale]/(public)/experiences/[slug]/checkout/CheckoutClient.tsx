@@ -292,7 +292,7 @@ export function CheckoutClient({
                 <Button
                   type="submit"
                   disabled={isSubmitting || isFormDisabled}
-                  className="w-full bg-primary hover:bg-[#a62444] text-white h-14 rounded-lg font-bold text-lg shadow-lg shadow-primary/20 transition-all group"
+                  className="w-full bg-primary hover:bg-[hsl(var(--primary-hover))] text-white h-14 rounded-lg font-bold text-lg shadow-lg shadow-primary/20 transition-all group"
                 >
                   {isSubmitting ? (
                     <>

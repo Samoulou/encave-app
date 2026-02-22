@@ -65,7 +65,7 @@ export default async function ExperiencesDashboardPage({ searchParams }: PagePro
           </div>
           <Button
             asChild
-            className="flex items-center gap-2 bg-primary hover:bg-[#b02244] text-white px-5 py-2.5 rounded-lg shadow-lg shadow-primary/20 transition-all active:scale-95 group"
+            className="flex items-center gap-2 bg-primary hover:bg-[hsl(var(--primary-hover))] text-white px-5 py-2.5 rounded-lg shadow-lg shadow-primary/20 transition-all active:scale-95 group"
           >
             <Link href="/dashboard/experiences/new">
               <Plus className="h-5 w-5 transition-transform group-hover:rotate-90" />
