@@ -30,10 +30,10 @@ export function MobileOrderSummary(props: MobileOrderSummaryProps) {
       <button
         type="button"
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full bg-white p-4 rounded-xl shadow-sm border border-[#e5d2d7] flex items-center justify-between"
+        className="w-full bg-white p-4 rounded-xl shadow-sm border border-border flex items-center justify-between"
       >
         <div className="flex items-center gap-3">
-          <span className="font-medium text-[#1a0f12]">{t('orderSummary')}</span>
+          <span className="font-medium text-foreground">{t('orderSummary')}</span>
           <span className="text-lg font-bold text-primary">{formatCHF(total)}</span>
         </div>
         {isExpanded ? (

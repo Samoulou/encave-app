@@ -103,7 +103,7 @@ export function MobileBookingDrawer({
         <SheetHeader className="text-left pb-4">
           <SheetTitle>{t('bookExperience')}</SheetTitle>
           <SheetDescription>
-            <span className="text-lg font-bold text-[#1a0f12]">{formatCHF(price)}</span>
+            <span className="text-lg font-bold text-foreground">{formatCHF(price)}</span>
             <span className="text-gray-500 ml-1">/ {t('perPerson')}</span>
           </SheetDescription>
         </SheetHeader>
@@ -111,7 +111,7 @@ export function MobileBookingDrawer({
         <div className="flex flex-col gap-5 pb-24">
           {/* Date Picker */}
           <div className="space-y-2">
-            <label className="block text-sm font-semibold text-[#1a0f12]">
+            <label className="block text-sm font-semibold text-foreground">
               {t('selectDate')}
             </label>
             <BookingDatePicker
@@ -124,7 +124,7 @@ export function MobileBookingDrawer({
           {/* Time Slots */}
           {date && (
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-[#1a0f12]">
+              <label className="block text-sm font-semibold text-foreground">
                 {t('selectTime')}
               </label>
               <TimeSlotSelector
@@ -140,7 +140,7 @@ export function MobileBookingDrawer({
           {/* Guests */}
           {time && (
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-[#1a0f12]">
+              <label className="block text-sm font-semibold text-foreground">
                 {t('selectGuests')}
               </label>
               <GuestCountInput
@@ -161,7 +161,7 @@ export function MobileBookingDrawer({
 
               {/* Total */}
               <div className="flex justify-between items-center">
-                <span className="font-bold text-lg text-[#1a0f12]">
+                <span className="font-bold text-lg text-foreground">
                   {t('totalPrice')}
                 </span>
                 <span className="font-bold text-xl text-primary">

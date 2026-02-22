@@ -130,12 +130,12 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
 
   return (
     <>
-      <div className="bg-white rounded-xl border border-[#e5d2d7] shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-border shadow-sm overflow-hidden">
         {/* Table */}
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-[#e5d2d7]">
+              <tr className="border-b border-border">
                 <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564]">
                   {t('columns.bookingInfo')}
                 </th>
@@ -169,7 +169,7 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
                     {/* Booking Info */}
                     <td className="py-4 px-6">
                       <div className="flex flex-col">
-                        <span className="text-[#1a0f12] font-bold text-sm">
+                        <span className="text-foreground font-bold text-sm">
                           {formatDate(bookingDate, locale as Locale, { dateStyle: 'medium' })}
                         </span>
                         <span className="text-[#915564] text-xs">
@@ -185,7 +185,7 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
                           {initials}
                         </div>
                         <div className="flex flex-col min-w-0">
-                          <span className="text-[#1a0f12] text-sm font-semibold truncate">
+                          <span className="text-foreground text-sm font-semibold truncate">
                             {booking.visitorName}
                           </span>
                           <span className="text-[#915564] text-xs truncate">
@@ -197,14 +197,14 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
 
                     {/* Experience */}
                     <td className="py-4 px-6">
-                      <span className="text-[#1a0f12] text-sm font-medium">
+                      <span className="text-foreground text-sm font-medium">
                         {booking.experience.title}
                       </span>
                     </td>
 
                     {/* Guests */}
                     <td className="py-4 px-6">
-                      <div className="flex items-center gap-1 text-[#1a0f12] text-sm">
+                      <div className="flex items-center gap-1 text-foreground text-sm">
                         <Users className="h-4 w-4 text-[#915564]" />
                         {t('guestCount', { count: booking.guestCount })}
                       </div>
@@ -247,7 +247,7 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
                       ) : (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <button className="p-2 rounded-lg text-[#915564] hover:bg-[#f2e9eb] hover:text-primary transition-colors">
+                            <button className="p-2 rounded-lg text-[#915564] hover:bg-primary-light hover:text-primary transition-colors">
                               <MoreVertical className="h-5 w-5" />
                             </button>
                           </DropdownMenuTrigger>
@@ -282,7 +282,7 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
         </div>
 
         {/* Pagination Footer */}
-        <div className="bg-white px-6 py-4 border-t border-[#e5d2d7] flex items-center justify-between">
+        <div className="bg-white px-6 py-4 border-t border-border flex items-center justify-between">
           <span className="text-sm text-[#915564]">
             {t('pagination.showing', { from: startIndex + 1, to: endIndex, total: bookings.length })}
           </span>
@@ -290,14 +290,14 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="px-3 py-1 rounded-lg border border-[#e5d2d7] text-[#915564] text-sm hover:bg-[#f2e9eb] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1 rounded-lg border border-border text-[#915564] text-sm hover:bg-primary-light disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {t('pagination.previous')}
             </button>
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="px-3 py-1 rounded-lg border border-[#e5d2d7] text-[#915564] text-sm hover:bg-[#f2e9eb] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1 rounded-lg border border-border text-[#915564] text-sm hover:bg-primary-light disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {t('pagination.next')}
             </button>

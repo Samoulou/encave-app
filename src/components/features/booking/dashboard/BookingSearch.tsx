@@ -75,12 +75,12 @@ export function BookingSearch() {
         placeholder={t('search.placeholder')}
         value={localValue}
         onChange={handleChange}
-        className="block w-full pl-10 pr-8 py-2.5 rounded-lg bg-[#f8f6f6] border-transparent focus:border-primary focus:bg-white focus:ring-0 text-sm text-[#1a0f12] placeholder-[#915564] transition-all"
+        className="block w-full pl-10 pr-8 py-2.5 rounded-lg bg-[#f8f6f6] border-transparent focus:border-primary focus:bg-white focus:ring-0 text-sm text-foreground placeholder-[#915564] transition-all"
       />
       {localValue && !isPending && (
         <button
           type="button"
-          className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-[#915564] hover:text-[#1a0f12] hover:bg-[#f2e9eb] transition-colors"
+          className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-[#915564] hover:text-foreground hover:bg-primary-light transition-colors"
           onClick={clearSearch}
         >
           <X className="h-4 w-4" />

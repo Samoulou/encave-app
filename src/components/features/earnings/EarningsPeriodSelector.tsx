@@ -55,7 +55,7 @@ export function EarningsPeriodSelector({
     <Select value={optimisticPeriod} onValueChange={handlePeriodChange}>
       <SelectTrigger
         className={cn(
-          'w-40 h-10 bg-white border-[#e5d2d7] text-[#1a0f12] font-medium shadow-sm',
+          'w-40 h-10 bg-white border-border text-foreground font-medium shadow-sm',
           isPending && 'opacity-70'
         )}
       >

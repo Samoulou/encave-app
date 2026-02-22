@@ -56,7 +56,7 @@ export default async function ExperiencesDashboardPage({ searchParams }: PagePro
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="font-display text-3xl md:text-4xl font-black tracking-[-0.033em] text-[#1a0f12]">
+            <h1 className="font-display text-3xl md:text-4xl font-black tracking-[-0.033em] text-foreground">
               Manage Experiences
             </h1>
             <p className="text-gray-500 mt-1">
@@ -105,7 +105,7 @@ function ExperiencesLoadingState() {
       {/* Experience cards skeleton */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="rounded-xl bg-white overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)]">
+          <div key={i} className="rounded-xl bg-white overflow-hidden shadow-card">
             <Skeleton className="aspect-[3/2] w-full" />
             <div className="p-5 space-y-3">
               <Skeleton className="h-6 w-3/4" />

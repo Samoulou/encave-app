@@ -42,7 +42,7 @@ export async function EarningsTransactionsSection({ wineryId, params }: Earnings
     <div className="flex flex-col gap-4">
       {/* Section Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-[#1a0f12]">Recent Transactions</h2>
+        <h2 className="text-xl font-bold text-foreground">Recent Transactions</h2>
         <Link
           href="/dashboard/earnings/all"
           className="text-primary text-sm font-bold hover:underline"

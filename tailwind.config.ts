@@ -91,7 +91,8 @@ const config: Config = {
   			input: 'hsl(var(--input))',
   			primary: {
   				DEFAULT: 'hsl(var(--primary))',
-  				foreground: 'hsl(var(--primary-foreground))'
+  				foreground: 'hsl(var(--primary-foreground))',
+  				light: 'hsl(var(--primary-light))'
   			},
   			secondary: {
   				DEFAULT: 'hsl(var(--secondary))',
@@ -174,7 +175,8 @@ const config: Config = {
   			gold: '0 4px 14px rgba(201, 169, 78, 0.15)',
   			card: '0 4px 20px rgba(0, 0, 0, 0.05)',
   			'card-hover': '0 12px 30px rgba(150, 42, 72, 0.15)',
-  			primary: '0 4px 14px rgba(150, 42, 72, 0.2)'
+  			primary: '0 4px 14px rgba(150, 42, 72, 0.2)',
+  			'warm-xl': '0 10px 30px rgba(122, 27, 59, 0.1), 0 4px 10px rgba(0, 0, 0, 0.06)'
   		},
   		borderRadius: {
   			DEFAULT: '0.25rem',
@@ -202,11 +204,20 @@ const config: Config = {
   				to: {
   					height: '0'
   				}
+  			},
+  			'shimmer-gold': {
+  				'0%, 100%': {
+  					backgroundPosition: '-200% center'
+  				},
+  				'50%': {
+  					backgroundPosition: '200% center'
+  				}
   			}
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
-  			'accordion-up': 'accordion-up 0.2s ease-out'
+  			'accordion-up': 'accordion-up 0.2s ease-out',
+  			'shimmer-gold': 'shimmer-gold 3s ease-in-out infinite'
   		}
   	}
   },

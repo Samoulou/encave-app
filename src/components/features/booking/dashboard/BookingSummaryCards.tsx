@@ -31,7 +31,7 @@ export function BookingSummaryCards({ summary }: BookingSummaryCardsProps) {
   return (
     <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
       {/* Total Bookings Card */}
-      <div className="flex flex-col gap-1 p-5 bg-white rounded-xl border border-[#e5d2d7] shadow-sm">
+      <div className="flex flex-col gap-1 p-5 bg-white rounded-xl border border-border shadow-sm">
         <div className="flex items-center justify-between">
           <p className="text-[#915564] text-sm font-medium uppercase tracking-wider">
             {t('totalBookings')}
@@ -39,7 +39,7 @@ export function BookingSummaryCards({ summary }: BookingSummaryCardsProps) {
           <CalendarCheck className="h-5 w-5 text-[#915564]" />
         </div>
         <div className="flex items-baseline gap-3 mt-2">
-          <p className="text-[#1a0f12] text-3xl font-bold">{summary.monthCount}</p>
+          <p className="text-foreground text-3xl font-bold">{summary.monthCount}</p>
           {trendPercentage !== 0 && (
             <span
               className={cn(
@@ -62,7 +62,7 @@ export function BookingSummaryCards({ summary }: BookingSummaryCardsProps) {
       </div>
 
       {/* Upcoming (7 Days) Card */}
-      <div className="flex flex-col gap-1 p-5 bg-white rounded-xl border border-[#e5d2d7] shadow-sm">
+      <div className="flex flex-col gap-1 p-5 bg-white rounded-xl border border-border shadow-sm">
         <div className="flex items-center justify-between">
           <p className="text-[#915564] text-sm font-medium uppercase tracking-wider">
             {t('upcoming')}
@@ -70,12 +70,12 @@ export function BookingSummaryCards({ summary }: BookingSummaryCardsProps) {
           <CalendarClock className="h-5 w-5 text-[#915564]" />
         </div>
         <div className="flex items-baseline gap-3 mt-2">
-          <p className="text-[#1a0f12] text-3xl font-bold">{summary.weekCount}</p>
+          <p className="text-foreground text-3xl font-bold">{summary.weekCount}</p>
         </div>
       </div>
 
       {/* Occupancy Rate Card */}
-      <div className="flex flex-col gap-1 p-5 bg-white rounded-xl border border-[#e5d2d7] shadow-sm">
+      <div className="flex flex-col gap-1 p-5 bg-white rounded-xl border border-border shadow-sm">
         <div className="flex items-center justify-between">
           <p className="text-[#915564] text-sm font-medium uppercase tracking-wider">
             {t('occupancyRate')}
@@ -84,10 +84,10 @@ export function BookingSummaryCards({ summary }: BookingSummaryCardsProps) {
         </div>
         <div className="flex flex-col gap-2 mt-2">
           <div className="flex items-baseline justify-between">
-            <p className="text-[#1a0f12] text-3xl font-bold">{occupancyRate}%</p>
+            <p className="text-foreground text-3xl font-bold">{occupancyRate}%</p>
             <span className="text-sm text-[#915564]">{t('avgThisMonth')}</span>
           </div>
-          <div className="w-full h-1.5 bg-[#f2e9eb] rounded-full overflow-hidden">
+          <div className="w-full h-1.5 bg-primary-light rounded-full overflow-hidden">
             <div
               className="h-full bg-primary rounded-full transition-all duration-500"
               style={{ width: `${occupancyRate}%` }}

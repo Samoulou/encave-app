@@ -18,7 +18,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
       className="toaster group"
       position="bottom-right"
       icons={{
-        success: <CircleCheck className="h-4 w-4 text-green-600" />,
+        success: <CircleCheck className="h-4 w-4 text-emerald-600" />,
         info: <Info className="h-4 w-4 text-blue-600" />,
         warning: <TriangleAlert className="h-4 w-4 text-amber-600" />,
         error: <OctagonX className="h-4 w-4 text-red-600" />,
@@ -27,13 +27,13 @@ const Toaster = ({ ...props }: ToasterProps) => {
       toastOptions={{
         classNames: {
           toast:
-            "group toast group-[.toaster]:bg-white group-[.toaster]:text-slate-900 group-[.toaster]:border-stone-200 group-[.toaster]:shadow-warm-lg group-[.toaster]:rounded-xl",
-          description: "group-[.toast]:text-slate-600",
+            "group toast group-[.toaster]:bg-white group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-warm-lg group-[.toaster]:rounded-xl",
+          description: "group-[.toast]:text-muted-foreground",
           actionButton:
-            "group-[.toast]:bg-burgundy-600 group-[.toast]:text-white group-[.toast]:rounded-lg group-[.toast]:hover:bg-burgundy-700",
+            "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground group-[.toast]:rounded-lg group-[.toast]:hover:bg-[hsl(var(--primary-hover))]",
           cancelButton:
-            "group-[.toast]:bg-stone-100 group-[.toast]:text-slate-700 group-[.toast]:rounded-lg group-[.toast]:hover:bg-stone-200",
-          success: "group-[.toaster]:border-l-4 group-[.toaster]:border-l-green-500",
+            "group-[.toast]:bg-muted group-[.toast]:text-foreground group-[.toast]:rounded-lg group-[.toast]:hover:bg-accent",
+          success: "group-[.toaster]:border-l-4 group-[.toaster]:border-l-emerald-500",
           error: "group-[.toaster]:border-l-4 group-[.toaster]:border-l-red-500",
           warning: "group-[.toaster]:border-l-4 group-[.toaster]:border-l-amber-500",
           info: "group-[.toaster]:border-l-4 group-[.toaster]:border-l-blue-500",

@@ -43,6 +43,9 @@
   /* Ring */
   --ring: 345 55% 37%;
 
+  /* Primary light tint: #f2e9eb */
+  --primary-light: 345 23% 93%;
+
   /* Custom semantic colors */
   /* Text: #1a0f12 main, #915564 secondary */
   --text-main: 345 26% 8%;

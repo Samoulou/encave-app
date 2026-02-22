@@ -26,7 +26,7 @@ export function WhatsIncluded({ type, inclusions }: WhatsIncludedProps) {
 
   return (
     <section>
-      <h3 className="text-2xl font-bold mb-6 text-[#1a0f12]">{t('whatsIncluded')}</h3>
+      <h3 className="text-2xl font-bold mb-6 text-foreground">{t('whatsIncluded')}</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {items.map((item, index) => (
           <div key={index} className="flex items-start gap-3">

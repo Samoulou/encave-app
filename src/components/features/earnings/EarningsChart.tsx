@@ -30,8 +30,8 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!active || !payload || !payload.length) return null;
 
   return (
-    <div className="rounded-lg border border-[#e5d2d7] bg-white p-3 shadow-lg">
-      <p className="mb-2 font-bold text-[#1a0f12]">{label}</p>
+    <div className="rounded-lg border border-border bg-white p-3 shadow-lg">
+      <p className="mb-2 font-bold text-foreground">{label}</p>
       {payload.map((entry) => (
         <div key={entry.dataKey} className="flex items-center gap-2 text-sm">
           <span
@@ -41,7 +41,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
           <span className="text-[#915564]">
             {entry.dataKey === 'revenue' ? 'Gross' : 'Net Payout'}:
           </span>
-          <span className="font-bold text-[#1a0f12]">
+          <span className="font-bold text-foreground">
             CHF {(entry.value / 100).toLocaleString('de-CH', { minimumFractionDigits: 2 })}
           </span>
         </div>
@@ -68,11 +68,11 @@ export function EarningsChart({ data }: EarningsChartProps) {
   const yAxisMax = Math.ceil(maxValue / 2500) * 2500 || 10000;
 
   return (
-    <div className="rounded-xl border border-[#e5d2d7] bg-white p-6 lg:p-8 shadow-sm">
+    <div className="rounded-xl border border-border bg-white p-6 lg:p-8 shadow-sm">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
-          <h2 className="text-lg font-bold text-[#1a0f12]">Revenue Evolution</h2>
+          <h2 className="text-lg font-bold text-foreground">Revenue Evolution</h2>
           <p className="text-sm text-[#915564]">
             Gross revenue vs Net payout over the last 6 months
           </p>

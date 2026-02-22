@@ -21,7 +21,7 @@ export function EarningsPageHeader() {
           </li>
           <li className="text-[#915564]/50">/</li>
           <li>
-            <span className="font-medium text-[#1a0f12]">Earnings</span>
+            <span className="font-medium text-foreground">Earnings</span>
           </li>
         </ol>
       </nav>
@@ -29,7 +29,7 @@ export function EarningsPageHeader() {
       {/* Header with title and controls */}
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div className="flex flex-col gap-2">
-          <h1 className="font-display text-3xl md:text-4xl font-black tracking-tight text-[#1a0f12]">
+          <h1 className="font-display text-3xl md:text-4xl font-black tracking-tight text-foreground">
             Earnings
           </h1>
           <p className="text-[#915564] text-base">

@@ -142,7 +142,7 @@ export function LoginForm() {
                       type="email"
                       placeholder={tCommon('placeholders.email')}
                       autoComplete="email"
-                      className="w-full h-12 px-4 pr-10 rounded-lg border border-[#e5d2d7] bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-400"
+                      className="w-full h-12 px-4 pr-10 rounded-lg border border-border bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-400"
                       {...field}
                     />
                     <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
@@ -179,7 +179,7 @@ export function LoginForm() {
                       type={showPassword ? 'text' : 'password'}
                       placeholder="••••••••"
                       autoComplete="current-password"
-                      className="w-full h-12 px-4 pr-10 rounded-lg border border-[#e5d2d7] bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-400"
+                      className="w-full h-12 px-4 pr-10 rounded-lg border border-border bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-400"
                       {...field}
                     />
                     <button

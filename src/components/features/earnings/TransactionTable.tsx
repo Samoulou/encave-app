@@ -65,17 +65,17 @@ function TransactionTableComponent({ transactions }: TransactionTableProps) {
 
   if (transactions.length === 0) {
     return (
-      <div className="rounded-xl border border-[#e5d2d7] bg-white p-8 text-center shadow-sm">
+      <div className="rounded-xl border border-border bg-white p-8 text-center shadow-sm">
         <p className="text-[#915564]">{t('noTransactions')}</p>
       </div>
     );
   }
 
   return (
-    <div className="rounded-xl border border-[#e5d2d7] bg-white shadow-sm overflow-hidden">
+    <div className="rounded-xl border border-border bg-white shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm whitespace-nowrap">
-          <thead className="bg-gray-50 border-b border-[#e5d2d7] text-[#915564] font-medium uppercase text-xs tracking-wider">
+          <thead className="bg-gray-50 border-b border-border text-[#915564] font-medium uppercase text-xs tracking-wider">
             <tr>
               <th scope="col" className="px-6 py-4">
                 {t('date')}
@@ -100,7 +100,7 @@ function TransactionTableComponent({ transactions }: TransactionTableProps) {
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#f2e9eb] text-[#1a0f12]">
+          <tbody className="divide-y divide-[#f2e9eb] text-foreground">
             {paginatedTransactions.map((transaction) => (
               <tr
                 key={transaction.id}
@@ -176,7 +176,7 @@ function TransactionTableComponent({ transactions }: TransactionTableProps) {
 
       {/* Pagination */}
       {transactions.length > DEFAULT_PAGE_SIZE && (
-        <div className="border-t border-[#e5d2d7] p-4">
+        <div className="border-t border-border p-4">
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}

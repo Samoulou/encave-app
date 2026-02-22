@@ -16,12 +16,12 @@ export function ClientBookingEmptyState({ variant }: ClientBookingEmptyStateProp
   const Icon = isUpcoming ? CalendarX2 : History;
 
   return (
-    <div className="bg-white rounded-xl border border-[#e5d2d7] shadow-sm">
+    <div className="bg-white rounded-xl border border-border shadow-sm">
       <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-        <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#f2e9eb]">
+        <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-light">
           <Icon className="h-8 w-8 text-[#915564]" />
         </div>
-        <h3 className="text-lg font-bold text-[#1a0f12]">
+        <h3 className="text-lg font-bold text-foreground">
           {isUpcoming ? t('noUpcoming') : t('noPast')}
         </h3>
         <p className="mt-2 max-w-sm text-sm text-[#915564]">

@@ -78,7 +78,7 @@ export function ExperiencesPagination({
         <Button
           variant="ghost"
           size="icon"
-          className="h-9 w-9 text-gray-400 hover:text-[#1a0f12] disabled:opacity-50"
+          className="h-9 w-9 text-gray-400 hover:text-foreground disabled:opacity-50"
           onClick={() => goToPage(currentPage - 1)}
           disabled={currentPage === 1 || isPending}
           aria-label="Previous page"
@@ -118,7 +118,7 @@ export function ExperiencesPagination({
         <Button
           variant="ghost"
           size="icon"
-          className="h-9 w-9 text-gray-400 hover:text-[#1a0f12] disabled:opacity-50"
+          className="h-9 w-9 text-gray-400 hover:text-foreground disabled:opacity-50"
           onClick={() => goToPage(currentPage + 1)}
           disabled={currentPage === totalPages || isPending}
           aria-label="Next page"

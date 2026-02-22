@@ -74,7 +74,7 @@ export function ClientBookingCard({ booking, variant }: ClientBookingCardProps) 
   }
 
   return (
-    <div className="rounded-xl border border-[#e5d2d7] bg-white shadow-sm transition-shadow hover:shadow-md">
+    <div className="rounded-xl border border-border bg-white shadow-sm transition-shadow hover:shadow-md">
       {/* Summary Row */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
@@ -95,7 +95,7 @@ export function ClientBookingCard({ booking, variant }: ClientBookingCardProps) 
         {/* Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="font-display font-bold text-[#1a0f12] truncate">
+            <h3 className="font-display font-bold text-foreground truncate">
               {booking.experience.title}
             </h3>
             <BookingStatusBadge status={booking.status} />
@@ -117,44 +117,44 @@ export function ClientBookingCard({ booking, variant }: ClientBookingCardProps) 
 
       {/* Expanded Details */}
       {isExpanded && (
-        <div className="border-t border-[#e5d2d7] p-4 sm:p-6 space-y-4">
+        <div className="border-t border-border p-4 sm:p-6 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm">
                 <Calendar className="h-4 w-4 text-[#915564]" aria-hidden="true" />
-                <span className="text-[#1a0f12]">{formattedDate}</span>
+                <span className="text-foreground">{formattedDate}</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <Clock className="h-4 w-4 text-[#915564]" aria-hidden="true" />
-                <span className="text-[#1a0f12]">
+                <span className="text-foreground">
                   {booking.timeSlot} &middot; {booking.experience.duration} min
                 </span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <Users className="h-4 w-4 text-[#915564]" aria-hidden="true" />
-                <span className="text-[#1a0f12]">
+                <span className="text-foreground">
                   {t('bookingCard.guests', { count: booking.guestCount })}
                 </span>
               </div>
               <div className="text-sm">
                 <span className="text-[#915564]">{t('bookingCard.reference')}: </span>
-                <span className="font-mono font-bold text-[#1a0f12]">
+                <span className="font-mono font-bold text-foreground">
                   {booking.reference}
                 </span>
               </div>
               <div className="text-sm">
                 <span className="text-[#915564]">{t('bookingCard.price')}: </span>
-                <span className="font-bold text-[#1a0f12]">CHF {priceFormatted}</span>
+                <span className="font-bold text-foreground">CHF {priceFormatted}</span>
               </div>
             </div>
 
             <div className="space-y-3">
-              <h4 className="font-bold text-sm text-[#1a0f12]">
+              <h4 className="font-bold text-sm text-foreground">
                 {t('bookingCard.winery')}
               </h4>
               <div className="flex items-start gap-2 text-sm">
                 <MapPin className="h-4 w-4 text-[#915564] mt-0.5 flex-shrink-0" aria-hidden="true" />
-                <span className="text-[#1a0f12]">
+                <span className="text-foreground">
                   {booking.winery.address}
                   {booking.winery.commune && `, ${booking.winery.commune}`}
                 </span>
@@ -227,7 +227,7 @@ export function ClientBookingCard({ booking, variant }: ClientBookingCardProps) 
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
           <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-display font-bold text-lg text-[#1a0f12]">
+              <h3 className="font-display font-bold text-lg text-foreground">
                 {t('cancel.title')}
               </h3>
               <button
@@ -243,8 +243,8 @@ export function ClientBookingCard({ booking, variant }: ClientBookingCardProps) 
               {t('cancel.confirmMessage', { title: booking.experience.title })}
             </p>
 
-            <div className="rounded-lg bg-[#fdfcfa] border border-[#e5d2d7] p-3 text-sm">
-              <p className="font-bold text-[#1a0f12]">{t('cancel.refundPolicy')}</p>
+            <div className="rounded-lg bg-[#fdfcfa] border border-border p-3 text-sm">
+              <p className="font-bold text-foreground">{t('cancel.refundPolicy')}</p>
               <p className="text-[#915564] mt-1">{t('cancel.refundPolicyDetail')}</p>
             </div>
 

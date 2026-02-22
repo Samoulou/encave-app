@@ -108,7 +108,7 @@ export function BookingWidget({
 
   return (
     <div
-      className="sticky top-28 bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] p-6 lg:p-8"
+      className="sticky top-28 bg-white rounded-2xl shadow-warm-xl p-6 lg:p-8"
       data-testid="booking-widget"
       id="booking-widget"
     >
@@ -117,7 +117,7 @@ export function BookingWidget({
         <div>
           <p className="text-sm text-gray-500">{tExp('pricePerPersonLabel')}</p>
           <div className="flex items-baseline gap-1">
-            <span className="text-2xl font-bold text-[#1a0f12]" data-testid="booking-price">
+            <span className="text-2xl font-bold text-foreground" data-testid="booking-price">
               {formatCHF(price)}
             </span>
           </div>
@@ -132,7 +132,7 @@ export function BookingWidget({
       <div className="flex flex-col gap-5">
         {/* Date Picker */}
         <div className="space-y-2">
-          <label className="block text-sm font-semibold text-[#1a0f12]">
+          <label className="block text-sm font-semibold text-foreground">
             {t('selectDate')}
           </label>
           <BookingDatePicker
@@ -145,7 +145,7 @@ export function BookingWidget({
         {/* Time Slots */}
         {date && (
           <div className="space-y-2">
-            <label className="block text-sm font-semibold text-[#1a0f12]">
+            <label className="block text-sm font-semibold text-foreground">
               {t('selectTime')}
             </label>
             <TimeSlotSelector
@@ -161,7 +161,7 @@ export function BookingWidget({
         {/* Guests */}
         {time && (
           <div className="space-y-2">
-            <label className="block text-sm font-semibold text-[#1a0f12]">
+            <label className="block text-sm font-semibold text-foreground">
               {t('selectGuests')}
             </label>
             <GuestCountInput
@@ -182,7 +182,7 @@ export function BookingWidget({
 
             {/* Total */}
             <div className="flex justify-between items-center mb-2">
-              <span className="font-bold text-lg text-[#1a0f12]">
+              <span className="font-bold text-lg text-foreground">
                 {t('totalPrice')}
               </span>
               <span className="font-bold text-xl text-primary" data-testid="booking-total">

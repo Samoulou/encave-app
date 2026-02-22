@@ -177,7 +177,7 @@ export function CheckoutClient({
       <div className="mx-auto max-w-7xl">
         {/* Page Heading */}
         <div className="mb-8">
-          <h1 className="font-display text-3xl md:text-4xl font-bold text-[#1a0f12] mb-2">
+          <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-2">
             {t('pageTitle')}
           </h1>
           <p className="text-[#915564]">{t('pageSubtitle')}</p>
@@ -238,7 +238,7 @@ export function CheckoutClient({
         {isCheckingAvailability && remainingCapacity === null && (
           <Alert className="mb-6 border-primary/20 bg-primary/5">
             <Loader2 className="h-4 w-4 animate-spin text-primary" />
-            <AlertDescription className="text-[#1a0f12]">
+            <AlertDescription className="text-foreground">
               {t('verifyingAvailability')}
             </AlertDescription>
           </Alert>
@@ -274,11 +274,11 @@ export function CheckoutClient({
               </fieldset>
 
               {/* Payment Section - Simplified for Stripe redirect */}
-              <section className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-[#e5d2d7]">
+              <section className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-border">
                 {/* Trust Badge */}
-                <div className="flex items-center justify-center gap-2 p-3 bg-[#f2e9eb]/50 rounded-lg border border-[#e5d2d7] mb-6">
-                  <Lock className="h-4 w-4 text-[#1a0f12]" aria-hidden="true" />
-                  <span className="text-sm font-medium text-[#1a0f12]">{t('securePaymentStripe')}</span>
+                <div className="flex items-center justify-center gap-2 p-3 bg-primary-light/50 rounded-lg border border-border mb-6">
+                  <Lock className="h-4 w-4 text-foreground" aria-hidden="true" />
+                  <span className="text-sm font-medium text-foreground">{t('securePaymentStripe')}</span>
                 </div>
 
                 {/* Submit Error */}

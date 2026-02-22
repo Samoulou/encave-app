@@ -65,7 +65,7 @@ export function ExportCSVButton() {
     <button
       onClick={handleExport}
       disabled={isExporting}
-      className="flex items-center gap-2 h-10 px-4 rounded-lg border border-[#e5d2d7] bg-white text-[#1a0f12] text-sm font-bold hover:bg-gray-50 transition-colors disabled:opacity-50"
+      className="flex items-center gap-2 h-10 px-4 rounded-lg border border-border bg-white text-foreground text-sm font-bold hover:bg-gray-50 transition-colors disabled:opacity-50"
     >
       {isExporting ? (
         <Loader2 className="h-5 w-5 animate-spin" />

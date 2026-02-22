@@ -26,7 +26,7 @@ export default async function ConfirmationLayout({
             <div className="flex h-8 w-8 items-center justify-center text-primary">
               <Wine className="h-8 w-8" aria-hidden="true" />
             </div>
-            <span className="text-[#1a0f12] text-xl font-bold tracking-tight">
+            <span className="text-foreground text-xl font-bold tracking-tight">
               EnCave
             </span>
           </Link>

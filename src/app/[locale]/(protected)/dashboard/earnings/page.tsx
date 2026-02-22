@@ -98,7 +98,7 @@ function SummarySkeleton() {
   return (
     <SkeletonContainer label="Loading summary..." className="grid gap-4 grid-cols-1 md:grid-cols-3">
       {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} className="rounded-xl border border-[#e5d2d7] bg-white p-6 shadow-sm h-40">
+        <div key={i} className="rounded-xl border border-border bg-white p-6 shadow-sm h-40">
           <div className="flex items-center justify-between">
             <Skeleton className="h-4 w-28" />
             <Skeleton className="h-10 w-10 rounded-lg" />
@@ -117,7 +117,7 @@ function SummarySkeleton() {
 function ChartsSkeleton() {
   return (
     <SkeletonContainer label="Loading chart...">
-      <div className="rounded-xl border border-[#e5d2d7] bg-white p-6 lg:p-8 shadow-sm">
+      <div className="rounded-xl border border-border bg-white p-6 lg:p-8 shadow-sm">
         <div className="flex items-center justify-between mb-8">
           <div>
             <Skeleton className="h-5 w-40" />
@@ -142,9 +142,9 @@ function TransactionsSkeleton() {
         <Skeleton className="h-6 w-44" />
         <Skeleton className="h-4 w-16" />
       </div>
-      <div className="rounded-xl border border-[#e5d2d7] bg-white shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-border bg-white shadow-sm overflow-hidden">
         {/* Table Header */}
-        <div className="border-b border-[#e5d2d7] bg-gray-50 px-6 py-4">
+        <div className="border-b border-border bg-gray-50 px-6 py-4">
           <div className="grid grid-cols-7 gap-4">
             <Skeleton className="h-3 w-12" />
             <Skeleton className="h-3 w-20" />

@@ -137,7 +137,7 @@ export function ExperienceManagementCard({
         className={cn(
           'group relative flex flex-col bg-white rounded-xl overflow-hidden border border-transparent',
           'hover:border-primary/20 transition-all duration-300 hover:-translate-y-1',
-          'shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:shadow-[0_12px_30px_rgba(205,45,85,0.15)]'
+          'shadow-card hover:shadow-card-hover'
         )}
       >
         {/* Image Area */}
@@ -229,7 +229,7 @@ export function ExperienceManagementCard({
 
         {/* Content */}
         <div className="p-5 flex flex-col flex-1 gap-3">
-          <h3 className="text-lg font-bold text-[#1a0f12] leading-tight group-hover:text-primary transition-colors line-clamp-1">
+          <h3 className="text-lg font-bold text-foreground leading-tight group-hover:text-primary transition-colors line-clamp-1">
             {experience.title}
           </h3>
 
@@ -247,7 +247,7 @@ export function ExperienceManagementCard({
 
           {/* Footer with Price and Actions */}
           <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
-            <span className="text-xl font-bold text-[#1a0f12]">
+            <span className="text-xl font-bold text-foreground">
               {formatPrice(experience.price)}
               <span className="text-xs font-normal text-gray-500 ml-1">/ pp</span>
             </span>
