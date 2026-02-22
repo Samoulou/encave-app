@@ -55,7 +55,7 @@ export function ImageWithFallback({
       {isLoading && (
         <div
           className={cn(
-            'absolute inset-0 animate-pulse bg-slate-200',
+            'absolute inset-0 animate-skeleton-shimmer skeleton-warm',
             className
           )}
           aria-hidden="true"

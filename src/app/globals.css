@@ -151,6 +151,40 @@ body {
   .gradient-warm-bg {
     background: linear-gradient(180deg, #fdfcfa 0%, #faf8f5 100%);
   }
+
+  /* Warm skeleton shimmer — replaces cold gray pulse */
+  .skeleton-warm {
+    background: linear-gradient(
+      90deg,
+      hsl(345 12% 90%) 25%,
+      hsl(345 15% 94%) 50%,
+      hsl(345 12% 90%) 75%
+    );
+    background-size: 200% 100%;
+  }
+
+  /* Subtle dot pattern for premium section backgrounds */
+  .pattern-dots {
+    background-image: radial-gradient(
+      circle at 1px 1px,
+      rgba(150, 42, 72, 0.04) 1px,
+      transparent 0
+    );
+    background-size: 24px 24px;
+  }
+
+  /* Decorative vine ornament line */
+  .ornament-vine {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(345 30% 75% / 0.4) 20%,
+      hsl(45 50% 55% / 0.3) 50%,
+      hsl(345 30% 75% / 0.4) 80%,
+      transparent
+    );
+    height: 1px;
+  }
 }
 
 /* NProgress Navigation Progress Bar */

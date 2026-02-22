@@ -212,12 +212,17 @@ const config: Config = {
   				'50%': {
   					backgroundPosition: '200% center'
   				}
+  			},
+  			'skeleton-shimmer': {
+  				'0%': { backgroundPosition: '-200% 0' },
+  				'100%': { backgroundPosition: '200% 0' }
   			}
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
   			'accordion-up': 'accordion-up 0.2s ease-out',
-  			'shimmer-gold': 'shimmer-gold 3s ease-in-out infinite'
+  			'shimmer-gold': 'shimmer-gold 3s ease-in-out infinite',
+			'skeleton-shimmer': 'skeleton-shimmer 1.5s ease-in-out infinite'
   		}
   	}
   },

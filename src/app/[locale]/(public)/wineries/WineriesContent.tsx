@@ -32,7 +32,7 @@ export async function WineriesContent({ commune }: WineriesContentProps) {
             {t('showingCount', { count: wineries.length })}
           </span>
           {communes.length > 0 && (
-            <Suspense fallback={<div className="h-11 w-[200px] bg-stone-100 rounded-lg animate-pulse" />}>
+            <Suspense fallback={<div className="h-11 w-[200px] skeleton-warm rounded-lg animate-skeleton-shimmer" />}>
               <CommuneFilter communes={communes} />
             </Suspense>
           )}

@@ -50,7 +50,7 @@ export function ExperienceHero({
 
       {/* Hero Content */}
       <div className="absolute bottom-0 left-0 right-0 p-8 lg:p-12">
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-7xl">
           {/* Type Badge */}
           <span className="inline-flex items-center rounded-full bg-gold-400 px-3 py-1 text-sm font-medium text-gold-950" data-testid="experience-type-badge">
             {TYPE_LABELS[type]}
