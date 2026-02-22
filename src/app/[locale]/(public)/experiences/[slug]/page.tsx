@@ -182,17 +182,17 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
             commune={experience.winery.commune}
           />
 
-          {/* Image Gallery Grid */}
-          <ExperienceDetailGallery
-            coverPhoto={experience.coverPhoto}
-            images={experience.galleryImages}
-            experienceTitle={experience.title}
-          />
-
-          {/* Two Column Layout */}
+          {/* Two Column Layout — gallery + booking widget side by side */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 relative">
-            {/* Left Column: Details (8 cols) */}
+            {/* Left Column: Gallery + Details + Related (8 cols) */}
             <div className="lg:col-span-8 flex flex-col gap-10">
+              {/* Image Gallery */}
+              <ExperienceDetailGallery
+                coverPhoto={experience.coverPhoto}
+                images={experience.galleryImages}
+                experienceTitle={experience.title}
+              />
+
               {/* Quick Facts Chips */}
               <QuickFacts
                 duration={experience.duration}
@@ -211,6 +211,15 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
                 latitude={experience.latitude || experience.winery.latitude}
                 longitude={experience.longitude || experience.winery.longitude}
               />
+
+              {/* Related Experiences - inside left column so booking widget stays sticky */}
+              <Suspense fallback={<RelatedExperiencesSkeleton />}>
+                <RelatedExperiencesSection
+                  experienceId={experience.id}
+                  wineryId={experience.wineryId}
+                  experienceType={experience.type}
+                />
+              </Suspense>
             </div>
 
             {/* Right Column: Sticky Booking Widget (4 cols) */}
@@ -227,15 +236,6 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
               />
             </div>
           </div>
-
-          {/* Related Experiences - streams in after main content */}
-          <Suspense fallback={<RelatedExperiencesSkeleton />}>
-            <RelatedExperiencesSection
-              experienceId={experience.id}
-              wineryId={experience.wineryId}
-              experienceType={experience.type}
-            />
-          </Suspense>
         </div>
 
         {/* Mobile Booking Bar */}
