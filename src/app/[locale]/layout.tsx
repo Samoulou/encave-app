@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { Manrope, JetBrains_Mono, Cormorant } from 'next/font/google';
+import { Manrope, JetBrains_Mono, Fraunces } from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
@@ -24,10 +24,9 @@ const manrope = Manrope({
   display: 'swap',
 });
 
-const cormorant = Cormorant({
+const fraunces = Fraunces({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-cormorant',
+  variable: '--font-fraunces',
   display: 'swap',
 });
 
@@ -64,7 +63,7 @@ export default async function LocaleLayout({ children, params }: Props) {
     <html lang={locale} suppressHydrationWarning>
       <head />
       <body
-        className={`${manrope.variable} ${cormorant.variable} ${jetbrainsMono.variable} font-sans antialiased`}
+        className={`${manrope.variable} ${fraunces.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
         <NextIntlClientProvider messages={messages}>
           <SkipLink />

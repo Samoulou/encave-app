@@ -1,4 +1,4 @@
-import { Manrope, JetBrains_Mono, Cormorant } from 'next/font/google';
+import { Manrope, JetBrains_Mono, Fraunces } from 'next/font/google';
 import '../globals.css';
 
 const manrope = Manrope({
@@ -8,10 +8,9 @@ const manrope = Manrope({
   display: 'swap',
 });
 
-const cormorant = Cormorant({
+const fraunces = Fraunces({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-cormorant',
+  variable: '--font-fraunces',
   display: 'swap',
 });
 
@@ -35,7 +34,7 @@ export default function ComingSoonLayout({
   return (
     <html lang="fr">
       <body
-        className={`${manrope.variable} ${cormorant.variable} ${jetbrainsMono.variable} font-sans antialiased`}
+        className={`${manrope.variable} ${fraunces.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
         {children}
       </body>

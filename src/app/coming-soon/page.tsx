@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Wine, GlassWater, Building2, Grape, UtensilsCrossed, Map, Calendar, Users, ArrowRight, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -104,13 +105,15 @@ export default function ComingSoonPage() {
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?q=80&w=1920&auto=format&fit=crop')] bg-cover bg-center opacity-10" />
         <div className="relative max-w-6xl mx-auto px-6 py-16 md:py-24">
           {/* Logo */}
-          <div className="flex items-center justify-center gap-3 mb-12">
-            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-burgundy-600 to-burgundy-700 shadow-warm-lg">
-              <Wine className="h-8 w-8 text-white" />
-            </div>
-            <span className="font-display text-4xl font-semibold text-burgundy-700">
-              EnCave
-            </span>
+          <div className="flex items-center justify-center mb-12">
+            <Image
+              src="/icons/encave-logo.png"
+              alt="EnCave"
+              width={200}
+              height={56}
+              className="h-14 w-auto"
+              priority
+            />
           </div>
 
           {/* Hero Content */}
@@ -355,16 +358,52 @@ export default function ComingSoonPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-slate-900 py-8">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <Wine className="h-5 w-5 text-burgundy-400" />
-              <span className="font-display text-lg font-semibold text-white">EnCave</span>
+      <footer className="bg-[#1a1215] text-burgundy-300">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+          <div className="grid gap-8 sm:grid-cols-2">
+            {/* Brand */}
+            <div>
+              <Image
+                src="/icons/encave-logo.png"
+                alt="EnCave"
+                width={160}
+                height={46}
+                className="h-11 w-auto brightness-0 invert"
+              />
+              <p className="mt-4 text-sm text-burgundy-400 max-w-xs">
+                Réservez des expériences viticoles uniques directement avec les vignerons suisses.
+              </p>
             </div>
-            <p className="text-slate-400 text-sm">
-              © {new Date().getFullYear()} EnCave. Expériences viticoles authentiques en Valais.
+
+            {/* Découvrir */}
+            <div>
+              <h3 className="font-display text-sm font-semibold text-white mb-4">Découvrir</h3>
+              <ul className="space-y-3 text-sm">
+                <li>
+                  <a href="/fr/degustation-vin-valais" className="hover:text-white transition-colors">
+                    Dégustation en Valais
+                  </a>
+                </li>
+                <li>
+                  <a href="/fr/cepages-valaisans" className="hover:text-white transition-colors">
+                    Cépages Valaisans
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Bottom */}
+          <div className="mt-12 pt-8 border-t border-burgundy-800 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <p className="text-sm text-burgundy-400">
+              © {new Date().getFullYear()} EnCave. Tous droits réservés.
             </p>
+            <a
+              href="mailto:samuel@encave.ch"
+              className="flex items-center gap-2 text-sm text-burgundy-400 hover:text-white transition-colors"
+            >
+              samuel@encave.ch
+            </a>
           </div>
         </div>
       </footer>

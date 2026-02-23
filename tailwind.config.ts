@@ -22,14 +22,14 @@ const config: Config = {
   	extend: {
   		fontFamily: {
   			display: [
-  				'var(--font-cormorant)',
-  				'Cormorant',
+  				'var(--font-fraunces)',
+  				'Fraunces',
   				'Georgia',
   				'serif'
   			],
   			serif: [
-  				'var(--font-cormorant)',
-  				'Cormorant',
+  				'var(--font-fraunces)',
+  				'Fraunces',
   				'Georgia',
   				'serif'
   			],

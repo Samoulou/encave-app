@@ -177,8 +177,7 @@
   "home": {
     "title": "Entdecken Sie Walliser Weinerlebnisse",
     "subtitle": "Buchen Sie einzigartige Weinverkostungen direkt bei Schweizer Winzern. Erkunden Sie Weinkeller, kosten Sie aussergewohnliche Weine und schaffen Sie unvergessliche Erinnerungen.",
-    "heroTitle": "Entdecken Sie die Geheimnisse des",
-    "heroTitleHighlight": "Wallis",
+    "heroTitle": "Entdecken Sie die <strong>Geheimnisse</strong> des <em>Wallis</em>",
     "heroSubtitle": "Entdecken und buchen Sie exklusive Weinverkostungen im Herzen der Schweizer Alpen. Von versteckten Kellern bis zu Grand-Cru-Weinbergen.",
     "heroImageAlt": "Weinberge an den Hangen des Wallis",
     "searchLocationPlaceholder": "Wohin? (z.B. Sitten, Siders)",

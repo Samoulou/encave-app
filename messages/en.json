@@ -177,8 +177,7 @@
   "home": {
     "title": "Discover Valais Wine Experiences",
     "subtitle": "Book unique wine tasting experiences directly with Swiss winemakers. Explore cellars, taste exceptional wines, and create unforgettable memories.",
-    "heroTitle": "Uncork the Secrets of",
-    "heroTitleHighlight": "Valais",
+    "heroTitle": "Uncork the <strong>Secrets</strong> of <em>Valais</em>",
     "heroSubtitle": "Discover and book exclusive wine tastings in the heart of the Swiss Alps. From hidden cellars to grand cru vineyards.",
     "heroImageAlt": "Vineyards on hillside in Valais",
     "searchLocationPlaceholder": "Where to? (e.g., Sion, Sierre)",

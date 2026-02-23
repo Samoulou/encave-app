@@ -177,8 +177,7 @@
   "home": {
     "title": "Découvrez les expériences viticoles du Valais",
     "subtitle": "Réservez des dégustations uniques directement avec les vignerons suisses. Explorez les caves, goûtez des vins exceptionnels et créez des souvenirs inoubliables.",
-    "heroTitle": "Découvrez les secrets du",
-    "heroTitleHighlight": "Valais",
+    "heroTitle": "Découvrez les <strong>secrets</strong> du <em>Valais</em>",
     "heroSubtitle": "Découvrez et réservez des dégustations de vins exclusives au cœur des Alpes suisses. Des caves cachées aux grands crus des vignobles.",
     "heroImageAlt": "Vignobles sur les collines valaisannes",
     "searchLocationPlaceholder": "Où? (ex: Sion, Sierre)",
