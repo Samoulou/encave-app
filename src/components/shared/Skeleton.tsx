@@ -13,7 +13,7 @@ export function Skeleton({ className, ...props }: SkeletonProps) {
   return (
     <div
       className={cn(
-        'animate-pulse rounded-md bg-stone-200',
+        'animate-skeleton-shimmer rounded-md skeleton-warm',
         className
       )}
       aria-hidden="true"

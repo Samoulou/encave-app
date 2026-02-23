@@ -1,6 +1,7 @@
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import {
   Card,
@@ -20,6 +21,7 @@ interface WineryAccessGuardProps {
  * Renders children only if winery is verified, otherwise shows appropriate message.
  */
 export async function WineryAccessGuard({ children }: WineryAccessGuardProps) {
+  const t = await getTranslations('winery.accessGuard');
   const session = await auth();
 
   if (!session?.user) {
@@ -46,15 +48,15 @@ export async function WineryAccessGuard({ children }: WineryAccessGuardProps) {
           <Card className="mx-auto max-w-md text-center">
             <CardHeader>
               <CardTitle className="text-xl text-slate-700">
-                Winemaker Access Required
+                {t('winemakerRequired')}
               </CardTitle>
               <CardDescription>
-                This feature is only available to registered winemakers.
+                {t('winemakerRequiredDescription')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Button asChild>
-                <Link href="/onboarding/winery">Register Your Winery</Link>
+                <Link href="/onboarding/winery">{t('registerWinery')}</Link>
               </Button>
             </CardContent>
           </Card>
@@ -89,21 +91,21 @@ export async function WineryAccessGuard({ children }: WineryAccessGuardProps) {
                 </svg>
               </div>
               <CardTitle className="text-xl text-slate-700">
-                Verification Pending
+                {t('verificationPending')}
               </CardTitle>
               <CardDescription>
-                Your winery <strong>{winery.name}</strong> is currently under
-                review. You will be able to access winemaker features once your
-                registration is verified.
+                {t.rich('verificationPendingDescription', {
+                  name: winery.name,
+                  strong: (chunks) => <strong>{chunks}</strong>,
+                })}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
-                Verification typically takes 2-3 business days. Check your email
-                for updates.
+                {t('verificationInfo')}
               </div>
               <Button asChild variant="outline">
-                <Link href="/">Return to Home</Link>
+                <Link href="/">{t('returnToHome')}</Link>
               </Button>
             </CardContent>
           </Card>
@@ -131,16 +133,15 @@ export async function WineryAccessGuard({ children }: WineryAccessGuardProps) {
                 </svg>
               </div>
               <CardTitle className="text-xl text-slate-700">
-                Registration Not Approved
+                {t('registrationNotApproved')}
               </CardTitle>
               <CardDescription>
-                Unfortunately, your winery registration was not approved. Please
-                contact support for more information.
+                {t('registrationNotApprovedDescription')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Button asChild variant="outline">
-                <Link href="/">Return to Home</Link>
+                <Link href="/">{t('returnToHome')}</Link>
               </Button>
             </CardContent>
           </Card>
@@ -168,16 +169,15 @@ export async function WineryAccessGuard({ children }: WineryAccessGuardProps) {
                 </svg>
               </div>
               <CardTitle className="text-xl text-slate-700">
-                Account Suspended
+                {t('accountSuspended')}
               </CardTitle>
               <CardDescription>
-                Your winery account has been suspended. Please contact support
-                for assistance.
+                {t('accountSuspendedDescription')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Button asChild variant="outline">
-                <Link href="/">Return to Home</Link>
+                <Link href="/">{t('returnToHome')}</Link>
               </Button>
             </CardContent>
           </Card>

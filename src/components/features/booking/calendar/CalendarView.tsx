@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   format,
   startOfMonth,
@@ -58,8 +59,6 @@ interface CalendarViewProps {
   onRefresh?: () => void;
 }
 
-const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
 export function CalendarView({
   calendarData,
   onDateChange,
@@ -67,7 +66,19 @@ export function CalendarView({
   onBookingClick,
   onRefresh,
 }: CalendarViewProps) {
+  const t = useTranslations('calendar');
+  const tDays = useTranslations('common.days.short');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
+  const weekdays = [
+    tDays('1'), // Mon
+    tDays('2'), // Tue
+    tDays('3'), // Wed
+    tDays('4'), // Thu
+    tDays('5'), // Fri
+    tDays('6'), // Sat
+    tDays('0'), // Sun
+  ];
 
   const calendarDays = useMemo(() => {
     const monthStart = startOfMonth(currentDate);
@@ -104,7 +115,7 @@ export function CalendarView({
         {/* Calendar Grid */}
         <div className="grid grid-cols-7 gap-px overflow-hidden rounded-lg border border-slate-200 bg-slate-200">
           {/* Weekday Headers */}
-          {WEEKDAYS.map((day) => (
+          {weekdays.map((day) => (
             <div
               key={day}
               className="bg-slate-50 py-2 text-center text-xs font-medium text-slate-500"
@@ -125,8 +136,9 @@ export function CalendarView({
               <button
                 key={date.toISOString()}
                 onClick={() => handleDayClick(date)}
+                aria-label={format(date, 'PPPP')}
                 className={cn(
-                  'relative min-h-[80px] bg-white p-1.5 text-left transition-colors hover:bg-slate-50',
+                  'relative min-h-[80px] bg-white p-1.5 text-left transition-colors hover:bg-slate-50 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none',
                   !isCurrentMonth && 'bg-slate-50 text-slate-400',
                   isBlocked && 'bg-red-50'
                 )}
@@ -177,7 +189,7 @@ export function CalendarView({
 
                 {/* Blocked Indicator */}
                 {isBlocked && !hasBookings && (
-                  <div className="mt-1 text-[10px] text-red-600">Blocked</div>
+                  <div className="mt-1 text-[10px] text-red-600">{t('blocked')}</div>
                 )}
               </button>
             );
@@ -188,15 +200,15 @@ export function CalendarView({
         <div className="mt-4 flex items-center gap-4 text-xs text-slate-500">
           <div className="flex items-center gap-1.5">
             <span className="inline-block h-3 w-3 rounded-full bg-burgundy-600" />
-            <span>Today</span>
+            <span>{t('today')}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="inline-block h-3 w-3 rounded bg-burgundy-100" />
-            <span>Booking count</span>
+            <span>{t('bookingCount')}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="inline-block h-3 w-3 rounded bg-red-50 ring-1 ring-red-200" />
-            <span>Blocked</span>
+            <span>{t('blocked')}</span>
           </div>
         </div>
       </Card>

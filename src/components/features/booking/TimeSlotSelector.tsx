@@ -136,31 +136,72 @@ export function TimeSlotSelector({
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3" data-testid="time-slot-grid">
-      {slots.map((slot) => (
-        <button
-          key={slot.timeSlot}
-          onClick={() => handleSlotSelect(slot)}
-          disabled={!slot.available}
-          className={cn(
-            'relative flex flex-col items-center justify-center rounded-lg border-2 px-4 py-3 transition-all',
-            slot.available
-              ? selectedTime === slot.timeSlot
-                ? 'border-burgundy-600 bg-burgundy-50 text-burgundy-900'
-                : 'border-stone-200 bg-white hover:border-burgundy-300 hover:bg-burgundy-50/50'
-              : 'border-stone-100 bg-stone-50 text-slate-300 cursor-not-allowed'
-          )}
-        >
-          <span className="text-sm font-medium">{formatTime(slot.timeSlot)}</span>
-          {slot.available ? (
-            <span className="mt-1 text-xs text-slate-500" data-testid="remaining-capacity">
-              {t('remainingCapacity', { count: slot.remainingCapacity })}
-            </span>
-          ) : (
-            <span className="mt-1 text-xs">{t('unavailable')}</span>
-          )}
-        </button>
-      ))}
+    <div className="flex flex-col gap-3" data-testid="time-slot-grid">
+      {slots.map((slot) => {
+        const isSelected = selectedTime === slot.timeSlot;
+        const isFull = !slot.available;
+        const isLowCapacity = slot.available && slot.remainingCapacity <= 3;
+        const capacityPercent = slot.maxCapacity > 0
+          ? Math.round((slot.remainingCapacity / slot.maxCapacity) * 100)
+          : 0;
+
+        return (
+          <button
+            key={slot.timeSlot}
+            onClick={() => handleSlotSelect(slot)}
+            disabled={isFull}
+            className={cn(
+              'relative flex flex-col rounded-xl border-2 px-4 py-3.5 text-left transition-all',
+              isFull
+                ? 'border-stone-100 bg-stone-50 cursor-not-allowed opacity-60'
+                : isSelected
+                  ? 'border-primary bg-primary/5 shadow-sm'
+                  : 'border-stone-200 bg-white hover:border-primary/40 hover:bg-primary/[0.02]'
+            )}
+          >
+            {/* Time range */}
+            <div className="flex items-center justify-between">
+              <span className={cn(
+                'text-base font-semibold',
+                isFull ? 'text-muted-foreground' : 'text-foreground'
+              )}>
+                {formatTime(slot.timeSlot)} → {formatTime(slot.endTime)}
+              </span>
+              {isFull && (
+                <span className="text-xs font-medium text-muted-foreground bg-stone-100 px-2 py-0.5 rounded-full">
+                  {t('sessionFull')}
+                </span>
+              )}
+              {isLowCapacity && (
+                <span className="text-xs font-medium text-orange-700 bg-orange-100 px-2 py-0.5 rounded-full">
+                  {t('spotsLeft', { count: slot.remainingCapacity })}
+                </span>
+              )}
+            </div>
+
+            {/* Capacity bar */}
+            {!isFull && (
+              <div className="mt-2.5 flex items-center gap-2.5">
+                <div className="flex-1 h-1.5 rounded-full bg-stone-100 overflow-hidden">
+                  <div
+                    className={cn(
+                      'h-full rounded-full transition-all duration-500',
+                      isLowCapacity ? 'bg-orange-400' : 'bg-primary/60'
+                    )}
+                    style={{ width: `${capacityPercent}%` }}
+                  />
+                </div>
+                <span className={cn(
+                  'text-xs whitespace-nowrap',
+                  isLowCapacity ? 'text-orange-600 font-medium' : 'text-muted-foreground'
+                )} data-testid="remaining-capacity">
+                  {t('spotsLeft', { count: slot.remainingCapacity })}
+                </span>
+              </div>
+            )}
+          </button>
+        );
+      })}
     </div>
   );
 }

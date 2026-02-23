@@ -33,7 +33,7 @@ export function EarningsSummaryCards({ summary }: EarningsSummaryCardsProps) {
   return (
     <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
       {/* Card 1 - Total Earnings (Current Month) */}
-      <div className="flex flex-col justify-between h-40 p-6 bg-white rounded-xl border border-[#e5d2d7] shadow-sm group hover:border-primary/30 transition-colors">
+      <div className="flex flex-col justify-between h-40 p-6 bg-white rounded-xl border border-border shadow-sm group hover:border-primary/30 transition-colors">
         <div className="flex items-center justify-between">
           <p className="text-[#915564] text-sm font-medium">
             {t('totalEarnings')} ({summary.currentMonthLabel})
@@ -43,7 +43,7 @@ export function EarningsSummaryCards({ summary }: EarningsSummaryCardsProps) {
           </div>
         </div>
         <div>
-          <h3 className="text-3xl font-extrabold text-[#1a0f12] tabular-nums">
+          <h3 className="text-3xl font-extrabold text-foreground tabular-nums">
             {formatCHF(summary.thisMonth)}
           </h3>
           {summary.lastMonth > 0 && (
@@ -69,7 +69,7 @@ export function EarningsSummaryCards({ summary }: EarningsSummaryCardsProps) {
       </div>
 
       {/* Card 2 - Year to Date */}
-      <div className="flex flex-col justify-between h-40 p-6 bg-white rounded-xl border border-[#e5d2d7] shadow-sm group hover:border-primary/30 transition-colors">
+      <div className="flex flex-col justify-between h-40 p-6 bg-white rounded-xl border border-border shadow-sm group hover:border-primary/30 transition-colors">
         <div className="flex items-center justify-between">
           <p className="text-[#915564] text-sm font-medium">{t('yearToDate')}</p>
           <div className="p-2 bg-primary/10 rounded-lg text-primary">
@@ -77,7 +77,7 @@ export function EarningsSummaryCards({ summary }: EarningsSummaryCardsProps) {
           </div>
         </div>
         <div>
-          <h3 className="text-3xl font-extrabold text-[#1a0f12] tabular-nums">
+          <h3 className="text-3xl font-extrabold text-foreground tabular-nums">
             {formatCHF(summary.yearToDate)}
           </h3>
           <div className="flex items-center gap-1 mt-2 text-sm text-[#915564] font-medium">
@@ -88,7 +88,7 @@ export function EarningsSummaryCards({ summary }: EarningsSummaryCardsProps) {
       </div>
 
       {/* Card 3 - Pending Payouts */}
-      <div className="flex flex-col justify-between h-40 p-6 bg-white rounded-xl border border-[#e5d2d7] shadow-sm group hover:border-primary/30 transition-colors">
+      <div className="flex flex-col justify-between h-40 p-6 bg-white rounded-xl border border-border shadow-sm group hover:border-primary/30 transition-colors">
         <div className="flex items-center justify-between">
           <p className="text-[#915564] text-sm font-medium">{t('pendingPayouts')}</p>
           <div className="p-2 bg-yellow-50 rounded-lg text-yellow-600">
@@ -96,12 +96,12 @@ export function EarningsSummaryCards({ summary }: EarningsSummaryCardsProps) {
           </div>
         </div>
         <div>
-          <h3 className="text-3xl font-extrabold text-[#1a0f12] tabular-nums">
+          <h3 className="text-3xl font-extrabold text-foreground tabular-nums">
             {formatCHF(summary.pendingPayout)}
           </h3>
           <div className="flex items-center gap-1 mt-2 text-sm text-[#915564] font-medium">
             <span>{t('estArrival')}</span>
-            <span className="text-[#1a0f12] font-bold">
+            <span className="text-foreground font-bold">
               {summary.nextPayoutDate
                 ? format(summary.nextPayoutDate, 'MMM d')
                 : '—'}

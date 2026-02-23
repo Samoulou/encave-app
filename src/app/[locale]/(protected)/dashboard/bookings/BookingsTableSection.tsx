@@ -102,7 +102,7 @@ export async function BookingsTableSection({ wineryId, params }: BookingsTableSe
         bookings.length > 0 ? (
           <BookingsTable bookings={bookings} />
         ) : (
-          <div className="bg-white rounded-xl border border-[#e5d2d7] p-8 text-center">
+          <div className="bg-white rounded-xl border border-border p-8 text-center">
             <p className="text-[#915564]">
               {t('filters.noResults')}
             </p>

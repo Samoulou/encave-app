@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { IMAGE_PLACEHOLDERS } from '@/lib/image-placeholder';
+import { FadeIn } from '@/components/shared/FadeIn';
 
 interface GalleryImage {
   id: string;
@@ -74,90 +75,68 @@ export function ExperienceDetailGallery({
 
   return (
     <>
-      {/* Gallery Grid */}
+      {/* Gallery — vertical layout for side-by-side with booking widget */}
       <div
-        className="grid grid-cols-1 md:grid-cols-4 gap-3 h-[400px] md:h-[500px] mb-12 rounded-2xl overflow-hidden"
+        className="flex flex-col gap-3 mb-10"
         data-testid="experience-gallery"
       >
-        {/* Main Image (spans 2 cols, 2 rows) */}
+        {/* Hero image — full width of left column */}
         <button
           type="button"
           onClick={() => openLightbox(0)}
-          className="md:col-span-2 md:row-span-2 h-full relative group cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+          className="relative aspect-[16/10] w-full rounded-2xl overflow-hidden group cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
         >
           <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors z-10" />
-          <div className="relative w-full h-full">
-            <Image
-              src={coverPhoto}
-              alt={experienceTitle}
-              fill
-              className="object-cover transition-transform duration-700 group-hover:scale-105"
-              sizes="(max-width: 768px) 100vw, 50vw"
-              priority
-              placeholder="blur"
-              blurDataURL={IMAGE_PLACEHOLDERS.hero}
-            />
-          </div>
+          <Image
+            src={coverPhoto}
+            alt={experienceTitle}
+            fill
+            className="object-cover transition-transform duration-700 group-hover:scale-105"
+            sizes="(max-width: 768px) 100vw, 66vw"
+            priority
+            placeholder="blur"
+            blurDataURL={IMAGE_PLACEHOLDERS.hero}
+          />
         </button>
 
-        {/* Secondary Images */}
-        {allImages.slice(1, 5).map((image, index) => {
-          const isLastWithMore = index === 3 && remainingCount > 0;
+        {/* Secondary images — 2-col grid, fade in on scroll (hidden on mobile) */}
+        {allImages.length > 1 && (
+          <div className="hidden md:grid grid-cols-2 gap-3">
+            {allImages.slice(1, 5).map((image, index) => {
+              const isLastWithMore = index === 3 && remainingCount > 0;
 
-          return (
-            <button
-              key={image.id}
-              type="button"
-              onClick={() => openLightbox(index + 1)}
-              className="hidden md:block h-full relative group cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-            >
-              {isLastWithMore ? (
-                <>
-                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors z-10 flex items-center justify-center">
-                    <span className="text-white font-bold text-lg border-b-2 border-white pb-1">
-                      View All Photos
-                    </span>
-                  </div>
-                  <div className="relative w-full h-full">
-                    <Image
-                      src={image.url}
-                      alt={t('imageAlt', { title: experienceTitle, index: index + 2 })}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 50vw, 25vw"
-                      placeholder="blur"
-                      blurDataURL={IMAGE_PLACEHOLDERS.square}
-                    />
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors z-10" />
-                  <div className="relative w-full h-full">
+              return (
+                <FadeIn key={image.id} delay={index * 150} direction="up">
+                  <button
+                    type="button"
+                    onClick={() => openLightbox(index + 1)}
+                    className="relative aspect-[4/3] w-full rounded-xl overflow-hidden group cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                  >
+                    {isLastWithMore && (
+                      <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors z-10 flex items-center justify-center">
+                        <span className="text-white font-bold text-lg border-b-2 border-white pb-1">
+                          View All Photos
+                        </span>
+                      </div>
+                    )}
+                    {!isLastWithMore && (
+                      <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors z-10" />
+                    )}
                     <Image
                       src={image.url}
                       alt={t('imageAlt', { title: experienceTitle, index: index + 2 })}
                       fill
                       className="object-cover transition-transform duration-700 group-hover:scale-105"
-                      sizes="(max-width: 768px) 50vw, 25vw"
+                      sizes="(max-width: 768px) 50vw, 33vw"
                       placeholder="blur"
                       blurDataURL={IMAGE_PLACEHOLDERS.square}
                     />
-                  </div>
-                </>
-              )}
-            </button>
-          );
-        })}
-
-        {/* Fill empty slots if less than 4 gallery images */}
-        {allImages.length < 5 &&
-          Array.from({ length: 5 - allImages.length }).map((_, index) => (
-            <div
-              key={`empty-${index}`}
-              className="hidden md:block h-full bg-stone-200"
-            />
-          ))}
+                  </button>
+                </FadeIn>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Lightbox */}

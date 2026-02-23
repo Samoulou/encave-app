@@ -17,7 +17,7 @@ export async function BookingsFiltersSection({ wineryId }: BookingsFiltersSectio
   const experiences = await getWineryExperiencesForFilter(wineryId);
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-2 rounded-xl border border-[#e5d2d7]">
+    <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-2 rounded-xl border border-border">
       <div className="flex items-center gap-2 flex-1 min-w-[300px]">
         <BookingSearch />
         <BookingFilters experiences={experiences} />

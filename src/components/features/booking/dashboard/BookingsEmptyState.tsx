@@ -13,15 +13,15 @@ export function BookingsEmptyState() {
   const t = useTranslations('bookings.empty');
 
   return (
-    <div className="bg-white rounded-xl border border-[#e5d2d7] shadow-sm">
+    <div className="bg-white rounded-xl border border-border shadow-sm">
       <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
-        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-[#f2e9eb]">
-          <CalendarX2 className="h-10 w-10 text-[#915564]" />
+        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-primary-light">
+          <CalendarX2 className="h-10 w-10 text-muted-foreground" />
         </div>
-        <h3 className="text-xl font-bold text-[#1a0f12]">
+        <h3 className="text-xl font-bold text-foreground">
           {t('title')}
         </h3>
-        <p className="mt-2 max-w-md text-[#915564]">
+        <p className="mt-2 max-w-md text-muted-foreground">
           {t('description')}
         </p>
         <Link

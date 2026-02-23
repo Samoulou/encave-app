@@ -86,7 +86,7 @@ function SummaryCardsSkeleton() {
   return (
     <SkeletonContainer label="Loading summary..." className="grid gap-4 grid-cols-1 md:grid-cols-3">
       {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} className="rounded-xl border border-[#e5d2d7] bg-white p-5 shadow-sm">
+        <div key={i} className="rounded-xl border border-border bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <Skeleton className="h-4 w-28" />
             <Skeleton className="h-6 w-6" />
@@ -105,7 +105,7 @@ function FiltersSkeleton() {
   return (
     <SkeletonContainer
       label="Loading filters..."
-      className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-[#e5d2d7] bg-white p-2"
+      className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-white p-2"
     >
       <div className="flex items-center gap-2 flex-1 min-w-[300px]">
         <Skeleton className="h-10 flex-1 max-w-md rounded-lg" />
@@ -120,9 +120,9 @@ function FiltersSkeleton() {
 function TableSkeleton() {
   return (
     <SkeletonContainer label="Loading bookings..." className="space-y-4">
-      <div className="rounded-xl border border-[#e5d2d7] bg-white shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-border bg-white shadow-sm overflow-hidden">
         {/* Table Header */}
-        <div className="border-b border-[#e5d2d7] px-6 py-4">
+        <div className="border-b border-border px-6 py-4">
           <div className="grid grid-cols-6 gap-4">
             <Skeleton className="h-4 w-24" />
             <Skeleton className="h-4 w-16" />
@@ -155,7 +155,7 @@ function TableSkeleton() {
           </div>
         ))}
         {/* Pagination Footer */}
-        <div className="px-6 py-4 border-t border-[#e5d2d7] flex items-center justify-between">
+        <div className="px-6 py-4 border-t border-border flex items-center justify-between">
           <Skeleton className="h-4 w-40" />
           <div className="flex gap-2">
             <Skeleton className="h-8 w-20 rounded-lg" />

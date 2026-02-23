@@ -9,6 +9,8 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
+import { useTranslations } from 'next-intl';
+import { formatPrice } from '@/lib/i18n/formatters';
 import type { MonthlyEarning } from '@/server/queries/earnings.queries';
 
 interface EarningsChartProps {
@@ -27,11 +29,12 @@ interface CustomTooltipProps {
 }
 
 function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
+  const t = useTranslations('earnings.chart');
   if (!active || !payload || !payload.length) return null;
 
   return (
-    <div className="rounded-lg border border-[#e5d2d7] bg-white p-3 shadow-lg">
-      <p className="mb-2 font-bold text-[#1a0f12]">{label}</p>
+    <div className="rounded-lg border border-border bg-white p-3 shadow-lg">
+      <p className="mb-2 font-bold text-foreground">{label}</p>
       {payload.map((entry) => (
         <div key={entry.dataKey} className="flex items-center gap-2 text-sm">
           <span
@@ -39,10 +42,10 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
             style={{ backgroundColor: entry.color }}
           />
           <span className="text-[#915564]">
-            {entry.dataKey === 'revenue' ? 'Gross' : 'Net Payout'}:
+            {entry.dataKey === 'revenueDisplay' ? t('gross') : t('netPayout')}:
           </span>
-          <span className="font-bold text-[#1a0f12]">
-            CHF {(entry.value / 100).toLocaleString('de-CH', { minimumFractionDigits: 2 })}
+          <span className="font-bold text-foreground">
+            {formatPrice(entry.value)}
           </span>
         </div>
       ))}
@@ -56,6 +59,8 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
  * Shows Gross revenue vs Net payout over the last 6 months.
  */
 export function EarningsChart({ data }: EarningsChartProps) {
+  const t = useTranslations('earnings.chart');
+
   // Format data for chart (convert cents to CHF for display)
   const chartData = data.map((d) => ({
     ...d,
@@ -68,29 +73,29 @@ export function EarningsChart({ data }: EarningsChartProps) {
   const yAxisMax = Math.ceil(maxValue / 2500) * 2500 || 10000;
 
   return (
-    <div className="rounded-xl border border-[#e5d2d7] bg-white p-6 lg:p-8 shadow-sm">
+    <div className="rounded-xl border border-border bg-white p-6 lg:p-8 shadow-sm" role="region" aria-label="Revenue Evolution">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
-          <h2 className="text-lg font-bold text-[#1a0f12]">Revenue Evolution</h2>
-          <p className="text-sm text-[#915564]">
-            Gross revenue vs Net payout over the last 6 months
+          <h2 id="earnings-chart-title" className="text-lg font-bold text-foreground">{t('title')}</h2>
+          <p id="earnings-chart-desc" className="text-sm text-[#915564]">
+            {t('subtitle')}
           </p>
         </div>
         <div className="flex items-center gap-4 text-xs font-medium">
           <div className="flex items-center gap-2">
             <span className="h-3 w-3 rounded-full bg-primary" />
-            <span className="text-[#915564]">Gross</span>
+            <span className="text-[#915564]">{t('gross')}</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="h-3 w-3 rounded-full bg-gray-300" />
-            <span className="text-[#915564]">Net Payout</span>
+            <span className="text-[#915564]">{t('netPayout')}</span>
           </div>
         </div>
       </div>
 
       {/* Chart */}
-      <div className="h-[320px]">
+      <div className="h-[320px]" role="img" aria-labelledby="earnings-chart-title" aria-describedby="earnings-chart-desc">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
             data={chartData}
@@ -98,8 +103,8 @@ export function EarningsChart({ data }: EarningsChartProps) {
           >
             <defs>
               <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#cd2d55" stopOpacity={0.2} />
-                <stop offset="100%" stopColor="#cd2d55" stopOpacity={0} />
+                <stop offset="0%" stopColor="#962a48" stopOpacity={0.2} />
+                <stop offset="100%" stopColor="#962a48" stopOpacity={0} />
               </linearGradient>
               <linearGradient id="colorPayout" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#9ca3af" stopOpacity={0.15} />
@@ -153,13 +158,13 @@ export function EarningsChart({ data }: EarningsChartProps) {
               type="monotone"
               dataKey="revenueDisplay"
               name="Gross"
-              stroke="#cd2d55"
+              stroke="#962a48"
               strokeWidth={3}
               fill="url(#colorRevenue)"
               dot={false}
               activeDot={{
                 r: 6,
-                fill: '#cd2d55',
+                fill: '#962a48',
                 stroke: '#fff',
                 strokeWidth: 2,
               }}

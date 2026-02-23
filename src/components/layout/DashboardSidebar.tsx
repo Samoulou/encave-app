@@ -27,6 +27,7 @@ const sidebarLinks = [
   { href: '/dashboard/experiences', labelKey: 'experiences', icon: PartyPopper },
   { href: '/dashboard/bookings', labelKey: 'bookings', icon: Calendar },
   { href: '/dashboard/earnings', labelKey: 'earnings', icon: Wallet },
+  { href: '/dashboard/winery/profile', labelKey: 'wineryProfile', icon: Wine },
   { href: '/dashboard/settings', labelKey: 'settings', icon: Settings },
 ];
 
@@ -157,7 +158,11 @@ export function DashboardSidebar({
         </div>
 
         {/* User Profile */}
-        <div className="flex items-center gap-3 px-3 py-3 rounded-lg border border-transparent hover:border-[#e5dbdd] cursor-pointer transition-all">
+        <Link
+          href={`/${locale}/dashboard/settings`}
+          onClick={() => setIsMobileOpen(false)}
+          className="flex items-center gap-3 px-3 py-3 rounded-lg border border-transparent hover:border-[#e5dbdd] cursor-pointer transition-all"
+        >
           <div className="relative size-10 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
             <div className="w-full h-full flex items-center justify-center text-gray-500 font-medium">
               {userName?.charAt(0)?.toUpperCase() || 'W'}
@@ -169,7 +174,7 @@ export function DashboardSidebar({
             </p>
             <p className="text-xs text-gray-500 truncate">{wineryName}</p>
           </div>
-        </div>
+        </Link>
       </aside>
     </>
   );

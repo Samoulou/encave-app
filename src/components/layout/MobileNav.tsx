@@ -1,10 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Menu, Wine } from 'lucide-react';
+import Image from 'next/image';
+import {
+  Menu,
+  Grape,
+  Compass,
+  Info,
+  Shield,
+  LayoutDashboard,
+  Calendar,
+  LogOut,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { Link } from '@/i18n/navigation';
+import { Link, usePathname } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -14,7 +23,8 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { LocaleSwitcher } from '@/components/shared/LocaleSwitcher';
-import { signOut } from '@/lib/auth-client';
+import { useLogout } from '@/hooks/useLogout';
+import { cn } from '@/lib/utils';
 
 interface MobileNavProps {
   isAuthenticated: boolean;
@@ -22,19 +32,47 @@ interface MobileNavProps {
   userRole?: string | null;
 }
 
+type TranslateFn = ReturnType<typeof useTranslations<'nav'>>;
+
+type NavItem = {
+  href: string;
+  label: string;
+  icon: React.ReactNode;
+};
+
+const baseNavItems = (t: TranslateFn): NavItem[] => [
+  { href: '/wineries', label: t('wineries'), icon: <Grape className="h-5 w-5" /> },
+  { href: '/experiences', label: t('experiences'), icon: <Compass className="h-5 w-5" /> },
+  { href: '/about', label: t('about'), icon: <Info className="h-5 w-5" /> },
+];
+
+function getRoleNavItems(role: string | null | undefined, t: TranslateFn): NavItem[] {
+  switch (role) {
+    case 'ADMIN':
+      return [{ href: '/admin', label: t('admin'), icon: <Shield className="h-5 w-5" /> }];
+    case 'WINEMAKER':
+      return [{ href: '/dashboard', label: t('dashboard'), icon: <LayoutDashboard className="h-5 w-5" /> }];
+    case 'CLIENT':
+      return [{ href: '/dashboard/my-bookings', label: t('myBookings'), icon: <Calendar className="h-5 w-5" /> }];
+    default:
+      return [];
+  }
+}
+
 export function MobileNav({ isAuthenticated, userName, userRole }: MobileNavProps) {
   const [open, setOpen] = useState(false);
-  const router = useRouter();
   const t = useTranslations('nav');
+  const pathname = usePathname();
+  const logout = useLogout();
 
   const closeMenu = () => setOpen(false);
 
   async function handleLogout() {
-    await signOut();
+    await logout();
     closeMenu();
-    router.push('/');
-    router.refresh();
   }
+
+  const navItems = [...baseNavItems(t), ...getRoleNavItems(userRole, t)];
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -54,73 +92,52 @@ export function MobileNav({ isAuthenticated, userName, userRole }: MobileNavProp
       >
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-burgundy-600 text-white">
-              <Wine className="h-4 w-4" aria-hidden="true" />
-            </div>
-            <span className="font-display text-xl text-burgundy-800">EnCave</span>
+            <Image
+              src="/icons/encave-logo.png"
+              alt="EnCave"
+              width={140}
+              height={40}
+              className="h-10 w-auto"
+            />
           </SheetTitle>
         </SheetHeader>
         <nav className="flex flex-col gap-2 mt-8" aria-label={t('mainNavigation')}>
-          <Link
-            href="/wineries"
-            onClick={closeMenu}
-            className="text-lg font-medium text-slate-700 hover:text-burgundy-600 hover:bg-burgundy-50 transition-colors py-3 px-3 rounded-lg"
-          >
-            {t('wineries')}
-          </Link>
-          <Link
-            href="/experiences"
-            onClick={closeMenu}
-            className="text-lg font-medium text-slate-700 hover:text-burgundy-600 hover:bg-burgundy-50 transition-colors py-3 px-3 rounded-lg"
-          >
-            {t('experiences')}
-          </Link>
-          <Link
-            href="/about"
-            onClick={closeMenu}
-            className="text-lg font-medium text-slate-700 hover:text-burgundy-600 hover:bg-burgundy-50 transition-colors py-3 px-3 rounded-lg"
-          >
-            {t('about')}
-          </Link>
-          {userRole === 'ADMIN' && (
-            <Link
-              href="/admin"
-              onClick={closeMenu}
-              className="text-lg font-medium text-slate-700 hover:text-burgundy-600 hover:bg-burgundy-50 transition-colors py-3 px-3 rounded-lg"
-            >
-              {t('admin')}
-            </Link>
-          )}
-          {userRole === 'WINEMAKER' && (
-            <Link
-              href="/dashboard"
-              onClick={closeMenu}
-              className="text-lg font-medium text-slate-700 hover:text-burgundy-600 hover:bg-burgundy-50 transition-colors py-3 px-3 rounded-lg"
-            >
-              {t('dashboard')}
-            </Link>
-          )}
-          {userRole === 'CLIENT' && (
-            <Link
-              href="/dashboard/my-bookings"
-              onClick={closeMenu}
-              className="text-lg font-medium text-slate-700 hover:text-burgundy-600 hover:bg-burgundy-50 transition-colors py-3 px-3 rounded-lg"
-            >
-              {t('myBookings')}
-            </Link>
-          )}
+          {navItems.map((item) => {
+            const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={closeMenu}
+                className={cn(
+                  'flex items-center gap-3 text-lg font-medium transition-colors py-3 px-3 rounded-lg',
+                  isActive
+                    ? 'text-primary bg-primary/5 border-l-2 border-primary'
+                    : 'text-foreground hover:text-primary hover:bg-burgundy-50'
+                )}
+              >
+                {item.icon}
+                {item.label}
+              </Link>
+            );
+          })}
 
-          <div className="border-t border-stone-200 my-4" aria-hidden="true" />
+          <div className="px-3 py-2">
+            <LocaleSwitcher />
+          </div>
+
+          <div className="border-t border-border my-4" aria-hidden="true" />
 
           {isAuthenticated ? (
             <>
-              <p className="text-sm text-slate-500 px-3">
+              <p className="text-sm text-muted-foreground px-3">
                 {t('welcome', { name: userName || t('user') })}
               </p>
               <button
                 onClick={handleLogout}
-                className="text-left text-lg font-medium text-slate-700 hover:text-burgundy-600 hover:bg-burgundy-50 transition-colors py-3 px-3 rounded-lg"
+                className="flex items-center gap-3 text-left text-lg font-medium text-foreground hover:text-primary hover:bg-burgundy-50 transition-colors py-3 px-3 rounded-lg"
               >
+                <LogOut className="h-5 w-5" />
                 {t('signOut')}
               </button>
             </>
@@ -134,12 +151,6 @@ export function MobileNav({ isAuthenticated, userName, userRole }: MobileNavProp
               </Button>
             </div>
           )}
-
-          <div className="border-t border-stone-200 my-4" aria-hidden="true" />
-
-          <div className="px-3">
-            <LocaleSwitcher />
-          </div>
         </nav>
       </SheetContent>
     </Sheet>

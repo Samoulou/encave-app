@@ -92,7 +92,7 @@ export function WineryInfoCard({
             href={googleMapsUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full text-center text-sm font-semibold text-primary hover:text-[#a62444] transition-colors block"
+            className="w-full text-center text-sm font-semibold text-primary hover:text-[hsl(var(--primary-hover))] transition-colors block"
           >
             {t('getDirections')}
           </a>

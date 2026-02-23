@@ -10,7 +10,6 @@ import { ExperienceDetailGallery } from '@/components/features/experience/Experi
 import { QuickFacts } from '@/components/features/experience/QuickFacts';
 import { AboutSection } from '@/components/features/experience/AboutSection';
 import { LocationSection } from '@/components/features/experience/LocationSection';
-import { AvailabilityDisplay } from '@/components/features/experience/AvailabilityDisplay';
 import { BookingWidget } from '@/components/features/experience/BookingWidget';
 import { MobileBookingBar } from '@/components/features/experience/MobileBookingBar';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
@@ -169,7 +168,7 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
       <JsonLd data={eventSchema} />
 
       <main className="flex-grow w-full pb-24 lg:pb-8">
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Breadcrumbs */}
           <nav className="flex items-center text-sm mb-6 overflow-x-auto whitespace-nowrap">
             <Breadcrumb items={breadcrumbItems} baseUrl={baseUrl} />
@@ -183,17 +182,17 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
             commune={experience.winery.commune}
           />
 
-          {/* Image Gallery Grid */}
-          <ExperienceDetailGallery
-            coverPhoto={experience.coverPhoto}
-            images={experience.galleryImages}
-            experienceTitle={experience.title}
-          />
-
-          {/* Two Column Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 relative">
-            {/* Left Column: Details (8 cols) */}
+          {/* Two Column Layout — gallery + booking widget side by side */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 relative">
+            {/* Left Column: Gallery + Details + Related (8 cols) */}
             <div className="lg:col-span-8 flex flex-col gap-10">
+              {/* Image Gallery */}
+              <ExperienceDetailGallery
+                coverPhoto={experience.coverPhoto}
+                images={experience.galleryImages}
+                experienceTitle={experience.title}
+              />
+
               {/* Quick Facts Chips */}
               <QuickFacts
                 duration={experience.duration}
@@ -204,11 +203,6 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
               {/* About Section */}
               <AboutSection description={experience.description} />
 
-              {/* Availability Schedule */}
-              {experience.availabilitySlots && experience.availabilitySlots.length > 0 && (
-                <AvailabilityDisplay slots={experience.availabilitySlots} />
-              )}
-
               {/* Location Map */}
               <LocationSection
                 address={experience.address || experience.winery.address}
@@ -217,6 +211,15 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
                 latitude={experience.latitude || experience.winery.latitude}
                 longitude={experience.longitude || experience.winery.longitude}
               />
+
+              {/* Related Experiences - inside left column so booking widget stays sticky */}
+              <Suspense fallback={<RelatedExperiencesSkeleton />}>
+                <RelatedExperiencesSection
+                  experienceId={experience.id}
+                  wineryId={experience.wineryId}
+                  experienceType={experience.type}
+                />
+              </Suspense>
             </div>
 
             {/* Right Column: Sticky Booking Widget (4 cols) */}
@@ -228,19 +231,11 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
                 stripeConnected={experience.winery.stripeOnboardingComplete}
                 minCapacity={experience.minCapacity}
                 maxCapacity={experience.maxCapacity}
+                duration={experience.duration}
                 availabilitySlots={experience.availabilitySlots}
               />
             </div>
           </div>
-
-          {/* Related Experiences - streams in after main content */}
-          <Suspense fallback={<RelatedExperiencesSkeleton />}>
-            <RelatedExperiencesSection
-              experienceId={experience.id}
-              wineryId={experience.wineryId}
-              experienceType={experience.type}
-            />
-          </Suspense>
         </div>
 
         {/* Mobile Booking Bar */}
@@ -251,6 +246,7 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
           stripeConnected={experience.winery.stripeOnboardingComplete}
           minCapacity={experience.minCapacity}
           maxCapacity={experience.maxCapacity}
+          duration={experience.duration}
           availabilitySlots={experience.availabilitySlots}
         />
       </main>

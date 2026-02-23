@@ -1,8 +1,8 @@
-import { Suspense } from 'react';
+import { Fragment, Suspense } from 'react';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { redirect } from 'next/navigation';
-import { getLocale } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { AlertTriangle } from 'lucide-react';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
 import { EarningsPageHeader } from '@/components/features/earnings/EarningsPageHeader';
@@ -50,6 +50,8 @@ export default async function EarningsPage({ searchParams }: PageProps) {
     redirect(`/${locale}/onboarding/winery`);
   }
 
+  const t = await getTranslations('stripe.onboarding');
+
   return (
     <WineryAccessGuard>
       <div className="space-y-8">
@@ -61,14 +63,13 @@ export default async function EarningsPage({ searchParams }: PageProps) {
           <div className="flex items-start gap-3 rounded-xl bg-amber-50 p-4 border border-amber-200">
             <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-600" />
             <div className="text-sm text-amber-900">
-              <p className="font-medium">Complete Stripe Setup</p>
+              <p className="font-medium">{t('completeSetupTitle')}</p>
               <p className="mt-1 text-amber-700">
-                To receive payouts, you need to complete your Stripe account setup.
-                Go to your{' '}
-                <a href="/dashboard/winery/profile" className="underline">
-                  Winery Profile
-                </a>{' '}
-                to complete the process.
+                {t('completeSetupDescription', { wineryProfileLink: '__LINK__' }).split('__LINK__').map((part, i, arr) =>
+                  i < arr.length - 1 ? (
+                    <Fragment key={i}>{part}<a href="/dashboard/winery/profile" className="underline">{t('wineryProfileLink')}</a></Fragment>
+                  ) : part
+                )}
               </p>
             </div>
           </div>
@@ -98,7 +99,7 @@ function SummarySkeleton() {
   return (
     <SkeletonContainer label="Loading summary..." className="grid gap-4 grid-cols-1 md:grid-cols-3">
       {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} className="rounded-xl border border-[#e5d2d7] bg-white p-6 shadow-sm h-40">
+        <div key={i} className="rounded-xl border border-border bg-white p-6 shadow-sm h-40">
           <div className="flex items-center justify-between">
             <Skeleton className="h-4 w-28" />
             <Skeleton className="h-10 w-10 rounded-lg" />
@@ -117,7 +118,7 @@ function SummarySkeleton() {
 function ChartsSkeleton() {
   return (
     <SkeletonContainer label="Loading chart...">
-      <div className="rounded-xl border border-[#e5d2d7] bg-white p-6 lg:p-8 shadow-sm">
+      <div className="rounded-xl border border-border bg-white p-6 lg:p-8 shadow-sm">
         <div className="flex items-center justify-between mb-8">
           <div>
             <Skeleton className="h-5 w-40" />
@@ -142,9 +143,9 @@ function TransactionsSkeleton() {
         <Skeleton className="h-6 w-44" />
         <Skeleton className="h-4 w-16" />
       </div>
-      <div className="rounded-xl border border-[#e5d2d7] bg-white shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-border bg-white shadow-sm overflow-hidden">
         {/* Table Header */}
-        <div className="border-b border-[#e5d2d7] bg-gray-50 px-6 py-4">
+        <div className="border-b border-border bg-gray-50 px-6 py-4">
           <div className="grid grid-cols-7 gap-4">
             <Skeleton className="h-3 w-12" />
             <Skeleton className="h-3 w-20" />

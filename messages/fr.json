@@ -111,7 +111,15 @@
     "settings": "Paramètres",
     "messages": "Messages",
     "backToHome": "Retour à l'accueil",
-    "myBookings": "Mes réservations"
+    "myBookings": "Mes réservations",
+    "account": "Compte",
+    "manageAccount": "Gérer le compte",
+    "viewDashboard": "Voir le tableau de bord",
+    "adminPanel": "Panneau d'administration",
+    "myProfile": "Mon profil",
+    "roleWinemaker": "Vigneron",
+    "roleClient": "Client",
+    "roleAdmin": "Administrateur"
   },
   "locale": {
     "fr": "Français",
@@ -411,6 +419,22 @@
       "alphabetical": "Alphabétique",
       "byStatus": "Par statut"
     },
+    "loading": "Chargement des expériences...",
+    "manageTitle": "Gérer les expériences",
+    "manageSubtitle": "Organisez vos offres de dégustation pour les visiteurs.",
+    "deletedSuccess": "Expérience supprimée",
+    "deletedDescription": "Votre expérience a été définitivement supprimée.",
+    "perPerson": "/ pp",
+    "previewMode": "Mode aperçu",
+    "notPublishedNotice": "Cette expérience n'est pas publiée",
+    "backToDashboard": "Retour au tableau de bord",
+    "editExperience": "Modifier l'expérience",
+    "viewPublicPage": "Voir la page publique",
+    "draftNotice": "Cette expérience est actuellement un brouillon et n'est pas visible par les visiteurs. Publiez-la depuis votre tableau de bord pour la rendre disponible aux réservations.",
+    "editTitle": "Modifier l'expérience",
+    "editSubtitle": "Mettez à jour les détails de votre expérience. Les modifications seront enregistrées immédiatement.",
+    "availabilitySchedule": "Planning de disponibilité",
+    "availabilityScheduleSubtitle": "Configurez quand les visiteurs peuvent réserver cette expérience",
     "availability": {
       "title": "Disponibilité",
       "noConfigured": "Aucune disponibilité configurée",
@@ -473,9 +497,24 @@
     "today": "Aujourd'hui",
     "bookingDetails": "Détails de la réservation",
     "decreaseGuests": "Diminuer le nombre d'invités",
-    "increaseGuests": "Augmenter le nombre d'invités"
+    "increaseGuests": "Augmenter le nombre d'invités",
+    "step": {
+      "date": "Date",
+      "session": "Séance",
+      "guests": "Invités",
+      "selectSession": "Choisir une séance"
+    },
+    "nextSession": "Suivant : Choisir une séance",
+    "nextGuests": "Suivant : Nombre de personnes",
+    "editSelection": "Modifier",
+    "sessionFull": "Complet",
+    "spotsLeft": "{count} {count, plural, =1 {place restante} other {places restantes}}",
+    "whenVisit": "Quand souhaitez-vous nous rendre visite ?",
+    "back": "Retour"
   },
   "bookings": {
+    "title": "Réservations",
+    "loading": "Chargement des réservations...",
     "empty": {
       "title": "Pas encore de réservations",
       "description": "Lorsque des clients réservent vos expériences, elles apparaîtront ici.",
@@ -510,7 +549,8 @@
       "viewDetails": "Voir les détails",
       "contactClient": "Contacter le client",
       "markAsCompleted": "Marquer comme terminé",
-      "markAsNoShow": "Marquer comme absent"
+      "markAsNoShow": "Marquer comme absent",
+      "moreOptions": "Plus d'options"
     },
     "toast": {
       "confirmed": "Réservation confirmée",
@@ -540,7 +580,9 @@
     "pagination": {
       "showing": "Affichage de {from} à {to} sur {total} résultats",
       "previous": "Précédent",
-      "next": "Suivant"
+      "next": "Suivant",
+      "previousPage": "Aller à la page précédente",
+      "nextPage": "Aller à la page suivante"
     },
     "export": {
       "csv": "Exporter CSV",
@@ -557,7 +599,8 @@
       "bookingHistory": "Historique des réservations",
       "noHistory": "Aucune réservation précédente",
       "at": "à"
-    }
+    },
+    "tableLabel": "Tableau des réservations"
   },
   "checkout": {
     "checkout": "Paiement",
@@ -732,6 +775,8 @@
     "coverPhotoRemoved": "Photo de couverture supprimée",
     "galleryImageAdded": "Image de galerie ajoutée",
     "galleryImageRemoved": "Image de galerie supprimée",
+    "deleteImageTitle": "Supprimer l'image de la galerie ?",
+    "deleteImageDescription": "Cette image sera définitivement supprimée de votre galerie. Cette action est irréversible.",
     "uploading": "Téléchargement...",
     "unsavedChanges": "Modifications non enregistrées",
     "saving": "Enregistrement...",
@@ -763,7 +808,24 @@
       "confirmationEmailSent": "Nous avons envoyé un email de confirmation à <strong>{email}</strong>",
       "expectedResponse": "Réponse attendue sous <strong>{hours}</strong> heures",
       "returnToHomepage": "Retour à l'accueil"
-    }
+    },
+    "accessGuard": {
+      "winemakerRequired": "Accès vigneron requis",
+      "winemakerRequiredDescription": "Cette fonctionnalité est réservée aux vignerons enregistrés.",
+      "registerWinery": "Enregistrer votre domaine",
+      "verificationPending": "Vérification en cours",
+      "verificationPendingDescription": "Votre domaine <strong>{name}</strong> est en cours de vérification. Vous pourrez accéder aux fonctionnalités vignerons une fois votre inscription vérifiée.",
+      "verificationInfo": "La vérification prend généralement 2-3 jours ouvrables. Consultez vos emails pour les mises à jour.",
+      "returnToHome": "Retour à l'accueil",
+      "registrationNotApproved": "Inscription non approuvée",
+      "registrationNotApprovedDescription": "Malheureusement, votre inscription de domaine n'a pas été approuvée. Veuillez contacter le support pour plus d'informations.",
+      "accountSuspended": "Compte suspendu",
+      "accountSuspendedDescription": "Votre compte domaine a été suspendu. Veuillez contacter le support pour obtenir de l'aide."
+    },
+    "manageProfile": "Gérez le profil et les photos de votre domaine",
+    "lastUpdatedDate": "Dernière mise à jour {date}",
+    "viewPublicProfile": "Voir le profil public",
+    "paymentStatusLabel": "Statut du paiement"
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -775,6 +837,7 @@
   },
   "settings": {
     "title": "Paramètres",
+    "subtitle": "Gérez votre compte et vos préférences de notifications",
     "accountInformation": "Informations du compte",
     "accountInfo": "Informations du compte",
     "role": "Rôle",
@@ -794,6 +857,64 @@
         "title": "Langue",
         "description": "Changez votre langue préférée"
       }
+    },
+    "notifications": {
+      "dailyDigest": "Résumé quotidien",
+      "dailyDigestDescription": "Recevez un résumé des réservations du jour et du lendemain chaque matin à 7h00",
+      "weeklySummary": "Résumé hebdomadaire",
+      "weeklySummaryDescription": "Recevez un résumé des réservations et des revenus de la semaine chaque lundi matin",
+      "instantAlerts": "Alertes de réservation instantanées",
+      "instantAlertsDescription": "Recevez un email immédiatement lorsqu'une personne réserve une expérience",
+      "saving": "Enregistrement...",
+      "savePreferences": "Enregistrer les préférences",
+      "updated": "Préférences de notifications mises à jour",
+      "updateFailed": "Échec de la mise à jour des préférences",
+      "unexpectedError": "Une erreur inattendue s'est produite"
+    }
+  },
+  "stripe": {
+    "callback": {
+      "setupComplete": "Configuration du paiement terminée",
+      "setupCompleteDescription": "Votre compte de paiement est prêt. Vous pouvez maintenant publier des expériences et recevoir des paiements des visiteurs.",
+      "goToExperiences": "Aller aux expériences",
+      "verificationPending": "Vérification en cours",
+      "verificationPendingDescription": "Vos informations ont été soumises et sont en cours de vérification par Stripe. Cela prend généralement 1-2 jours ouvrables. Nous vous notifierons une fois vérifié.",
+      "returnToDashboard": "Retour au tableau de bord",
+      "sessionExpired": "Session expirée",
+      "setupIncomplete": "Configuration incomplète",
+      "sessionExpiredDescription": "Votre session d'intégration a expiré. Veuillez reprendre là où vous vous êtes arrêté.",
+      "setupIncompleteDescription": "La configuration de votre paiement n'est pas terminée. Veuillez continuer pour finaliser le processus.",
+      "continueSetup": "Continuer la configuration",
+      "loading": "Chargement...",
+      "failedToContinue": "Échec de la reprise. Veuillez réessayer."
+    },
+    "paymentStatus": {
+      "notConnected": "Non connecté",
+      "notConnectedDescription": "Connectez votre compte bancaire pour recevoir des paiements",
+      "pendingVerification": "Vérification en cours",
+      "pendingVerificationDescription": "Stripe vérifie les détails de votre compte",
+      "ready": "Prêt à accepter les paiements",
+      "readyDescription": "Votre compte est entièrement configuré",
+      "manage": "Gérer",
+      "failedToOpen": "Échec de l'ouverture du tableau de bord de paiement"
+    },
+    "onboarding": {
+      "setupPayments": "Configurer les paiements",
+      "setupPaymentsDescription": "Connectez votre compte bancaire pour recevoir des paiements lorsque des visiteurs réservent vos expériences.",
+      "connecting": "Connexion...",
+      "getStarted": "Commencer",
+      "failedToStart": "Échec du démarrage de la configuration. Veuillez réessayer.",
+      "completeSetupTitle": "Compléter la configuration Stripe",
+      "completeSetupDescription": "Pour recevoir des paiements, vous devez compléter la configuration de votre compte Stripe. Rendez-vous sur votre {wineryProfileLink} pour finaliser le processus.",
+      "wineryProfileLink": "Profil du domaine"
+    },
+    "warning": {
+      "actionRequired": "Action requise",
+      "defaultMessage": "Votre compte Stripe nécessite une attention. Veuillez mettre à jour vos informations pour continuer à recevoir des paiements.",
+      "updateInformation": "Mettre à jour les informations",
+      "loading": "Chargement...",
+      "dismissWarning": "Ignorer l'avertissement",
+      "failedToOpen": "Échec de l'ouverture de Stripe. Veuillez réessayer."
     }
   },
   "earnings": {
@@ -824,7 +945,8 @@
       "status": "Statut",
       "openMenu": "Ouvrir le menu",
       "viewDetails": "Voir les détails",
-      "downloadReceipt": "Télécharger le reçu"
+      "downloadReceipt": "Télécharger le reçu",
+      "tableLabel": "Tableau des transactions"
     },
     "filters": {
       "allMonths": "Tous les mois",
@@ -855,6 +977,33 @@
       "downloadPDF": "Télécharger le relevé PDF",
       "downloadCSV": "Télécharger CSV",
       "viewInStripe": "Voir dans Stripe"
+    },
+    "loading": "Chargement des revenus...",
+    "subtitle": "Suivez vos flux de revenus et l'historique des paiements.",
+    "breadcrumbDashboard": "Tableau de bord",
+    "chart": {
+      "title": "Évolution des revenus",
+      "subtitle": "Revenu brut vs paiement net sur les 6 derniers mois",
+      "gross": "Brut",
+      "netPayout": "Paiement net"
+    },
+    "yearToDate": {
+      "title": "Résumé de l'année ({year})",
+      "grossRevenue": "Revenu brut",
+      "platformFees": "Frais de plateforme",
+      "netEarnings": "Revenus nets",
+      "totalBookings": "Total des réservations",
+      "refundedThisYear": "Remboursé cette année : {amount}"
+    },
+    "payout": {
+      "title": "Calendrier des paiements",
+      "description": "Les paiements sont traités automatiquement 7 jours après la date de l'expérience. Les fonds sont transférés directement sur votre compte bancaire connecté via Stripe."
+    },
+    "transactionStatus": {
+      "paid": "Payé",
+      "processing": "En cours",
+      "pending": "En attente",
+      "refunded": "Remboursé"
     }
   },
   "calendar": {

@@ -103,6 +103,7 @@ export function ExperienceFilters({
           value={searchValue}
           onChange={(e) => handleSearchChange(e.target.value)}
           placeholder={t('searchPlaceholder')}
+          aria-label={t('searchPlaceholder')}
           className="pl-10 border-none bg-[#f8f6f6] focus:ring-2 focus:ring-primary/50"
         />
       </div>

@@ -20,10 +20,11 @@ export function LocationSection({ location, onLocationChange, sectionRef }: Loca
       <div className="space-y-4">
         {/* Address Autocomplete */}
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+          <label htmlFor="location-address" className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
             Address
           </label>
           <AddressAutocomplete
+            id="location-address"
             value={location}
             onChange={onLocationChange}
             placeholder="Search for an address..."

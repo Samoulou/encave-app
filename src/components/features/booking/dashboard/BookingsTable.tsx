@@ -17,6 +17,7 @@ import { approveBooking, rejectBooking } from '@/server/actions/booking-dashboar
 import { toast } from 'sonner';
 import { formatDate } from '@/lib/i18n/formatters';
 import type { Locale } from '@/i18n/routing';
+import { getInitials } from '@/lib/get-initials';
 
 interface BookingWithExperience {
   id: string;
@@ -43,16 +44,6 @@ interface BookingsTableProps {
 
 const DEFAULT_PAGE_SIZE = 5;
 
-/**
- * Get initials from a name (first letter of first and last name)
- */
-function getInitials(name: string): string {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) {
-    return parts[0]?.substring(0, 2).toUpperCase() ?? '';
-  }
-  return `${parts[0]?.[0] ?? ''}${parts[parts.length - 1]?.[0] ?? ''}`.toUpperCase();
-}
 
 /**
  * Bookings table component matching US-UI-09 mockup.
@@ -130,28 +121,28 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
 
   return (
     <>
-      <div className="bg-white rounded-xl border border-[#e5d2d7] shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-border shadow-sm overflow-hidden">
         {/* Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left border-collapse" aria-label={t('tableLabel')}>
             <thead>
-              <tr className="border-b border-[#e5d2d7]">
-                <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564]">
+              <tr className="border-b border-border">
+                <th scope="col" className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564]">
                   {t('columns.bookingInfo')}
                 </th>
-                <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564]">
+                <th scope="col" className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564]">
                   {t('columns.client')}
                 </th>
-                <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564]">
+                <th scope="col" className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564]">
                   {t('columns.experience')}
                 </th>
-                <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564]">
+                <th scope="col" className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564]">
                   {t('columns.guests')}
                 </th>
-                <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564]">
+                <th scope="col" className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564]">
                   {t('columns.status')}
                 </th>
-                <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564] text-right">
+                <th scope="col" className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564] text-right">
                   {t('columns.actions')}
                 </th>
               </tr>
@@ -169,7 +160,7 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
                     {/* Booking Info */}
                     <td className="py-4 px-6">
                       <div className="flex flex-col">
-                        <span className="text-[#1a0f12] font-bold text-sm">
+                        <span className="text-foreground font-bold text-sm">
                           {formatDate(bookingDate, locale as Locale, { dateStyle: 'medium' })}
                         </span>
                         <span className="text-[#915564] text-xs">
@@ -185,7 +176,7 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
                           {initials}
                         </div>
                         <div className="flex flex-col min-w-0">
-                          <span className="text-[#1a0f12] text-sm font-semibold truncate">
+                          <span className="text-foreground text-sm font-semibold truncate">
                             {booking.visitorName}
                           </span>
                           <span className="text-[#915564] text-xs truncate">
@@ -197,14 +188,14 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
 
                     {/* Experience */}
                     <td className="py-4 px-6">
-                      <span className="text-[#1a0f12] text-sm font-medium">
+                      <span className="text-foreground text-sm font-medium">
                         {booking.experience.title}
                       </span>
                     </td>
 
                     {/* Guests */}
                     <td className="py-4 px-6">
-                      <div className="flex items-center gap-1 text-[#1a0f12] text-sm">
+                      <div className="flex items-center gap-1 text-foreground text-sm">
                         <Users className="h-4 w-4 text-[#915564]" />
                         {t('guestCount', { count: booking.guestCount })}
                       </div>
@@ -224,6 +215,7 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
                             disabled={isApproving || isRejecting}
                             className="p-1.5 rounded-lg text-green-600 hover:bg-green-50 transition-colors disabled:opacity-50"
                             title={t('actions.approve')}
+                            aria-label={t('actions.approve')}
                           >
                             {isApproving ? (
                               <Loader2 className="h-5 w-5 animate-spin" />
@@ -236,6 +228,7 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
                             disabled={isApproving || isRejecting}
                             className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
                             title={t('actions.reject')}
+                            aria-label={t('actions.reject')}
                           >
                             {isRejecting ? (
                               <Loader2 className="h-5 w-5 animate-spin" />
@@ -247,8 +240,8 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
                       ) : (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <button className="p-2 rounded-lg text-[#915564] hover:bg-[#f2e9eb] hover:text-primary transition-colors">
-                              <MoreVertical className="h-5 w-5" />
+                            <button className="p-2 rounded-lg text-[#915564] hover:bg-primary-light hover:text-primary transition-colors" aria-label={t('actions.moreOptions')}>
+                              <MoreVertical className="h-5 w-5" aria-hidden="true" />
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-48">
@@ -282,7 +275,7 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
         </div>
 
         {/* Pagination Footer */}
-        <div className="bg-white px-6 py-4 border-t border-[#e5d2d7] flex items-center justify-between">
+        <div className="bg-white px-6 py-4 border-t border-border flex items-center justify-between">
           <span className="text-sm text-[#915564]">
             {t('pagination.showing', { from: startIndex + 1, to: endIndex, total: bookings.length })}
           </span>
@@ -290,14 +283,16 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="px-3 py-1 rounded-lg border border-[#e5d2d7] text-[#915564] text-sm hover:bg-[#f2e9eb] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1 rounded-lg border border-border text-[#915564] text-sm hover:bg-primary-light disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label={t('pagination.previousPage')}
             >
               {t('pagination.previous')}
             </button>
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="px-3 py-1 rounded-lg border border-[#e5d2d7] text-[#915564] text-sm hover:bg-[#f2e9eb] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1 rounded-lg border border-border text-[#915564] text-sm hover:bg-primary-light disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label={t('pagination.nextPage')}
             >
               {t('pagination.next')}
             </button>

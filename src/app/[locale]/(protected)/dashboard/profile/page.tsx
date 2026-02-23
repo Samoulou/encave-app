@@ -27,7 +27,7 @@ export default async function ProfilePage() {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <h1 className="font-display text-2xl sm:text-3xl font-bold text-[#1a0f12]">
+      <h1 className="font-display text-2xl sm:text-3xl font-bold text-foreground">
         {t('title')}
       </h1>
       <ClientProfileForm

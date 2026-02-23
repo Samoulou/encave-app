@@ -1,8 +1,19 @@
 'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
-import { GripVertical, X, Camera } from 'lucide-react';
+import { X, Camera } from 'lucide-react';
 import { ImageUpload } from '@/components/shared/ImageUpload';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
 
@@ -63,6 +74,8 @@ export function WineryMediaSection({
   onRemoveGalleryImage,
 }: WineryMediaSectionProps) {
   const t = useTranslations('winery');
+  const tCommon = useTranslations('common');
+  const [imageToDelete, setImageToDelete] = useState<string | null>(null);
 
   const emptySlots = maxGalleryImages - galleryImages.length;
 
@@ -137,6 +150,7 @@ export function WineryMediaSection({
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <path
                 strokeLinecap="round"
@@ -154,7 +168,7 @@ export function WineryMediaSection({
       <section className="space-y-6">
         <SectionHeader
           icon={
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -183,20 +197,11 @@ export function WineryMediaSection({
               />
               {/* Hover Overlay with Actions */}
               <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/0 opacity-0 transition-all duration-300 group-hover:bg-black/40 group-hover:opacity-100">
-                {/* Drag Handle for Future Reordering */}
-                <button
-                  type="button"
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-slate-600 shadow-lg transition-colors hover:bg-white"
-                  aria-label={t('dragToReorder')}
-                  disabled
-                >
-                  <GripVertical className="h-5 w-5" aria-hidden="true" />
-                </button>
                 {/* Remove Button */}
                 <button
                   type="button"
                   className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-red-600 shadow-lg transition-colors hover:bg-red-50"
-                  onClick={() => onRemoveGalleryImage(image.id)}
+                  onClick={() => setImageToDelete(image.id)}
                   aria-label={t('removeGalleryImage', { index: index + 1 })}
                 >
                   <X className="h-5 w-5" aria-hidden="true" />
@@ -240,6 +245,30 @@ export function WineryMediaSection({
           {t('galleryHelpFull')}
         </p>
       </section>
+
+      {/* Confirmation dialog for gallery image deletion */}
+      <AlertDialog open={!!imageToDelete} onOpenChange={(open) => !open && setImageToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('deleteImageTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('deleteImageDescription')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{tCommon('buttons.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => {
+                if (imageToDelete) {
+                  onRemoveGalleryImage(imageToDelete);
+                  setImageToDelete(null);
+                }
+              }}
+            >
+              {tCommon('buttons.delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

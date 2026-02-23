@@ -10,7 +10,7 @@ export function ProgressBarProvider() {
   return (
     <ProgressBar
       height="3px"
-      color="#cc2d55"
+      color="#962a48"
       options={{
         showSpinner: false,
         easing: 'ease',

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
@@ -33,6 +34,7 @@ interface NotificationPreferencesFormProps {
 export function NotificationPreferencesForm({
   initialData,
 }: NotificationPreferencesFormProps) {
+  const t = useTranslations('settings.notifications');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<NotificationPreferencesInput>({
@@ -50,12 +52,12 @@ export function NotificationPreferencesForm({
       const result = await updateNotificationPreferences(data);
 
       if (result.success) {
-        toast.success('Notification preferences updated');
+        toast.success(t('updated'));
       } else {
-        toast.error(result.error?.message || 'Failed to update preferences');
+        toast.error(result.error?.message || t('updateFailed'));
       }
     } catch {
-      toast.error('An unexpected error occurred');
+      toast.error(t('unexpectedError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -77,11 +79,10 @@ export function NotificationPreferencesForm({
                   </div>
                   <div className="space-y-1">
                     <FormLabel className="text-base font-medium">
-                      Daily Digest
+                      {t('dailyDigest')}
                     </FormLabel>
                     <FormDescription>
-                      Receive a summary of today&apos;s and tomorrow&apos;s bookings
-                      every morning at 7:00 AM
+                      {t('dailyDigestDescription')}
                     </FormDescription>
                   </div>
                 </div>
@@ -89,6 +90,7 @@ export function NotificationPreferencesForm({
                   <Switch
                     checked={field.value}
                     onCheckedChange={field.onChange}
+                    aria-label="Daily Digest"
                   />
                 </FormControl>
               </FormItem>
@@ -109,11 +111,10 @@ export function NotificationPreferencesForm({
                   </div>
                   <div className="space-y-1">
                     <FormLabel className="text-base font-medium">
-                      Weekly Summary
+                      {t('weeklySummary')}
                     </FormLabel>
                     <FormDescription>
-                      Receive a summary of last week&apos;s bookings and revenue
-                      every Monday morning
+                      {t('weeklySummaryDescription')}
                     </FormDescription>
                   </div>
                 </div>
@@ -121,6 +122,7 @@ export function NotificationPreferencesForm({
                   <Switch
                     checked={field.value}
                     onCheckedChange={field.onChange}
+                    aria-label="Weekly Summary"
                   />
                 </FormControl>
               </FormItem>
@@ -141,10 +143,10 @@ export function NotificationPreferencesForm({
                   </div>
                   <div className="space-y-1">
                     <FormLabel className="text-base font-medium">
-                      Instant Booking Alerts
+                      {t('instantAlerts')}
                     </FormLabel>
                     <FormDescription>
-                      Receive an email immediately when someone books an experience
+                      {t('instantAlertsDescription')}
                     </FormDescription>
                   </div>
                 </div>
@@ -152,6 +154,7 @@ export function NotificationPreferencesForm({
                   <Switch
                     checked={field.value}
                     onCheckedChange={field.onChange}
+                    aria-label="Instant Booking Alerts"
                   />
                 </FormControl>
               </FormItem>
@@ -164,12 +167,12 @@ export function NotificationPreferencesForm({
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saving...
+                {t('saving')}
               </>
             ) : (
               <>
                 <Mail className="mr-2 h-4 w-4" />
-                Save Preferences
+                {t('savePreferences')}
               </>
             )}
           </Button>

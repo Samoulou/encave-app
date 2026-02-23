@@ -41,18 +41,18 @@ export function SocialLoginButtons() {
     <>
       {/* Divider */}
       <div className="relative flex py-2 items-center">
-        <div className="flex-grow border-t border-[#e5d2d7]" />
+        <div className="flex-grow border-t border-border" />
         <span className="flex-shrink-0 mx-4 text-sm text-slate-400">
           {t('orContinueWith')}
         </span>
-        <div className="flex-grow border-t border-[#e5d2d7]" />
+        <div className="flex-grow border-t border-border" />
       </div>
 
       {/* Google Login Button */}
       <Button
         type="button"
         variant="outline"
-        className="flex w-full items-center justify-center gap-2 h-11 px-4 border border-[#e5d2d7] rounded-lg hover:bg-slate-50 transition-colors bg-white"
+        className="flex w-full items-center justify-center gap-2 h-11 px-4 border border-border rounded-lg hover:bg-slate-50 transition-colors bg-white"
         onClick={handleGoogleSignIn}
       >
         <GoogleIcon className="w-5 h-5" />

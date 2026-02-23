@@ -92,7 +92,9 @@ export async function checkAvailability(
 
 export interface TimeSlotAvailability {
   timeSlot: string;
+  endTime: string;
   remainingCapacity: number;
+  maxCapacity: number;
   available: boolean;
 }
 
@@ -148,7 +150,9 @@ export async function getTimeSlotsForDate(
         const remainingCapacity = experience.maxCapacity - bookedCount;
         return {
           timeSlot: slot.startTime,
+          endTime: slot.endTime,
           remainingCapacity,
+          maxCapacity: experience.maxCapacity,
           available: remainingCapacity > 0,
         };
       }

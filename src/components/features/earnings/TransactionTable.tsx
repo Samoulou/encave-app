@@ -2,19 +2,12 @@
 
 import { useState, useMemo, memo } from 'react';
 import { format } from 'date-fns';
-import { MoreVertical } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
 import { formatCHF } from '@/lib/utils/currency';
 import { TransactionStatusBadge } from './TransactionStatusBadge';
 import { Pagination } from '@/components/shared/Pagination';
 import type { Transaction } from '@/server/queries/earnings.queries';
+import { getInitials } from '@/lib/get-initials';
 
 interface TransactionTableProps {
   transactions: Transaction[];
@@ -22,16 +15,6 @@ interface TransactionTableProps {
 
 const DEFAULT_PAGE_SIZE = 20;
 
-/**
- * Generate initials from a name for avatar fallback.
- */
-function getInitials(name: string): string {
-  const parts = name.split(' ').filter(Boolean);
-  if (parts.length >= 2) {
-    return `${parts[0]?.[0] ?? ''}${parts[1]?.[0] ?? ''}`.toUpperCase();
-  }
-  return (parts[0]?.slice(0, 2) ?? '').toUpperCase();
-}
 
 function TransactionTableComponent({ transactions }: TransactionTableProps) {
   const t = useTranslations('earnings.transactions');
@@ -65,17 +48,17 @@ function TransactionTableComponent({ transactions }: TransactionTableProps) {
 
   if (transactions.length === 0) {
     return (
-      <div className="rounded-xl border border-[#e5d2d7] bg-white p-8 text-center shadow-sm">
+      <div className="rounded-xl border border-border bg-white p-8 text-center shadow-sm">
         <p className="text-[#915564]">{t('noTransactions')}</p>
       </div>
     );
   }
 
   return (
-    <div className="rounded-xl border border-[#e5d2d7] bg-white shadow-sm overflow-hidden">
+    <div className="rounded-xl border border-border bg-white shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm whitespace-nowrap">
-          <thead className="bg-gray-50 border-b border-[#e5d2d7] text-[#915564] font-medium uppercase text-xs tracking-wider">
+        <table className="w-full text-left text-sm whitespace-nowrap" aria-label={t('tableLabel')}>
+          <thead className="bg-gray-50 border-b border-border text-[#915564] font-medium uppercase text-xs tracking-wider">
             <tr>
               <th scope="col" className="px-6 py-4">
                 {t('date')}
@@ -95,12 +78,9 @@ function TransactionTableComponent({ transactions }: TransactionTableProps) {
               <th scope="col" className="px-6 py-4 text-center">
                 {t('status')}
               </th>
-              <th scope="col" className="px-6 py-4">
-                <span className="sr-only">Actions</span>
-              </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#f2e9eb] text-[#1a0f12]">
+          <tbody className="divide-y divide-[#f2e9eb] text-foreground">
             {paginatedTransactions.map((transaction) => (
               <tr
                 key={transaction.id}
@@ -149,25 +129,6 @@ function TransactionTableComponent({ transactions }: TransactionTableProps) {
                   <TransactionStatusBadge status={transaction.status} />
                 </td>
 
-                {/* Actions */}
-                <td className="px-6 py-4 text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-[#915564] hover:text-primary hover:bg-transparent"
-                      >
-                        <MoreVertical className="h-5 w-5" />
-                        <span className="sr-only">{t('openMenu')}</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>{t('viewDetails')}</DropdownMenuItem>
-                      <DropdownMenuItem>{t('downloadReceipt')}</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </td>
               </tr>
             ))}
           </tbody>
@@ -176,7 +137,7 @@ function TransactionTableComponent({ transactions }: TransactionTableProps) {
 
       {/* Pagination */}
       {transactions.length > DEFAULT_PAGE_SIZE && (
-        <div className="border-t border-[#e5d2d7] p-4">
+        <div className="border-t border-border p-4">
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}

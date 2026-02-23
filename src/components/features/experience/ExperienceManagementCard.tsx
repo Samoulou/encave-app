@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Clock, Users, Copy, Trash2, Edit, MoreVertical, Send, EyeOff, Archive } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -41,6 +42,8 @@ export function ExperienceManagementCard({
   experience,
 }: ExperienceManagementCardProps) {
   const router = useRouter();
+  const t = useTranslations('experience');
+  const tCommon = useTranslations('common.buttons');
   const [isPending, startTransition] = useTransition();
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
@@ -62,8 +65,8 @@ export function ExperienceManagementCard({
     startTransition(async () => {
       const result = await publishExperience(experience.id);
       if (result.success) {
-        toast.success('Experience published', {
-          description: 'Your experience is now visible to visitors.',
+        toast.success(t('publishedSuccess'), {
+          description: t('publishedDescription'),
         });
         router.refresh();
       } else {
@@ -76,8 +79,8 @@ export function ExperienceManagementCard({
     startTransition(async () => {
       const result = await unpublishExperience(experience.id);
       if (result.success) {
-        toast.success('Experience unpublished', {
-          description: 'Your experience is now a draft.',
+        toast.success(t('unpublishedSuccess'), {
+          description: t('unpublishedDescription'),
         });
         router.refresh();
       } else {
@@ -90,8 +93,8 @@ export function ExperienceManagementCard({
     startTransition(async () => {
       const result = await archiveExperience(experience.id);
       if (result.success) {
-        toast.success('Experience archived', {
-          description: 'Your experience has been archived.',
+        toast.success(t('archivedSuccess'), {
+          description: t('archivedDescription'),
         });
         router.refresh();
       } else {
@@ -104,8 +107,8 @@ export function ExperienceManagementCard({
     startTransition(async () => {
       const result = await duplicateExperience(experience.id);
       if (result.success) {
-        toast.success('Experience duplicated', {
-          description: 'A copy has been created as a draft.',
+        toast.success(t('duplicatedSuccess'), {
+          description: t('duplicatedDescription'),
         });
         router.refresh();
       } else {
@@ -118,8 +121,8 @@ export function ExperienceManagementCard({
     startTransition(async () => {
       const result = await deleteExperience(experience.id);
       if (result.success) {
-        toast.success('Experience deleted', {
-          description: 'Your experience has been permanently deleted.',
+        toast.success(t('deletedSuccess'), {
+          description: t('deletedDescription'),
         });
         router.refresh();
       } else {
@@ -137,7 +140,7 @@ export function ExperienceManagementCard({
         className={cn(
           'group relative flex flex-col bg-white rounded-xl overflow-hidden border border-transparent',
           'hover:border-primary/20 transition-all duration-300 hover:-translate-y-1',
-          'shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:shadow-[0_12px_30px_rgba(205,45,85,0.15)]'
+          'shadow-card hover:shadow-card-hover'
         )}
       >
         {/* Image Area */}
@@ -168,7 +171,7 @@ export function ExperienceManagementCard({
                   disabled={isPending}
                 >
                   <MoreVertical className="h-4 w-4" />
-                  <span className="sr-only">More actions</span>
+                  <span className="sr-only">{t('moreActions')}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-40">
@@ -179,7 +182,7 @@ export function ExperienceManagementCard({
                     className="cursor-pointer text-green-600 focus:text-green-600"
                   >
                     <Send className="mr-2 h-4 w-4" />
-                    Publish
+                    {t('publish')}
                   </DropdownMenuItem>
                 )}
                 {experience.status === 'PUBLISHED' && (
@@ -189,7 +192,7 @@ export function ExperienceManagementCard({
                     className="cursor-pointer"
                   >
                     <EyeOff className="mr-2 h-4 w-4" />
-                    Unpublish
+                    {t('unpublish')}
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem
@@ -198,7 +201,7 @@ export function ExperienceManagementCard({
                   className="cursor-pointer"
                 >
                   <Copy className="mr-2 h-4 w-4" />
-                  Duplicate
+                  {t('duplicate')}
                 </DropdownMenuItem>
                 {experience.status !== 'ARCHIVED' && (
                   <>
@@ -209,7 +212,7 @@ export function ExperienceManagementCard({
                       className="cursor-pointer text-amber-600 focus:text-amber-600"
                     >
                       <Archive className="mr-2 h-4 w-4" />
-                      Archive
+                      {t('archive')}
                     </DropdownMenuItem>
                   </>
                 )}
@@ -220,7 +223,7 @@ export function ExperienceManagementCard({
                   className="cursor-pointer text-red-600 focus:text-red-600"
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
-                  Delete
+                  {tCommon('delete')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -229,7 +232,7 @@ export function ExperienceManagementCard({
 
         {/* Content */}
         <div className="p-5 flex flex-col flex-1 gap-3">
-          <h3 className="text-lg font-bold text-[#1a0f12] leading-tight group-hover:text-primary transition-colors line-clamp-1">
+          <h3 className="text-lg font-bold text-foreground leading-tight group-hover:text-primary transition-colors line-clamp-1">
             {experience.title}
           </h3>
 
@@ -241,15 +244,15 @@ export function ExperienceManagementCard({
             </div>
             <div className="flex items-center gap-1.5">
               <Users className="h-4 w-4" aria-hidden="true" />
-              Max {experience.maxCapacity}
+              {t('maxGuests2', { count: experience.maxCapacity })}
             </div>
           </div>
 
           {/* Footer with Price and Actions */}
           <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
-            <span className="text-xl font-bold text-[#1a0f12]">
+            <span className="text-xl font-bold text-foreground">
               {formatPrice(experience.price)}
-              <span className="text-xs font-normal text-gray-500 ml-1">/ pp</span>
+              <span className="text-xs font-normal text-gray-500 ml-1">{t('perPerson')}</span>
             </span>
 
             <div className="flex items-center gap-1">
@@ -259,7 +262,7 @@ export function ExperienceManagementCard({
                 className="h-8 w-8 text-gray-400 hover:text-primary hover:bg-primary/5"
                 onClick={handleDuplicate}
                 disabled={isPending}
-                title="Duplicate"
+                title={t('duplicate')}
               >
                 <Copy className="h-4 w-4" />
               </Button>
@@ -269,7 +272,7 @@ export function ExperienceManagementCard({
                 className="h-8 w-8 text-gray-400 hover:text-red-500 hover:bg-red-50"
                 onClick={() => setDeleteModalOpen(true)}
                 disabled={isPending}
-                title="Delete"
+                title={tCommon('delete')}
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -279,7 +282,7 @@ export function ExperienceManagementCard({
                 className="ml-1 bg-primary/10 hover:bg-primary text-primary hover:text-white font-bold"
               >
                 <Link href={`/dashboard/experiences/${experience.id}/edit`}>
-                  Edit
+                  {tCommon('edit')}
                   <Edit className="ml-1 h-3.5 w-3.5" />
                 </Link>
               </Button>

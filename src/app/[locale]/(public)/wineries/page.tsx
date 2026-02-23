@@ -42,7 +42,7 @@ export default async function WineriesPage({
         />
         <div className="absolute inset-0 bg-gradient-to-t from-burgundy-950/80 via-burgundy-900/40 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-8 lg:p-12">
-          <div className="mx-auto max-w-6xl">
+          <div className="mx-auto max-w-7xl">
             <h1 id="hero-heading" className="font-display text-display-lg text-white">
               {t('title')}
             </h1>
@@ -68,15 +68,15 @@ function WineriesLoadingState() {
     <>
       {/* Filter Bar skeleton */}
       <div className="sticky top-0 z-20 border-b border-stone-200/60 bg-white/95 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4 lg:px-8">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 py-4 lg:px-8">
           <Skeleton className="h-5 w-32" />
           <Skeleton className="h-11 w-[200px]" />
         </div>
       </div>
 
       {/* Grid skeleton */}
-      <div className="mx-auto max-w-6xl px-6 py-10 lg:px-8 lg:py-12">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 lg:px-8 lg:py-12">
+        <div className="grid grid-cols-1 gap-6 md:gap-8 md:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="overflow-hidden rounded-xl bg-white shadow-warm">
               <Skeleton className="h-48 w-full" />

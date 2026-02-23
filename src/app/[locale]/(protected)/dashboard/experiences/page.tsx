@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { redirect } from 'next/navigation';
-import { getLocale } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
 import { Button } from '@/components/ui/button';
@@ -50,26 +50,28 @@ export default async function ExperiencesDashboardPage({ searchParams }: PagePro
     redirect(`/${locale}/onboarding/winery`);
   }
 
+  const t = await getTranslations('experience');
+
   return (
     <WineryAccessGuard>
       <div className="max-w-7xl mx-auto flex flex-col gap-8">
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl md:text-4xl font-black tracking-[-0.033em] text-[#1a0f12]">
-              Manage Experiences
+            <h1 className="font-display text-3xl md:text-4xl font-black tracking-[-0.033em] text-foreground">
+              {t('manageTitle')}
             </h1>
             <p className="text-gray-500 mt-1">
-              Curate your wine tasting offerings for visitors.
+              {t('manageSubtitle')}
             </p>
           </div>
           <Button
             asChild
-            className="flex items-center gap-2 bg-primary hover:bg-[#b02244] text-white px-5 py-2.5 rounded-lg shadow-lg shadow-primary/20 transition-all active:scale-95 group"
+            className="flex items-center gap-2 bg-primary hover:bg-[hsl(var(--primary-hover))] text-white px-5 py-2.5 rounded-lg shadow-lg shadow-primary/20 transition-all active:scale-95 group"
           >
             <Link href="/dashboard/experiences/new">
               <Plus className="h-5 w-5 transition-transform group-hover:rotate-90" />
-              <span className="font-bold text-sm">New Experience</span>
+              <span className="font-bold text-sm">{t('newExperience')}</span>
             </Link>
           </Button>
         </div>
@@ -105,7 +107,7 @@ function ExperiencesLoadingState() {
       {/* Experience cards skeleton */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="rounded-xl bg-white overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)]">
+          <div key={i} className="rounded-xl bg-white overflow-hidden shadow-card">
             <Skeleton className="aspect-[3/2] w-full" />
             <div className="p-5 space-y-3">
               <Skeleton className="h-6 w-3/4" />

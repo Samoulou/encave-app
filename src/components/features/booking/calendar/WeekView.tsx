@@ -135,8 +135,9 @@ export function WeekView({
                   <button
                     key={date.toISOString()}
                     onClick={() => handleDayClick(date)}
+                    aria-label={format(date, 'PPPP', { locale: dateLocale })}
                     className={cn(
-                      'bg-white p-2 text-center transition-colors hover:bg-slate-50',
+                      'bg-white p-2 text-center transition-colors hover:bg-slate-50 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none',
                       isCurrentDay && 'bg-burgundy-50',
                       isBlocked && 'bg-red-50'
                     )}
@@ -196,7 +197,8 @@ export function WeekView({
                           <BookingTooltip key={booking.id} booking={booking}>
                             <button
                               onClick={() => onBookingClick?.(booking.id)}
-                              className="mb-1 w-full rounded px-1.5 py-1 text-left text-xs text-white transition-opacity hover:opacity-90"
+                              aria-label={`${booking.visitorName}, ${booking.timeSlot}, ${booking.guestCount} ${booking.guestCount === 1 ? 'guest' : 'guests'}`}
+                              className="mb-1 w-full rounded px-1.5 py-1 text-left text-xs text-white transition-opacity hover:opacity-90 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none"
                               style={{
                                 backgroundColor:
                                   EXPERIENCE_TYPE_COLORS[booking.experience.type],

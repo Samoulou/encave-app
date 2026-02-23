@@ -11,6 +11,7 @@ import { getBaseUrl } from '@/lib/env';
 import { HeroSearchBar } from '@/components/features/home/HeroSearchBar';
 import { PopularExperiences } from '@/components/features/home/PopularExperiences';
 import { HowItWorks } from '@/components/features/home/HowItWorks';
+import { FadeIn } from '@/components/shared/FadeIn';
 import { getFeaturedExperiences } from '@/server/queries/experience.queries';
 import type { Locale } from '@/i18n/routing';
 
@@ -65,14 +66,14 @@ export default async function Home({ params }: Props) {
       <Header />
 
       {/* Hero Section with Background Image */}
-      <section className="relative h-[500px] md:h-[600px] w-full flex items-center justify-center overflow-hidden">
+      <section className="relative h-[350px] sm:h-[450px] md:h-[500px] lg:h-[600px] w-full flex items-center justify-center overflow-hidden">
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           {/* Gradient Overlay */}
           <div
             className="absolute inset-0 z-10"
             style={{
-              background: 'linear-gradient(135deg, rgba(32, 18, 22, 0.4) 0%, rgba(205, 45, 85, 0.5) 100%)',
+              background: 'linear-gradient(135deg, rgba(32, 18, 22, 0.4) 0%, rgba(150, 42, 72, 0.5) 100%)',
             }}
           />
           <Image
@@ -88,7 +89,7 @@ export default async function Home({ params }: Props) {
 
         {/* Hero Content */}
         <div className="relative z-20 w-full max-w-4xl px-4 text-center">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-6 leading-tight tracking-tight drop-shadow-sm">
+          <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-6 leading-tight tracking-tight drop-shadow-sm">
             {t('heroTitle')} <span className="text-secondary">{t('heroTitleHighlight')}</span>
           </h1>
           <p className="text-lg md:text-xl text-white/90 mb-10 max-w-2xl mx-auto font-medium drop-shadow-sm">
@@ -102,12 +103,17 @@ export default async function Home({ params }: Props) {
 
       <main id="main-content" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-24">
         {/* Popular Experiences Section */}
-        <PopularExperiences experiences={featuredExperiences} />
+        <FadeIn>
+          <PopularExperiences experiences={featuredExperiences} />
+        </FadeIn>
 
         {/* How It Works Section */}
-        <HowItWorks />
+        <FadeIn>
+          <HowItWorks />
+        </FadeIn>
 
         {/* CTA Banner Section */}
+        <FadeIn>
         <section className="relative rounded-3xl overflow-hidden">
           <div className="absolute inset-0 bg-[#201216]">
             <Image
@@ -119,14 +125,14 @@ export default async function Home({ params }: Props) {
             />
           </div>
           <div className="relative z-10 px-6 py-20 text-center">
-            <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-6">
+            <h2 className="font-display text-3xl md:text-5xl font-extrabold text-white mb-6">
               {t('ctaTitle')}
             </h2>
             <p className="text-lg text-white/80 mb-8 max-w-xl mx-auto">
               {t('ctaSubtitle')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" asChild className="bg-primary hover:bg-[#a62444] shadow-lg">
+              <Button size="lg" asChild className="bg-primary hover:bg-[hsl(var(--primary-hover))] shadow-lg">
                 <Link href="/experiences">
                   {t('ctaButton')}
                 </Link>
@@ -144,6 +150,7 @@ export default async function Home({ params }: Props) {
             </div>
           </div>
         </section>
+        </FadeIn>
 
         {/* Health Status (for development) */}
         <div className="mt-8 flex justify-center">

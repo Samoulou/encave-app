@@ -8,6 +8,7 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Link } from '@/i18n/navigation';
 import { ArrowLeft } from 'lucide-react';
+import Image from 'next/image';
 import type { Metadata } from 'next';
 
 // Static metadata - no async, instant navigation!
@@ -63,37 +64,40 @@ export default async function ExperiencesPage({ params, searchParams }: PageProp
     <div className="min-h-screen bg-cream-50">
       <Header />
 
-      {/* Hero Section with visual warmth */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-burgundy-900 via-burgundy-800 to-burgundy-900">
-        {/* Decorative background pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          }} />
-        </div>
+      {/* Hero Section with background image */}
+      <section className="relative min-h-[280px] sm:min-h-[320px] w-full">
+        <Image
+          src="/images/herobanner-image.jpg"
+          alt=""
+          fill
+          className="object-cover"
+          priority
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-burgundy-950/80 via-burgundy-900/40 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 p-8 lg:p-12">
+          <div className="mx-auto max-w-7xl">
+            {/* Back to Home Link */}
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 text-sm font-medium text-cream-100 hover:text-white transition-colors mb-4"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              {tNav('backToHome')}
+            </Link>
 
-        <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-          {/* Back to Home Link */}
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-sm font-medium text-cream-100 hover:text-white transition-colors mb-6"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            {tNav('backToHome')}
-          </Link>
-
-          {/* Page Title */}
-          <h1 className="font-display text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
-            {t('wineExperiences')}
-          </h1>
-          <p className="mt-3 max-w-2xl text-lg text-cream-100/90">
-            {t('discoverExperiences')}
-          </p>
+            {/* Page Title */}
+            <h1 className="font-display text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
+              {t('wineExperiences')}
+            </h1>
+            <p className="mt-3 max-w-2xl text-lg text-white/90">
+              {t('discoverExperiences')}
+            </p>
+          </div>
         </div>
-      </div>
+      </section>
 
       {/* Main Content */}
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         {/* Content with data - streams in when ready */}
         <Suspense fallback={<ContentLoadingState />}>
           <ExperiencesContent searchParams={parsedParams} />

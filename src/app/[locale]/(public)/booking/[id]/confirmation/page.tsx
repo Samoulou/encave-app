@@ -100,13 +100,13 @@ export default async function ConfirmationPage({ params }: ConfirmationPageProps
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-yellow-100">
               <Clock className="h-10 w-10 text-yellow-600" />
             </div>
-            <h1 className="text-3xl font-bold text-[#1a0f12] mb-2">
+            <h1 className="font-display text-3xl font-bold text-foreground mb-2">
               {t('paymentPending')}
             </h1>
             <p className="text-[#915564]">{t('paymentPendingDescription')}</p>
           </div>
 
-          <Card className="mb-6 border-[#e5d2d7]">
+          <Card className="mb-6 border-border">
             <CardContent className="p-6 text-center">
               <p className="text-sm text-[#915564] mb-1">{t('bookingReference')}</p>
               <p className="text-2xl font-mono font-bold text-primary">

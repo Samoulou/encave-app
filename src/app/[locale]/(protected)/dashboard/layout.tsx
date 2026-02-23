@@ -22,7 +22,7 @@ export default async function DashboardLayout({
     const wineryName = winery?.name ?? 'My Winery';
 
     return (
-      <div className="flex h-screen w-full overflow-hidden bg-[#f8f6f6]">
+      <div className="flex h-screen w-full overflow-hidden bg-primary-light">
         <DashboardSidebar
           wineryName={wineryName}
           userName={session.user.name ?? undefined}
@@ -40,7 +40,7 @@ export default async function DashboardLayout({
   // CLIENT: show client dashboard sidebar
   if (session.user.role === 'CLIENT') {
     return (
-      <div className="flex h-screen w-full overflow-hidden bg-[#f8f6f6]">
+      <div className="flex h-screen w-full overflow-hidden bg-primary-light">
         <ClientDashboardSidebar
           userName={session.user.name ?? undefined}
           userEmail={session.user.email}

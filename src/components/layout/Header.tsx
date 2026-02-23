@@ -14,8 +14,8 @@ export async function Header() {
   const t = await getTranslations('nav');
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-stone-200/60 bg-white/95 backdrop-blur-md supports-[backdrop-filter]:bg-white/80">
-      <div className="mx-auto flex h-20 max-w-6xl items-center justify-between px-6 lg:px-8">
+    <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-white/95 backdrop-blur-md supports-[backdrop-filter]:bg-white/80">
+      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link
           href="/"
           className="flex items-center gap-2 group"
@@ -49,9 +49,13 @@ export async function Header() {
         {/* Desktop auth section - hidden on mobile */}
         <div className="hidden md:flex items-center gap-4">
           <LocaleSwitcher />
-          <div className="h-5 w-px bg-slate-200" aria-hidden="true" />
+          <div className="h-5 w-px bg-border" aria-hidden="true" />
           {session?.user ? (
-            <UserMenu userName={session.user.name} />
+            <UserMenu
+              userName={session.user.name}
+              userRole={session.user.role}
+              userEmail={session.user.email}
+            />
           ) : (
             <div className="flex items-center gap-3">
               <Button variant="ghost" asChild>

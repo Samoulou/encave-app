@@ -49,14 +49,14 @@ export function PaymentSection({
   const t = useTranslations('checkout');
 
   return (
-    <section className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-[#e5d2d7]">
+    <section className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-border">
       {/* Section Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">
             <CreditCard className="h-4 w-4" aria-hidden="true" />
           </div>
-          <h3 className="text-xl font-bold text-[#1a0f12]">{t('paymentMethod')}</h3>
+          <h3 className="text-xl font-bold text-foreground">{t('paymentMethod')}</h3>
         </div>
         <div className="flex gap-2 opacity-60">
           <VisaIcon />
@@ -67,10 +67,10 @@ export function PaymentSection({
       <div className="space-y-4">
         {/* Card Information - Combined Input */}
         <div className="flex flex-col w-full">
-          <Label htmlFor="cardNumber" className="text-[#1a0f12] text-sm font-medium pb-2">
+          <Label htmlFor="cardNumber" className="text-foreground text-sm font-medium pb-2">
             {t('cardInformation')}
           </Label>
-          <div className="relative flex items-center w-full rounded-lg border border-[#e5d2d7] bg-[#fbf9f9] px-4 h-12 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all">
+          <div className="relative flex items-center w-full rounded-lg border border-border bg-[#fbf9f9] px-4 h-12 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all">
             <CreditCard className="h-5 w-5 text-[#915564] mr-3 flex-shrink-0" aria-hidden="true" />
             <input
               id="cardNumber"
@@ -79,10 +79,10 @@ export function PaymentSection({
               inputMode="numeric"
               autoComplete="cc-number"
               placeholder={t('cardNumberPlaceholder')}
-              className="flex-1 bg-transparent border-none focus:ring-0 focus:outline-none text-[#1a0f12] placeholder:text-[#915564]/60 text-base min-w-0"
+              className="flex-1 bg-transparent border-none focus:ring-0 focus:outline-none text-foreground placeholder:text-[#915564]/60 text-base min-w-0"
               disabled={isSubmitting}
             />
-            <div className="flex items-center border-l border-[#e5d2d7] ml-2 pl-2">
+            <div className="flex items-center border-l border-border ml-2 pl-2">
               <input
                 id="cardExpiry"
                 name="cardExpiry"
@@ -91,11 +91,11 @@ export function PaymentSection({
                 autoComplete="cc-exp"
                 placeholder="MM/YY"
                 aria-label={t('cardExpiry')}
-                className="w-16 bg-transparent border-none focus:ring-0 focus:outline-none text-[#1a0f12] placeholder:text-[#915564]/60 text-center text-base"
+                className="w-16 bg-transparent border-none focus:ring-0 focus:outline-none text-foreground placeholder:text-[#915564]/60 text-center text-base"
                 disabled={isSubmitting}
               />
             </div>
-            <div className="flex items-center border-l border-[#e5d2d7] ml-2 pl-2">
+            <div className="flex items-center border-l border-border ml-2 pl-2">
               <input
                 id="cardCvc"
                 name="cardCvc"
@@ -104,7 +104,7 @@ export function PaymentSection({
                 autoComplete="cc-csc"
                 placeholder="CVC"
                 aria-label={t('cardCvc')}
-                className="w-12 bg-transparent border-none focus:ring-0 focus:outline-none text-[#1a0f12] placeholder:text-[#915564]/60 text-center text-base"
+                className="w-12 bg-transparent border-none focus:ring-0 focus:outline-none text-foreground placeholder:text-[#915564]/60 text-center text-base"
                 disabled={isSubmitting}
               />
             </div>
@@ -113,7 +113,7 @@ export function PaymentSection({
 
         {/* Cardholder Name */}
         <div className="flex flex-col w-full">
-          <Label htmlFor="cardholderName" className="text-[#1a0f12] text-sm font-medium pb-2">
+          <Label htmlFor="cardholderName" className="text-foreground text-sm font-medium pb-2">
             {t('cardholderName')}
           </Label>
           <Input
@@ -121,7 +121,7 @@ export function PaymentSection({
             placeholder={t('cardholderNamePlaceholder')}
             autoComplete="cc-name"
             disabled={isSubmitting}
-            className="h-12 rounded-lg border-[#e5d2d7] bg-[#fbf9f9] focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-[#915564]/60"
+            className="h-12 rounded-lg border-border bg-[#fbf9f9] focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-[#915564]/60"
             {...register('cardholderName')}
           />
           {errors.cardholderName && (
@@ -131,9 +131,9 @@ export function PaymentSection({
       </div>
 
       {/* Trust Badge */}
-      <div className="mt-8 flex items-center justify-center gap-2 p-3 bg-[#f2e9eb]/50 rounded-lg border border-[#e5d2d7]">
-        <Lock className="h-4 w-4 text-[#1a0f12]" aria-hidden="true" />
-        <span className="text-sm font-medium text-[#1a0f12]">{t('securePaymentStripe')}</span>
+      <div className="mt-8 flex items-center justify-center gap-2 p-3 bg-primary-light/50 rounded-lg border border-border">
+        <Lock className="h-4 w-4 text-foreground" aria-hidden="true" />
+        <span className="text-sm font-medium text-foreground">{t('securePaymentStripe')}</span>
       </div>
 
       {/* CTA Button */}
@@ -141,7 +141,7 @@ export function PaymentSection({
         type="submit"
         onClick={onSubmit}
         disabled={isSubmitting}
-        className="w-full mt-6 bg-primary hover:bg-[#a62444] text-white h-14 rounded-lg font-bold text-lg shadow-lg shadow-primary/20 transition-all group"
+        className="w-full mt-6 bg-primary hover:bg-[hsl(var(--primary-hover))] text-white h-14 rounded-lg font-bold text-lg shadow-lg shadow-primary/20 transition-all group"
       >
         {isSubmitting ? (
           <>

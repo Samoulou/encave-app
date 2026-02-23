@@ -52,17 +52,17 @@ export async function PopularExperiences({ experiences }: PopularExperiencesProp
         <h2 className="text-primary font-bold tracking-wider text-sm uppercase mb-2">
           {t('curatedForYou')}
         </h2>
-        <h3 className="text-3xl md:text-4xl font-extrabold text-foreground">
+        <h3 className="font-display text-3xl md:text-4xl font-extrabold text-foreground">
           {t('popularExperiences')}
         </h3>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
         {experiences.map((experience, index) => (
           <Link
             key={experience.id}
             href={`/experiences/${experience.slug}`}
-            className="group bg-white dark:bg-[#2a1a1f] rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-800 flex flex-col h-full"
+            className="group bg-white dark:bg-[#2a1a1f] rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 ease-premium border border-gray-100 dark:border-gray-800 flex flex-col h-full"
           >
             {/* Image */}
             <div className="relative h-60 overflow-hidden">
@@ -70,7 +70,7 @@ export async function PopularExperiences({ experiences }: PopularExperiencesProp
                 src={experience.coverPhoto}
                 alt={experience.title}
                 fill
-                className="object-cover transform group-hover:scale-105 transition-transform duration-500"
+                className="object-cover transform group-hover:scale-105 transition-transform duration-500 ease-premium"
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 priority={index === 0}
                 loading={index === 0 ? 'eager' : 'lazy'}

@@ -8,6 +8,7 @@ import {
   ExternalLink,
   Loader2,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { getStripeDashboardLink } from '@/server/actions/stripe';
 import { toast } from 'sonner';
@@ -19,35 +20,37 @@ interface PaymentStatusProps {
   className?: string;
 }
 
-const statusConfig = {
-  not_connected: {
-    label: 'Not connected',
-    description: 'Connect your bank account to receive payments',
-    icon: XCircle,
-    iconColor: 'text-slate-400',
-    bgColor: 'bg-slate-50',
-    textColor: 'text-slate-600',
-  },
-  pending: {
-    label: 'Pending verification',
-    description: 'Stripe is verifying your account details',
-    icon: Clock,
-    iconColor: 'text-gold-500',
-    bgColor: 'bg-gold-50',
-    textColor: 'text-gold-700',
-  },
-  ready: {
-    label: 'Ready to accept payments',
-    description: 'Your account is fully set up',
-    icon: CheckCircle,
-    iconColor: 'text-green-500',
-    bgColor: 'bg-green-50',
-    textColor: 'text-green-700',
-  },
-};
-
 export function PaymentStatus({ status, className }: PaymentStatusProps) {
+  const t = useTranslations('stripe.paymentStatus');
   const [isLoading, setIsLoading] = useState(false);
+
+  const statusConfig = {
+    not_connected: {
+      label: t('notConnected'),
+      description: t('notConnectedDescription'),
+      icon: XCircle,
+      iconColor: 'text-slate-400',
+      bgColor: 'bg-slate-50',
+      textColor: 'text-slate-600',
+    },
+    pending: {
+      label: t('pendingVerification'),
+      description: t('pendingVerificationDescription'),
+      icon: Clock,
+      iconColor: 'text-gold-500',
+      bgColor: 'bg-gold-50',
+      textColor: 'text-gold-700',
+    },
+    ready: {
+      label: t('ready'),
+      description: t('readyDescription'),
+      icon: CheckCircle,
+      iconColor: 'text-green-500',
+      bgColor: 'bg-green-50',
+      textColor: 'text-green-700',
+    },
+  };
+
   const config = statusConfig[status];
   const Icon = config.icon;
 
@@ -61,7 +64,7 @@ export function PaymentStatus({ status, className }: PaymentStatusProps) {
         toast.error(result.error.message);
       }
     } catch {
-      toast.error('Failed to open payment dashboard');
+      toast.error(t('failedToOpen'));
     } finally {
       setIsLoading(false);
     }
@@ -97,7 +100,7 @@ export function PaymentStatus({ status, className }: PaymentStatusProps) {
             <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
           ) : (
             <>
-              Manage
+              {t('manage')}
               <ExternalLink className="ml-1.5 h-3.5 w-3.5" aria-hidden="true" />
             </>
           )}

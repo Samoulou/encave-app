@@ -10,7 +10,7 @@ const EarningsChart = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="rounded-xl border border-[#e5d2d7] bg-white p-6 lg:p-8 shadow-sm">
+      <div className="rounded-xl border border-border bg-white p-6 lg:p-8 shadow-sm">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
           <div>
             <Skeleton className="h-5 w-40" />

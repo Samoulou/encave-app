@@ -25,7 +25,7 @@ export function ExperienceDetailHeader({
 
   return (
     <div className="mb-8">
-      <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-[#1a0f12] mb-3 leading-tight tracking-tight">
+      <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground mb-3 leading-tight tracking-tight">
         {title}
       </h1>
       <div className="flex flex-wrap items-center gap-4 text-sm md:text-base">
@@ -40,7 +40,7 @@ export function ExperienceDetailHeader({
             <span className="text-gray-300">•</span>
             <div className="flex items-center gap-1">
               <Star className="h-[18px] w-[18px] text-yellow-500 fill-yellow-500" />
-              <span className="font-bold text-[#1a0f12]">{rating.toFixed(1)}</span>
+              <span className="font-bold text-foreground">{rating.toFixed(1)}</span>
               {reviewCount > 0 && (
                 <span className="text-gray-500">({t('reviews', { count: reviewCount })})</span>
               )}

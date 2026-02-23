@@ -52,7 +52,7 @@ export function AvailabilityDisplay({ slots }: AvailabilityDisplayProps) {
 
   return (
     <section className="mt-8">
-      <h3 className="text-2xl font-bold mb-4 text-[#1a0f12] flex items-center gap-2">
+      <h3 className="text-2xl font-bold mb-4 text-foreground flex items-center gap-2">
         <Calendar className="h-6 w-6 text-primary" />
         {t('title')}
       </h3>

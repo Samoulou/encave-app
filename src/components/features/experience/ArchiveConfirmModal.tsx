@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,25 +27,26 @@ export function ArchiveConfirmModal({
   onConfirm,
   isPending,
 }: ArchiveConfirmModalProps) {
+  const t = useTranslations('experience.archiveModal');
+  const tCommon = useTranslations('common.buttons');
+
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Archive Experience</AlertDialogTitle>
+          <AlertDialogTitle>{t('title')}</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to archive &quot;{experienceTitle}&quot;? This
-            experience will no longer be visible to visitors. You can restore it
-            later if needed.
+            {t('description', { title: experienceTitle })}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={isPending}>{tCommon('cancel')}</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             disabled={isPending}
             className="bg-amber-600 hover:bg-amber-700 focus:ring-amber-600"
           >
-            {isPending ? 'Archiving...' : 'Archive'}
+            {isPending ? t('archiving') : t('archiveButton')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

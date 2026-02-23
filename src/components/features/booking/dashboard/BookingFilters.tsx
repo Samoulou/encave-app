@@ -162,7 +162,7 @@ export function BookingFilters({ experiences }: BookingFiltersProps) {
         <div className="px-2 py-1 flex gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex-1 h-9 px-3 text-sm rounded-lg border border-[#e5d2d7] bg-white hover:bg-[#f8f6f6] text-left truncate">
+              <button className="flex-1 h-9 px-3 text-sm rounded-lg border border-border bg-white hover:bg-[#f8f6f6] text-left truncate">
                 {dateFrom ? format(parseISO(dateFrom), 'MMM d', { locale: dateLocale }) : t('filters.from')}
               </button>
             </DropdownMenuTrigger>
@@ -179,7 +179,7 @@ export function BookingFilters({ experiences }: BookingFiltersProps) {
           </DropdownMenu>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex-1 h-9 px-3 text-sm rounded-lg border border-[#e5d2d7] bg-white hover:bg-[#f8f6f6] text-left truncate">
+              <button className="flex-1 h-9 px-3 text-sm rounded-lg border border-border bg-white hover:bg-[#f8f6f6] text-left truncate">
                 {dateTo ? format(parseISO(dateTo), 'MMM d', { locale: dateLocale }) : t('filters.to')}
               </button>
             </DropdownMenuTrigger>

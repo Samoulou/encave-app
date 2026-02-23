@@ -52,10 +52,10 @@ export function ClientProfileForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="rounded-xl border border-[#e5d2d7] bg-white shadow-sm p-6 sm:p-8 space-y-6">
+      <div className="rounded-xl border border-border bg-white shadow-sm p-6 sm:p-8 space-y-6">
         {/* Name */}
         <div className="space-y-2">
-          <label htmlFor="name" className="block text-sm font-bold text-[#1a0f12]">
+          <label htmlFor="name" className="block text-sm font-bold text-foreground">
             {t('name')}
           </label>
           <input
@@ -63,7 +63,7 @@ export function ClientProfileForm({
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full h-11 px-4 rounded-lg border border-[#e5d2d7] bg-white text-[#1a0f12] text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+            className="w-full h-11 px-4 rounded-lg border border-border bg-white text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
             required
             minLength={1}
             maxLength={100}
@@ -72,7 +72,7 @@ export function ClientProfileForm({
 
         {/* Email (read-only) */}
         <div className="space-y-2">
-          <label htmlFor="email" className="block text-sm font-bold text-[#1a0f12]">
+          <label htmlFor="email" className="block text-sm font-bold text-foreground">
             {t('email')}
           </label>
           <input
@@ -80,21 +80,21 @@ export function ClientProfileForm({
             type="email"
             value={email}
             disabled
-            className="w-full h-11 px-4 rounded-lg border border-[#e5d2d7] bg-gray-50 text-gray-500 text-sm cursor-not-allowed"
+            className="w-full h-11 px-4 rounded-lg border border-border bg-gray-50 text-gray-500 text-sm cursor-not-allowed"
           />
           <p className="text-xs text-[#915564]">{t('emailReadonly')}</p>
         </div>
 
         {/* Language */}
         <div className="space-y-2">
-          <label htmlFor="language" className="block text-sm font-bold text-[#1a0f12]">
+          <label htmlFor="language" className="block text-sm font-bold text-foreground">
             {t('language')}
           </label>
           <select
             id="language"
             value={preferredLocale}
             onChange={(e) => setPreferredLocale(e.target.value as Locale)}
-            className="w-full h-11 px-4 rounded-lg border border-[#e5d2d7] bg-white text-[#1a0f12] text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+            className="w-full h-11 px-4 rounded-lg border border-border bg-white text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
           >
             {LOCALE_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>

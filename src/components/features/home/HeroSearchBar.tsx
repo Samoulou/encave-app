@@ -46,7 +46,7 @@ export function HeroSearchBar() {
         <Button
           type="submit"
           size="lg"
-          className="w-full md:w-auto h-12 px-8 bg-primary hover:bg-[#a62444] text-white font-bold rounded-lg shadow-md flex items-center justify-center gap-2"
+          className="w-full md:w-auto h-12 px-8 bg-primary hover:bg-[hsl(var(--primary-hover))] text-white font-bold rounded-lg shadow-md flex items-center justify-center gap-2"
         >
           <Search className="h-5 w-5" />
           <span>{t('searchButton')}</span>

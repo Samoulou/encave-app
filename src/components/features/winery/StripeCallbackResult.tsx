@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { CheckCircle, Clock, AlertCircle, ArrowRight, Loader2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { startStripeOnboarding } from '@/server/actions/stripe';
@@ -19,6 +20,7 @@ export function StripeCallbackResult({
   isRefresh,
   wineryId,
 }: StripeCallbackResultProps) {
+  const t = useTranslations('stripe.callback');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleContinueOnboarding = async () => {
@@ -31,7 +33,7 @@ export function StripeCallbackResult({
         toast.error(result.error.message);
       }
     } catch {
-      toast.error('Failed to continue setup. Please try again.');
+      toast.error(t('failedToContinue'));
     } finally {
       setIsLoading(false);
     }
@@ -45,17 +47,16 @@ export function StripeCallbackResult({
             <CheckCircle className="h-8 w-8 text-green-600" aria-hidden="true" />
           </div>
           <CardTitle className="font-display text-2xl text-green-800">
-            Payment Setup Complete
+            {t('setupComplete')}
           </CardTitle>
         </CardHeader>
         <CardContent className="text-center">
           <p className="mb-6 text-green-700">
-            Your payment account is ready. You can now publish experiences and
-            receive payments from visitors.
+            {t('setupCompleteDescription')}
           </p>
           <Button asChild>
             <Link href="/dashboard/experiences">
-              Go to Experiences
+              {t('goToExperiences')}
               <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
             </Link>
           </Button>
@@ -72,18 +73,16 @@ export function StripeCallbackResult({
             <Clock className="h-8 w-8 text-gold-600" aria-hidden="true" />
           </div>
           <CardTitle className="font-display text-2xl text-gold-800">
-            Verification Pending
+            {t('verificationPending')}
           </CardTitle>
         </CardHeader>
         <CardContent className="text-center">
           <p className="mb-6 text-gold-700">
-            Your details have been submitted and are being verified by Stripe.
-            This usually takes 1-2 business days. We will notify you once
-            verified.
+            {t('verificationPendingDescription')}
           </p>
           <Button asChild variant="secondary">
             <Link href="/dashboard">
-              Return to Dashboard
+              {t('returnToDashboard')}
               <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
             </Link>
           </Button>
@@ -100,31 +99,31 @@ export function StripeCallbackResult({
           <AlertCircle className="h-8 w-8 text-burgundy-600" aria-hidden="true" />
         </div>
         <CardTitle className="font-display text-2xl text-burgundy-800">
-          {isRefresh ? 'Session Expired' : 'Setup Incomplete'}
+          {isRefresh ? t('sessionExpired') : t('setupIncomplete')}
         </CardTitle>
       </CardHeader>
       <CardContent className="text-center">
         <p className="mb-6 text-burgundy-700">
           {isRefresh
-            ? 'Your onboarding session has expired. Please continue where you left off.'
-            : 'Your payment setup is not complete. Please continue to finish the process.'}
+            ? t('sessionExpiredDescription')
+            : t('setupIncompleteDescription')}
         </p>
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Button onClick={handleContinueOnboarding} disabled={isLoading}>
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
-                Loading...
+                {t('loading')}
               </>
             ) : (
               <>
-                Continue Setup
+                {t('continueSetup')}
                 <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
               </>
             )}
           </Button>
           <Button asChild variant="outline">
-            <Link href="/dashboard">Return to Dashboard</Link>
+            <Link href="/dashboard">{t('returnToDashboard')}</Link>
           </Button>
         </div>
       </CardContent>

@@ -15,7 +15,7 @@ export function CreateExperienceCard({ className }: CreateExperienceCardProps) {
       className={cn(
         'flex flex-col items-center justify-center p-8 rounded-xl',
         'border-2 border-dashed border-primary/30 hover:border-primary',
-        'bg-[#f2e9eb]/40 hover:bg-[#f2e9eb]/80',
+        'bg-primary-light/40 hover:bg-primary-light/80',
         'cursor-pointer transition-all group gap-4 min-h-[360px]',
         className
       )}
@@ -24,7 +24,7 @@ export function CreateExperienceCard({ className }: CreateExperienceCardProps) {
         <Plus className="h-8 w-8 text-primary" aria-hidden="true" />
       </div>
       <div className="text-center">
-        <h3 className="text-lg font-bold text-[#1a0f12] group-hover:text-primary transition-colors">
+        <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
           Create New Experience
         </h3>
         <p className="text-sm text-gray-500 mt-1 max-w-[200px]">

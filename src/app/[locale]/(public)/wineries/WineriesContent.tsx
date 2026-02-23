@@ -27,12 +27,12 @@ export async function WineriesContent({ commune }: WineriesContentProps) {
     <>
       {/* Filter Bar */}
       <div className="sticky top-0 z-20 border-b border-stone-200/60 bg-white/95 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4 lg:px-8">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 py-4 lg:px-8">
           <span className="text-sm font-medium text-slate-600">
             {t('showingCount', { count: wineries.length })}
           </span>
           {communes.length > 0 && (
-            <Suspense fallback={<div className="h-11 w-[200px] bg-stone-100 rounded-lg animate-pulse" />}>
+            <Suspense fallback={<div className="h-11 w-[200px] skeleton-warm rounded-lg animate-skeleton-shimmer" />}>
               <CommuneFilter communes={communes} />
             </Suspense>
           )}
@@ -40,14 +40,14 @@ export async function WineriesContent({ commune }: WineriesContentProps) {
       </div>
 
       {/* Content */}
-      <div className="mx-auto max-w-6xl px-6 py-10 lg:px-8 lg:py-12">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 lg:px-8 lg:py-12">
         {wineries.length === 0 ? (
           <EmptyState
             title={t('comingSoon')}
             description={t('emptyDescription')}
           />
         ) : (
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 md:gap-8 md:grid-cols-2 lg:grid-cols-3">
             {wineries.map((winery, index) => (
               <div
                 key={winery.id}

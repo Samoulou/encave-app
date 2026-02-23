@@ -30,7 +30,7 @@ export default async function AboutPage({ params }: PageProps) {
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-burgundy-800 via-burgundy-700 to-burgundy-900 py-20 lg:py-28">
         <div className="absolute inset-0 bg-[url('/images/wine-texture.png')] opacity-5" />
-        <div className="relative mx-auto max-w-4xl px-6 text-center">
+        <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
           <Grape className="mx-auto mb-6 h-12 w-12 text-gold-400" aria-hidden="true" />
           <h1 className="font-display text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
             {t('hero.title')}
@@ -39,7 +39,7 @@ export default async function AboutPage({ params }: PageProps) {
       </section>
 
       {/* Content Sections */}
-      <div className="mx-auto max-w-4xl px-6 py-16 lg:py-20">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
         <div className="space-y-12">
           {/* Valais Heritage Section */}
           <Card className="overflow-hidden rounded-xl border-0 shadow-warm-lg">

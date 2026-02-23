@@ -22,8 +22,8 @@ export function ViewToggle() {
         className={cn(
           'px-4 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2',
           currentView === 'list'
-            ? 'bg-white text-[#1a0f12] shadow-sm font-bold'
-            : 'text-[#915564] hover:text-[#1a0f12]'
+            ? 'bg-white text-foreground shadow-sm font-bold'
+            : 'text-[#915564] hover:text-foreground'
         )}
         onClick={() => setView(null)}
       >
@@ -34,8 +34,8 @@ export function ViewToggle() {
         className={cn(
           'px-4 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2',
           currentView === 'calendar'
-            ? 'bg-white text-[#1a0f12] shadow-sm font-bold'
-            : 'text-[#915564] hover:text-[#1a0f12]'
+            ? 'bg-white text-foreground shadow-sm font-bold'
+            : 'text-[#915564] hover:text-foreground'
         )}
         onClick={() => setView('calendar')}
       >

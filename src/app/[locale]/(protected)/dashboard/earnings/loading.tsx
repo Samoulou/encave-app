@@ -1,8 +1,11 @@
+import { getTranslations } from 'next-intl/server';
 import { SkeletonDashboardStats, Skeleton, SkeletonContainer } from '@/components/shared/Skeleton';
 
-export default function EarningsLoading() {
+export default async function EarningsLoading() {
+  const t = await getTranslations('earnings');
+
   return (
-    <SkeletonContainer label="Chargement des revenus..." className="space-y-8">
+    <SkeletonContainer label={t('loading')} className="space-y-8">
       <div className="flex items-center justify-between">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-10 w-32" />

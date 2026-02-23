@@ -14,7 +14,7 @@ export function AboutSection({ description }: AboutSectionProps) {
 
   return (
     <section>
-      <h3 className="text-2xl font-bold mb-4 text-[#1a0f12]">
+      <h3 className="text-2xl font-bold mb-4 text-foreground">
         {t('aboutTitle')}
       </h3>
       <div className="prose prose-lg text-gray-600 leading-relaxed">
