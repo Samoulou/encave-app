@@ -1,8 +1,8 @@
-import { Suspense } from 'react';
+import { Fragment, Suspense } from 'react';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { redirect } from 'next/navigation';
-import { getLocale } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { AlertTriangle } from 'lucide-react';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
 import { EarningsPageHeader } from '@/components/features/earnings/EarningsPageHeader';
@@ -50,6 +50,8 @@ export default async function EarningsPage({ searchParams }: PageProps) {
     redirect(`/${locale}/onboarding/winery`);
   }
 
+  const t = await getTranslations('stripe.onboarding');
+
   return (
     <WineryAccessGuard>
       <div className="space-y-8">
@@ -61,14 +63,13 @@ export default async function EarningsPage({ searchParams }: PageProps) {
           <div className="flex items-start gap-3 rounded-xl bg-amber-50 p-4 border border-amber-200">
             <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-600" />
             <div className="text-sm text-amber-900">
-              <p className="font-medium">Complete Stripe Setup</p>
+              <p className="font-medium">{t('completeSetupTitle')}</p>
               <p className="mt-1 text-amber-700">
-                To receive payouts, you need to complete your Stripe account setup.
-                Go to your{' '}
-                <a href="/dashboard/winery/profile" className="underline">
-                  Winery Profile
-                </a>{' '}
-                to complete the process.
+                {t('completeSetupDescription', { wineryProfileLink: '__LINK__' }).split('__LINK__').map((part, i, arr) =>
+                  i < arr.length - 1 ? (
+                    <Fragment key={i}>{part}<a href="/dashboard/winery/profile" className="underline">{t('wineryProfileLink')}</a></Fragment>
+                  ) : part
+                )}
               </p>
             </div>
           </div>

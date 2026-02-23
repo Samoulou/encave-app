@@ -115,7 +115,7 @@ export function CalendarView({
         {/* Calendar Grid */}
         <div className="grid grid-cols-7 gap-px overflow-hidden rounded-lg border border-slate-200 bg-slate-200">
           {/* Weekday Headers */}
-          {WEEKDAYS.map((day) => (
+          {weekdays.map((day) => (
             <div
               key={day}
               className="bg-slate-50 py-2 text-center text-xs font-medium text-slate-500"
@@ -189,7 +189,7 @@ export function CalendarView({
 
                 {/* Blocked Indicator */}
                 {isBlocked && !hasBookings && (
-                  <div className="mt-1 text-[10px] text-red-600">Blocked</div>
+                  <div className="mt-1 text-[10px] text-red-600">{t('blocked')}</div>
                 )}
               </button>
             );
@@ -200,15 +200,15 @@ export function CalendarView({
         <div className="mt-4 flex items-center gap-4 text-xs text-slate-500">
           <div className="flex items-center gap-1.5">
             <span className="inline-block h-3 w-3 rounded-full bg-burgundy-600" />
-            <span>Today</span>
+            <span>{t('today')}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="inline-block h-3 w-3 rounded bg-burgundy-100" />
-            <span>Booking count</span>
+            <span>{t('bookingCount')}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="inline-block h-3 w-3 rounded bg-red-50 ring-1 ring-red-200" />
-            <span>Blocked</span>
+            <span>{t('blocked')}</span>
           </div>
         </div>
       </Card>

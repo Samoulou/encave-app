@@ -411,6 +411,7 @@
       "alphabetical": "Alphabetical",
       "byStatus": "By Status"
     },
+    "loading": "Loading experiences...",
     "manageTitle": "Manage Experiences",
     "manageSubtitle": "Curate your wine tasting offerings for visitors.",
     "deletedSuccess": "Experience deleted",
@@ -766,6 +767,8 @@
     "coverPhotoRemoved": "Cover photo removed",
     "galleryImageAdded": "Gallery image added",
     "galleryImageRemoved": "Gallery image removed",
+    "deleteImageTitle": "Delete gallery image?",
+    "deleteImageDescription": "This image will be permanently removed from your gallery. This action cannot be undone.",
     "uploading": "Uploading...",
     "unsavedChanges": "Unsaved changes",
     "saving": "Saving...",
@@ -967,6 +970,7 @@
       "downloadCSV": "Download CSV",
       "viewInStripe": "View in Stripe"
     },
+    "loading": "Loading earnings...",
     "subtitle": "Track your revenue streams and payout history.",
     "breadcrumbDashboard": "Dashboard",
     "chart": {

@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { redirect } from 'next/navigation';
-import { getLocale } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
 import { Button } from '@/components/ui/button';
@@ -50,6 +50,8 @@ export default async function ExperiencesDashboardPage({ searchParams }: PagePro
     redirect(`/${locale}/onboarding/winery`);
   }
 
+  const t = await getTranslations('experience');
+
   return (
     <WineryAccessGuard>
       <div className="max-w-7xl mx-auto flex flex-col gap-8">
@@ -57,10 +59,10 @@ export default async function ExperiencesDashboardPage({ searchParams }: PagePro
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="font-display text-3xl md:text-4xl font-black tracking-[-0.033em] text-foreground">
-              Manage Experiences
+              {t('manageTitle')}
             </h1>
             <p className="text-gray-500 mt-1">
-              Curate your wine tasting offerings for visitors.
+              {t('manageSubtitle')}
             </p>
           </div>
           <Button
@@ -69,7 +71,7 @@ export default async function ExperiencesDashboardPage({ searchParams }: PagePro
           >
             <Link href="/dashboard/experiences/new">
               <Plus className="h-5 w-5 transition-transform group-hover:rotate-90" />
-              <span className="font-bold text-sm">New Experience</span>
+              <span className="font-bold text-sm">{t('newExperience')}</span>
             </Link>
           </Button>
         </div>

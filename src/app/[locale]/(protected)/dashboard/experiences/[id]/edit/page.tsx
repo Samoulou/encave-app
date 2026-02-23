@@ -2,7 +2,7 @@ import dynamic from 'next/dynamic';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { redirect, notFound } from 'next/navigation';
-import { getLocale } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
 import { Skeleton } from '@/components/shared/Skeleton';
@@ -94,6 +94,8 @@ export default async function EditExperiencePage({ params }: PageProps) {
     notFound();
   }
 
+  const t = await getTranslations('experience');
+
   // Transform for form
   const experienceData = {
     id: experience.id,
@@ -125,16 +127,16 @@ export default async function EditExperiencePage({ params }: PageProps) {
           >
             <Link href="/dashboard/experiences" className="gap-2">
               <ArrowLeft className="h-4 w-4" />
-              Back to Experiences
+              {t('backToExperiences')}
             </Link>
           </Button>
 
           <div className="space-y-3">
             <h1 className="font-display text-display-md text-slate-900">
-              Edit Experience
+              {t('editTitle')}
             </h1>
             <p className="text-slate-600">
-              Update your experience details. Changes will be saved immediately.
+              {t('editSubtitle')}
             </p>
           </div>
         </div>
@@ -149,10 +151,10 @@ export default async function EditExperiencePage({ params }: PageProps) {
             </div>
             <div>
               <h2 className="font-display text-xl font-semibold text-slate-900">
-                Availability Schedule
+                {t('availabilitySchedule')}
               </h2>
               <p className="mt-1 text-sm text-slate-600">
-                Configure when visitors can book this experience
+                {t('availabilityScheduleSubtitle')}
               </p>
             </div>
           </div>

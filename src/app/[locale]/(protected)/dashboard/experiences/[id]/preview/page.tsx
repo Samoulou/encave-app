@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { AlertTriangle, ArrowLeft, ExternalLink } from 'lucide-react';
 import { getExperienceForPreview } from '@/server/actions/experience';
 import { ExperienceHero } from '@/components/features/experience/ExperienceHero';
@@ -46,6 +47,7 @@ interface ExperiencePreviewData {
 
 export default function ExperiencePreviewPage() {
   const params = useParams();
+  const t = useTranslations('experience');
   const experienceId = params.id as string;
   const [experience, setExperience] = useState<ExperiencePreviewData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -89,10 +91,10 @@ export default function ExperiencePreviewPage() {
     return (
       <div className="min-h-screen bg-cream-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-semibold text-slate-900 mb-2">Experience Not Found</h1>
+          <h1 className="text-2xl font-semibold text-slate-900 mb-2">{t('notFound')}</h1>
           <p className="text-slate-600 mb-4">{error || 'Unable to load the experience preview.'}</p>
           <Button asChild>
-            <Link href="/dashboard/experiences">Back to Experiences</Link>
+            <Link href="/dashboard/experiences">{t('backToExperiences')}</Link>
           </Button>
         </div>
       </div>
@@ -110,25 +112,25 @@ export default function ExperiencePreviewPage() {
             <div className="flex items-center gap-3">
               <AlertTriangle className="h-5 w-5 text-amber-600" />
               <span className="text-sm font-medium text-amber-800">
-                Preview Mode {isDraft && '- This experience is not published'}
+                {t('previewMode')}{isDraft && ` - ${t('notPublishedNotice')}`}
               </span>
             </div>
             <div className="flex items-center gap-3">
               <Button variant="outline" size="sm" asChild>
                 <Link href="/dashboard/experiences">
                   <ArrowLeft className="mr-1.5 h-4 w-4" />
-                  Back to Dashboard
+                  {t('backToDashboard')}
                 </Link>
               </Button>
               <Button variant="outline" size="sm" asChild>
                 <Link href={`/dashboard/experiences/${experience.id}/edit`}>
-                  Edit Experience
+                  {t('editExperience')}
                 </Link>
               </Button>
               {!isDraft && (
                 <Button variant="outline" size="sm" asChild>
                   <Link href={`/experiences/${experience.slug}`} target="_blank">
-                    View Public Page
+                    {t('viewPublicPage')}
                     <ExternalLink className="ml-1.5 h-4 w-4" />
                   </Link>
                 </Button>
@@ -151,7 +153,7 @@ export default function ExperiencePreviewPage() {
           <Alert className="mb-6 border-amber-200 bg-amber-50">
             <AlertTriangle className="h-4 w-4 text-amber-600" />
             <AlertDescription className="text-amber-800">
-              This experience is currently a draft and is not visible to visitors. Publish it from your dashboard to make it available for bookings.
+              {t('draftNotice')}
             </AlertDescription>
           </Alert>
         )}

@@ -411,6 +411,7 @@
       "alphabetical": "Alphabetisch",
       "byStatus": "Nach Status"
     },
+    "loading": "Erlebnisse werden geladen...",
     "manageTitle": "Erlebnisse verwalten",
     "manageSubtitle": "Gestalten Sie Ihre Weinverkostungsangebote für Besucher.",
     "deletedSuccess": "Erlebnis gelöscht",
@@ -766,6 +767,8 @@
     "coverPhotoRemoved": "Titelbild entfernt",
     "galleryImageAdded": "Galeriebild hinzugefügt",
     "galleryImageRemoved": "Galeriebild entfernt",
+    "deleteImageTitle": "Galeriebild löschen?",
+    "deleteImageDescription": "Dieses Bild wird dauerhaft aus Ihrer Galerie entfernt. Diese Aktion kann nicht rückgängig gemacht werden.",
     "uploading": "Wird hochgeladen...",
     "unsavedChanges": "Ungespeicherte Änderungen",
     "saving": "Wird gespeichert...",
@@ -967,6 +970,7 @@
       "downloadCSV": "CSV herunterladen",
       "viewInStripe": "In Stripe anzeigen"
     },
+    "loading": "Einnahmen werden geladen...",
     "subtitle": "Verfolgen Sie Ihre Einnahmequellen und Auszahlungshistorie.",
     "breadcrumbDashboard": "Dashboard",
     "chart": {

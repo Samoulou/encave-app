@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { CreditCard, ArrowRight, Loader2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { startStripeOnboarding } from '@/server/actions/stripe';
@@ -12,6 +13,7 @@ interface StripeOnboardingProps {
 }
 
 export function StripeOnboarding({ wineryId }: StripeOnboardingProps) {
+  const t = useTranslations('stripe.onboarding');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSetupPayments = async () => {
@@ -26,7 +28,7 @@ export function StripeOnboarding({ wineryId }: StripeOnboardingProps) {
         toast.error(result.error.message);
       }
     } catch {
-      toast.error('Failed to start payment setup. Please try again.');
+      toast.error(t('failedToStart'));
     } finally {
       setIsLoading(false);
     }
@@ -41,11 +43,10 @@ export function StripeOnboarding({ wineryId }: StripeOnboardingProps) {
           </div>
           <div>
             <h3 className="font-display text-lg font-semibold text-slate-900">
-              Setup Payments
+              {t('setupPayments')}
             </h3>
             <p className="mt-1 text-sm text-slate-600">
-              Connect your bank account to receive payments when visitors book
-              your experiences.
+              {t('setupPaymentsDescription')}
             </p>
           </div>
         </div>
@@ -57,11 +58,11 @@ export function StripeOnboarding({ wineryId }: StripeOnboardingProps) {
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
-              Connecting...
+              {t('connecting')}
             </>
           ) : (
             <>
-              Get Started
+              {t('getStarted')}
               <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
             </>
           )}

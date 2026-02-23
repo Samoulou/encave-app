@@ -1,7 +1,7 @@
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { redirect } from 'next/navigation';
-import { getLocale } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
 import { WineryProfileForm } from '@/components/features/winery/WineryProfileForm';
@@ -47,6 +47,7 @@ export default async function WineryProfilePage({ params }: { params: Promise<{ 
     redirect(`/${locale}/onboarding/winery`);
   }
 
+  const t = await getTranslations('winery');
   const isVerified = winery.status === 'VERIFIED';
 
   return (
@@ -63,7 +64,7 @@ export default async function WineryProfilePage({ params }: { params: Promise<{ 
                 {isVerified && <VerifiedBadge size="md" />}
               </div>
               <p className="text-slate-600">
-                Manage your winery profile and photos
+                {t('manageProfile')}
               </p>
               {winery.updatedAt && (
                 <p className="flex items-center gap-1.5 text-sm text-slate-500">
@@ -81,8 +82,7 @@ export default async function WineryProfilePage({ params }: { params: Promise<{ 
                       d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  Last updated{' '}
-                  {formatDate(new Date(winery.updatedAt), locale as Locale)}
+                  {t('lastUpdatedDate', { date: formatDate(new Date(winery.updatedAt), locale as Locale) })}
                 </p>
               )}
             </div>
@@ -113,7 +113,7 @@ export default async function WineryProfilePage({ params }: { params: Promise<{ 
                     d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                   />
                 </svg>
-                View Public Profile
+                {t('viewPublicProfile')}
               </Link>
             </Button>
           </div>
@@ -127,7 +127,7 @@ export default async function WineryProfilePage({ params }: { params: Promise<{ 
             ) : (
               <div className="space-y-3">
                 <h2 className="text-sm font-medium text-slate-700">
-                  Payment Status
+                  {t('paymentStatusLabel')}
                 </h2>
                 <PaymentStatus
                   status={getPaymentStatusType({

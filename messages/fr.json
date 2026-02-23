@@ -411,6 +411,7 @@
       "alphabetical": "Alphabétique",
       "byStatus": "Par statut"
     },
+    "loading": "Chargement des expériences...",
     "manageTitle": "Gérer les expériences",
     "manageSubtitle": "Organisez vos offres de dégustation pour les visiteurs.",
     "deletedSuccess": "Expérience supprimée",
@@ -766,6 +767,8 @@
     "coverPhotoRemoved": "Photo de couverture supprimée",
     "galleryImageAdded": "Image de galerie ajoutée",
     "galleryImageRemoved": "Image de galerie supprimée",
+    "deleteImageTitle": "Supprimer l'image de la galerie ?",
+    "deleteImageDescription": "Cette image sera définitivement supprimée de votre galerie. Cette action est irréversible.",
     "uploading": "Téléchargement...",
     "unsavedChanges": "Modifications non enregistrées",
     "saving": "Enregistrement...",
@@ -967,6 +970,7 @@
       "downloadCSV": "Télécharger CSV",
       "viewInStripe": "Voir dans Stripe"
     },
+    "loading": "Chargement des revenus...",
     "subtitle": "Suivez vos flux de revenus et l'historique des paiements.",
     "breadcrumbDashboard": "Tableau de bord",
     "chart": {

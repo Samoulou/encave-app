@@ -9,6 +9,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
+import { useTranslations } from 'next-intl';
 import type { MonthlyEarning } from '@/server/queries/earnings.queries';
 
 interface EarningsChartProps {
@@ -27,6 +28,7 @@ interface CustomTooltipProps {
 }
 
 function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
+  const t = useTranslations('earnings.chart');
   if (!active || !payload || !payload.length) return null;
 
   return (
@@ -39,7 +41,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
             style={{ backgroundColor: entry.color }}
           />
           <span className="text-[#915564]">
-            {entry.dataKey === 'revenue' ? 'Gross' : 'Net Payout'}:
+            {entry.dataKey === 'revenueDisplay' ? t('gross') : t('netPayout')}:
           </span>
           <span className="font-bold text-foreground">
             CHF {(entry.value / 100).toLocaleString('de-CH', { minimumFractionDigits: 2 })}
@@ -56,6 +58,8 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
  * Shows Gross revenue vs Net payout over the last 6 months.
  */
 export function EarningsChart({ data }: EarningsChartProps) {
+  const t = useTranslations('earnings.chart');
+
   // Format data for chart (convert cents to CHF for display)
   const chartData = data.map((d) => ({
     ...d,
@@ -72,19 +76,19 @@ export function EarningsChart({ data }: EarningsChartProps) {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
-          <h2 id="earnings-chart-title" className="text-lg font-bold text-foreground">Revenue Evolution</h2>
+          <h2 id="earnings-chart-title" className="text-lg font-bold text-foreground">{t('title')}</h2>
           <p id="earnings-chart-desc" className="text-sm text-[#915564]">
-            Gross revenue vs Net payout over the last 6 months
+            {t('subtitle')}
           </p>
         </div>
         <div className="flex items-center gap-4 text-xs font-medium">
           <div className="flex items-center gap-2">
             <span className="h-3 w-3 rounded-full bg-primary" />
-            <span className="text-[#915564]">Gross</span>
+            <span className="text-[#915564]">{t('gross')}</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="h-3 w-3 rounded-full bg-gray-300" />
-            <span className="text-[#915564]">Net Payout</span>
+            <span className="text-[#915564]">{t('netPayout')}</span>
           </div>
         </div>
       </div>

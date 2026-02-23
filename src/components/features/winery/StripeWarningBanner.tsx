@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { AlertTriangle, ArrowRight, Loader2, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { startStripeOnboarding } from '@/server/actions/stripe';
 import { toast } from 'sonner';
@@ -14,9 +15,10 @@ interface StripeWarningBannerProps {
 
 export function StripeWarningBanner({
   wineryId,
-  message = 'Your Stripe account requires attention. Please update your information to continue receiving payments.',
+  message,
   dismissible = true,
 }: StripeWarningBannerProps) {
+  const t = useTranslations('stripe.warning');
   const [isLoading, setIsLoading] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
 
@@ -34,7 +36,7 @@ export function StripeWarningBanner({
         toast.error(result.error.message);
       }
     } catch {
-      toast.error('Failed to open Stripe. Please try again.');
+      toast.error(t('failedToOpen'));
     } finally {
       setIsLoading(false);
     }
@@ -52,9 +54,9 @@ export function StripeWarningBanner({
         />
         <div className="flex-1">
           <h3 className="text-sm font-medium text-amber-800">
-            Action Required
+            {t('actionRequired')}
           </h3>
-          <p className="mt-1 text-sm text-amber-700">{message}</p>
+          <p className="mt-1 text-sm text-amber-700">{message ?? t('defaultMessage')}</p>
           <div className="mt-3">
             <Button
               size="sm"
@@ -66,11 +68,11 @@ export function StripeWarningBanner({
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
-                  Loading...
+                  {t('loading')}
                 </>
               ) : (
                 <>
-                  Update Information
+                  {t('updateInformation')}
                   <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
                 </>
               )}
@@ -82,7 +84,7 @@ export function StripeWarningBanner({
             type="button"
             onClick={() => setIsDismissed(true)}
             className="flex-shrink-0 rounded p-1 text-amber-600 hover:bg-amber-100 hover:text-amber-800"
-            aria-label="Dismiss warning"
+            aria-label={t('dismissWarning')}
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </button>
