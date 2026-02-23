@@ -51,6 +51,14 @@ export default async function middleware(request: NextRequest) {
     if (pathname === '/coming-soon') {
       return NextResponse.next();
     }
+
+    // Allow article pages (accessible from coming-soon footer)
+    const pathnameNoLocale = getPathnameWithoutLocale(pathname);
+    const allowedPaths = ['/degustation-vin-valais', '/cepages-valaisans'];
+    if (allowedPaths.some((p) => pathnameNoLocale === p)) {
+      return intlMiddleware(request);
+    }
+
     // Redirect everything else to coming-soon
     return NextResponse.redirect(new URL('/coming-soon', request.url));
   }

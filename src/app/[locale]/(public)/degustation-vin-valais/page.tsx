@@ -1,16 +1,13 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { Wine, ArrowRight, Clock, MapPin, Star } from 'lucide-react';
+import { Wine, Clock, MapPin, Star } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { FaqSchema } from '@/components/seo/FaqSchema';
 import { FaqAccordion } from '@/components/shared/FaqAccordion';
 import { JsonLd } from '@/components/shared/JsonLd';
-import { ExperienceCard } from '@/components/features/search/ExperienceCard';
-import { getFeaturedExperiences } from '@/server/queries/experience.queries';
 import { getBaseUrl } from '@/lib/env';
 
 interface PageProps {
@@ -37,10 +34,7 @@ export default async function DegustationVinValaisPage({ params }: PageProps) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations('landing.degustation');
-  const tCommon = await getTranslations('common');
-
   const baseUrl = getBaseUrl();
-  const experiences = await getFeaturedExperiences(6);
 
   // FAQ items for schema and display
   const faqItems = [
@@ -137,32 +131,6 @@ export default async function DegustationVinValaisPage({ params }: PageProps) {
           </Card>
         </section>
 
-        {/* Featured Experiences Section */}
-        <section className="mx-auto max-w-6xl px-6 py-12 lg:py-16">
-          <h2 className="font-display text-2xl font-semibold text-slate-900 sm:text-3xl mb-8 text-center">
-            {t('experiences.title')}
-          </h2>
-          {experiences.length > 0 ? (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {experiences.map((experience) => (
-                <ExperienceCard key={experience.id} experience={experience} />
-              ))}
-            </div>
-          ) : (
-            <Card className="p-8 text-center">
-              <p className="text-slate-600">{tCommon('noResults')}</p>
-            </Card>
-          )}
-          <div className="mt-10 text-center">
-            <Button size="lg" asChild>
-              <Link href="/experiences">
-                {t('experiences.viewAll')}
-                <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
-              </Link>
-            </Button>
-          </div>
-        </section>
-
         {/* FAQ Section */}
         <section className="mx-auto max-w-4xl px-6 py-12 lg:py-16">
           <h2 className="font-display text-2xl font-semibold text-slate-900 sm:text-3xl mb-8 text-center">
@@ -173,24 +141,6 @@ export default async function DegustationVinValaisPage({ params }: PageProps) {
               <FaqAccordion items={faqItems} />
             </CardContent>
           </Card>
-        </section>
-
-        {/* CTA Section */}
-        <section className="bg-gradient-to-br from-burgundy-800 via-burgundy-700 to-burgundy-900 py-16 lg:py-20">
-          <div className="mx-auto max-w-4xl px-6 text-center">
-            <h2 className="font-display text-2xl font-bold text-white sm:text-3xl mb-4">
-              {t('cta.title')}
-            </h2>
-            <p className="text-burgundy-100 mb-8 max-w-2xl mx-auto">
-              {t('cta.subtitle')}
-            </p>
-            <Button size="lg" variant="secondary" asChild>
-              <Link href="/experiences">
-                {t('cta.button')}
-                <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
-              </Link>
-            </Button>
-          </div>
         </section>
 
         <Footer />

@@ -1,11 +1,10 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { Grape, ArrowRight, Wine } from 'lucide-react';
+import { Grape, Wine } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { JsonLd } from '@/components/shared/JsonLd';
 import { getBaseUrl } from '@/lib/env';
 
@@ -207,52 +206,6 @@ export default async function CepagesValaisansPage({ params }: PageProps) {
                 </CardContent>
               </Card>
             ))}
-          </div>
-        </section>
-
-        {/* Where to Taste Section */}
-        <section className="mx-auto max-w-4xl px-6 py-12 lg:py-16">
-          <Card className="overflow-hidden rounded-xl border-0 shadow-warm-lg">
-            <CardContent className="p-8 sm:p-10 text-center">
-              <Grape className="mx-auto mb-4 h-10 w-10 text-burgundy-600" aria-hidden="true" />
-              <h2 className="font-display text-2xl font-semibold text-slate-900 sm:text-3xl mb-4">
-                {t('taste.title')}
-              </h2>
-              <p className="text-slate-600 mb-8 max-w-2xl mx-auto">
-                {t('taste.description')}
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button size="lg" asChild>
-                  <Link href="/experiences">
-                    {t('taste.experiencesButton')}
-                    <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
-                  </Link>
-                </Button>
-                <Button size="lg" variant="outline" asChild>
-                  <Link href="/wineries">
-                    {t('taste.wineriesButton')}
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-
-        {/* CTA Section */}
-        <section className="bg-gradient-to-br from-burgundy-800 via-burgundy-700 to-burgundy-900 py-16 lg:py-20">
-          <div className="mx-auto max-w-4xl px-6 text-center">
-            <h2 className="font-display text-2xl font-bold text-white sm:text-3xl mb-4">
-              {t('cta.title')}
-            </h2>
-            <p className="text-burgundy-100 mb-8 max-w-2xl mx-auto">
-              {t('cta.subtitle')}
-            </p>
-            <Button size="lg" variant="secondary" asChild>
-              <Link href="/experiences">
-                {t('cta.button')}
-                <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
-              </Link>
-            </Button>
           </div>
         </section>
 

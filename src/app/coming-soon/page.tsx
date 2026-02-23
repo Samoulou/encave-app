@@ -109,9 +109,9 @@ export default function ComingSoonPage() {
             <Image
               src="/icons/encave-logo.png"
               alt="EnCave"
-              width={200}
-              height={56}
-              className="h-14 w-auto"
+              width={320}
+              height={90}
+              className="h-20 md:h-24 w-auto"
               priority
             />
           </div>
@@ -358,7 +358,7 @@ export default function ComingSoonPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-[#1a1215] text-burgundy-300">
+      <footer className="bg-[#1a1215] text-cream-100">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
           <div className="grid gap-8 sm:grid-cols-2">
             {/* Brand */}
@@ -370,7 +370,7 @@ export default function ComingSoonPage() {
                 height={46}
                 className="h-11 w-auto brightness-0 invert"
               />
-              <p className="mt-4 text-sm text-burgundy-400 max-w-xs">
+              <p className="mt-4 text-sm text-stone-400 max-w-xs">
                 Réservez des expériences viticoles uniques directement avec les vignerons suisses.
               </p>
             </div>
@@ -395,12 +395,12 @@ export default function ComingSoonPage() {
 
           {/* Bottom */}
           <div className="mt-12 pt-8 border-t border-burgundy-800 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-burgundy-400">
+            <p className="text-sm text-stone-400">
               © {new Date().getFullYear()} EnCave. Tous droits réservés.
             </p>
             <a
               href="mailto:samuel@encave.ch"
-              className="flex items-center gap-2 text-sm text-burgundy-400 hover:text-white transition-colors"
+              className="flex items-center gap-2 text-sm text-stone-400 hover:text-white transition-colors"
             >
               samuel@encave.ch
             </a>
