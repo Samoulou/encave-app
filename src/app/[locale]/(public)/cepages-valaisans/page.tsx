@@ -2,8 +2,6 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Grape, Wine } from 'lucide-react';
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { JsonLd } from '@/components/shared/JsonLd';
 import { getBaseUrl } from '@/lib/env';
@@ -89,7 +87,6 @@ export default async function CepagesValaisansPage({ params }: PageProps) {
       <JsonLd data={breadcrumbSchema} />
       <JsonLd data={itemListSchema} />
       <div className="min-h-screen bg-cream-50">
-        <Header />
 
         {/* Hero Section */}
         <section className="relative bg-gradient-to-br from-burgundy-800 via-burgundy-700 to-burgundy-900 py-20 lg:py-28">
@@ -209,7 +206,6 @@ export default async function CepagesValaisansPage({ params }: PageProps) {
           </div>
         </section>
 
-        <Footer />
       </div>
     </>
   );

@@ -2,8 +2,6 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Wine, Clock, MapPin, Star } from 'lucide-react';
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
 import { Card, CardContent } from '@/components/ui/card';
 import { FaqSchema } from '@/components/seo/FaqSchema';
 import { FaqAccordion } from '@/components/shared/FaqAccordion';
@@ -70,7 +68,6 @@ export default async function DegustationVinValaisPage({ params }: PageProps) {
       <FaqSchema items={faqItems} />
       <JsonLd data={breadcrumbSchema} />
       <div className="min-h-screen bg-cream-50">
-        <Header />
 
         {/* Hero Section */}
         <section className="relative bg-gradient-to-br from-burgundy-800 via-burgundy-700 to-burgundy-900 py-20 lg:py-28">
@@ -143,7 +140,6 @@ export default async function DegustationVinValaisPage({ params }: PageProps) {
           </Card>
         </section>
 
-        <Footer />
       </div>
     </>
   );
