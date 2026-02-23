@@ -9,6 +9,7 @@ import { StripeOnboarding } from '@/components/features/winery/StripeOnboarding'
 import { PaymentStatus } from '@/components/features/winery/PaymentStatus';
 import { getPaymentStatusType } from '@/lib/utils/payment-status';
 import { Button } from '@/components/ui/button';
+import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { VerifiedBadge } from '@/components/shared/VerifiedBadge';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import { formatDate } from '@/lib/i18n/formatters';
@@ -47,12 +48,24 @@ export default async function WineryProfilePage({ params }: { params: Promise<{ 
     redirect(`/${locale}/onboarding/winery`);
   }
 
-  const t = await getTranslations('winery');
+  const [t, tNav] = await Promise.all([
+    getTranslations('winery'),
+    getTranslations('nav'),
+  ]);
   const isVerified = winery.status === 'VERIFIED';
 
   return (
     <WineryAccessGuard>
       <div className="container max-w-4xl py-12">
+        {/* Breadcrumb */}
+        <Breadcrumb
+          className="mb-6"
+          items={[
+            { label: tNav('dashboard'), href: '/dashboard' },
+            { label: tNav('wineryProfile') },
+          ]}
+        />
+
         {/* Premium Page Header */}
         <div className="mb-10">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">

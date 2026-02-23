@@ -3,11 +3,10 @@ import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { redirect, notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { Link } from '@/i18n/navigation';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
 import { Skeleton } from '@/components/shared/Skeleton';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, Calendar } from 'lucide-react';
+import { Calendar } from 'lucide-react';
+import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
@@ -94,7 +93,10 @@ export default async function EditExperiencePage({ params }: PageProps) {
     notFound();
   }
 
-  const t = await getTranslations('experience');
+  const [t, tNav] = await Promise.all([
+    getTranslations('experience'),
+    getTranslations('nav'),
+  ]);
 
   // Transform for form
   const experienceData = {
@@ -119,17 +121,14 @@ export default async function EditExperiencePage({ params }: PageProps) {
       <div className="container max-w-4xl py-12">
         {/* Page Header */}
         <div className="mb-10">
-          <Button
-            asChild
-            variant="ghost"
-            size="sm"
-            className="mb-4 -ml-2 text-slate-600 hover:text-slate-900"
-          >
-            <Link href="/dashboard/experiences" className="gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              {t('backToExperiences')}
-            </Link>
-          </Button>
+          <Breadcrumb
+            className="mb-4"
+            items={[
+              { label: tNav('dashboard'), href: '/dashboard' },
+              { label: tNav('experiences'), href: '/dashboard/experiences' },
+              { label: t('editTitle') },
+            ]}
+          />
 
           <div className="space-y-3">
             <h1 className="font-display text-display-md text-slate-900">

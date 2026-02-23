@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { useTranslations } from 'next-intl';
+import { formatPrice } from '@/lib/i18n/formatters';
 import type { MonthlyEarning } from '@/server/queries/earnings.queries';
 
 interface EarningsChartProps {
@@ -44,7 +45,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
             {entry.dataKey === 'revenueDisplay' ? t('gross') : t('netPayout')}:
           </span>
           <span className="font-bold text-foreground">
-            CHF {(entry.value / 100).toLocaleString('de-CH', { minimumFractionDigits: 2 })}
+            {formatPrice(entry.value)}
           </span>
         </div>
       ))}

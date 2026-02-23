@@ -27,6 +27,7 @@ const sidebarLinks = [
   { href: '/dashboard/experiences', labelKey: 'experiences', icon: PartyPopper },
   { href: '/dashboard/bookings', labelKey: 'bookings', icon: Calendar },
   { href: '/dashboard/earnings', labelKey: 'earnings', icon: Wallet },
+  { href: '/dashboard/winery/profile', labelKey: 'wineryProfile', icon: Wine },
   { href: '/dashboard/settings', labelKey: 'settings', icon: Settings },
 ];
 
