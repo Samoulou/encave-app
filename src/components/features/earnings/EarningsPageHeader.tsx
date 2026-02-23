@@ -15,9 +15,9 @@ export function EarningsPageHeader() {
       <nav className="text-sm">
         <ol className="flex items-center gap-2">
           <li>
-            <span className="text-[#915564] hover:text-primary transition-colors">
+            <a href="/dashboard" className="text-[#915564] hover:text-primary transition-colors">
               Dashboard
-            </span>
+            </a>
           </li>
           <li className="text-[#915564]/50">/</li>
           <li>

@@ -2,15 +2,7 @@
 
 import { useState, useMemo, memo } from 'react';
 import { format } from 'date-fns';
-import { MoreVertical } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
 import { formatCHF } from '@/lib/utils/currency';
 import { TransactionStatusBadge } from './TransactionStatusBadge';
 import { Pagination } from '@/components/shared/Pagination';
@@ -95,9 +87,6 @@ function TransactionTableComponent({ transactions }: TransactionTableProps) {
               <th scope="col" className="px-6 py-4 text-center">
                 {t('status')}
               </th>
-              <th scope="col" className="px-6 py-4">
-                <span className="sr-only">Actions</span>
-              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#f2e9eb] text-foreground">
@@ -149,25 +138,6 @@ function TransactionTableComponent({ transactions }: TransactionTableProps) {
                   <TransactionStatusBadge status={transaction.status} />
                 </td>
 
-                {/* Actions */}
-                <td className="px-6 py-4 text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-[#915564] hover:text-primary hover:bg-transparent"
-                      >
-                        <MoreVertical className="h-5 w-5" />
-                        <span className="sr-only">{t('openMenu')}</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>{t('viewDetails')}</DropdownMenuItem>
-                      <DropdownMenuItem>{t('downloadReceipt')}</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </td>
               </tr>
             ))}
           </tbody>

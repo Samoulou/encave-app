@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { Upload, ImageIcon, Trash2, Eye } from 'lucide-react';
+import { Upload, ImageIcon, Trash2 } from 'lucide-react';
 import { SectionHeader } from './SectionHeader';
 import type { GalleryImage } from './types';
 
@@ -78,13 +78,6 @@ export function MediaSection({
                   aria-label={`Remove image ${index + 1}`}
                 >
                   <Trash2 className="h-4 w-4" aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
-                  className="p-1.5 bg-white text-slate-700 rounded-full hover:bg-slate-50"
-                  aria-label={`Preview image ${index + 1}`}
-                >
-                  <Eye className="h-4 w-4" aria-hidden="true" />
                 </button>
               </div>
               {image.isCover && (

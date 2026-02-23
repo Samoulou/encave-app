@@ -117,47 +117,11 @@ export function BasicInfoSection({ form, sectionRef }: BasicInfoSectionProps) {
                 Description
               </FormLabel>
               <FormControl>
-                <div className="border border-stone-200 rounded-lg bg-slate-50 overflow-hidden focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-all">
-                  {/* Rich Text Toolbar */}
-                  <div className="flex items-center gap-1 border-b border-stone-200 p-2 bg-white">
-                    <button
-                      type="button"
-                      className="p-1 rounded text-slate-500 hover:bg-slate-100 hover:text-slate-900"
-                      aria-label="Bold"
-                    >
-                      <span className="font-bold text-sm" aria-hidden="true">B</span>
-                    </button>
-                    <button
-                      type="button"
-                      className="p-1 rounded text-slate-500 hover:bg-slate-100 hover:text-slate-900"
-                      aria-label="Italic"
-                    >
-                      <span className="italic text-sm" aria-hidden="true">I</span>
-                    </button>
-                    <button
-                      type="button"
-                      className="p-1 rounded text-slate-500 hover:bg-slate-100 hover:text-slate-900"
-                      aria-label="Underline"
-                    >
-                      <span className="underline text-sm" aria-hidden="true">U</span>
-                    </button>
-                    <div className="w-px h-4 bg-stone-300 mx-1" aria-hidden="true" />
-                    <button
-                      type="button"
-                      className="p-1 rounded text-slate-500 hover:bg-slate-100 hover:text-slate-900"
-                      aria-label="Bullet list"
-                    >
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                      </svg>
-                    </button>
-                  </div>
-                  <Textarea
-                    placeholder="Describe the experience in detail. What can guests expect?"
-                    className="w-full bg-transparent border-none p-4 min-h-[140px] outline-none text-sm leading-relaxed resize-none focus-visible:ring-0"
-                    {...field}
-                  />
-                </div>
+                <Textarea
+                  placeholder="Describe the experience in detail. What can guests expect?"
+                  className="bg-slate-50 border-stone-200 rounded-lg p-4 min-h-[140px] text-sm leading-relaxed resize-none focus:ring-2 focus:ring-primary focus:border-primary"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
