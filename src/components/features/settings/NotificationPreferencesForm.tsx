@@ -89,6 +89,7 @@ export function NotificationPreferencesForm({
                   <Switch
                     checked={field.value}
                     onCheckedChange={field.onChange}
+                    aria-label="Daily Digest"
                   />
                 </FormControl>
               </FormItem>
@@ -121,6 +122,7 @@ export function NotificationPreferencesForm({
                   <Switch
                     checked={field.value}
                     onCheckedChange={field.onChange}
+                    aria-label="Weekly Summary"
                   />
                 </FormControl>
               </FormItem>
@@ -152,6 +154,7 @@ export function NotificationPreferencesForm({
                   <Switch
                     checked={field.value}
                     onCheckedChange={field.onChange}
+                    aria-label="Instant Booking Alerts"
                   />
                 </FormControl>
               </FormItem>

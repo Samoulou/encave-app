@@ -66,7 +66,7 @@ function TransactionTableComponent({ transactions }: TransactionTableProps) {
   return (
     <div className="rounded-xl border border-border bg-white shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm whitespace-nowrap">
+        <table className="w-full text-left text-sm whitespace-nowrap" aria-label={t('tableLabel')}>
           <thead className="bg-gray-50 border-b border-border text-[#915564] font-medium uppercase text-xs tracking-wider">
             <tr>
               <th scope="col" className="px-6 py-4">

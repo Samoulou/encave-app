@@ -133,25 +133,25 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
       <div className="bg-white rounded-xl border border-border shadow-sm overflow-hidden">
         {/* Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left border-collapse" aria-label={t('tableLabel')}>
             <thead>
               <tr className="border-b border-border">
-                <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564]">
+                <th scope="col" className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564]">
                   {t('columns.bookingInfo')}
                 </th>
-                <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564]">
+                <th scope="col" className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564]">
                   {t('columns.client')}
                 </th>
-                <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564]">
+                <th scope="col" className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564]">
                   {t('columns.experience')}
                 </th>
-                <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564]">
+                <th scope="col" className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564]">
                   {t('columns.guests')}
                 </th>
-                <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564]">
+                <th scope="col" className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564]">
                   {t('columns.status')}
                 </th>
-                <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564] text-right">
+                <th scope="col" className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-[#915564] text-right">
                   {t('columns.actions')}
                 </th>
               </tr>
@@ -224,6 +224,7 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
                             disabled={isApproving || isRejecting}
                             className="p-1.5 rounded-lg text-green-600 hover:bg-green-50 transition-colors disabled:opacity-50"
                             title={t('actions.approve')}
+                            aria-label={t('actions.approve')}
                           >
                             {isApproving ? (
                               <Loader2 className="h-5 w-5 animate-spin" />
@@ -236,6 +237,7 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
                             disabled={isApproving || isRejecting}
                             className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
                             title={t('actions.reject')}
+                            aria-label={t('actions.reject')}
                           >
                             {isRejecting ? (
                               <Loader2 className="h-5 w-5 animate-spin" />
@@ -247,8 +249,8 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
                       ) : (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <button className="p-2 rounded-lg text-[#915564] hover:bg-primary-light hover:text-primary transition-colors">
-                              <MoreVertical className="h-5 w-5" />
+                            <button className="p-2 rounded-lg text-[#915564] hover:bg-primary-light hover:text-primary transition-colors" aria-label={t('actions.moreOptions')}>
+                              <MoreVertical className="h-5 w-5" aria-hidden="true" />
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-48">
@@ -291,6 +293,7 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
               className="px-3 py-1 rounded-lg border border-border text-[#915564] text-sm hover:bg-primary-light disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label={t('pagination.previousPage')}
             >
               {t('pagination.previous')}
             </button>
@@ -298,6 +301,7 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
               className="px-3 py-1 rounded-lg border border-border text-[#915564] text-sm hover:bg-primary-light disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label={t('pagination.nextPage')}
             >
               {t('pagination.next')}
             </button>

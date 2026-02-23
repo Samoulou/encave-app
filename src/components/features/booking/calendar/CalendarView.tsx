@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   format,
   startOfMonth,
@@ -58,8 +59,6 @@ interface CalendarViewProps {
   onRefresh?: () => void;
 }
 
-const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
 export function CalendarView({
   calendarData,
   onDateChange,
@@ -67,7 +66,19 @@ export function CalendarView({
   onBookingClick,
   onRefresh,
 }: CalendarViewProps) {
+  const t = useTranslations('calendar');
+  const tDays = useTranslations('common.days.short');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
+  const weekdays = [
+    tDays('1'), // Mon
+    tDays('2'), // Tue
+    tDays('3'), // Wed
+    tDays('4'), // Thu
+    tDays('5'), // Fri
+    tDays('6'), // Sat
+    tDays('0'), // Sun
+  ];
 
   const calendarDays = useMemo(() => {
     const monthStart = startOfMonth(currentDate);
@@ -125,8 +136,9 @@ export function CalendarView({
               <button
                 key={date.toISOString()}
                 onClick={() => handleDayClick(date)}
+                aria-label={format(date, 'PPPP')}
                 className={cn(
-                  'relative min-h-[80px] bg-white p-1.5 text-left transition-colors hover:bg-slate-50',
+                  'relative min-h-[80px] bg-white p-1.5 text-left transition-colors hover:bg-slate-50 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none',
                   !isCurrentMonth && 'bg-slate-50 text-slate-400',
                   isBlocked && 'bg-red-50'
                 )}

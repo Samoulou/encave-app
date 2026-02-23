@@ -73,6 +73,7 @@ export function BookingSearch() {
         ref={inputRef}
         type="text"
         placeholder={t('search.placeholder')}
+        aria-label={t('search.placeholder')}
         value={localValue}
         onChange={handleChange}
         className="block w-full pl-10 pr-8 py-2.5 rounded-lg bg-[#f8f6f6] border-transparent focus:border-primary focus:bg-white focus:ring-0 text-sm text-foreground placeholder-[#915564] transition-all"

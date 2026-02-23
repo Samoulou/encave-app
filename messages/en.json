@@ -411,6 +411,21 @@
       "alphabetical": "Alphabetical",
       "byStatus": "By Status"
     },
+    "manageTitle": "Manage Experiences",
+    "manageSubtitle": "Curate your wine tasting offerings for visitors.",
+    "deletedSuccess": "Experience deleted",
+    "deletedDescription": "Your experience has been permanently deleted.",
+    "perPerson": "/ pp",
+    "previewMode": "Preview Mode",
+    "notPublishedNotice": "This experience is not published",
+    "backToDashboard": "Back to Dashboard",
+    "editExperience": "Edit Experience",
+    "viewPublicPage": "View Public Page",
+    "draftNotice": "This experience is currently a draft and is not visible to visitors. Publish it from your dashboard to make it available for bookings.",
+    "editTitle": "Edit Experience",
+    "editSubtitle": "Update your experience details. Changes will be saved immediately.",
+    "availabilitySchedule": "Availability Schedule",
+    "availabilityScheduleSubtitle": "Configure when visitors can book this experience",
     "availability": {
       "title": "Availability",
       "noConfigured": "No availability configured",
@@ -489,6 +504,8 @@
     "back": "Back"
   },
   "bookings": {
+    "title": "Bookings",
+    "loading": "Loading bookings...",
     "empty": {
       "title": "No bookings yet",
       "description": "When customers book your experiences, they'll appear here.",
@@ -523,7 +540,8 @@
       "viewDetails": "View Details",
       "contactClient": "Contact Client",
       "markAsCompleted": "Mark as Completed",
-      "markAsNoShow": "Mark as No-Show"
+      "markAsNoShow": "Mark as No-Show",
+      "moreOptions": "More options"
     },
     "toast": {
       "confirmed": "Booking confirmed",
@@ -553,7 +571,9 @@
     "pagination": {
       "showing": "Showing {from} to {to} of {total} results",
       "previous": "Previous",
-      "next": "Next"
+      "next": "Next",
+      "previousPage": "Go to previous page",
+      "nextPage": "Go to next page"
     },
     "export": {
       "csv": "Export CSV",
@@ -570,7 +590,8 @@
       "bookingHistory": "Booking History",
       "noHistory": "No previous bookings",
       "at": "at"
-    }
+    },
+    "tableLabel": "Bookings table"
   },
   "checkout": {
     "checkout": "Checkout",
@@ -776,7 +797,24 @@
       "confirmationEmailSent": "We've sent a confirmation email to <strong>{email}</strong>",
       "expectedResponse": "Expected response within <strong>{hours}</strong> hours",
       "returnToHomepage": "Return to homepage"
-    }
+    },
+    "accessGuard": {
+      "winemakerRequired": "Winemaker Access Required",
+      "winemakerRequiredDescription": "This feature is only available to registered winemakers.",
+      "registerWinery": "Register Your Winery",
+      "verificationPending": "Verification Pending",
+      "verificationPendingDescription": "Your winery <strong>{name}</strong> is currently under review. You will be able to access winemaker features once your registration is verified.",
+      "verificationInfo": "Verification typically takes 2-3 business days. Check your email for updates.",
+      "returnToHome": "Return to Home",
+      "registrationNotApproved": "Registration Not Approved",
+      "registrationNotApprovedDescription": "Unfortunately, your winery registration was not approved. Please contact support for more information.",
+      "accountSuspended": "Account Suspended",
+      "accountSuspendedDescription": "Your winery account has been suspended. Please contact support for assistance."
+    },
+    "manageProfile": "Manage your winery profile and photos",
+    "lastUpdatedDate": "Last updated {date}",
+    "viewPublicProfile": "View Public Profile",
+    "paymentStatusLabel": "Payment Status"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -788,6 +826,7 @@
   },
   "settings": {
     "title": "Settings",
+    "subtitle": "Manage your account and notification preferences",
     "accountInformation": "Account Information",
     "accountInfo": "Account Information",
     "role": "Role",
@@ -807,6 +846,64 @@
         "title": "Language",
         "description": "Change your preferred language"
       }
+    },
+    "notifications": {
+      "dailyDigest": "Daily Digest",
+      "dailyDigestDescription": "Receive a summary of today's and tomorrow's bookings every morning at 7:00 AM",
+      "weeklySummary": "Weekly Summary",
+      "weeklySummaryDescription": "Receive a summary of last week's bookings and revenue every Monday morning",
+      "instantAlerts": "Instant Booking Alerts",
+      "instantAlertsDescription": "Receive an email immediately when someone books an experience",
+      "saving": "Saving...",
+      "savePreferences": "Save Preferences",
+      "updated": "Notification preferences updated",
+      "updateFailed": "Failed to update preferences",
+      "unexpectedError": "An unexpected error occurred"
+    }
+  },
+  "stripe": {
+    "callback": {
+      "setupComplete": "Payment Setup Complete",
+      "setupCompleteDescription": "Your payment account is ready. You can now publish experiences and receive payments from visitors.",
+      "goToExperiences": "Go to Experiences",
+      "verificationPending": "Verification Pending",
+      "verificationPendingDescription": "Your details have been submitted and are being verified by Stripe. This usually takes 1-2 business days. We will notify you once verified.",
+      "returnToDashboard": "Return to Dashboard",
+      "sessionExpired": "Session Expired",
+      "setupIncomplete": "Setup Incomplete",
+      "sessionExpiredDescription": "Your onboarding session has expired. Please continue where you left off.",
+      "setupIncompleteDescription": "Your payment setup is not complete. Please continue to finish the process.",
+      "continueSetup": "Continue Setup",
+      "loading": "Loading...",
+      "failedToContinue": "Failed to continue setup. Please try again."
+    },
+    "paymentStatus": {
+      "notConnected": "Not connected",
+      "notConnectedDescription": "Connect your bank account to receive payments",
+      "pendingVerification": "Pending verification",
+      "pendingVerificationDescription": "Stripe is verifying your account details",
+      "ready": "Ready to accept payments",
+      "readyDescription": "Your account is fully set up",
+      "manage": "Manage",
+      "failedToOpen": "Failed to open payment dashboard"
+    },
+    "onboarding": {
+      "setupPayments": "Setup Payments",
+      "setupPaymentsDescription": "Connect your bank account to receive payments when visitors book your experiences.",
+      "connecting": "Connecting...",
+      "getStarted": "Get Started",
+      "failedToStart": "Failed to start payment setup. Please try again.",
+      "completeSetupTitle": "Complete Stripe Setup",
+      "completeSetupDescription": "To receive payouts, you need to complete your Stripe account setup. Go to your {wineryProfileLink} to complete the process.",
+      "wineryProfileLink": "Winery Profile"
+    },
+    "warning": {
+      "actionRequired": "Action Required",
+      "defaultMessage": "Your Stripe account requires attention. Please update your information to continue receiving payments.",
+      "updateInformation": "Update Information",
+      "loading": "Loading...",
+      "dismissWarning": "Dismiss warning",
+      "failedToOpen": "Failed to open Stripe. Please try again."
     }
   },
   "earnings": {
@@ -837,7 +934,8 @@
       "status": "Status",
       "openMenu": "Open menu",
       "viewDetails": "View Details",
-      "downloadReceipt": "Download Receipt"
+      "downloadReceipt": "Download Receipt",
+      "tableLabel": "Transactions table"
     },
     "filters": {
       "allMonths": "All months",
@@ -868,6 +966,32 @@
       "downloadPDF": "Download PDF Statement",
       "downloadCSV": "Download CSV",
       "viewInStripe": "View in Stripe"
+    },
+    "subtitle": "Track your revenue streams and payout history.",
+    "breadcrumbDashboard": "Dashboard",
+    "chart": {
+      "title": "Revenue Evolution",
+      "subtitle": "Gross revenue vs Net payout over the last 6 months",
+      "gross": "Gross",
+      "netPayout": "Net Payout"
+    },
+    "yearToDate": {
+      "title": "Year-to-Date Summary ({year})",
+      "grossRevenue": "Gross Revenue",
+      "platformFees": "Platform Fees",
+      "netEarnings": "Net Earnings",
+      "totalBookings": "Total Bookings",
+      "refundedThisYear": "Refunded this year: {amount}"
+    },
+    "payout": {
+      "title": "Payout Schedule",
+      "description": "Payouts are processed automatically 7 days after the experience date. Funds are transferred directly to your connected bank account via Stripe."
+    },
+    "transactionStatus": {
+      "paid": "Paid",
+      "processing": "Processing",
+      "pending": "Pending",
+      "refunded": "Refunded"
     }
   },
   "calendar": {

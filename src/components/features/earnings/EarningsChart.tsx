@@ -68,12 +68,12 @@ export function EarningsChart({ data }: EarningsChartProps) {
   const yAxisMax = Math.ceil(maxValue / 2500) * 2500 || 10000;
 
   return (
-    <div className="rounded-xl border border-border bg-white p-6 lg:p-8 shadow-sm">
+    <div className="rounded-xl border border-border bg-white p-6 lg:p-8 shadow-sm" role="region" aria-label="Revenue Evolution">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
-          <h2 className="text-lg font-bold text-foreground">Revenue Evolution</h2>
-          <p className="text-sm text-[#915564]">
+          <h2 id="earnings-chart-title" className="text-lg font-bold text-foreground">Revenue Evolution</h2>
+          <p id="earnings-chart-desc" className="text-sm text-[#915564]">
             Gross revenue vs Net payout over the last 6 months
           </p>
         </div>
@@ -90,7 +90,7 @@ export function EarningsChart({ data }: EarningsChartProps) {
       </div>
 
       {/* Chart */}
-      <div className="h-[320px]">
+      <div className="h-[320px]" role="img" aria-labelledby="earnings-chart-title" aria-describedby="earnings-chart-desc">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
             data={chartData}

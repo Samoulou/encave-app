@@ -19,7 +19,7 @@ export function EarningsPageHeader() {
               Dashboard
             </a>
           </li>
-          <li className="text-[#915564]/50">/</li>
+          <li className="text-[#915564]/50" aria-hidden="true">/</li>
           <li>
             <span className="font-medium text-foreground">Earnings</span>
           </li>
