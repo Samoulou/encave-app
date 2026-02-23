@@ -1,9 +1,8 @@
 'use client';
 
-import { CalendarCheck, CalendarClock, PieChart, TrendingUp, TrendingDown } from 'lucide-react';
+import { CalendarCheck, CalendarClock, PieChart } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { BookingSummary } from '@/server/queries/booking.queries';
-import { cn } from '@/lib/utils';
 
 interface BookingSummaryCardsProps {
   summary: BookingSummary;
@@ -17,12 +16,7 @@ interface BookingSummaryCardsProps {
 export function BookingSummaryCards({ summary }: BookingSummaryCardsProps) {
   const t = useTranslations('bookings.summary');
 
-  // Calculate trend percentage (mock for now - would need previous period data)
-  const trendPercentage = summary.monthCount > 0 ? 12 : 0;
-  const trendIsPositive = trendPercentage >= 0;
-
-  // Calculate occupancy rate based on confirmed bookings vs capacity
-  // For now, using a calculated approximation
+  // Occupancy rate based on confirmed bookings vs capacity (approximation)
   const occupancyRate = Math.min(
     Math.round((summary.monthCount / Math.max(summary.monthCount + 5, 10)) * 100),
     100
@@ -40,24 +34,6 @@ export function BookingSummaryCards({ summary }: BookingSummaryCardsProps) {
         </div>
         <div className="flex items-baseline gap-3 mt-2">
           <p className="text-foreground text-3xl font-bold">{summary.monthCount}</p>
-          {trendPercentage !== 0 && (
-            <span
-              className={cn(
-                'inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold',
-                trendIsPositive
-                  ? 'text-[#078859] bg-[#078859]/10'
-                  : 'text-red-600 bg-red-600/10'
-              )}
-            >
-              {trendIsPositive ? (
-                <TrendingUp className="h-3.5 w-3.5" />
-              ) : (
-                <TrendingDown className="h-3.5 w-3.5" />
-              )}
-              {trendIsPositive ? '+' : ''}
-              {trendPercentage}%
-            </span>
-          )}
         </div>
       </div>
 
