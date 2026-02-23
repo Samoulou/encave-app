@@ -50,10 +50,10 @@ export function ExperienceCard({ experience, className }: ExperienceCardProps) {
   return (
     <Link
       href={`/experiences/${experience.slug}`}
-      className={cn('group block', className)}
+      className={cn('group block h-full', className)}
       data-testid="experience-card"
     >
-      <Card className="overflow-hidden">
+      <Card className="h-full flex flex-col overflow-hidden">
         {/* Cover Photo */}
         <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
           <ImageWithFallback
@@ -74,7 +74,7 @@ export function ExperienceCard({ experience, className }: ExperienceCardProps) {
         </div>
 
         {/* Content */}
-        <CardContent className="p-5">
+        <CardContent className="flex flex-col flex-1 p-5">
           {/* Winery Name */}
           <p className="text-sm font-medium text-burgundy-600" data-testid="winery-name">
             {experience.winery.name}
@@ -111,8 +111,8 @@ export function ExperienceCard({ experience, className }: ExperienceCardProps) {
             </span>
           </div>
 
-          {/* Price */}
-          <div className="mt-4 flex items-center justify-between">
+          {/* Price — pinned to bottom */}
+          <div className="mt-auto pt-4 flex items-center justify-between">
             <span className="text-lg font-semibold text-slate-900" data-testid="experience-price">
               {formatCHF(experience.price)}
             </span>

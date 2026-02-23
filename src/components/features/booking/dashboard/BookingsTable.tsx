@@ -17,6 +17,7 @@ import { approveBooking, rejectBooking } from '@/server/actions/booking-dashboar
 import { toast } from 'sonner';
 import { formatDate } from '@/lib/i18n/formatters';
 import type { Locale } from '@/i18n/routing';
+import { getInitials } from '@/lib/get-initials';
 
 interface BookingWithExperience {
   id: string;
@@ -43,16 +44,6 @@ interface BookingsTableProps {
 
 const DEFAULT_PAGE_SIZE = 5;
 
-/**
- * Get initials from a name (first letter of first and last name)
- */
-function getInitials(name: string): string {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) {
-    return parts[0]?.substring(0, 2).toUpperCase() ?? '';
-  }
-  return `${parts[0]?.[0] ?? ''}${parts[parts.length - 1]?.[0] ?? ''}`.toUpperCase();
-}
 
 /**
  * Bookings table component matching US-UI-09 mockup.

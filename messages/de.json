@@ -111,7 +111,15 @@
     "settings": "Einstellungen",
     "messages": "Nachrichten",
     "backToHome": "Zuruck zur Startseite",
-    "myBookings": "Meine Buchungen"
+    "myBookings": "Meine Buchungen",
+    "account": "Konto",
+    "manageAccount": "Konto verwalten",
+    "viewDashboard": "Dashboard ansehen",
+    "adminPanel": "Admin-Bereich",
+    "myProfile": "Mein Profil",
+    "roleWinemaker": "Winzer",
+    "roleClient": "Kunde",
+    "roleAdmin": "Administrator"
   },
   "locale": {
     "fr": "Francais",

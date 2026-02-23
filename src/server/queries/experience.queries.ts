@@ -144,11 +144,14 @@ export async function searchExperiences(
       const hasLocationSearch = !!(params.location && params.lat !== undefined && params.lng !== undefined);
       const locationName = params.location ? getLocationById(params.location)?.name : undefined;
 
+      const wineryWhere: Prisma.WineryWhereInput = {
+        status: 'VERIFIED',
+        ...(params.commune && { commune: params.commune }),
+      };
+
       const where: Prisma.ExperienceWhereInput = {
         status: ExperienceStatus.PUBLISHED,
-        winery: {
-          status: 'VERIFIED',
-        },
+        winery: wineryWhere,
         availabilitySlots: {
           some: {
             isActive: true,
@@ -160,6 +163,7 @@ export async function searchExperiences(
             { title: { contains: params.search, mode: 'insensitive' } },
             { description: { contains: params.search, mode: 'insensitive' } },
             { winery: { name: { contains: params.search, mode: 'insensitive' } } },
+            { winery: { commune: { contains: params.search, mode: 'insensitive' } } },
           ],
         }),
         // Type filter
@@ -167,10 +171,6 @@ export async function searchExperiences(
           params.type.length > 0 && {
             type: { in: params.type },
           }),
-        // Commune filter (backward compatible)
-        ...(params.commune && {
-          winery: { commune: params.commune },
-        }),
         // Price range filters
         ...(params.minPrice !== undefined && {
           price: { gte: params.minPrice },

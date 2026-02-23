@@ -103,7 +103,7 @@ export function SearchResults({
 
       {/* Results Grid or Empty State */}
       {count > 0 ? (
-        <div className="grid gap-6 md:gap-8 sm:grid-cols-2 lg:grid-cols-3" data-testid="search-results-grid">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" data-testid="search-results-grid">
           {experiences.map((experience) => (
             <ExperienceCard key={experience.id} experience={experience} />
           ))}

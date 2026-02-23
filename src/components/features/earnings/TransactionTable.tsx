@@ -7,6 +7,7 @@ import { formatCHF } from '@/lib/utils/currency';
 import { TransactionStatusBadge } from './TransactionStatusBadge';
 import { Pagination } from '@/components/shared/Pagination';
 import type { Transaction } from '@/server/queries/earnings.queries';
+import { getInitials } from '@/lib/get-initials';
 
 interface TransactionTableProps {
   transactions: Transaction[];
@@ -14,16 +15,6 @@ interface TransactionTableProps {
 
 const DEFAULT_PAGE_SIZE = 20;
 
-/**
- * Generate initials from a name for avatar fallback.
- */
-function getInitials(name: string): string {
-  const parts = name.split(' ').filter(Boolean);
-  if (parts.length >= 2) {
-    return `${parts[0]?.[0] ?? ''}${parts[1]?.[0] ?? ''}`.toUpperCase();
-  }
-  return (parts[0]?.slice(0, 2) ?? '').toUpperCase();
-}
 
 function TransactionTableComponent({ transactions }: TransactionTableProps) {
   const t = useTranslations('earnings.transactions');
