@@ -3,6 +3,7 @@ import { z } from 'zod';
 const envSchema = z.object({
   // Database
   DATABASE_URL: z.string().url(),
+  DIRECT_URL: z.string().url().optional(),
 
   // Authentication (Better Auth)
   // BETTER_AUTH_SECRET is required in production
@@ -17,8 +18,12 @@ const envSchema = z.object({
   APPLE_CLIENT_SECRET: z.string().optional(),
 
   // Vercel automatic environment variables
+  VERCEL: z.string().optional(),
   VERCEL_URL: z.string().optional(),
   VERCEL_ENV: z.enum(['production', 'preview', 'development']).optional(),
+  VERCEL_BRANCH_URL: z.string().optional(),
+  VERCEL_PROJECT_PRODUCTION_URL: z.string().optional(),
+  NEXT_PUBLIC_VERCEL_URL: z.string().optional(),
 
   // Email (Resend)
   RESEND_API_KEY: z.string().optional(),
@@ -46,6 +51,10 @@ const envSchema = z.object({
 
   // Analytics
   NEXT_PUBLIC_VERCEL_ANALYTICS_ID: z.string().optional(),
+
+  // SEO / Site URL
+  NEXT_PUBLIC_BASE_URL: z.string().url().optional(),
+  NEXT_PUBLIC_SITE_URL: z.string().url().optional(),
 
   // Node environment
   NODE_ENV: z

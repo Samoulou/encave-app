@@ -79,8 +79,8 @@ export default defineConfig({
       // Passer explicitement les variables d'environnement de test
       NODE_ENV: 'production',
       ...(process.env.DATABASE_URL && { DATABASE_URL: process.env.DATABASE_URL }),
-      ...(process.env.NEXTAUTH_SECRET && { NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET }),
-      ...(process.env.NEXTAUTH_URL && { NEXTAUTH_URL: process.env.NEXTAUTH_URL }),
+      ...(process.env.BETTER_AUTH_SECRET && { BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET }),
+      ...(process.env.BETTER_AUTH_URL && { BETTER_AUTH_URL: process.env.BETTER_AUTH_URL }),
       ...(process.env.STRIPE_SECRET_KEY && { STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY }),
       ...(process.env.STRIPE_PUBLISHABLE_KEY && { STRIPE_PUBLISHABLE_KEY: process.env.STRIPE_PUBLISHABLE_KEY }),
       ...(process.env.STRIPE_WEBHOOK_SECRET && { STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET }),
