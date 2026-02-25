@@ -3,8 +3,16 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
+import posthog from 'posthog-js';
 import { parseAsString, parseAsInteger, useQueryStates } from 'nuqs';
-import { Calendar, Clock, Users, ChevronRight, Loader2, Pencil } from 'lucide-react';
+import {
+  Calendar,
+  Clock,
+  Users,
+  ChevronRight,
+  Loader2,
+  Pencil,
+} from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { enUS, fr, de } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
@@ -56,7 +64,9 @@ export function BookingWidget({
     guests: parseAsInteger.withDefault(Math.max(2, minCapacity)),
   });
 
-  const [remainingCapacity, setRemainingCapacity] = useState<number | null>(null);
+  const [remainingCapacity, setRemainingCapacity] = useState<number | null>(
+    null
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const [selectedEndTime, setSelectedEndTime] = useState<string | null>(null);
@@ -66,12 +76,19 @@ export function BookingWidget({
 
   // Available days based on availability slots
   const availableDays = useMemo(
-    () => new Set(availabilitySlots.filter(s => s.isActive).map((slot) => slot.dayOfWeek)),
+    () =>
+      new Set(
+        availabilitySlots
+          .filter((s) => s.isActive)
+          .map((slot) => slot.dayOfWeek)
+      ),
     [availabilitySlots]
   );
 
   // Check if form is valid
-  const isValid = date && time &&
+  const isValid =
+    date &&
+    time &&
     guests >= minCapacity &&
     guests <= maxCapacity &&
     (remainingCapacity === null || guests <= remainingCapacity);
@@ -127,6 +144,15 @@ export function BookingWidget({
   const handleContinue = () => {
     if (!isValid || !isBookingEnabled) return;
 
+    posthog.capture('booking_started', {
+      experience_id: experienceId,
+      experience_slug: experienceSlug,
+      date,
+      time_slot: time,
+      guest_count: guests,
+      total_price_chf: totalPrice / 100,
+    });
+
     setIsSubmitting(true);
     const params = new URLSearchParams({
       date: date!,
@@ -173,22 +199,27 @@ export function BookingWidget({
 
   return (
     <div
-      className="sticky top-28 bg-white rounded-2xl shadow-warm-xl overflow-hidden"
+      className="sticky top-28 overflow-hidden rounded-2xl bg-white shadow-warm-xl"
       data-testid="booking-widget"
       id="booking-widget"
     >
       {/* Price Header */}
-      <div className="flex justify-between items-end px-6 pt-6 pb-4">
+      <div className="flex items-end justify-between px-6 pb-4 pt-6">
         <div>
           <div className="flex items-baseline gap-1">
-            <span className="text-2xl font-bold text-foreground" data-testid="booking-price">
+            <span
+              className="text-2xl font-bold text-foreground"
+              data-testid="booking-price"
+            >
               {formatCHF(price)}
             </span>
-            <span className="text-sm text-muted-foreground">/ {t('perPerson')}</span>
+            <span className="text-sm text-muted-foreground">
+              / {t('perPerson')}
+            </span>
           </div>
         </div>
         {isBookingEnabled && (
-          <div className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded">
+          <div className="rounded bg-green-100 px-2 py-1 text-xs font-bold text-green-700">
             {tExp('available')}
           </div>
         )}
@@ -213,7 +244,7 @@ export function BookingWidget({
       ) : date ? (
         <button
           onClick={() => handleEditStep(1)}
-          className="w-full flex items-center justify-between px-6 py-3.5 hover:bg-stone-50 transition-colors text-left"
+          className="flex w-full items-center justify-between px-6 py-3.5 text-left transition-colors hover:bg-stone-50"
         >
           <div className="flex items-center gap-2.5">
             <Calendar className="h-4 w-4 text-primary" aria-hidden="true" />
@@ -221,7 +252,7 @@ export function BookingWidget({
               {formatDateLabel(date)}
             </span>
           </div>
-          <span className="text-xs text-primary font-medium flex items-center gap-1">
+          <span className="flex items-center gap-1 text-xs font-medium text-primary">
             <Pencil className="h-3 w-3" />
             {t('editSelection')}
           </span>
@@ -233,7 +264,7 @@ export function BookingWidget({
       {/* Step 2: Session */}
       {currentStep === 2 && date ? (
         <div className="px-6 py-4">
-          <p className="text-sm font-semibold text-foreground mb-3">
+          <p className="mb-3 text-sm font-semibold text-foreground">
             {t('whenVisit')}
           </p>
           <TimeSlotSelector
@@ -247,15 +278,18 @@ export function BookingWidget({
       ) : time && currentStep > 2 ? (
         <button
           onClick={() => handleEditStep(2)}
-          className="w-full flex items-center justify-between px-6 py-3.5 hover:bg-stone-50 transition-colors text-left"
+          className="flex w-full items-center justify-between px-6 py-3.5 text-left transition-colors hover:bg-stone-50"
         >
           <div className="flex items-center gap-2.5">
             <Clock className="h-4 w-4 text-primary" aria-hidden="true" />
             <span className="text-sm font-medium text-foreground">
-              {formatTime(time)}{selectedEndTime ? ` → ${formatTime(selectedEndTime)}` : ` (${duration} min)`}
+              {formatTime(time)}
+              {selectedEndTime
+                ? ` → ${formatTime(selectedEndTime)}`
+                : ` (${duration} min)`}
             </span>
           </div>
-          <span className="text-xs text-primary font-medium flex items-center gap-1">
+          <span className="flex items-center gap-1 text-xs font-medium text-primary">
             <Pencil className="h-3 w-3" />
             {t('editSelection')}
           </span>
@@ -277,7 +311,11 @@ export function BookingWidget({
             value={guests}
             onChange={handleGuestsChange}
             min={minCapacity}
-            max={remainingCapacity !== null ? Math.min(maxCapacity, remainingCapacity) : maxCapacity}
+            max={
+              remainingCapacity !== null
+                ? Math.min(maxCapacity, remainingCapacity)
+                : maxCapacity
+            }
             isLoading={false}
             remainingCapacity={remainingCapacity}
           />
@@ -285,7 +323,7 @@ export function BookingWidget({
       ) : isValid ? (
         <button
           onClick={() => handleEditStep(3)}
-          className="w-full flex items-center justify-between px-6 py-3.5 hover:bg-stone-50 transition-colors text-left"
+          className="flex w-full items-center justify-between px-6 py-3.5 text-left transition-colors hover:bg-stone-50"
         >
           <div className="flex items-center gap-2.5">
             <Users className="h-4 w-4 text-primary" aria-hidden="true" />
@@ -293,7 +331,7 @@ export function BookingWidget({
               {t('guests', { count: guests })}
             </span>
           </div>
-          <span className="text-xs text-primary font-medium flex items-center gap-1">
+          <span className="flex items-center gap-1 text-xs font-medium text-primary">
             <Pencil className="h-3 w-3" />
             {t('editSelection')}
           </span>
@@ -311,11 +349,14 @@ export function BookingWidget({
       {/* Price Summary — only when all 3 steps complete */}
       {isValid && currentStep === 3 && (
         <div className="px-6 py-3">
-          <div className="flex justify-between items-center text-sm">
+          <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">
               {guests} × {formatCHF(price)}
             </span>
-            <span className="font-bold text-lg text-foreground" data-testid="booking-total">
+            <span
+              className="text-lg font-bold text-foreground"
+              data-testid="booking-total"
+            >
               {formatCHF(totalPrice)}
             </span>
           </div>
@@ -327,7 +368,7 @@ export function BookingWidget({
         {isBookingEnabled ? (
           <Button
             size="lg"
-            className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/20 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 h-auto"
+            className="hover:bg-primary-hover flex h-auto w-full transform items-center justify-center gap-2 rounded-xl bg-primary py-4 font-bold text-white shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
             disabled={!isValid || isSubmitting}
             onClick={handleContinue}
           >
@@ -346,7 +387,7 @@ export function BookingWidget({
         ) : (
           <Button
             size="lg"
-            className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 h-auto opacity-90"
+            className="hover:bg-primary-hover flex h-auto w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 font-bold text-white opacity-90 shadow-lg shadow-primary/20 transition-all"
             disabled
           >
             <span>{t('bookExperience')}</span>
@@ -355,7 +396,7 @@ export function BookingWidget({
         )}
 
         {isBookingEnabled && (
-          <p className="text-xs text-center text-muted-foreground mt-3">
+          <p className="mt-3 text-center text-xs text-muted-foreground">
             {tExp('freeCancellation')}
           </p>
         )}

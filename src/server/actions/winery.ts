@@ -11,12 +11,10 @@ import {
 } from '@/lib/validators/winery';
 import { generateSlug, ensureUniqueSlug } from '@/lib/utils/slug';
 import { geocodeWineryAddress } from '@/lib/geocoding';
-import {
-  IMAGE_MAX_SIZE,
-  WINERY_ALLOWED_TYPES,
-} from '@/lib/validators/image';
+import { IMAGE_MAX_SIZE, WINERY_ALLOWED_TYPES } from '@/lib/validators/image';
 import type { ActionResult } from '@/types/actions';
 import { logError, logWarn } from '@/lib/logger';
+import { getPostHogServer } from '@/lib/posthog';
 
 /**
  * Check if a winery slug already exists
@@ -111,7 +109,10 @@ export async function createWinery(
       coordinates = await geocodeWineryAddress(address, commune);
     } catch (geocodeError) {
       // Log but don't fail - geocoding is optional
-      logWarn('Geocoding failed for new winery', { action: 'createWinery', error: geocodeError });
+      logWarn('Geocoding failed for new winery', {
+        action: 'createWinery',
+        error: geocodeError,
+      });
     }
 
     // 8. Create winery and update user role in a transaction
@@ -141,6 +142,22 @@ export async function createWinery(
 
       return newWinery;
     });
+
+    // Track producer onboarding in PostHog (server-side)
+    const posthogServer = getPostHogServer();
+    if (posthogServer) {
+      posthogServer.capture({
+        distinctId: session.user.id,
+        event: 'producer_onboarded',
+        properties: {
+          winery_id: winery.id,
+          winery_slug: winery.slug,
+          winery_name: name,
+          commune,
+        },
+      });
+      await posthogServer.flush();
+    }
 
     return {
       success: true,
@@ -221,7 +238,10 @@ export async function updateWineryProfile(
         const newCommune = validated.data.commune ?? winery.commune;
         coordinates = await geocodeWineryAddress(newAddress, newCommune);
       } catch (geocodeError) {
-        logWarn('Geocoding failed for winery update', { action: 'updateWineryProfile', error: geocodeError });
+        logWarn('Geocoding failed for winery update', {
+          action: 'updateWineryProfile',
+          error: geocodeError,
+        });
       }
     }
 
@@ -243,7 +263,9 @@ export async function updateWineryProfile(
       data: { updatedAt: updated.updatedAt },
     };
   } catch (error) {
-    logError('updateWineryProfile error', error, { action: 'updateWineryProfile' });
+    logError('updateWineryProfile error', error, {
+      action: 'updateWineryProfile',
+    });
     return {
       success: false,
       error: {
@@ -281,11 +303,18 @@ export async function uploadWineryImage(
     if (file.size > IMAGE_MAX_SIZE) {
       return {
         success: false,
-        error: { code: 'VALIDATION_ERROR', message: 'Image must be less than 5MB' },
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Image must be less than 5MB',
+        },
       };
     }
 
-    if (!WINERY_ALLOWED_TYPES.includes(file.type as typeof WINERY_ALLOWED_TYPES[number])) {
+    if (
+      !WINERY_ALLOWED_TYPES.includes(
+        file.type as (typeof WINERY_ALLOWED_TYPES)[number]
+      )
+    ) {
       return {
         success: false,
         error: {
@@ -363,7 +392,9 @@ export async function updateWineryCoverPhoto(
       data: { updatedAt: updated.updatedAt },
     };
   } catch (error) {
-    logError('updateWineryCoverPhoto error', error, { action: 'updateWineryCoverPhoto' });
+    logError('updateWineryCoverPhoto error', error, {
+      action: 'updateWineryCoverPhoto',
+    });
     return {
       success: false,
       error: {
@@ -413,7 +444,10 @@ export async function addGalleryImage(
     }
 
     // Get next order number
-    const maxOrder = Math.max(0, ...winery.galleryImages.map((img) => img.order));
+    const maxOrder = Math.max(
+      0,
+      ...winery.galleryImages.map((img) => img.order)
+    );
 
     const image = await db.wineryGalleryImage.create({
       data: {
@@ -497,7 +531,9 @@ export async function removeGalleryImage(
       data: { removed: true },
     };
   } catch (error) {
-    logError('removeGalleryImage error', error, { action: 'removeGalleryImage' });
+    logError('removeGalleryImage error', error, {
+      action: 'removeGalleryImage',
+    });
     return {
       success: false,
       error: {

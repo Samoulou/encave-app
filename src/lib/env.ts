@@ -51,7 +51,11 @@ const envSchema = z.object({
   SENTRY_ORG: z.string().optional(),
   SENTRY_PROJECT: z.string().optional(),
 
-  // Analytics
+  // Analytics (PostHog)
+  NEXT_PUBLIC_POSTHOG_KEY: z.string().optional(),
+  NEXT_PUBLIC_POSTHOG_HOST: z.string().url().optional(),
+
+  // Analytics (Vercel)
   NEXT_PUBLIC_VERCEL_ANALYTICS_ID: z.string().optional(),
 
   // SEO / Site URL
