@@ -1,3 +1,4 @@
+const { withSentryConfig } = require('@sentry/nextjs');
 const createNextIntlPlugin = require('next-intl/plugin');
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
@@ -12,7 +13,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' https: data: blob:",
       "font-src 'self' https: data:",
-      "connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://*.vercel-insights.com https://*.vercel-analytics.com",
+      "connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://*.vercel-insights.com https://*.vercel-analytics.com https://*.ingest.sentry.io",
       "frame-src https://js.stripe.com https://hooks.stripe.com https://www.openstreetmap.org",
       "frame-ancestors 'self'",
       "form-action 'self'",
@@ -79,4 +80,28 @@ const nextConfig = {
   },
 };
 
-module.exports = withNextIntl(nextConfig);
+module.exports = withSentryConfig(withNextIntl(nextConfig), {
+  // Suppress source maps upload logs during build
+  silent: !process.env.CI,
+
+  // Upload source maps to Sentry for readable stack traces
+  // SENTRY_AUTH_TOKEN, SENTRY_ORG, SENTRY_PROJECT must be set in Vercel env
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+
+  // Hide source maps from the client bundle (security)
+  hideSourceMaps: true,
+
+  // Route browser Sentry requests through a Next.js rewrite to avoid ad-blockers
+  tunnelRoute: '/monitoring',
+
+  // Webpack-specific Sentry options
+  webpack: {
+    autoInstrumentServerFunctions: true,
+    autoInstrumentMiddleware: true,
+    autoInstrumentAppDirectory: true,
+    treeshake: {
+      removeDebugLogging: true,
+    },
+  },
+});

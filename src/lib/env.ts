@@ -48,6 +48,8 @@ const envSchema = z.object({
   // Sentry (Error Tracking)
   NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
   SENTRY_AUTH_TOKEN: z.string().optional(),
+  SENTRY_ORG: z.string().optional(),
+  SENTRY_PROJECT: z.string().optional(),
 
   // Analytics
   NEXT_PUBLIC_VERCEL_ANALYTICS_ID: z.string().optional(),
