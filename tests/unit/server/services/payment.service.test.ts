@@ -14,7 +14,7 @@ vi.mock('@/server/db', () => ({
 vi.mock('@/lib/env', () => ({
   env: {
     STRIPE_SECRET_KEY: 'sk_test_mock',
-    NEXTAUTH_URL: 'https://test.example.com',
+    BETTER_AUTH_URL: 'https://test.example.com',
     PLATFORM_COMMISSION_RATE: 0.12,
   },
   getBaseUrl: () => 'https://test.example.com',
