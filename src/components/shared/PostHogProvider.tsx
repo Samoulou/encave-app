@@ -5,30 +5,26 @@ import posthog from 'posthog-js';
 import { PostHogProvider as PHProvider } from 'posthog-js/react';
 import { useSession } from '@/lib/auth-client';
 
-/**
- * Initializes PostHog client-side analytics (EU-hosted for nLPD compliance).
- * - Auto-captures pageviews and pageleaves
- * - Identifies authenticated users (aligned with Sentry.setUser)
- */
-export function PostHogProvider({ children }: { children: React.ReactNode }) {
-  useEffect(() => {
-    const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-    if (!key) return;
-
+// Initialize PostHog at module level (before any component renders)
+// so that posthog.capture() works in all client components.
+if (typeof window !== 'undefined') {
+  const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
+  if (key) {
     posthog.init(key, {
       api_host:
         process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://eu.posthog.com',
       capture_pageview: true,
       capture_pageleave: true,
       persistence: 'localStorage+cookie',
-      loaded: (ph) => {
-        if (process.env.NODE_ENV === 'development') {
-          ph.debug();
-        }
-      },
     });
-  }, []);
+  }
+}
 
+/**
+ * Provides PostHog React context (EU-hosted for nLPD compliance).
+ * Init happens at module level above — this just provides the context.
+ */
+export function PostHogProvider({ children }: { children: React.ReactNode }) {
   return <PHProvider client={posthog}>{children}</PHProvider>;
 }
 
