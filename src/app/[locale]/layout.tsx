@@ -8,6 +8,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { SkipLink } from '@/components/shared/SkipLink';
 import { ProgressBarProvider } from '@/components/shared/ProgressBarProvider';
 import { NavigationLoader } from '@/components/shared/NavigationLoader';
+import { SentryUserSync } from '@/components/shared/SentryUserSync';
 import { routing, type Locale } from '@/i18n/routing';
 import '../globals.css';
 
@@ -71,6 +72,7 @@ export default async function LocaleLayout({ children, params }: Props) {
           <Toaster />
           <ProgressBarProvider />
           <NavigationLoader />
+          <SentryUserSync />
           <Analytics />
         </NextIntlClientProvider>
       </body>

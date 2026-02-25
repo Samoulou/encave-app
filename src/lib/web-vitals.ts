@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import type { Metric } from 'web-vitals';
 
 /**
@@ -25,7 +26,7 @@ function isGoodScore(name: string, value: number): boolean {
 }
 
 /**
- * Reports web vitals to analytics or monitoring service.
+ * Reports web vitals to Sentry for performance monitoring.
  * This function is called by Next.js for each web vital metric.
  */
 export function reportWebVitals(metric: Metric) {
@@ -39,10 +40,13 @@ export function reportWebVitals(metric: Metric) {
     );
   }
 
-  // Send to analytics (Vercel Analytics handles this automatically)
-
-  // Send to Sentry for performance monitoring (if configured)
-  if (typeof window !== 'undefined' && 'Sentry' in window) {
-    // Sentry will capture this if performance monitoring is enabled
+  // Send to Sentry as custom measurement
+  const transaction = Sentry.getActiveSpan();
+  if (transaction) {
+    Sentry.setMeasurement(
+      metric.name,
+      metric.value,
+      metric.name === 'CLS' ? '' : 'millisecond'
+    );
   }
 }

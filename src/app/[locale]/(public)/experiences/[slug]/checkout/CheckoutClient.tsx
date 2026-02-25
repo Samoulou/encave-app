@@ -6,6 +6,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import * as Sentry from '@sentry/nextjs';
 import { Loader2, AlertCircle, RefreshCw, Users, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -61,6 +62,24 @@ export function CheckoutClient({
   const router = useRouter();
 
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // Set Sentry booking context for all errors on this page
+  useEffect(() => {
+    Sentry.setContext('booking', {
+      experienceId: experience.id,
+      experienceTitle: experience.title,
+      wineryId: experience.winery.id,
+      slug,
+      date,
+      timeSlot: time,
+      guestCount,
+      totalPriceCHF: (experience.price * guestCount) / 100,
+    });
+
+    return () => {
+      Sentry.setContext('booking', null);
+    };
+  }, [experience, slug, date, time, guestCount]);
 
   // BUG-003 & BUG-013: Availability state
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
