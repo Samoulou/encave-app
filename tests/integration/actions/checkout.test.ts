@@ -49,7 +49,7 @@ vi.mock('@/lib/env', () => ({
     STRIPE_SECRET_KEY: 'sk_test_123',
     STRIPE_PUBLISHABLE_KEY: 'pk_test_123',
     STRIPE_WEBHOOK_SECRET: 'whsec_test_123',
-    NEXTAUTH_URL: 'http://localhost:3000',
+    BETTER_AUTH_URL: 'http://localhost:3000',
     DATABASE_URL: 'postgresql://test',
     PLATFORM_COMMISSION_RATE: 0.12,
     NODE_ENV: 'test',
