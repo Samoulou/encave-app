@@ -9,6 +9,10 @@ import { SkipLink } from '@/components/shared/SkipLink';
 import { ProgressBarProvider } from '@/components/shared/ProgressBarProvider';
 import { NavigationLoader } from '@/components/shared/NavigationLoader';
 import { SentryUserSync } from '@/components/shared/SentryUserSync';
+import {
+  PostHogProvider,
+  PostHogUserSync,
+} from '@/components/shared/PostHogProvider';
 import { routing, type Locale } from '@/i18n/routing';
 import '../globals.css';
 
@@ -67,13 +71,16 @@ export default async function LocaleLayout({ children, params }: Props) {
         className={`${manrope.variable} ${fraunces.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
         <NextIntlClientProvider messages={messages}>
-          <SkipLink />
-          <NuqsAdapter>{children}</NuqsAdapter>
-          <Toaster />
-          <ProgressBarProvider />
-          <NavigationLoader />
-          <SentryUserSync />
-          <Analytics />
+          <PostHogProvider>
+            <SkipLink />
+            <NuqsAdapter>{children}</NuqsAdapter>
+            <Toaster />
+            <ProgressBarProvider />
+            <NavigationLoader />
+            <SentryUserSync />
+            <PostHogUserSync />
+            <Analytics />
+          </PostHogProvider>
         </NextIntlClientProvider>
       </body>
     </html>
