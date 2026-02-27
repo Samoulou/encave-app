@@ -66,47 +66,48 @@ export default async function Home({ params }: Props) {
     <div className="min-h-screen bg-background">
       <Header />
 
-      {/* Hero Section with Background Image */}
-      <section className="relative h-[350px] sm:h-[450px] md:h-[500px] lg:h-[600px] w-full flex items-center justify-center overflow-hidden">
-        {/* Background Image */}
-        <div className="absolute inset-0 z-0">
-          {/* Gradient Overlay */}
-          <div
-            className="absolute inset-0 z-10"
-            style={{
-              background: 'linear-gradient(135deg, rgba(32, 18, 22, 0.4) 0%, rgba(150, 42, 72, 0.5) 100%)',
-            }}
-          />
-          <Image
-            src={heroBannerImage}
-            alt={t('heroImageAlt')}
-            fill
-            className="object-cover object-center"
-            priority
-            placeholder="blur"
-            sizes="100vw"
-            quality={60}
-          />
-        </div>
+      <main id="main-content">
+        {/* Hero Section with Background Image */}
+        <section className="relative h-[350px] sm:h-[450px] md:h-[500px] lg:h-[600px] w-full flex items-center justify-center overflow-hidden">
+          {/* Background Image */}
+          <div className="absolute inset-0 z-0">
+            {/* Gradient Overlay */}
+            <div
+              className="absolute inset-0 z-10"
+              style={{
+                background: 'linear-gradient(135deg, rgba(32, 18, 22, 0.4) 0%, rgba(150, 42, 72, 0.5) 100%)',
+              }}
+            />
+            <Image
+              src={heroBannerImage}
+              alt={t('heroImageAlt')}
+              fill
+              className="object-cover object-center"
+              priority
+              placeholder="blur"
+              sizes="100vw"
+              quality={60}
+            />
+          </div>
 
-        {/* Hero Content */}
-        <div className="relative z-20 w-full max-w-4xl px-4 text-center">
-          <h1 className="font-display text-4xl md:text-5xl lg:text-7xl font-light text-white mb-6 leading-[1.08] tracking-tight drop-shadow-sm">
-            {t.rich('heroTitle', {
-              strong: (chunks) => <strong className="font-bold">{chunks}</strong>,
-              em: (chunks) => <em className="text-gold-300">{chunks}</em>,
-            })}
-          </h1>
-          <p className="text-lg md:text-xl text-white/90 mb-10 max-w-2xl mx-auto font-medium drop-shadow-sm">
-            {t('heroSubtitle')}
-          </p>
+          {/* Hero Content */}
+          <div className="relative z-20 w-full max-w-4xl px-4 text-center">
+            <h1 className="font-display text-4xl md:text-5xl lg:text-7xl font-light text-white mb-6 leading-[1.08] tracking-tight drop-shadow-sm">
+              {t.rich('heroTitle', {
+                strong: (chunks) => <strong className="font-bold">{chunks}</strong>,
+                em: (chunks) => <em className="text-gold-300">{chunks}</em>,
+              })}
+            </h1>
+            <p className="text-lg md:text-xl text-white/90 mb-10 max-w-2xl mx-auto font-medium drop-shadow-sm">
+              {t('heroSubtitle')}
+            </p>
 
-          {/* Search Bar */}
-          <HeroSearchBar />
-        </div>
-      </section>
+            {/* Search Bar */}
+            <HeroSearchBar />
+          </div>
+        </section>
 
-      <main id="main-content" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-24">
         {/* Popular Experiences Section */}
         <FadeIn>
           <PopularExperiences experiences={featuredExperiences} />
@@ -160,6 +161,7 @@ export default async function Home({ params }: Props) {
         {/* Health Status (for development) */}
         <div className="mt-8 flex justify-center">
           <HealthStatus />
+        </div>
         </div>
       </main>
       <Footer />
