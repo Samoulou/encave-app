@@ -6,7 +6,6 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { useTranslations } from 'next-intl';
 import { Navigation } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { env } from '@/lib/env';
 import type { MapWinery } from './types';
 
 // Valais, Switzerland center
@@ -41,7 +40,7 @@ export function InteractiveMap({
   const [isLocating, setIsLocating] = useState(false);
   const [mapError, setMapError] = useState(false);
 
-  const token = env.NEXT_PUBLIC_MAPBOX_TOKEN;
+  const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
   // Build GeoJSON from wineries
   const geojson = useGeoJSON(wineries);
