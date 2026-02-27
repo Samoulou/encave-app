@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import Image from 'next/image';
 import { Link } from '@/i18n/navigation';
+import heroBannerImage from '@/../public/images/herobanner-image.jpg';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { HealthStatus } from '@/components/shared/HealthStatus';
@@ -77,11 +78,12 @@ export default async function Home({ params }: Props) {
             }}
           />
           <Image
-            src="/images/herobanner-image.jpg"
+            src={heroBannerImage}
             alt={t('heroImageAlt')}
             fill
             className="object-cover object-center"
             priority
+            placeholder="blur"
             sizes="100vw"
             quality={60}
           />
