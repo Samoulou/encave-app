@@ -22,6 +22,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { AuthPageLayout } from './AuthPageLayout';
 import { cn } from '@/lib/utils';
+import registerImage from '@/../public/images/register-image.jpg';
 
 export function RegisterForm() {
   const router = useRouter();
@@ -98,7 +99,7 @@ export function RegisterForm() {
 
   return (
     <AuthPageLayout
-      imageUrl="https://images.unsplash.com/photo-1523531294919-4bcd7c65e216?q=80&w=1920&auto=format&fit=crop"
+      imageUrl={registerImage}
       imageAlt={t('imageAlt')}
       heroTitle={t('heroTitle')}
       heroSubtitle={t('heroSubtitle')}
