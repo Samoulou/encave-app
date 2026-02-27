@@ -28,9 +28,7 @@ interface ExperiencePageProps {
 
 export async function generateStaticParams() {
   const slugs = await getAllPublishedExperienceSlugs();
-  return locales.flatMap((locale) =>
-    slugs.map((slug) => ({ locale, slug }))
-  );
+  return locales.flatMap((locale) => slugs.map((slug) => ({ locale, slug })));
 }
 
 export async function generateMetadata({
@@ -64,7 +62,10 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
 
   // SEO-002: Calculate next available date from availability slots
   const getNextAvailableDate = () => {
-    if (!experience.availabilitySlots || experience.availabilitySlots.length === 0) {
+    if (
+      !experience.availabilitySlots ||
+      experience.availabilitySlots.length === 0
+    ) {
       return null;
     }
 
@@ -127,13 +128,14 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
         addressRegion: 'Valais',
         addressCountry: 'CH',
       },
-      ...((experience.latitude || experience.winery.latitude) && (experience.longitude || experience.winery.longitude) && {
-        geo: {
-          '@type': 'GeoCoordinates',
-          latitude: experience.latitude || experience.winery.latitude,
-          longitude: experience.longitude || experience.winery.longitude,
-        },
-      }),
+      ...((experience.latitude || experience.winery.latitude) &&
+        (experience.longitude || experience.winery.longitude) && {
+          geo: {
+            '@type': 'GeoCoordinates',
+            latitude: experience.latitude || experience.winery.latitude,
+            longitude: experience.longitude || experience.winery.longitude,
+          },
+        }),
     },
     offers: {
       '@type': 'Offer',
@@ -163,14 +165,14 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-background-light">
+    <div className="bg-background-light min-h-screen">
       <Header />
       <JsonLd data={eventSchema} />
 
-      <main className="flex-grow w-full pb-24 lg:pb-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="w-full flex-grow pb-24 lg:pb-8">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           {/* Breadcrumbs */}
-          <nav className="flex items-center text-sm mb-6 overflow-x-auto whitespace-nowrap">
+          <nav className="mb-6 flex items-center overflow-x-auto whitespace-nowrap text-sm">
             <Breadcrumb items={breadcrumbItems} baseUrl={baseUrl} />
           </nav>
 
@@ -183,9 +185,9 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
           />
 
           {/* Two Column Layout — gallery + booking widget side by side */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 relative">
+          <div className="relative grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
             {/* Left Column: Gallery + Details + Related (8 cols) */}
-            <div className="lg:col-span-8 flex flex-col gap-10">
+            <div className="flex flex-col gap-10 lg:col-span-8">
               {/* Image Gallery */}
               <ExperienceDetailGallery
                 coverPhoto={experience.coverPhoto}
@@ -208,6 +210,7 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
                 address={experience.address || experience.winery.address}
                 commune={experience.city || experience.winery.commune}
                 wineryName={experience.winery.name}
+                winerySlug={experience.winery.slug}
                 latitude={experience.latitude || experience.winery.latitude}
                 longitude={experience.longitude || experience.winery.longitude}
               />
@@ -223,7 +226,7 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
             </div>
 
             {/* Right Column: Sticky Booking Widget (4 cols) */}
-            <div className="lg:col-span-4 relative hidden lg:block">
+            <div className="relative hidden lg:col-span-4 lg:block">
               <BookingWidget
                 price={experience.price}
                 experienceSlug={experience.slug}
@@ -258,13 +261,16 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
 function RelatedExperiencesSkeleton() {
   return (
     <div className="mt-16">
-      <Skeleton className="h-8 w-48 mb-6" />
+      <Skeleton className="mb-6 h-8 w-48" />
       <div className="grid gap-6 md:grid-cols-3">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="overflow-hidden rounded-xl bg-white shadow-warm">
+          <div
+            key={i}
+            className="overflow-hidden rounded-xl bg-white shadow-warm"
+          >
             <Skeleton className="h-48 w-full" />
             <div className="p-5">
-              <Skeleton className="h-5 w-3/4 mb-2" />
+              <Skeleton className="mb-2 h-5 w-3/4" />
               <Skeleton className="h-4 w-1/2" />
             </div>
           </div>

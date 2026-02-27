@@ -1161,7 +1161,18 @@
     "discover": "Discover",
     "allCommunes": "All communes",
     "emptyDescription": "We're working with local winemakers to bring you amazing experiences. Check back soon!",
-    "heroImageAlt": "Vineyards in Valais, Switzerland"
+    "heroImageAlt": "Vineyards in Valais, Switzerland",
+    "mapView": "Map",
+    "gridView": "Grid",
+    "myLocation": "My location",
+    "viewWinery": "View winery",
+    "experienceCount": "{count} {count, plural, =1 {experience} other {experiences}}",
+    "clusterCount": "{count} wineries",
+    "locationOnMap": "Location on map",
+    "getDirections": "Get directions",
+    "mapLoadError": "Unable to load the map",
+    "locationDenied": "Location access was denied",
+    "locating": "Locating..."
   },
   "onboarding": {
     "step": "Step {current} of {total}"

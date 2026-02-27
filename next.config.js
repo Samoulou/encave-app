@@ -19,6 +19,8 @@ const securityHeaders = [
       "frame-ancestors 'self'",
       "form-action 'self'",
       "base-uri 'self'",
+      "worker-src 'self' blob:",
+      "child-src 'self' blob:",
       "object-src 'none'",
     ].join('; '),
   },
@@ -44,7 +46,7 @@ const securityHeaders = [
   },
   {
     key: 'Permissions-Policy',
-    value: 'geolocation=(), microphone=(), camera=()',
+    value: 'geolocation=(self), microphone=(), camera=()',
   },
 ];
 

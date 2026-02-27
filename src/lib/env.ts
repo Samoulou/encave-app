@@ -55,6 +55,9 @@ const envSchema = z.object({
   NEXT_PUBLIC_POSTHOG_KEY: z.string().optional(),
   NEXT_PUBLIC_POSTHOG_HOST: z.string().url().optional(),
 
+  // Mapbox
+  NEXT_PUBLIC_MAPBOX_TOKEN: z.string().optional(),
+
   // Analytics (Vercel)
   NEXT_PUBLIC_VERCEL_ANALYTICS_ID: z.string().optional(),
 
