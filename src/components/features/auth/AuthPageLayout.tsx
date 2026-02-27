@@ -1,13 +1,13 @@
 'use client';
 
-import Link from 'next/link';
-import Image from 'next/image';
+import { Link } from '@/i18n/navigation';
+import Image, { type StaticImageData } from 'next/image';
 import { Wine, MapPin } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 interface AuthPageLayoutProps {
   children: React.ReactNode;
-  imageUrl: string;
+  imageUrl: string | StaticImageData;
   imageAlt: string;
   heroTitle?: string;
   heroSubtitle?: string;
@@ -27,13 +27,17 @@ export function AuthPageLayout({
   return (
     <div className="flex min-h-screen flex-col md:flex-row overflow-hidden">
       {/* Left Panel - Image (hidden on mobile, shown as header on mobile) */}
-      <div className="relative hidden lg:flex w-1/2 lg:w-[55%] h-screen bg-slate-900 overflow-hidden">
+      <div className="relative hidden lg:flex w-1/2 lg:w-[55%] h-screen bg-[#2a1a1f] overflow-hidden">
         <Image
           src={imageUrl}
           alt={imageAlt}
           fill
           className="object-cover transition-transform duration-[20s] ease-out hover:scale-105"
           priority
+          sizes="55vw"
+          quality={75}
+          placeholder="blur"
+          blurDataURL={typeof imageUrl === 'string' ? 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzJhMWExZiIvPjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjOTYyYTQ4IiBvcGFjaXR5PSIwLjMiLz48L3N2Zz4=' : undefined}
         />
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
@@ -58,12 +62,16 @@ export function AuthPageLayout({
       </div>
 
       {/* Mobile Header Image (shown only on small screens) */}
-      <div
-        className="lg:hidden h-48 w-full bg-cover bg-center relative"
-        style={{ backgroundImage: `url("${imageUrl}")` }}
-        role="img"
-        aria-label={imageAlt}
-      >
+      <div className="lg:hidden h-48 w-full relative overflow-hidden">
+        <Image
+          src={imageUrl}
+          alt={imageAlt}
+          fill
+          className="object-cover object-center"
+          sizes="100vw"
+          quality={60}
+          {...(typeof imageUrl !== 'string' ? { placeholder: 'blur' } : {})}
+        />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#f8f6f6]" />
       </div>
 
