@@ -10,27 +10,34 @@ import { formatDistance } from '@/lib/geo-utils';
 import { useTranslations } from 'next-intl';
 import type { ExperienceType } from '@prisma/client';
 
-interface ExperienceCardProps {
-  experience: {
-    id: string;
-    title: string;
+export interface ExperienceCardData {
+  id: string;
+  title: string;
+  slug: string;
+  type: ExperienceType;
+  duration: number;
+  price: number;
+  maxCapacity?: number;
+  coverPhoto: string;
+  winery: {
+    name: string;
     slug: string;
-    type: ExperienceType;
-    duration: number;
-    price: number;
-    maxCapacity: number;
-    coverPhoto: string;
-    winery: {
-      name: string;
-      slug: string;
-      commune: string;
-    };
-    distance?: number | null;
+    commune: string;
   };
-  className?: string;
+  distance?: number | null;
 }
 
-export function ExperienceCard({ experience, className }: ExperienceCardProps) {
+interface ExperienceCardProps {
+  experience: ExperienceCardData;
+  className?: string;
+  priority?: boolean;
+}
+
+export function ExperienceCard({
+  experience,
+  className,
+  priority = false,
+}: ExperienceCardProps) {
   const t = useTranslations('experience');
   const tCommon = useTranslations('common');
 
@@ -45,7 +52,6 @@ export function ExperienceCard({ experience, className }: ExperienceCardProps) {
     }
     return t('durationMinutes', { count: minutes });
   };
-
 
   return (
     <Link
@@ -62,6 +68,8 @@ export function ExperienceCard({ experience, className }: ExperienceCardProps) {
             fill
             className="object-cover transition-transform duration-500 ease-premium group-hover:scale-105"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            priority={priority}
+            loading={priority ? 'eager' : 'lazy'}
           />
           {/* Subtle gradient overlay for depth */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-transparent transition-opacity duration-300 group-hover:from-black/25" />
@@ -76,12 +84,18 @@ export function ExperienceCard({ experience, className }: ExperienceCardProps) {
         {/* Content */}
         <CardContent className="flex flex-col flex-1 p-5">
           {/* Winery Name */}
-          <p className="text-sm font-medium text-burgundy-600" data-testid="winery-name">
+          <p
+            className="text-sm font-medium text-burgundy-600"
+            data-testid="winery-name"
+          >
             {experience.winery.name}
           </p>
 
           {/* Title */}
-          <h3 className="mt-1 font-display text-lg font-semibold text-slate-900 line-clamp-2 group-hover:text-burgundy-700 transition-colors" data-testid="experience-title">
+          <h3
+            className="mt-1 font-display text-lg font-semibold text-slate-900 line-clamp-2 group-hover:text-burgundy-700 transition-colors"
+            data-testid="experience-title"
+          >
             {experience.title}
           </h3>
 
@@ -101,22 +115,32 @@ export function ExperienceCard({ experience, className }: ExperienceCardProps) {
 
           {/* Meta Info */}
           <div className="mt-3 flex items-center gap-4 text-sm text-slate-600">
-            <span className="flex items-center gap-1" data-testid="experience-duration">
+            <span
+              className="flex items-center gap-1"
+              data-testid="experience-duration"
+            >
               <Clock className="h-4 w-4" aria-hidden="true" />
               {formatDuration(experience.duration)}
             </span>
-            <span className="flex items-center gap-1">
-              <Users className="h-4 w-4" aria-hidden="true" />
-              {t('upTo', { count: experience.maxCapacity })}
-            </span>
+            {experience.maxCapacity != null && (
+              <span className="flex items-center gap-1">
+                <Users className="h-4 w-4" aria-hidden="true" />
+                {t('upTo', { count: experience.maxCapacity })}
+              </span>
+            )}
           </div>
 
           {/* Price — pinned to bottom */}
           <div className="mt-auto pt-4 flex items-center justify-between">
-            <span className="text-lg font-semibold text-slate-900" data-testid="experience-price">
+            <span
+              className="text-lg font-semibold text-slate-900"
+              data-testid="experience-price"
+            >
               {formatCHF(experience.price)}
             </span>
-            <span className="text-sm text-slate-500">{tCommon('currency.perPerson')}</span>
+            <span className="text-sm text-slate-500">
+              {tCommon('currency.perPerson')}
+            </span>
           </div>
         </CardContent>
       </Card>

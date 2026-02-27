@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
-import { ExperienceCard } from '@/components/features/search/ExperienceCard';
+import { ExperienceCard } from '@/components/features/experience/ExperienceCard';
 
 const mockExperience = {
   id: 'exp-1',
