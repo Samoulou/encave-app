@@ -13,7 +13,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' https: data: blob:",
       "font-src 'self' https: data:",
-      "connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://*.vercel-insights.com https://*.vercel-analytics.com https://*.ingest.sentry.io https://eu.posthog.com https://eu.i.posthog.com",
+      "connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://*.vercel-insights.com https://*.vercel-analytics.com https://*.ingest.sentry.io https://eu.posthog.com https://eu.i.posthog.com https://api.mapbox.com https://*.tiles.mapbox.com https://events.mapbox.com",
       'frame-src https://js.stripe.com https://hooks.stripe.com https://www.openstreetmap.org',
       "frame-ancestors 'self'",
       "form-action 'self'",
@@ -43,7 +43,7 @@ const securityHeaders = [
   },
   {
     key: 'Permissions-Policy',
-    value: 'geolocation=(), microphone=(), camera=()',
+    value: 'geolocation=(self), microphone=(), camera=()',
   },
 ];
 
