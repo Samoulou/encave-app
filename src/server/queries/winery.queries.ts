@@ -12,6 +12,11 @@ export const getVerifiedWineries = unstable_cache(
         status: 'VERIFIED',
         ...(commune && { commune }),
       },
+      include: {
+        _count: {
+          select: { experiences: { where: { status: 'PUBLISHED' } } },
+        },
+      },
       orderBy: { name: 'asc' },
     });
   },

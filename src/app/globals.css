@@ -92,7 +92,7 @@ body {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background font-sans text-foreground;
   }
 
   /* Premium focus ring - primary accent */
@@ -187,18 +187,41 @@ body {
   }
 }
 
+/* Mapbox popup overrides — strip default chrome */
+.mapboxgl-popup-content {
+  padding: 0 !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 4px 20px rgba(122, 27, 59, 0.12) !important;
+  overflow: hidden;
+}
+
+.mapboxgl-popup-close-button {
+  font-size: 18px;
+  padding: 4px 8px;
+  color: #64748b;
+  right: 4px;
+  top: 4px;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 4px;
+}
+
+.mapboxgl-popup-close-button:hover {
+  color: #1e293b;
+  background-color: #f1f5f9;
+}
+
+.mapboxgl-popup-tip {
+  border-top-color: #fff !important;
+}
+
 /* NProgress Navigation Progress Bar */
 #nprogress {
   pointer-events: none;
 }
 
 #nprogress .bar {
-  background: linear-gradient(
-    90deg,
-    #962a48 0%,
-    #732040 50%,
-    #962a48 100%
-  );
+  background: linear-gradient(90deg, #962a48 0%, #732040 50%, #962a48 100%);
   position: fixed;
   z-index: 9999;
   top: 0;
@@ -214,7 +237,9 @@ body {
   right: 0;
   width: 100px;
   height: 100%;
-  box-shadow: 0 0 10px #962a48, 0 0 5px #962a48;
+  box-shadow:
+    0 0 10px #962a48,
+    0 0 5px #962a48;
   opacity: 1;
   transform: rotate(3deg) translate(0px, -4px);
 }

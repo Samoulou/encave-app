@@ -1161,7 +1161,18 @@
     "discover": "Entdecken",
     "allCommunes": "Alle Gemeinden",
     "emptyDescription": "Wir arbeiten mit lokalen Winzern zusammen, um Ihnen grossartige Erlebnisse zu bieten. Schauen Sie bald wieder vorbei!",
-    "heroImageAlt": "Weinberge im Wallis, Schweiz"
+    "heroImageAlt": "Weinberge im Wallis, Schweiz",
+    "mapView": "Karte",
+    "gridView": "Raster",
+    "myLocation": "Mein Standort",
+    "viewWinery": "Weingut ansehen",
+    "experienceCount": "{count} {count, plural, =1 {Erlebnis} other {Erlebnisse}}",
+    "clusterCount": "{count} Weingüter",
+    "locationOnMap": "Standort auf der Karte",
+    "getDirections": "Route berechnen",
+    "mapLoadError": "Karte konnte nicht geladen werden",
+    "locationDenied": "Standortzugriff wurde verweigert",
+    "locating": "Standort wird ermittelt..."
   },
   "onboarding": {
     "step": "Schritt {current} von {total}"

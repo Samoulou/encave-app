@@ -1161,7 +1161,18 @@
     "discover": "Découvrir",
     "allCommunes": "Toutes les communes",
     "emptyDescription": "Nous travaillons avec les vignerons locaux pour vous proposer des expériences incroyables. Revenez bientôt !",
-    "heroImageAlt": "Vignobles en Valais, Suisse"
+    "heroImageAlt": "Vignobles en Valais, Suisse",
+    "mapView": "Carte",
+    "gridView": "Grille",
+    "myLocation": "Ma position",
+    "viewWinery": "Voir le domaine",
+    "experienceCount": "{count} {count, plural, =1 {expérience} other {expériences}}",
+    "clusterCount": "{count} domaines",
+    "locationOnMap": "Localisation sur la carte",
+    "getDirections": "Itinéraire",
+    "mapLoadError": "Impossible de charger la carte",
+    "locationDenied": "L'accès à la localisation a été refusé",
+    "locating": "Localisation..."
   },
   "onboarding": {
     "step": "Étape {current} sur {total}"
