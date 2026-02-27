@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/form';
 import { AuthPageLayout } from './AuthPageLayout';
 import { SocialLoginButtons } from './SocialLoginButtons';
+import loginImage from '@/../public/images/login-image.jpg';
 
 /**
  * Validate returnUrl to prevent open redirect attacks
@@ -105,7 +106,7 @@ export function LoginForm() {
 
   return (
     <AuthPageLayout
-      imageUrl="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=1920&auto=format&fit=crop"
+      imageUrl={loginImage}
       imageAlt={t('imageAlt')}
       heroTitle={t('heroTitle')}
       heroSubtitle={t('heroSubtitle')}
