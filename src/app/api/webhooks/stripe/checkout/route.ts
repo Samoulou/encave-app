@@ -11,6 +11,7 @@ import {
   sendWinemakerNewBookingEmail,
 } from '@/server/services/email.service';
 import { logError, logInfo } from '@/lib/logger';
+import { getPostHogServer } from '@/lib/posthog';
 
 export async function POST(req: Request) {
   if (!isStripeConfigured()) {
@@ -37,10 +38,7 @@ export async function POST(req: Request) {
 
   if (!signature) {
     logError('Missing stripe-signature header');
-    return NextResponse.json(
-      { error: 'Missing signature' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'Missing signature' }, { status: 400 });
   }
 
   let event: Stripe.Event;
@@ -50,7 +48,9 @@ export async function POST(req: Request) {
   } catch (err) {
     logError('Webhook signature verification failed', err);
     return NextResponse.json(
-      { error: `Webhook Error: ${err instanceof Error ? err.message : 'Unknown error'}` },
+      {
+        error: `Webhook Error: ${err instanceof Error ? err.message : 'Unknown error'}`,
+      },
       { status: 400 }
     );
   }
@@ -129,7 +129,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   // Already confirmed - skip (idempotency)
   if (booking.status === BookingStatus.CONFIRMED) {
-    logInfo('Booking already confirmed, skipping', { bookingRef: booking.reference });
+    logInfo('Booking already confirmed, skipping', {
+      bookingRef: booking.reference,
+    });
     return;
   }
 
@@ -145,7 +147,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   // Generate secure access token for email link
   // Store only the hash for security - the plaintext token is sent in emails
   const accessToken = crypto.randomBytes(32).toString('hex');
-  const accessTokenHash = crypto.createHash('sha256').update(accessToken).digest('hex');
+  const accessTokenHash = crypto
+    .createHash('sha256')
+    .update(accessToken)
+    .digest('hex');
 
   // Update booking to confirmed
   // Note: We only store the hash, not the plaintext token (SEC-002 fix)
@@ -161,6 +166,30 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   logInfo('Booking confirmed via webhook', { bookingRef: booking.reference });
 
+  // Track booking completion in PostHog (server-side)
+  const posthogServer = getPostHogServer();
+  if (posthogServer) {
+    posthogServer.capture({
+      distinctId: booking.visitorEmail,
+      event: 'booking_completed',
+      properties: {
+        booking_id: booking.id,
+        booking_reference: booking.reference,
+        experience_id: booking.experienceId,
+        experience_title: booking.experience.title,
+        winery_id: booking.wineryId,
+        winery_name: booking.winery.name,
+        date: booking.date.toISOString(),
+        time_slot: booking.timeSlot,
+        guest_count: booking.guestCount,
+        total_price_chf: booking.totalPrice / 100,
+        platform_fee_chf: booking.platformFee / 100,
+        winery_payout_chf: booking.wineryPayout / 100,
+      },
+    });
+    await posthogServer.flush();
+  }
+
   // Combine date and timeSlot for email formatting
   const [hours, minutes] = booking.timeSlot.split(':').map(Number);
   const bookingDateTime = new Date(booking.date);
@@ -168,19 +197,16 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   // Send confirmation email to visitor
   try {
-    await sendBookingConfirmationEmail(
-      booking.visitorEmail,
-      {
-        guestName: booking.visitorName,
-        experienceTitle: booking.experience.title,
-        wineryName: booking.winery.name,
-        date: bookingDateTime,
-        guestCount: booking.guestCount,
-        duration: booking.experience.duration,
-        totalPrice: booking.totalPrice,
-        bookingRef: booking.reference,
-      }
-    );
+    await sendBookingConfirmationEmail(booking.visitorEmail, {
+      guestName: booking.visitorName,
+      experienceTitle: booking.experience.title,
+      wineryName: booking.winery.name,
+      date: bookingDateTime,
+      guestCount: booking.guestCount,
+      duration: booking.experience.duration,
+      totalPrice: booking.totalPrice,
+      bookingRef: booking.reference,
+    });
 
     // Update confirmation sent timestamp
     await db.booking.update({
@@ -188,7 +214,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       data: { confirmationSentAt: new Date() },
     });
 
-    logInfo('Confirmation email sent', { to: booking.visitorEmail, bookingRef: booking.reference });
+    logInfo('Confirmation email sent', {
+      to: booking.visitorEmail,
+      bookingRef: booking.reference,
+    });
   } catch (error) {
     logError('Failed to send confirmation email', error, { bookingId });
     // Don't throw - booking is still confirmed, email failure is not critical
@@ -217,7 +246,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       data: { wineryNotifiedAt: new Date() },
     });
 
-    logInfo('Winery notification sent', { to: booking.winery.email, bookingRef: booking.reference });
+    logInfo('Winery notification sent', {
+      to: booking.winery.email,
+      bookingRef: booking.reference,
+    });
   } catch (error) {
     logError('Failed to send winery notification', error, { bookingId });
     // Don't throw - booking is still confirmed
@@ -260,5 +292,7 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
     where: { id: bookingId },
   });
 
-  logInfo('Booking deleted due to checkout session expiry', { bookingRef: booking.reference });
+  logInfo('Booking deleted due to checkout session expiry', {
+    bookingRef: booking.reference,
+  });
 }

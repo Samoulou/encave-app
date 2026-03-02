@@ -1,6 +1,6 @@
 'use client';
 
-import { ExperienceCard } from './ExperienceCard';
+import { ExperienceCard } from '@/components/features/experience/ExperienceCard';
 import {
   Select,
   SelectContent,

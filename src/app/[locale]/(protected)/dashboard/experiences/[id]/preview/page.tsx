@@ -185,6 +185,7 @@ export default function ExperiencePreviewPage() {
               address={experience.winery.address}
               commune={experience.winery.commune}
               wineryName={experience.winery.name}
+              winerySlug={experience.winery.slug}
               latitude={experience.winery.latitude}
               longitude={experience.winery.longitude}
             />

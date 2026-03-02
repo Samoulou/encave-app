@@ -1,3 +1,4 @@
+const { withSentryConfig } = require('@sentry/nextjs');
 const createNextIntlPlugin = require('next-intl/plugin');
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
@@ -22,12 +23,13 @@ if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
 }
 
 // Security headers configuration (SEC-003)
+const isDev = process.env.NODE_ENV === 'development';
 const securityHeaders = [
   {
     key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://va.vercel-scripts.com",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://va.vercel-scripts.com https://eu.posthog.com https://eu-assets.i.posthog.com",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' https: data: blob:",
       "font-src 'self' https: data:",
@@ -36,6 +38,8 @@ const securityHeaders = [
       "frame-ancestors 'self'",
       "form-action 'self'",
       "base-uri 'self'",
+      "worker-src 'self' blob:",
+      "child-src 'self' blob:",
       "object-src 'none'",
     ].join('; '),
   },
@@ -61,7 +65,7 @@ const securityHeaders = [
   },
   {
     key: 'Permissions-Policy',
-    value: 'geolocation=(), microphone=(), camera=()',
+    value: 'geolocation=(self), microphone=(), camera=()',
   },
 ];
 
@@ -98,4 +102,28 @@ const nextConfig = {
   },
 };
 
-module.exports = withNextIntl(nextConfig);
+module.exports = withSentryConfig(withNextIntl(nextConfig), {
+  // Suppress source maps upload logs during build
+  silent: !process.env.CI,
+
+  // Upload source maps to Sentry for readable stack traces
+  // SENTRY_AUTH_TOKEN, SENTRY_ORG, SENTRY_PROJECT must be set in Vercel env
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+
+  // Hide source maps from the client bundle (security)
+  hideSourceMaps: true,
+
+  // Route browser Sentry requests through a Next.js rewrite to avoid ad-blockers
+  tunnelRoute: '/monitoring',
+
+  // Webpack-specific Sentry options
+  webpack: {
+    autoInstrumentServerFunctions: true,
+    autoInstrumentMiddleware: true,
+    autoInstrumentAppDirectory: true,
+    treeshake: {
+      removeDebugLogging: true,
+    },
+  },
+});

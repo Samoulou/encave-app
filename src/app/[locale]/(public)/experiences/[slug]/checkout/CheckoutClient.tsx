@@ -6,6 +6,8 @@ import { useTranslations, useLocale } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import * as Sentry from '@sentry/nextjs';
+import posthog from 'posthog-js';
 import { Loader2, AlertCircle, RefreshCw, Users, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -14,7 +16,10 @@ import { ContactDetailsSection } from '@/components/features/checkout/ContactDet
 import { OrderSummary } from '@/components/features/checkout/OrderSummary';
 import { MobileOrderSummary } from '@/components/features/checkout/MobileOrderSummary';
 import { TrustBadges } from '@/components/features/checkout/TrustBadges';
-import { checkAvailability, type ExperienceForBooking } from '@/server/actions/booking';
+import {
+  checkAvailability,
+  type ExperienceForBooking,
+} from '@/server/actions/booking';
 import { createBookingAndCheckout } from '@/server/actions/checkout';
 import { formatCHF } from '@/lib/utils/currency';
 
@@ -62,10 +67,48 @@ export function CheckoutClient({
 
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  // Set Sentry booking context for all errors on this page
+  useEffect(() => {
+    Sentry.setContext('booking', {
+      experienceId: experience.id,
+      experienceTitle: experience.title,
+      wineryId: experience.winery.id,
+      slug,
+      date,
+      timeSlot: time,
+      guestCount,
+      totalPriceCHF: (experience.price * guestCount) / 100,
+    });
+
+    return () => {
+      Sentry.setContext('booking', null);
+    };
+  }, [experience, slug, date, time, guestCount]);
+
+  // Track payment failure from Stripe redirect (cancelled or failed)
+  useEffect(() => {
+    if (paymentError) {
+      posthog.capture('booking_payment_failed', {
+        experience_id: experience.id,
+        experience_slug: slug,
+        winery_id: experience.winery.id,
+        date,
+        time_slot: time,
+        guest_count: guestCount,
+        total_price_chf: (experience.price * guestCount) / 100,
+        error_type: paymentError,
+      });
+    }
+  }, [paymentError, experience, slug, date, time, guestCount]);
+
   // BUG-003 & BUG-013: Availability state
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
-  const [remainingCapacity, setRemainingCapacity] = useState<number | null>(null);
-  const [availabilityError, setAvailabilityError] = useState<string | null>(null);
+  const [remainingCapacity, setRemainingCapacity] = useState<number | null>(
+    null
+  );
+  const [availabilityError, setAvailabilityError] = useState<string | null>(
+    null
+  );
   const [capacityExceeded, setCapacityExceeded] = useState(false);
 
   // Ref for interval cleanup
@@ -80,45 +123,52 @@ export function CheckoutClient({
   });
 
   // BUG-003 & BUG-013: Check availability function
-  const validateAvailability = useCallback(async (showLoading = true) => {
-    if (showLoading) {
-      setIsCheckingAvailability(true);
-    }
-    setAvailabilityError(null);
-
-    try {
-      const result = await checkAvailability({
-        experienceId: experience.id,
-        date,
-        timeSlot: time,
-      });
-
-      if (result.success) {
-        setRemainingCapacity(result.data.remainingCapacity);
-
-        // Check if capacity is now exceeded
-        if (guestCount > result.data.remainingCapacity) {
-          setCapacityExceeded(true);
-        } else {
-          setCapacityExceeded(false);
-        }
-
-        // If no capacity at all, redirect back to experience page
-        if (result.data.remainingCapacity === 0) {
-          router.push(`/${locale}/experiences/${slug}?error=no_availability&date=${date}&time=${time}`);
-          return;
-        }
-      } else {
-        setAvailabilityError(result.error.message);
-      }
-    } catch {
-      setAvailabilityError('Failed to verify availability. Please try again.');
-    } finally {
+  const validateAvailability = useCallback(
+    async (showLoading = true) => {
       if (showLoading) {
-        setIsCheckingAvailability(false);
+        setIsCheckingAvailability(true);
       }
-    }
-  }, [date, time, guestCount, slug, router, locale, experience.id]);
+      setAvailabilityError(null);
+
+      try {
+        const result = await checkAvailability({
+          experienceId: experience.id,
+          date,
+          timeSlot: time,
+        });
+
+        if (result.success) {
+          setRemainingCapacity(result.data.remainingCapacity);
+
+          // Check if capacity is now exceeded
+          if (guestCount > result.data.remainingCapacity) {
+            setCapacityExceeded(true);
+          } else {
+            setCapacityExceeded(false);
+          }
+
+          // If no capacity at all, redirect back to experience page
+          if (result.data.remainingCapacity === 0) {
+            router.push(
+              `/${locale}/experiences/${slug}?error=no_availability&date=${date}&time=${time}`
+            );
+            return;
+          }
+        } else {
+          setAvailabilityError(result.error.message);
+        }
+      } catch {
+        setAvailabilityError(
+          'Failed to verify availability. Please try again.'
+        );
+      } finally {
+        if (showLoading) {
+          setIsCheckingAvailability(false);
+        }
+      }
+    },
+    [date, time, guestCount, slug, router, locale, experience.id]
+  );
 
   // BUG-003: Validate availability on mount
   useEffect(() => {
@@ -145,6 +195,16 @@ export function CheckoutClient({
 
   const onSubmit = async (data: CheckoutFormData) => {
     setSubmitError(null);
+
+    posthog.capture('booking_payment_initiated', {
+      experience_id: experience.id,
+      experience_slug: slug,
+      winery_id: experience.winery.id,
+      date,
+      time_slot: time,
+      guest_count: guestCount,
+      total_price_chf: (experience.price * guestCount) / 100,
+    });
 
     try {
       const result = await createBookingAndCheckout({
@@ -173,11 +233,11 @@ export function CheckoutClient({
   const totalPrice = experience.price * guestCount;
 
   return (
-    <div className="w-full px-4 md:px-10 py-10">
+    <div className="w-full px-4 py-10 md:px-10">
       <div className="mx-auto max-w-7xl">
         {/* Page Heading */}
         <div className="mb-8">
-          <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-2">
+          <h1 className="mb-2 font-display text-3xl font-bold text-foreground md:text-4xl">
             {t('pageTitle')}
           </h1>
           <p className="text-[#915564]">{t('pageSubtitle')}</p>
@@ -188,7 +248,9 @@ export function CheckoutClient({
           <Alert variant="destructive" className="mb-6">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              {paymentError === 'cancelled' ? t('paymentCancelled') : t('paymentFailed')}
+              {paymentError === 'cancelled'
+                ? t('paymentCancelled')
+                : t('paymentFailed')}
             </AlertDescription>
           </Alert>
         )}
@@ -209,7 +271,7 @@ export function CheckoutClient({
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <>
-                    <RefreshCw className="h-4 w-4 mr-1" />
+                    <RefreshCw className="mr-1 h-4 w-4" />
                     Retry
                   </>
                 )}
@@ -223,10 +285,15 @@ export function CheckoutClient({
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>{t('capacityExceeded')}</AlertTitle>
             <AlertDescription>
-              {t('capacityExceededMessage', { requested: guestCount, available: remainingCapacity })}
+              {t('capacityExceededMessage', {
+                requested: guestCount,
+                available: remainingCapacity,
+              })}
               <div className="mt-3">
                 <Button asChild variant="outline" size="sm">
-                  <Link href={`/${locale}/experiences/${slug}?date=${date}&time=${time}&guests=${remainingCapacity}`}>
+                  <Link
+                    href={`/${locale}/experiences/${slug}?date=${date}&time=${time}&guests=${remainingCapacity}`}
+                  >
                     {t('adjustGuestCount')}
                   </Link>
                 </Button>
@@ -252,7 +319,9 @@ export function CheckoutClient({
             location={experience.winery.commune || 'Valais'}
             date={date}
             time={time}
-            duration={experience.duration ? experience.duration / 60 : undefined}
+            duration={
+              experience.duration ? experience.duration / 60 : undefined
+            }
             guestCount={guestCount}
             pricePerPerson={experience.price}
             serviceFee={0}
@@ -261,9 +330,9 @@ export function CheckoutClient({
 
         {/* Main Grid Layout */}
         <form onSubmit={handleSubmit(onSubmit)} data-testid="checkout-form">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
             {/* Left Column: Contact Form & Payment Button */}
-            <div className="lg:col-span-7 flex flex-col gap-8">
+            <div className="flex flex-col gap-8 lg:col-span-7">
               {/* Contact Details Section */}
               <fieldset disabled={isFormDisabled || isSubmitting}>
                 <ContactDetailsSection
@@ -274,11 +343,16 @@ export function CheckoutClient({
               </fieldset>
 
               {/* Payment Section - Simplified for Stripe redirect */}
-              <section className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-border">
+              <section className="rounded-xl border border-border bg-white p-6 shadow-sm md:p-8">
                 {/* Trust Badge */}
-                <div className="flex items-center justify-center gap-2 p-3 bg-primary-light/50 rounded-lg border border-border mb-6">
-                  <Lock className="h-4 w-4 text-foreground" aria-hidden="true" />
-                  <span className="text-sm font-medium text-foreground">{t('securePaymentStripe')}</span>
+                <div className="mb-6 flex items-center justify-center gap-2 rounded-lg border border-border bg-primary-light/50 p-3">
+                  <Lock
+                    className="h-4 w-4 text-foreground"
+                    aria-hidden="true"
+                  />
+                  <span className="text-sm font-medium text-foreground">
+                    {t('securePaymentStripe')}
+                  </span>
                 </div>
 
                 {/* Submit Error */}
@@ -292,7 +366,7 @@ export function CheckoutClient({
                 <Button
                   type="submit"
                   disabled={isSubmitting || isFormDisabled}
-                  className="w-full bg-primary hover:bg-[hsl(var(--primary-hover))] text-white h-14 rounded-lg font-bold text-lg shadow-lg shadow-primary/20 transition-all group"
+                  className="group h-14 w-full rounded-lg bg-primary text-lg font-bold text-white shadow-lg shadow-primary/20 transition-all hover:bg-[hsl(var(--primary-hover))]"
                 >
                   {isSubmitting ? (
                     <>
@@ -301,9 +375,21 @@ export function CheckoutClient({
                     </>
                   ) : (
                     <>
-                      <span>{t('confirmAndPay', { amount: formatCHF(totalPrice) })}</span>
-                      <svg className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      <span>
+                        {t('confirmAndPay', { amount: formatCHF(totalPrice) })}
+                      </span>
+                      <svg
+                        className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M14 5l7 7m0 0l-7 7m7-7H3"
+                        />
                       </svg>
                     </>
                   )}
@@ -317,7 +403,7 @@ export function CheckoutClient({
             </div>
 
             {/* Right Column: Summary (Sticky) - Desktop Only */}
-            <aside className="hidden lg:block lg:col-span-5">
+            <aside className="hidden lg:col-span-5 lg:block">
               <div className="sticky top-24">
                 <OrderSummary
                   experienceTitle={experience.title}
@@ -325,7 +411,9 @@ export function CheckoutClient({
                   location={experience.winery.commune || 'Valais'}
                   date={date}
                   time={time}
-                  duration={experience.duration ? experience.duration / 60 : undefined}
+                  duration={
+                    experience.duration ? experience.duration / 60 : undefined
+                  }
                   guestCount={guestCount}
                   pricePerPerson={experience.price}
                   serviceFee={0}
@@ -333,11 +421,13 @@ export function CheckoutClient({
 
                 {/* Capacity Status Indicator */}
                 {remainingCapacity !== null && !capacityExceeded && (
-                  <div className="mt-4 p-4 rounded-lg border border-green-200 bg-green-50">
+                  <div className="mt-4 rounded-lg border border-green-200 bg-green-50 p-4">
                     <div className="flex items-center gap-2 text-green-800">
                       <Users className="h-4 w-4" />
                       <span className="text-sm font-medium">
-                        {tBooking('remainingCapacity', { count: remainingCapacity })}
+                        {tBooking('remainingCapacity', {
+                          count: remainingCapacity,
+                        })}
                       </span>
                     </div>
                   </div>
