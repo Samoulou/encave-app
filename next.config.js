@@ -3,6 +3,25 @@ const createNextIntlPlugin = require('next-intl/plugin');
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
+// Build connect-src dynamically so Vercel preview deployments can reach the
+// auth API when NEXT_PUBLIC_BETTER_AUTH_URL differs from the page origin.
+const connectSrc = [
+  "'self'",
+  'https://api.stripe.com',
+  'https://checkout.stripe.com',
+  'https://*.vercel-insights.com',
+  'https://*.vercel-analytics.com',
+  'https://*.ingest.sentry.io',
+];
+
+if (process.env.NEXT_PUBLIC_BETTER_AUTH_URL) {
+  connectSrc.push(process.env.NEXT_PUBLIC_BETTER_AUTH_URL);
+}
+
+if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+  connectSrc.push(`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`);
+}
+
 // Security headers configuration (SEC-003)
 const isDev = process.env.NODE_ENV === 'development';
 const securityHeaders = [
@@ -14,7 +33,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' https: data: blob:",
       "font-src 'self' https: data:",
-      `connect-src 'self'${isDev ? ' http://localhost:*' : ''} https://api.stripe.com https://checkout.stripe.com https://*.vercel-insights.com https://*.vercel-analytics.com https://*.ingest.sentry.io https://eu.posthog.com https://eu.i.posthog.com`,
+      `connect-src ${connectSrc.join(' ')}`,
       'frame-src https://js.stripe.com https://hooks.stripe.com https://www.openstreetmap.org',
       "frame-ancestors 'self'",
       "form-action 'self'",
