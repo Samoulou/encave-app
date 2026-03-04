@@ -16,6 +16,14 @@ function getTrustedOrigins(): string[] {
     origins.push(process.env.BETTER_AUTH_URL);
   }
 
+  // Add custom domain aliases (e.g. encave-dev.vercel.app, encave.ch)
+  if (process.env.NEXT_PUBLIC_BASE_URL) {
+    origins.push(process.env.NEXT_PUBLIC_BASE_URL);
+  }
+  if (process.env.NEXT_PUBLIC_SITE_URL) {
+    origins.push(process.env.NEXT_PUBLIC_SITE_URL);
+  }
+
   // Add Vercel URLs (automatically provided by Vercel)
   if (process.env.VERCEL_URL) {
     origins.push(`https://${process.env.VERCEL_URL}`);
