@@ -94,13 +94,13 @@ export function AuthPageLayout({
           {/* Footer legal links */}
           <div className="mt-12 flex justify-center gap-6 text-xs text-slate-400">
             <Link
-              href="/privacy"
+              href="/legal/privacy"
               className="hover:text-slate-600 transition-colors"
             >
               {t('legal.privacyPolicy')}
             </Link>
             <Link
-              href="/terms"
+              href="/legal/terms"
               className="hover:text-slate-600 transition-colors"
             >
               {t('legal.termsOfService')}
