@@ -2,13 +2,9 @@ import { createAuthClient } from 'better-auth/react';
 
 /**
  * Better Auth client for React components
- * If NEXT_PUBLIC_BETTER_AUTH_URL is not set, Better Auth will use the current origin
+ * Always uses the current page origin so auth API calls are never cross-origin.
  */
-export const authClient = createAuthClient(
-  process.env.NEXT_PUBLIC_BETTER_AUTH_URL
-    ? { baseURL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL }
-    : {}
-);
+export const authClient = createAuthClient();
 
 // Export individual functions for easier imports
 export const { signIn, signUp, signOut, useSession, getSession } = authClient;

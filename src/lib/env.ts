@@ -9,7 +9,6 @@ const envSchema = z.object({
   // BETTER_AUTH_SECRET is required in production
   BETTER_AUTH_SECRET: z.string().min(32).optional(),
   BETTER_AUTH_URL: z.string().url().optional(),
-  NEXT_PUBLIC_BETTER_AUTH_URL: z.string().url().optional(),
 
   // OAuth Providers
   GOOGLE_CLIENT_ID: z.string().optional(),

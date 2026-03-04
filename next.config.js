@@ -3,8 +3,8 @@ const createNextIntlPlugin = require('next-intl/plugin');
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
-// Build connect-src dynamically so Vercel preview deployments can reach the
-// auth API when NEXT_PUBLIC_BETTER_AUTH_URL differs from the page origin.
+// Build connect-src for CSP — auth calls always use same origin so no extra
+// entry is needed for the auth URL.
 const connectSrc = [
   "'self'",
   'https://api.stripe.com',
@@ -13,14 +13,6 @@ const connectSrc = [
   'https://*.vercel-analytics.com',
   'https://*.ingest.sentry.io',
 ];
-
-if (process.env.NEXT_PUBLIC_BETTER_AUTH_URL) {
-  connectSrc.push(process.env.NEXT_PUBLIC_BETTER_AUTH_URL);
-}
-
-if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
-  connectSrc.push(`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`);
-}
 
 // Security headers configuration (SEC-003)
 const isDev = process.env.NODE_ENV === 'development';
