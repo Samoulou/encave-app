@@ -56,3 +56,4 @@ tmpclaude-*
 _bmad/
 _bmad-output/
 .bmad-core/
+.env*.local
