@@ -35,42 +35,42 @@ Ces choix corrigent les divergences entre le backlog d'origine et le code réel 
 
 ### Réservation & paiement
 
-| ID | Titre | Taille | Statut |
-|---|---|---|---|
-| ENC-067 | Cron expiration `PENDING_PAYMENT` après 30 min (libère la capacité) | S | 📋 |
-| ENC-068b | Joindre QR code en PNG à l'email de confirmation (actuellement client-side uniquement) | S | 🔧 |
-| ENC-045 | Annulation événement par encaveur déclenche refund auto + emails | M | 📋 |
+| ID | Titre | Taille | Statut | Spec |
+|---|---|---|---|---|
+| ENC-067 | Cron expiration `PENDING_PAYMENT` après 30 min (libère la capacité) | S | 📋 | [spec](./specs/ENC-067.md) |
+| ENC-068b | Joindre QR code en PNG à l'email de confirmation (actuellement client-side uniquement) | S | 🔧 | [spec](./specs/ENC-068b.md) |
+| ENC-045 | Annulation événement par encaveur déclenche refund auto + emails | M | 📋 | [spec](./specs/ENC-045.md) |
 
 ### Détail événement encaveur (jour-J)
 
-| ID | Titre | Taille | Statut |
-|---|---|---|---|
-| ENC-096 | Page détail événement encaveur (liste des inscrits par session + actions) | M | 📋 |
-| ENC-100 | Page `/dashboard/scan` mobile (caméra + html5-qrcode) | M | 📋 |
-| ENC-101 | Endpoint check-in : ajouter `checkedInAt` au modèle `Booking` + transition CONFIRMED → COMPLETED via scan | S | 📋 |
-| ENC-102 | Liste check-in manuelle sur page détail événement (fallback si pas de caméra) | S | 📋 |
-| ENC-103b | UI "marquer no-show" sur page détail événement (logique back déjà présente dans `booking-dashboard.ts:265`) | S | 🔧 |
+| ID | Titre | Taille | Statut | Spec |
+|---|---|---|---|---|
+| ENC-096 | Page détail événement encaveur (liste des inscrits par session + actions) | M | 📋 | [spec](./specs/ENC-096.md) |
+| ENC-100 | Page `/dashboard/scan` mobile (caméra + html5-qrcode) | M | 📋 | [spec](./specs/ENC-100.md) |
+| ENC-101 | Endpoint check-in : ajouter `checkedInAt` au modèle `Booking` + transition CONFIRMED → COMPLETED via scan | S | 📋 | [spec](./specs/ENC-101.md) |
+| ENC-102 | Liste check-in manuelle sur page détail événement (fallback si pas de caméra) | S | 📋 | [spec](./specs/ENC-102.md) |
+| ENC-103b | UI "marquer no-show" sur page détail événement (logique back déjà présente dans `booking-dashboard.ts:265`) | S | 🔧 | [spec](./specs/ENC-103b.md) |
 
 ### Onboarding & visibilité
 
-| ID | Titre | Taille | Statut |
-|---|---|---|---|
-| ENC-027 | Logique visibilité cave publique (critères : KYC ok + photos min + infos complètes + status VERIFIED) | S | 📋 |
-| ENC-028 | Brancher l'envoi de `WelcomeEmail` au signup encaveur (template existe déjà) | S | 🔧 |
+| ID | Titre | Taille | Statut | Spec |
+|---|---|---|---|---|
+| ENC-027 | Logique visibilité cave publique (critères : KYC ok + photos min + infos complètes + status VERIFIED) | S | 📋 | [spec](./specs/ENC-027.md) |
+| ENC-028 | Brancher l'envoi de `WelcomeEmail` au signup encaveur (template existe déjà) | S | 🔧 | [spec](./specs/ENC-028.md) |
 
 ### Admin SAV
 
-| ID | Titre | Taille | Statut |
-|---|---|---|---|
-| ENC-128 | Action admin : refund manuel d'une booking + log | M | 📋 |
+| ID | Titre | Taille | Statut | Spec |
+|---|---|---|---|---|
+| ENC-128 | Action admin : refund manuel d'une booking + log | M | 📋 | [spec](./specs/ENC-128.md) |
 
 ### Légal & conformité
 
-| ID | Titre | Taille | Statut |
-|---|---|---|---|
-| ENC-133 | Bannière cookies + opt-in PostHog (nLPD) | M | 📋 |
-| ENC-134 | Mention 18+ sur pages event + checkout (obligation alcool Suisse) | S | 📋 |
-| ENC-135 | Endpoint droit à l'oubli nLPD (anonymisation user + bookings) | M | 📋 |
+| ID | Titre | Taille | Statut | Spec |
+|---|---|---|---|---|
+| ENC-133 | Bannière cookies + opt-in PostHog (nLPD) | M | 📋 | [spec](./specs/ENC-133.md) |
+| ENC-134 | Mention 18+ sur pages event + checkout (obligation alcool Suisse) | S | 📋 | [spec](./specs/ENC-134.md) |
+| ENC-135 | Endpoint droit à l'oubli nLPD (anonymisation user + bookings) | M | 📋 | [spec](./specs/ENC-135.md) |
 
 ---
 
@@ -78,86 +78,86 @@ Ces choix corrigent les divergences entre le backlog d'origine et le code réel 
 
 ### Auth & profil
 
-| ID | Titre | Taille | Statut |
-|---|---|---|---|
-| ENC-013 | Reset password via magic link (Better Auth a la primitive, à câbler) | S | 📋 |
-| ENC-015b | Renforcer middleware : check rôle ADMIN au niveau middleware (pas seulement layout) | S | 🆕 |
+| ID | Titre | Taille | Statut | Spec |
+|---|---|---|---|---|
+| ENC-013 | Reset password via magic link (Better Auth a la primitive, à câbler) | S | 📋 | [spec](./specs/ENC-013.md) |
+| ENC-015b | Renforcer middleware : check rôle ADMIN au niveau middleware (pas seulement layout) | S | 🆕 | [spec](./specs/ENC-015b.md) |
 
 ### Onboarding & landing pro
 
-| ID | Titre | Taille | Statut |
-|---|---|---|---|
-| ENC-021 | Landing pro `/pro` (proposition de valeur encaveur, indispensable pour onboarder les 10 Fondateurs) | M | 📋 |
-| ENC-025 | Étape onboarding "premier événement" (skippable) | S | 📋 |
-| ENC-026b | Compléter page édition profil cave (revue exhaustivité des champs) | S | 🔧 |
+| ID | Titre | Taille | Statut | Spec |
+|---|---|---|---|---|
+| ENC-021 | Landing pro `/pro` (proposition de valeur encaveur, indispensable pour onboarder les 10 Fondateurs) | M | 📋 | [spec](./specs/ENC-021.md) |
+| ENC-025 | Étape onboarding "premier événement" (skippable) | S | 📋 | [spec](./specs/ENC-025.md) |
+| ENC-026b | Compléter page édition profil cave (revue exhaustivité des champs) | S | 🔧 | [spec](./specs/ENC-026b.md) |
 
 ### Stripe Connect — robustesse
 
-| ID | Titre | Taille | Statut |
-|---|---|---|---|
-| ENC-030b | Table `StripeEvent` pour idempotence webhooks (éviter double-traitement) | S | 🆕 |
-| ENC-035 | Email relance KYC J+1 si onboarding Stripe pas commencé | S | 📋 |
+| ID | Titre | Taille | Statut | Spec |
+|---|---|---|---|---|
+| ENC-030b | Table `StripeEvent` pour idempotence webhooks (éviter double-traitement) | S | 🆕 | [spec](./specs/ENC-030b.md) |
+| ENC-035 | Email relance KYC J+1 si onboarding Stripe pas commencé | S | 📋 | [spec](./specs/ENC-035.md) |
 
 ### Événements
 
-| ID | Titre | Taille | Statut |
-|---|---|---|---|
-| ENC-044b | Valider et tester les règles d'édition d'événement quand des bookings existent (prix, capacité, créneaux) | S | 🔧 |
-| ENC-052b | CTA sticky en `fixed bottom` sur mobile pour la page détail événement | S | 🔧 |
-| ENC-069 | Génération + attachement `.ics` à l'email de confirmation | S | 📋 |
+| ID | Titre | Taille | Statut | Spec |
+|---|---|---|---|---|
+| ENC-044b | Valider et tester les règles d'édition d'événement quand des bookings existent (prix, capacité, créneaux) | S | 🔧 | [spec](./specs/ENC-044b.md) |
+| ENC-052b | CTA sticky en `fixed bottom` sur mobile pour la page détail événement | S | 🔧 | [spec](./specs/ENC-052b.md) |
+| ENC-069 | Génération + attachement `.ics` à l'email de confirmation | S | 📋 | [spec](./specs/ENC-069.md) |
 
 ### Dashboard encaveur
 
-| ID | Titre | Taille | Statut |
-|---|---|---|---|
-| ENC-092b | Enrichir section "Cette semaine" (détail jour par jour avec actions rapides) | S | 🔧 |
-| ENC-097 | Action mailto: groupé sur page détail événement (contacter tous les inscrits) | S | 📋 |
-| ENC-114 | Page encaveur "Reversements" (lecture historique via Stripe API, pas de table custom) | M | 🔧 |
+| ID | Titre | Taille | Statut | Spec |
+|---|---|---|---|---|
+| ENC-092b | Enrichir section "Cette semaine" (détail jour par jour avec actions rapides) | S | 🔧 | [spec](./specs/ENC-092b.md) |
+| ENC-097 | Action mailto: groupé sur page détail événement (contacter tous les inscrits) | S | 📋 | [spec](./specs/ENC-097.md) |
+| ENC-114 | Page encaveur "Reversements" (lecture historique via Stripe API, pas de table custom) | M | 🔧 | [spec](./specs/ENC-114.md) |
 
 ### Espace client
 
-| ID | Titre | Taille | Statut |
-|---|---|---|---|
-| ENC-080b | Pagination + filtres UI sur page "Mes réservations" | S | 🔧 |
-| ENC-083 | Invitation +1 par email (nouvelle table `BookingGuest` + formulaire) | M | 📋 |
-| ENC-084 | Email invitation +1 avec QR personnel | S | 📋 |
+| ID | Titre | Taille | Statut | Spec |
+|---|---|---|---|---|
+| ENC-080b | Pagination + filtres UI sur page "Mes réservations" | S | 🔧 | [spec](./specs/ENC-080b.md) |
+| ENC-083 | Invitation +1 par email (nouvelle table `BookingGuest` + formulaire) | M | 📋 | [spec](./specs/ENC-083.md) |
+| ENC-084 | Email invitation +1 avec QR personnel | S | 📋 | [spec](./specs/ENC-084.md) |
 
 ### Admin
 
-| ID | Titre | Taille | Statut |
-|---|---|---|---|
-| ENC-124 | Page admin liste événements (filtres statut + suspension manuelle) | M | 📋 |
-| ENC-125 | Page admin liste réservations (recherche + détail) | M | 📋 |
-| ENC-126 | Table `AdminAction` + log automatique des actions admin sensibles | S | 📋 |
-| ENC-127 | Action admin : suspension cave / utilisateur (statut `SUSPENDED` existe déjà dans l'enum) | S | 📋 |
+| ID | Titre | Taille | Statut | Spec |
+|---|---|---|---|---|
+| ENC-124 | Page admin liste événements (filtres statut + suspension manuelle) | M | 📋 | [spec](./specs/ENC-124.md) |
+| ENC-125 | Page admin liste réservations (recherche + détail) | M | 📋 | [spec](./specs/ENC-125.md) |
+| ENC-126 | Table `AdminAction` + log automatique des actions admin sensibles | S | 📋 | [spec](./specs/ENC-126.md) |
+| ENC-127 | Action admin : suspension cave / utilisateur (statut `SUSPENDED` existe déjà dans l'enum) | S | 📋 | [spec](./specs/ENC-127.md) |
 
 ### Légal & conformité
 
-| ID | Titre | Taille | Statut |
-|---|---|---|---|
-| ENC-132b | Vérifier exhaustivité de la page mentions légales | S | 🔧 |
-| ENC-136 | Export données perso utilisateur en `.json` téléchargeable (nLPD) | M | 📋 |
+| ID | Titre | Taille | Statut | Spec |
+|---|---|---|---|---|
+| ENC-132b | Vérifier exhaustivité de la page mentions légales | S | 🔧 | [spec](./specs/ENC-132b.md) |
+| ENC-136 | Export données perso utilisateur en `.json` téléchargeable (nLPD) | M | 📋 | [spec](./specs/ENC-136.md) |
 
 ### Tests & qualité
 
-| ID | Titre | Taille | Statut |
-|---|---|---|---|
-| ENC-144 | Audit a11y rapide avec axe-core sur pages publiques (détail event, checkout, confirmation) | S | 📋 |
-| ENC-150 | Audit complet emails : deliverability (SPF/DKIM/DMARC) + rendu mobile (Litmus ou équivalent) | M | 📋 |
-| ENC-151 | Audit Lighthouse pages publiques (cible >90 mobile) | M | 📋 |
+| ID | Titre | Taille | Statut | Spec |
+|---|---|---|---|---|
+| ENC-144 | Audit a11y rapide avec axe-core sur pages publiques (détail event, checkout, confirmation) | S | 📋 | [spec](./specs/ENC-144.md) |
+| ENC-150 | Audit complet emails : deliverability (SPF/DKIM/DMARC) + rendu mobile (Litmus ou équivalent) | M | 📋 | [spec](./specs/ENC-150.md) |
+| ENC-151 | Audit Lighthouse pages publiques (cible >90 mobile) | M | 📋 | [spec](./specs/ENC-151.md) |
 
 ---
 
 ## 🟡 P2 — Nice-to-have (post-launch acceptable)
 
-| ID | Titre | Taille | Statut |
-|---|---|---|---|
-| ENC-016b | Ajouter champ téléphone à l'édition profil client | S | 🔧 |
-| ENC-032b | Champ `kycStatus` explicite sur `Winery` (actuellement proxy via `charges_enabled`) | S | 🆕 |
-| ENC-094 | Dashboard mini graph 30j (réservations + remplissage) | M | 📋 |
-| ENC-145 | Tests de charge basiques (200 résas/heure simulées) | M | 📋 |
-| ENC-152 | Page 404 et erreurs custom (cohérence brand) | S | 📋 |
-| ENC-153 | Loading states + skeleton UI sur pages lentes | M | 📋 |
+| ID | Titre | Taille | Statut | Spec |
+|---|---|---|---|---|
+| ENC-016b | Ajouter champ téléphone à l'édition profil client | S | 🔧 | [spec](./specs/ENC-016b.md) |
+| ENC-032b | Champ `kycStatus` explicite sur `Winery` (actuellement proxy via `charges_enabled`) | S | 🆕 | [spec](./specs/ENC-032b.md) |
+| ENC-094 | Dashboard mini graph 30j (réservations + remplissage) | M | 📋 | [spec](./specs/ENC-094.md) |
+| ENC-145 | Tests de charge basiques (200 résas/heure simulées) | M | 📋 | [spec](./specs/ENC-145.md) |
+| ENC-152 | Page 404 et erreurs custom (cohérence brand) | S | 📋 | [spec](./specs/ENC-152.md) |
+| ENC-153 | Loading states + skeleton UI sur pages lentes | M | 📋 | [spec](./specs/ENC-153.md) |
 
 ---
 
@@ -195,12 +195,14 @@ Ces US du backlog d'origine sont sorties du périmètre MVP suite à l'audit. Co
 
 | Priorité | Items | Effort estimé |
 |---|---|---|
-| P0 | 13 | ~10-12 jours-dev |
-| P1 | 19 | ~16-20 jours-dev |
+| P0 | 14 | ~10-12 jours-dev |
+| P1 | 25 | ~20-25 jours-dev |
 | P2 | 6 | ~5-7 jours-dev |
-| **Total à livrer** | **38** | **~30-40 jours-dev** |
+| **Total à livrer** | **45** | **~35-45 jours-dev** |
 
-À 15-20h/semaine + boost agentique, **livrer le P0 prend ~3 semaines**, ajouter le P1 ~4-5 semaines supplémentaires. Cible MVP "ouverture publique complète" atteignable en **7-8 semaines**.
+> Correction post-spec (cf. `docs/specs/README.md`) : le récap d'origine annonçait 38 items mais le contenu réel du backlog en comptait 45. Compte recalibré ci-dessus.
+
+À 15-20h/semaine + boost agentique, **livrer le P0 prend ~3 semaines**, ajouter le P1 ~5-6 semaines supplémentaires. Cible MVP "ouverture publique complète" atteignable en **8-9 semaines**.
 
 ---
 
@@ -217,6 +219,7 @@ Ces US du backlog d'origine sont sorties du périmètre MVP suite à l'audit. Co
 
 ---
 
-**Version** : 2.0 — 11 mai 2026 (post-audit)
-**Total items** : 38 dev + 4 ops
+**Version** : 2.1 — 11 mai 2026 (post-audit + post-spec)
+**Total items** : 45 dev + 4 ops
+**Specs détaillées** : [`docs/specs/`](./specs/README.md) — 45 fichiers Markdown (1 par US)
 **Prochaine révision** : à la fin de chaque sprint
