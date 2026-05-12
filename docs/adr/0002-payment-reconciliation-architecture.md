@@ -108,6 +108,20 @@ Autres validations du contrat Luca :
   - Invalidation cache : `revalidateTag('experience:${experienceSlug}:availability')` pour libérer la capacité côté UI. Optionnellement `booking:${id}` mais peu utile (booking abandonné, pas d'UI à rafraîchir).
   - Log Pino : `{ msg: 'pending_bookings_released', count: result.count, cutoff }`.
 
+### 6. UI d'attente : Suspense RSC plutôt que polling client (ajout 2026-05-12)
+
+**Décision** : la spec initiale (`docs/specs/ENC-067.md` §État 1) prévoyait un polling client `useEffect` toutes les 3 secondes (max 10 tentatives = 30s) via une Server Action `checkBookingConfirmationStatus`, avec un état 1bis « ça prend plus de temps que prévu » au-delà. **Cette partie n'est pas implémentée.** Le composant `ConfirmationFinalizing` est un simple Suspense fallback côté serveur, sans polling ni état 1bis.
+
+**Justification** :
+
+- Le `stripe.checkout.sessions.retrieve` + `updateMany` côté serveur tient en **2-3 secondes** en pratique (latence Stripe API + une write Postgres). Le Suspense fallback couvre la fenêtre sans avoir besoin d'un cycle de polling visible côté client.
+- Pas de `'use client'` supplémentaire ni de `useEffect`, donc moins de surface de bug et un composant testable en SSR sans `@testing-library/react`.
+- Pas de Server Action `checkBookingConfirmationStatus` à maintenir, donc moins de code et un seul chemin de réconciliation (la page elle-même).
+- Les clés i18n `BookingConfirmation.finalizing.slow.*` ne sont pas créées. La spec a été annotée en conséquence.
+- Si dans la durée on observe que des retrieve Stripe dépassent 3-4s (incident provider, ralentissement réseau preview), on rouvrira la question — soit en ajoutant le polling, soit en augmentant le `maxDuration` de la route. Aujourd'hui non observé.
+
+**Risque résiduel** : si Stripe a une latence anormale (>10s), l'utilisateur voit le spinner Suspense très longtemps sans message « slow ». Acceptable au MVP, à monitorer via Sentry.
+
 ## Conséquences
 
 ### Positives
@@ -129,6 +143,7 @@ Autres validations du contrat Luca :
 
 1. **Webhook only, sans fallback** : laisse la page confirmation cassée sur preview. Inacceptable pour Hugo qui teste sur preview.
 2. **Polling client-side `useEffect` toutes les 2s** : viole l'architecture (Server Component → Server Action), gaspille des appels Stripe, expose le sessionId côté client. Rejeté.
+   - **Variante allégée envisagée puis rejetée (cf. §6)** : polling 3s × 10 via Server Action `checkBookingConfirmationStatus`. Tenu hors scope à l'implémentation au profit du seul Suspense RSC.
 3. **Ajout colonne `confirmationSource` + `paymentReconciledAt`** : observabilité gratuite mais YAGNI tant que les logs Pino suffisent. Reportée.
 4. **Nouveau statut `CANCELLED_BY_SYSTEM`** : sémantiquement propre mais casse tous les `switch` exhaustifs. Coût > bénéfice tant qu'on n'a pas de besoin produit distinct.
 5. **Table `stripe_events` pour idempotence forte** : pertinent à terme, surdimensionné pour ENC-067 où la race est résolue au niveau row.
