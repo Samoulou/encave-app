@@ -33,13 +33,27 @@ import type { PaymentReconciliationState } from '@/types/payment-reconciliation'
 
 /**
  * Auth policy — 3 levels (cf. ADR-0002 §4):
- * 1. Authenticated user's email matches `booking.visitorEmail` → OK.
- *    (Bookings are guest-keyed by email; no FK to User.)
+ * 1. Authenticated user's email matches `booking.visitorEmail` AND the
+ *    user's email is verified (better-auth `emailVerified === true`).
+ *    Email verification is enforced because bookings are guest-keyed by
+ *    email — without verification, anyone could claim someone else's
+ *    booking by signing up with their email (ENC-067 review H2).
  * 2. Valid `accessToken` matching `booking.accessTokenHash` → OK.
- * 3. Booking is still `PENDING_PAYMENT` AND the supplied Stripe sessionId
- *    matches the value stored on the booking. The sessionId acts as a
- *    capability token (non-guessable, only delivered to the buyer by
- *    Stripe's `success_url` redirect).
+ * 3. Booking is still `PENDING_PAYMENT` AND `booking.stripePaymentIntentId`
+ *    is a Stripe Checkout Session id (starts with `cs_`) AND it matches
+ *    the supplied sessionId. The sessionId acts as a capability token
+ *    (non-guessable, only delivered to the buyer by Stripe's `success_url`
+ *    redirect).
+ *
+ *    ⚠️ Dépendance fragile (cf. ADR-0002 §2 — dette de naming) :
+ *    `booking.stripePaymentIntentId` holds a `cs_...` while the booking
+ *    is PENDING_PAYMENT, then gets overwritten with a `pi_...` once the
+ *    webhook/reconcile path confirms the booking. The `startsWith('cs_')`
+ *    guard makes this dependency explicit: if a future refactor changes
+ *    the population order (e.g. inline PI write at checkout creation),
+ *    level 3 silently bails out instead of matching `pi_...` against the
+ *    provided `cs_...` sessionId. Track the rename ticket before relaxing
+ *    this guard.
  */
 async function authorizeAccess(args: {
   booking: {
@@ -49,14 +63,21 @@ async function authorizeAccess(args: {
     stripePaymentIntentId: string | null;
   };
   sessionUserEmail: string | null;
+  sessionUserEmailVerified: boolean;
   providedAccessToken: string | undefined;
   providedSessionId: string;
 }): Promise<boolean> {
-  const { booking, sessionUserEmail, providedAccessToken, providedSessionId } =
-    args;
+  const {
+    booking,
+    sessionUserEmail,
+    sessionUserEmailVerified,
+    providedAccessToken,
+    providedSessionId,
+  } = args;
 
   if (
     sessionUserEmail &&
+    sessionUserEmailVerified &&
     sessionUserEmail.toLowerCase() === booking.visitorEmail.toLowerCase()
   ) {
     return true;
@@ -76,6 +97,8 @@ async function authorizeAccess(args: {
 
   if (
     booking.status === BookingStatus.PENDING_PAYMENT &&
+    booking.stripePaymentIntentId !== null &&
+    booking.stripePaymentIntentId.startsWith('cs_') &&
     booking.stripePaymentIntentId === providedSessionId
   ) {
     return true;
@@ -146,6 +169,7 @@ export async function reconcileBookingPayment(
   const authorized = await authorizeAccess({
     booking,
     sessionUserEmail: session?.user.email ?? null,
+    sessionUserEmailVerified: session?.user.emailVerified === true,
     providedAccessToken: accessToken,
     providedSessionId: sessionId,
   });

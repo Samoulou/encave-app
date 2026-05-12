@@ -55,7 +55,19 @@ const sessionOwner: Session = {
   user: {
     id: 'user-1',
     email: 'jane@example.com',
+    emailVerified: true,
     name: 'Jane',
+    role: 'CLIENT',
+    preferredLocale: 'FR',
+  },
+};
+
+const sessionOwnerUnverified: Session = {
+  user: {
+    id: 'user-2',
+    email: 'jane@example.com',
+    emailVerified: false,
+    name: 'Jane unverified',
     role: 'CLIENT',
     preferredLocale: 'FR',
   },
@@ -187,6 +199,47 @@ describe('reconcileBookingPayment', () => {
     if (!result.success) throw new Error('unreachable');
     expect(result.data).toEqual({ kind: 'PAYMENT_FAILED_INSTANT' });
     expect(confirmBookingFromCheckoutSession).not.toHaveBeenCalled();
+  });
+
+  it('H2: rejects level-1 auth when the session email is not verified', async () => {
+    // Email match but emailVerified=false → level 1 must fail. With no token
+    // and stripePaymentIntentId mismatching, level 2 and 3 also fail → FORBIDDEN.
+    vi.mocked(auth).mockResolvedValue(sessionOwnerUnverified);
+    vi.mocked(db.booking.findUnique).mockResolvedValue({
+      ...pendingBooking,
+      stripePaymentIntentId: 'cs_other_session',
+    } as unknown as Awaited<ReturnType<typeof db.booking.findUnique>>);
+
+    const result = await reconcileBookingPayment({
+      bookingId: BOOKING_ID,
+      sessionId: SESSION_ID,
+    });
+
+    expect(result.success).toBe(false);
+    if (result.success) throw new Error('unreachable');
+    expect(result.error.code).toBe('FORBIDDEN');
+  });
+
+  it('H3: rejects level-3 auth when stripePaymentIntentId is a pi_ (not cs_) value', async () => {
+    // The validator forces `sessionId` to start with `cs_`, so the attack
+    // surface for H3 is: DB row has a `pi_...` (e.g. webhook already wrote
+    // the payment intent id) but caller sends a colliding sessionId.
+    // Level 3 must NOT accept it — the policy requires booking field to
+    // start with `cs_`.
+    vi.mocked(auth).mockResolvedValue(null);
+    vi.mocked(db.booking.findUnique).mockResolvedValue({
+      ...pendingBooking,
+      stripePaymentIntentId: 'pi_should_not_match',
+    } as unknown as Awaited<ReturnType<typeof db.booking.findUnique>>);
+
+    const result = await reconcileBookingPayment({
+      bookingId: BOOKING_ID,
+      sessionId: SESSION_ID, // valid `cs_test_...` shape per validator
+    });
+
+    expect(result.success).toBe(false);
+    if (result.success) throw new Error('unreachable');
+    expect(result.error.code).toBe('FORBIDDEN');
   });
 
   it('returns SESSION_EXPIRED when the Stripe session is past its expires_at', async () => {
