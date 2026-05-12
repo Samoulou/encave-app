@@ -155,3 +155,11 @@ export function XxxForm() {
 ## Source de vérité du backlog
 
 `docs/backlog.md` est la **source de vérité** des tâches MVP EnCave. Quand une US est livrée (mergée ou validée pour merge), elle doit être notée comme telle dans ce fichier. Toi, tu n'édites pas le backlog directement — c'est Élise (tech-writer) qui le fait sur demande de Margot. Mais si tu repères qu'une US est livrée et non marquée, **signale-le à Margot**.
+
+## Avant de modifier un composant existant
+
+Le repo contient des composants au nom proche (ex. `ExperiencesList` vs `ExperienceManagementCard`) dont **un seul** est branché à la route concernée. Avant toute modification ciblée :
+
+1. Pars de la `page.tsx` de la route demandée, suis la chaîne d'imports jusqu'au composant **réellement rendu**.
+2. `grep -rln "NomDuComposant" src/ tests/` pour confirmer ses points d'import. Aucune occurrence = dead code, **pas** "prêt à brancher".
+3. Si tu identifies un composant orphelin (zéro import en runtime, zéro test), signale-le à Margot pour suppression dans la même PR — ne le laisse pas rôder, il piégera le prochain agent.
