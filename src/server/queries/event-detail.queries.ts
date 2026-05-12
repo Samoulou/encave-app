@@ -125,12 +125,12 @@ interface FetchedExperience {
 }
 
 async function fetchExperienceForOwner(
-  experienceSlug: string,
+  experienceId: string,
   userId: string
 ): Promise<FetchedExperience | null> {
   const experience = await db.experience.findFirst({
     where: {
-      slug: experienceSlug,
+      id: experienceId,
       status: { not: ExperienceStatus.ARCHIVED },
       winery: { userId },
     },
@@ -318,7 +318,7 @@ function buildEventDetail(experience: FetchedExperience): EventDetailDTO {
 
 /**
  * Get the winemaker event detail (sessions + bookings grouped) for the given
- * experience slug. Returns null when the experience doesn't exist, is archived,
+ * experience id. Returns null when the experience doesn't exist, is archived,
  * or does not belong to the user's winery.
  *
  * Request-level deduplication via React.cache only. We intentionally do NOT
@@ -330,10 +330,10 @@ function buildEventDetail(experience: FetchedExperience): EventDetailDTO {
  */
 export const getEventDetail = cache(
   async (
-    experienceSlug: string,
+    experienceId: string,
     userId: string
   ): Promise<EventDetailDTO | null> => {
-    const experience = await fetchExperienceForOwner(experienceSlug, userId);
+    const experience = await fetchExperienceForOwner(experienceId, userId);
     if (!experience) return null;
     return buildEventDetail(experience);
   }

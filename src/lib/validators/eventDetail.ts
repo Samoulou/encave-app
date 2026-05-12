@@ -11,11 +11,8 @@ export const bookingIdSchema = z.object({
 
 export type BookingIdInput = z.infer<typeof bookingIdSchema>;
 
-export const eventDetailSlugSchema = z.object({
-  experienceSlug: z
-    .string()
-    .min(1, 'experienceSlug is required')
-    .max(200, 'experienceSlug is too long'),
+export const eventDetailIdSchema = z.object({
+  experienceId: z.string().cuid('experienceId must be a cuid'),
 });
 
-export type EventDetailSlugInput = z.infer<typeof eventDetailSlugSchema>;
+export type EventDetailIdInput = z.infer<typeof eventDetailIdSchema>;

@@ -13,6 +13,7 @@ import {
   Archive,
   Copy,
   Clock,
+  Users,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
@@ -192,7 +193,16 @@ export function ExperiencesList({ experiences }: ExperiencesListProps) {
 
               {/* Actions */}
               <div className="mt-4 flex items-center gap-2">
-                <Button asChild variant="outline" size="sm" className="flex-1">
+                <Button asChild variant="default" size="sm" className="flex-1">
+                  <Link
+                    href={`/dashboard/experiences/${experience.id}/sessions`}
+                  >
+                    <Users className="mr-1.5 h-3.5 w-3.5" />
+                    Voir les inscrits
+                  </Link>
+                </Button>
+
+                <Button asChild variant="outline" size="sm">
                   <Link href={`/dashboard/experiences/${experience.id}/edit`}>
                     <Edit className="mr-1.5 h-3.5 w-3.5" />
                     Edit

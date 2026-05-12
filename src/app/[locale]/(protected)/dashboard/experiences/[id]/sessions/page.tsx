@@ -2,7 +2,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { redirect } from '@/i18n/navigation';
 import { auth } from '@/server/auth';
 import { getEventDetail } from '@/server/queries/event-detail.queries';
-import { eventDetailSlugSchema } from '@/lib/validators/eventDetail';
+import { eventDetailIdSchema } from '@/lib/validators/eventDetail';
 import { EventDetailHeader } from '@/components/features/event-detail/EventDetailHeader';
 import { EventStatusBanner } from '@/components/features/event-detail/EventStatusBanner';
 import { SessionGroupSection } from '@/components/features/event-detail/SessionGroupSection';
@@ -16,7 +16,7 @@ import type { Locale } from '@/i18n/routing';
 import type { EventSessionDTO, SessionGroup } from '@/types/event-detail';
 
 interface PageProps {
-  params: Promise<{ locale: string; experienceSlug: string }>;
+  params: Promise<{ locale: string; id: string }>;
 }
 
 const SCAN_WINDOW_MS = 2 * 60 * 60 * 1000;
@@ -60,14 +60,14 @@ export default async function EventDetailPage({ params }: PageProps) {
 
   const localeTyped = resolved.locale as Locale;
 
-  const parsed = eventDetailSlugSchema.safeParse({
-    experienceSlug: resolved.experienceSlug,
+  const parsed = eventDetailIdSchema.safeParse({
+    experienceId: resolved.id,
   });
   if (!parsed.success) {
-    redirect({ href: '/dashboard', locale: localeTyped });
+    redirect({ href: '/dashboard/experiences', locale: localeTyped });
     return null;
   }
-  const experienceSlug = parsed.data.experienceSlug;
+  const experienceId = parsed.data.experienceId;
 
   const session = await auth();
   if (!session?.user) {
@@ -75,9 +75,9 @@ export default async function EventDetailPage({ params }: PageProps) {
     return null;
   }
 
-  const event = await getEventDetail(experienceSlug, session.user.id);
+  const event = await getEventDetail(experienceId, session.user.id);
   if (!event) {
-    redirect({ href: '/dashboard', locale: localeTyped });
+    redirect({ href: '/dashboard/experiences', locale: localeTyped });
     return null;
   }
 
@@ -106,7 +106,7 @@ export default async function EventDetailPage({ params }: PageProps) {
       {!hasAnySession ? (
         <div className="flex justify-center">
           <Button asChild>
-            <Link href={`/dashboard/experiences/${event.experience.slug}/edit`}>
+            <Link href={`/dashboard/experiences/${event.experience.id}/edit`}>
               <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
               {t('empty.cta')}
             </Link>
