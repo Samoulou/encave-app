@@ -90,6 +90,11 @@ export async function confirmBookingFromCheckoutSession(
   }
 
   // We own the transition — load full booking for side-effects.
+  // `confirmationSentAt` and `wineryNotifiedAt` are pulled to enforce a
+  // second idempotence layer at the email step (cf. ENC-067 review H1):
+  // belt-and-braces protection against any future code path that could
+  // re-enter this service for the same booking outside of the updateMany
+  // guard above.
   const booking = await db.booking.findUnique({
     where: { id: bookingId },
     include: {
@@ -180,66 +185,85 @@ export async function confirmBookingFromCheckoutSession(
   const bookingDateTime = new Date(booking.date);
   bookingDateTime.setHours(hours, minutes, 0, 0);
 
-  // Send client confirmation email.
-  try {
-    const sent = await sendBookingConfirmationEmail(booking.visitorEmail, {
-      guestName: booking.visitorName,
-      experienceTitle: booking.experience.title,
-      wineryName: booking.winery.name,
-      date: bookingDateTime,
-      guestCount: booking.guestCount,
-      duration: booking.experience.duration,
-      totalPrice: booking.totalPrice,
-      bookingRef: booking.reference,
-    });
-
-    if (sent) {
-      await db.booking.update({
-        where: { id: bookingId },
-        data: { confirmationSentAt: new Date() },
-      });
-      logInfo('Confirmation email sent', {
-        to: booking.visitorEmail,
-        bookingRef: booking.reference,
-        source,
-      });
-    }
-  } catch (error) {
-    logError('Failed to send confirmation email', error, { bookingId, source });
-    // Don't throw — booking is still CONFIRMED.
-  }
-
-  // Send winemaker notification.
-  try {
-    const sent = await sendWinemakerNewBookingEmail(
-      booking.winery.email,
-      {
-        winemakerName: booking.winery.user.name ?? 'Winemaker',
+  // Send client confirmation email — gated by `confirmationSentAt` to enforce
+  // single-send even if the service is somehow re-entered for the same row
+  // (ENC-067 review H1 — belt-and-braces vs the updateMany guard above).
+  if (!booking.confirmationSentAt) {
+    try {
+      const sent = await sendBookingConfirmationEmail(booking.visitorEmail, {
+        guestName: booking.visitorName,
         experienceTitle: booking.experience.title,
+        wineryName: booking.winery.name,
         date: bookingDateTime,
         guestCount: booking.guestCount,
-        totalPrice: booking.wineryPayout,
-        guestName: booking.visitorName,
-        guestEmail: booking.visitorEmail,
+        duration: booking.experience.duration,
+        totalPrice: booking.totalPrice,
         bookingRef: booking.reference,
-      },
-      booking.winery.user.preferredLocale
-    );
-
-    if (sent) {
-      await db.booking.update({
-        where: { id: bookingId },
-        data: { wineryNotifiedAt: new Date() },
       });
-      logInfo('Winery notification sent', {
-        to: booking.winery.email,
-        bookingRef: booking.reference,
+
+      if (sent) {
+        await db.booking.update({
+          where: { id: bookingId },
+          data: { confirmationSentAt: new Date() },
+        });
+        // PII-safe log — bookingRef alone is enough for debug (cf. M1).
+        logInfo('Confirmation email sent', {
+          bookingRef: booking.reference,
+          source,
+        });
+      }
+    } catch (error) {
+      logError('Failed to send confirmation email', error, {
+        bookingId,
+        source,
+      });
+      // Don't throw — booking is still CONFIRMED.
+    }
+  } else {
+    logInfo('Confirmation email skipped (already sent)', {
+      bookingRef: booking.reference,
+      source,
+    });
+  }
+
+  // Send winemaker notification — same idempotence guard via `wineryNotifiedAt`.
+  if (!booking.wineryNotifiedAt) {
+    try {
+      const sent = await sendWinemakerNewBookingEmail(
+        booking.winery.email,
+        {
+          winemakerName: booking.winery.user.name ?? 'Winemaker',
+          experienceTitle: booking.experience.title,
+          date: bookingDateTime,
+          guestCount: booking.guestCount,
+          totalPrice: booking.wineryPayout,
+          guestName: booking.visitorName,
+          guestEmail: booking.visitorEmail,
+          bookingRef: booking.reference,
+        },
+        booking.winery.user.preferredLocale
+      );
+
+      if (sent) {
+        await db.booking.update({
+          where: { id: bookingId },
+          data: { wineryNotifiedAt: new Date() },
+        });
+        // PII-safe log — bookingRef alone is enough for debug (cf. M1).
+        logInfo('Winery notification sent', {
+          bookingRef: booking.reference,
+          source,
+        });
+      }
+    } catch (error) {
+      logError('Failed to send winery notification', error, {
+        bookingId,
         source,
       });
     }
-  } catch (error) {
-    logError('Failed to send winery notification', error, {
-      bookingId,
+  } else {
+    logInfo('Winery notification skipped (already sent)', {
+      bookingRef: booking.reference,
       source,
     });
   }

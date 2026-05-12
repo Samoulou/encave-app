@@ -55,6 +55,9 @@ const baseBooking = {
   wineryPayout: 7920,
   experienceId: 'exp_1',
   wineryId: 'win_1',
+  // ENC-067 H1: explicit nulls so the email guard reads "not yet sent".
+  confirmationSentAt: null,
+  wineryNotifiedAt: null,
   experience: {
     title: 'Dégustation Pinot Noir',
     slug: 'degustation-pinot-noir',
@@ -137,6 +140,32 @@ describe('confirmBookingFromCheckoutSession', () => {
     expect(sendBookingConfirmationEmail).not.toHaveBeenCalled();
     expect(sendWinemakerNewBookingEmail).not.toHaveBeenCalled();
     expect(revalidateTag).not.toHaveBeenCalled();
+  });
+
+  it('H1: skips both emails when confirmationSentAt and wineryNotifiedAt are already set', async () => {
+    vi.mocked(db.booking.updateMany).mockResolvedValue({ count: 1 });
+    vi.mocked(db.booking.findUnique).mockResolvedValue({
+      ...baseBooking,
+      confirmationSentAt: new Date('2026-06-13T10:00:00.000Z'),
+      wineryNotifiedAt: new Date('2026-06-13T10:00:00.000Z'),
+    } as unknown as Awaited<ReturnType<typeof db.booking.findUnique>>);
+    vi.mocked(db.booking.update).mockResolvedValue(
+      {} as unknown as Awaited<ReturnType<typeof db.booking.update>>
+    );
+
+    const res = await confirmBookingFromCheckoutSession({
+      bookingId: BOOKING_ID,
+      stripeSessionId: SESSION_ID,
+      stripePaymentIntentId: PI_ID,
+      source: 'RECONCILE',
+    });
+
+    expect(res).toEqual({ confirmed: true, alreadyConfirmed: false });
+    // Both emails skipped.
+    expect(sendBookingConfirmationEmail).not.toHaveBeenCalled();
+    expect(sendWinemakerNewBookingEmail).not.toHaveBeenCalled();
+    // No timestamp updates fired either.
+    expect(db.booking.update).not.toHaveBeenCalled();
   });
 
   it('already confirmed: a second WEBHOOK call after a successful RECONCILE is a no-op', async () => {
