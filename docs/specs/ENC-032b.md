@@ -3,6 +3,7 @@
 ## Objectif métier
 
 Aujourd'hui, l'état KYC d'un encaveur est dérivé indirectement de `charges_enabled` (Stripe Account). Cette approche pose 3 problèmes :
+
 1. **Lecture imprécise** : `charges_enabled=true` ne distingue pas "vérifié sans restriction" de "vérifié sous surveillance" (Stripe peut autoriser les charges même avec `requirements.eventually_due`).
 2. **Pas de signal pour l'admin** : impossible d'afficher en un coup d'œil un encaveur dont le KYC est en cours de rejet ou requiert une action sous 30j.
 3. **Logique métier dupliquée** : chaque appel doit recomputer "est-ce que cette cave peut publier ?" via `charges_enabled + details_submitted + status VERIFIED`.
@@ -94,6 +95,7 @@ Fonctionnalité: Champ kycStatus dénormalisé
   - `REJECTED` : invisible publiquement, encaveur reçoit email (US séparée)
 
 - **Migration Prisma** :
+
   ```prisma
   enum KycStatus {
     NOT_STARTED
@@ -110,6 +112,7 @@ Fonctionnalité: Champ kycStatus dénormalisé
     // ...
   }
   ```
+
   - Backfill : script qui parcourt toutes les wineries existantes, charge l'account Stripe, applique `mapStripeAccountToKycStatus`. Run en one-shot post-migration.
   - Index : pas nécessaire pour MVP (volumétrie faible).
 
@@ -119,18 +122,18 @@ Fonctionnalité: Champ kycStatus dénormalisé
 
 Le champ est principalement back-office mais expose des libellés côté admin et dashboard encaveur :
 
-| Élément | Clé i18n suggérée | Texte FR |
-|---|---|---|
-| Label NOT_STARTED | `Winery.kycStatus.NOT_STARTED` | "À démarrer" |
-| Label PENDING | `Winery.kycStatus.PENDING` | "Vérification en cours" |
-| Label VERIFIED | `Winery.kycStatus.VERIFIED` | "Vérifié" |
-| Label RESTRICTED | `Winery.kycStatus.RESTRICTED` | "Restreint — action requise" |
-| Label REJECTED | `Winery.kycStatus.REJECTED` | "Refusé" |
-| Tooltip RESTRICTED encaveur | `Winery.kycStatus.RESTRICTED.help` | "Stripe demande des informations complémentaires. Ouvrez votre tableau de bord Stripe pour régulariser." |
-| Tooltip REJECTED encaveur | `Winery.kycStatus.REJECTED.help` | "Votre vérification d'identité n'a pas pu être validée. Contactez-nous à bonjour@encave.ch." |
-| Bandeau dashboard si PENDING | `Dashboard.kyc.banner.pending` | "Vérification Stripe en cours. Vous pourrez publier vos expériences dès validation." |
-| Bandeau dashboard si NOT_STARTED | `Dashboard.kyc.banner.notStarted` | "Finalisez votre vérification d'identité pour commencer à recevoir des réservations." |
-| CTA bandeau NOT_STARTED | `Dashboard.kyc.banner.cta` | "Démarrer la vérification" |
+| Élément                          | Clé i18n suggérée                  | Texte FR                                                                                                 |
+| -------------------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Label NOT_STARTED                | `Winery.kycStatus.NOT_STARTED`     | "À démarrer"                                                                                             |
+| Label PENDING                    | `Winery.kycStatus.PENDING`         | "Vérification en cours"                                                                                  |
+| Label VERIFIED                   | `Winery.kycStatus.VERIFIED`        | "Vérifié"                                                                                                |
+| Label RESTRICTED                 | `Winery.kycStatus.RESTRICTED`      | "Restreint — action requise"                                                                             |
+| Label REJECTED                   | `Winery.kycStatus.REJECTED`        | "Refusé"                                                                                                 |
+| Tooltip RESTRICTED encaveur      | `Winery.kycStatus.RESTRICTED.help` | "Stripe demande des informations complémentaires. Ouvrez votre tableau de bord Stripe pour régulariser." |
+| Tooltip REJECTED encaveur        | `Winery.kycStatus.REJECTED.help`   | "Votre vérification d'identité n'a pas pu être validée. Contactez-nous à bonjour@encave.ch."             |
+| Bandeau dashboard si PENDING     | `Dashboard.kyc.banner.pending`     | "Vérification Stripe en cours. Vous pourrez publier vos expériences dès validation."                     |
+| Bandeau dashboard si NOT_STARTED | `Dashboard.kyc.banner.notStarted`  | "Finalisez votre vérification d'identité pour commencer à recevoir des réservations."                    |
+| CTA bandeau NOT_STARTED          | `Dashboard.kyc.banner.cta`         | "Démarrer la vérification"                                                                               |
 
 ## États UI
 

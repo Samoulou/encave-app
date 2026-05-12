@@ -9,18 +9,25 @@ interface LocationSectionProps {
   sectionRef: (_el: HTMLElement | null) => void;
 }
 
-export function LocationSection({ location, onLocationChange, sectionRef }: LocationSectionProps) {
+export function LocationSection({
+  location,
+  onLocationChange,
+  sectionRef,
+}: LocationSectionProps) {
   return (
     <section
       ref={sectionRef}
       id="location"
-      className="bg-white border border-stone-200 rounded-xl p-6 md:p-8 scroll-mt-24 shadow-sm"
+      className="scroll-mt-24 rounded-xl border border-stone-200 bg-white p-6 shadow-sm md:p-8"
     >
       <SectionHeader icon={MapPin} title="Location" />
       <div className="space-y-4">
         {/* Address Autocomplete */}
         <div>
-          <label htmlFor="location-address" className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+          <label
+            htmlFor="location-address"
+            className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500"
+          >
             Address
           </label>
           <AddressAutocomplete
@@ -29,15 +36,15 @@ export function LocationSection({ location, onLocationChange, sectionRef }: Loca
             onChange={onLocationChange}
             placeholder="Search for an address..."
           />
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="mt-1 text-xs text-slate-400">
             Start typing to search for an address
           </p>
         </div>
 
         {/* Display selected address details */}
         {location.street && (
-          <div className="bg-slate-50 rounded-lg p-4 border border-stone-200">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+          <div className="rounded-lg border border-stone-200 bg-slate-50 p-4">
+            <h4 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">
               Selected Address
             </h4>
             <div className="space-y-1 text-sm text-slate-700">
@@ -47,7 +54,8 @@ export function LocationSection({ location, onLocationChange, sectionRef }: Loca
               </p>
               {location.latitude && location.longitude && (
                 <p className="text-xs text-slate-400">
-                  Coordinates: {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+                  Coordinates: {location.latitude.toFixed(6)},{' '}
+                  {location.longitude.toFixed(6)}
                 </p>
               )}
             </div>

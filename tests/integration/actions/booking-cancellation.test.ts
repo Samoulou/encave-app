@@ -33,7 +33,10 @@ import {
 
 describe('Booking Cancellation Actions', () => {
   const accessToken = 'test-cancel-token-abc123';
-  const tokenHash = crypto.createHash('sha256').update(accessToken).digest('hex');
+  const tokenHash = crypto
+    .createHash('sha256')
+    .update(accessToken)
+    .digest('hex');
 
   // Create a date 48 hours in the future for refund-eligible booking
   const futureDate = new Date();
@@ -94,7 +97,9 @@ describe('Booking Cancellation Actions', () => {
         date: new Date('2026-01-14'), // 3 days in future
         timeSlot: '14:00',
       };
-      vi.mocked(db.booking.findFirst).mockResolvedValue(bookingWithFutureDate as never);
+      vi.mocked(db.booking.findFirst).mockResolvedValue(
+        bookingWithFutureDate as never
+      );
       vi.mocked(db.booking.update).mockResolvedValue({
         ...bookingWithFutureDate,
         status: BookingStatus.CANCELLED_BY_CLIENT,
@@ -127,7 +132,9 @@ describe('Booking Cancellation Actions', () => {
         date: new Date('2026-01-11'), // Same day
         timeSlot: '22:00', // 12 hours from now (10:00 + 12 = 22:00)
       };
-      vi.mocked(db.booking.findFirst).mockResolvedValue(bookingNearFuture as never);
+      vi.mocked(db.booking.findFirst).mockResolvedValue(
+        bookingNearFuture as never
+      );
       vi.mocked(db.booking.update).mockResolvedValue({
         ...bookingNearFuture,
         status: BookingStatus.CANCELLED_BY_CLIENT,
@@ -192,7 +199,9 @@ describe('Booking Cancellation Actions', () => {
         ...mockConfirmedBooking,
         status: BookingStatus.PENDING_PAYMENT,
       };
-      vi.mocked(db.booking.findFirst).mockResolvedValue(pendingBooking as never);
+      vi.mocked(db.booking.findFirst).mockResolvedValue(
+        pendingBooking as never
+      );
 
       const { cancelBooking } = await import('@/server/actions/booking');
       const result = await cancelBooking('booking-cancel-1', accessToken);
@@ -228,7 +237,9 @@ describe('Booking Cancellation Actions', () => {
         date: new Date('2026-01-14'),
         timeSlot: '14:00',
       };
-      vi.mocked(db.booking.findFirst).mockResolvedValue(bookingWithFutureDate as never);
+      vi.mocked(db.booking.findFirst).mockResolvedValue(
+        bookingWithFutureDate as never
+      );
       vi.mocked(processRefund).mockRejectedValue(new Error('Stripe API error'));
 
       const { cancelBooking } = await import('@/server/actions/booking');
@@ -247,7 +258,9 @@ describe('Booking Cancellation Actions', () => {
         date: new Date('2026-01-14'),
         timeSlot: '14:00',
       };
-      vi.mocked(db.booking.findFirst).mockResolvedValue(bookingWithFutureDate as never);
+      vi.mocked(db.booking.findFirst).mockResolvedValue(
+        bookingWithFutureDate as never
+      );
       vi.mocked(db.booking.update).mockResolvedValue({
         ...bookingWithFutureDate,
         status: BookingStatus.CANCELLED_BY_CLIENT,
@@ -279,7 +292,9 @@ describe('Booking Cancellation Actions', () => {
         date: new Date('2026-01-14'),
         timeSlot: '14:00',
       };
-      vi.mocked(db.booking.findFirst).mockResolvedValue(bookingWithFutureDate as never);
+      vi.mocked(db.booking.findFirst).mockResolvedValue(
+        bookingWithFutureDate as never
+      );
       vi.mocked(db.booking.update).mockResolvedValue({
         ...bookingWithFutureDate,
         status: BookingStatus.CANCELLED_BY_CLIENT,
@@ -313,7 +328,9 @@ describe('Booking Cancellation Actions', () => {
         date: new Date('2026-01-14'),
         timeSlot: '14:00',
       };
-      vi.mocked(db.booking.findFirst).mockResolvedValue(bookingWithFutureDate as never);
+      vi.mocked(db.booking.findFirst).mockResolvedValue(
+        bookingWithFutureDate as never
+      );
       vi.mocked(db.booking.update).mockResolvedValue({
         ...bookingWithFutureDate,
         status: BookingStatus.CANCELLED_BY_CLIENT,
@@ -348,10 +365,7 @@ describe('Booking Cancellation Actions', () => {
         expect.objectContaining({
           where: {
             id: 'booking-cancel-1',
-            OR: [
-              { accessToken },
-              { accessTokenHash: tokenHash },
-            ],
+            OR: [{ accessToken }, { accessTokenHash: tokenHash }],
           },
         })
       );
@@ -364,7 +378,9 @@ describe('Booking Cancellation Actions', () => {
         timeSlot: '14:00',
         stripePaymentIntentId: null, // No payment made
       };
-      vi.mocked(db.booking.findFirst).mockResolvedValue(bookingNoPayment as never);
+      vi.mocked(db.booking.findFirst).mockResolvedValue(
+        bookingNoPayment as never
+      );
       vi.mocked(db.booking.update).mockResolvedValue({
         ...bookingNoPayment,
         status: BookingStatus.CANCELLED_BY_CLIENT,
@@ -387,7 +403,9 @@ describe('Booking Cancellation Actions', () => {
         date: new Date('2026-01-14'), // 3 days in future
         timeSlot: '14:00',
       };
-      vi.mocked(db.booking.findFirst).mockResolvedValue(bookingWithFutureDate as never);
+      vi.mocked(db.booking.findFirst).mockResolvedValue(
+        bookingWithFutureDate as never
+      );
 
       const { getCancellationInfo } = await import('@/server/actions/booking');
       const result = await getCancellationInfo('booking-cancel-1', accessToken);
@@ -407,7 +425,9 @@ describe('Booking Cancellation Actions', () => {
         date: new Date('2026-01-11'),
         timeSlot: '22:00', // 12 hours from 10:00
       };
-      vi.mocked(db.booking.findFirst).mockResolvedValue(bookingNearFuture as never);
+      vi.mocked(db.booking.findFirst).mockResolvedValue(
+        bookingNearFuture as never
+      );
 
       const { getCancellationInfo } = await import('@/server/actions/booking');
       const result = await getCancellationInfo('booking-cancel-1', accessToken);
@@ -444,7 +464,9 @@ describe('Booking Cancellation Actions', () => {
         ...mockConfirmedBooking,
         status: BookingStatus.CANCELLED_BY_CLIENT,
       };
-      vi.mocked(db.booking.findFirst).mockResolvedValue(cancelledBooking as never);
+      vi.mocked(db.booking.findFirst).mockResolvedValue(
+        cancelledBooking as never
+      );
 
       const { getCancellationInfo } = await import('@/server/actions/booking');
       const result = await getCancellationInfo('booking-cancel-1', accessToken);
@@ -460,7 +482,10 @@ describe('Booking Cancellation Actions', () => {
       vi.mocked(db.booking.findFirst).mockResolvedValue(null);
 
       const { getCancellationInfo } = await import('@/server/actions/booking');
-      const result = await getCancellationInfo('booking-cancel-1', 'invalid-token');
+      const result = await getCancellationInfo(
+        'booking-cancel-1',
+        'invalid-token'
+      );
 
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -478,10 +503,7 @@ describe('Booking Cancellation Actions', () => {
         expect.objectContaining({
           where: {
             id: 'booking-cancel-1',
-            OR: [
-              { accessToken },
-              { accessTokenHash: tokenHash },
-            ],
+            OR: [{ accessToken }, { accessTokenHash: tokenHash }],
           },
         })
       );

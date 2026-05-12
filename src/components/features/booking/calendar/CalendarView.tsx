@@ -130,7 +130,8 @@ export function CalendarView({
             const isCurrentMonth = isSameMonth(date, currentDate);
             const isCurrentDay = isToday(date);
             const hasBookings = dayData && dayData.bookingCount > 0;
-            const isBlocked = dayData && dayData.blockedExperienceIds.length > 0;
+            const isBlocked =
+              dayData && dayData.blockedExperienceIds.length > 0;
 
             return (
               <button
@@ -138,7 +139,7 @@ export function CalendarView({
                 onClick={() => handleDayClick(date)}
                 aria-label={format(date, 'PPPP')}
                 className={cn(
-                  'relative min-h-[80px] bg-white p-1.5 text-left transition-colors hover:bg-slate-50 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none',
+                  'relative min-h-[80px] bg-white p-1.5 text-left transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
                   !isCurrentMonth && 'bg-slate-50 text-slate-400',
                   isBlocked && 'bg-red-50'
                 )}
@@ -148,7 +149,9 @@ export function CalendarView({
                   className={cn(
                     'mb-1 flex h-6 w-6 items-center justify-center rounded-full text-sm',
                     isCurrentDay && 'bg-burgundy-600 font-semibold text-white',
-                    !isCurrentDay && isCurrentMonth && 'font-medium text-slate-900',
+                    !isCurrentDay &&
+                      isCurrentMonth &&
+                      'font-medium text-slate-900',
                     !isCurrentMonth && 'text-slate-400'
                   )}
                 >
@@ -180,7 +183,8 @@ export function CalendarView({
                     {dayData.bookings[0] && (
                       <BookingTooltip booking={dayData.bookings[0]}>
                         <div className="truncate text-[10px] text-slate-600">
-                          {dayData.bookings[0].timeSlot} {dayData.bookings[0].visitorName}
+                          {dayData.bookings[0].timeSlot}{' '}
+                          {dayData.bookings[0].visitorName}
                         </div>
                       </BookingTooltip>
                     )}
@@ -189,7 +193,9 @@ export function CalendarView({
 
                 {/* Blocked Indicator */}
                 {isBlocked && !hasBookings && (
-                  <div className="mt-1 text-[10px] text-red-600">{t('blocked')}</div>
+                  <div className="mt-1 text-[10px] text-red-600">
+                    {t('blocked')}
+                  </div>
                 )}
               </button>
             );

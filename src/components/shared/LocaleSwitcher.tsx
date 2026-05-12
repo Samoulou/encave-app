@@ -32,7 +32,11 @@ export function LocaleSwitcher() {
     <div role="group" aria-label={t('languageSwitcher')}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-1.5 text-muted-foreground"
+          >
             <Globe className="h-4 w-4" aria-hidden="true" />
             <span>{localeLabels[locale]}</span>
           </Button>

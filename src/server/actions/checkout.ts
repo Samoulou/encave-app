@@ -9,7 +9,10 @@ import type { ActionResult } from '@/types/actions';
 import { BookingStatus } from '@prisma/client';
 import { timeSlotSchema } from '@/lib/validators/booking';
 import { env } from '@/lib/env';
-import { checkRateLimit, BOOKING_RATE_LIMIT } from '@/server/services/rate-limit.service';
+import {
+  checkRateLimit,
+  BOOKING_RATE_LIMIT,
+} from '@/server/services/rate-limit.service';
 import { logError } from '@/lib/logger';
 
 /**
@@ -62,11 +65,17 @@ export async function createBookingAndCheckout(
     } = validated.data;
 
     // Rate limit by visitor email to prevent booking abuse
-    const rateLimitResult = await checkRateLimit(`booking:${visitorEmail}`, BOOKING_RATE_LIMIT);
+    const rateLimitResult = await checkRateLimit(
+      `booking:${visitorEmail}`,
+      BOOKING_RATE_LIMIT
+    );
     if (!rateLimitResult.success) {
       return {
         success: false,
-        error: { code: 'RATE_LIMITED', message: 'Too many booking attempts. Please try again later.' },
+        error: {
+          code: 'RATE_LIMITED',
+          message: 'Too many booking attempts. Please try again later.',
+        },
       };
     }
 
@@ -92,10 +101,16 @@ export async function createBookingAndCheckout(
       };
     }
 
-    if (!experience.winery.stripeAccountId || !experience.winery.stripeOnboardingComplete) {
+    if (
+      !experience.winery.stripeAccountId ||
+      !experience.winery.stripeOnboardingComplete
+    ) {
       return {
         success: false,
-        error: { code: 'STRIPE_NOT_READY', message: 'Winery payment setup not complete' },
+        error: {
+          code: 'STRIPE_NOT_READY',
+          message: 'Winery payment setup not complete',
+        },
       };
     }
 
@@ -119,7 +134,9 @@ export async function createBookingAndCheckout(
               experienceId,
               date: bookingDate,
               timeSlot,
-              status: { in: [BookingStatus.PENDING_PAYMENT, BookingStatus.CONFIRMED] },
+              status: {
+                in: [BookingStatus.PENDING_PAYMENT, BookingStatus.CONFIRMED],
+              },
             },
             _sum: { guestCount: true },
           });
@@ -164,7 +181,10 @@ export async function createBookingAndCheckout(
       if (txError instanceof Error && txError.message === 'NO_CAPACITY') {
         return {
           success: false,
-          error: { code: 'NO_CAPACITY', message: 'Not enough availability for this time slot' },
+          error: {
+            code: 'NO_CAPACITY',
+            message: 'Not enough availability for this time slot',
+          },
         };
       }
       throw txError; // Re-throw other errors to be caught by outer catch
@@ -214,7 +234,10 @@ export async function createBookingAndCheckout(
     if (!session.url) {
       return {
         success: false,
-        error: { code: 'STRIPE_ERROR', message: 'Failed to create checkout session' },
+        error: {
+          code: 'STRIPE_ERROR',
+          message: 'Failed to create checkout session',
+        },
       };
     }
 
@@ -227,7 +250,9 @@ export async function createBookingAndCheckout(
       },
     };
   } catch (error) {
-    logError('createBookingAndCheckout error', error, { action: 'createBookingAndCheckout' });
+    logError('createBookingAndCheckout error', error, {
+      action: 'createBookingAndCheckout',
+    });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to create booking' },
@@ -235,30 +260,30 @@ export async function createBookingAndCheckout(
   }
 }
 
-export async function getBookingByReference(
-  reference: string
-): Promise<ActionResult<{
-  id: string;
-  reference: string;
-  status: BookingStatus;
-  visitorName: string;
-  visitorEmail: string;
-  date: Date;
-  timeSlot: string;
-  guestCount: number;
-  totalPrice: number;
-  experience: {
-    title: string;
-    slug: string;
-    duration: number;
-    coverPhoto: string;
-  };
-  winery: {
-    name: string;
-    address: string;
-    commune: string;
-  };
-}>> {
+export async function getBookingByReference(reference: string): Promise<
+  ActionResult<{
+    id: string;
+    reference: string;
+    status: BookingStatus;
+    visitorName: string;
+    visitorEmail: string;
+    date: Date;
+    timeSlot: string;
+    guestCount: number;
+    totalPrice: number;
+    experience: {
+      title: string;
+      slug: string;
+      duration: number;
+      coverPhoto: string;
+    };
+    winery: {
+      name: string;
+      address: string;
+      commune: string;
+    };
+  }>
+> {
   try {
     const booking = await db.booking.findUnique({
       where: { reference },
@@ -305,7 +330,9 @@ export async function getBookingByReference(
       },
     };
   } catch (error) {
-    logError('getBookingByReference error', error, { action: 'getBookingByReference' });
+    logError('getBookingByReference error', error, {
+      action: 'getBookingByReference',
+    });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to get booking' },
@@ -313,32 +340,32 @@ export async function getBookingByReference(
   }
 }
 
-export async function getBookingById(
-  id: string
-): Promise<ActionResult<{
-  id: string;
-  reference: string;
-  status: BookingStatus;
-  visitorName: string;
-  visitorEmail: string;
-  date: Date;
-  timeSlot: string;
-  guestCount: number;
-  totalPrice: number;
-  experience: {
-    title: string;
-    slug: string;
-    duration: number;
-    coverPhoto: string;
-  };
-  winery: {
-    name: string;
-    address: string;
-    commune: string;
-    phone: string;
-    email: string;
-  };
-}>> {
+export async function getBookingById(id: string): Promise<
+  ActionResult<{
+    id: string;
+    reference: string;
+    status: BookingStatus;
+    visitorName: string;
+    visitorEmail: string;
+    date: Date;
+    timeSlot: string;
+    guestCount: number;
+    totalPrice: number;
+    experience: {
+      title: string;
+      slug: string;
+      duration: number;
+      coverPhoto: string;
+    };
+    winery: {
+      name: string;
+      address: string;
+      commune: string;
+      phone: string;
+      email: string;
+    };
+  }>
+> {
   try {
     const booking = await db.booking.findUnique({
       where: { id },

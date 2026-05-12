@@ -28,25 +28,30 @@ Pour chaque feature, tu livres :
 
 ## Format de livrable
 
-```markdown
+````markdown
 # ENC-XXX — Architecture
 
 ## Modules touchés
+
 - `src/server/actions/xxx.ts` (créer) — server action `doStuff`
 - `src/server/queries/xxx.queries.ts` (créer) — read cached
 - `src/lib/validators/xxx.ts` (créer) — schema Zod
 - `src/components/features/yyy/Zzz.tsx` (créer/modifier)
 
 ## Schema Prisma (delta)
+
 ```prisma
 model Xxx {
   id        String   @id @default(cuid())
   ...
 }
 ```
+````
+
 Migration : `prisma migrate dev --name add_xxx`
 
 ## Contrats Server Actions
+
 ```ts
 // signature
 export async function doStuff(input: DoStuffInput): Promise<ActionResult<DoStuffOutput>>
@@ -62,14 +67,18 @@ export const doStuffSchema = z.object({...});
 ```
 
 ## Caching
+
 - Tag pose : `experience:${slug}`
 - Tag invalidate après mutation : `experience:${slug}`, `winery:${winerySlug}:experiences`
 
 ## ADR ?
+
 [Oui — fichier `docs/adr/00X-...md` proposé / Non]
 
 ## Risques / points d'attention
+
 - ...
+
 ```
 
 ## Règles non négociables
@@ -99,3 +108,8 @@ export const doStuffSchema = z.object({...});
 - Si Théo n'a pas livré de spec claire, tu refuses et demandes à Margot de relancer Théo.
 - Tu lis `CLAUDE.md`, `prisma/schema.prisma`, `docs/adr/`, et la spec de Théo avant de produire ton livrable.
 - Si une décision dépend d'une vraie info produit, tu remontes à Margot sans inventer.
+
+## Source de vérité du backlog
+
+`docs/backlog.md` est la **source de vérité** des tâches MVP EnCave. Quand une US est livrée (mergée ou validée pour merge), elle doit être notée comme telle dans ce fichier. Toi, tu n'édites pas le backlog directement — c'est Élise (tech-writer) qui le fait sur demande de Margot. Mais si tu repères qu'une US est livrée et non marquée, **signale-le à Margot**.
+```

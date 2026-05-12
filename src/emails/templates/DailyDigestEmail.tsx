@@ -53,16 +53,48 @@ export function DailyDigestEmail({
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
-            <th style={{ padding: '8px 4px', textAlign: 'left', fontSize: '12px', color: '#6b7280', fontWeight: '600' }}>
+            <th
+              style={{
+                padding: '8px 4px',
+                textAlign: 'left',
+                fontSize: '12px',
+                color: '#6b7280',
+                fontWeight: '600',
+              }}
+            >
               {t(common.time, locale)}
             </th>
-            <th style={{ padding: '8px 4px', textAlign: 'left', fontSize: '12px', color: '#6b7280', fontWeight: '600' }}>
+            <th
+              style={{
+                padding: '8px 4px',
+                textAlign: 'left',
+                fontSize: '12px',
+                color: '#6b7280',
+                fontWeight: '600',
+              }}
+            >
               {t(common.experience, locale)}
             </th>
-            <th style={{ padding: '8px 4px', textAlign: 'left', fontSize: '12px', color: '#6b7280', fontWeight: '600' }}>
+            <th
+              style={{
+                padding: '8px 4px',
+                textAlign: 'left',
+                fontSize: '12px',
+                color: '#6b7280',
+                fontWeight: '600',
+              }}
+            >
               {t(dailyDigest.guest, locale)}
             </th>
-            <th style={{ padding: '8px 4px', textAlign: 'right', fontSize: '12px', color: '#6b7280', fontWeight: '600' }}>
+            <th
+              style={{
+                padding: '8px 4px',
+                textAlign: 'right',
+                fontSize: '12px',
+                color: '#6b7280',
+                fontWeight: '600',
+              }}
+            >
               {t(common.guests, locale)}
             </th>
           </tr>
@@ -70,15 +102,17 @@ export function DailyDigestEmail({
         <tbody>
           {bookings.map((booking, index) => (
             <tr key={index} style={{ borderBottom: '1px solid #f3f4f6' }}>
-              <td style={{ padding: '12px 4px', fontWeight: 'bold', color: '#7c2d12' }}>
+              <td
+                style={{
+                  padding: '12px 4px',
+                  fontWeight: 'bold',
+                  color: '#7c2d12',
+                }}
+              >
                 {booking.time}
               </td>
-              <td style={{ padding: '12px 4px' }}>
-                {booking.experienceTitle}
-              </td>
-              <td style={{ padding: '12px 4px' }}>
-                {booking.guestName}
-              </td>
+              <td style={{ padding: '12px 4px' }}>{booking.experienceTitle}</td>
+              <td style={{ padding: '12px 4px' }}>{booking.guestName}</td>
               <td style={{ padding: '12px 4px', textAlign: 'right' }}>
                 {formatEmailGuests(booking.guestCount, locale)}
               </td>
@@ -91,7 +125,14 @@ export function DailyDigestEmail({
 
   return (
     <EmailLayout locale={locale} preview={t(subjects.dailyDigest, locale)}>
-      <Text style={{ fontSize: '24px', fontWeight: 'bold', color: '#7c2d12', margin: '0 0 16px 0' }}>
+      <Text
+        style={{
+          fontSize: '24px',
+          fontWeight: 'bold',
+          color: '#7c2d12',
+          margin: '0 0 16px 0',
+        }}
+      >
         {title}
       </Text>
 
@@ -99,9 +140,7 @@ export function DailyDigestEmail({
         {greeting} {winemakerName},
       </Text>
 
-      <Text style={{ margin: '0 0 24px 0' }}>
-        {intro}
-      </Text>
+      <Text style={{ margin: '0 0 24px 0' }}>{intro}</Text>
 
       {/* Today's Bookings */}
       <Section
@@ -112,7 +151,14 @@ export function DailyDigestEmail({
           margin: '0 0 16px 0',
         }}
       >
-        <Text style={{ margin: '0 0 16px 0', fontWeight: 'bold', fontSize: '16px', color: '#7c2d12' }}>
+        <Text
+          style={{
+            margin: '0 0 16px 0',
+            fontWeight: 'bold',
+            fontSize: '16px',
+            color: '#7c2d12',
+          }}
+        >
           {todaySection} ({todayBookings.length})
         </Text>
         {renderBookingsTable(todayBookings)}
@@ -127,13 +173,26 @@ export function DailyDigestEmail({
           margin: '0 0 24px 0',
         }}
       >
-        <Text style={{ margin: '0 0 16px 0', fontWeight: 'bold', fontSize: '16px', color: '#374151' }}>
+        <Text
+          style={{
+            margin: '0 0 16px 0',
+            fontWeight: 'bold',
+            fontSize: '16px',
+            color: '#374151',
+          }}
+        >
           {tomorrowSection} ({tomorrowBookings.length})
         </Text>
         {renderBookingsTable(tomorrowBookings)}
       </Section>
 
-      <Hr style={{ border: 'none', borderTop: '1px solid #e5e7eb', margin: '24px 0' }} />
+      <Hr
+        style={{
+          border: 'none',
+          borderTop: '1px solid #e5e7eb',
+          margin: '24px 0',
+        }}
+      />
 
       <div style={{ textAlign: 'center', margin: '0 0 24px 0' }}>
         <EmailButton href={dashboardUrl}>{viewDashboard}</EmailButton>

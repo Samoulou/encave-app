@@ -14,7 +14,11 @@ const sizeClasses = {
   xl: 'h-12 w-12',
 };
 
-export function LoadingSpinner({ size = 'md', className, label }: LoadingSpinnerProps) {
+export function LoadingSpinner({
+  size = 'md',
+  className,
+  label,
+}: LoadingSpinnerProps) {
   return (
     <div className={cn('flex items-center justify-center gap-2', className)}>
       <Loader2

@@ -24,20 +24,20 @@ export async function HowItWorks() {
   ];
 
   return (
-    <section className="bg-primary/5 dark:bg-white/5 rounded-3xl p-6 sm:p-8 md:p-12 lg:p-16">
-      <div className="text-center mb-16">
-        <h2 className="font-display text-3xl md:text-4xl font-extrabold text-foreground mb-4">
+    <section className="rounded-3xl bg-primary/5 p-6 dark:bg-white/5 sm:p-8 md:p-12 lg:p-16">
+      <div className="mb-16 text-center">
+        <h2 className="mb-4 font-display text-3xl font-extrabold text-foreground md:text-4xl">
           {t('howItWorks.title')}
         </h2>
-        <p className="text-muted-foreground max-w-2xl mx-auto">
+        <p className="mx-auto max-w-2xl text-muted-foreground">
           {t('howItWorks.subtitle')}
         </p>
       </div>
 
-      <div className="relative grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 text-center">
+      <div className="relative grid grid-cols-1 gap-8 text-center md:grid-cols-3 md:gap-12">
         {/* Connector Line (Desktop only) */}
         <div
-          className="hidden md:block absolute top-12 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-primary/30 to-transparent -z-10"
+          className="absolute left-0 top-12 -z-10 hidden h-0.5 w-full bg-gradient-to-r from-transparent via-primary/30 to-transparent md:block"
           aria-hidden="true"
         />
 
@@ -45,14 +45,14 @@ export async function HowItWorks() {
           const Icon = step.icon;
           return (
             <FadeIn key={index} delay={index * 150}>
-              <div className="relative flex flex-col items-center group">
-                <div className="w-24 h-24 bg-white dark:bg-[#2a1a1f] rounded-full shadow-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 ease-premium border-2 border-primary/20">
+              <div className="group relative flex flex-col items-center">
+                <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full border-2 border-primary/20 bg-white shadow-lg transition-transform duration-300 ease-premium group-hover:scale-110 dark:bg-[#2a1a1f]">
                   <Icon className="h-12 w-12 text-primary" />
                 </div>
-                <h3 className="text-xl font-bold text-foreground mb-2">
+                <h3 className="mb-2 text-xl font-bold text-foreground">
                   {index + 1}. {step.title}
                 </h3>
-                <p className="text-muted-foreground text-sm px-4">
+                <p className="px-4 text-sm text-muted-foreground">
                   {step.description}
                 </p>
               </div>

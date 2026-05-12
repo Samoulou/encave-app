@@ -39,7 +39,10 @@ interface BookingsContentProps {
  * Async server component that fetches booking data.
  * Designed to be wrapped in Suspense for streaming/progressive loading.
  */
-export async function BookingsContent({ wineryId, params }: BookingsContentProps) {
+export async function BookingsContent({
+  wineryId,
+  params,
+}: BookingsContentProps) {
   const t = await getTranslations('bookings');
   // Parse filters from URL params
   const filters: BookingFiltersType = {};
@@ -80,9 +83,8 @@ export async function BookingsContent({ wineryId, params }: BookingsContentProps
     : new Date();
 
   // Status filter for calendar
-  const statusFilter = filters.status && filters.status.length > 0
-    ? filters.status
-    : undefined;
+  const statusFilter =
+    filters.status && filters.status.length > 0 ? filters.status : undefined;
 
   // Fetch data in parallel
   const [bookings, summary, experiences, calendarData] = await Promise.all([
@@ -134,9 +136,7 @@ export async function BookingsContent({ wineryId, params }: BookingsContentProps
                 <BookingsTable bookings={bookings} />
               ) : (
                 <div className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center">
-                  <p className="text-slate-600">
-                    {t('filters.noResults')}
-                  </p>
+                  <p className="text-slate-600">{t('filters.noResults')}</p>
                 </div>
               )}
             </>

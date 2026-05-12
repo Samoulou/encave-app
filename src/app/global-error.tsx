@@ -36,7 +36,9 @@ export default function GlobalError({
             padding: '0 1rem',
           }}
         >
-          <div style={{ width: '100%', maxWidth: '28rem', textAlign: 'center' }}>
+          <div
+            style={{ width: '100%', maxWidth: '28rem', textAlign: 'center' }}
+          >
             <div
               style={{
                 margin: '0 auto 1.5rem',

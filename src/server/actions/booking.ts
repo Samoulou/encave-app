@@ -85,7 +85,10 @@ export async function checkAvailability(
     logError('checkAvailability error', error, { action: 'checkAvailability' });
     return {
       success: false,
-      error: { code: 'INTERNAL_ERROR', message: 'Failed to check availability' },
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to check availability',
+      },
     };
   }
 }
@@ -160,7 +163,10 @@ export async function getTimeSlotsForDate(
 
     return { success: true, data: slots };
   } catch (error) {
-    logError('getTimeSlotsForDate error', error, { action: 'getTimeSlotsForDate', experienceId });
+    logError('getTimeSlotsForDate error', error, {
+      action: 'getTimeSlotsForDate',
+      experienceId,
+    });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to get time slots' },
@@ -244,7 +250,9 @@ export async function getExperienceForBooking(
       },
     };
   } catch (error) {
-    logError('getExperienceForBooking error', error, { action: 'getExperienceForBooking' });
+    logError('getExperienceForBooking error', error, {
+      action: 'getExperienceForBooking',
+    });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to get experience' },
@@ -286,7 +294,10 @@ export async function resendConfirmationEmail(
     if (booking.status !== BookingStatus.CONFIRMED) {
       return {
         success: false,
-        error: { code: 'VALIDATION_ERROR', message: 'Booking is not confirmed' },
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Booking is not confirmed',
+        },
       };
     }
 
@@ -295,19 +306,16 @@ export async function resendConfirmationEmail(
     const bookingDateTime = new Date(booking.date);
     bookingDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
 
-    const sent = await sendBookingConfirmationEmail(
-      booking.visitorEmail,
-      {
-        guestName: booking.visitorName,
-        experienceTitle: booking.experience.title,
-        wineryName: booking.winery.name,
-        date: bookingDateTime,
-        guestCount: booking.guestCount,
-        duration: booking.experience.duration,
-        totalPrice: booking.totalPrice,
-        bookingRef: booking.reference,
-      }
-    );
+    const sent = await sendBookingConfirmationEmail(booking.visitorEmail, {
+      guestName: booking.visitorName,
+      experienceTitle: booking.experience.title,
+      wineryName: booking.winery.name,
+      date: bookingDateTime,
+      guestCount: booking.guestCount,
+      duration: booking.experience.duration,
+      totalPrice: booking.totalPrice,
+      bookingRef: booking.reference,
+    });
 
     if (sent) {
       await db.booking.update({
@@ -318,7 +326,10 @@ export async function resendConfirmationEmail(
 
     return { success: true, data: { sent } };
   } catch (error) {
-    logError('resendConfirmationEmail error', error, { action: 'resendConfirmationEmail', bookingId });
+    logError('resendConfirmationEmail error', error, {
+      action: 'resendConfirmationEmail',
+      bookingId,
+    });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to resend email' },
@@ -329,34 +340,34 @@ export async function resendConfirmationEmail(
 /**
  * Get booking by access token (for email links)
  */
-export async function getBookingByToken(
-  token: string
-): Promise<ActionResult<{
-  id: string;
-  reference: string;
-  status: BookingStatus;
-  visitorName: string;
-  visitorEmail: string;
-  visitorPhone: string;
-  date: Date;
-  timeSlot: string;
-  guestCount: number;
-  totalPrice: number;
-  experience: {
-    title: string;
-    slug: string;
-    duration: number;
-    coverPhoto: string;
-  };
-  winery: {
-    name: string;
-    slug: string;
-    address: string;
-    commune: string;
-    phone: string;
-    email: string;
-  };
-}>> {
+export async function getBookingByToken(token: string): Promise<
+  ActionResult<{
+    id: string;
+    reference: string;
+    status: BookingStatus;
+    visitorName: string;
+    visitorEmail: string;
+    visitorPhone: string;
+    date: Date;
+    timeSlot: string;
+    guestCount: number;
+    totalPrice: number;
+    experience: {
+      title: string;
+      slug: string;
+      duration: number;
+      coverPhoto: string;
+    };
+    winery: {
+      name: string;
+      slug: string;
+      address: string;
+      commune: string;
+      phone: string;
+      email: string;
+    };
+  }>
+> {
   try {
     // Hash the token to compare with stored hash (SEC-002: plaintext token no longer stored)
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
@@ -390,7 +401,10 @@ export async function getBookingByToken(
     if (!booking) {
       return {
         success: false,
-        error: { code: 'NOT_FOUND', message: 'Booking not found or invalid token' },
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Booking not found or invalid token',
+        },
       };
     }
 
@@ -437,7 +451,10 @@ export async function cancelBooking(
 ): Promise<ActionResult<CancellationResult>> {
   try {
     // Hash the token to compare with stored hash (SEC-002: plaintext token no longer stored)
-    const tokenHash = crypto.createHash('sha256').update(accessToken).digest('hex');
+    const tokenHash = crypto
+      .createHash('sha256')
+      .update(accessToken)
+      .digest('hex');
 
     // Find booking and verify access
     const booking = await db.booking.findFirst({
@@ -470,7 +487,10 @@ export async function cancelBooking(
     if (!booking) {
       return {
         success: false,
-        error: { code: 'NOT_FOUND', message: 'Booking not found or invalid access' },
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Booking not found or invalid access',
+        },
       };
     }
 
@@ -490,7 +510,10 @@ export async function cancelBooking(
     const experienceDateTime = new Date(booking.date);
     experienceDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
 
-    const hoursUntilExperience = differenceInHours(experienceDateTime, new Date());
+    const hoursUntilExperience = differenceInHours(
+      experienceDateTime,
+      new Date()
+    );
 
     // Check if experience hasn't already passed
     if (hoursUntilExperience < 0) {
@@ -511,16 +534,23 @@ export async function cancelBooking(
     // Process refund if eligible and payment was made
     if (isEligibleForRefund && booking.stripePaymentIntentId) {
       try {
-        const refundResult = await processRefund(booking.stripePaymentIntentId, true);
+        const refundResult = await processRefund(
+          booking.stripePaymentIntentId,
+          true
+        );
         refundAmount = refundResult.amount;
         stripeRefundId = refundResult.refundId;
       } catch (refundError) {
-        logError('Refund processing error', refundError, { action: 'cancelBooking', bookingId });
+        logError('Refund processing error', refundError, {
+          action: 'cancelBooking',
+          bookingId,
+        });
         return {
           success: false,
           error: {
             code: 'PAYMENT_FAILED',
-            message: 'Failed to process refund. Please try again or contact support.',
+            message:
+              'Failed to process refund. Please try again or contact support.',
           },
         };
       }
@@ -543,17 +573,14 @@ export async function cancelBooking(
     bookingDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
 
     // Send cancellation email to client
-    await sendBookingCancellationEmail(
-      booking.visitorEmail,
-      {
-        guestName: booking.visitorName,
-        experienceTitle: booking.experience.title,
-        wineryName: booking.winery.name,
-        date: bookingDateTime,
-        totalPrice: booking.totalPrice,
-        bookingRef: booking.reference,
-      }
-    );
+    await sendBookingCancellationEmail(booking.visitorEmail, {
+      guestName: booking.visitorName,
+      experienceTitle: booking.experience.title,
+      wineryName: booking.winery.name,
+      date: bookingDateTime,
+      totalPrice: booking.totalPrice,
+      bookingRef: booking.reference,
+    });
 
     // Send notification to winemaker
     await sendWinemakerCancellationEmail(
@@ -579,7 +606,10 @@ export async function cancelBooking(
       },
     };
   } catch (error) {
-    logError('cancelBooking error', error, { action: 'cancelBooking', bookingId });
+    logError('cancelBooking error', error, {
+      action: 'cancelBooking',
+      bookingId,
+    });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to cancel booking' },
@@ -593,16 +623,21 @@ export async function cancelBooking(
 export async function getCancellationInfo(
   bookingId: string,
   accessToken: string
-): Promise<ActionResult<{
-  canCancel: boolean;
-  isEligibleForRefund: boolean;
-  hoursUntilExperience: number;
-  refundAmount: number;
-  reason?: string;
-}>> {
+): Promise<
+  ActionResult<{
+    canCancel: boolean;
+    isEligibleForRefund: boolean;
+    hoursUntilExperience: number;
+    refundAmount: number;
+    reason?: string;
+  }>
+> {
   try {
     // Hash the token to compare with stored hash (SEC-002: plaintext token no longer stored)
-    const tokenHash = crypto.createHash('sha256').update(accessToken).digest('hex');
+    const tokenHash = crypto
+      .createHash('sha256')
+      .update(accessToken)
+      .digest('hex');
 
     const booking = await db.booking.findFirst({
       where: {
@@ -637,7 +672,10 @@ export async function getCancellationInfo(
     const experienceDateTime = new Date(booking.date);
     experienceDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
 
-    const hoursUntilExperience = differenceInHours(experienceDateTime, new Date());
+    const hoursUntilExperience = differenceInHours(
+      experienceDateTime,
+      new Date()
+    );
 
     // Check if experience hasn't passed
     if (hoursUntilExperience < 0) {
@@ -666,10 +704,16 @@ export async function getCancellationInfo(
       },
     };
   } catch (error) {
-    logError('getCancellationInfo error', error, { action: 'getCancellationInfo', bookingId });
+    logError('getCancellationInfo error', error, {
+      action: 'getCancellationInfo',
+      bookingId,
+    });
     return {
       success: false,
-      error: { code: 'INTERNAL_ERROR', message: 'Failed to get cancellation info' },
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to get cancellation info',
+      },
     };
   }
 }

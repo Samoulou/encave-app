@@ -34,7 +34,10 @@ export default async function AdminLayout({
             <Link href="/admin" className="text-xl font-bold text-burgundy-700">
               EnCave Admin
             </Link>
-            <nav aria-label="Admin navigation" className="flex items-center gap-4">
+            <nav
+              aria-label="Admin navigation"
+              className="flex items-center gap-4"
+            >
               <Link
                 href="/admin"
                 className="flex items-center gap-2 text-sm text-slate-600 hover:text-burgundy-700"
@@ -60,9 +63,7 @@ export default async function AdminLayout({
             </nav>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-slate-600">
-              {session.user.email}
-            </span>
+            <span className="text-sm text-slate-600">{session.user.email}</span>
             <form action="/api/auth/signout" method="POST">
               <Button variant="outline" size="sm" type="submit">
                 <LogOut className="mr-2 h-4 w-4" aria-hidden="true" />

@@ -90,8 +90,12 @@ describe('Checkout Server Actions', () => {
     };
 
     it('creates booking and returns checkout URL with valid input', async () => {
-      vi.mocked(db.experience.findUnique).mockResolvedValue(mockExperience as never);
-      vi.mocked(db.booking.aggregate).mockResolvedValue({ _sum: { guestCount: 0 } } as never);
+      vi.mocked(db.experience.findUnique).mockResolvedValue(
+        mockExperience as never
+      );
+      vi.mocked(db.booking.aggregate).mockResolvedValue({
+        _sum: { guestCount: 0 },
+      } as never);
       vi.mocked(db.booking.findUnique).mockResolvedValue(null);
       vi.mocked(db.booking.create).mockResolvedValue({
         id: 'booking-1',
@@ -101,7 +105,8 @@ describe('Checkout Server Actions', () => {
       vi.mocked(db.booking.update).mockResolvedValue({} as never);
 
       // Dynamically import after mocks are set up
-      const { createBookingAndCheckout } = await import('@/server/actions/checkout');
+      const { createBookingAndCheckout } =
+        await import('@/server/actions/checkout');
       const result = await createBookingAndCheckout(validInput);
 
       expect(result.success).toBe(true);
@@ -113,7 +118,8 @@ describe('Checkout Server Actions', () => {
     });
 
     it('returns validation error for invalid email', async () => {
-      const { createBookingAndCheckout } = await import('@/server/actions/checkout');
+      const { createBookingAndCheckout } =
+        await import('@/server/actions/checkout');
       const result = await createBookingAndCheckout({
         ...validInput,
         visitorEmail: 'invalid-email',
@@ -126,7 +132,8 @@ describe('Checkout Server Actions', () => {
     });
 
     it('returns validation error for missing name', async () => {
-      const { createBookingAndCheckout } = await import('@/server/actions/checkout');
+      const { createBookingAndCheckout } =
+        await import('@/server/actions/checkout');
       const result = await createBookingAndCheckout({
         ...validInput,
         visitorName: '',
@@ -141,7 +148,8 @@ describe('Checkout Server Actions', () => {
     it('returns NOT_FOUND when experience does not exist', async () => {
       vi.mocked(db.experience.findUnique).mockResolvedValue(null);
 
-      const { createBookingAndCheckout } = await import('@/server/actions/checkout');
+      const { createBookingAndCheckout } =
+        await import('@/server/actions/checkout');
       const result = await createBookingAndCheckout(validInput);
 
       expect(result.success).toBe(false);
@@ -160,7 +168,8 @@ describe('Checkout Server Actions', () => {
         },
       } as never);
 
-      const { createBookingAndCheckout } = await import('@/server/actions/checkout');
+      const { createBookingAndCheckout } =
+        await import('@/server/actions/checkout');
       const result = await createBookingAndCheckout(validInput);
 
       expect(result.success).toBe(false);
@@ -170,11 +179,16 @@ describe('Checkout Server Actions', () => {
     });
 
     it('returns NO_CAPACITY when slot is full', async () => {
-      vi.mocked(db.experience.findUnique).mockResolvedValue(mockExperience as never);
+      vi.mocked(db.experience.findUnique).mockResolvedValue(
+        mockExperience as never
+      );
       // Already 8 guests booked, max is 10, trying to book 4 more
-      vi.mocked(db.booking.aggregate).mockResolvedValue({ _sum: { guestCount: 8 } } as never);
+      vi.mocked(db.booking.aggregate).mockResolvedValue({
+        _sum: { guestCount: 8 },
+      } as never);
 
-      const { createBookingAndCheckout } = await import('@/server/actions/checkout');
+      const { createBookingAndCheckout } =
+        await import('@/server/actions/checkout');
       const result = await createBookingAndCheckout(validInput);
 
       expect(result.success).toBe(false);
@@ -184,22 +198,29 @@ describe('Checkout Server Actions', () => {
     });
 
     it('calculates platform fee correctly', async () => {
-      vi.mocked(db.experience.findUnique).mockResolvedValue(mockExperience as never);
-      vi.mocked(db.booking.aggregate).mockResolvedValue({ _sum: { guestCount: 0 } } as never);
+      vi.mocked(db.experience.findUnique).mockResolvedValue(
+        mockExperience as never
+      );
+      vi.mocked(db.booking.aggregate).mockResolvedValue({
+        _sum: { guestCount: 0 },
+      } as never);
       vi.mocked(db.booking.findUnique).mockResolvedValue(null);
 
       let capturedBookingData: Record<string, unknown> | null = null;
-      vi.mocked(db.booking.create).mockImplementation((args: { data: Record<string, unknown> }) => {
-        capturedBookingData = args.data;
-        return Promise.resolve({
-          id: 'booking-1',
-          reference: 'ENC-ABC123',
-          status: BookingStatus.PENDING_PAYMENT,
-        });
-      });
+      vi.mocked(db.booking.create).mockImplementation(
+        (args: { data: Record<string, unknown> }) => {
+          capturedBookingData = args.data;
+          return Promise.resolve({
+            id: 'booking-1',
+            reference: 'ENC-ABC123',
+            status: BookingStatus.PENDING_PAYMENT,
+          });
+        }
+      );
       vi.mocked(db.booking.update).mockResolvedValue({} as never);
 
-      const { createBookingAndCheckout } = await import('@/server/actions/checkout');
+      const { createBookingAndCheckout } =
+        await import('@/server/actions/checkout');
       await createBookingAndCheckout(validInput);
 
       // Total: 5000 * 4 = 20000 cents (200 CHF)
@@ -292,7 +313,8 @@ describe('Checkout Server Actions', () => {
 
       vi.mocked(db.booking.findUnique).mockResolvedValue(mockBooking as never);
 
-      const { getBookingByReference } = await import('@/server/actions/checkout');
+      const { getBookingByReference } =
+        await import('@/server/actions/checkout');
       const result = await getBookingByReference('ENC-XYZ789');
 
       expect(result.success).toBe(true);
@@ -305,7 +327,8 @@ describe('Checkout Server Actions', () => {
     it('returns NOT_FOUND when reference does not exist', async () => {
       vi.mocked(db.booking.findUnique).mockResolvedValue(null);
 
-      const { getBookingByReference } = await import('@/server/actions/checkout');
+      const { getBookingByReference } =
+        await import('@/server/actions/checkout');
       const result = await getBookingByReference('ENC-NOTFOUND');
 
       expect(result.success).toBe(false);

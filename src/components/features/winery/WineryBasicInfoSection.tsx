@@ -28,7 +28,7 @@ function SectionHeader({
   description?: string;
 }) {
   return (
-    <div className="flex items-start gap-4 pb-6 border-b border-stone-200">
+    <div className="flex items-start gap-4 border-b border-stone-200 pb-6">
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-burgundy-100 text-burgundy-600">
         {icon}
       </div>
@@ -44,14 +44,21 @@ function SectionHeader({
   );
 }
 
-export function WineryBasicInfoSection({ control }: WineryBasicInfoSectionProps) {
+export function WineryBasicInfoSection({
+  control,
+}: WineryBasicInfoSectionProps) {
   const t = useTranslations('winery');
 
   return (
     <div className="space-y-6">
       <SectionHeader
         icon={
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            className="h-5 w-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -69,7 +76,9 @@ export function WineryBasicInfoSection({ control }: WineryBasicInfoSectionProps)
         name="description"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-base font-medium">{t('description')}</FormLabel>
+            <FormLabel className="text-base font-medium">
+              {t('description')}
+            </FormLabel>
             <FormControl>
               <Textarea
                 placeholder={t('descriptionPlaceholder')}
@@ -77,9 +86,7 @@ export function WineryBasicInfoSection({ control }: WineryBasicInfoSectionProps)
                 {...field}
               />
             </FormControl>
-            <FormDescription>
-              {t('descriptionMinLength')}
-            </FormDescription>
+            <FormDescription>{t('descriptionMinLength')}</FormDescription>
             <FormMessage />
           </FormItem>
         )}

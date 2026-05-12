@@ -32,22 +32,26 @@ export function QuickFacts({
   };
 
   return (
-    <div className="flex flex-wrap gap-3 pb-6 border-b border-[#f2e9eb]">
-      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary-light text-foreground">
+    <div className="flex flex-wrap gap-3 border-b border-[#f2e9eb] pb-6">
+      <div className="flex items-center gap-2 rounded-lg bg-primary-light px-3 py-2 text-foreground">
         <Clock className="h-5 w-5 text-primary" />
         <span className="text-sm font-medium">{formatDuration(duration)}</span>
       </div>
-      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary-light text-foreground">
+      <div className="flex items-center gap-2 rounded-lg bg-primary-light px-3 py-2 text-foreground">
         <Users className="h-5 w-5 text-primary" />
-        <span className="text-sm font-medium">{t('maxGuests2', { count: maxCapacity })}</span>
+        <span className="text-sm font-medium">
+          {t('maxGuests2', { count: maxCapacity })}
+        </span>
       </div>
-      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary-light text-foreground">
+      <div className="flex items-center gap-2 rounded-lg bg-primary-light px-3 py-2 text-foreground">
         <Globe className="h-5 w-5 text-primary" />
         <span className="text-sm font-medium">{languages.join(' / ')}</span>
       </div>
-      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary-light text-foreground">
+      <div className="flex items-center gap-2 rounded-lg bg-primary-light px-3 py-2 text-foreground">
         <GraduationCap className="h-5 w-5 text-primary" />
-        <span className="text-sm font-medium">{t(`typesDetailed.${type}`)}</span>
+        <span className="text-sm font-medium">
+          {t(`typesDetailed.${type}`)}
+        </span>
       </div>
     </div>
   );

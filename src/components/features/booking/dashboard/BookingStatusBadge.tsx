@@ -64,14 +64,17 @@ interface BookingStatusBadgeProps {
 /**
  * Status badge component with dot indicator matching US-UI-09 mockup.
  */
-export function BookingStatusBadge({ status, className }: BookingStatusBadgeProps) {
+export function BookingStatusBadge({
+  status,
+  className,
+}: BookingStatusBadgeProps) {
   const t = useTranslations('bookings.status');
   const config = STATUS_CONFIG[status];
 
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border',
+        'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-bold',
         config.bg,
         config.text,
         config.border,

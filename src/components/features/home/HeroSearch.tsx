@@ -28,24 +28,23 @@ export function HeroSearch({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-xl mx-auto">
-      <div className="relative flex items-center gap-2 p-2 bg-white/95 backdrop-blur-sm rounded-xl shadow-lg">
+    <form onSubmit={handleSubmit} className="mx-auto w-full max-w-xl">
+      <div className="relative flex items-center gap-2 rounded-xl bg-white/95 p-2 shadow-lg backdrop-blur-sm">
         <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+          <Search
+            className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+            aria-hidden="true"
+          />
           <Input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={placeholder}
-            className="h-12 pl-12 pr-4 text-base border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+            className="h-12 border-0 bg-transparent pl-12 pr-4 text-base focus-visible:ring-0 focus-visible:ring-offset-0"
             aria-label={placeholder}
           />
         </div>
-        <Button
-          type="submit"
-          size="lg"
-          className="h-12 px-6 shrink-0"
-        >
+        <Button type="submit" size="lg" className="h-12 shrink-0 px-6">
           {buttonText}
         </Button>
       </div>

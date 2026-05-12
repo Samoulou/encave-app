@@ -55,7 +55,11 @@ describe('NavLink', () => {
   it('applies custom className', () => {
     vi.mocked(usePathname).mockReturnValue('/');
 
-    render(<NavLink href="/test" className="custom-class">Test</NavLink>);
+    render(
+      <NavLink href="/test" className="custom-class">
+        Test
+      </NavLink>
+    );
 
     const link = screen.getByRole('link', { name: 'Test' });
     expect(link).toHaveClass('custom-class');

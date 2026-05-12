@@ -80,7 +80,10 @@ export function generateGoogleCalendarUrl(event: CalendarEventData): string {
 /**
  * Triggers a file download of the iCal event
  */
-export function downloadICalEvent(event: CalendarEventData, filename: string): boolean {
+export function downloadICalEvent(
+  event: CalendarEventData,
+  filename: string
+): boolean {
   const icsContent = generateICalEvent(event);
 
   if (!icsContent) {

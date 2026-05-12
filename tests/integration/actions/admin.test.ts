@@ -63,7 +63,11 @@ describe('Admin Actions Integration Tests', () => {
     name: 'Test Winery',
     slug: 'test-winery',
     status: 'PENDING' as const,
-    user: { email: 'winemaker@test.com', name: 'Test Winemaker', preferredLocale: 'FR' as const },
+    user: {
+      email: 'winemaker@test.com',
+      name: 'Test Winemaker',
+      preferredLocale: 'FR' as const,
+    },
     createdAt: new Date(),
     updatedAt: new Date(),
   };

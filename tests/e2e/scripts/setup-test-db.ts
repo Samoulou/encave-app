@@ -14,7 +14,12 @@
 
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
-import { TEST_WINERIES, TEST_EXPERIENCES, TEST_VISITORS, TEST_USERS } from '../fixtures/test-data';
+import {
+  TEST_WINERIES,
+  TEST_EXPERIENCES,
+  TEST_VISITORS,
+  TEST_USERS,
+} from '../fixtures/test-data';
 import { TEST_USERS as AUTH_TEST_USERS } from '../fixtures/auth.fixture';
 
 const prisma = new PrismaClient();
@@ -33,10 +38,7 @@ async function main() {
 
   await prisma.user.deleteMany({
     where: {
-      OR: [
-        { id: { in: testUserIds } },
-        { email: { in: authUserEmails } },
-      ],
+      OR: [{ id: { in: testUserIds } }, { email: { in: authUserEmails } }],
     },
   });
 
@@ -85,7 +87,8 @@ async function main() {
         data: {
           name: 'Auth Test Winery',
           slug: 'auth-test-winery',
-          description: 'A test winery for authentication E2E tests with all required features enabled.',
+          description:
+            'A test winery for authentication E2E tests with all required features enabled.',
           commune: 'Sion',
           address: '100 Route des Tests, 1950 Sion',
           phone: '+41 27 123 45 67',
@@ -154,7 +157,9 @@ async function main() {
   console.log('');
   console.log('Données créées:');
   console.log(`  - ${Object.keys(TEST_USERS).length} winemaker users`);
-  console.log(`  - ${Object.keys(AUTH_TEST_USERS).length} auth test users (guest, winery_owner, admin)`);
+  console.log(
+    `  - ${Object.keys(AUTH_TEST_USERS).length} auth test users (guest, winery_owner, admin)`
+  );
   console.log(`  - ${Object.keys(TEST_WINERIES).length} wineries`);
   console.log(`  - ${Object.keys(TEST_EXPERIENCES).length} experiences`);
 }

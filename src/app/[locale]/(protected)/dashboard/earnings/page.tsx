@@ -13,7 +13,11 @@ import { EarningsTransactionsSection } from './EarningsTransactionsSection';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
   return generatePageMetadata({
     locale: locale as Locale,
@@ -60,16 +64,30 @@ export default async function EarningsPage({ searchParams }: PageProps) {
 
         {/* Stripe Onboarding Warning - renders immediately */}
         {!winery.stripeOnboardingComplete && (
-          <div className="flex items-start gap-3 rounded-xl bg-amber-50 p-4 border border-amber-200">
+          <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
             <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-600" />
             <div className="text-sm text-amber-900">
               <p className="font-medium">{t('completeSetupTitle')}</p>
               <p className="mt-1 text-amber-700">
-                {t('completeSetupDescription', { wineryProfileLink: '__LINK__' }).split('__LINK__').map((part, i, arr) =>
-                  i < arr.length - 1 ? (
-                    <Fragment key={i}>{part}<a href="/dashboard/winery/profile" className="underline">{t('wineryProfileLink')}</a></Fragment>
-                  ) : part
-                )}
+                {t('completeSetupDescription', {
+                  wineryProfileLink: '__LINK__',
+                })
+                  .split('__LINK__')
+                  .map((part, i, arr) =>
+                    i < arr.length - 1 ? (
+                      <Fragment key={i}>
+                        {part}
+                        <a
+                          href="/dashboard/winery/profile"
+                          className="underline"
+                        >
+                          {t('wineryProfileLink')}
+                        </a>
+                      </Fragment>
+                    ) : (
+                      part
+                    )
+                  )}
               </p>
             </div>
           </div>
@@ -97,16 +115,22 @@ export default async function EarningsPage({ searchParams }: PageProps) {
 /** Skeleton for summary cards - matches mockup 3-card layout */
 function SummarySkeleton() {
   return (
-    <SkeletonContainer label="Loading summary..." className="grid gap-4 grid-cols-1 md:grid-cols-3">
+    <SkeletonContainer
+      label="Loading summary..."
+      className="grid grid-cols-1 gap-4 md:grid-cols-3"
+    >
       {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} className="rounded-xl border border-border bg-white p-6 shadow-sm h-40">
+        <div
+          key={i}
+          className="h-40 rounded-xl border border-border bg-white p-6 shadow-sm"
+        >
           <div className="flex items-center justify-between">
             <Skeleton className="h-4 w-28" />
             <Skeleton className="h-10 w-10 rounded-lg" />
           </div>
           <div className="mt-4">
             <Skeleton className="h-9 w-36" />
-            <Skeleton className="h-4 w-24 mt-2" />
+            <Skeleton className="mt-2 h-4 w-24" />
           </div>
         </div>
       ))}
@@ -118,11 +142,11 @@ function SummarySkeleton() {
 function ChartsSkeleton() {
   return (
     <SkeletonContainer label="Loading chart...">
-      <div className="rounded-xl border border-border bg-white p-6 lg:p-8 shadow-sm">
-        <div className="flex items-center justify-between mb-8">
+      <div className="rounded-xl border border-border bg-white p-6 shadow-sm lg:p-8">
+        <div className="mb-8 flex items-center justify-between">
           <div>
             <Skeleton className="h-5 w-40" />
-            <Skeleton className="h-4 w-64 mt-2" />
+            <Skeleton className="mt-2 h-4 w-64" />
           </div>
           <div className="flex items-center gap-4">
             <Skeleton className="h-4 w-16" />
@@ -143,7 +167,7 @@ function TransactionsSkeleton() {
         <Skeleton className="h-6 w-44" />
         <Skeleton className="h-4 w-16" />
       </div>
-      <div className="rounded-xl border border-border bg-white shadow-sm overflow-hidden">
+      <div className="overflow-hidden rounded-xl border border-border bg-white shadow-sm">
         {/* Table Header */}
         <div className="border-b border-border bg-gray-50 px-6 py-4">
           <div className="grid grid-cols-7 gap-4">
@@ -158,8 +182,8 @@ function TransactionsSkeleton() {
         </div>
         {/* Table Rows */}
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="px-6 py-4 border-b border-[#f2e9eb]">
-            <div className="grid grid-cols-7 gap-4 items-center">
+          <div key={i} className="border-b border-[#f2e9eb] px-6 py-4">
+            <div className="grid grid-cols-7 items-center gap-4">
               <Skeleton className="h-4 w-24" />
               <Skeleton className="h-4 w-20" />
               <Skeleton className="h-4 w-32" />

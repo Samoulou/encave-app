@@ -6,7 +6,9 @@ import { BookingStatus, type ExperienceType } from '@prisma/client';
  * Convert a local date to UTC date, preserving the local date components.
  */
 function localDateToUTC(date: Date): Date {
-  return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  return new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+  );
 }
 
 export interface ClientBookingWithDetails {
@@ -108,34 +110,32 @@ export const getClientUpcomingBookings = cache(
  * Past = date < today OR status in [COMPLETED, CANCELLED_BY_CLIENT, CANCELLED_BY_WINERY, NO_SHOW].
  * Excludes PENDING_PAYMENT.
  */
-export const getClientPastBookings = cache(
-  async function getClientPastBookings(
-    userEmail: string
-  ): Promise<ClientBookingWithDetails[]> {
-    const todayUTC = localDateToUTC(new Date());
+export const getClientPastBookings = cache(async function getClientPastBookings(
+  userEmail: string
+): Promise<ClientBookingWithDetails[]> {
+  const todayUTC = localDateToUTC(new Date());
 
-    const bookings = await db.booking.findMany({
-      where: {
-        visitorEmail: { equals: userEmail, mode: 'insensitive' },
-        status: { not: BookingStatus.PENDING_PAYMENT },
-        OR: [
-          { date: { lt: todayUTC } },
-          {
-            status: {
-              in: [
-                BookingStatus.COMPLETED,
-                BookingStatus.CANCELLED_BY_CLIENT,
-                BookingStatus.CANCELLED_BY_WINERY,
-                BookingStatus.NO_SHOW,
-              ],
-            },
+  const bookings = await db.booking.findMany({
+    where: {
+      visitorEmail: { equals: userEmail, mode: 'insensitive' },
+      status: { not: BookingStatus.PENDING_PAYMENT },
+      OR: [
+        { date: { lt: todayUTC } },
+        {
+          status: {
+            in: [
+              BookingStatus.COMPLETED,
+              BookingStatus.CANCELLED_BY_CLIENT,
+              BookingStatus.CANCELLED_BY_WINERY,
+              BookingStatus.NO_SHOW,
+            ],
           },
-        ],
-      },
-      orderBy: [{ date: 'desc' }, { timeSlot: 'desc' }],
-      select: clientBookingSelect,
-    });
+        },
+      ],
+    },
+    orderBy: [{ date: 'desc' }, { timeSlot: 'desc' }],
+    select: clientBookingSelect,
+  });
 
-    return bookings;
-  }
-);
+  return bookings;
+});

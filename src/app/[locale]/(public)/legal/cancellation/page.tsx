@@ -23,7 +23,9 @@ export default async function CancellationPolicyPage({ params }: Props) {
   return (
     <>
       <h1>{t('cancellation.pageTitle')}</h1>
-      <p className="lead">{t('cancellation.lastUpdated', { date: '2026-01-12' })}</p>
+      <p className="lead">
+        {t('cancellation.lastUpdated', { date: '2026-01-12' })}
+      </p>
 
       <h2>{t('cancellation.sections.overview.title')}</h2>
       <p>{t('cancellation.sections.overview.content')}</p>
@@ -32,19 +34,27 @@ export default async function CancellationPolicyPage({ params }: Props) {
       <p>{t('cancellation.sections.clientPolicy.content')}</p>
 
       <div className="my-6 rounded-xl border border-stone-200 bg-white p-6">
-        <h3 className="mt-0">{t('cancellation.sections.clientPolicy.timeline.title')}</h3>
+        <h3 className="mt-0">
+          {t('cancellation.sections.clientPolicy.timeline.title')}
+        </h3>
         <ul>
           <li>
-            <strong>{t('cancellation.sections.clientPolicy.timeline.over24h.time')}</strong>:{' '}
-            {t('cancellation.sections.clientPolicy.timeline.over24h.refund')}
+            <strong>
+              {t('cancellation.sections.clientPolicy.timeline.over24h.time')}
+            </strong>
+            : {t('cancellation.sections.clientPolicy.timeline.over24h.refund')}
           </li>
           <li>
-            <strong>{t('cancellation.sections.clientPolicy.timeline.12to24h.time')}</strong>:{' '}
-            {t('cancellation.sections.clientPolicy.timeline.12to24h.refund')}
+            <strong>
+              {t('cancellation.sections.clientPolicy.timeline.12to24h.time')}
+            </strong>
+            : {t('cancellation.sections.clientPolicy.timeline.12to24h.refund')}
           </li>
           <li>
-            <strong>{t('cancellation.sections.clientPolicy.timeline.under12h.time')}</strong>:{' '}
-            {t('cancellation.sections.clientPolicy.timeline.under12h.refund')}
+            <strong>
+              {t('cancellation.sections.clientPolicy.timeline.under12h.time')}
+            </strong>
+            : {t('cancellation.sections.clientPolicy.timeline.under12h.refund')}
           </li>
         </ul>
       </div>

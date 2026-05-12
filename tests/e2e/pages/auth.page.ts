@@ -42,9 +42,13 @@ export class LoginPage extends BasePage {
     super(page);
     this.emailInput = page.getByRole('textbox', { name: /email/i });
     this.passwordInput = page.locator('input[type="password"]');
-    this.submitButton = page.getByRole('button', { name: /log in|sign in|se connecter/i });
+    this.submitButton = page.getByRole('button', {
+      name: /log in|sign in|se connecter/i,
+    });
     this.errorMessage = page.locator('.bg-red-50');
-    this.registerLink = page.getByRole('link', { name: /create account|créer un compte/i });
+    this.registerLink = page.getByRole('link', {
+      name: /create account|créer un compte/i,
+    });
     this.rememberMeCheckbox = page.getByRole('checkbox', { name: /remember/i });
     this.showPasswordButton = page.locator('button[aria-label*="password"]');
   }
@@ -53,7 +57,9 @@ export class LoginPage extends BasePage {
    * Navigate to login page
    */
   async navigate(callbackUrl?: string) {
-    const url = callbackUrl ? `/login?callbackUrl=${encodeURIComponent(callbackUrl)}` : '/login';
+    const url = callbackUrl
+      ? `/login?callbackUrl=${encodeURIComponent(callbackUrl)}`
+      : '/login';
     await this.goto(url);
   }
 
@@ -142,10 +148,16 @@ export class RegisterPage extends BasePage {
     this.nameInput = page.getByRole('textbox', { name: /name|nom/i });
     this.emailInput = page.getByRole('textbox', { name: /email/i });
     // Get password fields by their labels more specifically
-    this.passwordInput = page.locator('input[autocomplete="new-password"]').first();
-    this.confirmPasswordInput = page.locator('input[autocomplete="new-password"]').last();
+    this.passwordInput = page
+      .locator('input[autocomplete="new-password"]')
+      .first();
+    this.confirmPasswordInput = page
+      .locator('input[autocomplete="new-password"]')
+      .last();
     this.winemakerCheckbox = page.getByRole('checkbox');
-    this.submitButton = page.getByRole('button', { name: /create account|créer|sign up/i });
+    this.submitButton = page.getByRole('button', {
+      name: /create account|créer|sign up/i,
+    });
     this.errorMessage = page.locator('.bg-red-50');
     this.loginLink = page.getByRole('link', { name: /sign in|se connecter/i });
     this.passwordHint = page.locator('text=/8.*characters|caractères/i');
@@ -217,7 +229,9 @@ export class RegisterPage extends BasePage {
   /**
    * Get form validation errors
    */
-  async getFieldError(fieldName: 'name' | 'email' | 'password' | 'confirmPassword'): Promise<string | null> {
+  async getFieldError(
+    fieldName: 'name' | 'email' | 'password' | 'confirmPassword'
+  ): Promise<string | null> {
     const fieldLocators = {
       name: this.nameInput,
       email: this.emailInput,
@@ -227,7 +241,9 @@ export class RegisterPage extends BasePage {
 
     const field = fieldLocators[fieldName];
     const formItem = field.locator('..').locator('..');
-    const errorElement = formItem.locator('[data-slot="form-message"], .text-red-500, .text-destructive');
+    const errorElement = formItem.locator(
+      '[data-slot="form-message"], .text-red-500, .text-destructive'
+    );
 
     if (await errorElement.isVisible()) {
       return this.getText(errorElement);
@@ -247,11 +263,18 @@ export class AuthHeader extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.userMenuButton = page.getByTestId('user-menu').or(page.getByRole('button', { name: /account|profile|compte/i }));
-    this.logoutButton = page.getByRole('menuitem', { name: /log out|sign out|déconnexion/i })
+    this.userMenuButton = page
+      .getByTestId('user-menu')
+      .or(page.getByRole('button', { name: /account|profile|compte/i }));
+    this.logoutButton = page
+      .getByRole('menuitem', { name: /log out|sign out|déconnexion/i })
       .or(page.getByRole('button', { name: /log out|sign out|déconnexion/i }));
-    this.loginButton = page.getByRole('link', { name: /log in|sign in|connexion/i });
-    this.registerButton = page.getByRole('link', { name: /register|sign up|inscription/i });
+    this.loginButton = page.getByRole('link', {
+      name: /log in|sign in|connexion/i,
+    });
+    this.registerButton = page.getByRole('link', {
+      name: /register|sign up|inscription/i,
+    });
   }
 
   /**

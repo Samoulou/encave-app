@@ -56,7 +56,9 @@ export function StripeWarningBanner({
           <h3 className="text-sm font-medium text-amber-800">
             {t('actionRequired')}
           </h3>
-          <p className="mt-1 text-sm text-amber-700">{message ?? t('defaultMessage')}</p>
+          <p className="mt-1 text-sm text-amber-700">
+            {message ?? t('defaultMessage')}
+          </p>
           <div className="mt-3">
             <Button
               size="sm"
@@ -67,7 +69,10 @@ export function StripeWarningBanner({
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                  <Loader2
+                    className="mr-2 h-4 w-4 animate-spin"
+                    aria-hidden="true"
+                  />
                   {t('loading')}
                 </>
               ) : (

@@ -1,20 +1,24 @@
 # ENC-016b — Ajouter champ téléphone à l'édition profil client
 
 ## Objectif métier
+
 L'encaveur a besoin d'un canal de contact direct le jour-J en cas d'imprévu : retard du client, météo, changement de salle, urgence médicale, etc. L'email seul ne suffit pas (latence trop élevée le jour même). On ajoute donc un champ téléphone optionnel au profil client, visible par l'encaveur sur la fiche de chaque booking. Préparation également au canal SMS de rappel (futur, hors-scope).
 
 ## Acteurs
+
 - **CLIENT** : renseigne (ou non) son numéro dans `/account/profile`.
 - **WINEMAKER** : consulte le numéro sur la page détail de la session (jour-J) si renseigné.
 - **ADMIN** : voit le numéro dans le détail utilisateur back-office (audit / support).
 
 ## Préconditions & déclencheurs
+
 - Page `/account/profile` existe déjà avec d'autres champs (nom, email, locale).
 - Modèle `User` Prisma à étendre avec un champ `phone: String?` (optionnel, nullable).
 - Format international **E.164** (ex: `+41791234567`) — librairie suggérée : `libphonenumber-js`.
 - Validation Zod côté server action + côté formulaire client.
 
 ## User stories
+
 - En tant que **cliente**, je veux pouvoir ajouter mon numéro de téléphone à mon profil pour que l'encaveur puisse me joindre rapidement le jour de l'expérience.
 - En tant que **cliente sensible à la vie privée**, je veux que ce champ reste **facultatif** et que je puisse le supprimer à tout moment.
 - En tant qu'**encaveur**, je veux voir le téléphone du client sur la fiche de la session du jour pour pouvoir l'appeler ou lui envoyer un message si besoin.
@@ -65,6 +69,7 @@ Scénario : téléphone non visible côté CLIENT public
 ```
 
 ## Règles métier
+
 - **Champ optionnel** : `User.phone` est `String?` (nullable). Pas d'obligation au signup, pas d'obligation au booking. Le client peut le renseigner ou non.
 - **Format de stockage** : E.164 normalisé (`+41791234567`). Tout numéro saisi est passé dans `parsePhoneNumber()` de `libphonenumber-js` et stocké au format E.164.
 - **Format d'affichage** :
@@ -86,24 +91,25 @@ Scénario : téléphone non visible côté CLIENT public
 
 ## Copy FR définitive
 
-| Élément | Clé i18n suggérée | Texte FR |
-|---|---|---|
-| Label champ | `profile.phone.label` | Numéro de téléphone |
-| Sous-label / hint | `profile.phone.hint` | Facultatif. L'encaveur pourra vous joindre rapidement le jour de l'expérience. |
-| Placeholder | `profile.phone.placeholder` | 079 123 45 67 |
-| Erreur format | `profile.phone.errorFormat` | Le format du numéro de téléphone est invalide. |
-| Erreur trop court | `profile.phone.errorTooShort` | Numéro incomplet. |
-| Toast succès | `profile.phone.successToast` | Profil mis à jour. |
-| Section profil | `profile.contact.sectionTitle` | Coordonnées |
-| Label vue encaveur | `booking.detail.clientPhoneLabel` | Téléphone |
-| Bouton afficher | `booking.detail.clientPhoneReveal` | Afficher |
-| Bouton masquer | `booking.detail.clientPhoneHide` | Masquer |
-| Téléphone non renseigné | `booking.detail.clientPhoneEmpty` | Non renseigné |
-| Tooltip encaveur | `booking.detail.clientPhoneTooltip` | Visible uniquement pour les besoins de cette réservation. À ne pas utiliser à d'autres fins. |
+| Élément                 | Clé i18n suggérée                   | Texte FR                                                                                     |
+| ----------------------- | ----------------------------------- | -------------------------------------------------------------------------------------------- |
+| Label champ             | `profile.phone.label`               | Numéro de téléphone                                                                          |
+| Sous-label / hint       | `profile.phone.hint`                | Facultatif. L'encaveur pourra vous joindre rapidement le jour de l'expérience.               |
+| Placeholder             | `profile.phone.placeholder`         | 079 123 45 67                                                                                |
+| Erreur format           | `profile.phone.errorFormat`         | Le format du numéro de téléphone est invalide.                                               |
+| Erreur trop court       | `profile.phone.errorTooShort`       | Numéro incomplet.                                                                            |
+| Toast succès            | `profile.phone.successToast`        | Profil mis à jour.                                                                           |
+| Section profil          | `profile.contact.sectionTitle`      | Coordonnées                                                                                  |
+| Label vue encaveur      | `booking.detail.clientPhoneLabel`   | Téléphone                                                                                    |
+| Bouton afficher         | `booking.detail.clientPhoneReveal`  | Afficher                                                                                     |
+| Bouton masquer          | `booking.detail.clientPhoneHide`    | Masquer                                                                                      |
+| Téléphone non renseigné | `booking.detail.clientPhoneEmpty`   | Non renseigné                                                                                |
+| Tooltip encaveur        | `booking.detail.clientPhoneTooltip` | Visible uniquement pour les besoins de cette réservation. À ne pas utiliser à d'autres fins. |
 
 ## États UI
 
 ### Page `/account/profile`
+
 - **Loading** : skeleton sur le champ (cohérent avec les autres champs du formulaire).
 - **Empty (pas de phone enregistré)** : champ vide avec placeholder visible, hint affiché en sous-texte.
 - **Populated** : valeur affichée formatée nationale, modifiable.
@@ -111,11 +117,13 @@ Scénario : téléphone non visible côté CLIENT public
 - **Saving** : bouton "Enregistrer" désactivé avec label "Enregistrement...".
 
 ### Fiche détail session (encaveur)
+
 - **Empty (client sans phone)** : ligne "Téléphone : Non renseigné" en gris italique.
 - **Populated masqué** : `+41 79 *** ** 67` + bouton lien "Afficher".
 - **Populated révélé** : `+41 79 123 45 67` cliquable (`<a href="tel:...">`) + bouton lien "Masquer".
 
 ## Cas limites
+
 - Numéro saisi avec extension (`+41 22 555 00 00 ext 123`) : `libphonenumber-js` ignore les extensions ; à clarifier si on veut les supporter. **Proposition** : on ignore les extensions, le format simple suffit pour le besoin métier (appel direct).
 - Numéro de téléphone partagé entre deux comptes (cas atypique : couple, famille) : autorisé, pas d'unicité forcée sur `User.phone`. C'est une donnée déclarative.
 - Client qui change de pays et garde son ancien numéro : OK, E.164 supporte tous les pays.
@@ -127,6 +135,7 @@ Scénario : téléphone non visible côté CLIENT public
 - Copier le numéro depuis la fiche encaveur : doit être facile (sélection texte OK, ou icône "copier" — voir Léa).
 
 ## Dépendances
+
 - Migration Prisma : ajouter `phone String?` au modèle `User`. Migration simple, pas de backfill.
 - Librairie `libphonenumber-js` (~150 ko brotli, lazy-loadable côté client).
 - Validateur Zod : étendre `src/lib/validators/profile.ts` (créer si absent).
@@ -140,6 +149,7 @@ Scénario : téléphone non visible côté CLIENT public
 - À mentionner dans ENC-135 (anonymisation nLPD) et ENC-136 (export `.json`) : ajouter le champ phone au traitement.
 
 ## Hors-périmètre explicite
+
 - Pas de vérification SMS du numéro (pas de OTP).
 - Pas de rappels SMS automatiques (future US).
 - Pas de téléphone obligatoire au signup ou au checkout.
@@ -149,11 +159,13 @@ Scénario : téléphone non visible côté CLIENT public
 - Pas d'intégration WhatsApp / Signal / Telegram (lien tel: seulement).
 
 ## Métriques de succès
+
 - Taux d'adoption : % de clients qui renseignent leur téléphone après inscription (cible : > 40 % à 30 jours).
 - 0 incident "fuite de téléphone" vers un acteur non autorisé (CLIENT vers CLIENT, encaveur sans booking).
 - Feedback qualitatif des 10 encaveurs Fondateurs : "utile / pas utile" sur le canal téléphone.
 
 ## ❓ Questions ouvertes pour Sam
+
 - **Snapshot ou live ?** Si un client modifie/supprime son téléphone après confirmation d'un booking, l'encaveur doit-il voir le téléphone au moment du booking (snapshot figé sur `Booking`) ou la valeur live du profil client (refresh) ? **Préférence produit** : live (simplicité + cohérence avec "le client décide de sa visibilité"). À confirmer.
 - **Masquage par défaut côté encaveur** : tu valides ? L'argument : éviter qu'un encaveur exfiltre des numéros via screenshot d'écran. Le clic "Afficher" laisse une trace dans les logs (à câbler en option).
 - **Téléphone visible aussi sur la liste des inscrits (ENC-096)** ? Ou seulement sur la page détail individuelle ? Proposition : seulement sur le détail (un clic de plus, pas de batch view).

@@ -39,7 +39,11 @@ interface SendEmailOptions {
  * BACK-004 FIX: Send email with exponential backoff retry
  * Retries up to 3 times with delays of 1s, 2s, 4s
  */
-async function sendEmail({ to, subject, html }: SendEmailOptions): Promise<boolean> {
+async function sendEmail({
+  to,
+  subject,
+  html,
+}: SendEmailOptions): Promise<boolean> {
   if (!resend) {
     logInfo('Resend not configured, skipping email', { to, subject });
     return true;
@@ -97,7 +101,10 @@ async function sendEmail({ to, subject, html }: SendEmailOptions): Promise<boole
  */
 export function sendEmailNonBlocking(options: SendEmailOptions): void {
   sendEmail(options).catch((error) => {
-    logError('Non-blocking email send failed', error, { to: options.to, subject: options.subject });
+    logError('Non-blocking email send failed', error, {
+      to: options.to,
+      subject: options.subject,
+    });
   });
 }
 

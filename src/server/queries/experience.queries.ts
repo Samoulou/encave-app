@@ -105,7 +105,9 @@ export interface ExperienceDetail {
 
 function getOrderBy(
   sort?: string
-): Prisma.ExperienceOrderByWithRelationInput | Prisma.ExperienceOrderByWithRelationInput[] {
+):
+  | Prisma.ExperienceOrderByWithRelationInput
+  | Prisma.ExperienceOrderByWithRelationInput[] {
   switch (sort) {
     case 'price_asc':
       return { price: 'asc' };
@@ -141,8 +143,14 @@ export async function searchExperiences(
       const skip = (page - 1) * limit;
 
       // Check if location-based search
-      const hasLocationSearch = !!(params.location && params.lat !== undefined && params.lng !== undefined);
-      const locationName = params.location ? getLocationById(params.location)?.name : undefined;
+      const hasLocationSearch = !!(
+        params.location &&
+        params.lat !== undefined &&
+        params.lng !== undefined
+      );
+      const locationName = params.location
+        ? getLocationById(params.location)?.name
+        : undefined;
 
       const wineryWhere: Prisma.WineryWhereInput = {
         status: 'VERIFIED',
@@ -162,8 +170,16 @@ export async function searchExperiences(
           OR: [
             { title: { contains: params.search, mode: 'insensitive' } },
             { description: { contains: params.search, mode: 'insensitive' } },
-            { winery: { name: { contains: params.search, mode: 'insensitive' } } },
-            { winery: { commune: { contains: params.search, mode: 'insensitive' } } },
+            {
+              winery: {
+                name: { contains: params.search, mode: 'insensitive' },
+              },
+            },
+            {
+              winery: {
+                commune: { contains: params.search, mode: 'insensitive' },
+              },
+            },
           ],
         }),
         // Type filter
@@ -189,7 +205,11 @@ export async function searchExperiences(
 
       // For location-based search, we fetch all matching results and sort in JS
       // This is more efficient for small datasets (<100 wineries)
-      if (hasLocationSearch && params.lat !== undefined && params.lng !== undefined) {
+      if (
+        hasLocationSearch &&
+        params.lat !== undefined &&
+        params.lng !== undefined
+      ) {
         const refLat = params.lat;
         const refLng = params.lng;
 
@@ -214,7 +234,12 @@ export async function searchExperiences(
         const experiencesWithDistance = allExperiences.map((exp) => {
           const distance =
             exp.winery.latitude != null && exp.winery.longitude != null
-              ? calculateDistance(refLat, refLng, exp.winery.latitude, exp.winery.longitude)
+              ? calculateDistance(
+                  refLat,
+                  refLng,
+                  exp.winery.latitude,
+                  exp.winery.longitude
+                )
               : null;
           return { ...exp, distance };
         });
@@ -229,7 +254,10 @@ export async function searchExperiences(
 
         // Apply pagination
         const total = experiencesWithDistance.length;
-        const paginatedExperiences = experiencesWithDistance.slice(skip, skip + limit);
+        const paginatedExperiences = experiencesWithDistance.slice(
+          skip,
+          skip + limit
+        );
 
         return {
           experiences: paginatedExperiences,
@@ -266,7 +294,10 @@ export async function searchExperiences(
       ]);
 
       return {
-        experiences: experiences.map((exp) => ({ ...exp, distance: undefined })),
+        experiences: experiences.map((exp) => ({
+          ...exp,
+          distance: undefined,
+        })),
         total,
         page,
         limit,
@@ -288,296 +319,310 @@ export async function searchExperiences(
  * Get distinct communes that have published experiences.
  * Cached for 10 minutes. Wrapped with React.cache for request deduplication.
  */
-export const getExperienceCommunes = cache(unstable_cache(
-  async (): Promise<string[]> => {
-    const wineries = await db.winery.findMany({
-      where: {
-        status: 'VERIFIED',
-        experiences: {
-          some: {
-            status: ExperienceStatus.PUBLISHED,
-            availabilitySlots: {
-              some: {
-                isActive: true,
+export const getExperienceCommunes = cache(
+  unstable_cache(
+    async (): Promise<string[]> => {
+      const wineries = await db.winery.findMany({
+        where: {
+          status: 'VERIFIED',
+          experiences: {
+            some: {
+              status: ExperienceStatus.PUBLISHED,
+              availabilitySlots: {
+                some: {
+                  isActive: true,
+                },
               },
             },
           },
         },
-      },
-      select: {
-        commune: true,
-      },
-      distinct: ['commune'],
-      orderBy: {
-        commune: 'asc',
-      },
-    });
+        select: {
+          commune: true,
+        },
+        distinct: ['commune'],
+        orderBy: {
+          commune: 'asc',
+        },
+      });
 
-    return wineries.map((w) => w.commune);
-  },
-  ['experience-communes'],
-  {
-    revalidate: 600, // 10 minutes
-    tags: ['experiences', 'wineries'],
-  }
-));
+      return wineries.map((w) => w.commune);
+    },
+    ['experience-communes'],
+    {
+      revalidate: 600, // 10 minutes
+      tags: ['experiences', 'wineries'],
+    }
+  )
+);
 
 /**
  * Get min/max price range for experiences.
  * Cached for 10 minutes. Wrapped with React.cache for request deduplication.
  */
-export const getExperiencePriceRange = cache(unstable_cache(
-  async (): Promise<{ min: number; max: number }> => {
-    const result = await db.experience.aggregate({
-      where: {
-        status: ExperienceStatus.PUBLISHED,
-        winery: {
-          status: 'VERIFIED',
-        },
-        availabilitySlots: {
-          some: {
-            isActive: true,
+export const getExperiencePriceRange = cache(
+  unstable_cache(
+    async (): Promise<{ min: number; max: number }> => {
+      const result = await db.experience.aggregate({
+        where: {
+          status: ExperienceStatus.PUBLISHED,
+          winery: {
+            status: 'VERIFIED',
+          },
+          availabilitySlots: {
+            some: {
+              isActive: true,
+            },
           },
         },
-      },
-      _min: {
-        price: true,
-      },
-      _max: {
-        price: true,
-      },
-    });
+        _min: {
+          price: true,
+        },
+        _max: {
+          price: true,
+        },
+      });
 
-    return {
-      min: result._min.price ?? 0,
-      max: result._max.price ?? 50000, // Default to 500 CHF
-    };
-  },
-  ['experience-price-range'],
-  {
-    revalidate: 600, // 10 minutes
-    tags: ['experiences'],
-  }
-));
+      return {
+        min: result._min.price ?? 0,
+        max: result._max.price ?? 50000, // Default to 500 CHF
+      };
+    },
+    ['experience-price-range'],
+    {
+      revalidate: 600, // 10 minutes
+      tags: ['experiences'],
+    }
+  )
+);
 
 /**
  * Get a single experience by slug.
  * Cached for 5 minutes. Wrapped with React.cache for request deduplication.
  */
-export const getExperienceBySlug = cache(unstable_cache(
-  async (slug: string): Promise<ExperienceDetail | null> => {
-    return db.experience.findFirst({
-      where: {
-        slug,
-        status: ExperienceStatus.PUBLISHED,
-        winery: {
-          status: 'VERIFIED',
-        },
-      },
-      select: {
-        id: true,
-        title: true,
-        slug: true,
-        description: true,
-        type: true,
-        duration: true,
-        price: true,
-        minCapacity: true,
-        maxCapacity: true,
-        coverPhoto: true,
-        status: true,
-        wineryId: true,
-        // Experience-specific location fields
-        address: true,
-        city: true,
-        zipCode: true,
-        latitude: true,
-        longitude: true,
-        winery: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            commune: true,
-            address: true,
-            coverPhoto: true,
-            latitude: true,
-            longitude: true,
-            stripeOnboardingComplete: true,
+export const getExperienceBySlug = cache(
+  unstable_cache(
+    async (slug: string): Promise<ExperienceDetail | null> => {
+      return db.experience.findFirst({
+        where: {
+          slug,
+          status: ExperienceStatus.PUBLISHED,
+          winery: {
+            status: 'VERIFIED',
           },
         },
-        galleryImages: {
-          orderBy: { order: 'asc' },
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          description: true,
+          type: true,
+          duration: true,
+          price: true,
+          minCapacity: true,
+          maxCapacity: true,
+          coverPhoto: true,
+          status: true,
+          wineryId: true,
+          // Experience-specific location fields
+          address: true,
+          city: true,
+          zipCode: true,
+          latitude: true,
+          longitude: true,
+          winery: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              commune: true,
+              address: true,
+              coverPhoto: true,
+              latitude: true,
+              longitude: true,
+              stripeOnboardingComplete: true,
+            },
+          },
+          galleryImages: {
+            orderBy: { order: 'asc' },
+          },
+          availabilitySlots: {
+            where: { isActive: true },
+            orderBy: { dayOfWeek: 'asc' },
+          },
         },
-        availabilitySlots: {
-          where: { isActive: true },
-          orderBy: { dayOfWeek: 'asc' },
-        },
-      },
-    });
-  },
-  ['experience-by-slug'],
-  {
-    revalidate: 300, // 5 minutes
-    tags: ['experiences'],
-  }
-));
+      });
+    },
+    ['experience-by-slug'],
+    {
+      revalidate: 300, // 5 minutes
+      tags: ['experiences'],
+    }
+  )
+);
 
 /**
  * Get related experiences (same winery or same type).
  * Cached for 5 minutes. Wrapped with React.cache for request deduplication.
  */
-export const getRelatedExperiences = cache(unstable_cache(
-  async (
-    experienceId: string,
-    wineryId: string,
-    type: ExperienceType,
-    limit: number = 3
-  ) => {
-    // First try to get experiences from the same winery
-    const sameWinery = await db.experience.findMany({
-      where: {
-        id: { not: experienceId },
-        wineryId,
-        status: ExperienceStatus.PUBLISHED,
-        winery: { status: 'VERIFIED' },
-      },
-      include: {
-        winery: {
-          select: {
-            name: true,
-            slug: true,
-            commune: true,
+export const getRelatedExperiences = cache(
+  unstable_cache(
+    async (
+      experienceId: string,
+      wineryId: string,
+      type: ExperienceType,
+      limit: number = 3
+    ) => {
+      // First try to get experiences from the same winery
+      const sameWinery = await db.experience.findMany({
+        where: {
+          id: { not: experienceId },
+          wineryId,
+          status: ExperienceStatus.PUBLISHED,
+          winery: { status: 'VERIFIED' },
+        },
+        include: {
+          winery: {
+            select: {
+              name: true,
+              slug: true,
+              commune: true,
+            },
           },
         },
-      },
-      take: limit,
-    });
+        take: limit,
+      });
 
-    // If we have enough, return them
-    if (sameWinery.length >= limit) {
-      return sameWinery;
+      // If we have enough, return them
+      if (sameWinery.length >= limit) {
+        return sameWinery;
+      }
+
+      // Otherwise, fill with same type from other wineries
+      const remaining = limit - sameWinery.length;
+      const sameType = await db.experience.findMany({
+        where: {
+          id: { not: experienceId },
+          wineryId: { not: wineryId },
+          type,
+          status: ExperienceStatus.PUBLISHED,
+          winery: { status: 'VERIFIED' },
+        },
+        include: {
+          winery: {
+            select: {
+              name: true,
+              slug: true,
+              commune: true,
+            },
+          },
+        },
+        take: remaining,
+      });
+
+      return [...sameWinery, ...sameType];
+    },
+    ['related-experiences'],
+    {
+      revalidate: 300, // 5 minutes
+      tags: ['experiences'],
     }
-
-    // Otherwise, fill with same type from other wineries
-    const remaining = limit - sameWinery.length;
-    const sameType = await db.experience.findMany({
-      where: {
-        id: { not: experienceId },
-        wineryId: { not: wineryId },
-        type,
-        status: ExperienceStatus.PUBLISHED,
-        winery: { status: 'VERIFIED' },
-      },
-      include: {
-        winery: {
-          select: {
-            name: true,
-            slug: true,
-            commune: true,
-          },
-        },
-      },
-      take: remaining,
-    });
-
-    return [...sameWinery, ...sameType];
-  },
-  ['related-experiences'],
-  {
-    revalidate: 300, // 5 minutes
-    tags: ['experiences'],
-  }
-));
+  )
+);
 
 /**
  * Get published experiences for a specific winery.
  * Cached for 5 minutes. Wrapped with React.cache for request deduplication.
  */
-export const getExperiencesByWineryId = cache(unstable_cache(
-  async (wineryId: string, limit: number = 6) => {
-    return db.experience.findMany({
-      where: {
-        wineryId,
-        status: ExperienceStatus.PUBLISHED,
-      },
-      select: {
-        id: true,
-        title: true,
-        slug: true,
-        type: true,
-        duration: true,
-        price: true,
-        coverPhoto: true,
-        winery: {
-          select: {
-            name: true,
-            slug: true,
-            commune: true,
+export const getExperiencesByWineryId = cache(
+  unstable_cache(
+    async (wineryId: string, limit: number = 6) => {
+      return db.experience.findMany({
+        where: {
+          wineryId,
+          status: ExperienceStatus.PUBLISHED,
+        },
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          type: true,
+          duration: true,
+          price: true,
+          coverPhoto: true,
+          winery: {
+            select: {
+              name: true,
+              slug: true,
+              commune: true,
+            },
           },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-    });
-  },
-  ['experiences-by-winery'],
-  {
-    revalidate: 300, // 5 minutes
-    tags: ['experiences'],
-  }
-));
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+      });
+    },
+    ['experiences-by-winery'],
+    {
+      revalidate: 300, // 5 minutes
+      tags: ['experiences'],
+    }
+  )
+);
 
 /**
  * Get featured experiences for landing pages.
  * Cached for 5 minutes. Wrapped with React.cache for request deduplication.
  */
-export const getFeaturedExperiences = cache(unstable_cache(
-  async (limit: number = 6) => {
-    return db.experience.findMany({
-      where: {
-        status: ExperienceStatus.PUBLISHED,
-        winery: { status: 'VERIFIED' },
-      },
-      include: {
-        winery: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            commune: true,
+export const getFeaturedExperiences = cache(
+  unstable_cache(
+    async (limit: number = 6) => {
+      return db.experience.findMany({
+        where: {
+          status: ExperienceStatus.PUBLISHED,
+          winery: { status: 'VERIFIED' },
+        },
+        include: {
+          winery: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              commune: true,
+            },
           },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-    });
-  },
-  ['featured-experiences'],
-  {
-    revalidate: 300, // 5 minutes
-    tags: ['experiences'],
-  }
-));
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+      });
+    },
+    ['featured-experiences'],
+    {
+      revalidate: 300, // 5 minutes
+      tags: ['experiences'],
+    }
+  )
+);
 
 /**
  * Get all published experience slugs (for sitemap/static generation).
  * Cached for 1 hour. Wrapped with React.cache for request deduplication.
  */
-export const getAllPublishedExperienceSlugs = cache(unstable_cache(
-  async () => {
-    const experiences = await db.experience.findMany({
-      where: {
-        status: ExperienceStatus.PUBLISHED,
-        winery: { status: 'VERIFIED' },
-      },
-      select: { slug: true },
-    });
-    return experiences.map((e) => e.slug);
-  },
-  ['all-experience-slugs'],
-  {
-    revalidate: 3600, // 1 hour
-    tags: ['experiences'],
-  }
-));
+export const getAllPublishedExperienceSlugs = cache(
+  unstable_cache(
+    async () => {
+      const experiences = await db.experience.findMany({
+        where: {
+          status: ExperienceStatus.PUBLISHED,
+          winery: { status: 'VERIFIED' },
+        },
+        select: { slug: true },
+      });
+      return experiences.map((e) => e.slug);
+    },
+    ['all-experience-slugs'],
+    {
+      revalidate: 3600, // 1 hour
+      tags: ['experiences'],
+    }
+  )
+);

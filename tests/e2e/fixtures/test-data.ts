@@ -139,7 +139,8 @@ export const TEST_WINERIES: Record<string, TestWinery> = {
     id: 'test-winery-active',
     name: 'Domaine du Test',
     slug: 'domaine-du-test',
-    description: 'Un domaine viticole familial au cœur de Lausanne, produisant des vins exceptionnels depuis trois générations.',
+    description:
+      'Un domaine viticole familial au cœur de Lausanne, produisant des vins exceptionnels depuis trois générations.',
     commune: 'Lausanne',
     address: '123 Rue de Test, 1000 Lausanne',
     phone: '+41 21 123 45 67',
@@ -154,7 +155,8 @@ export const TEST_WINERIES: Record<string, TestWinery> = {
     id: 'test-winery-inactive',
     name: 'Domaine Sans Stripe',
     slug: 'domaine-sans-stripe',
-    description: 'Cave traditionnelle genevoise spécialisée dans les cépages autochtones.',
+    description:
+      'Cave traditionnelle genevoise spécialisée dans les cépages autochtones.',
     commune: 'Geneva',
     address: '456 Avenue du Vin, 1200 Genève',
     phone: '+41 22 987 65 43',
@@ -168,7 +170,8 @@ export const TEST_WINERIES: Record<string, TestWinery> = {
     id: 'test-winery-secondary',
     name: 'Cave des Tests',
     slug: 'cave-des-tests',
-    description: 'Une cave moderne à Montreux offrant des expériences œnologiques uniques avec vue sur le lac.',
+    description:
+      'Une cave moderne à Montreux offrant des expériences œnologiques uniques avec vue sur le lac.',
     commune: 'Montreux',
     address: '789 Chemin du Vignoble, 1820 Montreux',
     phone: '+41 21 555 12 34',
@@ -210,7 +213,8 @@ export const TEST_EXPERIENCES: Record<string, TestExperience> = {
     id: 'test-exp-cellar',
     slug: 'cellar-tour-test',
     title: 'Historic Cellar Tour',
-    description: 'Explore our centuries-old wine cellars and learn about wine-making.',
+    description:
+      'Explore our centuries-old wine cellars and learn about wine-making.',
     type: 'CELLAR_VISIT',
     price: 7500, // CHF 75
     minCapacity: 4,
@@ -321,7 +325,9 @@ export function generateAccessToken(): string {
 /**
  * Create a test booking with default values
  */
-export function createTestBooking(overrides?: Partial<TestBooking>): TestBooking {
+export function createTestBooking(
+  overrides?: Partial<TestBooking>
+): TestBooking {
   const experience = TEST_EXPERIENCES.wineTasting;
   const visitor = TEST_VISITORS.validVisitor;
   const guestCount = overrides?.guestCount ?? 2;
@@ -404,7 +410,9 @@ export function getWineryById(id: string): TestWinery | undefined {
 /**
  * Get winery for an experience
  */
-export function getWineryForExperience(experience: TestExperience): TestWinery | undefined {
+export function getWineryForExperience(
+  experience: TestExperience
+): TestWinery | undefined {
   return getWineryById(experience.wineryId);
 }
 
@@ -418,13 +426,21 @@ export function formatPrice(cents: number): string {
 /**
  * Calculate total price for a booking
  */
-export function calculateTotalPrice(experience: TestExperience, guestCount: number): number {
+export function calculateTotalPrice(
+  experience: TestExperience,
+  guestCount: number
+): number {
   return experience.price * guestCount;
 }
 
 /**
  * Check if experience is available on a given day
  */
-export function isAvailableOnDay(experience: TestExperience, dayOfWeek: DayOfWeek): boolean {
-  return experience.availabilitySlots.some((slot) => slot.dayOfWeek === dayOfWeek);
+export function isAvailableOnDay(
+  experience: TestExperience,
+  dayOfWeek: DayOfWeek
+): boolean {
+  return experience.availabilitySlots.some(
+    (slot) => slot.dayOfWeek === dayOfWeek
+  );
 }

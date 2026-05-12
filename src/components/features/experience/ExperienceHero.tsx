@@ -52,7 +52,10 @@ export function ExperienceHero({
       <div className="absolute bottom-0 left-0 right-0 p-8 lg:p-12">
         <div className="mx-auto max-w-7xl">
           {/* Type Badge */}
-          <span className="inline-flex items-center rounded-full bg-gold-400 px-3 py-1 text-sm font-medium text-gold-950" data-testid="experience-type-badge">
+          <span
+            className="inline-flex items-center rounded-full bg-gold-400 px-3 py-1 text-sm font-medium text-gold-950"
+            data-testid="experience-type-badge"
+          >
             {TYPE_LABELS[type]}
           </span>
 
@@ -62,7 +65,10 @@ export function ExperienceHero({
           </h1>
 
           {/* Price */}
-          <p className="mt-2 text-2xl font-semibold text-white" data-testid="hero-price">
+          <p
+            className="mt-2 text-2xl font-semibold text-white"
+            data-testid="hero-price"
+          >
             {formatCHF(price)}
             <span className="ml-2 text-base font-normal text-white/70">
               per person

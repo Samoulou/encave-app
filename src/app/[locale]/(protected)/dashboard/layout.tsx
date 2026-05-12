@@ -27,8 +27,8 @@ export default async function DashboardLayout({
           wineryName={wineryName}
           userName={session.user.name ?? undefined}
         />
-        <main className="flex-1 flex flex-col h-full overflow-hidden relative md:ml-64">
-          <div className="md:hidden h-14 flex-shrink-0" />
+        <main className="relative flex h-full flex-1 flex-col overflow-hidden md:ml-64">
+          <div className="h-14 flex-shrink-0 md:hidden" />
           <div className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-12">
             {children}
           </div>
@@ -45,8 +45,8 @@ export default async function DashboardLayout({
           userName={session.user.name ?? undefined}
           userEmail={session.user.email}
         />
-        <main className="flex-1 flex flex-col h-full overflow-hidden relative md:ml-64">
-          <div className="md:hidden h-14 flex-shrink-0" />
+        <main className="relative flex h-full flex-1 flex-col overflow-hidden md:ml-64">
+          <div className="h-14 flex-shrink-0 md:hidden" />
           <div className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-12">
             {children}
           </div>

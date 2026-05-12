@@ -46,21 +46,19 @@ export function WeeklyCalendarPreview({ slots }: WeeklyCalendarPreviewProps) {
   if (!hasAnySlots) {
     return (
       <div className="rounded-xl border-2 border-dashed border-stone-300 bg-stone-50 p-8 text-center">
-        <p className="text-slate-500">
-          {t('noSlotsPreview')}
-        </p>
+        <p className="text-slate-500">{t('noSlotsPreview')}</p>
       </div>
     );
   }
 
   return (
-    <div className="rounded-xl border border-stone-200 bg-white overflow-hidden">
+    <div className="overflow-hidden rounded-xl border border-stone-200 bg-white">
       {/* Header */}
       <div className="grid grid-cols-7 border-b border-stone-200 bg-stone-50">
         {DAYS_ORDER.map((dayValue) => (
           <div
             key={dayValue}
-            className="px-2 py-3 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider"
+            className="px-2 py-3 text-center text-xs font-semibold uppercase tracking-wider text-slate-600"
           >
             {tDaysShort(String(dayValue))}
           </div>
@@ -68,7 +66,7 @@ export function WeeklyCalendarPreview({ slots }: WeeklyCalendarPreviewProps) {
       </div>
 
       {/* Calendar Grid */}
-      <div className="grid grid-cols-7 min-h-[120px]">
+      <div className="grid min-h-[120px] grid-cols-7">
         {DAYS_ORDER.map((dayValue) => {
           const daySlots = slotsByDay[dayValue] ?? [];
           const hasSlots = daySlots.length > 0;
@@ -77,7 +75,7 @@ export function WeeklyCalendarPreview({ slots }: WeeklyCalendarPreviewProps) {
             <div
               key={dayValue}
               className={cn(
-                'border-r border-stone-100 last:border-r-0 p-2 min-h-[100px]',
+                'min-h-[100px] border-r border-stone-100 p-2 last:border-r-0',
                 hasSlots ? 'bg-white' : 'bg-stone-50/50'
               )}
             >
@@ -93,14 +91,12 @@ export function WeeklyCalendarPreview({ slots }: WeeklyCalendarPreviewProps) {
                       className={cn(
                         'rounded px-1.5 py-1 text-center text-xs font-medium transition-colors',
                         slot.isActive
-                          ? 'bg-burgundy-100 text-burgundy-700 border border-burgundy-200'
+                          ? 'border border-burgundy-200 bg-burgundy-100 text-burgundy-700'
                           : 'bg-stone-100 text-stone-400 line-through'
                       )}
                       title={slot.isActive ? t('active') : t('disabled')}
                     >
-                      <div className="truncate">
-                        {slot.startTime}
-                      </div>
+                      <div className="truncate">{slot.startTime}</div>
                       <div className="truncate text-[10px] opacity-75">
                         {slot.endTime}
                       </div>
@@ -118,7 +114,9 @@ export function WeeklyCalendarPreview({ slots }: WeeklyCalendarPreviewProps) {
         {hasActiveSlots ? (
           <span className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-green-500" />
-            {t('activeSlotsConfigured', { count: slots.filter((s) => s.isActive).length })}
+            {t('activeSlotsConfigured', {
+              count: slots.filter((s) => s.isActive).length,
+            })}
           </span>
         ) : (
           <span className="flex items-center gap-2 text-amber-600">

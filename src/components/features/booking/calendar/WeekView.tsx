@@ -129,7 +129,8 @@ export function WeekView({
               {weekDays.map((date) => {
                 const dayData = getDayData(date);
                 const isCurrentDay = isToday(date);
-                const isBlocked = dayData && dayData.blockedExperienceIds.length > 0;
+                const isBlocked =
+                  dayData && dayData.blockedExperienceIds.length > 0;
 
                 return (
                   <button
@@ -137,7 +138,7 @@ export function WeekView({
                     onClick={() => handleDayClick(date)}
                     aria-label={format(date, 'PPPP', { locale: dateLocale })}
                     className={cn(
-                      'bg-white p-2 text-center transition-colors hover:bg-slate-50 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none',
+                      'bg-white p-2 text-center transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
                       isCurrentDay && 'bg-burgundy-50',
                       isBlocked && 'bg-red-50'
                     )}
@@ -164,7 +165,9 @@ export function WeekView({
                       </div>
                     )}
                     {isBlocked && (
-                      <div className="mt-1 text-[10px] text-red-500">{t('blocked')}</div>
+                      <div className="mt-1 text-[10px] text-red-500">
+                        {t('blocked')}
+                      </div>
                     )}
                   </button>
                 );
@@ -198,10 +201,12 @@ export function WeekView({
                             <button
                               onClick={() => onBookingClick?.(booking.id)}
                               aria-label={`${booking.visitorName}, ${booking.timeSlot}, ${booking.guestCount} ${booking.guestCount === 1 ? 'guest' : 'guests'}`}
-                              className="mb-1 w-full rounded px-1.5 py-1 text-left text-xs text-white transition-opacity hover:opacity-90 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none"
+                              className="mb-1 w-full rounded px-1.5 py-1 text-left text-xs text-white transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                               style={{
                                 backgroundColor:
-                                  EXPERIENCE_TYPE_COLORS[booking.experience.type],
+                                  EXPERIENCE_TYPE_COLORS[
+                                    booking.experience.type
+                                  ],
                               }}
                             >
                               <div className="truncate font-medium">

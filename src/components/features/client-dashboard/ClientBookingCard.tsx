@@ -29,7 +29,10 @@ interface ClientBookingCardProps {
   variant: 'upcoming' | 'past';
 }
 
-export function ClientBookingCard({ booking, variant }: ClientBookingCardProps) {
+export function ClientBookingCard({
+  booking,
+  variant,
+}: ClientBookingCardProps) {
   const locale = useLocale();
   const t = useTranslations('clientDashboard');
   const [isExpanded, setIsExpanded] = useState(false);
@@ -78,11 +81,11 @@ export function ClientBookingCard({ booking, variant }: ClientBookingCardProps) 
       {/* Summary Row */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full p-4 sm:p-6 flex items-center gap-4 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl"
+        className="flex w-full items-center gap-4 rounded-xl p-4 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:p-6"
         aria-expanded={isExpanded}
       >
         {/* Cover Photo */}
-        <div className="hidden sm:block relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+        <div className="relative hidden h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg sm:block">
           <Image
             src={booking.experience.coverPhoto}
             alt={booking.experience.title}
@@ -93,15 +96,16 @@ export function ClientBookingCard({ booking, variant }: ClientBookingCardProps) 
         </div>
 
         {/* Info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="font-display font-bold text-foreground truncate">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="truncate font-display font-bold text-foreground">
               {booking.experience.title}
             </h3>
             <BookingStatusBadge status={booking.status} />
           </div>
-          <p className="text-sm text-[#915564] mt-1">
-            {booking.winery.name} &middot; {formattedDate} &middot; {booking.timeSlot}
+          <p className="mt-1 text-sm text-[#915564]">
+            {booking.winery.name} &middot; {formattedDate} &middot;{' '}
+            {booking.timeSlot}
           </p>
         </div>
 
@@ -117,11 +121,14 @@ export function ClientBookingCard({ booking, variant }: ClientBookingCardProps) 
 
       {/* Expanded Details */}
       {isExpanded && (
-        <div className="border-t border-border p-4 sm:p-6 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-4 border-t border-border p-4 sm:p-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm">
-                <Calendar className="h-4 w-4 text-[#915564]" aria-hidden="true" />
+                <Calendar
+                  className="h-4 w-4 text-[#915564]"
+                  aria-hidden="true"
+                />
                 <span className="text-foreground">{formattedDate}</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
@@ -137,23 +144,32 @@ export function ClientBookingCard({ booking, variant }: ClientBookingCardProps) 
                 </span>
               </div>
               <div className="text-sm">
-                <span className="text-[#915564]">{t('bookingCard.reference')}: </span>
+                <span className="text-[#915564]">
+                  {t('bookingCard.reference')}:{' '}
+                </span>
                 <span className="font-mono font-bold text-foreground">
                   {booking.reference}
                 </span>
               </div>
               <div className="text-sm">
-                <span className="text-[#915564]">{t('bookingCard.price')}: </span>
-                <span className="font-bold text-foreground">CHF {priceFormatted}</span>
+                <span className="text-[#915564]">
+                  {t('bookingCard.price')}:{' '}
+                </span>
+                <span className="font-bold text-foreground">
+                  CHF {priceFormatted}
+                </span>
               </div>
             </div>
 
             <div className="space-y-3">
-              <h4 className="font-bold text-sm text-foreground">
+              <h4 className="text-sm font-bold text-foreground">
                 {t('bookingCard.winery')}
               </h4>
               <div className="flex items-start gap-2 text-sm">
-                <MapPin className="h-4 w-4 text-[#915564] mt-0.5 flex-shrink-0" aria-hidden="true" />
+                <MapPin
+                  className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#915564]"
+                  aria-hidden="true"
+                />
                 <span className="text-foreground">
                   {booking.winery.address}
                   {booking.winery.commune && `, ${booking.winery.commune}`}
@@ -186,14 +202,16 @@ export function ClientBookingCard({ booking, variant }: ClientBookingCardProps) 
               className={cn(
                 'rounded-lg p-3 text-sm',
                 cancelResult.success
-                  ? 'bg-green-50 text-green-800 border border-green-200'
-                  : 'bg-red-50 text-red-800 border border-red-200'
+                  ? 'border border-green-200 bg-green-50 text-green-800'
+                  : 'border border-red-200 bg-red-50 text-red-800'
               )}
             >
               {cancelResult.success
                 ? cancelResult.refundIssued
                   ? t('cancel.successWithRefund', {
-                      amount: ((cancelResult.refundAmount ?? 0) / 100).toFixed(2),
+                      amount: ((cancelResult.refundAmount ?? 0) / 100).toFixed(
+                        2
+                      ),
                     })
                   : t('cancel.successNoRefund')
                 : cancelResult.message}
@@ -214,7 +232,7 @@ export function ClientBookingCard({ booking, variant }: ClientBookingCardProps) 
             )}
             <Link
               href={`/${locale}/experiences/${booking.experience.slug}`}
-              className="inline-flex items-center justify-center h-11 px-6 rounded-lg bg-primary hover:bg-primary/90 text-white text-sm font-bold transition-colors"
+              className="inline-flex h-11 items-center justify-center rounded-lg bg-primary px-6 text-sm font-bold text-white transition-colors hover:bg-primary/90"
             >
               {t('bookingCard.bookAgain')}
             </Link>
@@ -224,10 +242,10 @@ export function ClientBookingCard({ booking, variant }: ClientBookingCardProps) 
 
       {/* Cancel Confirmation Dialog */}
       {showCancelDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md space-y-4 rounded-xl bg-white p-6 shadow-lg">
             <div className="flex items-center justify-between">
-              <h3 className="font-display font-bold text-lg text-foreground">
+              <h3 className="font-display text-lg font-bold text-foreground">
                 {t('cancel.title')}
               </h3>
               <button
@@ -243,12 +261,16 @@ export function ClientBookingCard({ booking, variant }: ClientBookingCardProps) 
               {t('cancel.confirmMessage', { title: booking.experience.title })}
             </p>
 
-            <div className="rounded-lg bg-[#fdfcfa] border border-border p-3 text-sm">
-              <p className="font-bold text-foreground">{t('cancel.refundPolicy')}</p>
-              <p className="text-[#915564] mt-1">{t('cancel.refundPolicyDetail')}</p>
+            <div className="rounded-lg border border-border bg-[#fdfcfa] p-3 text-sm">
+              <p className="font-bold text-foreground">
+                {t('cancel.refundPolicy')}
+              </p>
+              <p className="mt-1 text-[#915564]">
+                {t('cancel.refundPolicyDetail')}
+              </p>
             </div>
 
-            <div className="flex gap-3 justify-end">
+            <div className="flex justify-end gap-3">
               <Button
                 variant="outline"
                 className="h-11"
@@ -258,7 +280,7 @@ export function ClientBookingCard({ booking, variant }: ClientBookingCardProps) 
                 {t('cancel.keepBooking')}
               </Button>
               <Button
-                className="h-11 bg-red-600 hover:bg-red-700 text-white"
+                className="h-11 bg-red-600 text-white hover:bg-red-700"
                 onClick={handleCancel}
                 disabled={isPending}
               >

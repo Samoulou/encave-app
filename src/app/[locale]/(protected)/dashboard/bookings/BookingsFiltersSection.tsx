@@ -13,12 +13,14 @@ interface BookingsFiltersSectionProps {
  * Designed to stream independently from the table.
  * Layout: Search | Filter Button | View Toggle (List/Calendar)
  */
-export async function BookingsFiltersSection({ wineryId }: BookingsFiltersSectionProps) {
+export async function BookingsFiltersSection({
+  wineryId,
+}: BookingsFiltersSectionProps) {
   const experiences = await getWineryExperiencesForFilter(wineryId);
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-2 rounded-xl border border-border">
-      <div className="flex items-center gap-2 flex-1 min-w-[300px]">
+    <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-white p-2">
+      <div className="flex min-w-[300px] flex-1 items-center gap-2">
         <BookingSearch />
         <BookingFilters experiences={experiences} />
       </div>

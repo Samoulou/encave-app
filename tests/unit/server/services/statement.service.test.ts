@@ -11,12 +11,14 @@ vi.mock('@react-pdf/renderer', () => ({
 }));
 
 import { renderToBuffer } from '@react-pdf/renderer';
-import type { YearToDateSummary, Transaction } from '@/server/queries/earnings.queries';
+import type {
+  YearToDateSummary,
+  Transaction,
+} from '@/server/queries/earnings.queries';
 
 // Import after mocks (file is .tsx)
-const { generateEarningsStatementPDF } = await import(
-  '@/server/services/statement.service'
-);
+const { generateEarningsStatementPDF } =
+  await import('@/server/services/statement.service');
 
 const mockRenderToBuffer = vi.mocked(renderToBuffer);
 
@@ -96,12 +98,20 @@ describe('Statement Service', () => {
     });
 
     it('handles empty transactions', async () => {
-      mockRenderToBuffer.mockResolvedValueOnce(Buffer.from('empty-pdf') as never);
+      mockRenderToBuffer.mockResolvedValueOnce(
+        Buffer.from('empty-pdf') as never
+      );
 
       const result = await generateEarningsStatementPDF(
         'Test Winery',
         2025,
-        { ...mockSummary, totalBookings: 0, grossRevenue: 0, platformFees: 0, netEarnings: 0 },
+        {
+          ...mockSummary,
+          totalBookings: 0,
+          grossRevenue: 0,
+          platformFees: 0,
+          netEarnings: 0,
+        },
         []
       );
 
@@ -112,7 +122,12 @@ describe('Statement Service', () => {
       mockRenderToBuffer.mockRejectedValueOnce(new Error('Render failed'));
 
       await expect(
-        generateEarningsStatementPDF('Test Winery', 2025, mockSummary, mockTransactions)
+        generateEarningsStatementPDF(
+          'Test Winery',
+          2025,
+          mockSummary,
+          mockTransactions
+        )
       ).rejects.toThrow('Render failed');
     });
   });

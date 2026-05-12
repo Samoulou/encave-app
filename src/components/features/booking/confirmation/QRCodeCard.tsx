@@ -15,8 +15,8 @@ export function QRCodeCard({ bookingId }: QRCodeCardProps) {
       : `/checkin/${bookingId}`;
 
   return (
-    <div className="flex items-center gap-4 bg-muted/50 p-4 rounded-lg border border-border">
-      <div className="bg-white p-2 rounded shrink-0">
+    <div className="flex items-center gap-4 rounded-lg border border-border bg-muted/50 p-4">
+      <div className="shrink-0 rounded bg-white p-2">
         <QRCodeSVG
           value={checkInUrl}
           size={64}
@@ -26,8 +26,10 @@ export function QRCodeCard({ bookingId }: QRCodeCardProps) {
         />
       </div>
       <div className="flex flex-col">
-        <p className="text-sm font-bold text-foreground">{t('checkInTicket')}</p>
-        <p className="text-xs text-muted-foreground leading-tight mt-1">
+        <p className="text-sm font-bold text-foreground">
+          {t('checkInTicket')}
+        </p>
+        <p className="mt-1 text-xs leading-tight text-muted-foreground">
           {t('presentQRCode')}
         </p>
       </div>

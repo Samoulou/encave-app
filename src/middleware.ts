@@ -67,7 +67,10 @@ export default async function middleware(request: NextRequest) {
   const intlResponse = intlMiddleware(request);
 
   // If intl middleware returned a redirect (e.g., for locale detection), honor it
-  if (intlResponse.headers.get('x-middleware-rewrite') || intlResponse.status === 307) {
+  if (
+    intlResponse.headers.get('x-middleware-rewrite') ||
+    intlResponse.status === 307
+  ) {
     return intlResponse;
   }
 
@@ -75,12 +78,10 @@ export default async function middleware(request: NextRequest) {
   // Since next-auth middleware doesn't easily chain, we'll use a different approach
   // We'll check for the session token in cookies
 
-
   // Better Auth session cookie names
-  const sessionToken = request.cookies.get('better-auth.session_token')?.value ||
+  const sessionToken =
+    request.cookies.get('better-auth.session_token')?.value ||
     request.cookies.get('__Secure-better-auth.session_token')?.value;
-
-
 
   const isLoggedIn = !!sessionToken;
   const pathnameWithoutLocale = getPathnameWithoutLocale(pathname);

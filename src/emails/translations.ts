@@ -329,7 +329,7 @@ export const wineryVerification = {
       EN: 'If you believe this decision was made in error or would like to provide additional information, please contact our support team.',
     },
     resubmit: {
-      FR: "Vous pouvez soumettre une nouvelle inscription une fois que vous avez traite les points mentionnes ci-dessus.",
+      FR: 'Vous pouvez soumettre une nouvelle inscription une fois que vous avez traite les points mentionnes ci-dessus.',
       DE: 'Sie konnen gerne eine neue Registrierung einreichen, sobald Sie die oben genannten Punkte bearbeitet haben.',
       EN: 'You are welcome to submit a new registration once you have addressed the concerns mentioned above.',
     },
@@ -448,7 +448,7 @@ export const dailyDigest = {
     EN: "Today's bookings",
   },
   intro: {
-    FR: 'Voici un apercu de vos reservations pour aujourd\'hui et demain.',
+    FR: "Voici un apercu de vos reservations pour aujourd'hui et demain.",
     DE: 'Hier ist eine Ubersicht Ihrer Buchungen fur heute und morgen.',
     EN: "Here's an overview of your bookings for today and tomorrow.",
   },
@@ -502,17 +502,17 @@ export const postExperience = {
     EN: 'Your feedback matters',
   },
   feedbackText: {
-    FR: 'Nous travaillons sur une fonctionnalite d\'avis. En attendant, n\'hesitez pas a contacter le domaine directement pour partager votre experience.',
+    FR: "Nous travaillons sur une fonctionnalite d'avis. En attendant, n'hesitez pas a contacter le domaine directement pour partager votre experience.",
     DE: 'Wir arbeiten an einer Bewertungsfunktion. In der Zwischenzeit konnen Sie das Weingut direkt kontaktieren, um Ihre Erfahrungen zu teilen.',
-    EN: 'We\'re working on a review feature. In the meantime, feel free to contact the winery directly to share your experience.',
+    EN: "We're working on a review feature. In the meantime, feel free to contact the winery directly to share your experience.",
   },
   discoverMore: {
-    FR: 'Envie de decouvrir d\'autres experiences viticoles en Suisse?',
+    FR: "Envie de decouvrir d'autres experiences viticoles en Suisse?",
     DE: 'Mochten Sie weitere Weinerlebnisse in der Schweiz entdecken?',
     EN: 'Want to discover more wine experiences in Switzerland?',
   },
   discoverMoreCta: {
-    FR: 'Decouvrir plus d\'experiences',
+    FR: "Decouvrir plus d'experiences",
     DE: 'Mehr Erlebnisse entdecken',
     EN: 'Discover more experiences',
   },

@@ -69,7 +69,9 @@ describe('ExperienceCard', () => {
   it('links to experience detail page', () => {
     render(<ExperienceCard experience={mockExperience} />);
     const link = screen.getByRole('link');
-    expect(link.getAttribute('href')).toBe('/experiences/wine-tasting-experience');
+    expect(link.getAttribute('href')).toBe(
+      '/experiences/wine-tasting-experience'
+    );
   });
 
   it('renders cover photo image', () => {

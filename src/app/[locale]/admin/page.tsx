@@ -2,14 +2,24 @@ import { db } from '@/server/db';
 import { AdminStats } from '@/components/features/admin/AdminStats';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { ArrowRight, Clock, MapPin, ClipboardList, Wine } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { getTranslations } from 'next-intl/server';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
   return generatePageMetadata({
     locale: locale as Locale,
@@ -52,10 +62,10 @@ export default async function AdminDashboard() {
   return (
     <div className="container py-10">
       <div className="mb-8">
-        <h1 className="font-display text-display-md text-burgundy-700">{t('title')}</h1>
-        <p className="mt-2 text-slate-600">
-          {t('subtitle')}
-        </p>
+        <h1 className="font-display text-display-md text-burgundy-700">
+          {t('title')}
+        </h1>
+        <p className="mt-2 text-slate-600">{t('subtitle')}</p>
       </div>
 
       <AdminStats {...stats} />
@@ -70,7 +80,9 @@ export default async function AdminDashboard() {
                   <Clock className="h-5 w-5 text-amber-600" />
                 </div>
                 <div>
-                  <CardTitle className="font-display">{t('recentPending')}</CardTitle>
+                  <CardTitle className="font-display">
+                    {t('recentPending')}
+                  </CardTitle>
                   <CardDescription>
                     {t('recentPendingDescription')}
                   </CardDescription>
@@ -104,13 +116,17 @@ export default async function AdminDashboard() {
                     className="flex items-center justify-between rounded-lg border border-stone-200 bg-white p-4 transition-colors hover:border-burgundy-200 hover:bg-burgundy-50/30"
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="font-medium text-slate-900">{winery.name}</p>
+                      <p className="font-medium text-slate-900">
+                        {winery.name}
+                      </p>
                       <p className="mt-0.5 flex items-center gap-1.5 text-sm text-slate-500">
                         <MapPin className="h-3.5 w-3.5" />
                         {winery.commune}
                       </p>
                       <p className="mt-1 text-xs text-slate-400">
-                        {formatDistanceToNow(new Date(winery.createdAt), { addSuffix: true })}
+                        {formatDistanceToNow(new Date(winery.createdAt), {
+                          addSuffix: true,
+                        })}
                       </p>
                     </div>
                     <Link href={`/admin/wineries/${winery.id}`}>
@@ -131,14 +147,21 @@ export default async function AdminDashboard() {
                 <ClipboardList className="h-5 w-5 text-burgundy-600" />
               </div>
               <div>
-                <CardTitle className="font-display">{t('quickActions')}</CardTitle>
-                <CardDescription>{t('quickActionsDescription')}</CardDescription>
+                <CardTitle className="font-display">
+                  {t('quickActions')}
+                </CardTitle>
+                <CardDescription>
+                  {t('quickActionsDescription')}
+                </CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-3 pt-4">
             <Link href="/admin/wineries/pending" className="block">
-              <Button variant="outline" className="w-full justify-start h-12 hover:border-burgundy-300 hover:bg-burgundy-50">
+              <Button
+                variant="outline"
+                className="h-12 w-full justify-start hover:border-burgundy-300 hover:bg-burgundy-50"
+              >
                 <Clock className="mr-3 h-4 w-4 text-amber-500" />
                 {t('reviewPendingWineries')}
                 {stats.pending > 0 && (

@@ -24,7 +24,7 @@ export function BookingDetailsSection({
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+        <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-foreground">
           <Wine className="size-5 text-primary" />
           {t('experienceDetails')}
         </h3>
@@ -63,8 +63,8 @@ export function BookingDetailsSection({
           </div>
         </div>
       </div>
-      <div className="pt-4 border-t border-border">
-        <div className="flex justify-between items-center">
+      <div className="border-t border-border pt-4">
+        <div className="flex items-center justify-between">
           <p className="text-base font-medium text-muted-foreground">
             {t('totalPaid')}
           </p>
@@ -72,7 +72,7 @@ export function BookingDetailsSection({
             {formatCHF(totalPrice)}
           </p>
         </div>
-        <p className="text-xs text-muted-foreground mt-1 text-right">
+        <p className="mt-1 text-right text-xs text-muted-foreground">
           {t('includesTaxes')}
         </p>
       </div>

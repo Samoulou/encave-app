@@ -74,11 +74,21 @@ export function logWarn(message: string, context?: LogContext) {
 /**
  * Log an error message with optional context
  */
-export function logError(message: string, error?: unknown, context?: LogContext) {
+export function logError(
+  message: string,
+  error?: unknown,
+  context?: LogContext
+) {
   const errorContext = {
     ...context,
     ...(error instanceof Error
-      ? { error: { message: error.message, stack: error.stack, name: error.name } }
+      ? {
+          error: {
+            message: error.message,
+            stack: error.stack,
+            name: error.name,
+          },
+        }
       : { error }),
   };
   logger.error(errorContext, message);

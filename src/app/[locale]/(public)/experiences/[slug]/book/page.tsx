@@ -2,7 +2,11 @@ import { redirect } from 'next/navigation';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
   return generatePageMetadata({
     locale: locale as Locale,
@@ -21,7 +25,10 @@ interface BookingPageProps {
  * This page now redirects to the experience page while preserving query params
  * for backwards compatibility.
  */
-export default async function BookingPage({ params, searchParams }: BookingPageProps) {
+export default async function BookingPage({
+  params,
+  searchParams,
+}: BookingPageProps) {
   const { slug, locale } = await params;
   const resolvedSearchParams = await searchParams;
 

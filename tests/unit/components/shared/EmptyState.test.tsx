@@ -29,10 +29,7 @@ describe('EmptyState', () => {
 
   it('renders icon when provided', () => {
     render(
-      <EmptyState
-        title="No items"
-        icon={<svg data-testid="custom-icon" />}
-      />
+      <EmptyState title="No items" icon={<svg data-testid="custom-icon" />} />
     );
 
     expect(screen.getByTestId('custom-icon')).toBeDefined();

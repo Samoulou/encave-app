@@ -6,7 +6,15 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import Image from 'next/image';
-import { X, Camera, Wine, Clock, Users, Banknote, HelpCircle } from 'lucide-react';
+import {
+  X,
+  Camera,
+  Wine,
+  Clock,
+  Users,
+  Banknote,
+  HelpCircle,
+} from 'lucide-react';
 import {
   createExperienceSchema,
   type CreateExperienceInput,
@@ -79,7 +87,7 @@ function SectionHeader({
   description?: string;
 }) {
   return (
-    <div className="flex items-start gap-4 pb-6 border-b border-stone-200">
+    <div className="flex items-start gap-4 border-b border-stone-200 pb-6">
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-burgundy-100 text-burgundy-600">
         {icon}
       </div>
@@ -103,9 +111,9 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
     experience.galleryImages
   );
   const [isUploadingCover, setIsUploadingCover] = useState(false);
-  const [uploadingGalleryIndex, setUploadingGalleryIndex] = useState<number | null>(
-    null
-  );
+  const [uploadingGalleryIndex, setUploadingGalleryIndex] = useState<
+    number | null
+  >(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const form = useForm<CreateExperienceInput>({
@@ -155,15 +163,12 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
     return result.data.url;
   };
 
-  const handleCoverPhotoChange = useCallback(
-    async (url: string | null) => {
-      if (url) {
-        setCoverPhoto(url);
-        setHasUnsavedChanges(true);
-      }
-    },
-    []
-  );
+  const handleCoverPhotoChange = useCallback(async (url: string | null) => {
+    if (url) {
+      setCoverPhoto(url);
+      setHasUnsavedChanges(true);
+    }
+  }, []);
 
   const handleGalleryUpload = async (
     file: File,
@@ -182,7 +187,10 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
     return url;
   };
 
-  const handleRemoveGalleryImage = async (imageId: string, imageUrl: string) => {
+  const handleRemoveGalleryImage = async (
+    imageId: string,
+    imageUrl: string
+  ) => {
     // Only delete from storage if it's a new upload (temp id)
     if (imageId.startsWith('temp-')) {
       await deleteUploadedImage(imageUrl);
@@ -321,7 +329,8 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
                 d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            Recommended: 1920 x 1080 pixels (16:9 aspect ratio). Max 5MB, JPEG or PNG.
+            Recommended: 1920 x 1080 pixels (16:9 aspect ratio). Max 5MB, JPEG
+            or PNG.
           </p>
         </div>
       </section>
@@ -431,7 +440,9 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium">Title</FormLabel>
+                    <FormLabel className="text-base font-medium">
+                      Title
+                    </FormLabel>
                     <FormControl>
                       <Input
                         placeholder="e.g., Grand Cru Wine Tasting Experience"
@@ -522,7 +533,9 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
                 name="duration"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium">Duration</FormLabel>
+                    <FormLabel className="text-base font-medium">
+                      Duration
+                    </FormLabel>
                     <Select
                       onValueChange={(value) => field.onChange(parseInt(value))}
                       value={field.value?.toString()}
@@ -553,16 +566,19 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
                 name="minCapacity"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium flex items-center gap-2">
+                    <FormLabel className="flex items-center gap-2 text-base font-medium">
                       <Users className="h-4 w-4" />
                       Min Booking Size
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <HelpCircle className="h-4 w-4 text-slate-400 cursor-help" />
+                            <HelpCircle className="h-4 w-4 cursor-help text-slate-400" />
                           </TooltipTrigger>
                           <TooltipContent className="max-w-xs">
-                            <p>The minimum number of guests required per booking. Visitors cannot book for fewer than this number.</p>
+                            <p>
+                              The minimum number of guests required per booking.
+                              Visitors cannot book for fewer than this number.
+                            </p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -588,7 +604,7 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
                 name="maxCapacity"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium flex items-center gap-2">
+                    <FormLabel className="flex items-center gap-2 text-base font-medium">
                       <Users className="h-4 w-4" />
                       Max Guests
                     </FormLabel>
@@ -639,12 +655,16 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
                         className="pl-14"
                         {...field}
                         onChange={(e) =>
-                          field.onChange(parseFloat(e.target.value) || undefined)
+                          field.onChange(
+                            parseFloat(e.target.value) || undefined
+                          )
                         }
                       />
                     </div>
                   </FormControl>
-                  <FormDescription>Price must be greater than 0</FormDescription>
+                  <FormDescription>
+                    Price must be greater than 0
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

@@ -15,7 +15,6 @@ interface TransactionTableProps {
 
 const DEFAULT_PAGE_SIZE = 20;
 
-
 function TransactionTableComponent({ transactions }: TransactionTableProps) {
   const t = useTranslations('earnings.transactions');
 
@@ -55,10 +54,13 @@ function TransactionTableComponent({ transactions }: TransactionTableProps) {
   }
 
   return (
-    <div className="rounded-xl border border-border bg-white shadow-sm overflow-hidden">
+    <div className="overflow-hidden rounded-xl border border-border bg-white shadow-sm">
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm whitespace-nowrap" aria-label={t('tableLabel')}>
-          <thead className="bg-gray-50 border-b border-border text-[#915564] font-medium uppercase text-xs tracking-wider">
+        <table
+          className="w-full whitespace-nowrap text-left text-sm"
+          aria-label={t('tableLabel')}
+        >
+          <thead className="border-b border-border bg-gray-50 text-xs font-medium uppercase tracking-wider text-[#915564]">
             <tr>
               <th scope="col" className="px-6 py-4">
                 {t('date')}
@@ -84,7 +86,7 @@ function TransactionTableComponent({ transactions }: TransactionTableProps) {
             {paginatedTransactions.map((transaction) => (
               <tr
                 key={transaction.id}
-                className="hover:bg-[#f8f6f6] transition-colors"
+                className="transition-colors hover:bg-[#f8f6f6]"
               >
                 {/* Date */}
                 <td className="px-6 py-4 font-medium">
@@ -92,7 +94,7 @@ function TransactionTableComponent({ transactions }: TransactionTableProps) {
                 </td>
 
                 {/* Booking ID */}
-                <td className="px-6 py-4 text-[#915564] font-mono text-xs">
+                <td className="px-6 py-4 font-mono text-xs text-[#915564]">
                   #{transaction.bookingId}
                 </td>
 
@@ -104,14 +106,14 @@ function TransactionTableComponent({ transactions }: TransactionTableProps) {
                   <div className="flex items-center gap-2">
                     {transaction.customer.avatarUrl ? (
                       <div
-                        className="h-6 w-6 rounded-full bg-gray-200 bg-cover bg-center flex-shrink-0"
+                        className="h-6 w-6 flex-shrink-0 rounded-full bg-gray-200 bg-cover bg-center"
                         style={{
                           backgroundImage: `url(${transaction.customer.avatarUrl})`,
                         }}
                         aria-hidden="true"
                       />
                     ) : (
-                      <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary flex-shrink-0">
+                      <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary/20 text-xs font-bold text-primary">
                         {getInitials(transaction.customer.name)}
                       </div>
                     )}
@@ -128,7 +130,6 @@ function TransactionTableComponent({ transactions }: TransactionTableProps) {
                 <td className="px-6 py-4 text-center">
                   <TransactionStatusBadge status={transaction.status} />
                 </td>
-
               </tr>
             ))}
           </tbody>

@@ -31,7 +31,13 @@ interface ExperiencePreviewData {
   coverPhoto: string;
   status: string;
   galleryImages: { id: string; url: string; order: number }[];
-  availabilitySlots: { id: string; dayOfWeek: number; startTime: string; endTime: string; isActive: boolean }[];
+  availabilitySlots: {
+    id: string;
+    dayOfWeek: number;
+    startTime: string;
+    endTime: string;
+    isActive: boolean;
+  }[];
   winery: {
     id: string;
     name: string;
@@ -49,7 +55,9 @@ export default function ExperiencePreviewPage() {
   const params = useParams();
   const t = useTranslations('experience');
   const experienceId = params.id as string;
-  const [experience, setExperience] = useState<ExperiencePreviewData | null>(null);
+  const [experience, setExperience] = useState<ExperiencePreviewData | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -75,12 +83,12 @@ export default function ExperiencePreviewPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-cream-50">
-        <div className="bg-burgundy-600 h-[40vh]">
+        <div className="h-[40vh] bg-burgundy-600">
           <Skeleton className="h-full w-full" />
         </div>
         <div className="mx-auto max-w-6xl px-6 py-10">
-          <Skeleton className="h-8 w-64 mb-4" />
-          <Skeleton className="h-4 w-full mb-2" />
+          <Skeleton className="mb-4 h-8 w-64" />
+          <Skeleton className="mb-2 h-4 w-full" />
           <Skeleton className="h-4 w-3/4" />
         </div>
       </div>
@@ -89,10 +97,14 @@ export default function ExperiencePreviewPage() {
 
   if (error || !experience) {
     return (
-      <div className="min-h-screen bg-cream-50 flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-cream-50">
         <div className="text-center">
-          <h1 className="text-2xl font-semibold text-slate-900 mb-2">{t('notFound')}</h1>
-          <p className="text-slate-600 mb-4">{error || 'Unable to load the experience preview.'}</p>
+          <h1 className="mb-2 text-2xl font-semibold text-slate-900">
+            {t('notFound')}
+          </h1>
+          <p className="mb-4 text-slate-600">
+            {error || 'Unable to load the experience preview.'}
+          </p>
           <Button asChild>
             <Link href="/dashboard/experiences">{t('backToExperiences')}</Link>
           </Button>
@@ -106,13 +118,14 @@ export default function ExperiencePreviewPage() {
   return (
     <div className="min-h-screen bg-cream-50">
       {/* Preview Mode Banner */}
-      <div className="sticky top-0 z-50 bg-amber-50 border-b border-amber-200">
+      <div className="sticky top-0 z-50 border-b border-amber-200 bg-amber-50">
         <div className="mx-auto max-w-6xl px-6 py-3">
-          <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <AlertTriangle className="h-5 w-5 text-amber-600" />
               <span className="text-sm font-medium text-amber-800">
-                {t('previewMode')}{isDraft && ` - ${t('notPublishedNotice')}`}
+                {t('previewMode')}
+                {isDraft && ` - ${t('notPublishedNotice')}`}
               </span>
             </div>
             <div className="flex items-center gap-3">
@@ -129,7 +142,10 @@ export default function ExperiencePreviewPage() {
               </Button>
               {!isDraft && (
                 <Button variant="outline" size="sm" asChild>
-                  <Link href={`/experiences/${experience.slug}`} target="_blank">
+                  <Link
+                    href={`/experiences/${experience.slug}`}
+                    target="_blank"
+                  >
                     {t('viewPublicPage')}
                     <ExternalLink className="ml-1.5 h-4 w-4" />
                   </Link>
@@ -160,7 +176,7 @@ export default function ExperiencePreviewPage() {
 
         <div className="grid gap-8 lg:grid-cols-3">
           {/* Left Column - Main Content */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="space-y-8 lg:col-span-2">
             {/* Experience Details */}
             <ExperienceDetails
               description={experience.description}

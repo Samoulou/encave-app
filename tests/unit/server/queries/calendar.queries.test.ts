@@ -160,7 +160,9 @@ describe('calendar.queries', () => {
 
     it('includes blocked experience IDs per day', async () => {
       vi.mocked(db.booking.findMany).mockResolvedValue([]);
-      vi.mocked(db.blockedDate.findMany).mockResolvedValue(mockBlockedDates as never);
+      vi.mocked(db.blockedDate.findMany).mockResolvedValue(
+        mockBlockedDates as never
+      );
 
       const result = await getCalendarData(
         'winery-123',
@@ -289,11 +291,9 @@ describe('calendar.queries', () => {
       vi.mocked(db.booking.findMany).mockResolvedValue([]);
       vi.mocked(db.blockedDate.findMany).mockResolvedValue([]);
 
-      await getMonthCalendarData(
-        'winery-123',
-        new Date('2026-01-15'),
-        [BookingStatus.CONFIRMED]
-      );
+      await getMonthCalendarData('winery-123', new Date('2026-01-15'), [
+        BookingStatus.CONFIRMED,
+      ]);
 
       expect(db.booking.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -326,11 +326,9 @@ describe('calendar.queries', () => {
       vi.mocked(db.booking.findMany).mockResolvedValue([]);
       vi.mocked(db.blockedDate.findMany).mockResolvedValue([]);
 
-      await getWeekCalendarData(
-        'winery-123',
-        new Date('2026-01-15'),
-        [BookingStatus.COMPLETED]
-      );
+      await getWeekCalendarData('winery-123', new Date('2026-01-15'), [
+        BookingStatus.COMPLETED,
+      ]);
 
       expect(db.booking.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -361,7 +359,9 @@ describe('calendar.queries', () => {
     ];
 
     it('returns blocked dates with experience info', async () => {
-      vi.mocked(db.blockedDate.findMany).mockResolvedValue(mockBlockedDatesWithInfo as never);
+      vi.mocked(db.blockedDate.findMany).mockResolvedValue(
+        mockBlockedDatesWithInfo as never
+      );
 
       const result = await getBlockedDates(
         'winery-123',
@@ -425,7 +425,10 @@ describe('calendar.queries', () => {
 
       expect(result).toHaveLength(3);
       expect(result[0]).toEqual({ type: ExperienceType.TASTING, count: 3 });
-      expect(result[1]).toEqual({ type: ExperienceType.CELLAR_VISIT, count: 2 });
+      expect(result[1]).toEqual({
+        type: ExperienceType.CELLAR_VISIT,
+        count: 2,
+      });
       expect(result[2]).toEqual({ type: ExperienceType.WORKSHOP, count: 1 });
     });
 
@@ -457,7 +460,9 @@ describe('calendar.queries', () => {
     ];
 
     it('returns published experiences for blocking', async () => {
-      vi.mocked(db.experience.findMany).mockResolvedValue(mockExperiences as never);
+      vi.mocked(db.experience.findMany).mockResolvedValue(
+        mockExperiences as never
+      );
 
       const result = await getWineryExperiencesForBlocking('winery-123');
 

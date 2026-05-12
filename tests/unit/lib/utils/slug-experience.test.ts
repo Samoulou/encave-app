@@ -3,7 +3,9 @@ import { generateSlug } from '@/lib/utils/slug';
 
 describe('generateSlug for experiences', () => {
   it('generates slug from title', () => {
-    expect(generateSlug('Grand Cru Wine Tasting')).toBe('grand-cru-wine-tasting');
+    expect(generateSlug('Grand Cru Wine Tasting')).toBe(
+      'grand-cru-wine-tasting'
+    );
   });
 
   it('handles special characters', () => {

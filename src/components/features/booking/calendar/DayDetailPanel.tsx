@@ -15,7 +15,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { BookingStatusBadge } from '@/components/features/booking/dashboard/BookingStatusBadge';
 import { ExperienceTypeDot } from './ExperienceTypeDot';
-import { blockDateForAllExperiences, unblockDateForAllExperiences } from '@/server/actions/availability';
+import {
+  blockDateForAllExperiences,
+  unblockDateForAllExperiences,
+} from '@/server/actions/availability';
 import { toast } from 'sonner';
 import { formatCHF } from '@/lib/utils/currency';
 
@@ -71,7 +74,12 @@ export function DayDetailPanel({
     try {
       const result = await blockDateForAllExperiences(date);
       if (result.success) {
-        toast.success(t('blockedSuccess', { count: result.data?.blockedCount || 0, date: format(date, 'PPP', { locale: dateLocale }) }));
+        toast.success(
+          t('blockedSuccess', {
+            count: result.data?.blockedCount || 0,
+            date: format(date, 'PPP', { locale: dateLocale }),
+          })
+        );
         onRefresh?.();
       } else {
         toast.error(result.error?.message || t('blockError'));
@@ -88,7 +96,12 @@ export function DayDetailPanel({
     try {
       const result = await unblockDateForAllExperiences(date);
       if (result.success) {
-        toast.success(t('unblockedSuccess', { count: result.data?.unblockedCount || 0, date: format(date, 'PPP', { locale: dateLocale }) }));
+        toast.success(
+          t('unblockedSuccess', {
+            count: result.data?.unblockedCount || 0,
+            date: format(date, 'PPP', { locale: dateLocale }),
+          })
+        );
         onRefresh?.();
       } else {
         toast.error(result.error?.message || t('unblockError'));
@@ -118,13 +131,17 @@ export function DayDetailPanel({
           {/* Summary */}
           <div className="flex items-center gap-4 rounded-lg bg-slate-50 p-3">
             <div className="flex items-center gap-2 text-sm text-slate-600">
-              <span className="font-semibold text-slate-900">{bookings.length}</span>
+              <span className="font-semibold text-slate-900">
+                {bookings.length}
+              </span>
               {t('bookingsCount', { count: bookings.length })}
             </div>
             <div className="h-4 w-px bg-slate-200" />
             <div className="flex items-center gap-2 text-sm text-slate-600">
               <Users className="h-4 w-4" />
-              <span className="font-semibold text-slate-900">{totalGuests}</span>
+              <span className="font-semibold text-slate-900">
+                {totalGuests}
+              </span>
               {t('guestsCount', { count: totalGuests })}
             </div>
           </div>
@@ -133,7 +150,9 @@ export function DayDetailPanel({
           <div className="flex items-center justify-between rounded-lg border border-slate-200 p-3">
             <div className="text-sm">
               {isFullyBlocked ? (
-                <span className="text-slate-600">{t('dateBlockedMessage')}</span>
+                <span className="text-slate-600">
+                  {t('dateBlockedMessage')}
+                </span>
               ) : (
                 <span className="text-slate-600">{t('blockDateQuestion')}</span>
               )}
@@ -163,7 +182,9 @@ export function DayDetailPanel({
           {/* Bookings List */}
           {bookings.length > 0 ? (
             <div className="space-y-2">
-              <h3 className="text-sm font-medium text-slate-700">{t('bookingsTitle')}</h3>
+              <h3 className="text-sm font-medium text-slate-700">
+                {t('bookingsTitle')}
+              </h3>
               <div className="space-y-2">
                 {bookings.map((booking) => (
                   <button
@@ -174,7 +195,10 @@ export function DayDetailPanel({
                     <div className="flex items-start justify-between">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <ExperienceTypeDot type={booking.experience.type} size="sm" />
+                          <ExperienceTypeDot
+                            type={booking.experience.type}
+                            size="sm"
+                          />
                           <span className="font-medium text-slate-900">
                             {booking.experience.title}
                           </span>

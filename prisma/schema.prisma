@@ -287,12 +287,14 @@ model Booking {
   refundIssued          Boolean       @default(false)
   refundAmount          Int?          // cents - amount refunded
   stripeRefundId        String?       // Stripe refund ID for tracking
+  checkedInAt           DateTime?     // When client was checked in by winery (ENC-096)
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
 
   @@index([experienceId])
   @@index([wineryId])
   @@index([experienceId, date, timeSlot])
+  @@index([experienceId, date, timeSlot, status])
   @@index([wineryId, date])
   @@index([status])
   @@index([reference])

@@ -17,7 +17,10 @@ import {
 } from '@/components/ui/alert-dialog';
 import { TimeSlotPicker, type TimeSlot } from './TimeSlotPicker';
 import { WeeklyCalendarPreview } from './WeeklyCalendarPreview';
-import { DAYS_OF_WEEK_ORDERED, hasOverlappingSlots } from '@/lib/constants/time-slots';
+import {
+  DAYS_OF_WEEK_ORDERED,
+  hasOverlappingSlots,
+} from '@/lib/constants/time-slots';
 import {
   getAvailabilitySlots,
   updateAvailabilitySlots,
@@ -135,7 +138,9 @@ export function AvailabilityScheduleBuilder({
     // Check for overlaps
     for (const day of DAYS_OF_WEEK_ORDERED) {
       if (getDayOverlapStatus(day.value)) {
-        toast.error(t('fixOverlapsBeforeSaving', { day: tDaysFull(String(day.value)) }));
+        toast.error(
+          t('fixOverlapsBeforeSaving', { day: tDaysFull(String(day.value)) })
+        );
         return;
       }
     }
@@ -196,10 +201,10 @@ export function AvailabilityScheduleBuilder({
       {/* Published Warning */}
       {showPublishedWarning && (
         <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
-          <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
           <div>
             <p className="font-medium text-amber-800">{t('noConfigured')}</p>
-            <p className="text-sm text-amber-700 mt-1">
+            <p className="mt-1 text-sm text-amber-700">
               {t('publishedNoSlots')}
             </p>
           </div>
@@ -209,9 +214,11 @@ export function AvailabilityScheduleBuilder({
       {/* Empty State */}
       {!hasAnySlots && !showPublishedWarning && (
         <div className="rounded-xl border-2 border-dashed border-stone-300 bg-stone-50 p-8 text-center">
-          <Calendar className="h-12 w-12 text-stone-400 mx-auto mb-4" />
-          <h3 className="font-semibold text-slate-900 mb-2">{t('noConfigured')}</h3>
-          <p className="text-sm text-slate-600 max-w-md mx-auto">
+          <Calendar className="mx-auto mb-4 h-12 w-12 text-stone-400" />
+          <h3 className="mb-2 font-semibold text-slate-900">
+            {t('noConfigured')}
+          </h3>
+          <p className="mx-auto max-w-md text-sm text-slate-600">
             {t('noConfiguredDescription')}
           </p>
         </div>
@@ -219,7 +226,7 @@ export function AvailabilityScheduleBuilder({
 
       {/* Day Selector */}
       <div>
-        <div className="flex items-center justify-between mb-4">
+        <div className="mb-4 flex items-center justify-between">
           <h3 className="font-medium text-slate-900">{t('selectDay')}</h3>
           {hasAnySlots && (
             <AlertDialog>
@@ -239,11 +246,15 @@ export function AvailabilityScheduleBuilder({
                 <AlertDialogHeader>
                   <AlertDialogTitle>{t('copyDialog.title')}</AlertDialogTitle>
                   <AlertDialogDescription>
-                    {t('copyDialog.description', { day: tDaysFull(String(selectedDay)) })}
+                    {t('copyDialog.description', {
+                      day: tDaysFull(String(selectedDay)),
+                    })}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>{tCommon('buttons.cancel')}</AlertDialogCancel>
+                  <AlertDialogCancel>
+                    {tCommon('buttons.cancel')}
+                  </AlertDialogCancel>
                   <AlertDialogAction onClick={handleCopyToAllDays}>
                     {t('copyToAllDays')}
                   </AlertDialogAction>
@@ -253,7 +264,7 @@ export function AvailabilityScheduleBuilder({
           )}
         </div>
 
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex flex-wrap gap-2">
           {DAYS_OF_WEEK_ORDERED.map((day) => {
             const daySlots = slotsByDay[day.value] ?? [];
             const hasSlots = daySlots.length > 0;
@@ -265,21 +276,21 @@ export function AvailabilityScheduleBuilder({
                 type="button"
                 onClick={() => setSelectedDay(day.value)}
                 className={cn(
-                  'px-4 py-2 rounded-lg border text-sm font-medium transition-all relative',
+                  'relative rounded-lg border px-4 py-2 text-sm font-medium transition-all',
                   selectedDay === day.value
                     ? 'border-burgundy-600 bg-burgundy-50 text-burgundy-700'
                     : hasOverlap
-                    ? 'border-red-300 bg-red-50 text-red-700'
-                    : hasSlots
-                    ? 'border-stone-300 bg-white text-slate-700 hover:border-burgundy-300'
-                    : 'border-stone-200 bg-stone-50 text-slate-500 hover:border-stone-300'
+                      ? 'border-red-300 bg-red-50 text-red-700'
+                      : hasSlots
+                        ? 'border-stone-300 bg-white text-slate-700 hover:border-burgundy-300'
+                        : 'border-stone-200 bg-stone-50 text-slate-500 hover:border-stone-300'
                 )}
               >
                 {tDaysShort(String(day.value))}
                 {hasSlots && (
                   <span
                     className={cn(
-                      'absolute -top-1.5 -right-1.5 h-4 min-w-[16px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center',
+                      'absolute -right-1.5 -top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[10px] font-bold',
                       hasOverlap
                         ? 'bg-red-500 text-white'
                         : 'bg-burgundy-600 text-white'
@@ -296,7 +307,7 @@ export function AvailabilityScheduleBuilder({
 
       {/* Time Slot Picker for Selected Day */}
       <div className="rounded-xl border border-stone-200 bg-white p-6">
-        <h4 className="font-medium text-slate-900 mb-4">
+        <h4 className="mb-4 font-medium text-slate-900">
           {t('dayTimeSlots', { day: tDaysFull(String(selectedDay)) })}
         </h4>
         <TimeSlotPicker
@@ -306,7 +317,7 @@ export function AvailabilityScheduleBuilder({
           hasOverlap={getDayOverlapStatus(selectedDay)}
         />
         {getDayOverlapStatus(selectedDay) && (
-          <p className="mt-3 text-sm text-red-600 flex items-center gap-2">
+          <p className="mt-3 flex items-center gap-2 text-sm text-red-600">
             <AlertTriangle className="h-4 w-4" />
             {t('slotsOverlap')}
           </p>
@@ -315,7 +326,9 @@ export function AvailabilityScheduleBuilder({
 
       {/* Weekly Preview */}
       <div>
-        <h3 className="font-medium text-slate-900 mb-4">{t('weeklyPreview')}</h3>
+        <h3 className="mb-4 font-medium text-slate-900">
+          {t('weeklyPreview')}
+        </h3>
         <WeeklyCalendarPreview
           slots={allSlots.map((s) => ({
             dayOfWeek: s.dayOfWeek,

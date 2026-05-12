@@ -65,7 +65,9 @@ export function RegisterForm() {
         if (result.error.code === 'USER_ALREADY_EXISTS') {
           setError(t('emailExists'));
         } else {
-          setError(result.error.message || tCommon('errors.somethingWentWrong'));
+          setError(
+            result.error.message || tCommon('errors.somethingWentWrong')
+          );
         }
         return;
       }
@@ -106,12 +108,10 @@ export function RegisterForm() {
     >
       {/* Heading */}
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold text-slate-900 font-display">
+        <h1 className="font-display text-3xl font-bold text-slate-900">
           {t('title')}
         </h1>
-        <p className="text-[#915564]">
-          {t('subtitle')}
-        </p>
+        <p className="text-[#915564]">{t('subtitle')}</p>
       </div>
 
       {/* Form */}
@@ -223,7 +223,10 @@ export function RegisterForm() {
                 </FormControl>
                 <div className="space-y-1 leading-none">
                   <FormLabel className="flex cursor-pointer items-center gap-2">
-                    <Wine className="h-4 w-4 text-burgundy-600" aria-hidden="true" />
+                    <Wine
+                      className="h-4 w-4 text-burgundy-600"
+                      aria-hidden="true"
+                    />
                     {t('iAmWinemaker')}
                   </FormLabel>
                   <p className="text-sm text-slate-500">
@@ -247,7 +250,7 @@ export function RegisterForm() {
             {t('haveAccount')}{' '}
             <Link
               href="/login"
-              className="font-medium text-burgundy-600 hover:text-burgundy-800 relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-gold-400 after:transition-all hover:after:w-full"
+              className="relative font-medium text-burgundy-600 after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-gold-400 after:transition-all hover:text-burgundy-800 hover:after:w-full"
             >
               {tCommon('buttons.signIn')}
             </Link>

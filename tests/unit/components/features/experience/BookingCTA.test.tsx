@@ -61,7 +61,9 @@ describe('BookingCTA', () => {
         />
       );
 
-      const button = screen.getByRole('button', { name: /Book This Experience/i });
+      const button = screen.getByRole('button', {
+        name: /Book This Experience/i,
+      });
       expect(button.hasAttribute('disabled')).toBe(true);
     });
 
@@ -109,7 +111,9 @@ describe('BookingCTA', () => {
       // Mock scrollIntoView
       const scrollIntoViewMock = vi.fn();
       const mockElement = { scrollIntoView: scrollIntoViewMock };
-      vi.spyOn(document, 'getElementById').mockReturnValue(mockElement as unknown as HTMLElement);
+      vi.spyOn(document, 'getElementById').mockReturnValue(
+        mockElement as unknown as HTMLElement
+      );
 
       renderWithI18n(
         <BookingCTA
@@ -119,14 +123,19 @@ describe('BookingCTA', () => {
         />
       );
 
-      const button = screen.getByRole('button', { name: /Book This Experience/i });
+      const button = screen.getByRole('button', {
+        name: /Book This Experience/i,
+      });
       expect(button).toBeDefined();
       expect(button.hasAttribute('disabled')).toBe(false);
 
       // Click the button and verify scroll
       fireEvent.click(button);
       expect(document.getElementById).toHaveBeenCalledWith('booking-widget');
-      expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+      expect(scrollIntoViewMock).toHaveBeenCalledWith({
+        behavior: 'smooth',
+        block: 'start',
+      });
     });
 
     it('does not show coming soon message', () => {
@@ -151,7 +160,9 @@ describe('BookingCTA', () => {
       );
 
       expect(
-        screen.queryByText('Contact the winery directly to book this experience.')
+        screen.queryByText(
+          'Contact the winery directly to book this experience.'
+        )
       ).toBeNull();
     });
   });

@@ -62,9 +62,18 @@ export function PendingWineriesTable({
                 </div>
               </SelectTrigger>
               <SelectContent className="border-stone-200 bg-white shadow-lg">
-                <SelectItem value="all" className="focus:bg-burgundy-50 focus:text-burgundy-900">{t('allCommunes')}</SelectItem>
+                <SelectItem
+                  value="all"
+                  className="focus:bg-burgundy-50 focus:text-burgundy-900"
+                >
+                  {t('allCommunes')}
+                </SelectItem>
                 {communes.map((commune) => (
-                  <SelectItem key={commune} value={commune} className="focus:bg-burgundy-50 focus:text-burgundy-900">
+                  <SelectItem
+                    key={commune}
+                    value={commune}
+                    className="focus:bg-burgundy-50 focus:text-burgundy-900"
+                  >
                     {commune}
                   </SelectItem>
                 ))}
@@ -73,7 +82,9 @@ export function PendingWineriesTable({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
+              onClick={() =>
+                setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')
+              }
               className="hover:border-burgundy-300 hover:bg-burgundy-50"
             >
               <ArrowUpDown className="mr-2 h-4 w-4" />
@@ -107,9 +118,14 @@ export function PendingWineriesTable({
               </thead>
               <tbody className="divide-y divide-stone-100">
                 {filteredWineries.map((winery) => (
-                  <tr key={winery.id} className="transition-colors hover:bg-burgundy-50/40">
+                  <tr
+                    key={winery.id}
+                    className="transition-colors hover:bg-burgundy-50/40"
+                  >
                     <td className="px-6 py-4">
-                      <span className="font-medium text-slate-900">{winery.name}</span>
+                      <span className="font-medium text-slate-900">
+                        {winery.name}
+                      </span>
                     </td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center gap-1.5 text-sm text-slate-600">
@@ -117,10 +133,14 @@ export function PendingWineriesTable({
                         {winery.commune}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-600">{winery.user.email}</td>
+                    <td className="px-6 py-4 text-sm text-slate-600">
+                      {winery.user.email}
+                    </td>
                     <td className="px-6 py-4">
                       <span className="text-sm text-slate-500">
-                        {formatDistanceToNow(new Date(winery.createdAt), { addSuffix: true })}
+                        {formatDistanceToNow(new Date(winery.createdAt), {
+                          addSuffix: true,
+                        })}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">

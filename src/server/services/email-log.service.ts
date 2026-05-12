@@ -67,7 +67,9 @@ export async function logEmailSkipped(
       },
     });
   } catch (error) {
-    logError('Failed to log skipped email', error, { action: 'logEmailSkipped' });
+    logError('Failed to log skipped email', error, {
+      action: 'logEmailSkipped',
+    });
   }
 }
 

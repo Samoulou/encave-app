@@ -1,11 +1,4 @@
-import {
-  Html,
-  Head,
-  Body,
-  Container,
-  Hr,
-  Text,
-} from '@react-email/components';
+import { Html, Head, Body, Container, Hr, Text } from '@react-email/components';
 import type { ReactNode } from 'react';
 import type { Locale } from '@prisma/client';
 

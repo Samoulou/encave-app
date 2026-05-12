@@ -593,7 +593,9 @@ describe('Earnings Queries', () => {
         }, // refunded
       ] as never);
 
-      const result = await getTransactions('winery-123', { status: 'refunded' });
+      const result = await getTransactions('winery-123', {
+        status: 'refunded',
+      });
 
       expect(result).toHaveLength(1);
       expect(result[0].status).toBe('refunded');
@@ -635,7 +637,9 @@ describe('Earnings Queries', () => {
       // All paid bookings, but filter for refunded
       mockDb.booking.findMany.mockResolvedValueOnce([mockBookingData] as never);
 
-      const result = await getTransactions('winery-123', { status: 'refunded' });
+      const result = await getTransactions('winery-123', {
+        status: 'refunded',
+      });
 
       expect(result).toEqual([]);
     });
@@ -687,8 +691,20 @@ describe('Earnings Queries', () => {
 
     it('calculates summary from non-refunded bookings', async () => {
       mockDb.booking.findMany.mockResolvedValueOnce([
-        { totalPrice: 20000, platformFee: 2400, wineryPayout: 17600, refundIssued: false, refundAmount: null },
-        { totalPrice: 10000, platformFee: 1200, wineryPayout: 8800, refundIssued: false, refundAmount: null },
+        {
+          totalPrice: 20000,
+          platformFee: 2400,
+          wineryPayout: 17600,
+          refundIssued: false,
+          refundAmount: null,
+        },
+        {
+          totalPrice: 10000,
+          platformFee: 1200,
+          wineryPayout: 8800,
+          refundIssued: false,
+          refundAmount: null,
+        },
       ] as never);
 
       const result = await getYearToDateSummary('winery-123');
@@ -701,9 +717,27 @@ describe('Earnings Queries', () => {
 
     it('calculates refunded amount from refunded bookings', async () => {
       mockDb.booking.findMany.mockResolvedValueOnce([
-        { totalPrice: 20000, platformFee: 2400, wineryPayout: 17600, refundIssued: false, refundAmount: null },
-        { totalPrice: 15000, platformFee: 1800, wineryPayout: 13200, refundIssued: true, refundAmount: 15000 },
-        { totalPrice: 5000, platformFee: 600, wineryPayout: 4400, refundIssued: true, refundAmount: 5000 },
+        {
+          totalPrice: 20000,
+          platformFee: 2400,
+          wineryPayout: 17600,
+          refundIssued: false,
+          refundAmount: null,
+        },
+        {
+          totalPrice: 15000,
+          platformFee: 1800,
+          wineryPayout: 13200,
+          refundIssued: true,
+          refundAmount: 15000,
+        },
+        {
+          totalPrice: 5000,
+          platformFee: 600,
+          wineryPayout: 4400,
+          refundIssued: true,
+          refundAmount: 5000,
+        },
       ] as never);
 
       const result = await getYearToDateSummary('winery-123');
@@ -720,7 +754,13 @@ describe('Earnings Queries', () => {
 
     it('handles null refundAmount gracefully', async () => {
       mockDb.booking.findMany.mockResolvedValueOnce([
-        { totalPrice: 5000, platformFee: 600, wineryPayout: 4400, refundIssued: true, refundAmount: null },
+        {
+          totalPrice: 5000,
+          platformFee: 600,
+          wineryPayout: 4400,
+          refundIssued: true,
+          refundAmount: null,
+        },
       ] as never);
 
       const result = await getYearToDateSummary('winery-123');
@@ -759,7 +799,9 @@ describe('Earnings Queries', () => {
         { id: 'exp-1', title: 'Cellar Tour' },
         { id: 'exp-2', title: 'Wine Tasting' },
       ];
-      mockDb.experience.findMany.mockResolvedValueOnce(mockExperiences as never);
+      mockDb.experience.findMany.mockResolvedValueOnce(
+        mockExperiences as never
+      );
 
       const result = await getWineryExperiencesForEarnings('winery-123');
 

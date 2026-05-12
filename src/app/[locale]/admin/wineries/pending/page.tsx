@@ -5,7 +5,11 @@ import { ArrowLeft } from 'lucide-react';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
   return generatePageMetadata({
     locale: locale as Locale,
@@ -46,7 +50,7 @@ export default async function PendingWineriesPage() {
       <div className="mb-8">
         <Link
           href="/admin"
-          className="mb-4 inline-flex items-center text-sm text-slate-600 hover:text-burgundy-700 transition-colors"
+          className="mb-4 inline-flex items-center text-sm text-slate-600 transition-colors hover:text-burgundy-700"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Dashboard

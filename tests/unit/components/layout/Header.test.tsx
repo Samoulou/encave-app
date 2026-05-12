@@ -4,19 +4,21 @@ import { Header } from '@/components/layout/Header';
 
 // Mock next-intl/server
 vi.mock('next-intl/server', () => ({
-  getTranslations: vi.fn(() => Promise.resolve((key: string) => {
-    const translations: Record<string, string> = {
-      'goToHomepage': 'EnCave - Go to homepage',
-      'mainNavigation': 'Main navigation',
-      'wineries': 'Wineries',
-      'experiences': 'Experiences',
-      'admin': 'Admin',
-      'dashboard': 'Dashboard',
-      'signIn': 'Sign in',
-      'getStarted': 'Get started',
-    };
-    return translations[key] || key;
-  })),
+  getTranslations: vi.fn(() =>
+    Promise.resolve((key: string) => {
+      const translations: Record<string, string> = {
+        goToHomepage: 'EnCave - Go to homepage',
+        mainNavigation: 'Main navigation',
+        wineries: 'Wineries',
+        experiences: 'Experiences',
+        admin: 'Admin',
+        dashboard: 'Dashboard',
+        signIn: 'Sign in',
+        getStarted: 'Get started',
+      };
+      return translations[key] || key;
+    })
+  ),
 }));
 
 // Mock auth
@@ -31,7 +33,13 @@ vi.mock('@/components/shared/LocaleSwitcher', () => ({
 
 // Mock NavLink component
 vi.mock('@/components/layout/NavLink', () => ({
-  NavLink: ({ href, children }: { href: string; children: React.ReactNode }) => (
+  NavLink: ({
+    href,
+    children,
+  }: {
+    href: string;
+    children: React.ReactNode;
+  }) => (
     <a href={href} data-testid={`navlink-${href.replace(/\//g, '-')}`}>
       {children}
     </a>
@@ -60,7 +68,9 @@ describe('Header', () => {
     const HeaderComponent = await Header();
     render(HeaderComponent);
 
-    const logoLink = screen.getByRole('link', { name: /encave.*go to homepage/i });
+    const logoLink = screen.getByRole('link', {
+      name: /encave.*go to homepage/i,
+    });
     expect(logoLink).toHaveAttribute('href', '/');
   });
 
@@ -68,14 +78,18 @@ describe('Header', () => {
     const HeaderComponent = await Header();
     render(HeaderComponent);
 
-    expect(screen.getByTestId('navlink--wineries')).toHaveTextContent('Wineries');
+    expect(screen.getByTestId('navlink--wineries')).toHaveTextContent(
+      'Wineries'
+    );
   });
 
   it('renders Experiences navigation link', async () => {
     const HeaderComponent = await Header();
     render(HeaderComponent);
 
-    expect(screen.getByTestId('navlink--experiences')).toHaveTextContent('Experiences');
+    expect(screen.getByTestId('navlink--experiences')).toHaveTextContent(
+      'Experiences'
+    );
   });
 
   it('renders sign in and get started buttons when not authenticated', async () => {
@@ -85,12 +99,19 @@ describe('Header', () => {
     render(HeaderComponent);
 
     expect(screen.getByRole('link', { name: /sign in/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /get started/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: /get started/i })
+    ).toBeInTheDocument();
   });
 
   it('renders user menu when authenticated', async () => {
     vi.mocked(auth).mockResolvedValue({
-      user: { id: '1', name: 'Test User', email: 'test@test.com', role: 'CLIENT' },
+      user: {
+        id: '1',
+        name: 'Test User',
+        email: 'test@test.com',
+        role: 'CLIENT',
+      },
       expires: new Date().toISOString(),
     });
 
@@ -98,12 +119,19 @@ describe('Header', () => {
     render(HeaderComponent);
 
     expect(screen.getByTestId('user-menu')).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: /sign in/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: /sign in/i })
+    ).not.toBeInTheDocument();
   });
 
   it('renders Admin link for ADMIN users', async () => {
     vi.mocked(auth).mockResolvedValue({
-      user: { id: '1', name: 'Admin User', email: 'admin@test.com', role: 'ADMIN' },
+      user: {
+        id: '1',
+        name: 'Admin User',
+        email: 'admin@test.com',
+        role: 'ADMIN',
+      },
       expires: new Date().toISOString(),
     });
 
@@ -115,14 +143,21 @@ describe('Header', () => {
 
   it('renders Dashboard link for WINEMAKER users', async () => {
     vi.mocked(auth).mockResolvedValue({
-      user: { id: '1', name: 'Winemaker', email: 'winemaker@test.com', role: 'WINEMAKER' },
+      user: {
+        id: '1',
+        name: 'Winemaker',
+        email: 'winemaker@test.com',
+        role: 'WINEMAKER',
+      },
       expires: new Date().toISOString(),
     });
 
     const HeaderComponent = await Header();
     render(HeaderComponent);
 
-    expect(screen.getByTestId('navlink--dashboard')).toHaveTextContent('Dashboard');
+    expect(screen.getByTestId('navlink--dashboard')).toHaveTextContent(
+      'Dashboard'
+    );
   });
 
   it('does not render Admin link for non-admin users', async () => {

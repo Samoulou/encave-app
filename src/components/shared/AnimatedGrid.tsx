@@ -74,7 +74,10 @@ interface AnimatedGridItemProps {
   className?: string;
 }
 
-export function AnimatedGridItem({ children, className }: AnimatedGridItemProps) {
+export function AnimatedGridItem({
+  children,
+  className,
+}: AnimatedGridItemProps) {
   return (
     <motion.div className={className} variants={itemVariants}>
       {children}

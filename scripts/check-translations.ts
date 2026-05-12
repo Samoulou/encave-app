@@ -101,7 +101,9 @@ function main(): void {
     console.log(`Locale: ${locale}`);
     console.log('-'.repeat(30));
     console.log(`  Total keys: ${stats.totalKeys}`);
-    console.log(`  Coverage: ${((stats.totalKeys - stats.extraKeys.length) / defaultKeys.length * 100).toFixed(1)}%`);
+    console.log(
+      `  Coverage: ${(((stats.totalKeys - stats.extraKeys.length) / defaultKeys.length) * 100).toFixed(1)}%`
+    );
 
     if (stats.missingKeys.length > 0) {
       hasIssues = true;
@@ -129,7 +131,9 @@ function main(): void {
   console.log('='.repeat(50));
   if (hasIssues) {
     console.log('Status: ISSUES FOUND');
-    console.log('Some translations are missing. Please update the translation files.');
+    console.log(
+      'Some translations are missing. Please update the translation files.'
+    );
     process.exit(1);
   } else {
     console.log('Status: ALL TRANSLATIONS COMPLETE');

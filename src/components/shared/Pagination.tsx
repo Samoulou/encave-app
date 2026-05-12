@@ -2,7 +2,12 @@
 
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -56,11 +61,9 @@ export function Pagination({
     >
       {/* Item count info */}
       <div className="text-sm text-slate-600">
-        {totalItems > 0 ? (
-          t('showing', { from: startItem, to: endItem, total: totalItems })
-        ) : (
-          t('noResults')
-        )}
+        {totalItems > 0
+          ? t('showing', { from: startItem, to: endItem, total: totalItems })
+          : t('noResults')}
       </div>
 
       <div className="flex items-center gap-4">

@@ -7,11 +7,11 @@ export function CancellationPolicy() {
   const t = useTranslations('cancellation');
 
   return (
-    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+    <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
       <div className="flex items-start gap-3">
-        <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+        <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-600" />
         <div className="text-sm">
-          <p className="font-medium text-amber-800 mb-2">{t('title')}</p>
+          <p className="mb-2 font-medium text-amber-800">{t('title')}</p>
           <ul className="space-y-1 text-amber-700">
             <li>{t('free24Hours')}</li>
             <li>{t('halfRefund')}</li>

@@ -56,7 +56,7 @@ export function BookingStepIndicator({
             {index < totalSteps - 1 && (
               <div
                 className={cn(
-                  'h-0.5 w-8 mx-1 -mt-4 transition-colors duration-300',
+                  'mx-1 -mt-4 h-0.5 w-8 transition-colors duration-300',
                   stepNumber < currentStep ? 'bg-primary' : 'bg-stone-200'
                 )}
               />

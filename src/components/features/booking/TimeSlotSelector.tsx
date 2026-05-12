@@ -5,7 +5,10 @@ import { useTranslations } from 'next-intl';
 import { Clock, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { getTimeSlotsForDate, type TimeSlotAvailability } from '@/server/actions/booking';
+import {
+  getTimeSlotsForDate,
+  type TimeSlotAvailability,
+} from '@/server/actions/booking';
 
 interface TimeSlotSelectorProps {
   experienceId: string;
@@ -43,7 +46,9 @@ export function TimeSlotSelector({
           setSlots(result.data);
           // BUG-030 FIX: Handle previously selected time
           if (selectedTime) {
-            const selectedSlot = result.data.find((s) => s.timeSlot === selectedTime);
+            const selectedSlot = result.data.find(
+              (s) => s.timeSlot === selectedTime
+            );
             if (selectedSlot?.available) {
               // Time still available - update capacity for new date
               onCapacityUpdate(selectedSlot.remainingCapacity);
@@ -65,7 +70,13 @@ export function TimeSlotSelector({
       .finally(() => {
         setIsLoading(false);
       });
-  }, [experienceId, selectedDate, selectedTime, onTimeChange, onCapacityUpdate]);
+  }, [
+    experienceId,
+    selectedDate,
+    selectedTime,
+    onTimeChange,
+    onCapacityUpdate,
+  ]);
 
   useEffect(() => {
     fetchTimeSlots();
@@ -88,7 +99,7 @@ export function TimeSlotSelector({
   if (!selectedDate) {
     return (
       <div className="flex flex-col items-center justify-center py-8 text-slate-400">
-        <Clock className="h-12 w-12 mb-2 opacity-50" aria-hidden="true" />
+        <Clock className="mb-2 h-12 w-12 opacity-50" aria-hidden="true" />
         <p className="text-sm">{t('selectDateFirst')}</p>
       </div>
     );
@@ -96,8 +107,14 @@ export function TimeSlotSelector({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-8" data-testid="time-slot-loading">
-        <Loader2 className="h-8 w-8 animate-spin text-burgundy-600" aria-hidden="true" />
+      <div
+        className="flex items-center justify-center py-8"
+        data-testid="time-slot-loading"
+      >
+        <Loader2
+          className="h-8 w-8 animate-spin text-burgundy-600"
+          aria-hidden="true"
+        />
         <span className="sr-only">{tCommon('loading')}</span>
       </div>
     );
@@ -105,8 +122,11 @@ export function TimeSlotSelector({
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center py-8 text-red-500" data-testid="time-slot-error">
-        <p className="text-sm mb-3">{error}</p>
+      <div
+        className="flex flex-col items-center justify-center py-8 text-red-500"
+        data-testid="time-slot-error"
+      >
+        <p className="mb-3 text-sm">{error}</p>
         <Button
           variant="outline"
           size="sm"
@@ -117,7 +137,7 @@ export function TimeSlotSelector({
             <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
           ) : (
             <>
-              <RefreshCw className="h-4 w-4 mr-1" aria-hidden="true" />
+              <RefreshCw className="mr-1 h-4 w-4" aria-hidden="true" />
               Retry
             </>
           )}
@@ -129,7 +149,7 @@ export function TimeSlotSelector({
   if (slots.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-8 text-slate-400">
-        <Clock className="h-12 w-12 mb-2 opacity-50" aria-hidden="true" />
+        <Clock className="mb-2 h-12 w-12 opacity-50" aria-hidden="true" />
         <p className="text-sm">{t('noAvailability')}</p>
       </div>
     );
@@ -141,9 +161,10 @@ export function TimeSlotSelector({
         const isSelected = selectedTime === slot.timeSlot;
         const isFull = !slot.available;
         const isLowCapacity = slot.available && slot.remainingCapacity <= 3;
-        const capacityPercent = slot.maxCapacity > 0
-          ? Math.round((slot.remainingCapacity / slot.maxCapacity) * 100)
-          : 0;
+        const capacityPercent =
+          slot.maxCapacity > 0
+            ? Math.round((slot.remainingCapacity / slot.maxCapacity) * 100)
+            : 0;
 
         return (
           <button
@@ -153,7 +174,7 @@ export function TimeSlotSelector({
             className={cn(
               'relative flex flex-col rounded-xl border-2 px-4 py-3.5 text-left transition-all',
               isFull
-                ? 'border-stone-100 bg-stone-50 cursor-not-allowed opacity-60'
+                ? 'cursor-not-allowed border-stone-100 bg-stone-50 opacity-60'
                 : isSelected
                   ? 'border-primary bg-primary/5 shadow-sm'
                   : 'border-stone-200 bg-white hover:border-primary/40 hover:bg-primary/[0.02]'
@@ -161,19 +182,21 @@ export function TimeSlotSelector({
           >
             {/* Time range */}
             <div className="flex items-center justify-between">
-              <span className={cn(
-                'text-base font-semibold',
-                isFull ? 'text-muted-foreground' : 'text-foreground'
-              )}>
+              <span
+                className={cn(
+                  'text-base font-semibold',
+                  isFull ? 'text-muted-foreground' : 'text-foreground'
+                )}
+              >
                 {formatTime(slot.timeSlot)} → {formatTime(slot.endTime)}
               </span>
               {isFull && (
-                <span className="text-xs font-medium text-muted-foreground bg-stone-100 px-2 py-0.5 rounded-full">
+                <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-muted-foreground">
                   {t('sessionFull')}
                 </span>
               )}
               {isLowCapacity && (
-                <span className="text-xs font-medium text-orange-700 bg-orange-100 px-2 py-0.5 rounded-full">
+                <span className="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700">
                   {t('spotsLeft', { count: slot.remainingCapacity })}
                 </span>
               )}
@@ -182,7 +205,7 @@ export function TimeSlotSelector({
             {/* Capacity bar */}
             {!isFull && (
               <div className="mt-2.5 flex items-center gap-2.5">
-                <div className="flex-1 h-1.5 rounded-full bg-stone-100 overflow-hidden">
+                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-stone-100">
                   <div
                     className={cn(
                       'h-full rounded-full transition-all duration-500',
@@ -191,10 +214,15 @@ export function TimeSlotSelector({
                     style={{ width: `${capacityPercent}%` }}
                   />
                 </div>
-                <span className={cn(
-                  'text-xs whitespace-nowrap',
-                  isLowCapacity ? 'text-orange-600 font-medium' : 'text-muted-foreground'
-                )} data-testid="remaining-capacity">
+                <span
+                  className={cn(
+                    'whitespace-nowrap text-xs',
+                    isLowCapacity
+                      ? 'font-medium text-orange-600'
+                      : 'text-muted-foreground'
+                  )}
+                  data-testid="remaining-capacity"
+                >
                   {t('spotsLeft', { count: slot.remainingCapacity })}
                 </span>
               </div>

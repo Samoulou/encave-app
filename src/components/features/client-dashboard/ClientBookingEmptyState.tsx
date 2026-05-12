@@ -8,7 +8,9 @@ interface ClientBookingEmptyStateProps {
   variant: 'upcoming' | 'past';
 }
 
-export function ClientBookingEmptyState({ variant }: ClientBookingEmptyStateProps) {
+export function ClientBookingEmptyState({
+  variant,
+}: ClientBookingEmptyStateProps) {
   const locale = useLocale();
   const t = useTranslations('clientDashboard.bookings');
 
@@ -16,8 +18,8 @@ export function ClientBookingEmptyState({ variant }: ClientBookingEmptyStateProp
   const Icon = isUpcoming ? CalendarX2 : History;
 
   return (
-    <div className="bg-white rounded-xl border border-border shadow-sm">
-      <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+    <div className="rounded-xl border border-border bg-white shadow-sm">
+      <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
         <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-light">
           <Icon className="h-8 w-8 text-[#915564]" />
         </div>
@@ -30,7 +32,7 @@ export function ClientBookingEmptyState({ variant }: ClientBookingEmptyStateProp
         {isUpcoming && (
           <Link
             href={`/${locale}/experiences`}
-            className="mt-6 inline-flex items-center gap-2 h-11 px-6 rounded-lg bg-primary hover:bg-primary/90 text-white text-sm font-bold transition-colors"
+            className="mt-6 inline-flex h-11 items-center gap-2 rounded-lg bg-primary px-6 text-sm font-bold text-white transition-colors hover:bg-primary/90"
           >
             <Search className="h-4 w-4" />
             {t('browseExperiences')}

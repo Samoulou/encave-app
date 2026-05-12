@@ -4,7 +4,10 @@ import { db } from '@/server/db';
 /**
  * Invalidate experience-related caches after mutations
  */
-export function invalidateExperienceCaches(winerySlug?: string, experienceSlug?: string) {
+export function invalidateExperienceCaches(
+  winerySlug?: string,
+  experienceSlug?: string
+) {
   // Invalidate the experiences list cache
   revalidateTag('experiences');
 

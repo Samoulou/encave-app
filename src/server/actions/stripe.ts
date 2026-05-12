@@ -75,7 +75,10 @@ export async function startStripeOnboarding(
 
     return { success: true, data: { url: onboardingUrl } };
   } catch (error) {
-    logError('startStripeOnboarding error', error, { action: 'startStripeOnboarding', wineryId });
+    logError('startStripeOnboarding error', error, {
+      action: 'startStripeOnboarding',
+      wineryId,
+    });
     return {
       success: false,
       error: {
@@ -134,7 +137,9 @@ export async function handleStripeCallback(): Promise<
 
     return { success: true, data: { status: 'refresh' } };
   } catch (error) {
-    logError('handleStripeCallback error', error, { action: 'handleStripeCallback' });
+    logError('handleStripeCallback error', error, {
+      action: 'handleStripeCallback',
+    });
     return {
       success: false,
       error: {
@@ -179,7 +184,9 @@ export async function getStripeDashboardLink(): Promise<
 
     return { success: true, data: { url } };
   } catch (error) {
-    logError('getStripeDashboardLink error', error, { action: 'getStripeDashboardLink' });
+    logError('getStripeDashboardLink error', error, {
+      action: 'getStripeDashboardLink',
+    });
     return {
       success: false,
       error: {
@@ -224,7 +231,10 @@ export async function checkCanPublish(
 
     return { success: true, data: result };
   } catch (error) {
-    logError('checkCanPublish error', error, { action: 'checkCanPublish', wineryId });
+    logError('checkCanPublish error', error, {
+      action: 'checkCanPublish',
+      wineryId,
+    });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to check status' },

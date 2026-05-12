@@ -26,11 +26,17 @@ async function globalSetup(config: FullConfig) {
   // Vérifier que DATABASE_URL pointe vers la base de test
   const dbUrl = process.env.DATABASE_URL || '';
   if (!dbUrl.includes('test') && !dbUrl.includes('localhost')) {
-    console.error('⚠️  ATTENTION: DATABASE_URL ne semble pas pointer vers une base de test!');
+    console.error(
+      '⚠️  ATTENTION: DATABASE_URL ne semble pas pointer vers une base de test!'
+    );
     console.error('   Valeur actuelle:', dbUrl.substring(0, 50) + '...');
     console.error('');
-    console.error('   Configurez DATABASE_URL vers votre base de test avant de continuer.');
-    console.error('   Exemple: DATABASE_URL=postgresql://localhost:5432/encave_test');
+    console.error(
+      '   Configurez DATABASE_URL vers votre base de test avant de continuer.'
+    );
+    console.error(
+      '   Exemple: DATABASE_URL=postgresql://localhost:5432/encave_test'
+    );
     console.error('');
 
     // En CI, on peut vouloir continuer quand même

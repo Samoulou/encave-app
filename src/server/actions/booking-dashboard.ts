@@ -94,7 +94,10 @@ export async function approveBooking(
 
     return { success: true, data: { status: BookingStatus.CONFIRMED } };
   } catch (error) {
-    logError('approveBooking error', error, { action: 'approveBooking', bookingId });
+    logError('approveBooking error', error, {
+      action: 'approveBooking',
+      bookingId,
+    });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to approve booking' },
@@ -180,9 +183,15 @@ export async function rejectBooking(
       });
     });
 
-    return { success: true, data: { status: BookingStatus.CANCELLED_BY_WINERY } };
+    return {
+      success: true,
+      data: { status: BookingStatus.CANCELLED_BY_WINERY },
+    };
   } catch (error) {
-    logError('rejectBooking error', error, { action: 'rejectBooking', bookingId });
+    logError('rejectBooking error', error, {
+      action: 'rejectBooking',
+      bookingId,
+    });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to reject booking' },
@@ -264,10 +273,16 @@ export async function markBookingCompleted(
 
     return { success: true, data: { status: BookingStatus.COMPLETED } };
   } catch (error) {
-    logError('markBookingCompleted error', error, { action: 'markBookingCompleted', bookingId });
+    logError('markBookingCompleted error', error, {
+      action: 'markBookingCompleted',
+      bookingId,
+    });
     return {
       success: false,
-      error: { code: 'INTERNAL_ERROR', message: 'Failed to update booking status' },
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to update booking status',
+      },
     };
   }
 }
@@ -346,10 +361,16 @@ export async function markBookingNoShow(
 
     return { success: true, data: { status: BookingStatus.NO_SHOW } };
   } catch (error) {
-    logError('markBookingNoShow error', error, { action: 'markBookingNoShow', bookingId });
+    logError('markBookingNoShow error', error, {
+      action: 'markBookingNoShow',
+      bookingId,
+    });
     return {
       success: false,
-      error: { code: 'INTERNAL_ERROR', message: 'Failed to update booking status' },
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to update booking status',
+      },
     };
   }
 }
@@ -444,16 +465,19 @@ export async function exportBookingsToCSV(
     ]);
 
     // Combine headers and rows
-    const csvData = [headers.join(','), ...rows.map((row) => row.join(','))].join(
-      '\n'
-    );
+    const csvData = [
+      headers.join(','),
+      ...rows.map((row) => row.join(',')),
+    ].join('\n');
 
     // Generate filename
     const filename = `bookings_${winery.slug}_${format(new Date(), 'yyyy-MM-dd')}.csv`;
 
     return { success: true, data: { csvData, filename } };
   } catch (error) {
-    logError('exportBookingsToCSV error', error, { action: 'exportBookingsToCSV' });
+    logError('exportBookingsToCSV error', error, {
+      action: 'exportBookingsToCSV',
+    });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to export bookings' },
@@ -464,9 +488,7 @@ export async function exportBookingsToCSV(
 /**
  * Get client history with winery (used by ClientDetailsModal)
  */
-export async function getClientHistory(
-  visitorEmail: string
-): Promise<
+export async function getClientHistory(visitorEmail: string): Promise<
   ActionResult<{
     bookings: Array<{
       id: string;
@@ -528,7 +550,10 @@ export async function getClientHistory(
     logError('getClientHistory error', error, { action: 'getClientHistory' });
     return {
       success: false,
-      error: { code: 'INTERNAL_ERROR', message: 'Failed to get client history' },
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to get client history',
+      },
     };
   }
 }

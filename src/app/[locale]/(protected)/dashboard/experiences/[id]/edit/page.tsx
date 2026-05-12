@@ -10,7 +10,11 @@ import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
   return generatePageMetadata({
     locale: locale as Locale,
@@ -21,7 +25,10 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 // Dynamic imports for heavy form components
 const EditExperienceForm = dynamic(
-  () => import('@/components/features/experience/EditExperienceForm').then(mod => mod.EditExperienceForm),
+  () =>
+    import('@/components/features/experience/EditExperienceForm').then(
+      (mod) => mod.EditExperienceForm
+    ),
   {
     loading: () => (
       <div className="space-y-6">
@@ -35,7 +42,10 @@ const EditExperienceForm = dynamic(
 );
 
 const AvailabilityScheduleBuilder = dynamic(
-  () => import('@/components/features/experience/AvailabilityScheduleBuilder').then(mod => mod.AvailabilityScheduleBuilder),
+  () =>
+    import('@/components/features/experience/AvailabilityScheduleBuilder').then(
+      (mod) => mod.AvailabilityScheduleBuilder
+    ),
   {
     loading: () => (
       <div className="space-y-4">
@@ -134,9 +144,7 @@ export default async function EditExperiencePage({ params }: PageProps) {
             <h1 className="font-display text-display-md text-slate-900">
               {t('editTitle')}
             </h1>
-            <p className="text-slate-600">
-              {t('editSubtitle')}
-            </p>
+            <p className="text-slate-600">{t('editSubtitle')}</p>
           </div>
         </div>
 
@@ -144,7 +152,7 @@ export default async function EditExperiencePage({ params }: PageProps) {
 
         {/* Availability Section */}
         <section className="mt-12 space-y-6">
-          <div className="flex items-start gap-4 pb-6 border-b border-stone-200">
+          <div className="flex items-start gap-4 border-b border-stone-200 pb-6">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-burgundy-100 text-burgundy-600">
               <Calendar className="h-5 w-5" />
             </div>

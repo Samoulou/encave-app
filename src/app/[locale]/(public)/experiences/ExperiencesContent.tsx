@@ -15,7 +15,9 @@ interface ExperiencesContentProps {
  * Async server component that fetches experience data.
  * Designed to be wrapped in Suspense for streaming/progressive loading.
  */
-export async function ExperiencesContent({ searchParams }: ExperiencesContentProps) {
+export async function ExperiencesContent({
+  searchParams,
+}: ExperiencesContentProps) {
   // Fetch data in parallel - this is the slow part
   const [searchResult, communes] = await Promise.all([
     searchExperiences(searchParams),
@@ -29,7 +31,8 @@ export async function ExperiencesContent({ searchParams }: ExperiencesContentPro
     '@context': 'https://schema.org',
     '@type': 'ItemList',
     name: 'Wine Experiences in Valais',
-    description: 'Discover wine tastings, cellar visits, and vineyard tours in Valais, Switzerland',
+    description:
+      'Discover wine tastings, cellar visits, and vineyard tours in Valais, Switzerland',
     url: `${baseUrl}/experiences`,
     numberOfItems: searchResult.total,
     itemListElement: searchResult.experiences.map((exp, index) => ({

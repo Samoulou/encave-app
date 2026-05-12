@@ -7,7 +7,11 @@ import { Skeleton } from '@/components/shared/Skeleton';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
   return generatePageMetadata({
     locale: locale as Locale,
@@ -18,7 +22,10 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 // Dynamic import for heavy form component (990 lines)
 const CreateExperienceForm = dynamic(
-  () => import('@/components/features/experience/CreateExperienceForm').then(mod => mod.CreateExperienceForm),
+  () =>
+    import('@/components/features/experience/CreateExperienceForm').then(
+      (mod) => mod.CreateExperienceForm
+    ),
   {
     loading: () => (
       <div className="space-y-6 p-6">

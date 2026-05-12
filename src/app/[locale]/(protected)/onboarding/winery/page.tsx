@@ -9,7 +9,11 @@ import { AnimatedProgressBar } from '@/components/shared/AnimatedProgressBar';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
   return generatePageMetadata({
     locale: locale as Locale,
@@ -44,7 +48,7 @@ export default async function WineryOnboardingPage() {
   return (
     <div className="min-h-screen bg-cream-50">
       {/* Progress bar */}
-      <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-sm border-b border-stone-200/60">
+      <div className="sticky top-0 z-10 border-b border-stone-200/60 bg-white/90 backdrop-blur-sm">
         <AnimatedProgressBar progress={50} />
       </div>
 
@@ -53,12 +57,14 @@ export default async function WineryOnboardingPage() {
         <div className="mb-8 flex items-center justify-between">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-burgundy-700 transition-colors"
+            className="inline-flex items-center gap-2 text-sm text-slate-600 transition-colors hover:text-burgundy-700"
           >
             <ArrowLeft className="h-4 w-4" />
             Back
           </Link>
-          <span className="text-sm font-medium text-slate-500">Step 1 of 2</span>
+          <span className="text-sm font-medium text-slate-500">
+            Step 1 of 2
+          </span>
         </div>
 
         {/* Hero section */}
@@ -70,7 +76,8 @@ export default async function WineryOnboardingPage() {
             Register Your Winery
           </h1>
           <p className="mt-3 text-lg text-slate-600">
-            Tell us about your winery to get started on EnCave and connect with wine enthusiasts.
+            Tell us about your winery to get started on EnCave and connect with
+            wine enthusiasts.
           </p>
         </div>
 

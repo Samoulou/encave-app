@@ -30,9 +30,14 @@ export function WineryContactSection({ control }: WineryContactSectionProps) {
 
   return (
     <div className="space-y-6 pt-4">
-      <div className="flex items-start gap-4 pb-6 border-b border-stone-200">
+      <div className="flex items-start gap-4 border-b border-stone-200 pb-6">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-burgundy-100 text-burgundy-600">
-          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            className="h-5 w-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -63,7 +68,9 @@ export function WineryContactSection({ control }: WineryContactSectionProps) {
           name="address"
           render={({ field }) => (
             <FormItem className="sm:col-span-2">
-              <FormLabel className="text-base font-medium">{t('address')}</FormLabel>
+              <FormLabel className="text-base font-medium">
+                {t('address')}
+              </FormLabel>
               <FormControl>
                 <Input placeholder={t('addressPlaceholder')} {...field} />
               </FormControl>
@@ -77,11 +84,10 @@ export function WineryContactSection({ control }: WineryContactSectionProps) {
           name="commune"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-base font-medium">{t('commune')}</FormLabel>
-              <Select
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-              >
+              <FormLabel className="text-base font-medium">
+                {t('commune')}
+              </FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder={t('communePlaceholder')} />
@@ -105,13 +111,13 @@ export function WineryContactSection({ control }: WineryContactSectionProps) {
           name="phone"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-base font-medium">{t('contactPhone')}</FormLabel>
+              <FormLabel className="text-base font-medium">
+                {t('contactPhone')}
+              </FormLabel>
               <FormControl>
                 <Input placeholder={t('phonePlaceholder')} {...field} />
               </FormControl>
-              <FormDescription>
-                {t('swissFormatShort')}
-              </FormDescription>
+              <FormDescription>{t('swissFormatShort')}</FormDescription>
               <FormMessage />
             </FormItem>
           )}

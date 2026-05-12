@@ -13,7 +13,7 @@ export function Skeleton({ className, ...props }: SkeletonProps) {
   return (
     <div
       className={cn(
-        'animate-skeleton-shimmer rounded-md skeleton-warm',
+        'skeleton-warm animate-skeleton-shimmer rounded-md',
         className
       )}
       aria-hidden="true"
@@ -35,7 +35,7 @@ interface SkeletonContainerProps {
 export function SkeletonContainer({
   children,
   label = 'Chargement en cours...',
-  className
+  className,
 }: SkeletonContainerProps) {
   return (
     <div
@@ -86,7 +86,13 @@ export function SkeletonExperienceGrid({ count = 6 }: { count?: number }) {
   );
 }
 
-export function SkeletonText({ lines = 3, className }: { lines?: number; className?: string }) {
+export function SkeletonText({
+  lines = 3,
+  className,
+}: {
+  lines?: number;
+  className?: string;
+}) {
   return (
     <div className={cn('space-y-2', className)}>
       {Array.from({ length: lines }).map((_, i) => (
@@ -140,7 +146,10 @@ export function SkeletonDashboardStats() {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="rounded-xl border border-stone-200 bg-white p-6">
+        <div
+          key={i}
+          className="rounded-xl border border-stone-200 bg-white p-6"
+        >
           <Skeleton className="h-4 w-24" />
           <Skeleton className="mt-2 h-8 w-16" />
           <Skeleton className="mt-2 h-3 w-20" />

@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/server/db';
-import { checkRateLimit, type RateLimitConfig } from '@/server/services/rate-limit.service';
+import {
+  checkRateLimit,
+  type RateLimitConfig,
+} from '@/server/services/rate-limit.service';
 import { logError } from '@/lib/logger';
 
 const newsletterSchema = z.object({
@@ -18,12 +21,16 @@ const NEWSLETTER_RATE_LIMIT: RateLimitConfig = {
 export async function POST(request: NextRequest) {
   try {
     // Get IP for rate limiting
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-               request.headers.get('x-real-ip') ||
-               'unknown';
+    const ip =
+      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      request.headers.get('x-real-ip') ||
+      'unknown';
 
     // Check rate limit
-    const rateLimitResult = await checkRateLimit(`newsletter:${ip}`, NEWSLETTER_RATE_LIMIT);
+    const rateLimitResult = await checkRateLimit(
+      `newsletter:${ip}`,
+      NEWSLETTER_RATE_LIMIT
+    );
     if (!rateLimitResult.success) {
       return NextResponse.json(
         { error: 'Trop de tentatives. Veuillez réessayer plus tard.' },

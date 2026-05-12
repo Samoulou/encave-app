@@ -62,7 +62,10 @@ export function BookingFilters({ experiences }: BookingFiltersProps) {
     'status',
     parseAsArrayOf(parseAsString).withOptions(transitionOptions)
   );
-  const [experienceFilter, setExperienceFilter] = useQueryState('experience', transitionOptions);
+  const [experienceFilter, setExperienceFilter] = useQueryState(
+    'experience',
+    transitionOptions
+  );
   const [dateFrom, setDateFrom] = useQueryState('from', transitionOptions);
   const [dateTo, setDateTo] = useQueryState('to', transitionOptions);
 
@@ -93,9 +96,7 @@ export function BookingFilters({ experiences }: BookingFiltersProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button
-          className="flex items-center gap-2 h-10 px-4 rounded-lg border border-transparent hover:bg-[#f8f6f6] text-[#915564] text-sm font-bold transition-colors"
-        >
+        <button className="flex h-10 items-center gap-2 rounded-lg border border-transparent px-4 text-sm font-bold text-[#915564] transition-colors hover:bg-[#f8f6f6]">
           {isPending ? (
             <Loader2 className="h-5 w-5 animate-spin" />
           ) : (
@@ -103,7 +104,7 @@ export function BookingFilters({ experiences }: BookingFiltersProps) {
           )}
           {t('filters.filter')}
           {activeFilterCount > 0 && (
-            <span className="ml-1 flex items-center justify-center h-5 min-w-[20px] px-1.5 rounded-full bg-primary text-white text-xs font-bold">
+            <span className="ml-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1.5 text-xs font-bold text-white">
               {activeFilterCount}
             </span>
           )}
@@ -111,7 +112,7 @@ export function BookingFilters({ experiences }: BookingFiltersProps) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-72">
         {/* Status Filters */}
-        <DropdownMenuLabel className="text-[#915564] text-xs uppercase tracking-wider">
+        <DropdownMenuLabel className="text-xs uppercase tracking-wider text-[#915564]">
           {t('filters.status')}
         </DropdownMenuLabel>
         {STATUS_OPTIONS.map((option) => (
@@ -128,7 +129,7 @@ export function BookingFilters({ experiences }: BookingFiltersProps) {
         {experiences.length > 0 && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuLabel className="text-[#915564] text-xs uppercase tracking-wider">
+            <DropdownMenuLabel className="text-xs uppercase tracking-wider text-[#915564]">
               {t('filters.experience')}
             </DropdownMenuLabel>
             <div className="px-2 py-1">
@@ -142,7 +143,9 @@ export function BookingFilters({ experiences }: BookingFiltersProps) {
                   <SelectValue placeholder={t('filters.allExperiences')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{t('filters.allExperiences')}</SelectItem>
+                  <SelectItem value="all">
+                    {t('filters.allExperiences')}
+                  </SelectItem>
                   {experiences.map((exp) => (
                     <SelectItem key={exp.id} value={exp.id}>
                       {exp.title}
@@ -156,14 +159,16 @@ export function BookingFilters({ experiences }: BookingFiltersProps) {
 
         {/* Date Range */}
         <DropdownMenuSeparator />
-        <DropdownMenuLabel className="text-[#915564] text-xs uppercase tracking-wider">
+        <DropdownMenuLabel className="text-xs uppercase tracking-wider text-[#915564]">
           {t('filters.dateRange')}
         </DropdownMenuLabel>
-        <div className="px-2 py-1 flex gap-2">
+        <div className="flex gap-2 px-2 py-1">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex-1 h-9 px-3 text-sm rounded-lg border border-border bg-white hover:bg-[#f8f6f6] text-left truncate">
-                {dateFrom ? format(parseISO(dateFrom), 'MMM d', { locale: dateLocale }) : t('filters.from')}
+              <button className="h-9 flex-1 truncate rounded-lg border border-border bg-white px-3 text-left text-sm hover:bg-[#f8f6f6]">
+                {dateFrom
+                  ? format(parseISO(dateFrom), 'MMM d', { locale: dateLocale })
+                  : t('filters.from')}
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-auto p-0">
@@ -179,8 +184,10 @@ export function BookingFilters({ experiences }: BookingFiltersProps) {
           </DropdownMenu>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex-1 h-9 px-3 text-sm rounded-lg border border-border bg-white hover:bg-[#f8f6f6] text-left truncate">
-                {dateTo ? format(parseISO(dateTo), 'MMM d', { locale: dateLocale }) : t('filters.to')}
+              <button className="h-9 flex-1 truncate rounded-lg border border-border bg-white px-3 text-left text-sm hover:bg-[#f8f6f6]">
+                {dateTo
+                  ? format(parseISO(dateTo), 'MMM d', { locale: dateLocale })
+                  : t('filters.to')}
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-auto p-0">
@@ -202,7 +209,7 @@ export function BookingFilters({ experiences }: BookingFiltersProps) {
             <DropdownMenuSeparator />
             <button
               onClick={clearFilters}
-              className="w-full px-2 py-2 text-sm text-[#915564] hover:text-primary hover:bg-[#f8f6f6] text-left transition-colors"
+              className="w-full px-2 py-2 text-left text-sm text-[#915564] transition-colors hover:bg-[#f8f6f6] hover:text-primary"
             >
               {t('filters.clearAll')}
             </button>

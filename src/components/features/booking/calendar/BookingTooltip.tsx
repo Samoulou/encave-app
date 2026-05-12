@@ -31,7 +31,7 @@ export function BookingTooltip({ children, booking }: BookingTooltipProps) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>{children}</TooltipTrigger>
-      <TooltipContent className="max-w-xs bg-white p-3 text-slate-900 shadow-lg border">
+      <TooltipContent className="max-w-xs border bg-white p-3 text-slate-900 shadow-lg">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <ExperienceTypeDot type={booking.experience.type} size="md" />
@@ -44,7 +44,9 @@ export function BookingTooltip({ children, booking }: BookingTooltipProps) {
             <div className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
               <span>{booking.timeSlot}</span>
-              <span className="text-slate-400">({booking.experience.duration}min)</span>
+              <span className="text-slate-400">
+                ({booking.experience.duration}min)
+              </span>
             </div>
             <div className="flex items-center gap-1">
               <Users className="h-3 w-3" />

@@ -99,13 +99,16 @@ export class BookingManagementPage extends BasePage {
     this.visitorPhone = page.getByTestId('visitor-phone');
 
     // Cancel button
-    this.cancelBookingButton = page.getByRole('button', { name: /cancel booking/i });
+    this.cancelBookingButton = page.getByRole('button', {
+      name: /cancel booking/i,
+    });
 
     // Modal
     this.cancellationModal = page.getByRole('dialog', { name: /cancel/i });
     this.modalTitle = this.cancellationModal.getByRole('heading');
     this.modalWarningIcon = this.cancellationModal.getByTestId('warning-icon');
-    this.policyExplanation = this.cancellationModal.getByTestId('policy-explanation');
+    this.policyExplanation =
+      this.cancellationModal.getByTestId('policy-explanation');
 
     // Refund info
     this.refundEligibleSection = page.getByTestId('refund-eligible');
@@ -115,12 +118,20 @@ export class BookingManagementPage extends BasePage {
 
     // Confirmation
     this.confirmCheckbox = page.getByRole('checkbox', { name: /understand/i });
-    this.confirmCancelButton = this.cancellationModal.getByRole('button', { name: /cancel/i });
-    this.closeModalButton = this.cancellationModal.getByRole('button', { name: /close|×/i });
+    this.confirmCancelButton = this.cancellationModal.getByRole('button', {
+      name: /cancel/i,
+    });
+    this.closeModalButton = this.cancellationModal.getByRole('button', {
+      name: /close|×/i,
+    });
 
     // Toasts
-    this.cancellationSuccessToast = page.getByRole('alert').filter({ hasText: /cancelled/i });
-    this.cancellationErrorToast = page.getByRole('alert').filter({ hasText: /error|failed/i });
+    this.cancellationSuccessToast = page
+      .getByRole('alert')
+      .filter({ hasText: /cancelled/i });
+    this.cancellationErrorToast = page
+      .getByRole('alert')
+      .filter({ hasText: /error|failed/i });
 
     // Access errors
     this.accessDeniedMessage = page.getByText(/access denied/i);
@@ -132,7 +143,8 @@ export class BookingManagementPage extends BasePage {
    */
   async navigate(bookingId: string, accessToken: string) {
     await this.goto(`/booking/${bookingId}?token=${accessToken}`, {
-      waitForSelector: '[data-testid="booking-reference"], [data-testid="access-denied"]',
+      waitForSelector:
+        '[data-testid="booking-reference"], [data-testid="access-denied"]',
     });
   }
 
@@ -360,7 +372,10 @@ export class BookingManagementPage extends BasePage {
    * Wait for success toast to appear
    */
   async waitForSuccessToast() {
-    await this.cancellationSuccessToast.waitFor({ state: 'visible', timeout: 10000 });
+    await this.cancellationSuccessToast.waitFor({
+      state: 'visible',
+      timeout: 10000,
+    });
   }
 
   // === ACCESS CONTROL ===

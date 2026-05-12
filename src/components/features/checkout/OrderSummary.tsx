@@ -51,12 +51,14 @@ export function OrderSummary({
   const dateLocale = localeMap[locale as keyof typeof localeMap] || enUS;
 
   const parsedDate = parseISO(date);
-  const formattedDate = format(parsedDate, 'EEE, d MMM', { locale: dateLocale });
+  const formattedDate = format(parsedDate, 'EEE, d MMM', {
+    locale: dateLocale,
+  });
   const subtotal = pricePerPerson * guestCount;
   const total = subtotal + serviceFee;
 
   return (
-    <div className="bg-white rounded-xl shadow-lg border border-border overflow-hidden">
+    <div className="overflow-hidden rounded-xl border border-border bg-white shadow-lg">
       {/* Image Header with Gradient Overlay */}
       <div className="relative h-48 w-full">
         {experienceImage ? (
@@ -68,10 +70,10 @@ export function OrderSummary({
             sizes="(max-width: 768px) 100vw, 400px"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-burgundy-100 to-burgundy-200" />
+          <div className="h-full w-full bg-gradient-to-br from-burgundy-100 to-burgundy-200" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6">
-          <h3 className="text-white text-xl font-bold leading-tight drop-shadow-sm">
+        <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/60 to-transparent p-6">
+          <h3 className="text-xl font-bold leading-tight text-white drop-shadow-sm">
             {experienceTitle}
           </h3>
         </div>
@@ -79,21 +81,23 @@ export function OrderSummary({
 
       <div className="p-6 md:p-8">
         {/* Details List */}
-        <div className="flex flex-col gap-4 pb-6 border-b border-[#f2e9eb]">
+        <div className="flex flex-col gap-4 border-b border-[#f2e9eb] pb-6">
           {/* Date & Time */}
           <div className="flex items-start gap-3">
-            <div className="w-8 flex justify-center pt-0.5">
+            <div className="flex w-8 justify-center pt-0.5">
               <Calendar className="h-5 w-5 text-[#915564]" aria-hidden="true" />
             </div>
             <div>
               <p className="font-bold text-foreground">{formattedDate}</p>
-              <p className="text-sm text-[#915564]">{formatTimeRange(time, duration)}</p>
+              <p className="text-sm text-[#915564]">
+                {formatTimeRange(time, duration)}
+              </p>
             </div>
           </div>
 
           {/* Guests */}
           <div className="flex items-start gap-3">
-            <div className="w-8 flex justify-center pt-0.5">
+            <div className="flex w-8 justify-center pt-0.5">
               <Users className="h-5 w-5 text-[#915564]" aria-hidden="true" />
             </div>
             <div>
@@ -105,14 +109,14 @@ export function OrderSummary({
 
           {/* Location */}
           <div className="flex items-start gap-3">
-            <div className="w-8 flex justify-center pt-0.5">
+            <div className="flex w-8 justify-center pt-0.5">
               <MapPin className="h-5 w-5 text-[#915564]" aria-hidden="true" />
             </div>
             <div>
               <p className="font-bold text-foreground">{location}</p>
               <button
                 type="button"
-                className="text-sm text-[#915564] hover:underline cursor-pointer"
+                className="cursor-pointer text-sm text-[#915564] hover:underline"
               >
                 {t('viewOnMap')}
               </button>
@@ -121,10 +125,11 @@ export function OrderSummary({
         </div>
 
         {/* Pricing Breakdown */}
-        <div className="pt-6 space-y-3">
+        <div className="space-y-3 pt-6">
           <div className="flex justify-between text-foreground">
             <span>
-              {formatCHF(pricePerPerson)} × {tBooking('guests', { count: guestCount })}
+              {formatCHF(pricePerPerson)} ×{' '}
+              {tBooking('guests', { count: guestCount })}
             </span>
             <span>{formatCHF(subtotal)}</span>
           </div>
@@ -132,18 +137,27 @@ export function OrderSummary({
             <span>{t('serviceFee')}</span>
             <span>{formatCHF(serviceFee)}</span>
           </div>
-          <div className="flex justify-between items-center pt-4 mt-2 border-t border-[#f2e9eb]">
-            <span className="text-lg font-bold text-foreground">{t('totalCHF')}</span>
-            <span className="text-2xl font-bold text-primary">{formatCHF(total)}</span>
+          <div className="mt-2 flex items-center justify-between border-t border-[#f2e9eb] pt-4">
+            <span className="text-lg font-bold text-foreground">
+              {t('totalCHF')}
+            </span>
+            <span className="text-2xl font-bold text-primary">
+              {formatCHF(total)}
+            </span>
           </div>
         </div>
 
         {/* Cancellation Policy Note */}
-        <div className="mt-6 pt-4 border-t border-dashed border-border">
+        <div className="mt-6 border-t border-dashed border-border pt-4">
           <div className="flex items-start gap-2">
-            <Info className="h-4 w-4 text-[#915564] mt-0.5 flex-shrink-0" aria-hidden="true" />
-            <p className="text-xs text-[#915564] leading-relaxed">
-              <span className="font-bold text-foreground">{t('freeCancellation')}</span>{' '}
+            <Info
+              className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#915564]"
+              aria-hidden="true"
+            />
+            <p className="text-xs leading-relaxed text-[#915564]">
+              <span className="font-bold text-foreground">
+                {t('freeCancellation')}
+              </span>{' '}
               {t('cancellationPolicy')}
             </p>
           </div>

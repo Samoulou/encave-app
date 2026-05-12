@@ -8,7 +8,11 @@ import { getTranslations } from 'next-intl/server';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
   return generatePageMetadata({
     locale: locale as Locale,
@@ -110,16 +114,21 @@ export default async function SettingsPage() {
           <div className="mt-4 space-y-3 text-sm">
             <div className="flex justify-between">
               <span className="text-slate-500">{tCommon('labels.email')}</span>
-              <span className="font-medium text-slate-900">{session.user.email}</span>
+              <span className="font-medium text-slate-900">
+                {session.user.email}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-500">{tCommon('labels.name')}</span>
-              <span className="font-medium text-slate-900">{session.user.name || t('notSet')}</span>
+              <span className="font-medium text-slate-900">
+                {session.user.name || t('notSet')}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-500">{t('role')}</span>
-              <span className="font-medium text-slate-900 capitalize">
-                {session.user.role?.toLowerCase().replace('_', ' ') || t('roleUser')}
+              <span className="font-medium capitalize text-slate-900">
+                {session.user.role?.toLowerCase().replace('_', ' ') ||
+                  t('roleUser')}
               </span>
             </div>
           </div>

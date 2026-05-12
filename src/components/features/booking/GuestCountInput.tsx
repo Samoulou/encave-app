@@ -52,13 +52,17 @@ export function GuestCountInput({
     const currentValue = valueRef.current;
     const currentMax = maxRef.current;
     const currentRemaining = remainingCapacityRef.current;
-    const effectiveMax = currentRemaining !== null ? Math.min(currentMax, currentRemaining) : currentMax;
+    const effectiveMax =
+      currentRemaining !== null
+        ? Math.min(currentMax, currentRemaining)
+        : currentMax;
     if (currentValue < effectiveMax) {
       onChange(currentValue + 1);
     }
   }, [onChange]);
 
-  const effectiveMax = remainingCapacity !== null ? Math.min(max, remainingCapacity) : max;
+  const effectiveMax =
+    remainingCapacity !== null ? Math.min(max, remainingCapacity) : max;
   const canDecrement = value > min && !isLoading;
   const canIncrement = value < effectiveMax && !isLoading;
 
@@ -73,18 +77,24 @@ export function GuestCountInput({
           disabled={!canDecrement}
           className={cn(
             'h-12 w-12 rounded-full transition-all duration-150',
-            canDecrement && 'hover:bg-burgundy-50 hover:border-burgundy-300 active:scale-95 active:bg-burgundy-100',
-            !canDecrement && 'opacity-50 cursor-not-allowed'
+            canDecrement &&
+              'hover:border-burgundy-300 hover:bg-burgundy-50 active:scale-95 active:bg-burgundy-100',
+            !canDecrement && 'cursor-not-allowed opacity-50'
           )}
           aria-label={t('decreaseGuests')}
         >
           <Minus className="h-5 w-5" />
         </Button>
 
-        <div className="flex flex-col items-center min-w-[80px]">
+        <div className="flex min-w-[80px] flex-col items-center">
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5 text-burgundy-600" />
-            <span className="text-2xl font-bold text-foreground tabular-nums" data-testid="guest-count-display">{value}</span>
+            <span
+              className="text-2xl font-bold tabular-nums text-foreground"
+              data-testid="guest-count-display"
+            >
+              {value}
+            </span>
           </div>
           <span className="text-sm text-slate-500">
             {t('guests', { count: value })}
@@ -98,8 +108,9 @@ export function GuestCountInput({
           disabled={!canIncrement}
           className={cn(
             'h-12 w-12 rounded-full transition-all duration-150',
-            canIncrement && 'hover:bg-burgundy-50 hover:border-burgundy-300 active:scale-95 active:bg-burgundy-100',
-            !canIncrement && 'opacity-50 cursor-not-allowed'
+            canIncrement &&
+              'hover:border-burgundy-300 hover:bg-burgundy-50 active:scale-95 active:bg-burgundy-100',
+            !canIncrement && 'cursor-not-allowed opacity-50'
           )}
           aria-label={t('increaseGuests')}
         >
@@ -125,13 +136,15 @@ export function GuestCountInput({
       </div>
 
       {/* Badge for low capacity - ONLY display when <= 3 */}
-      {remainingCapacity !== null && remainingCapacity <= 3 && remainingCapacity > 0 && (
-        <div className="flex justify-center">
-          <span className="inline-flex items-center rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-orange-800">
-            {t('remainingCapacity', { count: remainingCapacity })}
-          </span>
-        </div>
-      )}
+      {remainingCapacity !== null &&
+        remainingCapacity <= 3 &&
+        remainingCapacity > 0 && (
+          <div className="flex justify-center">
+            <span className="inline-flex items-center rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-orange-800">
+              {t('remainingCapacity', { count: remainingCapacity })}
+            </span>
+          </div>
+        )}
     </div>
   );
 }

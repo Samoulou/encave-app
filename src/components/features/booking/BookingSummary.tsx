@@ -45,8 +45,18 @@ export function BookingSummary({
         </div>
         <div>
           <p className="text-xs text-slate-500">{t('experience')}</p>
-          <p className="font-medium text-slate-900" data-testid="summary-experience-title">{experienceTitle}</p>
-          <p className="text-sm text-slate-600" data-testid="summary-winery-name">{wineryName}</p>
+          <p
+            className="font-medium text-slate-900"
+            data-testid="summary-experience-title"
+          >
+            {experienceTitle}
+          </p>
+          <p
+            className="text-sm text-slate-600"
+            data-testid="summary-winery-name"
+          >
+            {wineryName}
+          </p>
         </div>
       </div>
 
@@ -57,7 +67,9 @@ export function BookingSummary({
         </div>
         <div>
           <p className="text-xs text-slate-500">{t('date')}</p>
-          <p className="font-medium text-slate-900" data-testid="summary-date">{formattedDate}</p>
+          <p className="font-medium text-slate-900" data-testid="summary-date">
+            {formattedDate}
+          </p>
         </div>
       </div>
 
@@ -68,7 +80,9 @@ export function BookingSummary({
         </div>
         <div>
           <p className="text-xs text-slate-500">{t('time')}</p>
-          <p className="font-medium text-slate-900" data-testid="summary-time">{formatTime(time)}</p>
+          <p className="font-medium text-slate-900" data-testid="summary-time">
+            {formatTime(time)}
+          </p>
         </div>
       </div>
 
@@ -79,7 +93,12 @@ export function BookingSummary({
         </div>
         <div>
           <p className="text-xs text-slate-500">{t('selectGuests')}</p>
-          <p className="font-medium text-slate-900" data-testid="summary-guests">{t('guests', { count: guests })}</p>
+          <p
+            className="font-medium text-slate-900"
+            data-testid="summary-guests"
+          >
+            {t('guests', { count: guests })}
+          </p>
         </div>
       </div>
 
@@ -87,7 +106,12 @@ export function BookingSummary({
       <div className="border-t border-stone-200 pt-4">
         <div className="flex items-baseline justify-between">
           <span className="font-medium text-slate-700">{t('totalPrice')}</span>
-          <span className="text-xl font-bold text-burgundy-600" data-testid="summary-total">{formatCHF(totalPrice)}</span>
+          <span
+            className="text-xl font-bold text-burgundy-600"
+            data-testid="summary-total"
+          >
+            {formatCHF(totalPrice)}
+          </span>
         </div>
       </div>
     </div>

@@ -21,7 +21,10 @@ const isProduction = env.NODE_ENV === 'production';
 
 // SEC-006: Enforce Redis in production
 if (isProduction && !isRedisConfigured) {
-  logWarn('UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are required in production for scalable rate limiting', { action: 'rateLimitInit' });
+  logWarn(
+    'UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are required in production for scalable rate limiting',
+    { action: 'rateLimitInit' }
+  );
 }
 
 // In-memory store (fallback for development)
@@ -71,26 +74,23 @@ async function checkRateLimitRedis(
 
   try {
     // Use Upstash REST API for atomic operations
-    const response = await fetch(
-      `${env.UPSTASH_REDIS_REST_URL}/pipeline`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${env.UPSTASH_REDIS_REST_TOKEN}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify([
-          // Remove expired entries
-          ['ZREMRANGEBYSCORE', key, '0', windowStart.toString()],
-          // Add current request
-          ['ZADD', key, now.toString(), `${now}-${Math.random()}`],
-          // Count requests in window
-          ['ZCOUNT', key, windowStart.toString(), now.toString()],
-          // Set expiry on the key
-          ['PEXPIRE', key, config.windowMs.toString()],
-        ]),
-      }
-    );
+    const response = await fetch(`${env.UPSTASH_REDIS_REST_URL}/pipeline`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${env.UPSTASH_REDIS_REST_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify([
+        // Remove expired entries
+        ['ZREMRANGEBYSCORE', key, '0', windowStart.toString()],
+        // Add current request
+        ['ZADD', key, now.toString(), `${now}-${Math.random()}`],
+        // Count requests in window
+        ['ZCOUNT', key, windowStart.toString(), now.toString()],
+        // Set expiry on the key
+        ['PEXPIRE', key, config.windowMs.toString()],
+      ]),
+    });
 
     if (!response.ok) {
       throw new Error(`Redis request failed: ${response.status}`);
@@ -114,7 +114,9 @@ async function checkRateLimitRedis(
       resetAt,
     };
   } catch (error) {
-    logError('Redis error, falling back to in-memory', error, { action: 'checkRateLimitRedis' });
+    logError('Redis error, falling back to in-memory', error, {
+      action: 'checkRateLimitRedis',
+    });
     // Fallback to in-memory on Redis error
     return checkRateLimitInMemory(identifier, config);
   }
@@ -195,7 +197,9 @@ export async function resetRateLimit(identifier: string): Promise<void> {
         },
       });
     } catch (error) {
-      logError('Failed to reset rate limit in Redis', error, { action: 'resetRateLimit' });
+      logError('Failed to reset rate limit in Redis', error, {
+        action: 'resetRateLimit',
+      });
     }
   }
   rateLimitStore.delete(identifier);

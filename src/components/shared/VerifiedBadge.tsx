@@ -27,7 +27,7 @@ export function VerifiedBadge({
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full bg-gradient-to-r from-gold-400 to-gold-500 text-gold-950 font-medium shadow-sm',
+        'inline-flex items-center rounded-full bg-gradient-to-r from-gold-400 to-gold-500 font-medium text-gold-950 shadow-sm',
         sizeClasses[size],
         className
       )}

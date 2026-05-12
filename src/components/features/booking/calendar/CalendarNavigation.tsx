@@ -43,15 +43,12 @@ export function CalendarNavigation({
     onDateChange(new Date());
   };
 
-  const displayFormat = viewMode === 'calendar' ? 'MMMM yyyy' : "'Week of' MMM d, yyyy";
+  const displayFormat =
+    viewMode === 'calendar' ? 'MMMM yyyy' : "'Week of' MMM d, yyyy";
 
   return (
     <div className="flex items-center gap-2">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleToday}
-      >
+      <Button variant="outline" size="sm" onClick={handleToday}>
         {t('today')}
       </Button>
       <div className="flex items-center">

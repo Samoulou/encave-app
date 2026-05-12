@@ -90,7 +90,9 @@ test.describe('Winery Directory Performance', () => {
     await page.goto('/wineries');
 
     // Wait for main content to be visible
-    await page.getByRole('heading', { name: 'Wineries in Valais' }).waitFor({ state: 'visible' });
+    await page
+      .getByRole('heading', { name: 'Wineries in Valais' })
+      .waitFor({ state: 'visible' });
 
     const loadTime = Date.now() - startTime;
     console.log(`Time to visible content: ${loadTime}ms`);

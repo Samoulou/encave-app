@@ -51,9 +51,7 @@ import { headers } from 'next/headers';
 import { db } from '@/server/db';
 
 // Import the route handler after mocks
-const { POST } = await import(
-  '@/app/api/webhooks/stripe/connect/route'
-);
+const { POST } = await import('@/app/api/webhooks/stripe/connect/route');
 
 const mockHeaders = vi.mocked(headers);
 const mockDb = vi.mocked(db);

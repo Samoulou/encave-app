@@ -16,7 +16,10 @@ interface WineryVerificationPanelProps {
   actions?: ReactNode;
 }
 
-export function WineryVerificationPanel({ winery, actions }: WineryVerificationPanelProps) {
+export function WineryVerificationPanel({
+  winery,
+  actions,
+}: WineryVerificationPanelProps) {
   const t = useTranslations('admin');
 
   return (
@@ -26,7 +29,9 @@ export function WineryVerificationPanel({ winery, actions }: WineryVerificationP
         <CardContent className="p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="font-display text-2xl font-semibold text-slate-900">{winery.name}</h2>
+              <h2 className="font-display text-2xl font-semibold text-slate-900">
+                {winery.name}
+              </h2>
               <div className="mt-2 flex items-center gap-3">
                 <span className="inline-flex items-center gap-1.5 text-sm text-slate-500">
                   <MapPin className="h-4 w-4" />
@@ -35,8 +40,10 @@ export function WineryVerificationPanel({ winery, actions }: WineryVerificationP
                 <span
                   className={cn(
                     'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold',
-                    winery.status === 'PENDING' && 'bg-amber-100 text-amber-700',
-                    winery.status === 'VERIFIED' && 'bg-green-100 text-green-700',
+                    winery.status === 'PENDING' &&
+                      'bg-amber-100 text-amber-700',
+                    winery.status === 'VERIFIED' &&
+                      'bg-green-100 text-green-700',
                     winery.status === 'REJECTED' && 'bg-red-100 text-red-700'
                   )}
                 >

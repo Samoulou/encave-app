@@ -98,7 +98,9 @@ interface ExportPDFResult {
 /**
  * Export earnings statement to PDF
  */
-export async function exportEarningsPDF(): Promise<ActionResult<ExportPDFResult>> {
+export async function exportEarningsPDF(): Promise<
+  ActionResult<ExportPDFResult>
+> {
   try {
     const session = await auth();
     if (!session?.user) {

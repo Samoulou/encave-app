@@ -34,9 +34,7 @@ export function ExperienceTypeDot({
         style={{ backgroundColor: color }}
         title={label}
       />
-      {showLabel && (
-        <span className="text-xs text-slate-600">{label}</span>
-      )}
+      {showLabel && <span className="text-xs text-slate-600">{label}</span>}
     </div>
   );
 }

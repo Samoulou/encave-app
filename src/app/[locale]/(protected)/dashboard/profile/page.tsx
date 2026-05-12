@@ -5,7 +5,11 @@ import { ClientProfileForm } from '@/components/features/client-dashboard/Client
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
   return generatePageMetadata({
     locale: locale as Locale,
@@ -26,8 +30,8 @@ export default async function ProfilePage() {
   }
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <h1 className="font-display text-2xl sm:text-3xl font-bold text-foreground">
+    <div className="max-w-2xl space-y-6">
+      <h1 className="font-display text-2xl font-bold text-foreground sm:text-3xl">
         {t('title')}
       </h1>
       <ClientProfileForm

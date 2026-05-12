@@ -33,11 +33,18 @@ export function CommuneFilter({ communes }: CommuneFilterProps) {
         </div>
       </SelectTrigger>
       <SelectContent className="border-stone-200 bg-white shadow-lg">
-        <SelectItem value="all" className="focus:bg-burgundy-50 focus:text-burgundy-900">
+        <SelectItem
+          value="all"
+          className="focus:bg-burgundy-50 focus:text-burgundy-900"
+        >
           {t('allCommunes')}
         </SelectItem>
         {communes.map((c) => (
-          <SelectItem key={c} value={c} className="focus:bg-burgundy-50 focus:text-burgundy-900">
+          <SelectItem
+            key={c}
+            value={c}
+            className="focus:bg-burgundy-50 focus:text-burgundy-900"
+          >
             {c}
           </SelectItem>
         ))}

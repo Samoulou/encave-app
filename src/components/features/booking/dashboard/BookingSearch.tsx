@@ -61,8 +61,8 @@ export function BookingSearch() {
   };
 
   return (
-    <div className="relative flex-1 max-w-md group">
-      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#915564]">
+    <div className="group relative max-w-md flex-1">
+      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-[#915564]">
         {isPending ? (
           <Loader2 className="h-5 w-5 animate-spin" />
         ) : (
@@ -76,12 +76,12 @@ export function BookingSearch() {
         aria-label={t('search.placeholder')}
         value={localValue}
         onChange={handleChange}
-        className="block w-full pl-10 pr-8 py-2.5 rounded-lg bg-[#f8f6f6] border-transparent focus:border-primary focus:bg-white focus:ring-0 text-sm text-foreground placeholder-[#915564] transition-all"
+        className="block w-full rounded-lg border-transparent bg-[#f8f6f6] py-2.5 pl-10 pr-8 text-sm text-foreground placeholder-[#915564] transition-all focus:border-primary focus:bg-white focus:ring-0"
       />
       {localValue && !isPending && (
         <button
           type="button"
-          className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-[#915564] hover:text-foreground hover:bg-primary-light transition-colors"
+          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-[#915564] transition-colors hover:bg-primary-light hover:text-foreground"
           onClick={clearSearch}
         >
           <X className="h-4 w-4" />

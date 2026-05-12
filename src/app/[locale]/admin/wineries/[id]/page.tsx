@@ -6,7 +6,11 @@ import { WineryDetailView } from '@/components/features/admin/WineryDetailView';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
   return generatePageMetadata({
     locale: locale as Locale,
@@ -36,7 +40,9 @@ async function getWinery(id: string) {
   });
 }
 
-export default async function WineryDetailPage({ params }: WineryDetailPageProps) {
+export default async function WineryDetailPage({
+  params,
+}: WineryDetailPageProps) {
   const { id } = await params;
   const winery = await getWinery(id);
 
@@ -49,12 +55,14 @@ export default async function WineryDetailPage({ params }: WineryDetailPageProps
       <div className="mb-8">
         <Link
           href="/admin/wineries/pending"
-          className="mb-4 inline-flex items-center text-sm text-slate-600 hover:text-burgundy-700 transition-colors"
+          className="mb-4 inline-flex items-center text-sm text-slate-600 transition-colors hover:text-burgundy-700"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Pending Queue
         </Link>
-        <h1 className="font-display text-display-md text-burgundy-700">Winery Review</h1>
+        <h1 className="font-display text-display-md text-burgundy-700">
+          Winery Review
+        </h1>
         <p className="mt-2 text-slate-600">
           Review the winery details and approve or reject the registration
         </p>

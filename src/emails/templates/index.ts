@@ -37,10 +37,16 @@ export { ClientReminder2hEmail } from './ClientReminder2hEmail';
 export type { ClientReminder2hEmailProps } from './ClientReminder2hEmail';
 
 export { DailyDigestEmail } from './DailyDigestEmail';
-export type { DailyDigestEmailProps, DailyDigestBooking } from './DailyDigestEmail';
+export type {
+  DailyDigestEmailProps,
+  DailyDigestBooking,
+} from './DailyDigestEmail';
 
 export { PostExperienceFollowUpEmail } from './PostExperienceFollowUpEmail';
 export type { PostExperienceFollowUpEmailProps } from './PostExperienceFollowUpEmail';
 
 export { WeeklySummaryEmail } from './WeeklySummaryEmail';
-export type { WeeklySummaryEmailProps, WeeklySummaryStats } from './WeeklySummaryEmail';
+export type {
+  WeeklySummaryEmailProps,
+  WeeklySummaryStats,
+} from './WeeklySummaryEmail';

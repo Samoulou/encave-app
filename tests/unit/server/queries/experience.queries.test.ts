@@ -102,7 +102,13 @@ describe('URL parameter parsing helpers', () => {
   // Helper function to parse types (similar to what's in the page component)
   function parseTypes(
     typeParam: string | null
-  ): ('TASTING' | 'CELLAR_VISIT' | 'WORKSHOP' | 'VINEYARD_TOUR' | 'FOOD_PAIRING')[] {
+  ): (
+    | 'TASTING'
+    | 'CELLAR_VISIT'
+    | 'WORKSHOP'
+    | 'VINEYARD_TOUR'
+    | 'FOOD_PAIRING'
+  )[] {
     if (!typeParam) return [];
     const validTypes = [
       'TASTING',
@@ -142,7 +148,12 @@ describe('URL parameter parsing helpers', () => {
   function parseSort(
     sort: string | undefined
   ): 'relevance' | 'price_asc' | 'price_desc' | 'newest' {
-    const validSorts = ['relevance', 'price_asc', 'price_desc', 'newest'] as const;
+    const validSorts = [
+      'relevance',
+      'price_asc',
+      'price_desc',
+      'newest',
+    ] as const;
     if (sort && validSorts.includes(sort as (typeof validSorts)[number])) {
       return sort as (typeof validSorts)[number];
     }

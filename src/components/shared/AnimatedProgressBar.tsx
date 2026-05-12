@@ -16,7 +16,7 @@ export function AnimatedProgressBar({
   return (
     <div className={cn('h-1.5 bg-stone-100', className)}>
       <motion.div
-        className="h-full bg-burgundy-600 rounded-r-full"
+        className="h-full rounded-r-full bg-burgundy-600"
         initial={{ width: 0 }}
         animate={{ width: `${progress}%` }}
         transition={{

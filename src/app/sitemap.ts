@@ -76,7 +76,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       entries.push(...createEntry(`/experiences/${slug}`, 'weekly', 0.8));
     }
   } catch (error) {
-    logError('Error fetching experience slugs for sitemap', error, { action: 'sitemap' });
+    logError('Error fetching experience slugs for sitemap', error, {
+      action: 'sitemap',
+    });
   }
 
   // Dynamic pages - wineries
@@ -86,7 +88,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       entries.push(...createEntry(`/wineries/${slug}`, 'weekly', 0.8));
     }
   } catch (error) {
-    logError('Error fetching winery slugs for sitemap', error, { action: 'sitemap' });
+    logError('Error fetching winery slugs for sitemap', error, {
+      action: 'sitemap',
+    });
   }
 
   return entries;

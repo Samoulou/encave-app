@@ -6,7 +6,8 @@ const mockWinery = {
   slug: 'domaine-test',
   name: 'Domaine Test',
   commune: 'Sion',
-  description: 'A beautiful winery in the heart of Valais producing exceptional wines.',
+  description:
+    'A beautiful winery in the heart of Valais producing exceptional wines.',
   coverPhoto: 'https://example.com/photo.jpg',
 };
 

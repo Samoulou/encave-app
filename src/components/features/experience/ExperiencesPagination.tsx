@@ -90,7 +90,7 @@ export function ExperiencesPagination({
           pageNum === 'ellipsis' ? (
             <span
               key={`ellipsis-${idx}`}
-              className="w-9 h-9 flex items-center justify-center text-gray-400"
+              className="flex h-9 w-9 items-center justify-center text-gray-400"
             >
               ...
             </span>
@@ -100,7 +100,7 @@ export function ExperiencesPagination({
               variant="ghost"
               size="icon"
               className={cn(
-                'w-9 h-9 font-bold text-sm',
+                'h-9 w-9 text-sm font-bold',
                 currentPage === pageNum
                   ? 'bg-primary text-white shadow-md shadow-primary/20 hover:bg-primary hover:text-white'
                   : 'text-gray-500 hover:bg-gray-100'

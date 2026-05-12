@@ -9,7 +9,11 @@ import { CheckoutClient } from './CheckoutClient';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
   return generatePageMetadata({
     locale: locale as Locale,
@@ -33,7 +37,10 @@ interface PageProps {
  * Fetches experience data on the server to eliminate client-side waterfall.
  * (async-suspense-boundaries: Data is fetched before render, not in useEffect)
  */
-export default async function CheckoutPage({ params, searchParams }: PageProps) {
+export default async function CheckoutPage({
+  params,
+  searchParams,
+}: PageProps) {
   const [{ slug, locale }, search] = await Promise.all([params, searchParams]);
   const t = await getTranslations('checkout');
 
@@ -59,7 +66,7 @@ export default async function CheckoutPage({ params, searchParams }: PageProps) 
   // Invalid booking params - show error
   if (!hasValidParams) {
     return (
-      <div className="w-full px-4 md:px-10 py-10">
+      <div className="w-full px-4 py-10 md:px-10">
         <div className="mx-auto max-w-7xl">
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />

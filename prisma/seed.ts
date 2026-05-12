@@ -9,9 +9,21 @@ const SALT_ROUNDS = 10;
 // TEST ACCOUNTS (SEC-005 compliant passwords)
 // ============================================================================
 const ACCOUNTS = {
-  admin: { email: 'admin@encave.ch', password: 'Admin1234!', name: 'Samuel Admin' },
-  client1: { email: 'laura.meier@example.com', password: 'Client1234!', name: 'Laura Meier' },
-  client2: { email: 'thomas.brunner@example.com', password: 'Client1234!', name: 'Thomas Brunner' },
+  admin: {
+    email: 'admin@encave.ch',
+    password: 'Admin1234!',
+    name: 'Samuel Admin',
+  },
+  client1: {
+    email: 'laura.meier@example.com',
+    password: 'Client1234!',
+    name: 'Laura Meier',
+  },
+  client2: {
+    email: 'thomas.brunner@example.com',
+    password: 'Client1234!',
+    name: 'Thomas Brunner',
+  },
   winemakers: [
     {
       email: 'jean-rene@example.com',
@@ -28,7 +40,8 @@ const ACCOUNTS = {
         wineryEmail: 'info@germanier.example.com',
         latitude: 46.2215,
         longitude: 7.2752,
-        coverPhoto: 'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=1200',
+        coverPhoto:
+          'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=1200',
       },
     },
     {
@@ -46,7 +59,8 @@ const ACCOUNTS = {
         wineryEmail: 'info@rhodan.example.com',
         latitude: 46.3166,
         longitude: 7.5716,
-        coverPhoto: 'https://images.unsplash.com/photo-1560493676-04071c5f467b?w=1200',
+        coverPhoto:
+          'https://images.unsplash.com/photo-1560493676-04071c5f467b?w=1200',
       },
     },
     {
@@ -57,14 +71,15 @@ const ACCOUNTS = {
         name: 'Cave Fin Bec',
         slug: 'cave-fin-bec',
         description:
-          "Nichée entre les thermes de Saillon et les vignobles en terrasses, la Cave Fin Bec marie plaisir du palais et art de vivre valaisan. Notre philosophie : des vins gourmands, expressifs et accessibles, élaborés à partir de cépages traditionnels et de variétés oubliées que nous avons replantées avec amour.",
+          'Nichée entre les thermes de Saillon et les vignobles en terrasses, la Cave Fin Bec marie plaisir du palais et art de vivre valaisan. Notre philosophie : des vins gourmands, expressifs et accessibles, élaborés à partir de cépages traditionnels et de variétés oubliées que nous avons replantées avec amour.',
         address: 'Route de Fully 18',
         commune: 'Saillon',
         phone: '+41 27 744 30 44',
         wineryEmail: 'cave@finbec.example.com',
         latitude: 46.1726,
         longitude: 7.1907,
-        coverPhoto: 'https://images.unsplash.com/photo-1528823872057-9c018a7a7553?w=1200',
+        coverPhoto:
+          'https://images.unsplash.com/photo-1528823872057-9c018a7a7553?w=1200',
       },
     },
     {
@@ -82,7 +97,8 @@ const ACCOUNTS = {
         wineryEmail: 'accueil@muses.example.com',
         latitude: 46.292,
         longitude: 7.5348,
-        coverPhoto: 'https://images.unsplash.com/photo-1474722883778-792e7990302f?w=1200',
+        coverPhoto:
+          'https://images.unsplash.com/photo-1474722883778-792e7990302f?w=1200',
       },
     },
     {
@@ -100,7 +116,8 @@ const ACCOUNTS = {
         wineryEmail: 'visite@chappaz.example.com',
         latitude: 46.1526,
         longitude: 7.1116,
-        coverPhoto: 'https://images.unsplash.com/photo-1537640538966-79f369143f8f?w=1200',
+        coverPhoto:
+          'https://images.unsplash.com/photo-1537640538966-79f369143f8f?w=1200',
       },
     },
   ],
@@ -113,7 +130,12 @@ type ExperienceData = {
   title: string;
   slug: string;
   description: string;
-  type: 'TASTING' | 'CELLAR_VISIT' | 'WORKSHOP' | 'VINEYARD_TOUR' | 'FOOD_PAIRING';
+  type:
+    | 'TASTING'
+    | 'CELLAR_VISIT'
+    | 'WORKSHOP'
+    | 'VINEYARD_TOUR'
+    | 'FOOD_PAIRING';
   duration: number;
   price: number;
   minCapacity: number;
@@ -124,7 +146,7 @@ type ExperienceData = {
 const EXPERIENCES: Record<string, ExperienceData[]> = {
   'domaine-germanier': [
     {
-      title: "Dégustation Grands Crus de Vétroz",
+      title: 'Dégustation Grands Crus de Vétroz',
       slug: 'degustation-grands-crus-vetroz',
       description:
         "Plongez dans l'univers des Grands Crus de Vétroz lors d'une dégustation commentée de 7 vins d'exception. De l'Amigne flétrie aux Pinot Noir élevés en barrique, Jean-René Germanier partage les secrets de quatre générations de savoir-faire. Accompagnement de fromages d'alpage et viande séchée du Valais.",
@@ -133,19 +155,21 @@ const EXPERIENCES: Record<string, ExperienceData[]> = {
       price: 5500,
       minCapacity: 2,
       maxCapacity: 12,
-      coverPhoto: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=800',
+      coverPhoto:
+        'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=800',
     },
     {
       title: 'Visite du Chai et de la Vinothèque',
       slug: 'visite-chai-vinotheque',
       description:
-        "Découvrez notre chai moderne où tradition et technologie se rencontrent. Parcourez nos rangées de barriques en chêne et visitez notre vinothèque historique abritant des millésimes remontant à 1950. La visite se termine par une dégustation de 4 vins dont un millésime surprise de notre collection privée.",
+        'Découvrez notre chai moderne où tradition et technologie se rencontrent. Parcourez nos rangées de barriques en chêne et visitez notre vinothèque historique abritant des millésimes remontant à 1950. La visite se termine par une dégustation de 4 vins dont un millésime surprise de notre collection privée.',
       type: 'CELLAR_VISIT',
       duration: 75,
       price: 3500,
       minCapacity: 2,
       maxCapacity: 20,
-      coverPhoto: 'https://images.unsplash.com/photo-1528823872057-9c018a7a7553?w=800',
+      coverPhoto:
+        'https://images.unsplash.com/photo-1528823872057-9c018a7a7553?w=800',
     },
   ],
   'cave-du-rhodan': [
@@ -159,7 +183,8 @@ const EXPERIENCES: Record<string, ExperienceData[]> = {
       price: 7500,
       minCapacity: 4,
       maxCapacity: 15,
-      coverPhoto: 'https://images.unsplash.com/photo-1560493676-04071c5f467b?w=800',
+      coverPhoto:
+        'https://images.unsplash.com/photo-1560493676-04071c5f467b?w=800',
     },
     {
       title: 'Atelier Assemblage Pinot Noir',
@@ -171,7 +196,8 @@ const EXPERIENCES: Record<string, ExperienceData[]> = {
       price: 12000,
       minCapacity: 2,
       maxCapacity: 8,
-      coverPhoto: 'https://images.unsplash.com/photo-1567696911980-2eed69a46042?w=800',
+      coverPhoto:
+        'https://images.unsplash.com/photo-1567696911980-2eed69a46042?w=800',
     },
   ],
   'cave-fin-bec': [
@@ -185,7 +211,8 @@ const EXPERIENCES: Record<string, ExperienceData[]> = {
       price: 4800,
       minCapacity: 2,
       maxCapacity: 10,
-      coverPhoto: 'https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=800',
+      coverPhoto:
+        'https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=800',
     },
     {
       title: 'Accord Mets & Vins : Raclette au Feu de Bois',
@@ -197,7 +224,8 @@ const EXPERIENCES: Record<string, ExperienceData[]> = {
       price: 9500,
       minCapacity: 4,
       maxCapacity: 14,
-      coverPhoto: 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=800',
+      coverPhoto:
+        'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=800',
     },
   ],
   'domaine-des-muses': [
@@ -211,7 +239,8 @@ const EXPERIENCES: Record<string, ExperienceData[]> = {
       price: 5000,
       minCapacity: 2,
       maxCapacity: 10,
-      coverPhoto: 'https://images.unsplash.com/photo-1474722883778-792e7990302f?w=800',
+      coverPhoto:
+        'https://images.unsplash.com/photo-1474722883778-792e7990302f?w=800',
     },
     {
       title: 'Visite des Caves Historiques de Sierre',
@@ -223,7 +252,8 @@ const EXPERIENCES: Record<string, ExperienceData[]> = {
       price: 3800,
       minCapacity: 2,
       maxCapacity: 15,
-      coverPhoto: 'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=800',
+      coverPhoto:
+        'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=800',
     },
   ],
   'domaine-chappaz': [
@@ -237,7 +267,8 @@ const EXPERIENCES: Record<string, ExperienceData[]> = {
       price: 8500,
       minCapacity: 4,
       maxCapacity: 10,
-      coverPhoto: 'https://images.unsplash.com/photo-1537640538966-79f369143f8f?w=800',
+      coverPhoto:
+        'https://images.unsplash.com/photo-1537640538966-79f369143f8f?w=800',
     },
     {
       title: "Atelier Vendanges d'Exception",
@@ -249,7 +280,8 @@ const EXPERIENCES: Record<string, ExperienceData[]> = {
       price: 18000,
       minCapacity: 4,
       maxCapacity: 12,
-      coverPhoto: 'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=800',
+      coverPhoto:
+        'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=800',
     },
   ],
 };
@@ -371,9 +403,13 @@ async function main() {
   // 3. WINEMAKER USERS + WINERIES + EXPERIENCES
   // -------------------------------------------------------------------
   console.log('🍷 Creating winemakers, wineries & experiences...');
-  const winemakerHash = await bcrypt.hash(ACCOUNTS.winemakers[0].password, SALT_ROUNDS);
+  const winemakerHash = await bcrypt.hash(
+    ACCOUNTS.winemakers[0].password,
+    SALT_ROUNDS
+  );
 
-  const createdWineries: Array<{ wineryId: string; experienceIds: string[] }> = [];
+  const createdWineries: Array<{ wineryId: string; experienceIds: string[] }> =
+    [];
 
   for (const wm of ACCOUNTS.winemakers) {
     const user = await prisma.user.create({
@@ -466,7 +502,9 @@ async function main() {
         })),
       });
 
-      console.log(`      🍇 ${experience.title} (${exp.type}, ${exp.price / 100} CHF)`);
+      console.log(
+        `      🍇 ${experience.title} (${exp.type}, ${exp.price / 100} CHF)`
+      );
     }
 
     createdWineries.push({ wineryId: winery.id, experienceIds });
@@ -616,7 +654,9 @@ async function main() {
   console.log(`      Email:    ${ACCOUNTS.client2.email}`);
   console.log(`      Password: ${ACCOUNTS.client2.password}`);
   console.log('');
-  console.log(`   🔑 WINEMAKERS (all same password: ${ACCOUNTS.winemakers[0].password})`);
+  console.log(
+    `   🔑 WINEMAKERS (all same password: ${ACCOUNTS.winemakers[0].password})`
+  );
   for (const wm of ACCOUNTS.winemakers) {
     console.log(`      Email:    ${wm.email}  (${wm.winery.name})`);
   }

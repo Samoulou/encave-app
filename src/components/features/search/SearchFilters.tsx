@@ -147,7 +147,9 @@ export function SearchFilters({
 
       {/* Commune */}
       <div className="space-y-3">
-        <Label className="text-sm font-medium text-slate-700">{t('location')}</Label>
+        <Label className="text-sm font-medium text-slate-700">
+          {t('location')}
+        </Label>
         <Select
           value={commune ?? 'all'}
           onValueChange={(v) => onCommuneChange(v === 'all' ? null : v)}
@@ -177,7 +179,9 @@ export function SearchFilters({
             min={0}
             placeholder={t('min')}
             value={minPrice !== null ? minPrice / 100 : ''}
-            onChange={(e) => handlePriceChange(e.target.value, onMinPriceChange)}
+            onChange={(e) =>
+              handlePriceChange(e.target.value, onMinPriceChange)
+            }
             className="h-10"
             aria-label={t('minPrice')}
           />
@@ -187,7 +191,9 @@ export function SearchFilters({
             min={0}
             placeholder={t('max')}
             value={maxPrice !== null ? maxPrice / 100 : ''}
-            onChange={(e) => handlePriceChange(e.target.value, onMaxPriceChange)}
+            onChange={(e) =>
+              handlePriceChange(e.target.value, onMaxPriceChange)
+            }
             className="h-10"
             aria-label={t('maxPrice')}
           />
