@@ -1,6 +1,25 @@
 import { z } from 'zod';
 
 /**
+ * ENC-067 — Schema for the synchronous payment reconciliation action.
+ *
+ * Validates inputs to `reconcileBookingPayment`. The `sessionId` shape
+ * matches Stripe's `cs_(test|live)_<token>` format. `accessToken` is optional
+ * (used to authorize a guest who arrives later from an email link).
+ */
+export const reconcileBookingPaymentSchema = z.object({
+  bookingId: z.string().min(1),
+  sessionId: z
+    .string()
+    .regex(/^cs_(test|live)_[A-Za-z0-9]+$/, 'Invalid Stripe session id'),
+  accessToken: z.string().min(16).optional(),
+});
+
+export type ReconcileBookingPaymentInput = z.infer<
+  typeof reconcileBookingPaymentSchema
+>;
+
+/**
  * BACK-003 FIX: Validate HH:mm time format
  * Prevents NaN from parseInt when parsing invalid time strings
  */
