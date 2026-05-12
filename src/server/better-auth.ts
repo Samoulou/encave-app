@@ -1,7 +1,10 @@
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import bcrypt from 'bcryptjs';
+import { Locale } from '@prisma/client';
 import { db } from '@/server/db';
+import { sendEmailVerificationEmail } from '@/server/services/email.service';
+import { logError } from '@/lib/logger';
 
 const SALT_ROUNDS = 10;
 
@@ -92,12 +95,43 @@ export const auth = betterAuth({
     },
   },
 
-  // Email/password authentication with bcrypt (matches seed data)
+  // Email/password authentication with bcrypt (matches seed data).
+  // `requireEmailVerification: true` blocks sign-in until the user has
+  // clicked the verification link. This is required for ENC-067 review H2:
+  // bookings are guest-keyed by email, so an unverified `session.user.email`
+  // cannot be trusted to grant access to a booking row.
   emailAndPassword: {
     enabled: true,
+    requireEmailVerification: true,
     password: {
       hash: (password) => bcrypt.hash(password, SALT_ROUNDS),
       verify: ({ password, hash }) => bcrypt.compare(password, hash),
+    },
+  },
+
+  // Email verification flow.
+  // - `sendOnSignUp: true` triggers the email on /api/auth/sign-up/email.
+  // - `autoSignInAfterVerification: true` so the user lands logged-in after
+  //   clicking the link (smoother UX, no second sign-in step).
+  emailVerification: {
+    sendOnSignUp: true,
+    autoSignInAfterVerification: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      try {
+        // `user` extra fields (preferredLocale) are typed loosely by better-auth.
+        const preferredLocale =
+          (user as { preferredLocale?: Locale }).preferredLocale ?? Locale.FR;
+        await sendEmailVerificationEmail(
+          user.email,
+          user.name ?? user.email,
+          url,
+          preferredLocale
+        );
+      } catch (error) {
+        logError('Failed to send verification email', error, {
+          userId: user.id,
+        });
+      }
     },
   },
 

@@ -11,6 +11,13 @@ export interface Session {
   user: {
     id: string;
     email: string;
+    /**
+     * Better-auth flag. `true` only after the user has clicked the
+     * verification link sent at sign-up. OAuth providers (Google/Apple)
+     * pre-verify the address. ENC-067 H2: required for any auth check
+     * that uses email as a capability (e.g. booking visitor email match).
+     */
+    emailVerified: boolean;
     name: string | null;
     role: UserRole;
     preferredLocale: Locale;
@@ -38,12 +45,14 @@ export async function auth(): Promise<Session | null> {
     const user = session.user as typeof session.user & {
       role: UserRole;
       preferredLocale: Locale;
+      emailVerified?: boolean;
     };
 
     return {
       user: {
         id: user.id,
         email: user.email,
+        emailVerified: user.emailVerified === true,
         name: user.name,
         role: user.role,
         preferredLocale: user.preferredLocale,
