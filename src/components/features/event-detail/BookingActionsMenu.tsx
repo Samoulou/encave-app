@@ -13,6 +13,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -80,7 +86,14 @@ export function BookingActionsMenu({
         toast.success(t(`toast.${toastKey}`));
         closeDialog();
       } else {
-        toast.error(t('toast.error'));
+        // Surface typed messages from the server action so the user knows why.
+        if (result.error.message === 'REVERT_WINDOW_EXPIRED') {
+          toast.error(t('errors.revertWindowExpired'));
+        } else if (result.error.message === 'SESSION_NOT_ENDED') {
+          toast.error(t('errors.sessionNotEnded'));
+        } else {
+          toast.error(t('toast.error'));
+        }
       }
     });
   };
@@ -147,16 +160,39 @@ export function BookingActionsMenu({
                 <Check className="mr-2 h-4 w-4" aria-hidden="true" />
                 {t('actions.markPresent')}
               </DropdownMenuItem>
-              <DropdownMenuItem
-                disabled={!canMarkNoShow || isPending}
-                onSelect={(event) => {
-                  event.preventDefault();
-                  setDialog('markNoShow');
-                }}
-              >
-                <UserX className="mr-2 h-4 w-4" aria-hidden="true" />
-                {t('actions.markNoShow')}
-              </DropdownMenuItem>
+              {!canMarkNoShow ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      {/* span wrapper: Radix disables pointer events on
+                          disabled items, blocking the tooltip without it. */}
+                      <span className="block">
+                        <DropdownMenuItem
+                          disabled
+                          onSelect={(event) => event.preventDefault()}
+                        >
+                          <UserX className="mr-2 h-4 w-4" aria-hidden="true" />
+                          {t('actions.markNoShow')}
+                        </DropdownMenuItem>
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="left">
+                      {t('actions.markNoShowDisabled')}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                <DropdownMenuItem
+                  disabled={isPending}
+                  onSelect={(event) => {
+                    event.preventDefault();
+                    setDialog('markNoShow');
+                  }}
+                >
+                  <UserX className="mr-2 h-4 w-4" aria-hidden="true" />
+                  {t('actions.markNoShow')}
+                </DropdownMenuItem>
+              )}
             </>
           ) : null}
 

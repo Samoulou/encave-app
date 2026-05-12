@@ -39,10 +39,9 @@ export async function SessionCard({
 
   // CheckIn allowed while the live window is active and edits are allowed.
   const canCheckIn = canEdit && isScanWindow && !isPast;
-  // Mark-no-show allowed once session has ended (or during scan window for
-  // operational fix), and not in the past beyond reach. Spec asks: disabled
-  // until end of session. We allow once startsAt has passed.
-  const canMarkNoShow = canEdit && session.startsAt.getTime() <= Date.now();
+  // Mark-no-show: spec says "disabled until the end of the session". The
+  // server action also enforces this (defense in depth).
+  const canMarkNoShow = canEdit && session.endsAt.getTime() <= Date.now();
 
   return (
     <section

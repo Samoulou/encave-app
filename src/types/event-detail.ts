@@ -15,12 +15,17 @@ import type {
 
 export type SessionGroup = 'today' | 'upcoming' | 'past' | 'cancelled';
 
+/**
+ * Booking projection for the winemaker event detail page.
+ * nLPD minimisation: visitor phone is intentionally excluded — the page only
+ * offers a mailto: contact via `visitorEmail`. Do not stream this DTO to any
+ * client that is not the winery owner.
+ */
 export interface BookingDTO {
   id: string;
   reference: string;
   visitorName: string;
   visitorEmail: string;
-  visitorPhone: string;
   guestCount: number;
   status: BookingStatus;
   checkedInAt: Date | null;

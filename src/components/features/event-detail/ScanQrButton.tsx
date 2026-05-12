@@ -2,7 +2,6 @@
 
 import { useTranslations } from 'next-intl';
 import { QrCode } from 'lucide-react';
-import { Link } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import {
   Tooltip,
@@ -56,19 +55,13 @@ export function ScanQrButton({
 
   return (
     <Button
-      asChild
       size={size}
       disabled={isPending}
       className={cn(isPending && 'opacity-70')}
-      onClick={(event) => {
-        event.preventDefault();
-        navigate(href);
-      }}
+      onClick={() => navigate(href)}
     >
-      <Link href={href}>
-        <QrCode className="mr-2 h-4 w-4" aria-hidden="true" />
-        {t('scanQr')}
-      </Link>
+      <QrCode className="mr-2 h-4 w-4" aria-hidden="true" />
+      {t('scanQr')}
     </Button>
   );
 }

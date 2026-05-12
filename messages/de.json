@@ -1701,7 +1701,10 @@
   "Dashboard": {
     "eventDetail": {
       "title": "Veranstaltungsdetails",
-      "breadcrumb": "Dashboard / Veranstaltungen / {title}",
+      "breadcrumb": {
+        "dashboard": "Dashboard",
+        "events": "Veranstaltungen"
+      },
       "status": {
         "draft": "Entwurf",
         "published": "Veröffentlicht",
@@ -1767,7 +1770,9 @@
       },
       "errors": {
         "notOwner": "Sie haben keinen Zugriff auf diese Veranstaltung.",
-        "loadFailed": "Veranstaltung konnte nicht geladen werden. Bitte erneut versuchen."
+        "loadFailed": "Veranstaltung konnte nicht geladen werden. Bitte erneut versuchen.",
+        "revertWindowExpired": "Nach 72 Stunden nicht mehr rückgängig zu machen.",
+        "sessionNotEnded": "Nach Ende der Session verfügbar."
       },
       "toast": {
         "checkedIn": "Anwesenheit gespeichert.",

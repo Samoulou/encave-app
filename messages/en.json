@@ -1696,7 +1696,10 @@
   "Dashboard": {
     "eventDetail": {
       "title": "Event details",
-      "breadcrumb": "Dashboard / Events / {title}",
+      "breadcrumb": {
+        "dashboard": "Dashboard",
+        "events": "Events"
+      },
       "status": {
         "draft": "Draft",
         "published": "Published",
@@ -1762,7 +1765,9 @@
       },
       "errors": {
         "notOwner": "You do not have access to this event.",
-        "loadFailed": "Could not load the event. Try again in a moment."
+        "loadFailed": "Could not load the event. Try again in a moment.",
+        "revertWindowExpired": "Cannot revert after 72h.",
+        "sessionNotEnded": "Available after the session ends."
       },
       "toast": {
         "checkedIn": "Attendance saved.",

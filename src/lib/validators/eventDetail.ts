@@ -5,10 +5,8 @@ import { z } from 'zod';
  */
 
 export const bookingIdSchema = z.object({
-  bookingId: z
-    .string()
-    .min(1, 'bookingId is required')
-    .max(64, 'bookingId is too long'),
+  // Bookings use Prisma `@default(cuid())` IDs (see prisma/schema.prisma).
+  bookingId: z.string().cuid('bookingId must be a cuid'),
 });
 
 export type BookingIdInput = z.infer<typeof bookingIdSchema>;

@@ -44,6 +44,8 @@ function zonedWallClockToUTC(date: Date, timeSlot: string): Date {
     minute: '2-digit',
     second: '2-digit',
     hour12: false,
+    // Force 00–23 ('en-CA' otherwise lets midnight surface as '24:00:00').
+    hourCycle: 'h23',
   });
   const parts = fmt.formatToParts(wallUTC);
   const lookup: Record<string, string> = {};
@@ -82,7 +84,6 @@ interface RawBookingRow {
   reference: string;
   visitorName: string;
   visitorEmail: string;
-  visitorPhone: string;
   guestCount: number;
   status: BookingStatus;
   checkedInAt: Date | null;
@@ -154,7 +155,6 @@ async function fetchExperienceForOwner(
           reference: true,
           visitorName: true,
           visitorEmail: true,
-          visitorPhone: true,
           guestCount: true,
           status: true,
           checkedInAt: true,
@@ -206,7 +206,6 @@ function buildSessions(experience: FetchedExperience): EventSessionDTO[] {
       reference: row.reference,
       visitorName: row.visitorName,
       visitorEmail: row.visitorEmail,
-      visitorPhone: row.visitorPhone,
       guestCount: row.guestCount,
       status: row.status,
       checkedInAt: row.checkedInAt,
@@ -324,9 +323,8 @@ function buildEventDetail(experience: FetchedExperience): EventDetailDTO {
  * or does not belong to the user's winery.
  *
  * Cached at the request level (React.cache) and persistent (unstable_cache)
- * for 60 seconds. Invalidate via the action layer using tags
- *   - `event-detail:<experienceSlug>`
- *   - `winery-user:<userId>:bookings`
+ * for 60 seconds. The action layer in `src/server/actions/event-detail.ts`
+ * invalidates this entry by tag (`event-detail:<experienceSlug>`).
  *
  * Note: `isLive` and the H-2 / H+2 scan window are deliberately NOT cached —
  * they depend on the current instant. Compute them in the page Server
@@ -346,10 +344,7 @@ export const getEventDetail = cache(
       ['event-detail', experienceSlug, userId],
       {
         revalidate: 60,
-        tags: [
-          `event-detail:${experienceSlug}`,
-          `winery-user:${userId}:bookings`,
-        ],
+        tags: [`event-detail:${experienceSlug}`],
       }
     )();
   }

@@ -1696,7 +1696,10 @@
   "Dashboard": {
     "eventDetail": {
       "title": "Détail de l'événement",
-      "breadcrumb": "Dashboard / Événements / {title}",
+      "breadcrumb": {
+        "dashboard": "Tableau de bord",
+        "events": "Événements"
+      },
       "status": {
         "draft": "Brouillon",
         "published": "Publié",
@@ -1762,7 +1765,9 @@
       },
       "errors": {
         "notOwner": "Vous n'avez pas accès à cet événement.",
-        "loadFailed": "Impossible de charger l'événement. Réessayez dans un instant."
+        "loadFailed": "Impossible de charger l'événement. Réessayez dans un instant.",
+        "revertWindowExpired": "Impossible d'annuler après 72h.",
+        "sessionNotEnded": "Disponible après la fin de la session."
       },
       "toast": {
         "checkedIn": "Présence enregistrée.",

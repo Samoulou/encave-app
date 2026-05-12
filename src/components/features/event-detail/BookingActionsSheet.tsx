@@ -96,7 +96,13 @@ export function BookingActionsSheet({
         toast.success(t(`toast.${toastKey}`));
         closeAll();
       } else {
-        toast.error(t('toast.error'));
+        if (result.error.message === 'REVERT_WINDOW_EXPIRED') {
+          toast.error(t('errors.revertWindowExpired'));
+        } else if (result.error.message === 'SESSION_NOT_ENDED') {
+          toast.error(t('errors.sessionNotEnded'));
+        } else {
+          toast.error(t('toast.error'));
+        }
       }
     });
   };

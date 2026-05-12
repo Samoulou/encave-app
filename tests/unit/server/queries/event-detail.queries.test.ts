@@ -36,7 +36,12 @@ const baseExperience = {
   duration: 90,
   maxCapacity: 10,
   wineryId: 'winery-1',
-  winery: { id: 'winery-1', slug: 'domaine-x', name: 'Domaine X', userId: 'u1' },
+  winery: {
+    id: 'winery-1',
+    slug: 'domaine-x',
+    name: 'Domaine X',
+    userId: 'u1',
+  },
 };
 
 function makeBooking(overrides: {
@@ -52,7 +57,6 @@ function makeBooking(overrides: {
     reference: `ENC-${overrides.id.toUpperCase()}`,
     visitorName: 'Alice',
     visitorEmail: 'a@test.ch',
-    visitorPhone: '+41',
     guestCount: overrides.guestCount ?? 2,
     status: overrides.status,
     checkedInAt: overrides.checkedInAt ?? null,
@@ -274,6 +278,43 @@ describe('getEventDetail', () => {
     expect(includedStatuses).toContain(BookingStatus.CONFIRMED);
     expect(includedStatuses).toContain(BookingStatus.COMPLETED);
     expect(includedStatuses).toContain(BookingStatus.NO_SHOW);
+  });
+
+  it('handles the CEST→CET DST transition (Oct 2026) when computing startsAt', async () => {
+    // Last Sunday of October 2026 = 2026-10-25. After 03:00 CEST → 02:00 CET.
+    // A session at 14:00 the day before is in CEST (+02:00) → 12:00 UTC.
+    // A session at 14:00 the day after is in CET  (+01:00) → 13:00 UTC.
+    vi.mocked(db.experience.findFirst).mockResolvedValue({
+      ...baseExperience,
+      duration: 60,
+      bookings: [
+        makeBooking({
+          id: 'before-dst',
+          status: BookingStatus.CONFIRMED,
+          date: '2026-10-24',
+          timeSlot: '14:00',
+        }),
+        makeBooking({
+          id: 'after-dst',
+          status: BookingStatus.CONFIRMED,
+          date: '2026-10-26',
+          timeSlot: '14:00',
+        }),
+      ],
+    } as never);
+
+    const result = await getEventDetail('tasting', 'u1');
+    expect(result).not.toBeNull();
+
+    const before = result!.sessions.find(
+      (s) => s.bookings[0]?.id === 'before-dst'
+    )!;
+    const after = result!.sessions.find(
+      (s) => s.bookings[0]?.id === 'after-dst'
+    )!;
+
+    expect(before.startsAt.toISOString()).toBe('2026-10-24T12:00:00.000Z');
+    expect(after.startsAt.toISOString()).toBe('2026-10-26T13:00:00.000Z');
   });
 
   it('isFull reflects confirmedSeats >= maxCapacity', async () => {

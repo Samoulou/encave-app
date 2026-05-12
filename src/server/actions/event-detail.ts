@@ -1,11 +1,12 @@
 'use server';
 
-import { revalidateTag } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { BookingStatus } from '@prisma/client';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { logError, logInfo } from '@/lib/logger';
 import { bookingIdSchema } from '@/lib/validators/eventDetail';
+import { parseTimeSlot, timeSlotSchema } from '@/lib/validators/booking';
 import type { ActionResult } from '@/types/actions';
 import type { BookingDTO } from '@/types/event-detail';
 
@@ -13,12 +14,18 @@ import type { BookingDTO } from '@/types/event-detail';
  * Server actions for the winemaker event detail page (ENC-096).
  *
  * Distinct from src/server/actions/booking-dashboard.ts:
- *  - `markBookingNoShow` here does NOT require the booking time to be past
- *    (a no-show can be recorded as soon as the encaveur knows it);
+ *  - `markBookingNoShow` here requires the session to have ENDED (defense in
+ *    depth — UI also disables it before that);
  *  - the revert actions are the ONLY place where the booking state machine
  *    is allowed to step backwards. Every revert is logged via Pino as
  *    decided by Margot (2026-05-12).
+ *  - reverts are bounded to a 72h window after `session.endsAt` (Margot
+ *    decision, no Luca solicitation). Past that window we surface a typed
+ *    error code so the client can show a localised explanation.
  */
+
+const SESSION_TIMEZONE = 'Europe/Zurich';
+const REVERT_WINDOW_MS = 72 * 60 * 60 * 1000;
 
 type BookingActionData = { booking: BookingDTO };
 
@@ -26,9 +33,12 @@ interface AuthorizedBooking {
   id: string;
   status: BookingStatus;
   guestCount: number;
+  date: Date;
+  timeSlot: string;
   experience: {
     id: string;
     slug: string;
+    duration: number;
     winery: { id: string; userId: string };
   };
 }
@@ -36,6 +46,60 @@ interface AuthorizedBooking {
 interface ResolvedContext {
   userId: string;
   booking: AuthorizedBooking;
+}
+
+/**
+ * Mirror of zonedWallClockToUTC in event-detail.queries.ts — kept local to the
+ * action layer to avoid coupling queries → actions. If this helper grows
+ * a third caller, hoist it to `src/lib/i18n/formatters.ts`.
+ */
+function zonedWallClockToUTC(date: Date, timeSlot: string): Date {
+  const { hours, minutes } = parseTimeSlot(timeSlot);
+  const wallUTC = new Date(
+    Date.UTC(
+      date.getUTCFullYear(),
+      date.getUTCMonth(),
+      date.getUTCDate(),
+      hours,
+      minutes,
+      0,
+      0
+    )
+  );
+  const fmt = new Intl.DateTimeFormat('en-CA', {
+    timeZone: SESSION_TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+    hourCycle: 'h23',
+  });
+  const parts = fmt.formatToParts(wallUTC);
+  const lookup: Record<string, string> = {};
+  for (const part of parts) {
+    if (part.type !== 'literal') {
+      lookup[part.type] = part.value;
+    }
+  }
+  const zoneAsUTC = Date.UTC(
+    Number(lookup.year),
+    Number(lookup.month) - 1,
+    Number(lookup.day),
+    Number(lookup.hour === '24' ? '0' : lookup.hour),
+    Number(lookup.minute),
+    Number(lookup.second)
+  );
+  const offsetMs = zoneAsUTC - wallUTC.getTime();
+  return new Date(wallUTC.getTime() - offsetMs);
+}
+
+function getSessionEndsAt(booking: AuthorizedBooking): Date | null {
+  if (!timeSlotSchema.safeParse(booking.timeSlot).success) return null;
+  const startsAt = zonedWallClockToUTC(booking.date, booking.timeSlot);
+  return new Date(startsAt.getTime() + booking.experience.duration * 60_000);
 }
 
 async function resolveContext(
@@ -55,10 +119,13 @@ async function resolveContext(
       id: true,
       status: true,
       guestCount: true,
+      date: true,
+      timeSlot: true,
       experience: {
         select: {
           id: true,
           slug: true,
+          duration: true,
           winery: { select: { id: true, userId: true } },
         },
       },
@@ -85,15 +152,21 @@ async function resolveContext(
   };
 }
 
-function invalidate(
-  experienceSlug: string,
-  userId: string,
-  experienceId: string
-): void {
+/**
+ * Cache invalidation after a booking mutation on the event-detail page.
+ *
+ * Tag consumers (must match emitters here):
+ *   - `event-detail:<slug>` → consumed by `getEventDetail` in
+ *     `src/server/queries/event-detail.queries.ts`.
+ *
+ * Path consumers (other dashboard views rely on React.cache only — bumping the
+ * Next router cache forces a fresh render):
+ *   - `/dashboard/bookings` → list + calendar views in
+ *     `src/app/[locale]/(protected)/dashboard/bookings/`.
+ */
+function invalidate(experienceSlug: string): void {
   revalidateTag(`event-detail:${experienceSlug}`);
-  revalidateTag(`winery-user:${userId}:bookings`);
-  // Reuse the existing convention so the rest of the dashboard sees the change.
-  revalidateTag(`experience:${experienceId}:bookings`);
+  revalidatePath('/dashboard/bookings');
 }
 
 async function loadBookingDTO(bookingId: string): Promise<BookingDTO | null> {
@@ -104,7 +177,6 @@ async function loadBookingDTO(bookingId: string): Promise<BookingDTO | null> {
       reference: true,
       visitorName: true,
       visitorEmail: true,
-      visitorPhone: true,
       guestCount: true,
       status: true,
       checkedInAt: true,
@@ -152,7 +224,7 @@ export async function markBookingCheckedIn(
       },
     });
 
-    invalidate(booking.experience.slug, userId, booking.experience.id);
+    invalidate(booking.experience.slug);
 
     const dto = await loadBookingDTO(booking.id);
     if (!dto) {
@@ -177,8 +249,8 @@ export async function markBookingCheckedIn(
 }
 
 /**
- * Mark a CONFIRMED booking as NO_SHOW (no time-of-day guard — distinct from
- * the booking-dashboard action which requires the booking to be in the past).
+ * Mark a CONFIRMED booking as NO_SHOW. Requires the session to have ended
+ * (defense in depth: the UI also disables the action until `endsAt <= now`).
  */
 export async function markBookingNoShow(
   input: unknown
@@ -205,13 +277,24 @@ export async function markBookingNoShow(
     };
   }
 
+  const endsAt = getSessionEndsAt(booking);
+  if (!endsAt || endsAt.getTime() > Date.now()) {
+    return {
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: 'SESSION_NOT_ENDED',
+      },
+    };
+  }
+
   try {
     await db.booking.update({
       where: { id: booking.id },
       data: { status: BookingStatus.NO_SHOW },
     });
 
-    invalidate(booking.experience.slug, userId, booking.experience.id);
+    invalidate(booking.experience.slug);
 
     const dto = await loadBookingDTO(booking.id);
     if (!dto) {
@@ -236,6 +319,35 @@ export async function markBookingNoShow(
       },
     };
   }
+}
+
+/**
+ * Reject a revert request issued more than 72h after the session ended.
+ * Margot decision (2026-05-12): no operational latitude past this window.
+ */
+function checkRevertWindow(
+  booking: AuthorizedBooking
+): ActionResult<undefined> {
+  const endsAt = getSessionEndsAt(booking);
+  if (!endsAt) {
+    return {
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: 'REVERT_WINDOW_EXPIRED',
+      },
+    };
+  }
+  if (endsAt.getTime() + REVERT_WINDOW_MS < Date.now()) {
+    return {
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: 'REVERT_WINDOW_EXPIRED',
+      },
+    };
+  }
+  return { success: true, data: undefined };
 }
 
 /**
@@ -267,6 +379,9 @@ export async function revertBookingCheckIn(
     };
   }
 
+  const windowCheck = checkRevertWindow(booking);
+  if (!windowCheck.success) return windowCheck;
+
   try {
     await db.booking.update({
       where: { id: booking.id },
@@ -283,7 +398,7 @@ export async function revertBookingCheckIn(
       to: BookingStatus.CONFIRMED,
     });
 
-    invalidate(booking.experience.slug, userId, booking.experience.id);
+    invalidate(booking.experience.slug);
 
     const dto = await loadBookingDTO(booking.id);
     if (!dto) {
@@ -339,6 +454,9 @@ export async function revertBookingNoShow(
     };
   }
 
+  const windowCheck = checkRevertWindow(booking);
+  if (!windowCheck.success) return windowCheck;
+
   try {
     await db.booking.update({
       where: { id: booking.id },
@@ -352,7 +470,7 @@ export async function revertBookingNoShow(
       to: BookingStatus.CONFIRMED,
     });
 
-    invalidate(booking.experience.slug, userId, booking.experience.id);
+    invalidate(booking.experience.slug);
 
     const dto = await loadBookingDTO(booking.id);
     if (!dto) {

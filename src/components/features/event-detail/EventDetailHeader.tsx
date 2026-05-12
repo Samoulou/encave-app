@@ -41,11 +41,11 @@ export async function EventDetailHeader({ event }: EventDetailHeaderProps) {
           className="flex items-center gap-1 hover:text-slate-900"
         >
           <Home className="h-3.5 w-3.5" aria-hidden="true" />
-          <span className="sr-only">Dashboard</span>
+          <span className="sr-only">{t('breadcrumb.dashboard')}</span>
         </Link>
         <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
         <Link href="/dashboard/experiences" className="hover:text-slate-900">
-          {t('breadcrumb', { title: '' }).split('/')[1]?.trim() ?? 'Events'}
+          {t('breadcrumb.events')}
         </Link>
         <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
         <span className="truncate font-medium text-slate-900">
