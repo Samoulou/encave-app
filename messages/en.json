@@ -509,7 +509,31 @@
     "sessionFull": "Full",
     "spotsLeft": "{count} {count, plural, =1 {spot} other {spots}} left",
     "whenVisit": "When would you like to visit?",
-    "back": "Back"
+    "back": "Back",
+    "confirmation": {
+      "finalizing": {
+        "title": "We're finalising your booking…",
+        "subtitle": "Just a few seconds. We're confirming the payment with our provider — please don't close this page.",
+        "srLabel": "Finalising your payment"
+      },
+      "confirmed": {
+        "title": "Booking confirmed — see you soon!",
+        "subtitle": "A confirmation email with everything you need is on its way.",
+        "cta": {
+          "viewBooking": "View my booking",
+          "home": "Back to home"
+        }
+      },
+      "failed": {
+        "title": "Payment didn't go through",
+        "message": "Nothing was charged. This reservation will be released — you can start a new booking right away.",
+        "support": "Need help? Write to <link>contact@encave.ch</link>.",
+        "cta": {
+          "newBooking": "Start a new booking",
+          "myBookings": "View my bookings"
+        }
+      }
+    }
   },
   "bookings": {
     "title": "Bookings",

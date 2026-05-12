@@ -509,7 +509,31 @@
     "sessionFull": "Ausgebucht",
     "spotsLeft": "{count} {count, plural, =1 {Platz} other {Plätze}} frei",
     "whenVisit": "Wann möchten Sie uns besuchen?",
-    "back": "Zurück"
+    "back": "Zurück",
+    "confirmation": {
+      "finalizing": {
+        "title": "Wir schliessen Ihre Buchung ab …",
+        "subtitle": "Nur einen Moment. Wir prüfen die Zahlung mit unserem Anbieter. Bitte schliessen Sie diese Seite nicht.",
+        "srLabel": "Zahlung wird abgeschlossen"
+      },
+      "confirmed": {
+        "title": "Buchung bestätigt, bis gleich!",
+        "subtitle": "Eine Bestätigungs-E-Mail mit allen Details ist unterwegs.",
+        "cta": {
+          "viewBooking": "Meine Buchung ansehen",
+          "home": "Zur Startseite"
+        }
+      },
+      "failed": {
+        "title": "Die Zahlung konnte nicht abgeschlossen werden",
+        "message": "Es wurde nichts belastet. Diese Reservierung wird freigegeben, Sie können sofort eine neue starten.",
+        "support": "Brauchen Sie Hilfe? Schreiben Sie uns an <link>contact@encave.ch</link>.",
+        "cta": {
+          "newBooking": "Neue Buchung starten",
+          "myBookings": "Meine Buchungen ansehen"
+        }
+      }
+    }
   },
   "bookings": {
     "title": "Buchungen",
