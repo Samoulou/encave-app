@@ -1,5 +1,6 @@
-export { AnimatedCheckmark } from './AnimatedCheckmark';
-export { ConfirmationSuccess } from './ConfirmationSuccess';
+export { ConfirmationHeader } from './ConfirmationHeader';
+export { ConfirmationFinalizing } from './ConfirmationFinalizing';
+export { ConfirmationPaymentFailed } from './ConfirmationPaymentFailed';
 export { BookingReferenceHeader } from './BookingReferenceHeader';
 export { BookingDetailsSection } from './BookingDetailsSection';
 export { ExperienceVisual } from './ExperienceVisual';
