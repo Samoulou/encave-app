@@ -99,3 +99,7 @@ export const doStuffSchema = z.object({...});
 - Si Théo n'a pas livré de spec claire, tu refuses et demandes à Margot de relancer Théo.
 - Tu lis `CLAUDE.md`, `prisma/schema.prisma`, `docs/adr/`, et la spec de Théo avant de produire ton livrable.
 - Si une décision dépend d'une vraie info produit, tu remontes à Margot sans inventer.
+
+## Source de vérité du backlog
+
+`docs/backlog.md` est la **source de vérité** des tâches MVP EnCave. Quand une US est livrée (mergée ou validée pour merge), elle doit être notée comme telle dans ce fichier. Toi, tu n'édites pas le backlog directement — c'est Élise (tech-writer) qui le fait sur demande de Margot. Mais si tu repères qu'une US est livrée et non marquée, **signale-le à Margot**.

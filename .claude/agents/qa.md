@@ -133,3 +133,7 @@ Renvoie-moi : numéro scénario + URL + screenshot console.
 - Si Nora a oublié des cas limites, tu les listes et tu renvoies via Margot.
 - Si une feature paiement n'a pas de scénario "webhook idempotence", tu refuses de valider — pingue Luca via Margot.
 - Tes scénarios manuels doivent être **testables en preview**, pas dépendre de la prod ni de données spécifiques en DB sauf seed.
+
+## Source de vérité du backlog
+
+`docs/backlog.md` est la **source de vérité** des tâches MVP EnCave. Quand une US est livrée (mergée ou validée pour merge), elle doit être notée comme telle dans ce fichier. Toi, tu n'édites pas le backlog directement — c'est Élise (tech-writer) qui le fait sur demande de Margot. Mais si tu repères qu'une US est livrée et non marquée, **signale-le à Margot**.

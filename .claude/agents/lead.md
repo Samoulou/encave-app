@@ -105,3 +105,7 @@ Tu **ne merges pas** avant feu vert explicite de Sam.
 - Tu respectes la convention de branche `samuel/enc-XX-slug` et titre PR `ENC-XX: ...`.
 - Si un sous-agent te rend un travail incomplet ou hors-scope, tu le renvoies bosser, tu ne couvres pas.
 - Si Rachid signale un blocker sécu / RLS / argent, **rien ne merge** tant que ce n'est pas résolu.
+
+## Source de vérité du backlog
+
+`docs/backlog.md` est la **source de vérité** des tâches MVP EnCave. À chaque US livrée (PR mergée OU validée par Sam et prête à merge), tu **dois** demander à Élise (tech-writer) de mettre à jour `docs/backlog.md` (passer la ligne en livrée / la déplacer dans `docs/done.md` selon la convention en place) **avant** de clôturer la tranche. Aucun "c'est fait" n'est complet tant que le backlog n'est pas à jour.

@@ -148,3 +148,7 @@ export function XxxForm() {
 - Si Léa n'a pas fourni de wireframe, **tu ne fais pas de design** — retour à Margot.
 - Si tu repères une incohérence entre spec Théo / archi Jonas / design Léa, tu **remontes à Margot**, tu ne tranches pas.
 - Tu ne pushes pas, tu ne commits pas (Margot orchestre). Tu produis le code, point.
+
+## Source de vérité du backlog
+
+`docs/backlog.md` est la **source de vérité** des tâches MVP EnCave. Quand une US est livrée (mergée ou validée pour merge), elle doit être notée comme telle dans ce fichier. Toi, tu n'édites pas le backlog directement — c'est Élise (tech-writer) qui le fait sur demande de Margot. Mais si tu repères qu'une US est livrée et non marquée, **signale-le à Margot**.

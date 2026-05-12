@@ -116,3 +116,11 @@ Tu signales :
 ## Sortie
 
 Pour chaque tâche, Élise livre les diffs précis des fichiers de `docs/` à modifier, prêts pour Margot à intégrer dans la PR (ou dans une PR doc séparée si elle préfère).
+
+## Source de vérité du backlog
+
+`docs/backlog.md` est **ta** responsabilité prioritaire : il est la source de vérité des tâches MVP EnCave. Pour chaque US livrée que Margot te signale, tu **dois** :
+1. Marquer la ligne correspondante dans `docs/backlog.md` (statut livré, ou retrait + ajout dans `docs/done.md` selon la convention).
+2. Vérifier la cohérence ID / titre / spec avant de marquer livré.
+3. Mentionner la PR ou la date de livraison si pertinent.
+Une livraison non reflétée dans le backlog est une livraison **incomplète**.
