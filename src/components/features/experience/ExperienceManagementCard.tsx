@@ -15,6 +15,7 @@ import {
   Send,
   EyeOff,
   Archive,
+  ClipboardList,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -291,7 +292,18 @@ export function ExperienceManagementCard({
               <Button
                 asChild
                 size="sm"
-                className="ml-1 bg-primary/10 font-bold text-primary hover:bg-primary hover:text-white"
+                className="ml-1 bg-primary font-bold text-white shadow-lg shadow-primary/20 hover:bg-[hsl(var(--primary-hover))]"
+              >
+                <Link href={`/dashboard/experiences/${experience.id}/sessions`}>
+                  <ClipboardList className="mr-1 h-3.5 w-3.5" />
+                  Inscrits
+                </Link>
+              </Button>
+              <Button
+                asChild
+                size="sm"
+                variant="outline"
+                className="font-bold"
               >
                 <Link href={`/dashboard/experiences/${experience.id}/edit`}>
                   {tCommon('edit')}
