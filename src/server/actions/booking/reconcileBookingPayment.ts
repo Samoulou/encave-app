@@ -122,6 +122,15 @@ export async function reconcileBookingPayment(
   // 1. Validation
   const parsed = reconcileBookingPaymentSchema.safeParse(rawInput);
   if (!parsed.success) {
+    const rawBookingId = (rawInput as { bookingId?: unknown }).bookingId;
+    logWarn('reconcileBookingPayment: validation failed', {
+      bookingId: typeof rawBookingId === 'string' ? rawBookingId : undefined,
+      issues: parsed.error.issues.map((i) => ({
+        path: i.path,
+        code: i.code,
+        message: i.message,
+      })),
+    });
     return {
       success: false,
       error: {
@@ -132,6 +141,12 @@ export async function reconcileBookingPayment(
   }
   const { bookingId, sessionId, accessToken } = parsed.data;
 
+  logInfo('reconcileBookingPayment: entered', {
+    bookingId,
+    sessionIdPrefix: sessionId.slice(0, 12) + '…',
+    hasAccessToken: !!accessToken,
+  });
+
   // 2. Rate limit (per IP × booking)
   const ip = await getClientIp();
   const rate = await checkRateLimit(`reconcile:${ip}:${bookingId}`, {
@@ -139,6 +154,7 @@ export async function reconcileBookingPayment(
     windowMs: 60 * 1000,
   });
   if (!rate.success) {
+    logWarn('reconcileBookingPayment: rate limited', { bookingId, ip });
     return {
       success: false,
       error: { code: 'RATE_LIMITED', message: 'Too many requests' },
@@ -158,6 +174,7 @@ export async function reconcileBookingPayment(
   });
 
   if (!booking) {
+    logWarn('reconcileBookingPayment: booking not found', { bookingId });
     return {
       success: false,
       error: { code: 'NOT_FOUND', message: 'Booking not found' },
