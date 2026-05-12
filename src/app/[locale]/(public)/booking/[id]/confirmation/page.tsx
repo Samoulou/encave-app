@@ -152,12 +152,20 @@ async function ConfirmationResolver({
           <ConfirmationPaymentFailed experienceSlug={booking.experience.slug} />
         );
       }
-      if (reco.data.kind === 'CONFIRMED') {
+      if (
+        reco.data.kind === 'CONFIRMED' ||
+        reco.data.kind === 'ALREADY_CONFIRMED' ||
+        reco.data.kind === 'ALREADY_CANCELLED'
+      ) {
+        // M3 — re-fetch the booking so the branch below renders fresh state.
+        // CONFIRMED obviously needs a re-read (the row was just flipped),
+        // but ALREADY_* also benefit: between the first loadBooking and the
+        // reconcile call, the webhook may have flipped the row to CONFIRMED
+        // or another path may have cancelled it. One extra SSR query is
+        // acceptable to avoid rendering stale state.
         booking = await loadBooking(id);
         if (!booking) notFound();
       }
-      // ALREADY_CONFIRMED / ALREADY_CANCELLED → fall through; we'll branch
-      // below based on the (possibly re-read) booking.status.
     } else {
       // Best-effort fallback: log and keep rendering the pending UI.
       logWarn('Reconciliation failed, falling back to pending UI', {
