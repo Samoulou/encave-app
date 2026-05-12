@@ -82,7 +82,8 @@ export function BookingDatePicker({
         className="rounded-lg border-0"
         classNames={{
           // BUG-033 FIX: Updated to react-day-picker v9 class names
-          months: 'flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0',
+          months:
+            'flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0',
           month: 'space-y-4',
           month_caption: 'flex justify-center pt-1 relative items-center',
           caption_label: 'text-sm font-medium text-slate-900',
@@ -101,8 +102,10 @@ export function BookingDatePicker({
           selected:
             'bg-burgundy-600 text-white hover:bg-burgundy-600 hover:text-white focus:bg-burgundy-600 focus:text-white',
           outside: 'text-slate-400 opacity-50',
-          disabled: 'text-slate-300 opacity-50 cursor-not-allowed hover:bg-transparent',
-          range_middle: 'aria-selected:bg-burgundy-100 aria-selected:text-burgundy-900',
+          disabled:
+            'text-slate-300 opacity-50 cursor-not-allowed hover:bg-transparent',
+          range_middle:
+            'aria-selected:bg-burgundy-100 aria-selected:text-burgundy-900',
           hidden: 'invisible',
         }}
       />

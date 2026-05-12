@@ -153,11 +153,10 @@ describe('Upload Service', () => {
 
       await uploadImage(file);
 
-      expect(mockPut).toHaveBeenCalledWith(
-        expect.any(String),
-        file,
-        { access: 'public', contentType: 'image/png' }
-      );
+      expect(mockPut).toHaveBeenCalledWith(expect.any(String), file, {
+        access: 'public',
+        contentType: 'image/png',
+      });
     });
 
     it('sets access to public', async () => {
@@ -197,7 +196,9 @@ describe('Upload Service', () => {
 
       await deleteImage('https://blob.vercel-storage.com/photo.jpg');
 
-      expect(mockDel).toHaveBeenCalledWith('https://blob.vercel-storage.com/photo.jpg');
+      expect(mockDel).toHaveBeenCalledWith(
+        'https://blob.vercel-storage.com/photo.jpg'
+      );
     });
 
     it('does not throw when deletion fails', async () => {
@@ -233,7 +234,10 @@ describe('Upload Service', () => {
       const result = validateImageFile(file);
 
       expect(result.valid).toBe(true);
-      expect(mockSharedValidate).toHaveBeenCalledWith(file, ['image/jpeg', 'image/png']);
+      expect(mockSharedValidate).toHaveBeenCalledWith(file, [
+        'image/jpeg',
+        'image/png',
+      ]);
     });
 
     it('returns error from shared validator', () => {

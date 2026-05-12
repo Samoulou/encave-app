@@ -1,20 +1,24 @@
 # ENC-015b — Renforcer middleware : check rôle ADMIN au niveau middleware (pas seulement layout)
 
 ## Objectif métier
+
 Aujourd'hui, l'accès à `/admin/*` est gardé par le layout `src/app/admin/layout.tsx` qui vérifie `session.user.role === 'ADMIN'`. C'est tardif : Next.js a déjà résolu la route, instancié les Server Components, potentiellement déclenché des requêtes data (Server Components qui s'exécutent en parallèle). Un utilisateur non admin qui tape `/admin/wineries` consomme des ressources serveur avant le refus. Pire, si un Server Component fuit dans un boundary mal configuré, des données sensibles peuvent être renvoyées au client. On veut un check au **middleware**, qui bloque la requête avant tout rendu.
 
 ## Acteurs
+
 - **ADMIN** : utilisateur autorisé, doit pouvoir accéder à `/admin/*` sans friction.
 - **CLIENT / WINEMAKER** : utilisateurs authentifiés mais non admins, doivent être redirigés.
 - **VISITEUR anonyme** : non authentifié, doit être redirigé vers `/sign-in`.
 
 ## Préconditions & déclencheurs
+
 - Better Auth ^1.4.17 expose le rôle utilisateur dans la session (à vérifier : `session.user.role` doit être présent côté middleware via cookie session ou API edge-compatible).
 - Middleware Next.js Edge runtime : pas de DB call possible (Prisma incompatible Edge sans Accelerate ou DataProxy).
 - Routes ciblées : `/admin`, `/admin/*` pour les 3 locales (`/fr/admin`, `/de/admin`, `/en/admin`).
 - Middleware existant : `src/middleware.ts` (probablement déjà gère `next-intl` localePrefix).
 
 ## User stories
+
 - En tant qu'**admin**, je clique sur `/admin/wineries`, je vois la page admin normalement.
 - En tant que **client connecté**, je tape `/admin` dans la barre d'adresse, je suis redirigé vers une page 404 (ou vers `/`, à trancher).
 - En tant que **visiteur anonyme**, je tape `/admin`, je suis redirigé vers `/sign-in?callbackUrl=/admin`.
@@ -66,6 +70,7 @@ Scénario : layout admin garde un second check (defense in depth)
 ```
 
 ## Règles métier
+
 - **Source de vérité du rôle au middleware** : la session Better Auth doit exposer le rôle de manière edge-readable. Deux options à valider avec Jonas :
   1. Le rôle est dans le cookie de session lui-même (claim JWT signé) → lecture O(1) sans appel réseau.
   2. Better Auth expose un endpoint `getSession` callable en edge (fetch) → 1 round-trip réseau par requête, latence non négligeable.
@@ -81,27 +86,31 @@ Scénario : layout admin garde un second check (defense in depth)
 
 ## Copy FR définitive
 
-| Élément | Clé i18n suggérée | Texte FR |
-|---|---|---|
-| Page 404 (titre) | `errors.notFound.title` | Page introuvable |
-| Page 404 (corps) | `errors.notFound.body` | Cette page n'existe pas ou n'est plus disponible. |
-| Page 404 (CTA) | `errors.notFound.cta` | Retour à l'accueil |
+| Élément          | Clé i18n suggérée       | Texte FR                                          |
+| ---------------- | ----------------------- | ------------------------------------------------- |
+| Page 404 (titre) | `errors.notFound.title` | Page introuvable                                  |
+| Page 404 (corps) | `errors.notFound.body`  | Cette page n'existe pas ou n'est plus disponible. |
+| Page 404 (CTA)   | `errors.notFound.cta`   | Retour à l'accueil                                |
 
-*Note : aucun copy spécifique "admin only" — on assume une 404 silencieuse. Les visiteurs anonymes voient la copy standard sign-in (existante).*
+_Note : aucun copy spécifique "admin only" — on assume une 404 silencieuse. Les visiteurs anonymes voient la copy standard sign-in (existante)._
 
 ## États UI
 
 ### Côté admin authentifié
+
 - **Loading** : N/A au middleware (passe-plat). Le layout admin gère ses propres états de chargement.
 - **Populated** : page admin rendue normalement.
 
 ### Côté CLIENT / WINEMAKER authentifié
+
 - **Populated** : page `/not-found` standard d'EnCave (déjà existante via `app/not-found.tsx`).
 
 ### Côté visiteur anonyme
+
 - Redirection 307 vers `/sign-in?callbackUrl=...`. Pas d'écran intermédiaire.
 
 ## Cas limites
+
 - **Cookie session expiré** entre 2 requêtes : middleware traite comme "non authentifié" → redirect sign-in.
 - **Race condition** : utilisateur admin dont le rôle vient d'être révoqué par un autre admin → la prochaine requête voit l'ancien cookie ; il reste admin jusqu'à expiration du cookie ou logout. Mitigation : durée de vie de session courte (à valider avec Jonas, cf. config Better Auth). Note Sam : si critique, ajouter une révocation forcée admin → toutes sessions invalidées.
 - **Préload Next.js (`<Link prefetch>`)** : les prefetch de routes `/admin/*` depuis une page CLIENT vont déclencher le middleware → refus immédiat, pas de coût Server Component. OK.
@@ -111,6 +120,7 @@ Scénario : layout admin garde un second check (defense in depth)
 - **User dont le rôle est `ADMIN` mais dont le compte est SUSPENDED** : à clarifier. Proposition : on traite comme non-admin (404). À confirmer avec Sam.
 
 ## Dépendances
+
 - `src/middleware.ts` à modifier.
 - Configuration Better Auth pour exposer `role` dans le cookie session — à valider avec Jonas (lib Better Auth ^1.4.17, voir `src/lib/auth.ts` ou équivalent).
 - `next-intl` middleware existant à chainer (cf. `src/i18n/`).
@@ -118,6 +128,7 @@ Scénario : layout admin garde un second check (defense in depth)
 - Pas de migration DB.
 
 ## Hors-périmètre explicite
+
 - Pas de check role granulaire (sous-rôles admin : super-admin, ops, etc.).
 - Pas de gestion d'IP allowlist pour `/admin`.
 - Pas d'audit log centralisé des accès admin (c'est ENC-126).
@@ -125,11 +136,13 @@ Scénario : layout admin garde un second check (defense in depth)
 - Pas de UI "Vous n'avez pas les droits" — on assume 404 silencieuse.
 
 ## Métriques de succès
+
 - 0 Server Component admin exécuté pour un user non-admin (mesurable via logs Vercel / Sentry).
 - Latence ajoutée par le middleware < 5 ms (claim cookie lu en O(1), sans round-trip réseau).
 - 0 régression sur le parcours admin légitime (temps de chargement `/admin/wineries` stable).
 
 ## ❓ Questions ouvertes pour Sam
+
 - Compte ADMIN dont le statut user est SUSPENDED : on bloque (404 même flow) ou on laisse passer (un admin suspendu ne devrait pas exister) ? Préférence produit ?
 - Tu veux qu'on logue côté Sentry les tentatives d'accès `/admin` par des non-admins (signal d'alerte) ou juste un log info sans escalade ?
 - Pour les routes API `/api/admin/*` : tu veux qu'on ouvre une US dédiée pour auditer/durcir, ou on considère que `auth()` + check role dans chaque action suffit ?

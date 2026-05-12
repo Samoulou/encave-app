@@ -1,4 +1,8 @@
-import { SkeletonExperienceGrid, Skeleton, SkeletonContainer } from '@/components/shared/Skeleton';
+import {
+  SkeletonExperienceGrid,
+  Skeleton,
+  SkeletonContainer,
+} from '@/components/shared/Skeleton';
 
 export default function ExperiencesLoading() {
   return (

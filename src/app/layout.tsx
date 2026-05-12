@@ -7,7 +7,15 @@ export const metadata: Metadata = {
   },
   description:
     'Book unique wine tasting experiences directly with Swiss winemakers. Discover tastings, cellar visits, and workshops in Valais.',
-  keywords: ['wine', 'wine tasting', 'Valais', 'Switzerland', 'winery', 'experience', 'booking'],
+  keywords: [
+    'wine',
+    'wine tasting',
+    'Valais',
+    'Switzerland',
+    'winery',
+    'experience',
+    'booking',
+  ],
   authors: [{ name: 'EnCave' }],
   creator: 'EnCave',
   metadataBase: new URL('https://encave.ch'),
@@ -39,7 +47,8 @@ export const metadata: Metadata = {
     url: 'https://encave.ch',
     siteName: 'EnCave',
     title: 'EnCave - Wine Experiences in Valais',
-    description: 'Book unique wine tasting experiences directly with Swiss winemakers.',
+    description:
+      'Book unique wine tasting experiences directly with Swiss winemakers.',
     images: [
       {
         url: '/og-image.jpg',
@@ -52,7 +61,8 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'EnCave - Wine Experiences in Valais',
-    description: 'Book unique wine tasting experiences directly with Swiss winemakers.',
+    description:
+      'Book unique wine tasting experiences directly with Swiss winemakers.',
     images: ['/og-image.jpg'],
     creator: '@encave',
   },

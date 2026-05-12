@@ -36,7 +36,14 @@ export function PostExperienceFollowUpEmail({
 
   return (
     <EmailLayout locale={locale} preview={t(subjects.postExperience, locale)}>
-      <Text style={{ fontSize: '24px', fontWeight: 'bold', color: '#7c2d12', margin: '0 0 16px 0' }}>
+      <Text
+        style={{
+          fontSize: '24px',
+          fontWeight: 'bold',
+          color: '#7c2d12',
+          margin: '0 0 16px 0',
+        }}
+      >
         {title}
       </Text>
 
@@ -44,9 +51,7 @@ export function PostExperienceFollowUpEmail({
         {greeting} {guestName},
       </Text>
 
-      <Text style={{ margin: '0 0 24px 0' }}>
-        {intro}
-      </Text>
+      <Text style={{ margin: '0 0 24px 0' }}>{intro}</Text>
 
       {/* Experience Recap */}
       <Section
@@ -58,7 +63,14 @@ export function PostExperienceFollowUpEmail({
           textAlign: 'center',
         }}
       >
-        <Text style={{ margin: '0 0 8px 0', fontWeight: 'bold', fontSize: '18px', color: '#7c2d12' }}>
+        <Text
+          style={{
+            margin: '0 0 8px 0',
+            fontWeight: 'bold',
+            fontSize: '18px',
+            color: '#7c2d12',
+          }}
+        >
           {experienceTitle}
         </Text>
         <Text style={{ margin: '0 0 4px 0', color: '#6b7280' }}>
@@ -78,7 +90,9 @@ export function PostExperienceFollowUpEmail({
           margin: '0 0 24px 0',
         }}
       >
-        <Text style={{ margin: '0 0 8px 0', fontWeight: 'bold', fontSize: '14px' }}>
+        <Text
+          style={{ margin: '0 0 8px 0', fontWeight: 'bold', fontSize: '14px' }}
+        >
           {feedbackTitle}
         </Text>
         <Text style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>
@@ -87,9 +101,7 @@ export function PostExperienceFollowUpEmail({
       </Section>
 
       {/* Discover More */}
-      <Text style={{ margin: '0 0 16px 0' }}>
-        {discoverMore}
-      </Text>
+      <Text style={{ margin: '0 0 16px 0' }}>{discoverMore}</Text>
 
       <div style={{ textAlign: 'center', margin: '0 0 24px 0' }}>
         <EmailButton href={experiencesUrl}>{discoverMoreCta}</EmailButton>

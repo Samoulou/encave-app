@@ -6,7 +6,15 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import Image from 'next/image';
-import { X, Camera, Wine, Clock, Users, Banknote, HelpCircle } from 'lucide-react';
+import {
+  X,
+  Camera,
+  Wine,
+  Clock,
+  Users,
+  Banknote,
+  HelpCircle,
+} from 'lucide-react';
 import {
   createExperienceSchema,
   type CreateExperienceInput,
@@ -73,7 +81,7 @@ function SectionHeader({
   description?: string;
 }) {
   return (
-    <div className="flex items-start gap-4 pb-6 border-b border-stone-200">
+    <div className="flex items-start gap-4 border-b border-stone-200 pb-6">
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-burgundy-100 text-burgundy-600">
         {icon}
       </div>
@@ -97,10 +105,14 @@ export function ExperienceForm() {
   const [coverPhoto, setCoverPhoto] = useState<string | null>(null);
   const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
-  const [uploadingGalleryIndex, setUploadingGalleryIndex] = useState<number | null>(null);
+  const [uploadingGalleryIndex, setUploadingGalleryIndex] = useState<
+    number | null
+  >(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showPublishDialog, setShowPublishDialog] = useState(false);
-  const [createdExperienceId, setCreatedExperienceId] = useState<string | null>(null);
+  const [createdExperienceId, setCreatedExperienceId] = useState<string | null>(
+    null
+  );
   const [isPublishing, setIsPublishing] = useState(false);
 
   const form = useForm<CreateExperienceInput>({
@@ -161,16 +173,22 @@ export function ExperienceForm() {
     return result.data.url;
   };
 
-  const handleCoverPhotoChange = useCallback(async (url: string | null) => {
-    // If removing and there was a previous photo, delete it
-    if (!url && coverPhoto) {
-      await deleteUploadedImage(coverPhoto);
-    }
-    setCoverPhoto(url);
-    setHasUnsavedChanges(true);
-  }, [coverPhoto]);
+  const handleCoverPhotoChange = useCallback(
+    async (url: string | null) => {
+      // If removing and there was a previous photo, delete it
+      if (!url && coverPhoto) {
+        await deleteUploadedImage(coverPhoto);
+      }
+      setCoverPhoto(url);
+      setHasUnsavedChanges(true);
+    },
+    [coverPhoto]
+  );
 
-  const handleGalleryUpload = async (file: File, index: number): Promise<string> => {
+  const handleGalleryUpload = async (
+    file: File,
+    index: number
+  ): Promise<string> => {
     setUploadingGalleryIndex(index);
     const url = await handleImageUpload(file);
 
@@ -184,44 +202,50 @@ export function ExperienceForm() {
     return url;
   };
 
-  const handleRemoveGalleryImage = async (imageId: string, imageUrl: string) => {
+  const handleRemoveGalleryImage = async (
+    imageId: string,
+    imageUrl: string
+  ) => {
     // Delete from storage
     await deleteUploadedImage(imageUrl);
     setGalleryImages((prev) => prev.filter((img) => img.id !== imageId));
     setHasUnsavedChanges(true);
   };
 
-  const onSubmit = useCallback(async (data: CreateExperienceInput) => {
-    // Validate cover photo (AC 7)
-    if (!coverPhoto) {
-      toast.error(t('pleaseUploadCover'));
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      const galleryUrls = galleryImages.map((img) => img.url);
-      const result = await createExperience(data, coverPhoto, galleryUrls);
-
-      if (result.success) {
-        toast.success(t('createdSuccessfully'), {
-          description: t('savedAsDraft'),
-          className: 'bg-cream-50 border-gold-200',
-        });
-        setHasUnsavedChanges(false);
-        // Show publish prompt dialog instead of redirecting immediately
-        setCreatedExperienceId(result.data.experienceId);
-        setShowPublishDialog(true);
-      } else {
-        toast.error(result.error.message);
+  const onSubmit = useCallback(
+    async (data: CreateExperienceInput) => {
+      // Validate cover photo (AC 7)
+      if (!coverPhoto) {
+        toast.error(t('pleaseUploadCover'));
+        return;
       }
-    } catch {
-      toast.error(tCommon('errors.somethingWentWrong'));
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [coverPhoto, galleryImages, t, tCommon]);
+
+      setIsSubmitting(true);
+
+      try {
+        const galleryUrls = galleryImages.map((img) => img.url);
+        const result = await createExperience(data, coverPhoto, galleryUrls);
+
+        if (result.success) {
+          toast.success(t('createdSuccessfully'), {
+            description: t('savedAsDraft'),
+            className: 'bg-cream-50 border-gold-200',
+          });
+          setHasUnsavedChanges(false);
+          // Show publish prompt dialog instead of redirecting immediately
+          setCreatedExperienceId(result.data.experienceId);
+          setShowPublishDialog(true);
+        } else {
+          toast.error(result.error.message);
+        }
+      } catch {
+        toast.error(tCommon('errors.somethingWentWrong'));
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [coverPhoto, galleryImages, t, tCommon]
+  );
 
   const handlePublishNow = async () => {
     if (!createdExperienceId) return;
@@ -306,7 +330,7 @@ export function ExperienceForm() {
                 {/* Remove button */}
                 <button
                   type="button"
-                  className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-red-600 shadow-lg opacity-0 transition-all hover:bg-red-50 group-hover:opacity-100"
+                  className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-red-600 opacity-0 shadow-lg transition-all hover:bg-red-50 group-hover:opacity-100"
                   onClick={() => handleCoverPhotoChange(null)}
                   aria-label={t('removeCoverPhoto')}
                 >
@@ -360,7 +384,12 @@ export function ExperienceForm() {
       <section className="space-y-6">
         <SectionHeader
           icon={
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -370,7 +399,10 @@ export function ExperienceForm() {
             </svg>
           }
           title={t('galleryPhotos')}
-          description={t('galleryPhotosDescription', { count: galleryImages.length, max: maxGalleryImages })}
+          description={t('galleryPhotosDescription', {
+            count: galleryImages.length,
+            max: maxGalleryImages,
+          })}
         />
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-6">
@@ -399,39 +431,42 @@ export function ExperienceForm() {
             </div>
           ))}
 
-          {galleryImages.length < maxGalleryImages && Array.from({ length: emptySlots }).map((_, index) => (
-            <div
-              key={`empty-${index}`}
-              className={cn(
-                'relative aspect-square overflow-hidden rounded-xl border-2 border-dashed transition-all duration-300',
-                uploadingGalleryIndex === galleryImages.length + index
-                  ? 'border-burgundy-400 bg-burgundy-50'
-                  : 'border-stone-300 bg-stone-50 hover:border-burgundy-400 hover:bg-cream-50'
-              )}
-            >
-              {uploadingGalleryIndex === galleryImages.length + index ? (
-                <div className="flex h-full w-full flex-col items-center justify-center">
-                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-burgundy-600 border-t-transparent" />
-                  <p className="mt-3 text-sm font-medium text-burgundy-600">{t('uploading')}</p>
-                </div>
-              ) : (
-                <ImageUpload
-                  value={null}
-                  onChange={() => {}}
-                  onUpload={(file) => handleGalleryUpload(file, galleryImages.length + index)}
-                  aspectRatio="1/1"
-                  placeholder=""
-                  variant="gallery-add"
-                  className="h-full w-full"
-                />
-              )}
-            </div>
-          ))}
+          {galleryImages.length < maxGalleryImages &&
+            Array.from({ length: emptySlots }).map((_, index) => (
+              <div
+                key={`empty-${index}`}
+                className={cn(
+                  'relative aspect-square overflow-hidden rounded-xl border-2 border-dashed transition-all duration-300',
+                  uploadingGalleryIndex === galleryImages.length + index
+                    ? 'border-burgundy-400 bg-burgundy-50'
+                    : 'border-stone-300 bg-stone-50 hover:border-burgundy-400 hover:bg-cream-50'
+                )}
+              >
+                {uploadingGalleryIndex === galleryImages.length + index ? (
+                  <div className="flex h-full w-full flex-col items-center justify-center">
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-burgundy-600 border-t-transparent" />
+                    <p className="mt-3 text-sm font-medium text-burgundy-600">
+                      {t('uploading')}
+                    </p>
+                  </div>
+                ) : (
+                  <ImageUpload
+                    value={null}
+                    onChange={() => {}}
+                    onUpload={(file) =>
+                      handleGalleryUpload(file, galleryImages.length + index)
+                    }
+                    aspectRatio="1/1"
+                    placeholder=""
+                    variant="gallery-add"
+                    className="h-full w-full"
+                  />
+                )}
+              </div>
+            ))}
         </div>
 
-        <p className="text-sm text-slate-500">
-          {t('galleryHelp')}
-        </p>
+        <p className="text-sm text-slate-500">{t('galleryHelp')}</p>
       </section>
 
       {/* Experience Details Form (AC 5) */}
@@ -451,7 +486,9 @@ export function ExperienceForm() {
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium">{t('title')}</FormLabel>
+                    <FormLabel className="text-base font-medium">
+                      {t('title')}
+                    </FormLabel>
                     <FormControl>
                       <Input
                         placeholder={t('titlePlaceholder')}
@@ -459,9 +496,7 @@ export function ExperienceForm() {
                         {...field}
                       />
                     </FormControl>
-                    <FormDescription>
-                      {t('titleHelp')}
-                    </FormDescription>
+                    <FormDescription>{t('titleHelp')}</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -472,8 +507,13 @@ export function ExperienceForm() {
                 name="type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium">{t('experienceType')}</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormLabel className="text-base font-medium">
+                      {t('experienceType')}
+                    </FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder={t('selectType')} />
@@ -497,7 +537,9 @@ export function ExperienceForm() {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium">{t('description')}</FormLabel>
+                    <FormLabel className="text-base font-medium">
+                      {t('description')}
+                    </FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder={t('descriptionPlaceholder')}
@@ -507,9 +549,13 @@ export function ExperienceForm() {
                     </FormControl>
                     <FormDescription className="flex justify-between">
                       <span>{t('descriptionMinRecommended')}</span>
-                      <span className={cn(
-                        descriptionLength < 20 ? 'text-amber-600' : 'text-green-600'
-                      )}>
+                      <span
+                        className={cn(
+                          descriptionLength < 20
+                            ? 'text-amber-600'
+                            : 'text-green-600'
+                        )}
+                      >
                         {t('characters', { count: descriptionLength })}
                       </span>
                     </FormDescription>
@@ -534,7 +580,9 @@ export function ExperienceForm() {
                 name="duration"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium">{t('duration')}</FormLabel>
+                    <FormLabel className="text-base font-medium">
+                      {t('duration')}
+                    </FormLabel>
                     <Select
                       onValueChange={(value) => field.onChange(parseInt(value))}
                       defaultValue={field.value?.toString()}
@@ -546,7 +594,10 @@ export function ExperienceForm() {
                       </FormControl>
                       <SelectContent>
                         {DURATION_OPTIONS.map((option) => (
-                          <SelectItem key={option.value} value={option.value.toString()}>
+                          <SelectItem
+                            key={option.value}
+                            value={option.value.toString()}
+                          >
                             {option.label}
                           </SelectItem>
                         ))}
@@ -562,13 +613,13 @@ export function ExperienceForm() {
                 name="minCapacity"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium flex items-center gap-2">
+                    <FormLabel className="flex items-center gap-2 text-base font-medium">
                       <Users className="h-4 w-4" />
                       {t('minBookingSize')}
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <HelpCircle className="h-4 w-4 text-slate-400 cursor-help" />
+                            <HelpCircle className="h-4 w-4 cursor-help text-slate-400" />
                           </TooltipTrigger>
                           <TooltipContent className="max-w-xs">
                             <p>{t('minBookingSizeTooltip')}</p>
@@ -582,7 +633,9 @@ export function ExperienceForm() {
                         min={1}
                         max={100}
                         {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                        onChange={(e) =>
+                          field.onChange(parseInt(e.target.value) || 1)
+                        }
                       />
                     </FormControl>
                     <FormMessage />
@@ -595,7 +648,7 @@ export function ExperienceForm() {
                 name="maxCapacity"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium flex items-center gap-2">
+                    <FormLabel className="flex items-center gap-2 text-base font-medium">
                       <Users className="h-4 w-4" />
                       {t('maxGuestsLabel')}
                     </FormLabel>
@@ -605,7 +658,9 @@ export function ExperienceForm() {
                         min={1}
                         max={100}
                         {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                        onChange={(e) =>
+                          field.onChange(parseInt(e.target.value) || 1)
+                        }
                       />
                     </FormControl>
                     <FormMessage />
@@ -628,7 +683,9 @@ export function ExperienceForm() {
               name="price"
               render={({ field }) => (
                 <FormItem className="max-w-xs">
-                  <FormLabel className="text-base font-medium">{t('pricePerPerson')}</FormLabel>
+                  <FormLabel className="text-base font-medium">
+                    {t('pricePerPerson')}
+                  </FormLabel>
                   <FormControl>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
@@ -641,13 +698,15 @@ export function ExperienceForm() {
                         placeholder="0"
                         className="pl-14"
                         {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)}
+                        onChange={(e) =>
+                          field.onChange(
+                            parseFloat(e.target.value) || undefined
+                          )
+                        }
                       />
                     </div>
                   </FormControl>
-                  <FormDescription>
-                    {t('priceMustBePositive')}
-                  </FormDescription>
+                  <FormDescription>{t('priceMustBePositive')}</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

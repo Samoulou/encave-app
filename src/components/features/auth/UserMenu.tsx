@@ -44,26 +44,56 @@ function getRoleMenuItems(
   switch (role) {
     case 'WINEMAKER':
       return [
-        { href: '/dashboard', label: t('viewDashboard'), icon: <LayoutDashboard className="h-4 w-4" /> },
-        { href: '/dashboard/bookings', label: t('bookings'), icon: <Calendar className="h-4 w-4" /> },
-        { href: '/dashboard/winery-profile', label: t('wineryProfile'), icon: <Grape className="h-4 w-4" /> },
-        { href: '/dashboard/settings', label: t('settings'), icon: <Settings className="h-4 w-4" /> },
+        {
+          href: '/dashboard',
+          label: t('viewDashboard'),
+          icon: <LayoutDashboard className="h-4 w-4" />,
+        },
+        {
+          href: '/dashboard/bookings',
+          label: t('bookings'),
+          icon: <Calendar className="h-4 w-4" />,
+        },
+        {
+          href: '/dashboard/winery-profile',
+          label: t('wineryProfile'),
+          icon: <Grape className="h-4 w-4" />,
+        },
+        {
+          href: '/dashboard/settings',
+          label: t('settings'),
+          icon: <Settings className="h-4 w-4" />,
+        },
       ];
     case 'ADMIN':
       return [
-        { href: '/admin', label: t('adminPanel'), icon: <Shield className="h-4 w-4" /> },
-        { href: '/dashboard', label: t('viewDashboard'), icon: <LayoutDashboard className="h-4 w-4" /> },
+        {
+          href: '/admin',
+          label: t('adminPanel'),
+          icon: <Shield className="h-4 w-4" />,
+        },
+        {
+          href: '/dashboard',
+          label: t('viewDashboard'),
+          icon: <LayoutDashboard className="h-4 w-4" />,
+        },
       ];
     case 'CLIENT':
       return [
-        { href: '/dashboard/my-bookings', label: t('myBookings'), icon: <Calendar className="h-4 w-4" /> },
+        {
+          href: '/dashboard/my-bookings',
+          label: t('myBookings'),
+          icon: <Calendar className="h-4 w-4" />,
+        },
       ];
     default:
       return [];
   }
 }
 
-function getRoleBadgeVariant(role: string | null | undefined): 'gold' | 'default' | 'secondary' {
+function getRoleBadgeVariant(
+  role: string | null | undefined
+): 'gold' | 'default' | 'secondary' {
   switch (role) {
     case 'WINEMAKER':
       return 'gold';
@@ -111,15 +141,20 @@ export function UserMenu({ userName, userRole, userEmail }: UserMenuProps) {
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center gap-2">
-              <p className="text-sm font-semibold leading-none">{displayName}</p>
+              <p className="text-sm font-semibold leading-none">
+                {displayName}
+              </p>
               {roleLabel && (
-                <Badge variant={badgeVariant} className="text-[10px] px-1.5 py-0">
+                <Badge
+                  variant={badgeVariant}
+                  className="px-1.5 py-0 text-[10px]"
+                >
                   {roleLabel}
                 </Badge>
               )}
             </div>
             {userEmail && (
-              <p className="text-xs text-muted-foreground leading-none truncate">
+              <p className="truncate text-xs leading-none text-muted-foreground">
                 {userEmail}
               </p>
             )}
@@ -137,7 +172,7 @@ export function UserMenu({ userName, userRole, userEmail }: UserMenuProps) {
         {menuItems.length > 0 && <DropdownMenuSeparator />}
         <DropdownMenuItem
           onClick={logout}
-          className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
+          className="cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive"
         >
           <LogOut className="h-4 w-4" />
           <span>{t('signOut')}</span>

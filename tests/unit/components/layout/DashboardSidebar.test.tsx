@@ -28,8 +28,12 @@ describe('DashboardSidebar', () => {
   it('renders all navigation links', () => {
     render(<DashboardSidebar wineryName="Test Winery" />);
 
-    expect(screen.getByRole('link', { name: /experiences/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /winery profile/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: /experiences/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: /winery profile/i })
+    ).toBeInTheDocument();
   });
 
   it('renders navigation links with correct hrefs', () => {
@@ -39,10 +43,9 @@ describe('DashboardSidebar', () => {
       'href',
       '/dashboard/experiences'
     );
-    expect(screen.getByRole('link', { name: /winery profile/i })).toHaveAttribute(
-      'href',
-      '/dashboard/winery/profile'
-    );
+    expect(
+      screen.getByRole('link', { name: /winery profile/i })
+    ).toHaveAttribute('href', '/dashboard/winery/profile');
   });
 
   it('shows active state for current route', () => {
@@ -94,6 +97,8 @@ describe('DashboardSidebar', () => {
     render(<DashboardSidebar wineryName="Test Winery" />);
 
     expect(screen.getByRole('complementary')).toBeInTheDocument();
-    expect(screen.getByRole('navigation', { name: /dashboard navigation/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('navigation', { name: /dashboard navigation/i })
+    ).toBeInTheDocument();
   });
 });

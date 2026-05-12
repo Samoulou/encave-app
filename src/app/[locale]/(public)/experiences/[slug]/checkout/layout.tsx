@@ -8,9 +8,7 @@ export default function CheckoutLayout({
   return (
     <div className="min-h-screen bg-cream-50">
       <Header />
-      <main id="main-content">
-        {children}
-      </main>
+      <main id="main-content">{children}</main>
     </div>
   );
 }

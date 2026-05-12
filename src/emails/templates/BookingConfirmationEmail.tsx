@@ -56,8 +56,18 @@ export function BookingConfirmationEmail({
   const priceLabel = t(common.price, locale);
 
   return (
-    <EmailLayout locale={locale} preview={t(subjects.bookingConfirmation, locale)}>
-      <Text style={{ fontSize: '24px', fontWeight: 'bold', color: '#7c2d12', margin: '0 0 16px 0' }}>
+    <EmailLayout
+      locale={locale}
+      preview={t(subjects.bookingConfirmation, locale)}
+    >
+      <Text
+        style={{
+          fontSize: '24px',
+          fontWeight: 'bold',
+          color: '#7c2d12',
+          margin: '0 0 16px 0',
+        }}
+      >
         {title}
       </Text>
 
@@ -65,9 +75,7 @@ export function BookingConfirmationEmail({
         {greeting} {guestName},
       </Text>
 
-      <Text style={{ margin: '0 0 24px 0' }}>
-        {intro}
-      </Text>
+      <Text style={{ margin: '0 0 24px 0' }}>{intro}</Text>
 
       <Section
         style={{
@@ -77,43 +85,84 @@ export function BookingConfirmationEmail({
           margin: '0 0 24px 0',
         }}
       >
-        <Text style={{ fontSize: '16px', fontWeight: 'bold', margin: '0 0 16px 0', color: '#7c2d12' }}>
+        <Text
+          style={{
+            fontSize: '16px',
+            fontWeight: 'bold',
+            margin: '0 0 16px 0',
+            color: '#7c2d12',
+          }}
+        >
           {details}
         </Text>
 
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <tbody>
             <tr>
-              <td style={{ padding: '8px 0', color: '#6b7280', width: '40%' }}>{bookingRefLabel}</td>
-              <td style={{ padding: '8px 0', fontWeight: 'bold' }}>{bookingRef}</td>
+              <td style={{ padding: '8px 0', color: '#6b7280', width: '40%' }}>
+                {bookingRefLabel}
+              </td>
+              <td style={{ padding: '8px 0', fontWeight: 'bold' }}>
+                {bookingRef}
+              </td>
             </tr>
             <tr>
-              <td style={{ padding: '8px 0', color: '#6b7280' }}>{experienceLabel}</td>
-              <td style={{ padding: '8px 0', fontWeight: '500' }}>{experienceTitle}</td>
+              <td style={{ padding: '8px 0', color: '#6b7280' }}>
+                {experienceLabel}
+              </td>
+              <td style={{ padding: '8px 0', fontWeight: '500' }}>
+                {experienceTitle}
+              </td>
             </tr>
             <tr>
-              <td style={{ padding: '8px 0', color: '#6b7280' }}>{wineryLabel}</td>
+              <td style={{ padding: '8px 0', color: '#6b7280' }}>
+                {wineryLabel}
+              </td>
               <td style={{ padding: '8px 0' }}>{wineryName}</td>
             </tr>
             <tr>
-              <td style={{ padding: '8px 0', color: '#6b7280' }}>{dateLabel}</td>
-              <td style={{ padding: '8px 0' }}>{formatEmailDate(date, locale)}</td>
+              <td style={{ padding: '8px 0', color: '#6b7280' }}>
+                {dateLabel}
+              </td>
+              <td style={{ padding: '8px 0' }}>
+                {formatEmailDate(date, locale)}
+              </td>
             </tr>
             <tr>
-              <td style={{ padding: '8px 0', color: '#6b7280' }}>{timeLabel}</td>
-              <td style={{ padding: '8px 0' }}>{formatEmailTime(date, locale)}</td>
+              <td style={{ padding: '8px 0', color: '#6b7280' }}>
+                {timeLabel}
+              </td>
+              <td style={{ padding: '8px 0' }}>
+                {formatEmailTime(date, locale)}
+              </td>
             </tr>
             <tr>
-              <td style={{ padding: '8px 0', color: '#6b7280' }}>{guestsLabel}</td>
-              <td style={{ padding: '8px 0' }}>{formatEmailGuests(guestCount, locale)}</td>
+              <td style={{ padding: '8px 0', color: '#6b7280' }}>
+                {guestsLabel}
+              </td>
+              <td style={{ padding: '8px 0' }}>
+                {formatEmailGuests(guestCount, locale)}
+              </td>
             </tr>
             <tr>
-              <td style={{ padding: '8px 0', color: '#6b7280' }}>{durationLabel}</td>
-              <td style={{ padding: '8px 0' }}>{formatEmailDuration(duration, locale)}</td>
+              <td style={{ padding: '8px 0', color: '#6b7280' }}>
+                {durationLabel}
+              </td>
+              <td style={{ padding: '8px 0' }}>
+                {formatEmailDuration(duration, locale)}
+              </td>
             </tr>
             <tr>
-              <td style={{ padding: '8px 0', color: '#6b7280' }}>{priceLabel}</td>
-              <td style={{ padding: '8px 0', fontWeight: 'bold', color: '#7c2d12' }}>
+              <td style={{ padding: '8px 0', color: '#6b7280' }}>
+                {priceLabel}
+              </td>
+              <td
+                style={{
+                  padding: '8px 0',
+                  fontWeight: 'bold',
+                  color: '#7c2d12',
+                }}
+              >
                 {formatEmailPrice(totalPrice)}
               </td>
             </tr>

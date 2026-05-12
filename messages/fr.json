@@ -1692,5 +1692,95 @@
       "saved": "Profil mis à jour avec succès",
       "error": "Échec de la mise à jour du profil. Veuillez réessayer."
     }
+  },
+  "Dashboard": {
+    "eventDetail": {
+      "title": "Détail de l'événement",
+      "breadcrumb": "Dashboard / Événements / {title}",
+      "status": {
+        "draft": "Brouillon",
+        "published": "Publié",
+        "archived": "Archivé"
+      },
+      "sections": {
+        "today": "Aujourd'hui",
+        "upcoming": "Sessions à venir",
+        "past": "Sessions passées",
+        "cancelled": "Sessions annulées"
+      },
+      "summary": {
+        "active": "{confirmed} / {total} places sur {sessions, plural, =1 {1 session active} other {# sessions actives}}"
+      },
+      "session": {
+        "capacity": "{confirmed} / {total} places",
+        "empty": "Aucune réservation pour cette session",
+        "emptyCancelled": "Aucune session annulée",
+        "live": "En cours",
+        "fullBadge": "Complet"
+      },
+      "actions": {
+        "scanQr": "Scanner les QR codes",
+        "scanDisabled": "Disponible le jour de l'événement",
+        "contactAll": "Contacter les inscrits",
+        "contactAllSoon": "Bientôt disponible",
+        "revertCheckIn": "Annuler le check-in",
+        "revertNoShow": "Annuler le no-show",
+        "markPresent": "Marquer présent",
+        "markNoShow": "Marquer no-show",
+        "markNoShowDisabled": "Disponible après la fin de la session",
+        "openMenu": "Ouvrir le menu d'actions"
+      },
+      "columns": {
+        "client": "Client",
+        "partySize": "Personnes",
+        "reference": "Référence",
+        "status": "Statut",
+        "checkIn": "Check-in",
+        "actions": "Actions"
+      },
+      "bookingStatus": {
+        "confirmed": "Confirmée",
+        "completed": "Présent",
+        "noShow": "Absent (no-show)",
+        "cancelledByClient": "Annulée par le client",
+        "cancelledByWinery": "Annulée par vos soins"
+      },
+      "checkIn": {
+        "at": "Présent à {time}",
+        "none": "—"
+      },
+      "partySize": {
+        "inline": "{count, plural, =1 {1 personne} other {# personnes}}"
+      },
+      "banner": {
+        "draft": "Cet événement n'est pas publié. Aucun client ne peut le voir.",
+        "archived": "Événement archivé. Lecture seule."
+      },
+      "empty": {
+        "title": "Vous n'avez pas encore programmé de sessions",
+        "cta": "Ajouter une session"
+      },
+      "errors": {
+        "notOwner": "Vous n'avez pas accès à cet événement.",
+        "loadFailed": "Impossible de charger l'événement. Réessayez dans un instant."
+      },
+      "toast": {
+        "checkedIn": "Présence enregistrée.",
+        "noShow": "No-show enregistré.",
+        "revertedCheckIn": "Check-in annulé.",
+        "revertedNoShow": "No-show annulé.",
+        "error": "Action impossible pour le moment."
+      },
+      "confirm": {
+        "markNoShowTitle": "Marquer ce client comme absent ?",
+        "markNoShowDescription": "Le statut passera à No-show. Vous pourrez annuler cette action depuis la même page.",
+        "revertCheckInTitle": "Annuler le check-in ?",
+        "revertCheckInDescription": "Le statut repassera à Confirmée. L'action est tracée.",
+        "revertNoShowTitle": "Annuler le no-show ?",
+        "revertNoShowDescription": "Le statut repassera à Confirmée. L'action est tracée.",
+        "confirmCta": "Confirmer",
+        "cancelCta": "Retour"
+      }
+    }
   }
 }

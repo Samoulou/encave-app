@@ -26,10 +26,18 @@ export function BookingCTA({ price, stripeConnected }: BookingCTAProps) {
   };
 
   return (
-    <div className="rounded-xl bg-white p-6 shadow-warm" data-testid="booking-cta">
+    <div
+      className="rounded-xl bg-white p-6 shadow-warm"
+      data-testid="booking-cta"
+    >
       {/* Price */}
       <div className="text-center">
-        <p className="text-3xl font-bold text-slate-900" data-testid="experience-price">{formatCHF(price)}</p>
+        <p
+          className="text-3xl font-bold text-slate-900"
+          data-testid="experience-price"
+        >
+          {formatCHF(price)}
+        </p>
         <p className="text-sm text-slate-500">{t('perPerson')}</p>
       </div>
 
@@ -75,9 +83,7 @@ export function BookingCTA({ price, stripeConnected }: BookingCTAProps) {
           <p className="text-sm font-medium text-gold-900">
             {t('comingSoonTitle')}
           </p>
-          <p className="mt-1 text-xs text-gold-700">
-            {t('contactWinery')}
-          </p>
+          <p className="mt-1 text-xs text-gold-700">{t('contactWinery')}</p>
         </div>
       )}
     </div>

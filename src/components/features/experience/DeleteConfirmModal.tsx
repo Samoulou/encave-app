@@ -40,7 +40,9 @@ export function DeleteConfirmModal({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>{tCommon('buttons.cancel')}</AlertDialogCancel>
+          <AlertDialogCancel disabled={isPending}>
+            {tCommon('buttons.cancel')}
+          </AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             disabled={isPending}

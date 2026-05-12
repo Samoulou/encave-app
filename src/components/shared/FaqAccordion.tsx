@@ -24,7 +24,7 @@ export function FaqAccordion({ items }: FaqAccordionProps) {
           <AccordionTrigger className="text-left font-display text-lg font-medium text-slate-900 hover:text-burgundy-700">
             {item.question}
           </AccordionTrigger>
-          <AccordionContent className="text-slate-700 leading-relaxed">
+          <AccordionContent className="leading-relaxed text-slate-700">
             {item.answer}
           </AccordionContent>
         </AccordionItem>

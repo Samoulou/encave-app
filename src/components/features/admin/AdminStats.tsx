@@ -16,21 +16,34 @@ interface StatCardProps {
   textColor: string;
 }
 
-function StatCard({ value, label, borderColor, bgColor, textColor }: StatCardProps) {
+function StatCard({
+  value,
+  label,
+  borderColor,
+  bgColor,
+  textColor,
+}: StatCardProps) {
   return (
     <Card className={cn('relative overflow-hidden', bgColor)}>
-      <div className={cn('absolute left-0 top-0 bottom-0 w-1.5', borderColor)} />
+      <div
+        className={cn('absolute bottom-0 left-0 top-0 w-1.5', borderColor)}
+      />
       <CardContent className="p-6">
         <p className={cn('text-4xl font-bold', textColor)}>{value}</p>
-        <p className="text-sm text-slate-600 mt-1">{label}</p>
+        <p className="mt-1 text-sm text-slate-600">{label}</p>
       </CardContent>
     </Card>
   );
 }
 
-export function AdminStats({ pending, verified, rejected, total }: AdminStatsProps) {
+export function AdminStats({
+  pending,
+  verified,
+  rejected,
+  total,
+}: AdminStatsProps) {
   return (
-    <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
       <StatCard
         value={pending}
         label="Pending Review"

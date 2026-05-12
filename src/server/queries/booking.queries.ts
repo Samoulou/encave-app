@@ -16,7 +16,9 @@ import {
  * ensure our queries use UTC-normalized dates to avoid timezone issues.
  */
 function localDateToUTC(date: Date): Date {
-  return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  return new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+  );
 }
 
 export interface BookingFilters {
@@ -109,14 +111,22 @@ export const getWineryBookings = cache(async function getWineryBookings(
     const searchTerm = filters.search.trim();
     where.OR = [
       { visitorName: { contains: searchTerm, mode: 'insensitive' } },
-      { reference: { contains: searchTerm.toUpperCase(), mode: 'insensitive' } },
+      {
+        reference: { contains: searchTerm.toUpperCase(), mode: 'insensitive' },
+      },
     ];
   }
 
   // Determine sort order
   const orderBy: Prisma.BookingOrderByWithRelationInput = {};
   if (sort) {
-    orderBy[sort.field === 'totalPrice' ? 'totalPrice' : sort.field === 'guestCount' ? 'guestCount' : 'date'] = sort.direction;
+    orderBy[
+      sort.field === 'totalPrice'
+        ? 'totalPrice'
+        : sort.field === 'guestCount'
+          ? 'guestCount'
+          : 'date'
+    ] = sort.direction;
   } else {
     // Default: upcoming first (date asc), but show past at bottom
     orderBy.date = 'asc';
@@ -158,7 +168,9 @@ export const getWineryBookings = cache(async function getWineryBookings(
  * Get summary statistics for dashboard cards.
  * Wrapped with React.cache for request-level deduplication.
  */
-export const getBookingSummary = cache(async function getBookingSummary(wineryId: string): Promise<BookingSummary> {
+export const getBookingSummary = cache(async function getBookingSummary(
+  wineryId: string
+): Promise<BookingSummary> {
   const now = new Date();
 
   // Use local-to-UTC conversion for database comparison
@@ -238,63 +250,67 @@ export const getBookingSummary = cache(async function getBookingSummary(wineryId
  * Get distinct experiences for filter dropdown.
  * Wrapped with React.cache for request-level deduplication.
  */
-export const getWineryExperiencesForFilter = cache(async function getWineryExperiencesForFilter(
-  wineryId: string
-): Promise<ExperienceOption[]> {
-  const experiences = await db.experience.findMany({
-    where: { wineryId },
-    select: {
-      id: true,
-      title: true,
-    },
-    orderBy: { title: 'asc' },
-  });
+export const getWineryExperiencesForFilter = cache(
+  async function getWineryExperiencesForFilter(
+    wineryId: string
+  ): Promise<ExperienceOption[]> {
+    const experiences = await db.experience.findMany({
+      where: { wineryId },
+      select: {
+        id: true,
+        title: true,
+      },
+      orderBy: { title: 'asc' },
+    });
 
-  return experiences;
-});
+    return experiences;
+  }
+);
 
 /**
  * Get booking history for a specific client with a winery.
  * Wrapped with React.cache for request-level deduplication.
  */
-export const getClientHistoryWithWinery = cache(async function getClientHistoryWithWinery(
-  wineryId: string,
-  visitorEmail: string
-): Promise<BookingWithExperience[]> {
-  const bookings = await db.booking.findMany({
-    where: {
-      wineryId,
-      visitorEmail: { equals: visitorEmail, mode: 'insensitive' },
-    },
-    orderBy: { date: 'desc' },
-    select: {
-      id: true,
-      reference: true,
-      visitorEmail: true,
-      visitorName: true,
-      visitorPhone: true,
-      date: true,
-      timeSlot: true,
-      guestCount: true,
-      totalPrice: true,
-      wineryPayout: true,
-      status: true,
-      cancelledAt: true,
-      refundIssued: true,
-      refundAmount: true,
-      createdAt: true,
-      experience: {
-        select: {
-          id: true,
-          title: true,
-          slug: true,
+export const getClientHistoryWithWinery = cache(
+  async function getClientHistoryWithWinery(
+    wineryId: string,
+    visitorEmail: string
+  ): Promise<BookingWithExperience[]> {
+    const bookings = await db.booking.findMany({
+      where: {
+        wineryId,
+        visitorEmail: { equals: visitorEmail, mode: 'insensitive' },
+      },
+      orderBy: { date: 'desc' },
+      select: {
+        id: true,
+        reference: true,
+        visitorEmail: true,
+        visitorName: true,
+        visitorPhone: true,
+        date: true,
+        timeSlot: true,
+        guestCount: true,
+        totalPrice: true,
+        wineryPayout: true,
+        status: true,
+        cancelledAt: true,
+        refundIssued: true,
+        refundAmount: true,
+        createdAt: true,
+        experience: {
+          select: {
+            id: true,
+            title: true,
+            slug: true,
+          },
         },
       },
-    },
-  });
+    });
 
-  return bookings;
-});
+    return bookings;
+  }
+);
 
 /**
  * Get a single booking with full details for the winery owner.

@@ -1,13 +1,21 @@
 import { db } from '@/server/db';
 import { BookingStatus, ExperienceType } from '@prisma/client';
-import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays } from 'date-fns';
+import {
+  startOfMonth,
+  endOfMonth,
+  startOfWeek,
+  endOfWeek,
+  addDays,
+} from 'date-fns';
 
 /**
  * Convert a local date to UTC date, preserving the local date components.
  * This ensures that dates in local time map to the correct database date.
  */
 function localDateToUTC(date: Date): Date {
-  return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  return new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+  );
 }
 
 /**
@@ -69,9 +77,10 @@ export async function getCalendarData(
   statusFilter?: BookingStatus[]
 ): Promise<Map<string, CalendarDayData>> {
   // Default to showing confirmed and completed bookings
-  const statuses = statusFilter && statusFilter.length > 0
-    ? statusFilter
-    : [BookingStatus.CONFIRMED, BookingStatus.COMPLETED];
+  const statuses =
+    statusFilter && statusFilter.length > 0
+      ? statusFilter
+      : [BookingStatus.CONFIRMED, BookingStatus.COMPLETED];
 
   // Normalize dates to UTC for consistent database comparison
   // Use lt instead of lte for endDate to include the full end day

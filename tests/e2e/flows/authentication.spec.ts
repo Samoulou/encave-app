@@ -45,7 +45,9 @@ const INVALID_PASSWORDS = {
 
 test.describe('Authentification - Login', () => {
   test.describe('Login réussi', () => {
-    test('un CLIENT peut se connecter et est redirigé vers /dashboard', async ({ page }) => {
+    test('un CLIENT peut se connecter et est redirigé vers /dashboard', async ({
+      page,
+    }) => {
       const loginPage = new LoginPage(page);
 
       await loginPage.navigate();
@@ -59,7 +61,9 @@ test.describe('Authentification - Login', () => {
       await expect(page).toHaveURL(/\/dashboard$/);
     });
 
-    test('un WINEMAKER peut se connecter et est redirigé vers /dashboard/bookings', async ({ page }) => {
+    test('un WINEMAKER peut se connecter et est redirigé vers /dashboard/bookings', async ({
+      page,
+    }) => {
       const loginPage = new LoginPage(page);
 
       await loginPage.navigate();
@@ -73,7 +77,9 @@ test.describe('Authentification - Login', () => {
       await expect(page).toHaveURL(/\/dashboard\/bookings/);
     });
 
-    test('un ADMIN peut se connecter et est redirigé vers /admin', async ({ page }) => {
+    test('un ADMIN peut se connecter et est redirigé vers /admin', async ({
+      page,
+    }) => {
       const loginPage = new LoginPage(page);
 
       await loginPage.navigate();
@@ -87,7 +93,9 @@ test.describe('Authentification - Login', () => {
       await expect(page).toHaveURL(/\/admin/);
     });
 
-    test('le callbackUrl redirige vers la page demandée après login', async ({ page }) => {
+    test('le callbackUrl redirige vers la page demandée après login', async ({
+      page,
+    }) => {
       const loginPage = new LoginPage(page);
       const targetUrl = '/experiences';
 
@@ -104,7 +112,9 @@ test.describe('Authentification - Login', () => {
   });
 
   test.describe('Login échoué', () => {
-    test('affiche une erreur avec des credentials invalides', async ({ page }) => {
+    test('affiche une erreur avec des credentials invalides', async ({
+      page,
+    }) => {
       const loginPage = new LoginPage(page);
 
       await loginPage.navigate();
@@ -121,7 +131,9 @@ test.describe('Authentification - Login', () => {
       await expect(page).toHaveURL(/\/login/);
     });
 
-    test('affiche une erreur avec un mot de passe incorrect', async ({ page }) => {
+    test('affiche une erreur avec un mot de passe incorrect', async ({
+      page,
+    }) => {
       const loginPage = new LoginPage(page);
 
       await loginPage.navigate();
@@ -151,7 +163,9 @@ test.describe('Authentification - Login', () => {
   });
 
   test.describe('UI Login', () => {
-    test('le lien "Créer un compte" redirige vers /register', async ({ page }) => {
+    test('le lien "Créer un compte" redirige vers /register', async ({
+      page,
+    }) => {
       const loginPage = new LoginPage(page);
 
       await loginPage.navigate();
@@ -160,7 +174,9 @@ test.describe('Authentification - Login', () => {
       await expect(page).toHaveURL(/\/register/);
     });
 
-    test('le bouton afficher/masquer mot de passe fonctionne', async ({ page }) => {
+    test('le bouton afficher/masquer mot de passe fonctionne', async ({
+      page,
+    }) => {
       const loginPage = new LoginPage(page);
 
       await loginPage.navigate();
@@ -173,7 +189,9 @@ test.describe('Authentification - Login', () => {
       await loginPage.togglePasswordVisibility();
 
       // Maintenant le type devrait être 'text'
-      const passwordField = page.locator('input[autocomplete="current-password"]');
+      const passwordField = page.locator(
+        'input[autocomplete="current-password"]'
+      );
       await expect(passwordField).toHaveAttribute('type', 'text');
     });
   });
@@ -185,7 +203,7 @@ test.describe('Authentification - Login', () => {
 
 test.describe('Authentification - Register', () => {
   test.describe('Registration réussie', () => {
-    test('un nouveau CLIENT peut s\'inscrire', async ({ page }) => {
+    test("un nouveau CLIENT peut s'inscrire", async ({ page }) => {
       const registerPage = new RegisterPage(page);
       const uniqueEmail = generateUniqueEmail();
 
@@ -203,7 +221,7 @@ test.describe('Authentification - Register', () => {
       await expect(page).toHaveURL(/\/dashboard/);
     });
 
-    test('un nouveau WINEMAKER peut s\'inscrire', async ({ page }) => {
+    test("un nouveau WINEMAKER peut s'inscrire", async ({ page }) => {
       const registerPage = new RegisterPage(page);
       const uniqueEmail = generateUniqueEmail();
 
@@ -221,7 +239,9 @@ test.describe('Authentification - Register', () => {
       await expect(page).toHaveURL(/\/onboarding\/winery/);
     });
 
-    test('le paramètre ?winemaker=true pré-coche la checkbox', async ({ page }) => {
+    test('le paramètre ?winemaker=true pré-coche la checkbox', async ({
+      page,
+    }) => {
       const registerPage = new RegisterPage(page);
 
       await registerPage.navigate(true); // asWinemaker = true
@@ -263,7 +283,9 @@ test.describe('Authentification - Register', () => {
       await expect(page).toHaveURL(/\/register/);
     });
 
-    test('refuse si les mots de passe ne correspondent pas', async ({ page }) => {
+    test('refuse si les mots de passe ne correspondent pas', async ({
+      page,
+    }) => {
       const registerPage = new RegisterPage(page);
 
       await registerPage.navigate();
@@ -323,7 +345,7 @@ test.describe('Authentification - Register', () => {
       await expect(page).toHaveURL(/\/login/);
     });
 
-    test('l\'indice de mot de passe est visible', async ({ page }) => {
+    test("l'indice de mot de passe est visible", async ({ page }) => {
       const registerPage = new RegisterPage(page);
 
       await registerPage.navigate();
@@ -340,7 +362,9 @@ test.describe('Authentification - Register', () => {
 // ============================================================
 
 test.describe('Routes protégées', () => {
-  test('un utilisateur non connecté est redirigé vers /login depuis /dashboard', async ({ page }) => {
+  test('un utilisateur non connecté est redirigé vers /login depuis /dashboard', async ({
+    page,
+  }) => {
     // Tenter d'accéder au dashboard sans être connecté
     await page.goto('/dashboard');
 
@@ -350,25 +374,33 @@ test.describe('Routes protégées', () => {
     expect(url.searchParams.get('callbackUrl')).toContain('/dashboard');
   });
 
-  test('un utilisateur non connecté est redirigé vers /login depuis /dashboard/bookings', async ({ page }) => {
+  test('un utilisateur non connecté est redirigé vers /login depuis /dashboard/bookings', async ({
+    page,
+  }) => {
     await page.goto('/dashboard/bookings');
 
     await expect(page).toHaveURL(/\/login/);
   });
 
-  test('un utilisateur non connecté est redirigé vers /login depuis /admin', async ({ page }) => {
+  test('un utilisateur non connecté est redirigé vers /login depuis /admin', async ({
+    page,
+  }) => {
     await page.goto('/admin');
 
     await expect(page).toHaveURL(/\/login/);
   });
 
-  test('un utilisateur non connecté est redirigé vers /login depuis /onboarding/winery', async ({ page }) => {
+  test('un utilisateur non connecté est redirigé vers /login depuis /onboarding/winery', async ({
+    page,
+  }) => {
     await page.goto('/onboarding/winery');
 
     await expect(page).toHaveURL(/\/login/);
   });
 
-  test('les pages publiques sont accessibles sans connexion', async ({ page }) => {
+  test('les pages publiques sont accessibles sans connexion', async ({
+    page,
+  }) => {
     // Page d'accueil
     await page.goto('/');
     await expect(page).not.toHaveURL(/\/login/);
@@ -382,7 +414,9 @@ test.describe('Routes protégées', () => {
     await expect(page).not.toHaveURL(/\/login/);
   });
 
-  test('un utilisateur connecté est redirigé depuis /login vers la page d\'accueil', async ({ page }) => {
+  test("un utilisateur connecté est redirigé depuis /login vers la page d'accueil", async ({
+    page,
+  }) => {
     const loginPage = new LoginPage(page);
 
     // D'abord se connecter
@@ -419,7 +453,8 @@ test.describe('Logout', () => {
 
     // Chercher et cliquer sur le bouton de déconnexion
     // Ouvrir le menu utilisateur si présent
-    const userMenuButton = page.getByTestId('user-menu')
+    const userMenuButton = page
+      .getByTestId('user-menu')
       .or(page.getByRole('button', { name: /account|profile|compte|menu/i }));
 
     if (await userMenuButton.isVisible()) {
@@ -427,7 +462,8 @@ test.describe('Logout', () => {
     }
 
     // Cliquer sur déconnexion
-    const logoutButton = page.getByRole('menuitem', { name: /log out|sign out|déconnexion/i })
+    const logoutButton = page
+      .getByRole('menuitem', { name: /log out|sign out|déconnexion/i })
       .or(page.getByRole('button', { name: /log out|sign out|déconnexion/i }))
       .or(page.getByRole('link', { name: /log out|sign out|déconnexion/i }));
 
@@ -438,7 +474,9 @@ test.describe('Logout', () => {
     await expect(page).toHaveURL(/\/login/);
   });
 
-  test('après déconnexion, les routes protégées ne sont plus accessibles', async ({ page }) => {
+  test('après déconnexion, les routes protégées ne sont plus accessibles', async ({
+    page,
+  }) => {
     const loginPage = new LoginPage(page);
 
     // Se connecter
@@ -451,9 +489,12 @@ test.describe('Logout', () => {
 
     // Se déconnecter via l'API directement (plus fiable)
     await page.goto('/api/auth/signout');
-    await page.getByRole('button', { name: /sign out/i }).click().catch(() => {
-      // Si pas de confirmation, continuer
-    });
+    await page
+      .getByRole('button', { name: /sign out/i })
+      .click()
+      .catch(() => {
+        // Si pas de confirmation, continuer
+      });
 
     // Attendre un peu pour que la session soit invalidée
     await page.waitForTimeout(1000);
@@ -513,7 +554,7 @@ test.describe('Persistance de session', () => {
 // ROLE-BASED ACCESS TESTS
 // ============================================================
 
-test.describe('Contrôle d\'accès basé sur les rôles', () => {
+test.describe("Contrôle d'accès basé sur les rôles", () => {
   test('un CLIENT ne peut pas accéder à /admin', async ({ page }) => {
     const loginPage = new LoginPage(page);
 
@@ -530,11 +571,18 @@ test.describe('Contrôle d\'accès basé sur les rôles', () => {
 
     // Doit être redirigé ou voir une erreur 403
     const url = page.url();
-    const isBlocked = !url.includes('/admin') || (await page.locator('text=/access denied|forbidden|403/i').isVisible().catch(() => false));
+    const isBlocked =
+      !url.includes('/admin') ||
+      (await page
+        .locator('text=/access denied|forbidden|403/i')
+        .isVisible()
+        .catch(() => false));
     expect(isBlocked).toBe(true);
   });
 
-  test('un WINEMAKER peut accéder à /dashboard/experiences', async ({ page }) => {
+  test('un WINEMAKER peut accéder à /dashboard/experiences', async ({
+    page,
+  }) => {
     const loginPage = new LoginPage(page);
 
     // Se connecter en tant que WINEMAKER

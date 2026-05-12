@@ -85,7 +85,11 @@ export function CheckoutForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" data-testid="checkout-form">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="space-y-6"
+      data-testid="checkout-form"
+    >
       {/* Name */}
       <div className="space-y-2">
         <Label htmlFor="name">{t('name')}</Label>
@@ -97,7 +101,9 @@ export function CheckoutForm({
           disabled={isSubmitting}
         />
         {errors.name && (
-          <p className="text-sm text-red-500" data-testid="name-error">{errors.name.message}</p>
+          <p className="text-sm text-red-500" data-testid="name-error">
+            {errors.name.message}
+          </p>
         )}
       </div>
 
@@ -113,7 +119,9 @@ export function CheckoutForm({
           disabled={isSubmitting}
         />
         {errors.email && (
-          <p className="text-sm text-red-500" data-testid="email-error">{errors.email.message}</p>
+          <p className="text-sm text-red-500" data-testid="email-error">
+            {errors.email.message}
+          </p>
         )}
         <p className="text-xs text-slate-500">{t('emailHelp')}</p>
       </div>
@@ -130,7 +138,9 @@ export function CheckoutForm({
           disabled={isSubmitting}
         />
         {errors.phone && (
-          <p className="text-sm text-red-500" data-testid="phone-error">{errors.phone.message}</p>
+          <p className="text-sm text-red-500" data-testid="phone-error">
+            {errors.phone.message}
+          </p>
         )}
         <p className="text-xs text-slate-500">{t('phoneHelp')}</p>
       </div>

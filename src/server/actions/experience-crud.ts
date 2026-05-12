@@ -9,7 +9,10 @@ import {
 import { generateSlug, ensureUniqueSlug } from '@/lib/utils/slug';
 import type { ActionResult } from '@/types/actions';
 import { logError } from '@/lib/logger';
-import { invalidateExperienceCaches, createExperienceSlugChecker } from './experience-helpers';
+import {
+  invalidateExperienceCaches,
+  createExperienceSlugChecker,
+} from './experience-helpers';
 
 /**
  * Create a new experience for the current user's winery
@@ -66,12 +69,24 @@ export async function createExperience(
       };
     }
 
-    const { title, type, description, duration, price, minCapacity, maxCapacity, location, availabilitySlots } =
-      validated.data;
+    const {
+      title,
+      type,
+      description,
+      duration,
+      price,
+      minCapacity,
+      maxCapacity,
+      location,
+      availabilitySlots,
+    } = validated.data;
 
     // 4. Generate unique slug within winery (AC 9)
     const baseSlug = generateSlug(title);
-    const slug = await ensureUniqueSlug(baseSlug, createExperienceSlugChecker(winery.id));
+    const slug = await ensureUniqueSlug(
+      baseSlug,
+      createExperienceSlugChecker(winery.id)
+    );
 
     // 5. Convert price to cents for storage
     const priceInCents = Math.round(price * 100);
@@ -85,7 +100,15 @@ export async function createExperience(
 
     // Helper to convert day string to number (0 = Sunday, 6 = Saturday)
     const dayToNumber = (day: string): number => {
-      const days: Record<string, number> = { SUN: 0, MON: 1, TUE: 2, WED: 3, THU: 4, FRI: 5, SAT: 6 };
+      const days: Record<string, number> = {
+        SUN: 0,
+        MON: 1,
+        TUE: 2,
+        WED: 3,
+        THU: 4,
+        FRI: 5,
+        SAT: 6,
+      };
       return days[day] ?? 0;
     };
 
@@ -125,7 +148,13 @@ export async function createExperience(
 
       // Add availability slots if provided
       if (availabilitySlots && availabilitySlots.length > 0) {
-        const slotsToCreate: { experienceId: string; dayOfWeek: number; startTime: string; endTime: string; isActive: boolean }[] = [];
+        const slotsToCreate: {
+          experienceId: string;
+          dayOfWeek: number;
+          startTime: string;
+          endTime: string;
+          isActive: boolean;
+        }[] = [];
 
         for (const slot of availabilitySlots) {
           for (const day of slot.days) {
@@ -227,14 +256,24 @@ export async function updateExperience(
       };
     }
 
-    const { title, type, description, duration, price, minCapacity, maxCapacity } =
-      validated.data;
+    const {
+      title,
+      type,
+      description,
+      duration,
+      price,
+      minCapacity,
+      maxCapacity,
+    } = validated.data;
 
     // Generate new slug if title changed
     let slug = existingExperience.slug;
     if (title !== existingExperience.title) {
       const baseSlug = generateSlug(title);
-      slug = await ensureUniqueSlug(baseSlug, createExperienceSlugChecker(winery.id));
+      slug = await ensureUniqueSlug(
+        baseSlug,
+        createExperienceSlugChecker(winery.id)
+      );
     }
 
     // Convert price to cents
@@ -295,7 +334,10 @@ export async function updateExperience(
       data: { experienceId: experience.id, slug: experience.slug },
     };
   } catch (error) {
-    logError('updateExperience error', error, { action: 'updateExperience', experienceId });
+    logError('updateExperience error', error, {
+      action: 'updateExperience',
+      experienceId,
+    });
     return {
       success: false,
       error: {
@@ -361,7 +403,8 @@ export async function deleteExperience(
         success: false,
         error: {
           code: 'VALIDATION_ERROR',
-          message: 'Cannot delete experience with active bookings. Archive it instead.',
+          message:
+            'Cannot delete experience with active bookings. Archive it instead.',
         },
       };
     }
@@ -379,7 +422,10 @@ export async function deleteExperience(
       data: { deleted: true },
     };
   } catch (error) {
-    logError('deleteExperience error', error, { action: 'deleteExperience', experienceId });
+    logError('deleteExperience error', error, {
+      action: 'deleteExperience',
+      experienceId,
+    });
     return {
       success: false,
       error: {
@@ -393,20 +439,20 @@ export async function deleteExperience(
 /**
  * Get a single experience for editing
  */
-export async function getExperienceForEdit(
-  experienceId: string
-): Promise<ActionResult<{
-  id: string;
-  title: string;
-  type: string;
-  description: string;
-  duration: number;
-  price: number;
-  minCapacity: number;
-  maxCapacity: number;
-  coverPhoto: string;
-  galleryImages: { id: string; url: string; order: number }[];
-}>> {
+export async function getExperienceForEdit(experienceId: string): Promise<
+  ActionResult<{
+    id: string;
+    title: string;
+    type: string;
+    description: string;
+    duration: number;
+    price: number;
+    minCapacity: number;
+    maxCapacity: number;
+    coverPhoto: string;
+    galleryImages: { id: string; url: string; order: number }[];
+  }>
+> {
   try {
     const session = await auth();
     if (!session?.user) {
@@ -460,7 +506,10 @@ export async function getExperienceForEdit(
       },
     };
   } catch (error) {
-    logError('getExperienceForEdit error', error, { action: 'getExperienceForEdit', experienceId });
+    logError('getExperienceForEdit error', error, {
+      action: 'getExperienceForEdit',
+      experienceId,
+    });
     return {
       success: false,
       error: {
@@ -474,34 +523,40 @@ export async function getExperienceForEdit(
 /**
  * Get an experience for preview (owner only, any status)
  */
-export async function getExperienceForPreview(
-  experienceId: string
-): Promise<ActionResult<{
-  id: string;
-  title: string;
-  slug: string;
-  type: string;
-  description: string;
-  duration: number;
-  price: number;
-  minCapacity: number;
-  maxCapacity: number;
-  coverPhoto: string;
-  status: string;
-  galleryImages: { id: string; url: string; order: number }[];
-  availabilitySlots: { id: string; dayOfWeek: number; startTime: string; endTime: string; isActive: boolean }[];
-  winery: {
+export async function getExperienceForPreview(experienceId: string): Promise<
+  ActionResult<{
     id: string;
-    name: string;
+    title: string;
     slug: string;
-    commune: string;
-    address: string;
-    coverPhoto: string | null;
-    latitude: number | null;
-    longitude: number | null;
-    stripeOnboardingComplete: boolean;
-  };
-}>> {
+    type: string;
+    description: string;
+    duration: number;
+    price: number;
+    minCapacity: number;
+    maxCapacity: number;
+    coverPhoto: string;
+    status: string;
+    galleryImages: { id: string; url: string; order: number }[];
+    availabilitySlots: {
+      id: string;
+      dayOfWeek: number;
+      startTime: string;
+      endTime: string;
+      isActive: boolean;
+    }[];
+    winery: {
+      id: string;
+      name: string;
+      slug: string;
+      commune: string;
+      address: string;
+      coverPhoto: string | null;
+      latitude: number | null;
+      longitude: number | null;
+      stripeOnboardingComplete: boolean;
+    };
+  }>
+> {
   try {
     const session = await auth();
     if (!session?.user) {
@@ -581,7 +636,10 @@ export async function getExperienceForPreview(
       },
     };
   } catch (error) {
-    logError('getExperienceForPreview error', error, { action: 'getExperienceForPreview', experienceId });
+    logError('getExperienceForPreview error', error, {
+      action: 'getExperienceForPreview',
+      experienceId,
+    });
     return {
       success: false,
       error: {

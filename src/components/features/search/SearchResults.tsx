@@ -13,9 +13,18 @@ import { Wine, ChevronLeft, ChevronRight, MapPin } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { ExperienceSearchResult } from '@/server/queries/experience.queries';
 
-type SortOption = 'relevance' | 'price_asc' | 'price_desc' | 'newest' | 'distance';
+type SortOption =
+  | 'relevance'
+  | 'price_asc'
+  | 'price_desc'
+  | 'newest'
+  | 'distance';
 
-const SORT_OPTIONS: { value: SortOption; labelKey: string; locationOnly?: boolean }[] = [
+const SORT_OPTIONS: {
+  value: SortOption;
+  labelKey: string;
+  locationOnly?: boolean;
+}[] = [
   { value: 'distance', labelKey: 'sort.distance', locationOnly: true },
   { value: 'relevance', labelKey: 'sort.relevance' },
   { value: 'price_asc', labelKey: 'sort.priceLowToHigh' },
@@ -86,7 +95,10 @@ export function SearchResults({
         </p>
         <div className="flex items-center gap-2">
           <span className="text-sm text-slate-600">{t('sortBy')}:</span>
-          <Select value={sort} onValueChange={(v) => onSortChange(v as SortOption)}>
+          <Select
+            value={sort}
+            onValueChange={(v) => onSortChange(v as SortOption)}
+          >
             <SelectTrigger className="h-9 w-[180px]">
               <SelectValue />
             </SelectTrigger>
@@ -103,7 +115,10 @@ export function SearchResults({
 
       {/* Results Grid or Empty State */}
       {count > 0 ? (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" data-testid="search-results-grid">
+        <div
+          className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+          data-testid="search-results-grid"
+        >
           {experiences.map((experience) => (
             <ExperienceCard key={experience.id} experience={experience} />
           ))}
@@ -196,20 +211,23 @@ function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
 
       {(() => {
         const lastVisible = visiblePages[visiblePages.length - 1];
-        return lastVisible !== undefined && lastVisible < totalPages && (
-          <>
-            {lastVisible < totalPages - 1 && (
-              <span className="px-2 text-slate-400">...</span>
-            )}
-            <Button
-              variant={page === totalPages ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => onPageChange(totalPages)}
-              className="min-w-[40px]"
-            >
-              {totalPages}
-            </Button>
-          </>
+        return (
+          lastVisible !== undefined &&
+          lastVisible < totalPages && (
+            <>
+              {lastVisible < totalPages - 1 && (
+                <span className="px-2 text-slate-400">...</span>
+              )}
+              <Button
+                variant={page === totalPages ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => onPageChange(totalPages)}
+                className="min-w-[40px]"
+              >
+                {totalPages}
+              </Button>
+            </>
+          )
         );
       })()}
 
@@ -234,7 +252,10 @@ function EmptyState({ locationName }: EmptyStateProps) {
   const t = useTranslations('search');
 
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-stone-300 bg-cream-50 px-6 py-16 text-center" data-testid="empty-state">
+    <div
+      className="flex flex-col items-center justify-center rounded-xl border border-dashed border-stone-300 bg-cream-50 px-6 py-16 text-center"
+      data-testid="empty-state"
+    >
       <div className="flex h-16 w-16 items-center justify-center rounded-full bg-burgundy-100">
         <Wine className="h-8 w-8 text-burgundy-600" aria-hidden="true" />
       </div>

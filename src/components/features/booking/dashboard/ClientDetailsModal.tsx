@@ -125,12 +125,14 @@ export function ClientDetailsModal({
                           {booking.experience.title}
                         </p>
                         <p className="text-xs text-slate-500">
-                          {format(new Date(booking.date), 'PPP', { locale: dateLocale })} {t('at')}{' '}
-                          {booking.timeSlot}
+                          {format(new Date(booking.date), 'PPP', {
+                            locale: dateLocale,
+                          })}{' '}
+                          {t('at')} {booking.timeSlot}
                         </p>
                         <p className="text-xs text-slate-500">
-                          {tCommon('guestCount', { count: booking.guestCount })} &middot; CHF{' '}
-                          {(booking.totalPrice / 100).toFixed(2)}
+                          {tCommon('guestCount', { count: booking.guestCount })}{' '}
+                          &middot; CHF {(booking.totalPrice / 100).toFixed(2)}
                         </p>
                       </div>
                       <BookingStatusBadge status={booking.status} />

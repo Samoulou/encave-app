@@ -12,7 +12,11 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
-export type EarningsPeriod = 'this_month' | 'last_month' | 'this_year' | 'all_time';
+export type EarningsPeriod =
+  | 'this_month'
+  | 'last_month'
+  | 'this_year'
+  | 'all_time';
 
 const PERIOD_KEYS: Record<EarningsPeriod, string> = {
   this_month: 'thisMonth',
@@ -33,7 +37,8 @@ export function EarningsPeriodSelector({
   const [isPending, startTransition] = useTransition();
   const t = useTranslations('earnings.period');
 
-  const currentPeriod = (searchParams.get('period') as EarningsPeriod) || defaultValue;
+  const currentPeriod =
+    (searchParams.get('period') as EarningsPeriod) || defaultValue;
   const [optimisticPeriod, setOptimisticPeriod] = useOptimistic(currentPeriod);
 
   const handlePeriodChange = (value: EarningsPeriod) => {
@@ -49,13 +54,18 @@ export function EarningsPeriodSelector({
     });
   };
 
-  const periodOptions: EarningsPeriod[] = ['this_month', 'last_month', 'this_year', 'all_time'];
+  const periodOptions: EarningsPeriod[] = [
+    'this_month',
+    'last_month',
+    'this_year',
+    'all_time',
+  ];
 
   return (
     <Select value={optimisticPeriod} onValueChange={handlePeriodChange}>
       <SelectTrigger
         className={cn(
-          'w-40 h-10 bg-white border-border text-foreground font-medium shadow-sm',
+          'h-10 w-40 border-border bg-white font-medium text-foreground shadow-sm',
           isPending && 'opacity-70'
         )}
       >

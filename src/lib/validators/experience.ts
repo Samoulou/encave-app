@@ -39,8 +39,12 @@ export const availabilitySlotSchema = z.object({
   days: z.array(z.enum(['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'])),
   timeSlots: z.array(
     z.object({
-      start: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time format'),
-      end: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time format'),
+      start: z
+        .string()
+        .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time format'),
+      end: z
+        .string()
+        .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time format'),
     })
   ),
 });
@@ -83,7 +87,8 @@ export const createExperienceSchema = z
     duration: z
       .number()
       .refine(
-        (val) => durationValues.includes(val as (typeof durationValues)[number]),
+        (val) =>
+          durationValues.includes(val as (typeof durationValues)[number]),
         'Please select a valid duration'
       ),
     price: z
@@ -104,7 +109,8 @@ export const createExperienceSchema = z
     availabilitySlots: z.array(availabilitySlotSchema).optional(),
   })
   .refine((data) => data.maxCapacity >= data.minCapacity, {
-    message: 'Maximum capacity must be greater than or equal to minimum capacity',
+    message:
+      'Maximum capacity must be greater than or equal to minimum capacity',
     path: ['maxCapacity'],
   });
 

@@ -43,15 +43,16 @@ export function AvailabilityPreview({ slots }: AvailabilityPreviewProps) {
 
   if (slots.length === 0) {
     return (
-      <section className="rounded-xl bg-white p-6 shadow-warm lg:p-8" data-testid="availability-preview">
+      <section
+        className="rounded-xl bg-white p-6 shadow-warm lg:p-8"
+        data-testid="availability-preview"
+      >
         <h2 className="font-display text-xl font-semibold text-slate-900">
           {t('title')}
         </h2>
         <div className="mt-4 flex items-center gap-3 rounded-lg bg-amber-50 p-4 text-amber-800">
           <Calendar className="h-5 w-5 shrink-0" />
-          <p className="text-sm">
-            {t('noScheduleContact')}
-          </p>
+          <p className="text-sm">{t('noScheduleContact')}</p>
         </div>
       </section>
     );
@@ -61,7 +62,10 @@ export function AvailabilityPreview({ slots }: AvailabilityPreviewProps) {
   const availableDays = Array.from(groupedSlots.keys()).sort((a, b) => a - b);
 
   return (
-    <section className="rounded-xl bg-white p-6 shadow-warm lg:p-8" data-testid="availability-preview">
+    <section
+      className="rounded-xl bg-white p-6 shadow-warm lg:p-8"
+      data-testid="availability-preview"
+    >
       <h2 className="font-display text-xl font-semibold text-slate-900">
         {t('title')}
       </h2>

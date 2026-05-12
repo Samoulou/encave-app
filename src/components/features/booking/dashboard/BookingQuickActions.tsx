@@ -2,7 +2,13 @@
 
 import { useState, useTransition } from 'react';
 import { BookingStatus } from '@prisma/client';
-import { MoreHorizontal, CheckCircle, XCircle, User, Loader2 } from 'lucide-react';
+import {
+  MoreHorizontal,
+  CheckCircle,
+  XCircle,
+  User,
+  Loader2,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import {

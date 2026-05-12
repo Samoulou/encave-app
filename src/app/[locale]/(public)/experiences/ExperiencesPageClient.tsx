@@ -14,7 +14,12 @@ import { SlidersHorizontal, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ExperienceSearchResult } from '@/server/queries/experience.queries';
 
-type SortOption = 'relevance' | 'price_asc' | 'price_desc' | 'newest' | 'distance';
+type SortOption =
+  | 'relevance'
+  | 'price_asc'
+  | 'price_desc'
+  | 'newest'
+  | 'distance';
 
 interface PaginationInfo {
   total: number;
@@ -78,7 +83,10 @@ export function ExperiencesPageClient({
 
   // Update URL with new params - optimistic updates happen immediately
   const updateParams = useCallback(
-    (updates: Record<string, string | string[] | null>, optimisticUpdate?: Partial<FilterState>) => {
+    (
+      updates: Record<string, string | string[] | null>,
+      optimisticUpdate?: Partial<FilterState>
+    ) => {
       // Step 1: Update UI IMMEDIATELY (optimistic)
       if (optimisticUpdate) {
         setOptimisticFilters((prev) => ({ ...prev, ...optimisticUpdate }));
@@ -89,7 +97,11 @@ export function ExperiencesPageClient({
         const params = new URLSearchParams(searchParams.toString());
 
         Object.entries(updates).forEach(([key, value]) => {
-          if (value === null || value === '' || (Array.isArray(value) && value.length === 0)) {
+          if (
+            value === null ||
+            value === '' ||
+            (Array.isArray(value) && value.length === 0)
+          ) {
             params.delete(key);
           } else if (Array.isArray(value)) {
             params.set(key, value.join(','));
@@ -111,7 +123,10 @@ export function ExperiencesPageClient({
   };
 
   const handleTypesChange = (types: ExperienceType[]) => {
-    updateParams({ type: types.length > 0 ? types : null, page: null }, { types });
+    updateParams(
+      { type: types.length > 0 ? types : null, page: null },
+      { types }
+    );
   };
 
   const handleCommuneChange = (commune: string | null) => {
@@ -119,19 +134,31 @@ export function ExperiencesPageClient({
   };
 
   const handleMinPriceChange = (price: number | null) => {
-    updateParams({ minPrice: price !== null ? String(price) : null, page: null }, { minPrice: price });
+    updateParams(
+      { minPrice: price !== null ? String(price) : null, page: null },
+      { minPrice: price }
+    );
   };
 
   const handleMaxPriceChange = (price: number | null) => {
-    updateParams({ maxPrice: price !== null ? String(price) : null, page: null }, { maxPrice: price });
+    updateParams(
+      { maxPrice: price !== null ? String(price) : null, page: null },
+      { maxPrice: price }
+    );
   };
 
   const handleCapacityChange = (capacity: number | null) => {
-    updateParams({ capacity: capacity !== null ? String(capacity) : null, page: null }, { capacity });
+    updateParams(
+      { capacity: capacity !== null ? String(capacity) : null, page: null },
+      { capacity }
+    );
   };
 
   const handleSortChange = (sort: SortOption) => {
-    updateParams({ sort: sort !== 'relevance' ? sort : null, page: null }, { sort });
+    updateParams(
+      { sort: sort !== 'relevance' ? sort : null, page: null },
+      { sort }
+    );
   };
 
   const handlePageChange = (page: number) => {
@@ -247,10 +274,12 @@ export function ExperiencesPageClient({
         />
 
         {/* Loading Overlay - smooth transition for pending state */}
-        <div className={cn(
-          'relative transition-opacity duration-150',
-          isPending && 'opacity-70 pointer-events-none'
-        )}>
+        <div
+          className={cn(
+            'relative transition-opacity duration-150',
+            isPending && 'pointer-events-none opacity-70'
+          )}
+        >
           {isPending && (
             <div className="absolute inset-0 z-10 flex items-center justify-center">
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-burgundy-200 border-t-burgundy-600" />
@@ -283,7 +312,9 @@ function parseTypes(typeParam: string | null): ExperienceType[] {
   ];
   return typeParam
     .split(',')
-    .filter((t): t is ExperienceType => validTypes.includes(t as ExperienceType));
+    .filter((t): t is ExperienceType =>
+      validTypes.includes(t as ExperienceType)
+    );
 }
 
 function parseNumber(value: string | null): number | null {

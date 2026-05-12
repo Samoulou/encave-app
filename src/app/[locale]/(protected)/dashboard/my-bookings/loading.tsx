@@ -11,9 +11,9 @@ export default function MyBookingsLoading() {
         {[1, 2].map((i) => (
           <div
             key={i}
-            className="rounded-xl border border-stone-200 bg-white p-6 flex items-center gap-4"
+            className="flex items-center gap-4 rounded-xl border border-stone-200 bg-white p-6"
           >
-            <Skeleton className="hidden sm:block h-16 w-16 rounded-lg" />
+            <Skeleton className="hidden h-16 w-16 rounded-lg sm:block" />
             <div className="flex-1 space-y-2">
               <Skeleton className="h-5 w-64" />
               <Skeleton className="h-4 w-48" />
@@ -29,9 +29,9 @@ export default function MyBookingsLoading() {
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="rounded-xl border border-stone-200 bg-white p-6 flex items-center gap-4"
+            className="flex items-center gap-4 rounded-xl border border-stone-200 bg-white p-6"
           >
-            <Skeleton className="hidden sm:block h-16 w-16 rounded-lg" />
+            <Skeleton className="hidden h-16 w-16 rounded-lg sm:block" />
             <div className="flex-1 space-y-2">
               <Skeleton className="h-5 w-64" />
               <Skeleton className="h-4 w-48" />

@@ -67,7 +67,9 @@ describe('Email Log Service', () => {
     it('does not throw when db fails', async () => {
       mockDb.emailLog.create.mockRejectedValueOnce(new Error('DB error'));
 
-      await expect(logEmailSent('reminder_24h', 'user-123')).resolves.toBeUndefined();
+      await expect(
+        logEmailSent('reminder_24h', 'user-123')
+      ).resolves.toBeUndefined();
     });
 
     it('logs error when db fails', async () => {
@@ -91,7 +93,12 @@ describe('Email Log Service', () => {
     it('creates a failed email log entry', async () => {
       mockDb.emailLog.create.mockResolvedValueOnce({} as never);
 
-      await logEmailFailed('reminder_2h', 'user-123', 'SMTP timeout', 'booking-456');
+      await logEmailFailed(
+        'reminder_2h',
+        'user-123',
+        'SMTP timeout',
+        'booking-456'
+      );
 
       expect(mockDb.emailLog.create).toHaveBeenCalledWith({
         data: {
@@ -148,7 +155,12 @@ describe('Email Log Service', () => {
   describe('getRecentEmailLogs', () => {
     it('returns recent logs with default limit', async () => {
       const mockLogs = [
-        { id: '1', type: 'reminder_24h', status: 'sent', createdAt: new Date() },
+        {
+          id: '1',
+          type: 'reminder_24h',
+          status: 'sent',
+          createdAt: new Date(),
+        },
         { id: '2', type: 'follow_up', status: 'failed', createdAt: new Date() },
       ];
       mockDb.emailLog.findMany.mockResolvedValueOnce(mockLogs as never);

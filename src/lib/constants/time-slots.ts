@@ -36,7 +36,10 @@ export type DayOfWeek = (typeof DAYS_OF_WEEK)[number]['value'];
 /**
  * Calculate end time based on start time and duration
  */
-export function calculateEndTime(startTime: string, durationMinutes: number): string {
+export function calculateEndTime(
+  startTime: string,
+  durationMinutes: number
+): string {
   const [hours, minutes] = startTime.split(':').map(Number);
   const totalMinutes = (hours ?? 0) * 60 + (minutes ?? 0) + durationMinutes;
   const endHours = Math.floor(totalMinutes / 60);
@@ -60,7 +63,9 @@ export function doSlotsOverlap(
 export function hasOverlappingSlots(
   slots: { startTime: string; endTime: string }[]
 ): boolean {
-  const sorted = [...slots].sort((a, b) => a.startTime.localeCompare(b.startTime));
+  const sorted = [...slots].sort((a, b) =>
+    a.startTime.localeCompare(b.startTime)
+  );
   for (let i = 1; i < sorted.length; i++) {
     const prev = sorted[i - 1];
     const curr = sorted[i];

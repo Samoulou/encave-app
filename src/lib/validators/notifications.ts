@@ -6,4 +6,6 @@ export const notificationPreferencesSchema = z.object({
   instantBookingAlerts: z.boolean(),
 });
 
-export type NotificationPreferencesInput = z.infer<typeof notificationPreferencesSchema>;
+export type NotificationPreferencesInput = z.infer<
+  typeof notificationPreferencesSchema
+>;

@@ -28,7 +28,8 @@ export function ConfirmationActions({ booking }: ConfirmationActionsProps) {
 
   const calendarEvent = createBookingCalendarEvent({
     ...booking,
-    bookingUrl: typeof window !== 'undefined' ? window.location.href : undefined,
+    bookingUrl:
+      typeof window !== 'undefined' ? window.location.href : undefined,
   });
 
   const handleAddToCalendar = () => {
@@ -42,22 +43,18 @@ export function ConfirmationActions({ booking }: ConfirmationActionsProps) {
   };
 
   return (
-    <div className="flex flex-col sm:flex-row gap-4 mt-2">
-      <Button
-        onClick={handleAddToCalendar}
-        className="flex-1 h-12"
-        size="lg"
-      >
-        <Calendar className="size-5 mr-2" />
+    <div className="mt-2 flex flex-col gap-4 sm:flex-row">
+      <Button onClick={handleAddToCalendar} className="h-12 flex-1" size="lg">
+        <Calendar className="mr-2 size-5" />
         {t('addToCalendar')}
       </Button>
       <Button
         onClick={handleDownloadReceipt}
         variant="outline"
-        className="flex-1 h-12"
+        className="h-12 flex-1"
         size="lg"
       >
-        <Receipt className="size-5 mr-2" />
+        <Receipt className="mr-2 size-5" />
         {t('downloadReceipt')}
       </Button>
     </div>

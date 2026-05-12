@@ -41,25 +41,58 @@ type NavItem = {
 };
 
 const baseNavItems = (t: TranslateFn): NavItem[] => [
-  { href: '/wineries', label: t('wineries'), icon: <Grape className="h-5 w-5" /> },
-  { href: '/experiences', label: t('experiences'), icon: <Compass className="h-5 w-5" /> },
+  {
+    href: '/wineries',
+    label: t('wineries'),
+    icon: <Grape className="h-5 w-5" />,
+  },
+  {
+    href: '/experiences',
+    label: t('experiences'),
+    icon: <Compass className="h-5 w-5" />,
+  },
   { href: '/about', label: t('about'), icon: <Info className="h-5 w-5" /> },
 ];
 
-function getRoleNavItems(role: string | null | undefined, t: TranslateFn): NavItem[] {
+function getRoleNavItems(
+  role: string | null | undefined,
+  t: TranslateFn
+): NavItem[] {
   switch (role) {
     case 'ADMIN':
-      return [{ href: '/admin', label: t('admin'), icon: <Shield className="h-5 w-5" /> }];
+      return [
+        {
+          href: '/admin',
+          label: t('admin'),
+          icon: <Shield className="h-5 w-5" />,
+        },
+      ];
     case 'WINEMAKER':
-      return [{ href: '/dashboard', label: t('dashboard'), icon: <LayoutDashboard className="h-5 w-5" /> }];
+      return [
+        {
+          href: '/dashboard',
+          label: t('dashboard'),
+          icon: <LayoutDashboard className="h-5 w-5" />,
+        },
+      ];
     case 'CLIENT':
-      return [{ href: '/dashboard/my-bookings', label: t('myBookings'), icon: <Calendar className="h-5 w-5" /> }];
+      return [
+        {
+          href: '/dashboard/my-bookings',
+          label: t('myBookings'),
+          icon: <Calendar className="h-5 w-5" />,
+        },
+      ];
     default:
       return [];
   }
 }
 
-export function MobileNav({ isAuthenticated, userName, userRole }: MobileNavProps) {
+export function MobileNav({
+  isAuthenticated,
+  userName,
+  userRole,
+}: MobileNavProps) {
   const [open, setOpen] = useState(false);
   const t = useTranslations('nav');
   const pathname = usePathname();
@@ -80,16 +113,13 @@ export function MobileNav({ isAuthenticated, userName, userRole }: MobileNavProp
         <Button
           variant="ghost"
           size="icon"
-          className="md:hidden h-11 w-11"
+          className="h-11 w-11 md:hidden"
           aria-label={t('openMenu')}
         >
           <Menu className="h-6 w-6" />
         </Button>
       </SheetTrigger>
-      <SheetContent
-        side="right"
-        className="w-[300px] sm:w-[350px] bg-cream-50"
-      >
+      <SheetContent side="right" className="w-[300px] bg-cream-50 sm:w-[350px]">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             <Image
@@ -101,19 +131,23 @@ export function MobileNav({ isAuthenticated, userName, userRole }: MobileNavProp
             />
           </SheetTitle>
         </SheetHeader>
-        <nav className="flex flex-col gap-2 mt-8" aria-label={t('mainNavigation')}>
+        <nav
+          className="mt-8 flex flex-col gap-2"
+          aria-label={t('mainNavigation')}
+        >
           {navItems.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+            const isActive =
+              pathname === item.href || pathname.startsWith(item.href + '/');
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={closeMenu}
                 className={cn(
-                  'flex items-center gap-3 text-lg font-medium transition-colors py-3 px-3 rounded-lg',
+                  'flex items-center gap-3 rounded-lg px-3 py-3 text-lg font-medium transition-colors',
                   isActive
-                    ? 'text-primary bg-primary/5 border-l-2 border-primary'
-                    : 'text-foreground hover:text-primary hover:bg-burgundy-50'
+                    ? 'border-l-2 border-primary bg-primary/5 text-primary'
+                    : 'text-foreground hover:bg-burgundy-50 hover:text-primary'
                 )}
               >
                 {item.icon}
@@ -126,16 +160,16 @@ export function MobileNav({ isAuthenticated, userName, userRole }: MobileNavProp
             <LocaleSwitcher />
           </div>
 
-          <div className="border-t border-border my-4" aria-hidden="true" />
+          <div className="my-4 border-t border-border" aria-hidden="true" />
 
           {isAuthenticated ? (
             <>
-              <p className="text-sm text-muted-foreground px-3">
+              <p className="px-3 text-sm text-muted-foreground">
                 {t('welcome', { name: userName || t('user') })}
               </p>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-3 text-left text-lg font-medium text-foreground hover:text-primary hover:bg-burgundy-50 transition-colors py-3 px-3 rounded-lg"
+                className="flex items-center gap-3 rounded-lg px-3 py-3 text-left text-lg font-medium text-foreground transition-colors hover:bg-burgundy-50 hover:text-primary"
               >
                 <LogOut className="h-5 w-5" />
                 {t('signOut')}
@@ -144,10 +178,14 @@ export function MobileNav({ isAuthenticated, userName, userRole }: MobileNavProp
           ) : (
             <div className="flex flex-col gap-3 px-3">
               <Button variant="outline" className="h-11 w-full" asChild>
-                <Link href="/login" onClick={closeMenu}>{t('signIn')}</Link>
+                <Link href="/login" onClick={closeMenu}>
+                  {t('signIn')}
+                </Link>
               </Button>
               <Button className="h-11 w-full" asChild>
-                <Link href="/register" onClick={closeMenu}>{t('getStarted')}</Link>
+                <Link href="/register" onClick={closeMenu}>
+                  {t('getStarted')}
+                </Link>
               </Button>
             </div>
           )}

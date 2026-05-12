@@ -5,7 +5,14 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { parseAsString, parseAsInteger, useQueryStates } from 'nuqs';
-import { Calendar, Clock, Users, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
+import {
+  Calendar,
+  Clock,
+  Users,
+  ArrowRight,
+  Loader2,
+  AlertCircle,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -33,7 +40,9 @@ export function BookingWidget({ experience }: BookingWidgetProps) {
     guests: parseAsInteger.withDefault(experience.minCapacity),
   });
 
-  const [remainingCapacity, setRemainingCapacity] = useState<number | null>(null);
+  const [remainingCapacity, setRemainingCapacity] = useState<number | null>(
+    null
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Ref to store the previous experience ID for detecting changes
@@ -42,13 +51,16 @@ export function BookingWidget({ experience }: BookingWidgetProps) {
   const { date, time, guests } = queryState;
 
   // BUG-003b FIX: Check if form is valid including remainingCapacity
-  const isValid = date && time &&
+  const isValid =
+    date &&
+    time &&
     guests >= experience.minCapacity &&
     guests <= experience.maxCapacity &&
     (remainingCapacity === null || guests <= remainingCapacity);
 
   // BUG-003b: Check if capacity is exceeded (for warning display)
-  const capacityExceeded = remainingCapacity !== null && guests > remainingCapacity;
+  const capacityExceeded =
+    remainingCapacity !== null && guests > remainingCapacity;
 
   // Available days based on availability slots
   const availableDays = new Set(
@@ -102,17 +114,19 @@ export function BookingWidget({ experience }: BookingWidgetProps) {
       time: time!,
       guests: guests.toString(),
     });
-    router.push(`/experiences/${experience.slug}/checkout?${params.toString()}`);
+    router.push(
+      `/experiences/${experience.slug}/checkout?${params.toString()}`
+    );
   };
 
   return (
     <div className="grid gap-8 lg:grid-cols-3">
       {/* Left Column - Booking Form */}
-      <div className="lg:col-span-2 space-y-6">
+      <div className="space-y-6 lg:col-span-2">
         {/* Experience Header */}
         <Card className="overflow-hidden" data-testid="experience-summary-card">
           <div className="flex flex-col sm:flex-row">
-            <div className="relative h-48 sm:h-auto sm:w-48 flex-shrink-0">
+            <div className="relative h-48 flex-shrink-0 sm:h-auto sm:w-48">
               <Image
                 src={experience.coverPhoto}
                 alt={experience.title}
@@ -124,21 +138,36 @@ export function BookingWidget({ experience }: BookingWidgetProps) {
               />
             </div>
             <CardContent className="flex-1 p-6">
-              <h1 className="font-display text-2xl font-bold text-slate-900" data-testid="experience-title">
+              <h1
+                className="font-display text-2xl font-bold text-slate-900"
+                data-testid="experience-title"
+              >
                 {experience.title}
               </h1>
-              <p className="mt-2 text-sm text-slate-600" data-testid="winery-name">
+              <p
+                className="mt-2 text-sm text-slate-600"
+                data-testid="winery-name"
+              >
                 {experience.winery.name}
               </p>
               <div className="mt-4 flex flex-wrap gap-4 text-sm text-slate-600">
-                <span className="flex items-center gap-1.5" data-testid="experience-duration">
+                <span
+                  className="flex items-center gap-1.5"
+                  data-testid="experience-duration"
+                >
                   <Clock className="h-4 w-4" aria-hidden="true" />
                   {experience.duration} min
                 </span>
-                <span className="flex items-center gap-1.5" data-testid="capacity-range">
+                <span
+                  className="flex items-center gap-1.5"
+                  data-testid="capacity-range"
+                >
                   <Users className="h-4 w-4" aria-hidden="true" />
                   {/* BUG-032 FIX: Use capacityRange key to avoid "8-10 10 personnes" */}
-                  {t('capacityRange', { min: experience.minCapacity, max: experience.maxCapacity })}
+                  {t('capacityRange', {
+                    min: experience.minCapacity,
+                    max: experience.maxCapacity,
+                  })}
                 </span>
               </div>
             </CardContent>
@@ -148,15 +177,18 @@ export function BookingWidget({ experience }: BookingWidgetProps) {
         {/* Date Selection */}
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-center gap-3 mb-4">
+            <div className="mb-4 flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-burgundy-100">
-                <Calendar className="h-5 w-5 text-burgundy-600" aria-hidden="true" />
+                <Calendar
+                  className="h-5 w-5 text-burgundy-600"
+                  aria-hidden="true"
+                />
               </div>
               <div>
-                <h2 className="font-semibold text-slate-900">{t('selectDate')}</h2>
-                <p className="text-sm text-slate-500">
-                  {t('selectDateFirst')}
-                </p>
+                <h2 className="font-semibold text-slate-900">
+                  {t('selectDate')}
+                </h2>
+                <p className="text-sm text-slate-500">{t('selectDateFirst')}</p>
               </div>
             </div>
             <BookingDatePicker
@@ -175,12 +207,17 @@ export function BookingWidget({ experience }: BookingWidgetProps) {
         >
           <fieldset disabled={!date}>
             <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-4">
+              <div className="mb-4 flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-burgundy-100">
-                  <Clock className="h-5 w-5 text-burgundy-600" aria-hidden="true" />
+                  <Clock
+                    className="h-5 w-5 text-burgundy-600"
+                    aria-hidden="true"
+                  />
                 </div>
                 <div>
-                  <h2 className="font-semibold text-slate-900">{t('selectTime')}</h2>
+                  <h2 className="font-semibold text-slate-900">
+                    {t('selectTime')}
+                  </h2>
                   <p className="text-sm text-slate-500">
                     {date ? t('selectTimeFirst') : t('selectDateFirst')}
                   </p>
@@ -205,14 +242,20 @@ export function BookingWidget({ experience }: BookingWidgetProps) {
         >
           <fieldset disabled={!time}>
             <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-4">
+              <div className="mb-4 flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-burgundy-100">
-                  <Users className="h-5 w-5 text-burgundy-600" aria-hidden="true" />
+                  <Users
+                    className="h-5 w-5 text-burgundy-600"
+                    aria-hidden="true"
+                  />
                 </div>
                 <div>
-                  <h2 className="font-semibold text-slate-900">{t('selectGuests')}</h2>
+                  <h2 className="font-semibold text-slate-900">
+                    {t('selectGuests')}
+                  </h2>
                   <p className="text-sm text-slate-500">
-                    {t('minGuests', { count: experience.minCapacity })} - {t('maxGuests', { count: experience.maxCapacity })}
+                    {t('minGuests', { count: experience.minCapacity })} -{' '}
+                    {t('maxGuests', { count: experience.maxCapacity })}
                   </p>
                 </div>
               </div>
@@ -221,7 +264,11 @@ export function BookingWidget({ experience }: BookingWidgetProps) {
                 value={guests}
                 onChange={handleGuestsChange}
                 min={experience.minCapacity}
-                max={remainingCapacity !== null ? Math.min(experience.maxCapacity, remainingCapacity) : experience.maxCapacity}
+                max={
+                  remainingCapacity !== null
+                    ? Math.min(experience.maxCapacity, remainingCapacity)
+                    : experience.maxCapacity
+                }
                 isLoading={false}
                 remainingCapacity={remainingCapacity}
               />
@@ -278,7 +325,10 @@ export function BookingWidget({ experience }: BookingWidgetProps) {
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" aria-hidden="true" />
+                <Loader2
+                  className="mr-2 h-5 w-5 animate-spin"
+                  aria-hidden="true"
+                />
                 {t('continueToPayment')}
               </>
             ) : (

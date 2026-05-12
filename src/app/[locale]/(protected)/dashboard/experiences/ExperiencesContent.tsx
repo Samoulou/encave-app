@@ -1,5 +1,8 @@
 import { db } from '@/server/db';
-import { ExperienceFilters, type FilterStatus } from '@/components/features/experience/ExperienceFilters';
+import {
+  ExperienceFilters,
+  type FilterStatus,
+} from '@/components/features/experience/ExperienceFilters';
 import { ExperienceManagementCard } from '@/components/features/experience/ExperienceManagementCard';
 import { CreateExperienceCard } from '@/components/features/experience/CreateExperienceCard';
 import { ExperiencesPagination } from '@/components/features/experience/ExperiencesPagination';
@@ -84,9 +87,12 @@ export async function ExperiencesContent({
       />
 
       {/* Card Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
         {experiences.map((experience) => (
-          <ExperienceManagementCard key={experience.id} experience={experience} />
+          <ExperienceManagementCard
+            key={experience.id}
+            experience={experience}
+          />
         ))}
 
         {/* Always show create card on first page when not filtering */}

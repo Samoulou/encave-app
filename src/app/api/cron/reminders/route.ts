@@ -52,19 +52,16 @@ export async function GET() {
         const bookingDateTime = new Date(booking.date);
         bookingDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
 
-        const success = await sendBookingReminderEmail(
-          booking.visitorEmail,
-          {
-            guestName: booking.visitorName,
-            experienceTitle: booking.experience.title,
-            wineryName: booking.winery.name,
-            wineryAddress: booking.winery.address,
-            date: bookingDateTime,
-            guestCount: booking.guestCount,
-            bookingRef: booking.reference,
-            isTomorrow: true,
-          }
-        );
+        const success = await sendBookingReminderEmail(booking.visitorEmail, {
+          guestName: booking.visitorName,
+          experienceTitle: booking.experience.title,
+          wineryName: booking.winery.name,
+          wineryAddress: booking.winery.address,
+          date: bookingDateTime,
+          guestCount: booking.guestCount,
+          bookingRef: booking.reference,
+          isTomorrow: true,
+        });
 
         if (success) {
           await db.booking.update({
@@ -74,11 +71,19 @@ export async function GET() {
           await logEmailSent('reminder_24h', booking.visitorEmail, booking.id);
           results.reminder24h.sent++;
         } else {
-          await logEmailFailed('reminder_24h', booking.visitorEmail, 'Failed to send', booking.id);
+          await logEmailFailed(
+            'reminder_24h',
+            booking.visitorEmail,
+            'Failed to send',
+            booking.id
+          );
           results.reminder24h.failed++;
         }
       } catch (error) {
-        logError('Error sending 24h reminder', error, { action: 'cronReminders', bookingId: booking.id });
+        logError('Error sending 24h reminder', error, {
+          action: 'cronReminders',
+          bookingId: booking.id,
+        });
         await logEmailFailed(
           'reminder_24h',
           booking.visitorEmail,
@@ -116,25 +121,23 @@ export async function GET() {
         const bookingDateTime = new Date(booking.date);
         bookingDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
 
-        const hoursUntilBooking = (bookingDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+        const hoursUntilBooking =
+          (bookingDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
 
         // Only send if booking is 1.5-2.5 hours away
         if (hoursUntilBooking < 1.5 || hoursUntilBooking > 2.5) {
           continue;
         }
 
-        const success = await sendClientReminder2hEmail(
-          booking.visitorEmail,
-          {
-            guestName: booking.visitorName,
-            experienceTitle: booking.experience.title,
-            wineryName: booking.winery.name,
-            wineryAddress: booking.winery.address,
-            wineryPhone: booking.winery.phone,
-            date: bookingDateTime,
-            guestCount: booking.guestCount,
-          }
-        );
+        const success = await sendClientReminder2hEmail(booking.visitorEmail, {
+          guestName: booking.visitorName,
+          experienceTitle: booking.experience.title,
+          wineryName: booking.winery.name,
+          wineryAddress: booking.winery.address,
+          wineryPhone: booking.winery.phone,
+          date: bookingDateTime,
+          guestCount: booking.guestCount,
+        });
 
         if (success) {
           await db.booking.update({
@@ -144,11 +147,19 @@ export async function GET() {
           await logEmailSent('reminder_2h', booking.visitorEmail, booking.id);
           results.reminder2h.sent++;
         } else {
-          await logEmailFailed('reminder_2h', booking.visitorEmail, 'Failed to send', booking.id);
+          await logEmailFailed(
+            'reminder_2h',
+            booking.visitorEmail,
+            'Failed to send',
+            booking.id
+          );
           results.reminder2h.failed++;
         }
       } catch (error) {
-        logError('Error sending 2h reminder', error, { action: 'cronReminders', bookingId: booking.id });
+        logError('Error sending 2h reminder', error, {
+          action: 'cronReminders',
+          bookingId: booking.id,
+        });
         await logEmailFailed(
           'reminder_2h',
           booking.visitorEmail,

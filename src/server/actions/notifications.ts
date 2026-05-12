@@ -67,7 +67,9 @@ export async function updateNotificationPreferences(
       data: { updatedAt: preferences.updatedAt },
     };
   } catch (error) {
-    logError('Error updating notification preferences', error, { action: 'updateNotificationPreferences' });
+    logError('Error updating notification preferences', error, {
+      action: 'updateNotificationPreferences',
+    });
     return {
       success: false,
       error: {
@@ -117,7 +119,8 @@ export async function getNotificationPreferences(): Promise<
         data: {
           dailyDigest: winery.notificationPreferences.dailyDigest,
           weeklySummary: winery.notificationPreferences.weeklySummary,
-          instantBookingAlerts: winery.notificationPreferences.instantBookingAlerts,
+          instantBookingAlerts:
+            winery.notificationPreferences.instantBookingAlerts,
           unsubscribeToken: winery.notificationPreferences.unsubscribeToken,
         },
       };
@@ -143,7 +146,9 @@ export async function getNotificationPreferences(): Promise<
       },
     };
   } catch (error) {
-    logError('Error getting notification preferences', error, { action: 'getNotificationPreferences' });
+    logError('Error getting notification preferences', error, {
+      action: 'getNotificationPreferences',
+    });
     return {
       success: false,
       error: {

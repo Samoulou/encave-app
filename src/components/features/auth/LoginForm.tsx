@@ -113,7 +113,7 @@ export function LoginForm() {
     >
       {/* Heading */}
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold text-slate-900 font-display">
+        <h1 className="font-display text-3xl font-bold text-slate-900">
           {t('title')}
         </h1>
         <p className="text-[#915564]">{t('subtitle')}</p>
@@ -121,7 +121,10 @@ export function LoginForm() {
 
       {/* Form */}
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="flex flex-col gap-5"
+        >
           {error && (
             <div className="rounded-lg bg-red-50 p-4 text-sm text-red-600">
               {error}
@@ -138,15 +141,15 @@ export function LoginForm() {
                   {tCommon('labels.email')}
                 </FormLabel>
                 <FormControl>
-                  <div className="relative group">
+                  <div className="group relative">
                     <Input
                       type="email"
                       placeholder={tCommon('placeholders.email')}
                       autoComplete="email"
-                      className="w-full h-12 px-4 pr-10 rounded-lg border border-border bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-400"
+                      className="h-12 w-full rounded-lg border border-border bg-white px-4 pr-10 text-slate-900 transition-all placeholder:text-slate-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                       {...field}
                     />
-                    <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
+                    <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-400 transition-colors group-focus-within:text-primary">
                       <Mail className="h-5 w-5" aria-hidden="true" />
                     </div>
                   </div>
@@ -162,32 +165,34 @@ export function LoginForm() {
             name="password"
             render={({ field }) => (
               <FormItem className="flex flex-col gap-2">
-                <div className="flex justify-between items-center">
+                <div className="flex items-center justify-between">
                   <FormLabel className="text-sm font-medium text-slate-900">
                     {tCommon('labels.password')}
                   </FormLabel>
                   <a
                     href="mailto:support@encave.ch?subject=Password%20Reset%20Request"
-                    className="text-sm font-medium text-primary hover:text-primary/80 hover:underline transition-all"
+                    className="text-sm font-medium text-primary transition-all hover:text-primary/80 hover:underline"
                     title={t('forgotPasswordContactSupport')}
                   >
                     {t('forgotPassword')}
                   </a>
                 </div>
                 <FormControl>
-                  <div className="relative group">
+                  <div className="group relative">
                     <Input
                       type={showPassword ? 'text' : 'password'}
                       placeholder="••••••••"
                       autoComplete="current-password"
-                      className="w-full h-12 px-4 pr-10 rounded-lg border border-border bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-400"
+                      className="h-12 w-full rounded-lg border border-border bg-white px-4 pr-10 text-slate-900 transition-all placeholder:text-slate-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                       {...field}
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-3 flex items-center text-slate-400 hover:text-slate-900 transition-colors"
-                      aria-label={showPassword ? t('hidePassword') : t('showPassword')}
+                      className="absolute inset-y-0 right-3 flex items-center text-slate-400 transition-colors hover:text-slate-900"
+                      aria-label={
+                        showPassword ? t('hidePassword') : t('showPassword')
+                      }
                     >
                       {showPassword ? (
                         <EyeOff className="h-5 w-5" />
@@ -212,7 +217,7 @@ export function LoginForm() {
             />
             <label
               htmlFor="remember"
-              className="text-sm font-medium text-slate-900 cursor-pointer"
+              className="cursor-pointer text-sm font-medium text-slate-900"
             >
               {t('rememberMe')}
             </label>
@@ -221,7 +226,7 @@ export function LoginForm() {
           {/* Submit Button */}
           <Button
             type="submit"
-            className="mt-2 w-full h-12 bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg transition-colors shadow-sm shadow-primary/30"
+            className="mt-2 h-12 w-full rounded-lg bg-primary font-semibold text-white shadow-sm shadow-primary/30 transition-colors hover:bg-primary/90"
             isLoading={isLoading}
             loadingText={t('signingIn')}
           >
@@ -232,12 +237,12 @@ export function LoginForm() {
           <SocialLoginButtons />
 
           {/* Sign Up Link */}
-          <div className="text-center mt-4">
+          <div className="mt-4 text-center">
             <p className="text-sm text-slate-500">
               {t('noAccount')}{' '}
               <Link
                 href="/register"
-                className="font-semibold text-primary hover:text-primary/80 hover:underline transition-all"
+                className="font-semibold text-primary transition-all hover:text-primary/80 hover:underline"
               >
                 {t('createAccount')}
               </Link>

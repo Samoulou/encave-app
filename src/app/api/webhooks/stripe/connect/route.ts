@@ -31,10 +31,7 @@ export async function POST(req: Request) {
 
   if (!signature) {
     logError('Missing stripe-signature header');
-    return NextResponse.json(
-      { error: 'Missing signature' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'Missing signature' }, { status: 400 });
   }
 
   let event: Stripe.Event;
@@ -44,7 +41,9 @@ export async function POST(req: Request) {
   } catch (err) {
     logError('Webhook signature verification failed', err);
     return NextResponse.json(
-      { error: `Webhook Error: ${err instanceof Error ? err.message : 'Unknown error'}` },
+      {
+        error: `Webhook Error: ${err instanceof Error ? err.message : 'Unknown error'}`,
+      },
       { status: 400 }
     );
   }
@@ -127,7 +126,9 @@ async function handleAccountDeauthorized(stripeAccountId: string) {
   });
 
   if (!winery) {
-    logWarn('No winery found for deauthorized Stripe account', { stripeAccountId });
+    logWarn('No winery found for deauthorized Stripe account', {
+      stripeAccountId,
+    });
     return;
   }
 

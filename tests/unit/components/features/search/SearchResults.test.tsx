@@ -113,9 +113,7 @@ describe('SearchResults', () => {
       />
     );
     expect(screen.getByText('No experiences found')).toBeDefined();
-    expect(
-      screen.getByText(/No experiences match your filters/)
-    ).toBeDefined();
+    expect(screen.getByText(/No experiences match your filters/)).toBeDefined();
   });
 
   it('renders sort dropdown with current value', () => {

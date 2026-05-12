@@ -113,7 +113,10 @@ export async function GET() {
           results.failed++;
         }
       } catch (error) {
-        logError('DailyDigest cron error for winery', error, { action: 'cronDailyDigest', wineryId: winery.id });
+        logError('DailyDigest cron error for winery', error, {
+          action: 'cronDailyDigest',
+          wineryId: winery.id,
+        });
         await logEmailFailed(
           'daily_digest',
           winery.id,

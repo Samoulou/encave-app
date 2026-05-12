@@ -10,7 +10,11 @@
  */
 
 export { BasePage } from './base.page';
-export { SearchPage, type ExperienceType, type SortOption } from './search.page';
+export {
+  SearchPage,
+  type ExperienceType,
+  type SortOption,
+} from './search.page';
 export { ExperienceDetailPage } from './experience-detail.page';
 export { BookingPage } from './booking.page';
 export { CheckoutPage, type VisitorFormData } from './checkout.page';

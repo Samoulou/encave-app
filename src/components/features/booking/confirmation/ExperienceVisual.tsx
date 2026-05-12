@@ -17,7 +17,7 @@ export function ExperienceVisual({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="w-full aspect-video rounded-lg overflow-hidden relative group">
+      <div className="group relative aspect-video w-full overflow-hidden rounded-lg">
         <Image
           src={coverPhoto}
           alt={experienceTitle}
@@ -25,8 +25,8 @@ export function ExperienceVisual({
           className="object-cover"
           sizes="(max-width: 768px) 100vw, 50vw"
         />
-        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
-        <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded text-xs font-semibold text-foreground">
+        <div className="absolute inset-0 bg-black/20 transition-colors group-hover:bg-black/10" />
+        <div className="absolute bottom-3 left-3 rounded bg-white/90 px-3 py-1 text-xs font-semibold text-foreground backdrop-blur-sm">
           {t('valaisSwitzerland')}
         </div>
       </div>

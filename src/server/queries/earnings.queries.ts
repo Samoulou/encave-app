@@ -128,7 +128,10 @@ function getTransactionStatus(
   }
 
   // Experience has passed - calculate business days
-  if (bookingStatus === BookingStatus.COMPLETED || bookingStatus === BookingStatus.CONFIRMED) {
+  if (
+    bookingStatus === BookingStatus.COMPLETED ||
+    bookingStatus === BookingStatus.CONFIRMED
+  ) {
     const businessDaysSince = getBusinessDaysSince(bookingDate);
 
     if (businessDaysSince >= 5) {
@@ -147,7 +150,9 @@ function getTransactionStatus(
  * Get earnings summary for dashboard cards.
  * Wrapped with React.cache for request-level deduplication.
  */
-export const getEarningsSummary = cache(async function getEarningsSummary(wineryId: string): Promise<EarningsSummary> {
+export const getEarningsSummary = cache(async function getEarningsSummary(
+  wineryId: string
+): Promise<EarningsSummary> {
   const now = new Date();
   const monthStart = startOfMonth(now);
   const monthEnd = endOfMonth(now);
@@ -191,20 +196,13 @@ export const getEarningsSummary = cache(async function getEarningsSummary(winery
   const lastMonth = bookings
     .filter(
       (b) =>
-        !b.refundIssued &&
-        b.date >= lastMonthStart &&
-        b.date <= lastMonthEnd
+        !b.refundIssued && b.date >= lastMonthStart && b.date <= lastMonthEnd
     )
     .reduce((sum, b) => sum + b.wineryPayout, 0);
 
   // Year to date (gross revenue)
   const yearToDate = bookings
-    .filter(
-      (b) =>
-        !b.refundIssued &&
-        b.date >= yearStart &&
-        b.date <= now
-    )
+    .filter((b) => !b.refundIssued && b.date >= yearStart && b.date <= now)
     .reduce((sum, b) => sum + b.totalPrice, 0);
 
   // Pending payout: bookings where experience passed but < 5 business days ago
@@ -217,7 +215,10 @@ export const getEarningsSummary = cache(async function getEarningsSummary(winery
     return status === 'pending' || status === 'processing';
   });
 
-  const pendingPayout = pendingBookings.reduce((sum, b) => sum + b.wineryPayout, 0);
+  const pendingPayout = pendingBookings.reduce(
+    (sum, b) => sum + b.wineryPayout,
+    0
+  );
 
   // Next payout date: earliest pending booking's estimated payout date
   const sortedPending = pendingBookings.sort(
@@ -371,7 +372,9 @@ export const getTransactions = cache(async function getTransactions(
  * Get year-to-date summary.
  * Wrapped with React.cache for request-level deduplication.
  */
-export const getYearToDateSummary = cache(async function getYearToDateSummary(wineryId: string): Promise<YearToDateSummary> {
+export const getYearToDateSummary = cache(async function getYearToDateSummary(
+  wineryId: string
+): Promise<YearToDateSummary> {
   const now = new Date();
   const yearStart = startOfYear(now);
   const yearEnd = endOfYear(now);
@@ -407,12 +410,14 @@ export const getYearToDateSummary = cache(async function getYearToDateSummary(wi
  * Get experiences for filter dropdown.
  * Wrapped with React.cache for request-level deduplication.
  */
-export const getWineryExperiencesForEarnings = cache(async function getWineryExperiencesForEarnings(
-  wineryId: string
-): Promise<{ id: string; title: string }[]> {
-  return db.experience.findMany({
-    where: { wineryId },
-    select: { id: true, title: true },
-    orderBy: { title: 'asc' },
-  });
-});
+export const getWineryExperiencesForEarnings = cache(
+  async function getWineryExperiencesForEarnings(
+    wineryId: string
+  ): Promise<{ id: string; title: string }[]> {
+    return db.experience.findMany({
+      where: { wineryId },
+      select: { id: true, title: true },
+      orderBy: { title: 'asc' },
+    });
+  }
+);

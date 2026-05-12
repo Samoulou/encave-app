@@ -43,7 +43,8 @@ export default async function Home({ params }: Props) {
     name: 'EnCave',
     url: baseUrl,
     logo: `${baseUrl}/logo.png`,
-    description: 'Plateforme de réservation d\'expériences viticoles en Valais, Suisse. Découvrez et réservez des dégustations de vin, visites de caves et expériences œnologiques authentiques.',
+    description:
+      "Plateforme de réservation d'expériences viticoles en Valais, Suisse. Découvrez et réservez des dégustations de vin, visites de caves et expériences œnologiques authentiques.",
     areaServed: {
       '@type': 'Place',
       name: 'Valais, Switzerland',
@@ -62,110 +63,115 @@ export default async function Home({ params }: Props) {
 
   return (
     <>
-    <JsonLd data={organizationSchema} />
-    <div className="min-h-screen bg-background">
-      <Header />
+      <JsonLd data={organizationSchema} />
+      <div className="min-h-screen bg-background">
+        <Header />
 
-      <main id="main-content">
-        {/* Hero Section with Background Image */}
-        <section className="relative h-[350px] sm:h-[450px] md:h-[500px] lg:h-[600px] w-full flex items-center justify-center overflow-hidden">
-          {/* Background Image */}
-          <div className="absolute inset-0 z-0">
-            {/* Gradient Overlay */}
-            <div
-              className="absolute inset-0 z-10"
-              style={{
-                background: 'linear-gradient(135deg, rgba(32, 18, 22, 0.4) 0%, rgba(150, 42, 72, 0.5) 100%)',
-              }}
-            />
-            <Image
-              src={heroBannerImage}
-              alt={t('heroImageAlt')}
-              fill
-              className="object-cover object-center"
-              priority
-              placeholder="blur"
-              sizes="100vw"
-              quality={60}
-            />
-          </div>
+        <main id="main-content">
+          {/* Hero Section with Background Image */}
+          <section className="relative flex h-[350px] w-full items-center justify-center overflow-hidden sm:h-[450px] md:h-[500px] lg:h-[600px]">
+            {/* Background Image */}
+            <div className="absolute inset-0 z-0">
+              {/* Gradient Overlay */}
+              <div
+                className="absolute inset-0 z-10"
+                style={{
+                  background:
+                    'linear-gradient(135deg, rgba(32, 18, 22, 0.4) 0%, rgba(150, 42, 72, 0.5) 100%)',
+                }}
+              />
+              <Image
+                src={heroBannerImage}
+                alt={t('heroImageAlt')}
+                fill
+                className="object-cover object-center"
+                priority
+                placeholder="blur"
+                sizes="100vw"
+                quality={60}
+              />
+            </div>
 
-          {/* Hero Content */}
-          <div className="relative z-20 w-full max-w-4xl px-4 text-center">
-            <h1 className="font-display text-4xl md:text-5xl lg:text-7xl font-light text-white mb-6 leading-[1.08] tracking-tight drop-shadow-sm">
-              {t.rich('heroTitle', {
-                strong: (chunks) => <strong className="font-bold">{chunks}</strong>,
-                em: (chunks) => <em className="text-gold-300">{chunks}</em>,
-              })}
-            </h1>
-            <p className="text-lg md:text-xl text-white/90 mb-10 max-w-2xl mx-auto font-medium drop-shadow-sm">
-              {t('heroSubtitle')}
-            </p>
+            {/* Hero Content */}
+            <div className="relative z-20 w-full max-w-4xl px-4 text-center">
+              <h1 className="mb-6 font-display text-4xl font-light leading-[1.08] tracking-tight text-white drop-shadow-sm md:text-5xl lg:text-7xl">
+                {t.rich('heroTitle', {
+                  strong: (chunks) => (
+                    <strong className="font-bold">{chunks}</strong>
+                  ),
+                  em: (chunks) => <em className="text-gold-300">{chunks}</em>,
+                })}
+              </h1>
+              <p className="mx-auto mb-10 max-w-2xl text-lg font-medium text-white/90 drop-shadow-sm md:text-xl">
+                {t('heroSubtitle')}
+              </p>
 
-            {/* Search Bar */}
-            <HeroSearchBar />
-          </div>
-        </section>
+              {/* Search Bar */}
+              <HeroSearchBar />
+            </div>
+          </section>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-24">
-        {/* Popular Experiences Section */}
-        <FadeIn>
-          <PopularExperiences experiences={featuredExperiences} />
-        </FadeIn>
+          <div className="mx-auto max-w-7xl space-y-24 px-4 py-16 sm:px-6 lg:px-8">
+            {/* Popular Experiences Section */}
+            <FadeIn>
+              <PopularExperiences experiences={featuredExperiences} />
+            </FadeIn>
 
-        {/* How It Works Section */}
-        <FadeIn>
-          <HowItWorks />
-        </FadeIn>
+            {/* How It Works Section */}
+            <FadeIn>
+              <HowItWorks />
+            </FadeIn>
 
-        {/* CTA Banner Section */}
-        <FadeIn>
-        <section className="relative rounded-3xl overflow-hidden">
-          <div className="absolute inset-0 bg-[#201216]">
-            <Image
-              src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=1920&auto=format&fit=crop"
-              alt={t('ctaImageAlt')}
-              fill
-              className="object-cover opacity-40 mix-blend-overlay"
-              sizes="100vw"
-            />
-          </div>
-          <div className="relative z-10 px-6 py-20 text-center">
-            <h2 className="font-display text-3xl md:text-5xl font-extrabold text-white mb-6">
-              {t('ctaTitle')}
-            </h2>
-            <p className="text-lg text-white/80 mb-8 max-w-xl mx-auto">
-              {t('ctaSubtitle')}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" asChild className="bg-primary hover:bg-[hsl(var(--primary-hover))] shadow-lg">
-                <Link href="/experiences">
-                  {t('ctaButton')}
-                </Link>
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                asChild
-                className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white border-white/30"
-              >
-                <Link href="/register?winemaker=true">
-                  {t('becomePartner')}
-                </Link>
-              </Button>
+            {/* CTA Banner Section */}
+            <FadeIn>
+              <section className="relative overflow-hidden rounded-3xl">
+                <div className="absolute inset-0 bg-[#201216]">
+                  <Image
+                    src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=1920&auto=format&fit=crop"
+                    alt={t('ctaImageAlt')}
+                    fill
+                    className="object-cover opacity-40 mix-blend-overlay"
+                    sizes="100vw"
+                  />
+                </div>
+                <div className="relative z-10 px-6 py-20 text-center">
+                  <h2 className="mb-6 font-display text-3xl font-extrabold text-white md:text-5xl">
+                    {t('ctaTitle')}
+                  </h2>
+                  <p className="mx-auto mb-8 max-w-xl text-lg text-white/80">
+                    {t('ctaSubtitle')}
+                  </p>
+                  <div className="flex flex-col justify-center gap-4 sm:flex-row">
+                    <Button
+                      size="lg"
+                      asChild
+                      className="bg-primary shadow-lg hover:bg-[hsl(var(--primary-hover))]"
+                    >
+                      <Link href="/experiences">{t('ctaButton')}</Link>
+                    </Button>
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      asChild
+                      className="border-white/30 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20"
+                    >
+                      <Link href="/register?winemaker=true">
+                        {t('becomePartner')}
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              </section>
+            </FadeIn>
+
+            {/* Health Status (for development) */}
+            <div className="mt-8 flex justify-center">
+              <HealthStatus />
             </div>
           </div>
-        </section>
-        </FadeIn>
-
-        {/* Health Status (for development) */}
-        <div className="mt-8 flex justify-center">
-          <HealthStatus />
-        </div>
-        </div>
-      </main>
-      <Footer />
-    </div>
+        </main>
+        <Footer />
+      </div>
     </>
   );
 }

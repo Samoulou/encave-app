@@ -38,7 +38,7 @@ export const VALAIS_LOCATIONS: ValaisLocation[] = [
     type: 'city',
     parentCommune: null,
     latitude: 46.2922,
-    longitude: 7.5350,
+    longitude: 7.535,
     searchTerms: ['Siders'],
   },
   {
@@ -46,8 +46,8 @@ export const VALAIS_LOCATIONS: ValaisLocation[] = [
     name: 'Martigny',
     type: 'city',
     parentCommune: null,
-    latitude: 46.1030,
-    longitude: 7.0720,
+    latitude: 46.103,
+    longitude: 7.072,
     searchTerms: ['Martinach'],
   },
   {
@@ -148,7 +148,7 @@ export const VALAIS_LOCATIONS: ValaisLocation[] = [
     name: 'Grône',
     type: 'commune',
     parentCommune: null,
-    latitude: 46.2500,
+    latitude: 46.25,
     longitude: 7.4667,
   },
   {
@@ -156,7 +156,7 @@ export const VALAIS_LOCATIONS: ValaisLocation[] = [
     name: 'Icogne',
     type: 'commune',
     parentCommune: null,
-    latitude: 46.3000,
+    latitude: 46.3,
     longitude: 7.4333,
   },
   {
@@ -165,7 +165,7 @@ export const VALAIS_LOCATIONS: ValaisLocation[] = [
     type: 'commune',
     parentCommune: null,
     latitude: 46.2833,
-    longitude: 7.4500,
+    longitude: 7.45,
   },
   {
     id: 'leuk',
@@ -182,7 +182,7 @@ export const VALAIS_LOCATIONS: ValaisLocation[] = [
     type: 'commune',
     parentCommune: null,
     latitude: 46.1833,
-    longitude: 7.2000,
+    longitude: 7.2,
   },
   {
     id: 'miege',
@@ -190,7 +190,7 @@ export const VALAIS_LOCATIONS: ValaisLocation[] = [
     type: 'commune',
     parentCommune: null,
     latitude: 46.3167,
-    longitude: 7.5500,
+    longitude: 7.55,
   },
   {
     id: 'montana',
@@ -207,7 +207,7 @@ export const VALAIS_LOCATIONS: ValaisLocation[] = [
     type: 'commune',
     parentCommune: null,
     latitude: 46.1858,
-    longitude: 7.3050,
+    longitude: 7.305,
   },
   {
     id: 'orsieres',
@@ -215,7 +215,7 @@ export const VALAIS_LOCATIONS: ValaisLocation[] = [
     type: 'commune',
     parentCommune: null,
     latitude: 46.0333,
-    longitude: 7.1500,
+    longitude: 7.15,
   },
   {
     id: 'riddes',
@@ -238,7 +238,7 @@ export const VALAIS_LOCATIONS: ValaisLocation[] = [
     name: 'Saint-Léonard',
     type: 'commune',
     parentCommune: null,
-    latitude: 46.2500,
+    latitude: 46.25,
     longitude: 7.4167,
   },
   {
@@ -247,15 +247,15 @@ export const VALAIS_LOCATIONS: ValaisLocation[] = [
     type: 'commune',
     parentCommune: null,
     latitude: 46.2167,
-    longitude: 7.0000,
+    longitude: 7.0,
   },
   {
     id: 'salgesch',
     name: 'Salgesch',
     type: 'commune',
     parentCommune: null,
-    latitude: 46.3100,
-    longitude: 7.5700,
+    latitude: 46.31,
+    longitude: 7.57,
     searchTerms: ['Salquenen'],
   },
   {
@@ -271,15 +271,15 @@ export const VALAIS_LOCATIONS: ValaisLocation[] = [
     name: 'Savièse',
     type: 'commune',
     parentCommune: null,
-    latitude: 46.2500,
-    longitude: 7.3500,
+    latitude: 46.25,
+    longitude: 7.35,
   },
   {
     id: 'saxon',
     name: 'Saxon',
     type: 'commune',
     parentCommune: null,
-    latitude: 46.1500,
+    latitude: 46.15,
     longitude: 7.1667,
   },
   {
@@ -288,7 +288,7 @@ export const VALAIS_LOCATIONS: ValaisLocation[] = [
     type: 'commune',
     parentCommune: null,
     latitude: 46.0833,
-    longitude: 7.1500,
+    longitude: 7.15,
   },
   {
     id: 'varen',
@@ -296,14 +296,14 @@ export const VALAIS_LOCATIONS: ValaisLocation[] = [
     type: 'commune',
     parentCommune: null,
     latitude: 46.3167,
-    longitude: 7.6000,
+    longitude: 7.6,
   },
   {
     id: 'venthone',
     name: 'Venthône',
     type: 'commune',
     parentCommune: null,
-    latitude: 46.3000,
+    latitude: 46.3,
     longitude: 7.5333,
   },
   {
@@ -319,7 +319,7 @@ export const VALAIS_LOCATIONS: ValaisLocation[] = [
     name: 'Veyras',
     type: 'commune',
     parentCommune: null,
-    latitude: 46.3000,
+    latitude: 46.3,
     longitude: 7.5333,
   },
   {
@@ -327,8 +327,8 @@ export const VALAIS_LOCATIONS: ValaisLocation[] = [
     name: 'Visperterminen',
     type: 'commune',
     parentCommune: null,
-    latitude: 46.2500,
-    longitude: 7.9000,
+    latitude: 46.25,
+    longitude: 7.9,
   },
   {
     id: 'vouvry',
@@ -344,7 +344,7 @@ export const VALAIS_LOCATIONS: ValaisLocation[] = [
     type: 'commune',
     parentCommune: null,
     latitude: 46.0167,
-    longitude: 7.7500,
+    longitude: 7.75,
   },
 
   // Villages within communes
@@ -362,7 +362,7 @@ export const VALAIS_LOCATIONS: ValaisLocation[] = [
     type: 'village',
     parentCommune: 'Sion',
     latitude: 46.2333,
-    longitude: 7.4000,
+    longitude: 7.4,
   },
   {
     id: 'pont-de-la-morge',
@@ -370,22 +370,22 @@ export const VALAIS_LOCATIONS: ValaisLocation[] = [
     type: 'village',
     parentCommune: 'Conthey',
     latitude: 46.2197,
-    longitude: 7.3100,
+    longitude: 7.31,
   },
   {
     id: 'plan-conthey',
     name: 'Plan-Conthey',
     type: 'village',
     parentCommune: 'Conthey',
-    latitude: 46.2300,
-    longitude: 7.3000,
+    latitude: 46.23,
+    longitude: 7.3,
   },
   {
     id: 'saint-pierre-de-clages',
     name: 'Saint-Pierre-de-Clages',
     type: 'village',
     parentCommune: 'Chamoson',
-    latitude: 46.1950,
+    latitude: 46.195,
     longitude: 7.2119,
   },
   {
@@ -393,8 +393,8 @@ export const VALAIS_LOCATIONS: ValaisLocation[] = [
     name: 'Magnot',
     type: 'village',
     parentCommune: 'Chamoson',
-    latitude: 46.2000,
-    longitude: 7.2100,
+    latitude: 46.2,
+    longitude: 7.21,
   },
   {
     id: 'vercorin',
@@ -418,15 +418,15 @@ export const VALAIS_LOCATIONS: ValaisLocation[] = [
     type: 'village',
     parentCommune: 'Sierre',
     latitude: 46.2833,
-    longitude: 7.5500,
+    longitude: 7.55,
   },
   {
     id: 'muraz',
     name: 'Muraz',
     type: 'village',
     parentCommune: 'Sierre',
-    latitude: 46.2950,
-    longitude: 7.5100,
+    latitude: 46.295,
+    longitude: 7.51,
   },
   {
     id: 'granges',
@@ -451,31 +451,31 @@ export const VALAIS_LOCATIONS: ValaisLocation[] = [
     type: 'village',
     parentCommune: 'Lens',
     latitude: 46.2667,
-    longitude: 7.4500,
+    longitude: 7.45,
   },
   {
     id: 'chelin',
     name: 'Chelin',
     type: 'village',
     parentCommune: 'Lens',
-    latitude: 46.2800,
-    longitude: 7.4400,
+    latitude: 46.28,
+    longitude: 7.44,
   },
   {
     id: 'saint-clement',
     name: 'Saint-Clément',
     type: 'village',
     parentCommune: 'Ayent',
-    latitude: 46.2700,
-    longitude: 7.4100,
+    latitude: 46.27,
+    longitude: 7.41,
   },
   {
     id: 'botyre',
     name: 'Botyre',
     type: 'village',
     parentCommune: 'Ayent',
-    latitude: 46.2600,
-    longitude: 7.4000,
+    latitude: 46.26,
+    longitude: 7.4,
   },
   {
     id: 'anzere',
@@ -490,40 +490,40 @@ export const VALAIS_LOCATIONS: ValaisLocation[] = [
     name: 'Châteauneuf',
     type: 'village',
     parentCommune: 'Conthey',
-    latitude: 46.2300,
-    longitude: 7.3200,
+    latitude: 46.23,
+    longitude: 7.32,
   },
   {
     id: 'erde',
     name: 'Erde',
     type: 'village',
     parentCommune: 'Conthey',
-    latitude: 46.2200,
-    longitude: 7.3400,
+    latitude: 46.22,
+    longitude: 7.34,
   },
   {
     id: 'ovronnaz',
     name: 'Ovronnaz',
     type: 'village',
     parentCommune: 'Leytron',
-    latitude: 46.2000,
-    longitude: 7.1700,
+    latitude: 46.2,
+    longitude: 7.17,
   },
   {
     id: 'produit',
     name: 'Produit',
     type: 'village',
     parentCommune: 'Leytron',
-    latitude: 46.1900,
-    longitude: 7.1900,
+    latitude: 46.19,
+    longitude: 7.19,
   },
   {
     id: 'mayens-de-chamoson',
     name: 'Mayens de Chamoson',
     type: 'village',
     parentCommune: 'Chamoson',
-    latitude: 46.2100,
-    longitude: 7.1900,
+    latitude: 46.21,
+    longitude: 7.19,
   },
   {
     id: 'isérables',
@@ -538,8 +538,8 @@ export const VALAIS_LOCATIONS: ValaisLocation[] = [
     name: 'Aproz',
     type: 'village',
     parentCommune: 'Nendaz',
-    latitude: 46.1900,
-    longitude: 7.3000,
+    latitude: 46.19,
+    longitude: 7.3,
   },
   {
     id: 'haute-nendaz',
@@ -588,7 +588,7 @@ export const VALAIS_LOCATIONS: ValaisLocation[] = [
     type: 'village',
     parentCommune: 'Orsières',
     latitude: 45.9333,
-    longitude: 7.1000,
+    longitude: 7.1,
   },
   {
     id: 'troistorrents',
@@ -628,16 +628,16 @@ export const VALAIS_LOCATIONS: ValaisLocation[] = [
     name: 'Susten',
     type: 'village',
     parentCommune: 'Leuk',
-    latitude: 46.3100,
-    longitude: 7.6200,
+    latitude: 46.31,
+    longitude: 7.62,
   },
   {
     id: 'agarn',
     name: 'Agarn',
     type: 'village',
     parentCommune: 'Leuk',
-    latitude: 46.3000,
-    longitude: 7.6500,
+    latitude: 46.3,
+    longitude: 7.65,
   },
 ];
 
@@ -652,7 +652,10 @@ export function getLocationById(id: string): ValaisLocation | undefined {
  * Search locations by text (name or search terms)
  * Returns matching locations sorted by relevance
  */
-export function searchLocations(query: string, limit: number = 8): ValaisLocation[] {
+export function searchLocations(
+  query: string,
+  limit: number = 8
+): ValaisLocation[] {
   if (!query || query.length < 1) return [];
 
   const normalizedQuery = query.toLowerCase().trim();
@@ -660,7 +663,8 @@ export function searchLocations(query: string, limit: number = 8): ValaisLocatio
   // Score each location based on how well it matches
   const scored = VALAIS_LOCATIONS.map((location) => {
     const nameLower = location.name.toLowerCase();
-    const searchTermsLower = location.searchTerms?.map((t) => t.toLowerCase()) || [];
+    const searchTermsLower =
+      location.searchTerms?.map((t) => t.toLowerCase()) || [];
 
     let score = 0;
 
@@ -681,7 +685,9 @@ export function searchLocations(query: string, limit: number = 8): ValaisLocatio
       score = 90;
     }
     // Search terms starts with
-    else if (searchTermsLower.some((term) => term.startsWith(normalizedQuery))) {
+    else if (
+      searchTermsLower.some((term) => term.startsWith(normalizedQuery))
+    ) {
       score = 70;
     }
     // Search terms contains
@@ -720,5 +726,7 @@ export function getLocationDisplayName(location: ValaisLocation): string {
  * Get all locations sorted by name
  */
 export function getAllLocationsSorted(): ValaisLocation[] {
-  return [...VALAIS_LOCATIONS].sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+  return [...VALAIS_LOCATIONS].sort((a, b) =>
+    a.name.localeCompare(b.name, 'fr')
+  );
 }

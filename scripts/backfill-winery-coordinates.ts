@@ -20,7 +20,9 @@ interface NominatimResponse {
   display_name: string;
 }
 
-async function geocodeAddress(address: string): Promise<GeocodingResult | null> {
+async function geocodeAddress(
+  address: string
+): Promise<GeocodingResult | null> {
   try {
     const searchQuery = address.includes('Switzerland')
       ? address
@@ -105,7 +107,9 @@ async function main() {
         },
       });
 
-      console.log(`  ✓ Success: ${coordinates.latitude}, ${coordinates.longitude}`);
+      console.log(
+        `  ✓ Success: ${coordinates.latitude}, ${coordinates.longitude}`
+      );
       successCount++;
     } else {
       // Try with just commune as fallback

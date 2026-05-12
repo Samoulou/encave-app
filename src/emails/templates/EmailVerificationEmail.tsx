@@ -24,8 +24,18 @@ export function EmailVerificationEmail({
   const expiry = t(auth.verification.expiry, locale);
 
   return (
-    <EmailLayout locale={locale} preview={t(subjects.emailVerification, locale)}>
-      <Text style={{ fontSize: '24px', fontWeight: 'bold', color: '#7c2d12', margin: '0 0 16px 0' }}>
+    <EmailLayout
+      locale={locale}
+      preview={t(subjects.emailVerification, locale)}
+    >
+      <Text
+        style={{
+          fontSize: '24px',
+          fontWeight: 'bold',
+          color: '#7c2d12',
+          margin: '0 0 16px 0',
+        }}
+      >
         {title}
       </Text>
 
@@ -33,15 +43,15 @@ export function EmailVerificationEmail({
         {greeting} {userName},
       </Text>
 
-      <Text style={{ margin: '0 0 24px 0' }}>
-        {intro}
-      </Text>
+      <Text style={{ margin: '0 0 24px 0' }}>{intro}</Text>
 
       <div style={{ textAlign: 'center', margin: '0 0 24px 0' }}>
         <EmailButton href={verificationUrl}>{button}</EmailButton>
       </div>
 
-      <Text style={{ margin: '0 0 24px 0', color: '#6b7280', fontSize: '14px' }}>
+      <Text
+        style={{ margin: '0 0 24px 0', color: '#6b7280', fontSize: '14px' }}
+      >
         {expiry}
       </Text>
 

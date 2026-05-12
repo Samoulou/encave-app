@@ -22,7 +22,8 @@ export function MobileOrderSummary(props: MobileOrderSummaryProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const t = useTranslations('checkout');
 
-  const total = props.pricePerPerson * props.guestCount + (props.serviceFee ?? 0);
+  const total =
+    props.pricePerPerson * props.guestCount + (props.serviceFee ?? 0);
 
   return (
     <div className="lg:hidden">
@@ -30,11 +31,15 @@ export function MobileOrderSummary(props: MobileOrderSummaryProps) {
       <button
         type="button"
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full bg-white p-4 rounded-xl shadow-sm border border-border flex items-center justify-between"
+        className="flex w-full items-center justify-between rounded-xl border border-border bg-white p-4 shadow-sm"
       >
         <div className="flex items-center gap-3">
-          <span className="font-medium text-foreground">{t('orderSummary')}</span>
-          <span className="text-lg font-bold text-primary">{formatCHF(total)}</span>
+          <span className="font-medium text-foreground">
+            {t('orderSummary')}
+          </span>
+          <span className="text-lg font-bold text-primary">
+            {formatCHF(total)}
+          </span>
         </div>
         {isExpanded ? (
           <ChevronUp className="h-5 w-5 text-[#915564]" />

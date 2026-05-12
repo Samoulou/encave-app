@@ -40,7 +40,7 @@ function getTrustedOrigins(): string[] {
     origins.push(
       'http://localhost:3000',
       'http://localhost:3001',
-      'http://localhost:3002',
+      'http://localhost:3002'
     );
   }
 
@@ -51,7 +51,8 @@ function getTrustedOrigins(): string[] {
  * Build social providers config - only include providers with valid credentials
  */
 function getSocialProviders() {
-  const providers: Record<string, { clientId: string; clientSecret: string }> = {};
+  const providers: Record<string, { clientId: string; clientSecret: string }> =
+    {};
 
   if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
     providers.google = {
@@ -142,7 +143,7 @@ export const auth = betterAuth({
 
 // Use Better Auth's inferred types for type safety
 export type Session = typeof auth.$Infer.Session;
-export type User = typeof auth.$Infer.Session['user'];
+export type User = (typeof auth.$Infer.Session)['user'];
 
 // Export type for handler
 export type BetterAuth = typeof auth;

@@ -1,7 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { CheckCircle, Clock, AlertCircle, ArrowRight, Loader2 } from 'lucide-react';
+import {
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  ArrowRight,
+  Loader2,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
@@ -44,16 +50,17 @@ export function StripeCallbackResult({
       <Card className="border-green-200 bg-green-50">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-            <CheckCircle className="h-8 w-8 text-green-600" aria-hidden="true" />
+            <CheckCircle
+              className="h-8 w-8 text-green-600"
+              aria-hidden="true"
+            />
           </div>
           <CardTitle className="font-display text-2xl text-green-800">
             {t('setupComplete')}
           </CardTitle>
         </CardHeader>
         <CardContent className="text-center">
-          <p className="mb-6 text-green-700">
-            {t('setupCompleteDescription')}
-          </p>
+          <p className="mb-6 text-green-700">{t('setupCompleteDescription')}</p>
           <Button asChild>
             <Link href="/dashboard/experiences">
               {t('goToExperiences')}
@@ -96,7 +103,10 @@ export function StripeCallbackResult({
     <Card className="border-burgundy-200 bg-burgundy-50">
       <CardHeader className="text-center">
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-burgundy-100">
-          <AlertCircle className="h-8 w-8 text-burgundy-600" aria-hidden="true" />
+          <AlertCircle
+            className="h-8 w-8 text-burgundy-600"
+            aria-hidden="true"
+          />
         </div>
         <CardTitle className="font-display text-2xl text-burgundy-800">
           {isRefresh ? t('sessionExpired') : t('setupIncomplete')}
@@ -112,7 +122,10 @@ export function StripeCallbackResult({
           <Button onClick={handleContinueOnboarding} disabled={isLoading}>
             {isLoading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                <Loader2
+                  className="mr-2 h-4 w-4 animate-spin"
+                  aria-hidden="true"
+                />
                 {t('loading')}
               </>
             ) : (

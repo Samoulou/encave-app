@@ -28,7 +28,9 @@ export function LocationAutocomplete({
   referenceLocation,
 }: LocationAutocompleteProps) {
   const t = useTranslations('search');
-  const [inputValue, setInputValue] = useState(value ? getLocationDisplayName(value) : '');
+  const [inputValue, setInputValue] = useState(
+    value ? getLocationDisplayName(value) : ''
+  );
   const [suggestions, setSuggestions] = useState<ValaisLocation[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -49,7 +51,10 @@ export function LocationAutocomplete({
   // Handle clicks outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
         setActiveIndex(-1);
       }
@@ -114,11 +119,15 @@ export function LocationAutocomplete({
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
-        setActiveIndex((prev) => (prev < suggestions.length - 1 ? prev + 1 : 0));
+        setActiveIndex((prev) =>
+          prev < suggestions.length - 1 ? prev + 1 : 0
+        );
         break;
       case 'ArrowUp':
         e.preventDefault();
-        setActiveIndex((prev) => (prev > 0 ? prev - 1 : suggestions.length - 1));
+        setActiveIndex((prev) =>
+          prev > 0 ? prev - 1 : suggestions.length - 1
+        );
         break;
       case 'Enter':
         e.preventDefault();
@@ -142,7 +151,9 @@ export function LocationAutocomplete({
   // Scroll active item into view
   useEffect(() => {
     if (activeIndex >= 0 && listRef.current) {
-      const activeElement = listRef.current.children[activeIndex] as HTMLElement;
+      const activeElement = listRef.current.children[
+        activeIndex
+      ] as HTMLElement;
       if (activeElement) {
         activeElement.scrollIntoView({ block: 'nearest' });
       }
@@ -192,7 +203,7 @@ export function LocationAutocomplete({
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600"
             aria-label={t('clearLocation')}
           >
             <X className="h-4 w-4" />
@@ -229,17 +240,23 @@ export function LocationAutocomplete({
                   <MapPin
                     className={cn(
                       'h-4 w-4 flex-shrink-0',
-                      index === activeIndex ? 'text-burgundy-600' : 'text-slate-400'
+                      index === activeIndex
+                        ? 'text-burgundy-600'
+                        : 'text-slate-400'
                     )}
                     aria-hidden="true"
                   />
                   <span className="font-medium">{location.name}</span>
                   {location.parentCommune && (
-                    <span className="text-slate-500">, {location.parentCommune}</span>
+                    <span className="text-slate-500">
+                      , {location.parentCommune}
+                    </span>
                   )}
                 </div>
                 {distance && (
-                  <span className="ml-2 text-xs text-slate-400">{distance}</span>
+                  <span className="ml-2 text-xs text-slate-400">
+                    {distance}
+                  </span>
                 )}
               </li>
             );

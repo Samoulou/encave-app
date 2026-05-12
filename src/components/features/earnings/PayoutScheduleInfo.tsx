@@ -9,9 +9,7 @@ export async function PayoutScheduleInfo() {
       <Info className="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-600" />
       <div className="text-sm text-blue-900">
         <p className="font-medium">{t('title')}</p>
-        <p className="mt-1 text-blue-700">
-          {t('description')}
-        </p>
+        <p className="mt-1 text-blue-700">{t('description')}</p>
       </div>
     </div>
   );

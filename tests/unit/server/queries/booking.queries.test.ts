@@ -52,7 +52,11 @@ describe('booking.queries', () => {
         refundIssued: false,
         refundAmount: null,
         createdAt: new Date('2026-01-10'),
-        experience: { id: 'exp-1', title: 'Wine Tasting', slug: 'wine-tasting' },
+        experience: {
+          id: 'exp-1',
+          title: 'Wine Tasting',
+          slug: 'wine-tasting',
+        },
       },
     ];
 
@@ -215,8 +219,14 @@ describe('booking.queries', () => {
     it('returns summary statistics for a winery', async () => {
       vi.mocked(db.booking.aggregate)
         .mockResolvedValueOnce({ _count: 3, _sum: { guestCount: 8 } } as never) // Today
-        .mockResolvedValueOnce({ _count: 10, _sum: { guestCount: 25 } } as never) // Week
-        .mockResolvedValueOnce({ _count: 45, _sum: { guestCount: 120 } } as never) // Month
+        .mockResolvedValueOnce({
+          _count: 10,
+          _sum: { guestCount: 25 },
+        } as never) // Week
+        .mockResolvedValueOnce({
+          _count: 45,
+          _sum: { guestCount: 120 },
+        } as never) // Month
         .mockResolvedValueOnce({ _sum: { guestCount: 500 } } as never); // Total
 
       const result = await getBookingSummary('winery-123');
@@ -234,9 +244,18 @@ describe('booking.queries', () => {
 
     it('handles null guest counts gracefully', async () => {
       vi.mocked(db.booking.aggregate)
-        .mockResolvedValueOnce({ _count: 0, _sum: { guestCount: null } } as never)
-        .mockResolvedValueOnce({ _count: 0, _sum: { guestCount: null } } as never)
-        .mockResolvedValueOnce({ _count: 0, _sum: { guestCount: null } } as never)
+        .mockResolvedValueOnce({
+          _count: 0,
+          _sum: { guestCount: null },
+        } as never)
+        .mockResolvedValueOnce({
+          _count: 0,
+          _sum: { guestCount: null },
+        } as never)
+        .mockResolvedValueOnce({
+          _count: 0,
+          _sum: { guestCount: null },
+        } as never)
         .mockResolvedValueOnce({ _sum: { guestCount: null } } as never);
 
       const result = await getBookingSummary('winery-123');
@@ -311,7 +330,9 @@ describe('booking.queries', () => {
         { id: 'exp-1', title: 'Cellar Tour' },
         { id: 'exp-2', title: 'Wine Tasting' },
       ];
-      vi.mocked(db.experience.findMany).mockResolvedValue(mockExperiences as never);
+      vi.mocked(db.experience.findMany).mockResolvedValue(
+        mockExperiences as never
+      );
 
       const result = await getWineryExperiencesForFilter('winery-123');
 
@@ -370,12 +391,18 @@ describe('booking.queries', () => {
         refundIssued: false,
         refundAmount: null,
         createdAt: new Date('2026-01-05'),
-        experience: { id: 'exp-1', title: 'Wine Tasting', slug: 'wine-tasting' },
+        experience: {
+          id: 'exp-1',
+          title: 'Wine Tasting',
+          slug: 'wine-tasting',
+        },
       },
     ];
 
     it('returns booking history for a client', async () => {
-      vi.mocked(db.booking.findMany).mockResolvedValue(mockClientBookings as never);
+      vi.mocked(db.booking.findMany).mockResolvedValue(
+        mockClientBookings as never
+      );
 
       const result = await getClientHistoryWithWinery(
         'winery-123',

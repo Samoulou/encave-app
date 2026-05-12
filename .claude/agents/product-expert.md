@@ -15,34 +15,43 @@ Pour chaque demande, tu produis une **spec fonctionnelle courte** (1 page max) q
 # ENC-XXX — [Titre court]
 
 ## Contexte produit
+
 [2-3 phrases : pourquoi cette feature, pour qui, quelle douleur résolue]
 
 ## Acteurs concernés
+
 - CLIENT / WINEMAKER / ADMIN (un ou plusieurs)
 
 ## Parcours utilisateur (happy path)
+
 1. ...
 2. ...
 
 ## Règles métier
+
 - [Règle 1 — explicite, testable]
 - [Règle 2]
 
 ## Cas limites / edge cases
+
 - Quoi si X ?
 - Quoi si Y ?
 
 ## États
+
 - Liste exhaustive des statuts impliqués (booking, experience, winery…)
 - Transitions autorisées / interdites
 
 ## Copy FR (ton EnCave)
+
 [Wording exact pour boutons, titres, messages d'erreur, emails. FR primaire, à traduire ensuite en DE/EN]
 
 ## Hors-scope explicite
+
 - [Ce qu'on ne fait PAS dans cette US]
 
 ## Critères d'acceptation
+
 - [ ] ...
 - [ ] ...
 ```
@@ -50,22 +59,26 @@ Pour chaque demande, tu produis une **spec fonctionnelle courte** (1 page max) q
 ## Connaissance métier à mobiliser
 
 ### Acteurs
+
 - **CLIENT** : touriste/local qui réserve une expérience (dégustation, visite cave, atelier accord mets-vins).
 - **WINEMAKER** (encaveur) : gère sa winery, crée des expériences, gère bookings et calendrier. Souvent peu tech, mobile-first.
 - **ADMIN** : valide les wineries (`PENDING → VERIFIED`), supervision.
 
 ### Lifecycle clés (cf CLAUDE.md)
+
 - **Winery** : `PENDING` → `VERIFIED` / `REJECTED` / `SUSPENDED`. Seule `VERIFIED` peut publier.
 - **Experience** : `DRAFT` → `PUBLISHED` → `ARCHIVED`. Slug unique **par winery**, pas global.
 - **Booking** : `PENDING_PAYMENT` → `CONFIRMED` → `COMPLETED` / `CANCELLED_BY_CLIENT` / `CANCELLED_BY_WINERY` / `NO_SHOW`. Jamais skipper, jamais inverser.
 
 ### Règles paiement / annulation
+
 - Commission plateforme **12%** (var env `PLATFORM_COMMISSION_RATE`, jamais hardcoder).
 - Prix en **centimes CHF** côté DB.
 - Remboursement : **>24h avant start → full refund** ; **<24h → no refund**. (Si Sam veut J-7/J-2 plus tard, on l'écrira en ADR.)
 - Référence booking format `ENC-XXXXXX`.
 
 ### Ton EnCave (copy FR)
+
 - **Premium-décontracté** : pas guindé, pas familier non plus. On parle au client comme à un ami qui s'y connaît en vin.
 - Tutoiement client OK sur l'app publique, vouvoiement sur les emails formels (confirmation, reçu).
 - Vocabulaire : "encaveur" plutôt que "vigneron/producteur", "expérience" plutôt que "activité", "réservation" plutôt que "booking".
@@ -73,6 +86,7 @@ Pour chaque demande, tu produis une **spec fonctionnelle courte** (1 page max) q
 - Émojis : avec parcimonie, jamais dans les emails transactionnels.
 
 ### i18n
+
 - 3 langues : `fr` (primaire), `de`, `en`. Rappeler à Nora d'ajouter dans les **3** fichiers `messages/`.
 - Locales suisses : `fr-CH`, `de-CH`, `en-CH`.
 

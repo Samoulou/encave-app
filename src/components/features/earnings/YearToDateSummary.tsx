@@ -14,7 +14,9 @@ export async function YearToDateSummary({ summary }: YearToDateSummaryProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">{t('title', { year: currentYear })}</CardTitle>
+        <CardTitle className="text-lg">
+          {t('title', { year: currentYear })}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -45,7 +47,9 @@ export async function YearToDateSummary({ summary }: YearToDateSummaryProps) {
         </div>
         {summary.refundedAmount > 0 && (
           <div className="mt-4 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
-            {t('refundedThisYear', { amount: formatCHF(summary.refundedAmount) })}
+            {t('refundedThisYear', {
+              amount: formatCHF(summary.refundedAmount),
+            })}
           </div>
         )}
       </CardContent>

@@ -76,7 +76,7 @@ export const DISTANCE_THRESHOLDS = {
  * @returns Items sorted by distance with distance added
  */
 export function sortByDistance<
-  T extends { latitude?: number | null; longitude?: number | null }
+  T extends { latitude?: number | null; longitude?: number | null },
 >(
   items: T[],
   refLat: number,
@@ -132,7 +132,10 @@ export function groupByDistanceTier<T extends { distance: number | null }>(
  * @param lng Longitude
  * @returns True if coordinates are valid
  */
-export function isValidCoordinates(lat: number | null | undefined, lng: number | null | undefined): lat is number {
+export function isValidCoordinates(
+  lat: number | null | undefined,
+  lng: number | null | undefined
+): lat is number {
   if (lat == null || lng == null) return false;
   return lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
 }

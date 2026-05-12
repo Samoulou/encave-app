@@ -5,11 +5,17 @@ test.describe('Winery Directory', () => {
     test('displays page title and description', async ({ page }) => {
       await page.goto('/wineries');
 
-      await expect(page.getByRole('heading', { name: 'Wineries in Valais' })).toBeVisible();
-      await expect(page.getByText('Discover the finest winemakers')).toBeVisible();
+      await expect(
+        page.getByRole('heading', { name: 'Wineries in Valais' })
+      ).toBeVisible();
+      await expect(
+        page.getByText('Discover the finest winemakers')
+      ).toBeVisible();
     });
 
-    test('shows empty state when no verified wineries exist', async ({ page }) => {
+    test('shows empty state when no verified wineries exist', async ({
+      page,
+    }) => {
       await page.goto('/wineries');
 
       // If no wineries, should show coming soon message
@@ -17,7 +23,7 @@ test.describe('Winery Directory', () => {
       const wineryCards = page.locator('[data-testid="winery-card"]');
 
       // Either we have wineries or empty state
-      const hasWineries = await wineryCards.count() > 0;
+      const hasWineries = (await wineryCards.count()) > 0;
       if (!hasWineries) {
         await expect(emptyState).toBeVisible();
       }
@@ -103,7 +109,9 @@ test.describe('Winery Directory', () => {
       // First check if any winery links exist on listing page
       await page.goto('/wineries');
 
-      const wineryLinks = page.locator('a[href^="/wineries/"]').filter({ hasNot: page.locator('a[href="/wineries"]') });
+      const wineryLinks = page
+        .locator('a[href^="/wineries/"]')
+        .filter({ hasNot: page.locator('a[href="/wineries"]') });
       const linkCount = await wineryLinks.count();
 
       if (linkCount > 0) {
@@ -111,14 +119,18 @@ test.describe('Winery Directory', () => {
         await wineryLinks.first().click();
 
         // Check for coming soon teaser
-        await expect(page.getByText('Coming soon: Book experiences')).toBeVisible();
+        await expect(
+          page.getByText('Coming soon: Book experiences')
+        ).toBeVisible();
       }
     });
 
     test('displays winery information', async ({ page }) => {
       await page.goto('/wineries');
 
-      const wineryLinks = page.locator('a[href^="/wineries/"]').filter({ hasNot: page.locator('a[href="/wineries"]') });
+      const wineryLinks = page
+        .locator('a[href^="/wineries/"]')
+        .filter({ hasNot: page.locator('a[href="/wineries"]') });
       const linkCount = await wineryLinks.count();
 
       if (linkCount > 0) {
@@ -135,7 +147,9 @@ test.describe('Winery Directory', () => {
     test('has correct SEO metadata with winery name', async ({ page }) => {
       await page.goto('/wineries');
 
-      const wineryLinks = page.locator('a[href^="/wineries/"]').filter({ hasNot: page.locator('a[href="/wineries"]') });
+      const wineryLinks = page
+        .locator('a[href^="/wineries/"]')
+        .filter({ hasNot: page.locator('a[href="/wineries"]') });
       const linkCount = await wineryLinks.count();
 
       if (linkCount > 0) {

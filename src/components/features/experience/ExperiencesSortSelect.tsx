@@ -24,7 +24,9 @@ interface ExperiencesSortSelectProps {
   currentSort: string;
 }
 
-export function ExperiencesSortSelect({ currentSort }: ExperiencesSortSelectProps) {
+export function ExperiencesSortSelect({
+  currentSort,
+}: ExperiencesSortSelectProps) {
   const t = useTranslations('experience.sort');
   const [sort, setSort] = useQueryState('sort', {
     defaultValue: 'newest',

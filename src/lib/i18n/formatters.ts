@@ -25,16 +25,19 @@ export function formatDate(
 
   // If dateStyle or timeStyle is provided, don't use default component options
   // as they are mutually exclusive with individual date/time components
-  const finalOptions: Intl.DateTimeFormatOptions = options?.dateStyle || options?.timeStyle
-    ? options
-    : {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-        ...options,
-      };
+  const finalOptions: Intl.DateTimeFormatOptions =
+    options?.dateStyle || options?.timeStyle
+      ? options
+      : {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+          ...options,
+        };
 
-  return new Intl.DateTimeFormat(LOCALE_MAP[locale], finalOptions).format(dateObj);
+  return new Intl.DateTimeFormat(LOCALE_MAP[locale], finalOptions).format(
+    dateObj
+  );
 }
 
 /**
@@ -127,7 +130,10 @@ export function formatPriceValue(amount: number): string {
  * @param locale - The locale for formatting
  * @returns Object with hours and minutes for use with translation
  */
-export function formatDuration(minutes: number): { hours: number; mins: number } {
+export function formatDuration(minutes: number): {
+  hours: number;
+  mins: number;
+} {
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
   return { hours, mins };

@@ -11,7 +11,7 @@ export function Footer() {
 
   return (
     <footer className="bg-[#1a1215] text-burgundy-300">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
           <div className="sm:col-span-2 lg:col-span-1">
@@ -24,32 +24,43 @@ export function Footer() {
                 className="h-11 w-auto brightness-0 invert"
               />
             </Link>
-            <p className="mt-4 text-sm text-burgundy-400 max-w-xs">
+            <p className="mt-4 max-w-xs text-sm text-burgundy-400">
               {tFooter('brandDescription')}
             </p>
           </div>
 
           {/* Navigation */}
           <div>
-            <h3 className="font-display text-sm font-semibold text-white mb-4">{tFooter('navigation')}</h3>
+            <h3 className="mb-4 font-display text-sm font-semibold text-white">
+              {tFooter('navigation')}
+            </h3>
             <ul className="space-y-3 text-sm">
               <li>
-                <Link href="/" className="hover:text-white transition-colors">
+                <Link href="/" className="transition-colors hover:text-white">
                   {tNav('home')}
                 </Link>
               </li>
               <li>
-                <Link href="/experiences" className="hover:text-white transition-colors">
+                <Link
+                  href="/experiences"
+                  className="transition-colors hover:text-white"
+                >
                   {tNav('experiences')}
                 </Link>
               </li>
               <li>
-                <Link href="/wineries" className="hover:text-white transition-colors">
+                <Link
+                  href="/wineries"
+                  className="transition-colors hover:text-white"
+                >
                   {tNav('wineries')}
                 </Link>
               </li>
               <li>
-                <Link href="/about" className="hover:text-white transition-colors">
+                <Link
+                  href="/about"
+                  className="transition-colors hover:text-white"
+                >
                   {tNav('about')}
                 </Link>
               </li>
@@ -58,15 +69,23 @@ export function Footer() {
 
           {/* Discover (SEO Landing Pages) */}
           <div>
-            <h3 className="font-display text-sm font-semibold text-white mb-4">{t('discover')}</h3>
+            <h3 className="mb-4 font-display text-sm font-semibold text-white">
+              {t('discover')}
+            </h3>
             <ul className="space-y-3 text-sm">
               <li>
-                <Link href="/degustation-vin-valais" className="hover:text-white transition-colors">
+                <Link
+                  href="/degustation-vin-valais"
+                  className="transition-colors hover:text-white"
+                >
                   {t('degustation')}
                 </Link>
               </li>
               <li>
-                <Link href="/cepages-valaisans" className="hover:text-white transition-colors">
+                <Link
+                  href="/cepages-valaisans"
+                  className="transition-colors hover:text-white"
+                >
                   {t('cepages')}
                 </Link>
               </li>
@@ -75,20 +94,31 @@ export function Footer() {
 
           {/* Legal */}
           <div>
-            <h3 className="font-display text-sm font-semibold text-white mb-4">{tFooter('legal')}</h3>
+            <h3 className="mb-4 font-display text-sm font-semibold text-white">
+              {tFooter('legal')}
+            </h3>
             <ul className="space-y-3 text-sm">
               <li>
-                <Link href="/legal/privacy" className="hover:text-white transition-colors">
+                <Link
+                  href="/legal/privacy"
+                  className="transition-colors hover:text-white"
+                >
                   {tLegal('privacy.title')}
                 </Link>
               </li>
               <li>
-                <Link href="/legal/terms" className="hover:text-white transition-colors">
+                <Link
+                  href="/legal/terms"
+                  className="transition-colors hover:text-white"
+                >
                   {tLegal('terms.title')}
                 </Link>
               </li>
               <li>
-                <Link href="/legal/cancellation" className="hover:text-white transition-colors">
+                <Link
+                  href="/legal/cancellation"
+                  className="transition-colors hover:text-white"
+                >
                   {tLegal('cancellation.title')}
                 </Link>
               </li>
@@ -97,13 +127,13 @@ export function Footer() {
         </div>
 
         {/* Bottom */}
-        <div className="mt-12 pt-8 border-t border-burgundy-800 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-burgundy-800 pt-8 sm:flex-row">
           <p className="text-sm text-burgundy-400">
             © {new Date().getFullYear()} EnCave. {tFooter('allRightsReserved')}
           </p>
           <a
             href="mailto:samuel@encave.ch"
-            className="flex items-center gap-2 text-sm text-burgundy-400 hover:text-white transition-colors"
+            className="flex items-center gap-2 text-sm text-burgundy-400 transition-colors hover:text-white"
           >
             <Mail className="h-4 w-4" aria-hidden="true" />
             samuel@encave.ch

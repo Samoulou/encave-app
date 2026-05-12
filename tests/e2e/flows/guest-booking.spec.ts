@@ -7,7 +7,11 @@ import {
   ConfirmationPage,
   BookingManagementPage,
 } from '../pages';
-import { TEST_EXPERIENCES, TEST_VISITORS, formatPrice } from '../fixtures/test-data';
+import {
+  TEST_EXPERIENCES,
+  TEST_VISITORS,
+  formatPrice,
+} from '../fixtures/test-data';
 import { getNextWeekday, formatDisplayDate } from '../utils/date-helpers';
 import { completeStripeCheckout } from '../utils/stripe-helpers';
 
@@ -64,7 +68,9 @@ test.describe('Parcours Guest - Recherche & Découverte', () => {
     await searchPage.expectUrlContains({ type: 'TASTING' });
   });
 
-  test('cliquer sur une expérience navigue vers le détail', async ({ page }) => {
+  test('cliquer sur une expérience navigue vers le détail', async ({
+    page,
+  }) => {
     const searchPage = new SearchPage(page);
     await searchPage.navigate();
 
@@ -77,7 +83,9 @@ test.describe('Parcours Guest - Recherche & Découverte', () => {
 });
 
 test.describe('Parcours Guest - Page de Détail', () => {
-  test('la page de détail affiche les informations de l\'expérience', async ({ page }) => {
+  test("la page de détail affiche les informations de l'expérience", async ({
+    page,
+  }) => {
     const detailPage = new ExperienceDetailPage(page);
 
     // Naviguer vers une expérience connue
@@ -94,7 +102,9 @@ test.describe('Parcours Guest - Page de Détail', () => {
     expect(duration).toBeTruthy();
   });
 
-  test('le bouton "Book Now" est cliquable pour une expérience active', async ({ page }) => {
+  test('le bouton "Book Now" est cliquable pour une expérience active', async ({
+    page,
+  }) => {
     const detailPage = new ExperienceDetailPage(page);
     await detailPage.navigate(testExperience.slug);
 
@@ -103,7 +113,9 @@ test.describe('Parcours Guest - Page de Détail', () => {
     expect(canBook).toBe(true);
   });
 
-  test('cliquer sur "Book Now" scrolle vers le widget de réservation', async ({ page }) => {
+  test('cliquer sur "Book Now" scrolle vers le widget de réservation', async ({
+    page,
+  }) => {
     const detailPage = new ExperienceDetailPage(page);
     await detailPage.navigate(testExperience.slug);
 
@@ -131,7 +143,9 @@ test.describe('Parcours Guest - Page de Détail', () => {
 });
 
 test.describe('Parcours Guest - Sélection de Réservation', () => {
-  test('la page experience affiche le calendrier de réservation', async ({ page }) => {
+  test('la page experience affiche le calendrier de réservation', async ({
+    page,
+  }) => {
     const bookingPage = new BookingPage(page);
     await bookingPage.navigate(testExperience.slug);
 
@@ -139,7 +153,9 @@ test.describe('Parcours Guest - Sélection de Réservation', () => {
     await expect(bookingPage.calendar).toBeVisible();
   });
 
-  test('sélectionner une date affiche les créneaux horaires', async ({ page }) => {
+  test('sélectionner une date affiche les créneaux horaires', async ({
+    page,
+  }) => {
     const bookingPage = new BookingPage(page);
     await bookingPage.navigate(testExperience.slug);
 
@@ -151,7 +167,9 @@ test.describe('Parcours Guest - Sélection de Réservation', () => {
     expect(hasTimeSlots).toBe(true);
   });
 
-  test('sélectionner un créneau affiche le sélecteur de guests', async ({ page }) => {
+  test('sélectionner un créneau affiche le sélecteur de guests', async ({
+    page,
+  }) => {
     const bookingPage = new BookingPage(page);
     await bookingPage.navigate(testExperience.slug);
 
@@ -175,11 +193,15 @@ test.describe('Parcours Guest - Sélection de Réservation', () => {
 
     // Vérifier le prix total
     const totalPrice = await bookingPage.getTotalPrice();
-    const expectedTotal = formatPrice(testExperience.pricePerPerson * guestCount);
+    const expectedTotal = formatPrice(
+      testExperience.pricePerPerson * guestCount
+    );
     expect(totalPrice).toContain(expectedTotal.replace('CHF ', ''));
   });
 
-  test('le bouton Continue est désactivé sans sélection complète', async ({ page }) => {
+  test('le bouton Continue est désactivé sans sélection complète', async ({
+    page,
+  }) => {
     const bookingPage = new BookingPage(page);
     await bookingPage.navigate(testExperience.slug);
 
@@ -188,7 +210,9 @@ test.describe('Parcours Guest - Sélection de Réservation', () => {
     expect(canContinue).toBe(false);
   });
 
-  test('le bouton Continue s\'active avec une sélection complète', async ({ page }) => {
+  test("le bouton Continue s'active avec une sélection complète", async ({
+    page,
+  }) => {
     const bookingPage = new BookingPage(page);
     await bookingPage.navigate(testExperience.slug);
 
@@ -313,7 +337,9 @@ test.describe('Parcours Guest - Checkout', () => {
 
 test.describe('Parcours Guest - Confirmation', () => {
   // Ce test nécessite une vraie réservation ou un mock
-  test.skip('la page de confirmation affiche la référence', async ({ page }) => {
+  test.skip('la page de confirmation affiche la référence', async ({
+    page,
+  }) => {
     // Note: Ce test est skip car il nécessite un vrai paiement Stripe
     // ou une base de données de test avec une réservation existante
 
@@ -329,7 +355,9 @@ test.describe('Parcours Guest - Confirmation', () => {
 });
 
 test.describe('Parcours Complet - Happy Path', () => {
-  test('un visiteur peut compléter une réservation de bout en bout', async ({ page }) => {
+  test('un visiteur peut compléter une réservation de bout en bout', async ({
+    page,
+  }) => {
     // 1. RECHERCHE
     const searchPage = new SearchPage(page);
     await searchPage.navigate();
@@ -399,7 +427,9 @@ test.describe('Parcours Complet - Happy Path', () => {
  * Tests de régression / edge cases
  */
 test.describe('Edge Cases', () => {
-  test('accéder au checkout sans paramètres affiche une erreur', async ({ page }) => {
+  test('accéder au checkout sans paramètres affiche une erreur', async ({
+    page,
+  }) => {
     const checkoutPage = new CheckoutPage(page);
 
     // Naviguer sans les paramètres requis

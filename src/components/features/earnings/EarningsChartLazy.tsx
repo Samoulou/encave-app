@@ -6,15 +6,16 @@ import type { MonthlyEarning } from '@/server/queries/earnings.queries';
 
 // bundle-dynamic-imports: Defer recharts (~200KB) until actually needed
 const EarningsChart = dynamic(
-  () => import('./EarningsChart').then((mod) => ({ default: mod.EarningsChart })),
+  () =>
+    import('./EarningsChart').then((mod) => ({ default: mod.EarningsChart })),
   {
     ssr: false,
     loading: () => (
-      <div className="rounded-xl border border-border bg-white p-6 lg:p-8 shadow-sm">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
+      <div className="rounded-xl border border-border bg-white p-6 shadow-sm lg:p-8">
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <Skeleton className="h-5 w-40" />
-            <Skeleton className="h-4 w-64 mt-2" />
+            <Skeleton className="mt-2 h-4 w-64" />
           </div>
           <div className="flex items-center gap-4">
             <Skeleton className="h-4 w-16" />

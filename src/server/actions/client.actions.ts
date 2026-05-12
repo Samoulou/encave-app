@@ -88,7 +88,10 @@ export async function cancelClientBooking(
     const experienceDateTime = new Date(booking.date);
     experienceDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
 
-    const hoursUntilExperience = differenceInHours(experienceDateTime, new Date());
+    const hoursUntilExperience = differenceInHours(
+      experienceDateTime,
+      new Date()
+    );
 
     if (hoursUntilExperience < 0) {
       return {
@@ -107,16 +110,23 @@ export async function cancelClientBooking(
 
     if (isEligibleForRefund && booking.stripePaymentIntentId) {
       try {
-        const refundResult = await processRefund(booking.stripePaymentIntentId, true);
+        const refundResult = await processRefund(
+          booking.stripePaymentIntentId,
+          true
+        );
         refundAmount = refundResult.amount;
         stripeRefundId = refundResult.refundId;
       } catch (refundError) {
-        logError('Refund processing error', refundError, { action: 'cancelClientBooking', bookingId });
+        logError('Refund processing error', refundError, {
+          action: 'cancelClientBooking',
+          bookingId,
+        });
         return {
           success: false,
           error: {
             code: 'PAYMENT_FAILED',
-            message: 'Failed to process refund. Please try again or contact support.',
+            message:
+              'Failed to process refund. Please try again or contact support.',
           },
         };
       }
@@ -174,7 +184,10 @@ export async function cancelClientBooking(
       },
     };
   } catch (error) {
-    logError('cancelClientBooking error', error, { action: 'cancelClientBooking', bookingId });
+    logError('cancelClientBooking error', error, {
+      action: 'cancelClientBooking',
+      bookingId,
+    });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to cancel booking' },
@@ -224,7 +237,9 @@ export async function updateClientProfile(
       data: { name, preferredLocale },
     };
   } catch (error) {
-    logError('updateClientProfile error', error, { action: 'updateClientProfile' });
+    logError('updateClientProfile error', error, {
+      action: 'updateClientProfile',
+    });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to update profile' },

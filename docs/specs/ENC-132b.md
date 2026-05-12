@@ -1,18 +1,22 @@
 # ENC-132b — Vérifier exhaustivité de la page mentions légales
 
 ## Objectif métier
+
 S'assurer que la page `/legal` (mentions légales + CGU + CGV + politique de confidentialité) couvre **toutes les obligations légales suisses** : LCD (loi contre la concurrence déloyale, art. 3 al. 1 let. s — identification de l'éditeur en e-commerce), nLPD (information sur le traitement des données), droit de la consommation, droit comptable, politique alcool. Sans cette page robuste, la plateforme s'expose à des sanctions LCD (pénal) et à des contentieux client. C'est aussi un signal de pro pour les encaveurs sérieux.
 
 ## Acteurs
+
 - **CLIENT / WINEMAKER / VISITEUR** : consultent la page, doivent y trouver toute l'info.
 - **ADMIN / Sam** : valide le contenu juridique (idéalement avec relecture avocat externe — cf. Questions).
 - **Système** : footer présent sur 100% des pages, ESEC linkant `/legal`, `/legal/privacy`, `/legal/terms`.
 
 ## Préconditions & déclencheurs
+
 - Audit ponctuel : on relit la page existante, on identifie les manques, on les comble.
 - Pas de trigger utilisateur. Livrable = checklist + page complète + commit.
 
 ## User stories
+
 - En tant que **client** qui veut savoir qui édite EnCave, je trouve la raison sociale, l'adresse et l'IDE en 1 clic depuis n'importe quelle page.
 - En tant que **encaveur** qui veut comprendre ses obligations contractuelles, je trouve les CGV claires (commission 12%, modalités de paiement, refund, juridiction).
 - En tant que **PO**, je peux cocher chaque item de la checklist LCD/nLPD/alcool avant l'ouverture publique.
@@ -63,6 +67,7 @@ Scénario: Footer global
 ## Règles métier — Checklist d'audit (référence livrable)
 
 ### Bloc 1 — Identification éditeur (obligation LCD)
+
 - [ ] Raison sociale exacte (forme juridique incluse : SA, Sàrl, raison individuelle…)
 - [ ] Adresse postale complète CH
 - [ ] Numéro IDE (CHE-xxx.xxx.xxx) — vérifier sur `https://www.uid.admin.ch`
@@ -73,11 +78,13 @@ Scénario: Footer global
 - [ ] Nom du responsable de publication
 
 ### Bloc 2 — Hébergement & infrastructure
+
 - [ ] Nom + adresse de l'hébergeur (Vercel)
 - [ ] Localisation des données (Neon Amsterdam, Vercel Edge global)
 - [ ] Mention des transferts internationaux
 
 ### Bloc 3 — Politique de confidentialité (nLPD)
+
 - [ ] Identité du responsable du traitement
 - [ ] Finalités du traitement (création de compte, gestion bookings, paiement, communication, mesure d'audience)
 - [ ] Base légale de chaque finalité (contrat, consentement, intérêt légitime, obligation légale)
@@ -91,6 +98,7 @@ Scénario: Footer global
 - [ ] Date de dernière mise à jour
 
 ### Bloc 4 — CGU (Conditions générales d'utilisation)
+
 - [ ] Objet : plateforme de mise en relation
 - [ ] Acceptation des CGU au signup
 - [ ] Comportements interdits (fraude, multi-comptes, contenu illégal)
@@ -99,6 +107,7 @@ Scénario: Footer global
 - [ ] Propriété intellectuelle (logo, contenu plateforme vs contenu utilisateurs)
 
 ### Bloc 5 — CGV (Conditions générales de vente)
+
 - [ ] Statut EnCave : **intermédiaire / mandataire**, contrat de vente conclu directement entre client et encaveur (statut juridique à confirmer avec un avocat)
 - [ ] Commission plateforme : 12%
 - [ ] Modalités de paiement : Stripe, CHF, paiement comptant à la réservation
@@ -114,17 +123,20 @@ Scénario: Footer global
 - [ ] For : canton du Valais (à confirmer avec Sam)
 
 ### Bloc 6 — Cookies
+
 - [ ] Lien depuis la bannière de consentement
 - [ ] Liste cookies par catégorie : nom, fournisseur, finalité, durée
 - [ ] Bouton "Modifier mes préférences"
 
 ### Bloc 7 — Vente d'alcool
+
 - [ ] Mention 18+ explicite
 - [ ] Contrôle ID possible à l'arrivée
 - [ ] Refus de service en cas de doute (responsabilité encaveur)
 - [ ] Lien vers la prévention (`stopalcool.ch` ou `addictionsuisse.ch`)
 
 ### Bloc 8 — Médiation & litige
+
 - [ ] Procédure réclamation interne (email, délai)
 - [ ] Médiation (ombudsman e-commerce CH si applicable)
 - [ ] For en cas d'échec de médiation
@@ -133,36 +145,39 @@ Scénario: Footer global
 
 Compte tenu du volume (3-4 pages), la copy détaillée ne tient pas dans ce tableau. Livrable Théo : **un draft markdown de chaque section** dans `docs/legal/` (`legal-edition.md`, `legal-privacy.md`, `legal-terms.md`, `legal-cookies.md`). Léa s'occupe de la mise en page, Nora intègre dans le routing `/legal/*`.
 
-| Élément | Clé i18n suggérée | Texte FR (extrait représentatif) |
-|---|---|---|
-| Page racine titre | `Legal.index.title` | Mentions légales |
-| Page racine intro | `Legal.index.intro` | Vous trouverez ici toutes les informations légales relatives à EnCave : éditeur, hébergement, conditions d'utilisation et de vente, politique de confidentialité et politique des cookies. |
-| Lien CGV | `Legal.index.linkTerms` | Conditions générales de vente |
-| Lien CGU | `Legal.index.linkTos` | Conditions générales d'utilisation |
-| Lien privacy | `Legal.index.linkPrivacy` | Politique de confidentialité |
-| Lien cookies | `Legal.index.linkCookies` | Politique des cookies |
-| Dernière maj | `Legal.common.lastUpdated` | Dernière mise à jour : {date} |
-| Section éditeur titre | `Legal.edition.title` | Éditeur du site |
-| Section hébergeur titre | `Legal.edition.host.title` | Hébergement |
-| Footer lien | `Footer.legalLinks.notice` | Mentions légales |
-| Footer lien privacy | `Footer.legalLinks.privacy` | Confidentialité |
-| Footer lien CGV | `Footer.legalLinks.terms` | CGV |
-| Footer lien CGU | `Footer.legalLinks.tos` | CGU |
+| Élément                 | Clé i18n suggérée           | Texte FR (extrait représentatif)                                                                                                                                                           |
+| ----------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Page racine titre       | `Legal.index.title`         | Mentions légales                                                                                                                                                                           |
+| Page racine intro       | `Legal.index.intro`         | Vous trouverez ici toutes les informations légales relatives à EnCave : éditeur, hébergement, conditions d'utilisation et de vente, politique de confidentialité et politique des cookies. |
+| Lien CGV                | `Legal.index.linkTerms`     | Conditions générales de vente                                                                                                                                                              |
+| Lien CGU                | `Legal.index.linkTos`       | Conditions générales d'utilisation                                                                                                                                                         |
+| Lien privacy            | `Legal.index.linkPrivacy`   | Politique de confidentialité                                                                                                                                                               |
+| Lien cookies            | `Legal.index.linkCookies`   | Politique des cookies                                                                                                                                                                      |
+| Dernière maj            | `Legal.common.lastUpdated`  | Dernière mise à jour : {date}                                                                                                                                                              |
+| Section éditeur titre   | `Legal.edition.title`       | Éditeur du site                                                                                                                                                                            |
+| Section hébergeur titre | `Legal.edition.host.title`  | Hébergement                                                                                                                                                                                |
+| Footer lien             | `Footer.legalLinks.notice`  | Mentions légales                                                                                                                                                                           |
+| Footer lien privacy     | `Footer.legalLinks.privacy` | Confidentialité                                                                                                                                                                            |
+| Footer lien CGV         | `Footer.legalLinks.terms`   | CGV                                                                                                                                                                                        |
+| Footer lien CGU         | `Footer.legalLinks.tos`     | CGU                                                                                                                                                                                        |
 
 Ton : neutre-juridique, vouvoiement, phrases courtes. Pas de jargon impénétrable — l'objectif est que le client moyen comprenne.
 
 ## États UI
+
 - **Loading** : pages statiques server-rendered, pas de loader.
 - **Empty** : N/A.
 - **Error** : N/A (contenu statique).
 - **Populated** : 4 sous-pages : `/legal`, `/legal/privacy`, `/legal/terms`, `/legal/cookies`. Sommaire / table des matières en haut de chaque sous-page longue.
 
 ## Cas limites
+
 - **Mise à jour du contenu** : on bump la `lastUpdated` ; si modification significative de la politique de confidentialité ou des CGV, on notifie les utilisateurs actifs par email (obligation morale + transparence). Pas dans cette US, à prévoir en process ops.
 - **Multi-langue** : version FR doit faire foi (à mentionner dans une clause). DE et EN peuvent être ajoutées en P1.
 - **Lien depuis le checkout** : déjà obligatoire d'avoir un lien "J'accepte les CGV" avec checkbox. Vérifier qu'il pointe vers `/legal/terms` et pas vers un placeholder.
 
 ## Dépendances
+
 - ENC-133 (cookies) : politique cookies en cohérence avec la bannière.
 - ENC-134 (18+) : politique alcool en cohérence.
 - ENC-135 (droit à l'oubli) : procédure décrite dans la privacy.
@@ -170,17 +185,20 @@ Ton : neutre-juridique, vouvoiement, phrases courtes. Pas de jargon impénétrab
 - **Relecture avocat externe** (cf. Questions ouvertes) — fortement recommandée avant ouverture publique.
 
 ## Hors-périmètre explicite
+
 - **Traduction DE/EN** — à faire en P1 une fois la version FR validée juridiquement.
 - **CGV pour les encaveurs** (contrat de mandat plateforme ↔ encaveur) : actuellement intégré dans les CGV unifiées. Une convention séparée encaveur pourra être ajoutée post-MVP.
 - **DPA (Data Processing Agreement)** signé avec chaque sous-traitant : tâche ops Sam, hors code.
 - **Refonte design** de la page : Léa.
 
 ## Métriques de succès
+
 - 100% des items de la checklist sont cochés et présents en prod.
 - Validation juridique externe obtenue (oui/non) — cf. Questions.
 - 0 lien mort dans le footer et entre les pages légales.
 
 ## ❓ Questions ouvertes pour Sam
+
 1. **Forme juridique EnCave** : Sàrl ? SA ? Raison individuelle ? J'ai besoin du nom exact + IDE + adresse RC pour rédiger le bloc éditeur. Tu peux me transmettre ?
 2. **For juridique** : canton du Valais (Sion ?) cohérent avec le siège, ou tu préfères un autre canton ? Ma reco : Valais, simple et aligné branding.
 3. **Statut juridique EnCave plateforme** : intermédiaire / mandataire / commissionnaire ? Ça change beaucoup la rédaction des CGV (responsabilité, fiscalité). **Relecture avocat fortement recommandée ici.** As-tu un avocat suisse e-commerce / startup à mobiliser ?

@@ -25,7 +25,14 @@ export function WelcomeEmail({
 
   return (
     <EmailLayout locale={locale} preview={t(subjects.welcome, locale)}>
-      <Text style={{ fontSize: '24px', fontWeight: 'bold', color: '#7c2d12', margin: '0 0 16px 0' }}>
+      <Text
+        style={{
+          fontSize: '24px',
+          fontWeight: 'bold',
+          color: '#7c2d12',
+          margin: '0 0 16px 0',
+        }}
+      >
         {title}
       </Text>
 
@@ -33,13 +40,9 @@ export function WelcomeEmail({
         {greeting} {userName},
       </Text>
 
-      <Text style={{ margin: '0 0 16px 0' }}>
-        {intro}
-      </Text>
+      <Text style={{ margin: '0 0 16px 0' }}>{intro}</Text>
 
-      <Text style={{ margin: '0 0 24px 0' }}>
-        {discover}
-      </Text>
+      <Text style={{ margin: '0 0 24px 0' }}>{discover}</Text>
 
       <div style={{ textAlign: 'center', margin: '0 0 24px 0' }}>
         <EmailButton href={experiencesUrl}>{explore}</EmailButton>

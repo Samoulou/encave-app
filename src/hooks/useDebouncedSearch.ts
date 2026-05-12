@@ -72,7 +72,15 @@ export function useDebouncedSearch({
     }, delay);
 
     return () => clearTimeout(timer);
-  }, [inputValue, delay, paramName, router, searchParams, serverQuery, setOptimisticQuery]);
+  }, [
+    inputValue,
+    delay,
+    paramName,
+    router,
+    searchParams,
+    serverQuery,
+    setOptimisticQuery,
+  ]);
 
   return {
     inputValue,

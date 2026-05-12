@@ -1692,5 +1692,95 @@
       "saved": "Profile updated successfully",
       "error": "Failed to update profile. Please try again."
     }
+  },
+  "Dashboard": {
+    "eventDetail": {
+      "title": "Event details",
+      "breadcrumb": "Dashboard / Events / {title}",
+      "status": {
+        "draft": "Draft",
+        "published": "Published",
+        "archived": "Archived"
+      },
+      "sections": {
+        "today": "Today",
+        "upcoming": "Upcoming sessions",
+        "past": "Past sessions",
+        "cancelled": "Cancelled sessions"
+      },
+      "summary": {
+        "active": "{confirmed} / {total} seats across {sessions, plural, =1 {1 active session} other {# active sessions}}"
+      },
+      "session": {
+        "capacity": "{confirmed} / {total} seats",
+        "empty": "No booking for this session",
+        "emptyCancelled": "No cancelled session",
+        "live": "Live now",
+        "fullBadge": "Full"
+      },
+      "actions": {
+        "scanQr": "Scan QR codes",
+        "scanDisabled": "Available on the event day",
+        "contactAll": "Contact guests",
+        "contactAllSoon": "Coming soon",
+        "revertCheckIn": "Cancel check-in",
+        "revertNoShow": "Cancel no-show",
+        "markPresent": "Mark as present",
+        "markNoShow": "Mark as no-show",
+        "markNoShowDisabled": "Available after the session ends",
+        "openMenu": "Open actions menu"
+      },
+      "columns": {
+        "client": "Guest",
+        "partySize": "People",
+        "reference": "Reference",
+        "status": "Status",
+        "checkIn": "Check-in",
+        "actions": "Actions"
+      },
+      "bookingStatus": {
+        "confirmed": "Confirmed",
+        "completed": "Present",
+        "noShow": "Absent (no-show)",
+        "cancelledByClient": "Cancelled by guest",
+        "cancelledByWinery": "Cancelled by you"
+      },
+      "checkIn": {
+        "at": "Present at {time}",
+        "none": "—"
+      },
+      "partySize": {
+        "inline": "{count, plural, =1 {1 person} other {# people}}"
+      },
+      "banner": {
+        "draft": "This event is not published. Guests cannot see it.",
+        "archived": "Event archived. Read only."
+      },
+      "empty": {
+        "title": "You have not scheduled any session yet",
+        "cta": "Add a session"
+      },
+      "errors": {
+        "notOwner": "You do not have access to this event.",
+        "loadFailed": "Could not load the event. Try again in a moment."
+      },
+      "toast": {
+        "checkedIn": "Attendance saved.",
+        "noShow": "No-show saved.",
+        "revertedCheckIn": "Check-in cancelled.",
+        "revertedNoShow": "No-show cancelled.",
+        "error": "Action unavailable right now."
+      },
+      "confirm": {
+        "markNoShowTitle": "Mark this guest as absent?",
+        "markNoShowDescription": "The status will switch to No-show. You can revert from the same page.",
+        "revertCheckInTitle": "Cancel check-in?",
+        "revertCheckInDescription": "The status will go back to Confirmed. The action is logged.",
+        "revertNoShowTitle": "Cancel no-show?",
+        "revertNoShowDescription": "The status will go back to Confirmed. The action is logged.",
+        "confirmCta": "Confirm",
+        "cancelCta": "Back"
+      }
+    }
   }
 }

@@ -152,7 +152,10 @@ export async function unblockDate(
 
     return { success: true, data: { success: true } };
   } catch (error) {
-    logError('unblockDate error', error, { action: 'unblockDate', experienceId });
+    logError('unblockDate error', error, {
+      action: 'unblockDate',
+      experienceId,
+    });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to unblock date' },
@@ -209,7 +212,9 @@ export async function blockDateForAllExperiences(
 
     return { success: true, data: { blockedCount: result.count } };
   } catch (error) {
-    logError('blockDateForAllExperiences error', error, { action: 'blockDateForAllExperiences' });
+    logError('blockDateForAllExperiences error', error, {
+      action: 'blockDateForAllExperiences',
+    });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to block date' },
@@ -258,7 +263,9 @@ export async function unblockDateForAllExperiences(
 
     return { success: true, data: { unblockedCount: result.count } };
   } catch (error) {
-    logError('unblockDateForAllExperiences error', error, { action: 'unblockDateForAllExperiences' });
+    logError('unblockDateForAllExperiences error', error, {
+      action: 'unblockDateForAllExperiences',
+    });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to unblock date' },
@@ -312,7 +319,10 @@ export async function getBlockedDatesForExperience(
       data: { dates: blockedDates.map((bd) => bd.date) },
     };
   } catch (error) {
-    logError('getBlockedDatesForExperience error', error, { action: 'getBlockedDatesForExperience', experienceId });
+    logError('getBlockedDatesForExperience error', error, {
+      action: 'getBlockedDatesForExperience',
+      experienceId,
+    });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to get blocked dates' },

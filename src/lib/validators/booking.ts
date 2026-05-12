@@ -15,7 +15,10 @@ export const timeSlotSchema = z
  * Parse a validated time slot string into hours and minutes
  * Only call this after validation with timeSlotSchema
  */
-export function parseTimeSlot(timeSlot: string): { hours: number; minutes: number } {
+export function parseTimeSlot(timeSlot: string): {
+  hours: number;
+  minutes: number;
+} {
   const [hoursStr, minutesStr] = timeSlot.split(':');
   const hours = parseInt(hoursStr!, 10);
   const minutes = parseInt(minutesStr!, 10);

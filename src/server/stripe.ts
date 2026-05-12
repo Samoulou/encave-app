@@ -22,7 +22,9 @@ const stripe = env.STRIPE_SECRET_KEY
  */
 export function getStripe(): Stripe {
   if (!stripe) {
-    throw new Error('Stripe is not configured. Set STRIPE_SECRET_KEY environment variable.');
+    throw new Error(
+      'Stripe is not configured. Set STRIPE_SECRET_KEY environment variable.'
+    );
   }
   return stripe;
 }

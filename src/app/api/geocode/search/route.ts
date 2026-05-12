@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { checkRateLimit, GEOCODE_RATE_LIMIT } from '@/server/services/rate-limit.service';
+import {
+  checkRateLimit,
+  GEOCODE_RATE_LIMIT,
+} from '@/server/services/rate-limit.service';
 import { logError } from '@/lib/logger';
 
 const NOMINATIM_BASE_URL = 'https://nominatim.openstreetmap.org/search';
@@ -14,15 +17,23 @@ const MIN_REQUEST_INTERVAL = 100; // 100ms between requests (10 req/sec max)
 
 export async function GET(request: NextRequest) {
   // Per-IP rate limiting
-  const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
-  const rateLimitResult = await checkRateLimit(`geocode:${ip}`, GEOCODE_RATE_LIMIT);
+  const ip =
+    request.headers.get('x-forwarded-for') ||
+    request.headers.get('x-real-ip') ||
+    'unknown';
+  const rateLimitResult = await checkRateLimit(
+    `geocode:${ip}`,
+    GEOCODE_RATE_LIMIT
+  );
   if (!rateLimitResult.success) {
     return NextResponse.json(
       { error: 'Too many requests' },
       {
         status: 429,
         headers: {
-          'Retry-After': Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000).toString(),
+          'Retry-After': Math.ceil(
+            (rateLimitResult.resetAt - Date.now()) / 1000
+          ).toString(),
         },
       }
     );
@@ -73,7 +84,11 @@ export async function GET(request: NextRequest) {
     });
 
     if (!response.ok) {
-      logError(`Nominatim error: ${response.status} ${response.statusText}`, undefined, { action: 'geocodeSearch' });
+      logError(
+        `Nominatim error: ${response.status} ${response.statusText}`,
+        undefined,
+        { action: 'geocodeSearch' }
+      );
       return NextResponse.json(
         { error: 'Geocoding service unavailable' },
         { status: 502 }

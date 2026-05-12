@@ -66,7 +66,10 @@ vi.mock('@/emails/translations', () => ({
     postExperience: { FR: 'Suivi', EN: 'Follow Up' },
     weeklySummary: { FR: 'Resume', EN: 'Summary' },
   },
-  t: vi.fn((subject: Record<string, string>, locale: string) => subject[locale] || subject.FR),
+  t: vi.fn(
+    (subject: Record<string, string>, locale: string) =>
+      subject[locale] || subject.FR
+  ),
 }));
 
 // Import after all mocks
@@ -104,7 +107,10 @@ describe('Email Service', () => {
     };
 
     it('sends email successfully', async () => {
-      const result = await sendBookingConfirmationEmail('test@example.com', data);
+      const result = await sendBookingConfirmationEmail(
+        'test@example.com',
+        data
+      );
 
       expect(result).toBe(true);
       expect(mockEmailsSend).toHaveBeenCalledWith(
@@ -118,7 +124,10 @@ describe('Email Service', () => {
     it('returns false when Resend returns error', async () => {
       mockEmailsSend.mockResolvedValue({ error: 'Rate limited' });
 
-      const result = await sendBookingConfirmationEmail('test@example.com', data);
+      const result = await sendBookingConfirmationEmail(
+        'test@example.com',
+        data
+      );
 
       expect(result).toBe(false);
     });
@@ -128,7 +137,10 @@ describe('Email Service', () => {
         .mockResolvedValueOnce({ error: 'Temporary error' })
         .mockResolvedValueOnce({ error: null });
 
-      const result = await sendBookingConfirmationEmail('test@example.com', data);
+      const result = await sendBookingConfirmationEmail(
+        'test@example.com',
+        data
+      );
 
       expect(result).toBe(true);
       expect(mockEmailsSend).toHaveBeenCalledTimes(2);
@@ -177,7 +189,10 @@ describe('Email Service', () => {
     };
 
     it('sends email successfully', async () => {
-      const result = await sendBookingCancellationEmail('test@example.com', data);
+      const result = await sendBookingCancellationEmail(
+        'test@example.com',
+        data
+      );
       expect(result).toBe(true);
     });
   });
@@ -224,7 +239,10 @@ describe('Email Service', () => {
     };
 
     it('sends email successfully', async () => {
-      const result = await sendWinemakerNewBookingEmail('winemaker@test.com', data);
+      const result = await sendWinemakerNewBookingEmail(
+        'winemaker@test.com',
+        data
+      );
       expect(result).toBe(true);
     });
   });
@@ -240,7 +258,10 @@ describe('Email Service', () => {
     };
 
     it('sends email successfully', async () => {
-      const result = await sendWinemakerCancellationEmail('winemaker@test.com', data);
+      const result = await sendWinemakerCancellationEmail(
+        'winemaker@test.com',
+        data
+      );
       expect(result).toBe(true);
     });
   });

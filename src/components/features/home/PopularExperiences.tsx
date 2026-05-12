@@ -20,16 +20,16 @@ export async function PopularExperiences({
 
   return (
     <section>
-      <div className="text-center mb-12">
-        <h2 className="text-primary font-bold tracking-wider text-sm uppercase mb-2">
+      <div className="mb-12 text-center">
+        <h2 className="mb-2 text-sm font-bold uppercase tracking-wider text-primary">
           {t('curatedForYou')}
         </h2>
-        <h3 className="font-display text-3xl md:text-4xl font-extrabold text-foreground">
+        <h3 className="font-display text-3xl font-extrabold text-foreground md:text-4xl">
           {t('popularExperiences')}
         </h3>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8 lg:grid-cols-3">
         {experiences.map((experience, index) => (
           <ExperienceCard
             key={experience.id}

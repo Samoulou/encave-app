@@ -103,7 +103,11 @@ export async function approveWinery(
       winery.user.preferredLocale
     );
     if (!emailSent) {
-      logWarn('Failed to send approval email', { action: 'approveWinery', wineryId, email: winery.user.email });
+      logWarn('Failed to send approval email', {
+        action: 'approveWinery',
+        wineryId,
+        email: winery.user.email,
+      });
     }
 
     return {
@@ -111,7 +115,10 @@ export async function approveWinery(
       data: { verifiedAt: now },
     };
   } catch (error) {
-    logError('approveWinery error', error, { action: 'approveWinery', wineryId });
+    logError('approveWinery error', error, {
+      action: 'approveWinery',
+      wineryId,
+    });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Something went wrong' },
@@ -128,14 +135,17 @@ export async function rejectWinery(
 ): Promise<ActionResult<{ rejectedAt: Date }>> {
   try {
     // Validate input
-    const validated = RejectWinerySchema.safeParse({ wineryId, reason: reason.trim() });
+    const validated = RejectWinerySchema.safeParse({
+      wineryId,
+      reason: reason.trim(),
+    });
     if (!validated.success) {
       const firstIssue = validated.error.issues[0];
       return {
         success: false,
         error: {
           code: 'VALIDATION_ERROR',
-          message: firstIssue?.message || 'Invalid input'
+          message: firstIssue?.message || 'Invalid input',
         },
       };
     }
@@ -210,7 +220,11 @@ export async function rejectWinery(
       winery.user.preferredLocale
     );
     if (!emailSent) {
-      logWarn('Failed to send rejection email', { action: 'rejectWinery', wineryId, email: winery.user.email });
+      logWarn('Failed to send rejection email', {
+        action: 'rejectWinery',
+        wineryId,
+        email: winery.user.email,
+      });
     }
 
     return {

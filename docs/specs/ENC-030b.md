@@ -1,17 +1,21 @@
 # ENC-030b — Table `StripeEvent` pour idempotence webhooks (éviter double-traitement)
 
 ## Objectif métier
+
 Stripe peut renvoyer un même webhook plusieurs fois (retries réseau, redeploy Vercel, replay). Sans table d'idempotence, on risque : 2 confirmations de booking pour 1 paiement, 2 emails envoyés, 2 transferts comptables. Cette US persiste chaque `event.id` Stripe avec son statut de traitement pour garantir l'exactly-once côté logique métier.
 
 ## Acteurs
+
 - **SYSTEM (webhook handler)** : unique consommateur.
 - **ADMIN** : peut interroger la table pour debugger un événement.
 
 ## Préconditions & déclencheurs
+
 - Tout appel à `/api/webhooks/stripe` doit passer par le check d'idempotence avant d'exécuter le handler métier.
 - Signature webhook déjà vérifiée en amont (`stripe.webhooks.constructEvent`).
 
 ## User stories
+
 - En tant que **plateforme**, je veux la garantie qu'un événement Stripe est traité au plus une fois avec succès, peu importe le nombre de retries.
 - En tant qu'**admin**, je veux pouvoir consulter l'historique brut des événements reçus pour diagnostiquer un incident.
 
@@ -50,6 +54,7 @@ Scénario : contrainte unique
 ```
 
 ## Règles métier
+
 - **Schéma Prisma proposé** (à valider par Jonas) :
 
 ```prisma
@@ -94,22 +99,24 @@ enum StripeEventStatus {
 
 Pas de copy utilisateur — feature purement back. Seuls messages techniques (logs, admin) :
 
-| Élément | Clé i18n suggérée | Texte FR |
-|---|---|---|
-| Admin — colonne status PROCESSED | `Admin.stripeEvents.status.processed` | Traité |
-| Admin — colonne status PROCESSING | `Admin.stripeEvents.status.processing` | En cours |
-| Admin — colonne status FAILED | `Admin.stripeEvents.status.failed` | Échec |
-| Admin — colonne status IGNORED | `Admin.stripeEvents.status.ignored` | Ignoré |
-| Log info | (pas i18n) | `stripe.webhook.processed` |
-| Log warn doublon | (pas i18n) | `stripe.webhook.duplicate` |
+| Élément                           | Clé i18n suggérée                      | Texte FR                   |
+| --------------------------------- | -------------------------------------- | -------------------------- |
+| Admin — colonne status PROCESSED  | `Admin.stripeEvents.status.processed`  | Traité                     |
+| Admin — colonne status PROCESSING | `Admin.stripeEvents.status.processing` | En cours                   |
+| Admin — colonne status FAILED     | `Admin.stripeEvents.status.failed`     | Échec                      |
+| Admin — colonne status IGNORED    | `Admin.stripeEvents.status.ignored`    | Ignoré                     |
+| Log info                          | (pas i18n)                             | `stripe.webhook.processed` |
+| Log warn doublon                  | (pas i18n)                             | `stripe.webhook.duplicate` |
 
 ## États UI
+
 - **Loading** : N/A (pas d'UI client). Une future page admin (hors-scope ici) listera les events.
 - **Empty** : N/A.
 - **Error** : 500 si le handler métier crash, status FAILED, Stripe retente.
 - **Populated** : log structuré chaque traitement.
 
 ## Cas limites
+
 - **Event > 256 KB** : `payload` Json devrait tenir, mais tronquer en `lastError` si nécessaire.
 - **Concurrence** : 2 instances Vercel reçoivent le même event simultanément. La contrainte UNIQUE sur `stripeEventId` est le garde-fou. La 2e reçoit P2002, répond 409.
 - **Event reçu après timeout du handler précédent** : si PROCESSING > 30s, considérer comme stale et permettre reprise (champ `receivedAt` + check >30s pour autoriser une 2e tentative). À implémenter avec prudence — on peut commencer sans, observer.
@@ -118,21 +125,25 @@ Pas de copy utilisateur — feature purement back. Seuls messages techniques (lo
 - **`event.id` Stripe en mode test vs live** : aucun risque de collision (IDs distincts par environnement).
 
 ## Dépendances
+
 - Migration Prisma à créer.
 - Refacto du handler `/api/webhooks/stripe/route.ts` : wrapping idempotence autour du dispatch existant.
 - Bloque indirectement la fiabilité d'ENC-045 (annulation refund) et ENC-067 (expiration), donc à livrer **en début de Sprint 2**.
 
 ## Hors-périmètre explicite
+
 - Pas de page admin pour browse les events (V2 / debug interne via DB direct pour MVP).
 - Pas de cron de purge (ajouter au backlog post-MVP).
 - Pas de retry custom au-delà de ce que Stripe fait déjà (jusqu'à 3 jours en exponential backoff).
 - Pas d'idempotence sur les actions sortantes (refunds, transfers) — Stripe a son propre `Idempotency-Key` à utiliser séparément si besoin.
 
 ## Métriques de succès
+
 - 0 incident "double email" ou "double refund" attribuable à un replay webhook.
 - > 99.5 % des events en status PROCESSED (le reste = IGNORED ou FAILED tracé).
 - Temps médian de traitement webhook < 2 s.
 
 ## ❓ Questions ouvertes pour Sam
+
 - **Faut-il une UI admin de browse des events dès le MVP ?** Reco Théo : non, on requête en DB direct pour les rares incidents. Page admin = V2.
 - **Retention 90 jours OK pour audit fiscal / comptable ?** Reco Théo : à valider avec ton fiscaliste, 90 jours me semble suffisant car on garde les `Booking` et `stripePaymentIntentId` indéfiniment. Le payload brut est du debug.

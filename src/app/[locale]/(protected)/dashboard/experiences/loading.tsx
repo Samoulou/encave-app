@@ -1,5 +1,9 @@
 import { getTranslations } from 'next-intl/server';
-import { SkeletonExperienceGrid, Skeleton, SkeletonContainer } from '@/components/shared/Skeleton';
+import {
+  SkeletonExperienceGrid,
+  Skeleton,
+  SkeletonContainer,
+} from '@/components/shared/Skeleton';
 
 export default async function ExperiencesLoading() {
   const t = await getTranslations('experience');

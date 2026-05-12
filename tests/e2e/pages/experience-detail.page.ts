@@ -97,7 +97,8 @@ export class ExperienceDetailPage extends BasePage {
    */
   async navigate(slug: string) {
     await this.goto(`/experiences/${slug}`, {
-      waitForSelector: '[data-testid="experience-hero-image"], [data-testid="not-found"]',
+      waitForSelector:
+        '[data-testid="experience-hero-image"], [data-testid="not-found"]',
     });
   }
 
@@ -214,8 +215,12 @@ export class ExperienceDetailPage extends BasePage {
    * Get availability slots from preview
    */
   async getAvailabilitySlots(): Promise<string[]> {
-    const slots = await this.availabilityPreview.locator('[data-testid="availability-slot"]').all();
-    return Promise.all(slots.map((slot) => slot.textContent().then((t) => t?.trim() ?? '')));
+    const slots = await this.availabilityPreview
+      .locator('[data-testid="availability-slot"]')
+      .all();
+    return Promise.all(
+      slots.map((slot) => slot.textContent().then((t) => t?.trim() ?? ''))
+    );
   }
 
   /**
@@ -230,7 +235,9 @@ export class ExperienceDetailPage extends BasePage {
    */
   async getBreadcrumbs(): Promise<string[]> {
     const items = await this.breadcrumb.getByRole('listitem').all();
-    return Promise.all(items.map((item) => item.textContent().then((t) => t?.trim() ?? '')));
+    return Promise.all(
+      items.map((item) => item.textContent().then((t) => t?.trim() ?? ''))
+    );
   }
 
   /**

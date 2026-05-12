@@ -46,7 +46,7 @@ function SectionHeader({
   description?: string;
 }) {
   return (
-    <div className="flex items-start gap-4 pb-6 border-b border-stone-200">
+    <div className="flex items-start gap-4 border-b border-stone-200 pb-6">
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-burgundy-100 text-burgundy-600">
         {icon}
       </div>
@@ -168,7 +168,13 @@ export function WineryMediaSection({
       <section className="space-y-6">
         <SectionHeader
           icon={
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -178,7 +184,9 @@ export function WineryMediaSection({
             </svg>
           }
           title={t('galleryPhotos')}
-          description={t('galleryPhotosDescription', { count: galleryImages.length })}
+          description={t('galleryPhotosDescription', {
+            count: galleryImages.length,
+          })}
         />
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6">
@@ -224,13 +232,17 @@ export function WineryMediaSection({
               {uploadingGalleryIndex === galleryImages.length + index ? (
                 <div className="flex h-full w-full flex-col items-center justify-center">
                   <div className="h-8 w-8 animate-spin rounded-full border-4 border-burgundy-600 border-t-transparent" />
-                  <p className="mt-3 text-sm font-medium text-burgundy-600">{t('uploading')}</p>
+                  <p className="mt-3 text-sm font-medium text-burgundy-600">
+                    {t('uploading')}
+                  </p>
                 </div>
               ) : (
                 <ImageUpload
                   value={null}
                   onChange={() => {}}
-                  onUpload={(file) => onGalleryUpload(file, galleryImages.length + index)}
+                  onUpload={(file) =>
+                    onGalleryUpload(file, galleryImages.length + index)
+                  }
                   aspectRatio="1/1"
                   placeholder=""
                   variant="gallery-add"
@@ -241,17 +253,20 @@ export function WineryMediaSection({
           ))}
         </div>
 
-        <p className="text-sm text-slate-500">
-          {t('galleryHelpFull')}
-        </p>
+        <p className="text-sm text-slate-500">{t('galleryHelpFull')}</p>
       </section>
 
       {/* Confirmation dialog for gallery image deletion */}
-      <AlertDialog open={!!imageToDelete} onOpenChange={(open) => !open && setImageToDelete(null)}>
+      <AlertDialog
+        open={!!imageToDelete}
+        onOpenChange={(open) => !open && setImageToDelete(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t('deleteImageTitle')}</AlertDialogTitle>
-            <AlertDialogDescription>{t('deleteImageDescription')}</AlertDialogDescription>
+            <AlertDialogDescription>
+              {t('deleteImageDescription')}
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{tCommon('buttons.cancel')}</AlertDialogCancel>

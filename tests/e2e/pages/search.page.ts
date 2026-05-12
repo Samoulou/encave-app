@@ -265,7 +265,9 @@ export class SearchPage extends BasePage {
    * Navigate to a specific page
    */
   async goToPage(pageNumber: number) {
-    await this.pagination.getByRole('button', { name: String(pageNumber) }).click();
+    await this.pagination
+      .getByRole('button', { name: String(pageNumber) })
+      .click();
     await this.waitForResultsUpdate();
   }
 

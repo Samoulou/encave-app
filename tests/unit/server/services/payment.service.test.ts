@@ -134,8 +134,10 @@ describe('Payment Service', () => {
       expect(mockAccountsCreate).not.toHaveBeenCalled();
       expect(mockAccountLinksCreate).toHaveBeenCalledWith({
         account: 'acct_existing',
-        refresh_url: 'https://test.example.com/dashboard/stripe/callback?refresh=true',
-        return_url: 'https://test.example.com/dashboard/stripe/callback?success=true',
+        refresh_url:
+          'https://test.example.com/dashboard/stripe/callback?refresh=true',
+        return_url:
+          'https://test.example.com/dashboard/stripe/callback?success=true',
         type: 'account_onboarding',
       });
     });
@@ -307,7 +309,8 @@ describe('Payment Service', () => {
 
       expect(result).toEqual({
         canPublish: false,
-        reason: 'Payment setup required. Connect your Stripe account to publish.',
+        reason:
+          'Payment setup required. Connect your Stripe account to publish.',
       });
     });
 
@@ -439,13 +442,19 @@ describe('Payment Service', () => {
       });
       mockRefundsCreate.mockRejectedValue(new Error('Insufficient funds'));
 
-      await expect(processRefund('cs_test123')).rejects.toThrow('Insufficient funds');
+      await expect(processRefund('cs_test123')).rejects.toThrow(
+        'Insufficient funds'
+      );
     });
 
     it('propagates Stripe session retrieve errors', async () => {
-      mockCheckoutSessionsRetrieve.mockRejectedValue(new Error('Session not found'));
+      mockCheckoutSessionsRetrieve.mockRejectedValue(
+        new Error('Session not found')
+      );
 
-      await expect(processRefund('cs_invalid')).rejects.toThrow('Session not found');
+      await expect(processRefund('cs_invalid')).rejects.toThrow(
+        'Session not found'
+      );
     });
   });
 });

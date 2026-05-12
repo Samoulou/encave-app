@@ -111,7 +111,10 @@ export async function GET() {
           results.failed++;
         }
       } catch (error) {
-        logError('WeeklySummary cron error for winery', error, { action: 'cronWeeklySummary', wineryId: winery.id });
+        logError('WeeklySummary cron error for winery', error, {
+          action: 'cronWeeklySummary',
+          wineryId: winery.id,
+        });
         await logEmailFailed(
           'weekly_summary',
           winery.id,
@@ -127,7 +130,9 @@ export async function GET() {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    logError('WeeklySummary cron error', error, { action: 'cronWeeklySummary' });
+    logError('WeeklySummary cron error', error, {
+      action: 'cronWeeklySummary',
+    });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

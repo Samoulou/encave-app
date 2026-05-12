@@ -18,7 +18,7 @@ export async function Header() {
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link
           href="/"
-          className="flex items-center gap-2 group"
+          className="group flex items-center gap-2"
           aria-label={t('goToHomepage')}
         >
           <Image
@@ -31,7 +31,10 @@ export async function Header() {
           />
         </Link>
 
-        <nav aria-label={t('mainNavigation')} className="hidden md:flex items-center gap-8">
+        <nav
+          aria-label={t('mainNavigation')}
+          className="hidden items-center gap-8 md:flex"
+        >
           <NavLink href="/wineries">{t('wineries')}</NavLink>
           <NavLink href="/experiences">{t('experiences')}</NavLink>
           <NavLink href="/about">{t('about')}</NavLink>
@@ -47,7 +50,7 @@ export async function Header() {
         </nav>
 
         {/* Desktop auth section - hidden on mobile */}
-        <div className="hidden md:flex items-center gap-4">
+        <div className="hidden items-center gap-4 md:flex">
           <LocaleSwitcher />
           <div className="h-5 w-px bg-border" aria-hidden="true" />
           {session?.user ? (

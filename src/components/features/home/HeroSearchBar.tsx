@@ -12,7 +12,8 @@ export function HeroSearchBar() {
   const router = useRouter();
   const t = useTranslations('home');
 
-  const [selectedLocation, setSelectedLocation] = useState<ValaisLocation | null>(null);
+  const [selectedLocation, setSelectedLocation] =
+    useState<ValaisLocation | null>(null);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -30,15 +31,15 @@ export function HeroSearchBar() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-2xl mx-auto">
-      <div className="bg-white dark:bg-[#2a1a1f] p-2 rounded-xl shadow-2xl flex flex-col md:flex-row items-center gap-2">
+    <form onSubmit={handleSubmit} className="mx-auto w-full max-w-2xl">
+      <div className="flex flex-col items-center gap-2 rounded-xl bg-white p-2 shadow-2xl dark:bg-[#2a1a1f] md:flex-row">
         {/* Location Input */}
-        <div className="flex-1 w-full md:w-auto relative group">
+        <div className="group relative w-full flex-1 md:w-auto">
           <LocationAutocomplete
             value={selectedLocation}
             onChange={setSelectedLocation}
             placeholder={t('searchLocationPlaceholder')}
-            className="[&_input]:h-14 [&_input]:border-0 [&_input]:bg-transparent [&_input]:focus-visible:ring-0 [&_input]:font-medium [&_input]:rounded-lg [&_input]:hover:bg-gray-50 dark:[&_input]:hover:bg-white/5 [&_input]:transition-colors"
+            className="[&_input]:h-14 [&_input]:rounded-lg [&_input]:border-0 [&_input]:bg-transparent [&_input]:font-medium [&_input]:transition-colors [&_input]:hover:bg-gray-50 [&_input]:focus-visible:ring-0 dark:[&_input]:hover:bg-white/5"
           />
         </div>
 
@@ -46,7 +47,7 @@ export function HeroSearchBar() {
         <Button
           type="submit"
           size="lg"
-          className="w-full md:w-auto h-12 px-8 bg-primary hover:bg-[hsl(var(--primary-hover))] text-white font-bold rounded-lg shadow-md flex items-center justify-center gap-2"
+          className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-primary px-8 font-bold text-white shadow-md hover:bg-[hsl(var(--primary-hover))] md:w-auto"
         >
           <Search className="h-5 w-5" />
           <span>{t('searchButton')}</span>

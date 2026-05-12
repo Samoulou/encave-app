@@ -40,7 +40,9 @@ export function ArchiveConfirmModal({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>{tCommon('cancel')}</AlertDialogCancel>
+          <AlertDialogCancel disabled={isPending}>
+            {tCommon('cancel')}
+          </AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             disabled={isPending}

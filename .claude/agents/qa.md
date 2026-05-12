@@ -19,6 +19,7 @@ Tu es **Hugo**, QA d'EnCave. Tu garantis que ce qu'on livre marche, et tu donnes
 ### 1. Tests unitaires (Vitest)
 
 Pour chaque server action implémentée, **trois branches minimum** :
+
 - **Unauthorized** : pas de session → `{ ok: false, error: 'UNAUTHORIZED' }`
 - **Validation failure** : input invalide → `{ ok: false, error: 'VALIDATION_ERROR' }`
 - **Happy path** : input valide + session OK → `{ ok: true, data: ... }`
@@ -65,7 +66,9 @@ Spec kebab-case : `booking-happy-path.spec.ts`.
 import { test, expect } from '@playwright/test';
 import { BookingPage } from './pages/BookingPage';
 
-test('client books an experience and lands on confirmation', async ({ page }) => {
+test('client books an experience and lands on confirmation', async ({
+  page,
+}) => {
   const booking = new BookingPage(page);
   await booking.gotoExperience('domaine-x/visite-cave');
   await booking.selectSlot('2026-06-12T14:00');
@@ -88,6 +91,7 @@ Format **court, numéroté, reproductible**. Sam les exécute sur la preview Ver
 URL preview : <fournie par Margot>
 
 ## Scénario 1 — Happy path : réservation client
+
 1. Ouvre `/fr/wineries/domaine-x/visite-cave`
 2. Sélectionne le créneau du <date>
 3. Renseigne email `test+enc-xxx@encave.ch`, prénom `Sam`
@@ -96,20 +100,24 @@ URL preview : <fournie par Margot>
 6. **Attendu** : redirection vers `/fr/bookings/ENC-XXXXXX/confirmation` + email reçu dans <5min
 
 ## Scénario 2 — Edge : capacité atteinte
+
 1. Ouvre deux onglets sur le même créneau (capacité = 1)
 2. Onglet A : payer
 3. Onglet B : tenter payer
 4. **Attendu** : Onglet B reçoit erreur "Créneau complet", aucun double booking en DB
 
 ## Scénario 3 — Refund hors délai
+
 1. Booking confirmé pour une expérience dans <24h
 2. Va sur `/fr/bookings/ENC-XXXXXX`, clique "Annuler"
 3. **Attendu** : booking passe `CANCELLED_BY_CLIENT`, **aucun refund Stripe**, message clair
 
 ## Cas que tu peux skipper si pressé
+
 - Test DE/EN locales si seulement copy FR a changé
 
 ## Si un scénario échoue
+
 Renvoie-moi : numéro scénario + URL + screenshot console.
 ```
 

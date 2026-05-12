@@ -64,7 +64,10 @@ export function ExperienceGallery({
 
   return (
     <>
-      <section className="rounded-xl bg-white p-6 shadow-warm lg:p-8" data-testid="experience-gallery">
+      <section
+        className="rounded-xl bg-white p-6 shadow-warm lg:p-8"
+        data-testid="experience-gallery"
+      >
         <h2 className="font-display text-xl font-semibold text-slate-900">
           {t('title')}
         </h2>
@@ -78,7 +81,10 @@ export function ExperienceGallery({
             >
               <Image
                 src={image.url}
-                alt={t('imageAlt', { title: experienceTitle, index: index + 1 })}
+                alt={t('imageAlt', {
+                  title: experienceTitle,
+                  index: index + 1,
+                })}
                 fill
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                 sizes="(max-width: 768px) 50vw, 33vw"
@@ -125,7 +131,10 @@ export function ExperienceGallery({
           <div className="relative h-[80vh] w-[90vw] max-w-5xl">
             <Image
               src={images[currentIndex]?.url ?? ''}
-              alt={t('imageAlt', { title: experienceTitle, index: currentIndex + 1 })}
+              alt={t('imageAlt', {
+                title: experienceTitle,
+                index: currentIndex + 1,
+              })}
               fill
               className="object-contain"
               sizes="90vw"
@@ -149,7 +158,10 @@ export function ExperienceGallery({
 
           {/* Image counter */}
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-4 py-2 text-sm text-white">
-            {t('imageCounter', { current: currentIndex + 1, total: images.length })}
+            {t('imageCounter', {
+              current: currentIndex + 1,
+              total: images.length,
+            })}
           </div>
 
           {/* Thumbnail strip */}

@@ -12,7 +12,11 @@ import { BookingsPageHeader } from './BookingsPageHeader';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
   return generatePageMetadata({
     locale: locale as Locale,
@@ -36,7 +40,9 @@ interface PageProps {
   }>;
 }
 
-export default async function BookingsDashboardPage({ searchParams }: PageProps) {
+export default async function BookingsDashboardPage({
+  searchParams,
+}: PageProps) {
   // Parallelize auth and searchParams - they don't depend on each other
   const [session, params] = await Promise.all([auth(), searchParams]);
 
@@ -84,9 +90,15 @@ export default async function BookingsDashboardPage({ searchParams }: PageProps)
 /** Skeleton for KPI cards - matches BookingSummaryCards layout (3 cards) */
 function SummaryCardsSkeleton() {
   return (
-    <SkeletonContainer label="Loading summary..." className="grid gap-4 grid-cols-1 md:grid-cols-3">
+    <SkeletonContainer
+      label="Loading summary..."
+      className="grid grid-cols-1 gap-4 md:grid-cols-3"
+    >
       {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} className="rounded-xl border border-border bg-white p-5 shadow-sm">
+        <div
+          key={i}
+          className="rounded-xl border border-border bg-white p-5 shadow-sm"
+        >
           <div className="flex items-center justify-between">
             <Skeleton className="h-4 w-28" />
             <Skeleton className="h-6 w-6" />
@@ -107,8 +119,8 @@ function FiltersSkeleton() {
       label="Loading filters..."
       className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-white p-2"
     >
-      <div className="flex items-center gap-2 flex-1 min-w-[300px]">
-        <Skeleton className="h-10 flex-1 max-w-md rounded-lg" />
+      <div className="flex min-w-[300px] flex-1 items-center gap-2">
+        <Skeleton className="h-10 max-w-md flex-1 rounded-lg" />
         <Skeleton className="h-10 w-20 rounded-lg" />
       </div>
       <Skeleton className="h-10 w-48 rounded-lg" />
@@ -120,7 +132,7 @@ function FiltersSkeleton() {
 function TableSkeleton() {
   return (
     <SkeletonContainer label="Loading bookings..." className="space-y-4">
-      <div className="rounded-xl border border-border bg-white shadow-sm overflow-hidden">
+      <div className="overflow-hidden rounded-xl border border-border bg-white shadow-sm">
         {/* Table Header */}
         <div className="border-b border-border px-6 py-4">
           <div className="grid grid-cols-6 gap-4">
@@ -134,16 +146,16 @@ function TableSkeleton() {
         </div>
         {/* Table Rows */}
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="px-6 py-4 border-b border-[#f2e9eb]">
-            <div className="grid grid-cols-6 gap-4 items-center">
+          <div key={i} className="border-b border-[#f2e9eb] px-6 py-4">
+            <div className="grid grid-cols-6 items-center gap-4">
               <div>
-                <Skeleton className="h-4 w-24 mb-1" />
+                <Skeleton className="mb-1 h-4 w-24" />
                 <Skeleton className="h-3 w-20" />
               </div>
               <div className="flex items-center gap-3">
                 <Skeleton className="h-9 w-9 rounded-full" />
                 <div>
-                  <Skeleton className="h-4 w-28 mb-1" />
+                  <Skeleton className="mb-1 h-4 w-28" />
                   <Skeleton className="h-3 w-32" />
                 </div>
               </div>
@@ -155,7 +167,7 @@ function TableSkeleton() {
           </div>
         ))}
         {/* Pagination Footer */}
-        <div className="px-6 py-4 border-t border-border flex items-center justify-between">
+        <div className="flex items-center justify-between border-t border-border px-6 py-4">
           <Skeleton className="h-4 w-40" />
           <div className="flex gap-2">
             <Skeleton className="h-8 w-20 rounded-lg" />

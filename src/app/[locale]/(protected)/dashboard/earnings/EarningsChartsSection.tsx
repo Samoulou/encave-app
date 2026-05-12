@@ -10,7 +10,9 @@ interface EarningsChartsSectionProps {
  * Fetches monthly earnings for the Revenue Evolution chart.
  * Uses lazy-loaded chart component to defer recharts (~200KB) until render.
  */
-export async function EarningsChartsSection({ wineryId }: EarningsChartsSectionProps) {
+export async function EarningsChartsSection({
+  wineryId,
+}: EarningsChartsSectionProps) {
   const monthlyEarnings = await getMonthlyEarnings(wineryId, 6);
 
   return <EarningsChartLazy data={monthlyEarnings} />;

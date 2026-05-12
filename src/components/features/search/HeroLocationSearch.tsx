@@ -7,7 +7,10 @@ import { useTranslations } from 'next-intl';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { LocationAutocomplete } from './LocationAutocomplete';
-import { type ValaisLocation, getLocationDisplayName } from '@/lib/constants/locations';
+import {
+  type ValaisLocation,
+  getLocationDisplayName,
+} from '@/lib/constants/locations';
 
 interface HeroLocationSearchProps {
   searchPlaceholder?: string;
@@ -24,7 +27,8 @@ export function HeroLocationSearch({
   const t = useTranslations('home');
   const tSearch = useTranslations('search');
 
-  const [selectedLocation, setSelectedLocation] = useState<ValaisLocation | null>(null);
+  const [selectedLocation, setSelectedLocation] =
+    useState<ValaisLocation | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleSubmit = (e: FormEvent) => {
@@ -51,21 +55,21 @@ export function HeroLocationSearch({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-2xl mx-auto">
-      <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg p-2">
+    <form onSubmit={handleSubmit} className="mx-auto w-full max-w-2xl">
+      <div className="rounded-xl bg-white/95 p-2 shadow-lg backdrop-blur-sm">
         {/* Location and search inputs */}
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row">
           {/* Location Input */}
           <div className="relative flex-1">
             {selectedLocation ? (
-              <div className="flex items-center h-12 px-3 bg-burgundy-50 rounded-lg border border-burgundy-200">
-                <span className="flex-1 text-sm font-medium text-burgundy-800 truncate">
+              <div className="flex h-12 items-center rounded-lg border border-burgundy-200 bg-burgundy-50 px-3">
+                <span className="flex-1 truncate text-sm font-medium text-burgundy-800">
                   {getLocationDisplayName(selectedLocation)}
                 </span>
                 <button
                   type="button"
                   onClick={handleClearLocation}
-                  className="ml-2 text-burgundy-500 hover:text-burgundy-700 transition-colors"
+                  className="ml-2 text-burgundy-500 transition-colors hover:text-burgundy-700"
                   aria-label={tSearch('clearLocation')}
                 >
                   <X className="h-4 w-4" />
@@ -75,14 +79,19 @@ export function HeroLocationSearch({
               <LocationAutocomplete
                 value={selectedLocation}
                 onChange={setSelectedLocation}
-                placeholder={locationPlaceholder || tSearch('locationPlaceholder')}
+                placeholder={
+                  locationPlaceholder || tSearch('locationPlaceholder')
+                }
                 className="[&_input]:h-12 [&_input]:border-0 [&_input]:bg-transparent [&_input]:focus-visible:ring-0"
               />
             )}
           </div>
 
           {/* Divider (desktop only) */}
-          <div className="hidden sm:block w-px bg-slate-200 my-2" aria-hidden="true" />
+          <div
+            className="my-2 hidden w-px bg-slate-200 sm:block"
+            aria-hidden="true"
+          />
 
           {/* Text Search Input */}
           <div className="relative flex-1">
@@ -95,13 +104,13 @@ export function HeroLocationSearch({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={searchPlaceholder || t('searchPlaceholder')}
-              className="h-12 pl-10 pr-4 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+              className="h-12 border-0 bg-transparent pl-10 pr-4 focus-visible:ring-0 focus-visible:ring-offset-0"
               aria-label={searchPlaceholder || t('searchPlaceholder')}
             />
           </div>
 
           {/* Search Button */}
-          <Button type="submit" size="lg" className="h-12 px-6 shrink-0">
+          <Button type="submit" size="lg" className="h-12 shrink-0 px-6">
             {buttonText || t('searchButton')}
           </Button>
         </div>

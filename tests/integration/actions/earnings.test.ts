@@ -31,7 +31,10 @@ vi.mock('@/lib/logger', () => ({
 
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
-import { getTransactions, getYearToDateSummary } from '@/server/queries/earnings.queries';
+import {
+  getTransactions,
+  getYearToDateSummary,
+} from '@/server/queries/earnings.queries';
 import { generateEarningsStatementPDF } from '@/server/services/statement.service';
 import {
   exportEarningsCSV,

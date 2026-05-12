@@ -6,7 +6,11 @@ import { NotificationPreferencesForm } from '@/components/features/settings/Noti
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
   return generatePageMetadata({
     locale: locale as Locale,
@@ -50,7 +54,8 @@ export default async function NotificationsPage() {
         </h3>
         <p className="mt-1 text-sm text-slate-600">
           Booking confirmations, cancellations, and payment receipts cannot be
-          disabled as they contain important information about your reservations.
+          disabled as they contain important information about your
+          reservations.
         </p>
       </div>
     </div>

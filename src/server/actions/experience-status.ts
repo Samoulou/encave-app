@@ -5,7 +5,10 @@ import { db } from '@/server/db';
 import { generateSlug, ensureUniqueSlug } from '@/lib/utils/slug';
 import type { ActionResult } from '@/types/actions';
 import { logError } from '@/lib/logger';
-import { invalidateExperienceCaches, createExperienceSlugChecker } from './experience-helpers';
+import {
+  invalidateExperienceCaches,
+  createExperienceSlugChecker,
+} from './experience-helpers';
 
 /**
  * Publish an experience (DRAFT -> PUBLISHED)
@@ -102,7 +105,10 @@ export async function publishExperience(
       data: { status: 'PUBLISHED' },
     };
   } catch (error) {
-    logError('publishExperience error', error, { action: 'publishExperience', experienceId });
+    logError('publishExperience error', error, {
+      action: 'publishExperience',
+      experienceId,
+    });
     return {
       success: false,
       error: {
@@ -180,7 +186,10 @@ export async function unpublishExperience(
       data: { status: 'DRAFT' },
     };
   } catch (error) {
-    logError('unpublishExperience error', error, { action: 'unpublishExperience', experienceId });
+    logError('unpublishExperience error', error, {
+      action: 'unpublishExperience',
+      experienceId,
+    });
     return {
       success: false,
       error: {
@@ -258,7 +267,10 @@ export async function archiveExperience(
       data: { status: 'ARCHIVED' },
     };
   } catch (error) {
-    logError('archiveExperience error', error, { action: 'archiveExperience', experienceId });
+    logError('archiveExperience error', error, {
+      action: 'archiveExperience',
+      experienceId,
+    });
     return {
       success: false,
       error: {
@@ -313,7 +325,10 @@ export async function duplicateExperience(
 
     // Generate new unique slug
     const baseSlug = generateSlug(`${experience.title} copy`);
-    const slug = await ensureUniqueSlug(baseSlug, createExperienceSlugChecker(winery.id));
+    const slug = await ensureUniqueSlug(
+      baseSlug,
+      createExperienceSlugChecker(winery.id)
+    );
 
     // Get winery slug for cache invalidation
     const wineryData = await db.winery.findUnique({
@@ -374,7 +389,10 @@ export async function duplicateExperience(
       data: { experienceId: duplicate.id, slug: duplicate.slug },
     };
   } catch (error) {
-    logError('duplicateExperience error', error, { action: 'duplicateExperience', experienceId });
+    logError('duplicateExperience error', error, {
+      action: 'duplicateExperience',
+      experienceId,
+    });
     return {
       success: false,
       error: {

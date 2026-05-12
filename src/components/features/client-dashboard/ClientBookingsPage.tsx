@@ -26,13 +26,13 @@ export async function ClientBookingsPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="font-display text-2xl sm:text-3xl font-bold text-foreground">
+      <h1 className="font-display text-2xl font-bold text-foreground sm:text-3xl">
         {t('title')}
       </h1>
 
       {/* Upcoming Bookings */}
       <section>
-        <h2 className="font-display text-lg font-bold text-foreground mb-4">
+        <h2 className="mb-4 font-display text-lg font-bold text-foreground">
           {t('upcoming')} ({upcoming.length})
         </h2>
         {upcoming.length > 0 ? (
@@ -52,7 +52,7 @@ export async function ClientBookingsPage() {
 
       {/* Past Bookings */}
       <section>
-        <h2 className="font-display text-lg font-bold text-foreground mb-4">
+        <h2 className="mb-4 font-display text-lg font-bold text-foreground">
           {t('past')} ({past.length})
         </h2>
         {past.length > 0 ? (

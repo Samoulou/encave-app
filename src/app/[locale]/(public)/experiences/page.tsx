@@ -3,7 +3,11 @@ import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { type SearchParams } from '@/server/queries/experience.queries';
 import { ExperiencesContent } from './ExperiencesContent';
 import { ExperienceType } from '@prisma/client';
-import { SkeletonExperienceGrid, Skeleton, SkeletonContainer } from '@/components/shared/Skeleton';
+import {
+  SkeletonExperienceGrid,
+  Skeleton,
+  SkeletonContainer,
+} from '@/components/shared/Skeleton';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Link } from '@/i18n/navigation';
@@ -36,7 +40,10 @@ interface PageProps {
   }>;
 }
 
-export default async function ExperiencesPage({ params, searchParams }: PageProps) {
+export default async function ExperiencesPage({
+  params,
+  searchParams,
+}: PageProps) {
   const { locale } = await params;
   setRequestLocale(locale);
   const searchParamsData = await searchParams;
@@ -49,9 +56,15 @@ export default async function ExperiencesPage({ params, searchParams }: PageProp
     search: searchParamsData.q || undefined,
     type: parseTypeParam(searchParamsData.type),
     commune: searchParamsData.commune || undefined,
-    minPrice: searchParamsData.minPrice ? parseInt(searchParamsData.minPrice, 10) : undefined,
-    maxPrice: searchParamsData.maxPrice ? parseInt(searchParamsData.maxPrice, 10) : undefined,
-    capacity: searchParamsData.capacity ? parseInt(searchParamsData.capacity, 10) : undefined,
+    minPrice: searchParamsData.minPrice
+      ? parseInt(searchParamsData.minPrice, 10)
+      : undefined,
+    maxPrice: searchParamsData.maxPrice
+      ? parseInt(searchParamsData.maxPrice, 10)
+      : undefined,
+    capacity: searchParamsData.capacity
+      ? parseInt(searchParamsData.capacity, 10)
+      : undefined,
     sort: parseSort(searchParamsData.sort),
     page: page > 0 ? page : 1,
     // Location-based search params
@@ -65,7 +78,7 @@ export default async function ExperiencesPage({ params, searchParams }: PageProp
       <Header />
 
       {/* Hero Section with background image */}
-      <section className="relative min-h-[280px] sm:min-h-[320px] w-full">
+      <section className="relative min-h-[280px] w-full sm:min-h-[320px]">
         <Image
           src="/images/herobanner-image.jpg"
           alt=""
@@ -79,7 +92,7 @@ export default async function ExperiencesPage({ params, searchParams }: PageProp
             {/* Back to Home Link */}
             <Link
               href="/"
-              className="inline-flex items-center gap-2 text-sm font-medium text-cream-100 hover:text-white transition-colors mb-4"
+              className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-cream-100 transition-colors hover:text-white"
             >
               <ArrowLeft className="h-4 w-4" />
               {tNav('backToHome')}
@@ -115,10 +128,13 @@ export default async function ExperiencesPage({ params, searchParams }: PageProp
  */
 function ContentLoadingState() {
   return (
-    <SkeletonContainer label="Loading wine experiences..." className="lg:grid lg:grid-cols-[280px_1fr] lg:gap-8">
+    <SkeletonContainer
+      label="Loading wine experiences..."
+      className="lg:grid lg:grid-cols-[280px_1fr] lg:gap-8"
+    >
       {/* Sidebar filters skeleton (desktop) */}
       <aside className="hidden lg:block">
-        <div className="sticky top-24 rounded-xl border border-stone-200 bg-white p-6 space-y-6">
+        <div className="sticky top-24 space-y-6 rounded-xl border border-stone-200 bg-white p-6">
           <Skeleton className="h-6 w-20" />
           <div className="space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -179,7 +195,13 @@ function parseTypeParam(
 function parseSort(
   sort: string | undefined
 ): 'relevance' | 'price_asc' | 'price_desc' | 'newest' | 'distance' {
-  const validSorts = ['relevance', 'price_asc', 'price_desc', 'newest', 'distance'] as const;
+  const validSorts = [
+    'relevance',
+    'price_asc',
+    'price_desc',
+    'newest',
+    'distance',
+  ] as const;
   if (sort && validSorts.includes(sort as (typeof validSorts)[number])) {
     return sort as (typeof validSorts)[number];
   }

@@ -26,21 +26,21 @@
 
 ### 1.1 Remove or wire dead buttons
 
-| File | Line(s) | Element | Action |
-|------|---------|---------|--------|
-| `src/components/features/earnings/TransactionTable.tsx` | 166-167 | "View Details" / "Download Receipt" dropdown items | Wire onClick to open detail modal or remove items until feature is built |
-| `src/components/features/experience/form-sections/BasicInfoSection.tsx` | 123-153 | Rich text toolbar (Bold, Italic, Underline, List) | Remove toolbar entirely — textarea has no rich text support, toolbar is misleading |
-| `src/components/features/experience/form-sections/MediaSection.tsx` | 82-88 | Eye icon "Preview image" button | Wire to open image in a lightbox/modal or remove button |
-| `src/components/layout/DashboardSidebar.tsx` | 160-172 | User profile card (cursor-pointer, no handler) | Either make it a `<Link>` to `/dashboard/settings` or remove `cursor-pointer` + hover styling |
-| `src/components/layout/ClientDashboardSidebar.tsx` | 145-157 | User profile card (same issue) | Same fix as above — link to `/dashboard/profile` for clients |
+| File                                                                    | Line(s) | Element                                            | Action                                                                                        |
+| ----------------------------------------------------------------------- | ------- | -------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `src/components/features/earnings/TransactionTable.tsx`                 | 166-167 | "View Details" / "Download Receipt" dropdown items | Wire onClick to open detail modal or remove items until feature is built                      |
+| `src/components/features/experience/form-sections/BasicInfoSection.tsx` | 123-153 | Rich text toolbar (Bold, Italic, Underline, List)  | Remove toolbar entirely — textarea has no rich text support, toolbar is misleading            |
+| `src/components/features/experience/form-sections/MediaSection.tsx`     | 82-88   | Eye icon "Preview image" button                    | Wire to open image in a lightbox/modal or remove button                                       |
+| `src/components/layout/DashboardSidebar.tsx`                            | 160-172 | User profile card (cursor-pointer, no handler)     | Either make it a `<Link>` to `/dashboard/settings` or remove `cursor-pointer` + hover styling |
+| `src/components/layout/ClientDashboardSidebar.tsx`                      | 145-157 | User profile card (same issue)                     | Same fix as above — link to `/dashboard/profile` for clients                                  |
 
 ### 1.2 Fix broken navigation links
 
-| File | Line | Current Target | Fix |
-|------|------|----------------|-----|
-| `src/app/[locale]/(protected)/dashboard/bookings/BookingsPageHeader.tsx` | 24 | `/dashboard/bookings/new` (404) | Remove "Add Booking" button or create the route |
-| `src/app/[locale]/(protected)/dashboard/earnings/EarningsTransactionsSection.tsx` | 47 | `/dashboard/earnings/all` (404) | Remove "View All" link or create the route |
-| `src/components/features/earnings/EarningsPageHeader.tsx` | 18 | Breadcrumb "Dashboard" is `<span>` with hover style | Convert to `<Link href="/dashboard">` or remove hover styling |
+| File                                                                              | Line | Current Target                                      | Fix                                                           |
+| --------------------------------------------------------------------------------- | ---- | --------------------------------------------------- | ------------------------------------------------------------- |
+| `src/app/[locale]/(protected)/dashboard/bookings/BookingsPageHeader.tsx`          | 24   | `/dashboard/bookings/new` (404)                     | Remove "Add Booking" button or create the route               |
+| `src/app/[locale]/(protected)/dashboard/earnings/EarningsTransactionsSection.tsx` | 47   | `/dashboard/earnings/all` (404)                     | Remove "View All" link or create the route                    |
+| `src/components/features/earnings/EarningsPageHeader.tsx`                         | 18   | Breadcrumb "Dashboard" is `<span>` with hover style | Convert to `<Link href="/dashboard">` or remove hover styling |
 
 ---
 
@@ -53,41 +53,42 @@
 
 These need complete extraction to translation keys + entries in `messages/en.json`, `messages/fr.json`, `messages/de.json`:
 
-| Component | Strings | i18n Namespace |
-|-----------|---------|----------------|
-| `src/components/features/winery/WineryAccessGuard.tsx` | 17+ | `winery.accessGuard` |
-| `src/components/features/settings/NotificationPreferencesForm.tsx` | 15+ | `settings.notifications` |
-| `src/components/features/winery/StripeCallbackResult.tsx` | 10+ | `stripe.callback` |
-| `src/components/features/winery/PaymentStatus.tsx` | 5+ | `stripe.paymentStatus` |
-| `src/components/features/winery/StripeOnboarding.tsx` | 4+ | `stripe.onboarding` |
-| `src/components/features/winery/StripeWarningBanner.tsx` | 3+ | `stripe.warning` |
-| `src/components/features/earnings/EarningsChart.tsx` | 4 | `earnings.chart` |
-| `src/components/features/earnings/YearToDateSummary.tsx` | 6 | `earnings.yearToDate` |
-| `src/components/features/earnings/PayoutScheduleInfo.tsx` | 3 | `earnings.payout` |
-| `src/components/features/earnings/TransactionStatusBadge.tsx` | 4 | `earnings.transactionStatus` |
-| `src/components/features/experience/ArchiveConfirmModal.tsx` | 4 | `experience.archiveModal` |
-| `src/components/features/experience/ExperienceManagementCard.tsx` | 15+ (toast messages + button labels) | `experience.management` |
+| Component                                                          | Strings                              | i18n Namespace               |
+| ------------------------------------------------------------------ | ------------------------------------ | ---------------------------- |
+| `src/components/features/winery/WineryAccessGuard.tsx`             | 17+                                  | `winery.accessGuard`         |
+| `src/components/features/settings/NotificationPreferencesForm.tsx` | 15+                                  | `settings.notifications`     |
+| `src/components/features/winery/StripeCallbackResult.tsx`          | 10+                                  | `stripe.callback`            |
+| `src/components/features/winery/PaymentStatus.tsx`                 | 5+                                   | `stripe.paymentStatus`       |
+| `src/components/features/winery/StripeOnboarding.tsx`              | 4+                                   | `stripe.onboarding`          |
+| `src/components/features/winery/StripeWarningBanner.tsx`           | 3+                                   | `stripe.warning`             |
+| `src/components/features/earnings/EarningsChart.tsx`               | 4                                    | `earnings.chart`             |
+| `src/components/features/earnings/YearToDateSummary.tsx`           | 6                                    | `earnings.yearToDate`        |
+| `src/components/features/earnings/PayoutScheduleInfo.tsx`          | 3                                    | `earnings.payout`            |
+| `src/components/features/earnings/TransactionStatusBadge.tsx`      | 4                                    | `earnings.transactionStatus` |
+| `src/components/features/experience/ArchiveConfirmModal.tsx`       | 4                                    | `experience.archiveModal`    |
+| `src/components/features/experience/ExperienceManagementCard.tsx`  | 15+ (toast messages + button labels) | `experience.management`      |
 
 ### 2.2 Partially-localized components with hardcoded strings
 
-| File | Hardcoded Strings | Fix |
-|------|-------------------|-----|
-| `src/app/[locale]/(protected)/dashboard/bookings/loading.tsx:5` | `"Chargement des réservations..."` | Replace with `t('loading')` from `bookings` namespace |
-| `src/app/[locale]/(protected)/dashboard/experiences/page.tsx:60-72` | "Manage Experiences", subtitle, "New Experience" | Add to `experience` namespace |
-| `src/app/[locale]/(protected)/dashboard/experiences/[id]/preview/page.tsx:113-154` | "Preview Mode", "Back to Dashboard", "Edit Experience", draft notice | Add to `experience.preview` namespace |
-| `src/app/[locale]/(protected)/dashboard/experiences/[id]/edit/page.tsx:128-137` | "Back to Experiences", "Edit Experience", description | Add to `experience.edit` namespace |
-| `src/app/[locale]/(protected)/dashboard/earnings/page.tsx:61-75` | Stripe setup banner text | Add to `stripe.onboarding` namespace |
-| `src/app/[locale]/(protected)/dashboard/settings/layout.tsx:12-14` | "Settings", subtitle | Add to `settings` namespace |
-| `src/app/[locale]/(protected)/dashboard/winery/profile/page.tsx:66-128` | "Manage your winery profile", "Last updated", "View Public Profile", "Payment Status" | Add to `winery.profile` namespace |
-| `src/components/features/earnings/EarningsPageHeader.tsx:33-36` | "Earnings", subtitle, "Dashboard" breadcrumb | Add to `earnings` namespace |
-| `src/components/features/booking/calendar/CalendarView.tsx:61` | `WEEKDAYS = ['Mon', 'Tue', ...]` | Use `date-fns` locale-aware day formatting |
-| `src/components/features/booking/calendar/CalendarView.tsx:180-199` | "Blocked", "Today", "Booking count" | Add to `bookings.calendar` namespace |
-| `src/components/features/booking/calendar/WeekView.tsx` | "Week of" template literal | Add to `bookings.calendar` namespace |
-| `src/app/[locale]/(protected)/dashboard/bookings/BookingsPageHeader.tsx:19` | "Bookings" title | Add to `bookings` namespace |
+| File                                                                               | Hardcoded Strings                                                                     | Fix                                                   |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `src/app/[locale]/(protected)/dashboard/bookings/loading.tsx:5`                    | `"Chargement des réservations..."`                                                    | Replace with `t('loading')` from `bookings` namespace |
+| `src/app/[locale]/(protected)/dashboard/experiences/page.tsx:60-72`                | "Manage Experiences", subtitle, "New Experience"                                      | Add to `experience` namespace                         |
+| `src/app/[locale]/(protected)/dashboard/experiences/[id]/preview/page.tsx:113-154` | "Preview Mode", "Back to Dashboard", "Edit Experience", draft notice                  | Add to `experience.preview` namespace                 |
+| `src/app/[locale]/(protected)/dashboard/experiences/[id]/edit/page.tsx:128-137`    | "Back to Experiences", "Edit Experience", description                                 | Add to `experience.edit` namespace                    |
+| `src/app/[locale]/(protected)/dashboard/earnings/page.tsx:61-75`                   | Stripe setup banner text                                                              | Add to `stripe.onboarding` namespace                  |
+| `src/app/[locale]/(protected)/dashboard/settings/layout.tsx:12-14`                 | "Settings", subtitle                                                                  | Add to `settings` namespace                           |
+| `src/app/[locale]/(protected)/dashboard/winery/profile/page.tsx:66-128`            | "Manage your winery profile", "Last updated", "View Public Profile", "Payment Status" | Add to `winery.profile` namespace                     |
+| `src/components/features/earnings/EarningsPageHeader.tsx:33-36`                    | "Earnings", subtitle, "Dashboard" breadcrumb                                          | Add to `earnings` namespace                           |
+| `src/components/features/booking/calendar/CalendarView.tsx:61`                     | `WEEKDAYS = ['Mon', 'Tue', ...]`                                                      | Use `date-fns` locale-aware day formatting            |
+| `src/components/features/booking/calendar/CalendarView.tsx:180-199`                | "Blocked", "Today", "Booking count"                                                   | Add to `bookings.calendar` namespace                  |
+| `src/components/features/booking/calendar/WeekView.tsx`                            | "Week of" template literal                                                            | Add to `bookings.calendar` namespace                  |
+| `src/app/[locale]/(protected)/dashboard/bookings/BookingsPageHeader.tsx:19`        | "Bookings" title                                                                      | Add to `bookings` namespace                           |
 
 ### 2.3 Locale file updates
 
 After extracting all strings:
+
 1. Add keys to `messages/en.json`
 2. Translate and add to `messages/fr.json` (default locale — highest priority)
 3. Translate and add to `messages/de.json`
@@ -128,14 +129,14 @@ After extracting all strings:
 
 ### 3.4 Form accessibility
 
-| File | Fix |
-|------|-----|
-| `BookingSearch.tsx` | Add `aria-label={t('search.placeholder')}` to search input |
-| `ExperienceFilters.tsx:99` | Add `aria-label` or associated `<label>` to search input |
-| `NotificationPreferencesForm.tsx` | Add explicit `aria-label` to Switch fields |
-| `LocationSection.tsx:23` | Replace plain `<label>` with `FormLabel` component |
-| `winery/profile/page.tsx` | Add `aria-hidden="true"` to decorative inline SVGs |
-| `WineryMediaSection.tsx` | Add `aria-hidden="true"` to decorative inline SVGs |
+| File                              | Fix                                                        |
+| --------------------------------- | ---------------------------------------------------------- |
+| `BookingSearch.tsx`               | Add `aria-label={t('search.placeholder')}` to search input |
+| `ExperienceFilters.tsx:99`        | Add `aria-label` or associated `<label>` to search input   |
+| `NotificationPreferencesForm.tsx` | Add explicit `aria-label` to Switch fields                 |
+| `LocationSection.tsx:23`          | Replace plain `<label>` with `FormLabel` component         |
+| `winery/profile/page.tsx`         | Add `aria-hidden="true"` to decorative inline SVGs         |
+| `WineryMediaSection.tsx`          | Add `aria-hidden="true"` to decorative inline SVGs         |
 
 ---
 
@@ -155,21 +156,21 @@ Create `error.tsx` with appropriate error UI in:
 
 ### 4.2 Fix fake/broken data displays
 
-| File | Issue | Fix |
-|------|-------|-----|
-| `BookingSummaryCards.tsx:21` | Trend always shows "12%" — fake data | Implement real month-over-month calculation in query, or remove trend display entirely |
-| `EarningsPeriodSelector.tsx` | Component renders but queries ignore selected period | Either wire period param into earnings queries or hide the selector |
+| File                         | Issue                                                | Fix                                                                                    |
+| ---------------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `BookingSummaryCards.tsx:21` | Trend always shows "12%" — fake data                 | Implement real month-over-month calculation in query, or remove trend display entirely |
+| `EarningsPeriodSelector.tsx` | Component renders but queries ignore selected period | Either wire period param into earnings queries or hide the selector                    |
 
 ### 4.3 Add missing confirmation dialogs
 
-| File | Action | Fix |
-|------|--------|-----|
+| File                     | Action                                   | Fix                                          |
+| ------------------------ | ---------------------------------------- | -------------------------------------------- |
 | `WineryMediaSection.tsx` | Gallery image deletion — no confirmation | Add `AlertDialog` confirmation before delete |
 
 ### 4.4 Fix disabled affordance
 
-| File | Issue | Fix |
-|------|-------|-----|
+| File                             | Issue                                   | Fix                                                                           |
+| -------------------------------- | --------------------------------------- | ----------------------------------------------------------------------------- |
 | `WineryMediaSection.tsx:187-193` | Drag handle button visible but disabled | Hide with `className="hidden"` or remove until drag-to-reorder is implemented |
 
 ---
@@ -183,18 +184,18 @@ Create `error.tsx` with appropriate error UI in:
 
 These can be done as find-and-replace across the codebase:
 
-| Find | Replace With | Est. Instances |
-|------|-------------|----------------|
-| `text-[#915564]` | `text-muted-foreground` | ~40 |
-| `bg-[#f8f6f6]` / `hover:bg-[#f8f6f6]` | `bg-primary-light` / `hover:bg-primary-light` | ~8 |
-| `divide-[#f2e9eb]` | `divide-border` | ~2 |
-| `hover:bg-[#fbf9f9]` | `hover:bg-secondary` | ~2 |
-| `border-[#e5dbdd]` | `border-border` | ~4 |
-| `placeholder-[#915564]` | `placeholder-muted-foreground` | ~1 |
-| `text-[#078859]` | `text-emerald-600` (or add `text-success` token) | ~1 |
-| `text-gray-600` / `text-gray-500` (in sidebars) | `text-muted-foreground` | ~6 |
-| `hover:bg-gray-100` (in sidebars) | `hover:bg-primary/5` | ~4 |
-| `bg-gray-200` (in sidebars) | `bg-secondary` | ~2 |
+| Find                                            | Replace With                                     | Est. Instances |
+| ----------------------------------------------- | ------------------------------------------------ | -------------- |
+| `text-[#915564]`                                | `text-muted-foreground`                          | ~40            |
+| `bg-[#f8f6f6]` / `hover:bg-[#f8f6f6]`           | `bg-primary-light` / `hover:bg-primary-light`    | ~8             |
+| `divide-[#f2e9eb]`                              | `divide-border`                                  | ~2             |
+| `hover:bg-[#fbf9f9]`                            | `hover:bg-secondary`                             | ~2             |
+| `border-[#e5dbdd]`                              | `border-border`                                  | ~4             |
+| `placeholder-[#915564]`                         | `placeholder-muted-foreground`                   | ~1             |
+| `text-[#078859]`                                | `text-emerald-600` (or add `text-success` token) | ~1             |
+| `text-gray-600` / `text-gray-500` (in sidebars) | `text-muted-foreground`                          | ~6             |
+| `hover:bg-gray-100` (in sidebars)               | `hover:bg-primary/5`                             | ~4             |
+| `bg-gray-200` (in sidebars)                     | `bg-secondary`                                   | ~2             |
 
 ### 5.2 BookingStatusBadge token alignment
 
@@ -228,6 +229,7 @@ Replace `amber-100/300/800` with gold design tokens (`gold-50`, `gold-200`, `gol
 ### 5.5 Standardize card padding
 
 Adopt a consistent padding scale across all dashboard cards:
+
 - KPI/summary cards: `p-6`
 - List/table cards: `p-0` (internal padding on rows)
 - Form cards: `p-6 sm:p-8`
@@ -273,6 +275,7 @@ Replace inline `.toLocaleString('de-CH', ...)` with `formatCHF()` or `formatCHFC
 ### 6.5 Consider adding breadcrumbs
 
 The `Breadcrumb.tsx` shared component exists with proper SEO/a11y but is unused in the dashboard. Consider adding to:
+
 - `/dashboard/experiences/[id]/edit`
 - `/dashboard/experiences/[id]/preview`
 - `/dashboard/settings/notifications`
@@ -284,26 +287,27 @@ The `Breadcrumb.tsx` shared component exists with proper SEO/a11y but is unused 
 
 ### By Severity
 
-| Severity | Categories | Individual Instances |
-|----------|-----------|---------------------|
-| CRITICAL | 3 (dead buttons, non-localized components, hardcoded strings) | ~130+ strings |
-| HIGH | 4 (table a11y, chart a11y, calendar a11y, form a11y) | ~25 elements |
-| MEDIUM | 9 (color tokens, padding, buttons, error boundaries, fake data, etc.) | ~80+ instances |
-| LOW | 4 (console, formatting, breadcrumbs, polling) | ~5 instances |
+| Severity | Categories                                                            | Individual Instances |
+| -------- | --------------------------------------------------------------------- | -------------------- |
+| CRITICAL | 3 (dead buttons, non-localized components, hardcoded strings)         | ~130+ strings        |
+| HIGH     | 4 (table a11y, chart a11y, calendar a11y, form a11y)                  | ~25 elements         |
+| MEDIUM   | 9 (color tokens, padding, buttons, error boundaries, fake data, etc.) | ~80+ instances       |
+| LOW      | 4 (console, formatting, breadcrumbs, polling)                         | ~5 instances         |
 
 ### By Dashboard Section
 
-| Section | Critical | High | Medium | Low |
-|---------|----------|------|--------|-----|
-| Sidebar/Layout | 2 dead profile cards | — | 12 hardcoded colors | — |
-| Bookings (Reservations) | 1 dead link, loading.tsx i18n, calendar strings | Table a11y (6), calendar a11y (3) | 40+ color tokens, fake trend | 1 console.error |
-| Experiences | 4 dead toolbar buttons, 1 dead preview button, 30+ strings | Form a11y (2) | Card padding inconsistency | — |
-| Earnings (Revenue) | 2 dead dropdown items, 1 broken link, 1 fake breadcrumb, 35+ strings | Chart a11y (3) | Period selector broken, currency formatting | — |
-| Settings (Parametres) | 15+ strings (notifications), 17+ strings (access guard) | SVG a11y (4) | Brand colors mismatch, no image delete confirm | — |
+| Section                 | Critical                                                             | High                              | Medium                                         | Low             |
+| ----------------------- | -------------------------------------------------------------------- | --------------------------------- | ---------------------------------------------- | --------------- |
+| Sidebar/Layout          | 2 dead profile cards                                                 | —                                 | 12 hardcoded colors                            | —               |
+| Bookings (Reservations) | 1 dead link, loading.tsx i18n, calendar strings                      | Table a11y (6), calendar a11y (3) | 40+ color tokens, fake trend                   | 1 console.error |
+| Experiences             | 4 dead toolbar buttons, 1 dead preview button, 30+ strings           | Form a11y (2)                     | Card padding inconsistency                     | —               |
+| Earnings (Revenue)      | 2 dead dropdown items, 1 broken link, 1 fake breadcrumb, 35+ strings | Chart a11y (3)                    | Period selector broken, currency formatting    | —               |
+| Settings (Parametres)   | 15+ strings (notifications), 17+ strings (access guard)              | SVG a11y (4)                      | Brand colors mismatch, no image delete confirm | —               |
 
 ### Files Requiring Changes (by phase)
 
 **Phase 1 (7 files):**
+
 ```
 src/components/features/earnings/TransactionTable.tsx
 src/components/features/experience/form-sections/BasicInfoSection.tsx
@@ -315,6 +319,7 @@ src/app/[locale]/(protected)/dashboard/earnings/EarningsTransactionsSection.tsx
 ```
 
 **Phase 2 (20+ component files + 3 locale files):**
+
 ```
 src/components/features/winery/WineryAccessGuard.tsx
 src/components/features/settings/NotificationPreferencesForm.tsx
@@ -345,6 +350,7 @@ messages/de.json
 ```
 
 **Phase 3 (12 files):**
+
 ```
 src/components/features/booking/dashboard/BookingsTable.tsx
 src/components/features/earnings/TransactionTable.tsx
@@ -361,6 +367,7 @@ src/components/features/earnings/EarningsPageHeader.tsx
 ```
 
 **Phase 4 (8 new + 4 edits):**
+
 ```
 NEW: src/app/[locale]/(protected)/dashboard/error.tsx
 NEW: src/app/[locale]/(protected)/dashboard/earnings/error.tsx
@@ -372,6 +379,7 @@ EDIT: src/components/features/winery/WineryMediaSection.tsx (confirm dialog + hi
 ```
 
 **Phase 5 (25+ files):**
+
 ```
 Bulk find-replace across all files listed in section 5.1
 Plus targeted edits to:
@@ -381,6 +389,7 @@ src/components/features/winery/StripeWarningBanner.tsx
 ```
 
 **Phase 6 (5 files):**
+
 ```
 src/components/layout/DashboardSidebar.tsx
 src/app/[locale]/(protected)/dashboard/layout.tsx

@@ -1,5 +1,10 @@
 import { getTranslations } from 'next-intl/server';
-import { SkeletonDashboardStats, SkeletonTable, Skeleton, SkeletonContainer } from '@/components/shared/Skeleton';
+import {
+  SkeletonDashboardStats,
+  SkeletonTable,
+  Skeleton,
+  SkeletonContainer,
+} from '@/components/shared/Skeleton';
 
 export default async function BookingsLoading() {
   const t = await getTranslations('bookings');

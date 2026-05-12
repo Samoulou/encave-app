@@ -27,7 +27,10 @@ interface EarningsContentProps {
  * Async server component that fetches earnings data.
  * Designed to be wrapped in Suspense for streaming/progressive loading.
  */
-export async function EarningsContent({ wineryId, params }: EarningsContentProps) {
+export async function EarningsContent({
+  wineryId,
+  params,
+}: EarningsContentProps) {
   // Parse filters from URL params
   const filters: TransactionFiltersType = {};
 
@@ -70,15 +73,14 @@ export async function EarningsContent({ wineryId, params }: EarningsContentProps
       {/* Transactions Section */}
       <div className="space-y-4">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">
-            Transactions
-          </h2>
+          <h2 className="text-lg font-semibold text-slate-900">Transactions</h2>
           <TransactionFilters experiences={experiences} />
         </div>
 
         {/* Results Info */}
         <p className="text-sm text-slate-600">
-          {transactions.length} transaction{transactions.length !== 1 ? 's' : ''}
+          {transactions.length} transaction
+          {transactions.length !== 1 ? 's' : ''}
           {Object.keys(filters).length > 0 && ' (filtered)'}
         </p>
 

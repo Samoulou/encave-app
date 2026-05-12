@@ -77,16 +77,16 @@ export function ExperienceDetailGallery({
     <>
       {/* Gallery — vertical layout for side-by-side with booking widget */}
       <div
-        className="flex flex-col gap-3 mb-10"
+        className="mb-10 flex flex-col gap-3"
         data-testid="experience-gallery"
       >
         {/* Hero image — full width of left column */}
         <button
           type="button"
           onClick={() => openLightbox(0)}
-          className="relative aspect-[16/10] w-full rounded-2xl overflow-hidden group cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+          className="group relative aspect-[16/10] w-full cursor-pointer overflow-hidden rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
         >
-          <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors z-10" />
+          <div className="absolute inset-0 z-10 bg-black/10 transition-colors group-hover:bg-black/0" />
           <Image
             src={coverPhoto}
             alt={experienceTitle}
@@ -101,7 +101,7 @@ export function ExperienceDetailGallery({
 
         {/* Secondary images — 2-col grid, fade in on scroll (hidden on mobile) */}
         {allImages.length > 1 && (
-          <div className="hidden md:grid grid-cols-2 gap-3">
+          <div className="hidden grid-cols-2 gap-3 md:grid">
             {allImages.slice(1, 5).map((image, index) => {
               const isLastWithMore = index === 3 && remainingCount > 0;
 
@@ -110,21 +110,24 @@ export function ExperienceDetailGallery({
                   <button
                     type="button"
                     onClick={() => openLightbox(index + 1)}
-                    className="relative aspect-[4/3] w-full rounded-xl overflow-hidden group cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                    className="group relative aspect-[4/3] w-full cursor-pointer overflow-hidden rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                   >
                     {isLastWithMore && (
-                      <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors z-10 flex items-center justify-center">
-                        <span className="text-white font-bold text-lg border-b-2 border-white pb-1">
+                      <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 transition-colors group-hover:bg-black/30">
+                        <span className="border-b-2 border-white pb-1 text-lg font-bold text-white">
                           View All Photos
                         </span>
                       </div>
                     )}
                     {!isLastWithMore && (
-                      <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors z-10" />
+                      <div className="absolute inset-0 z-10 bg-black/10 transition-colors group-hover:bg-black/0" />
                     )}
                     <Image
                       src={image.url}
-                      alt={t('imageAlt', { title: experienceTitle, index: index + 2 })}
+                      alt={t('imageAlt', {
+                        title: experienceTitle,
+                        index: index + 2,
+                      })}
                       fill
                       className="object-cover transition-transform duration-700 group-hover:scale-105"
                       sizes="(max-width: 768px) 50vw, 33vw"
@@ -173,7 +176,10 @@ export function ExperienceDetailGallery({
           <div className="relative h-[80vh] w-[90vw] max-w-5xl">
             <Image
               src={allImages[currentIndex]?.url ?? ''}
-              alt={t('imageAlt', { title: experienceTitle, index: currentIndex + 1 })}
+              alt={t('imageAlt', {
+                title: experienceTitle,
+                index: currentIndex + 1,
+              })}
               fill
               className="object-contain"
               sizes="90vw"
@@ -197,7 +203,10 @@ export function ExperienceDetailGallery({
 
           {/* Image counter */}
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-4 py-2 text-sm text-white">
-            {t('imageCounter', { current: currentIndex + 1, total: allImages.length })}
+            {t('imageCounter', {
+              current: currentIndex + 1,
+              total: allImages.length,
+            })}
           </div>
 
           {/* Thumbnail strip */}

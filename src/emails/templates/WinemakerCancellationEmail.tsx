@@ -1,11 +1,7 @@
 import { Text, Section } from '@react-email/components';
 import type { Locale } from '@prisma/client';
 import { EmailLayout, EmailButton } from '../components';
-import {
-  formatEmailDate,
-  formatEmailTime,
-  formatEmailGuests,
-} from '../utils';
+import { formatEmailDate, formatEmailTime, formatEmailGuests } from '../utils';
 import { t, common, winemakerNotification, subjects } from '../translations';
 
 export interface WinemakerCancellationEmailProps {
@@ -35,7 +31,10 @@ export function WinemakerCancellationEmail({
 
   const title = t(winemakerNotification.cancellation.title, locale);
   const intro = t(winemakerNotification.cancellation.intro, locale);
-  const viewDashboard = t(winemakerNotification.newBooking.viewDashboard, locale);
+  const viewDashboard = t(
+    winemakerNotification.newBooking.viewDashboard,
+    locale
+  );
 
   const dateLabel = t(common.date, locale);
   const timeLabel = t(common.time, locale);
@@ -43,8 +42,18 @@ export function WinemakerCancellationEmail({
   const guestsLabel = t(common.guests, locale);
 
   return (
-    <EmailLayout locale={locale} preview={t(subjects.wineryCancellation, locale)}>
-      <Text style={{ fontSize: '24px', fontWeight: 'bold', color: '#7c2d12', margin: '0 0 16px 0' }}>
+    <EmailLayout
+      locale={locale}
+      preview={t(subjects.wineryCancellation, locale)}
+    >
+      <Text
+        style={{
+          fontSize: '24px',
+          fontWeight: 'bold',
+          color: '#7c2d12',
+          margin: '0 0 16px 0',
+        }}
+      >
         {title}
       </Text>
 
@@ -52,9 +61,7 @@ export function WinemakerCancellationEmail({
         {greeting} {winemakerName},
       </Text>
 
-      <Text style={{ margin: '0 0 24px 0' }}>
-        {intro}
-      </Text>
+      <Text style={{ margin: '0 0 24px 0' }}>{intro}</Text>
 
       <Section
         style={{
@@ -68,20 +75,36 @@ export function WinemakerCancellationEmail({
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <tbody>
             <tr>
-              <td style={{ padding: '8px 0', color: '#6b7280', width: '40%' }}>{experienceLabel}</td>
-              <td style={{ padding: '8px 0', fontWeight: '500' }}>{experienceTitle}</td>
+              <td style={{ padding: '8px 0', color: '#6b7280', width: '40%' }}>
+                {experienceLabel}
+              </td>
+              <td style={{ padding: '8px 0', fontWeight: '500' }}>
+                {experienceTitle}
+              </td>
             </tr>
             <tr>
-              <td style={{ padding: '8px 0', color: '#6b7280' }}>{dateLabel}</td>
-              <td style={{ padding: '8px 0' }}>{formatEmailDate(date, locale)}</td>
+              <td style={{ padding: '8px 0', color: '#6b7280' }}>
+                {dateLabel}
+              </td>
+              <td style={{ padding: '8px 0' }}>
+                {formatEmailDate(date, locale)}
+              </td>
             </tr>
             <tr>
-              <td style={{ padding: '8px 0', color: '#6b7280' }}>{timeLabel}</td>
-              <td style={{ padding: '8px 0' }}>{formatEmailTime(date, locale)}</td>
+              <td style={{ padding: '8px 0', color: '#6b7280' }}>
+                {timeLabel}
+              </td>
+              <td style={{ padding: '8px 0' }}>
+                {formatEmailTime(date, locale)}
+              </td>
             </tr>
             <tr>
-              <td style={{ padding: '8px 0', color: '#6b7280' }}>{guestsLabel}</td>
-              <td style={{ padding: '8px 0' }}>{formatEmailGuests(guestCount, locale)}</td>
+              <td style={{ padding: '8px 0', color: '#6b7280' }}>
+                {guestsLabel}
+              </td>
+              <td style={{ padding: '8px 0' }}>
+                {formatEmailGuests(guestCount, locale)}
+              </td>
             </tr>
           </tbody>
         </table>

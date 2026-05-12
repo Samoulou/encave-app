@@ -69,7 +69,10 @@ const glowVariants = {
   },
 };
 
-export function SuccessCheckmark({ className, size = 'md' }: SuccessCheckmarkProps) {
+export function SuccessCheckmark({
+  className,
+  size = 'md',
+}: SuccessCheckmarkProps) {
   const { container, icon, strokeWidth } = sizeMap[size];
 
   return (

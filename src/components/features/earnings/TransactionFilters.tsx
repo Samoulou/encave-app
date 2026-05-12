@@ -49,9 +49,18 @@ export function TransactionFilters({ experiences }: TransactionFiltersProps) {
   // Use nuqs with startTransition for non-blocking URL updates
   const transitionOptions = { shallow: false, startTransition };
 
-  const [monthFilter, setMonthFilter] = useQueryState('month', transitionOptions);
-  const [experienceFilter, setExperienceFilter] = useQueryState('experience', transitionOptions);
-  const [statusFilter, setStatusFilter] = useQueryState('status', transitionOptions);
+  const [monthFilter, setMonthFilter] = useQueryState(
+    'month',
+    transitionOptions
+  );
+  const [experienceFilter, setExperienceFilter] = useQueryState(
+    'experience',
+    transitionOptions
+  );
+  const [statusFilter, setStatusFilter] = useQueryState(
+    'status',
+    transitionOptions
+  );
 
   const monthOptions = getMonthOptions(locale);
 
@@ -74,7 +83,9 @@ export function TransactionFilters({ experiences }: TransactionFiltersProps) {
       {/* Month Filter */}
       <Select
         value={monthFilter ?? 'all'}
-        onValueChange={(value) => setMonthFilter(value === 'all' ? null : value)}
+        onValueChange={(value) =>
+          setMonthFilter(value === 'all' ? null : value)
+        }
       >
         <SelectTrigger className="h-9 w-[160px]">
           <SelectValue placeholder={t('filters.allMonths')} />
@@ -114,7 +125,9 @@ export function TransactionFilters({ experiences }: TransactionFiltersProps) {
       {/* Status Filter */}
       <Select
         value={statusFilter ?? 'all'}
-        onValueChange={(value) => setStatusFilter(value === 'all' ? null : value)}
+        onValueChange={(value) =>
+          setStatusFilter(value === 'all' ? null : value)
+        }
       >
         <SelectTrigger className="h-9 w-[120px]">
           <SelectValue placeholder={t('filters.allStatus')} />

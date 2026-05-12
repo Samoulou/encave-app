@@ -57,7 +57,8 @@ function NavigationLoaderInner() {
     };
 
     document.addEventListener('click', handleClick, { capture: true });
-    return () => document.removeEventListener('click', handleClick, { capture: true });
+    return () =>
+      document.removeEventListener('click', handleClick, { capture: true });
   }, []);
 
   if (!isNavigating) return null;

@@ -34,7 +34,10 @@ interface BookingsTableSectionProps {
  * Async server component for booking table/calendar content.
  * This is the heaviest query, designed to stream after summary and filters.
  */
-export async function BookingsTableSection({ wineryId, params }: BookingsTableSectionProps) {
+export async function BookingsTableSection({
+  wineryId,
+  params,
+}: BookingsTableSectionProps) {
   const t = await getTranslations('bookings');
   // Parse filters from URL params
   const filters: BookingFiltersType = {};
@@ -75,9 +78,8 @@ export async function BookingsTableSection({ wineryId, params }: BookingsTableSe
     : new Date();
 
   // Status filter for calendar
-  const statusFilter = filters.status && filters.status.length > 0
-    ? filters.status
-    : undefined;
+  const statusFilter =
+    filters.status && filters.status.length > 0 ? filters.status : undefined;
 
   // Fetch bookings and calendar data in parallel
   const [bookings, summary, calendarData] = await Promise.all([
@@ -102,10 +104,8 @@ export async function BookingsTableSection({ wineryId, params }: BookingsTableSe
         bookings.length > 0 ? (
           <BookingsTable bookings={bookings} />
         ) : (
-          <div className="bg-white rounded-xl border border-border p-8 text-center">
-            <p className="text-[#915564]">
-              {t('filters.noResults')}
-            </p>
+          <div className="rounded-xl border border-border bg-white p-8 text-center">
+            <p className="text-[#915564]">{t('filters.noResults')}</p>
           </div>
         )
       ) : (

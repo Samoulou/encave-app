@@ -73,7 +73,9 @@ export function CancellationModal({
       if (result.success) {
         toast.success(t('cancelled'), {
           description: result.data.refundIssued
-            ? t('refundProcessed', { amount: formatCHF(result.data.refundAmount ?? 0) })
+            ? t('refundProcessed', {
+                amount: formatCHF(result.data.refundAmount ?? 0),
+              })
             : t('cancelledDescription'),
         });
         onClose();
@@ -89,21 +91,30 @@ export function CancellationModal({
   };
 
   const hours = Math.floor(cancellationInfo?.hoursUntilExperience ?? 0);
-  const minutes = Math.round(((cancellationInfo?.hoursUntilExperience ?? 0) % 1) * 60);
+  const minutes = Math.round(
+    ((cancellationInfo?.hoursUntilExperience ?? 0) % 1) * 60
+  );
 
   return (
     <Dialog open={isOpen} onOpenChange={(open: boolean) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md" aria-describedby="cancellation-description">
+      <DialogContent
+        className="sm:max-w-md"
+        aria-describedby="cancellation-description"
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-amber-500" />
             {t('cancelBookingTitle')}
           </DialogTitle>
-          <DialogDescription id="cancellation-description">{t('policyExplanation')}</DialogDescription>
+          <DialogDescription id="cancellation-description">
+            {t('policyExplanation')}
+          </DialogDescription>
         </DialogHeader>
 
         {isLoading ? (
-          <div className="py-8 text-center text-slate-500">{tCommon('loading')}</div>
+          <div className="py-8 text-center text-slate-500">
+            {tCommon('loading')}
+          </div>
         ) : cancellationInfo && !cancellationInfo.canCancel ? (
           <div className="py-4">
             <p className="text-sm text-red-600">{cancellationInfo.reason}</p>
@@ -115,15 +126,15 @@ export function CancellationModal({
               className={cn(
                 'rounded-lg p-4',
                 cancellationInfo?.isEligibleForRefund
-                  ? 'bg-green-50 border border-green-200'
-                  : 'bg-amber-50 border border-amber-200'
+                  ? 'border border-green-200 bg-green-50'
+                  : 'border border-amber-200 bg-amber-50'
               )}
             >
               <div className="flex items-start gap-3">
                 {cancellationInfo?.isEligibleForRefund ? (
-                  <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+                  <CheckCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-green-600" />
                 ) : (
-                  <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-600" />
                 )}
                 <div>
                   <p
@@ -157,7 +168,7 @@ export function CancellationModal({
             )}
 
             {/* Refund amount */}
-            <div className="flex items-center justify-between py-3 border-t border-b border-stone-200">
+            <div className="flex items-center justify-between border-b border-t border-stone-200 py-3">
               <span className="text-slate-600">{t('refundAmount')}</span>
               <span
                 className={cn(
@@ -182,7 +193,7 @@ export function CancellationModal({
               />
               <Label
                 htmlFor="confirm-cancel"
-                className="text-sm text-slate-600 cursor-pointer leading-tight"
+                className="cursor-pointer text-sm leading-tight text-slate-600"
               >
                 {t('confirmCheckbox')}
               </Label>

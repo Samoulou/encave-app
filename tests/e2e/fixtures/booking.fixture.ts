@@ -68,7 +68,9 @@ export interface BookingFixtures {
   navigateToBooking: (experienceSlug?: string) => Promise<BookingPage>;
 
   /** Navigate to checkout with all selections made */
-  navigateToCheckout: (data?: Partial<CompleteBookingData>) => Promise<CheckoutPage>;
+  navigateToCheckout: (
+    data?: Partial<CompleteBookingData>
+  ) => Promise<CheckoutPage>;
 }
 
 // ============================================================

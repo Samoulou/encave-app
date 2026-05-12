@@ -54,7 +54,8 @@ export async function GET() {
           bookingStartTime.getTime() + booking.experience.duration * 60 * 1000
         );
 
-        const hoursSinceEnd = (now.getTime() - experienceEndTime.getTime()) / (1000 * 60 * 60);
+        const hoursSinceEnd =
+          (now.getTime() - experienceEndTime.getTime()) / (1000 * 60 * 60);
 
         // Send follow-up between 22-26 hours after the experience ended
         if (hoursSinceEnd < 22 || hoursSinceEnd > 26) {
@@ -79,11 +80,19 @@ export async function GET() {
           await logEmailSent('follow_up', booking.visitorEmail, booking.id);
           results.sent++;
         } else {
-          await logEmailFailed('follow_up', booking.visitorEmail, 'Failed to send', booking.id);
+          await logEmailFailed(
+            'follow_up',
+            booking.visitorEmail,
+            'Failed to send',
+            booking.id
+          );
           results.failed++;
         }
       } catch (error) {
-        logError('FollowUps cron error for booking', error, { action: 'cronFollowUps', bookingId: booking.id });
+        logError('FollowUps cron error for booking', error, {
+          action: 'cronFollowUps',
+          bookingId: booking.id,
+        });
         await logEmailFailed(
           'follow_up',
           booking.visitorEmail,

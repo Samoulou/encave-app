@@ -26,7 +26,10 @@ export default function Error({
       <div className="w-full max-w-md text-center">
         {/* Error Icon */}
         <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-red-100">
-          <AlertTriangle className="h-12 w-12 text-red-600" aria-hidden="true" />
+          <AlertTriangle
+            className="h-12 w-12 text-red-600"
+            aria-hidden="true"
+          />
         </div>
 
         {/* Title & Description */}

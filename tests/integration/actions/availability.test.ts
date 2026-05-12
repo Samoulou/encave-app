@@ -116,14 +116,30 @@ describe('Availability Actions', () => {
 
     it('returns availability slots successfully', async () => {
       const mockSlots = [
-        { id: 'slot-1', dayOfWeek: 1, startTime: '09:00', endTime: '12:00', isActive: true },
-        { id: 'slot-2', dayOfWeek: 3, startTime: '14:00', endTime: '17:00', isActive: false },
+        {
+          id: 'slot-1',
+          dayOfWeek: 1,
+          startTime: '09:00',
+          endTime: '12:00',
+          isActive: true,
+        },
+        {
+          id: 'slot-2',
+          dayOfWeek: 3,
+          startTime: '14:00',
+          endTime: '17:00',
+          isActive: false,
+        },
       ];
 
       mockAuth.mockResolvedValueOnce(mockSession);
       mockDb.winery.findUnique.mockResolvedValueOnce(mockWinery as never);
-      mockDb.experience.findFirst.mockResolvedValueOnce(mockExperience as never);
-      mockDb.availabilitySlot.findMany.mockResolvedValueOnce(mockSlots as never);
+      mockDb.experience.findFirst.mockResolvedValueOnce(
+        mockExperience as never
+      );
+      mockDb.availabilitySlot.findMany.mockResolvedValueOnce(
+        mockSlots as never
+      );
 
       const result = await getAvailabilitySlots('exp-123');
 
@@ -196,7 +212,9 @@ describe('Availability Actions', () => {
     it('returns VALIDATION_ERROR for overlapping slots', async () => {
       mockAuth.mockResolvedValueOnce(mockSession);
       mockDb.winery.findUnique.mockResolvedValueOnce(mockWinery as never);
-      mockDb.experience.findFirst.mockResolvedValueOnce(mockExperience as never);
+      mockDb.experience.findFirst.mockResolvedValueOnce(
+        mockExperience as never
+      );
       vi.mocked(hasOverlappingSlots).mockReturnValueOnce(true);
 
       const overlappingSlots = [
@@ -216,7 +234,9 @@ describe('Availability Actions', () => {
     it('returns VALIDATION_ERROR for invalid time format', async () => {
       mockAuth.mockResolvedValueOnce(mockSession);
       mockDb.winery.findUnique.mockResolvedValueOnce(mockWinery as never);
-      mockDb.experience.findFirst.mockResolvedValueOnce(mockExperience as never);
+      mockDb.experience.findFirst.mockResolvedValueOnce(
+        mockExperience as never
+      );
 
       const invalidSlots = [
         { dayOfWeek: 1, startTime: '9:00', endTime: '12:00', isActive: true },
@@ -234,7 +254,9 @@ describe('Availability Actions', () => {
     it('returns VALIDATION_ERROR when end time before start time', async () => {
       mockAuth.mockResolvedValueOnce(mockSession);
       mockDb.winery.findUnique.mockResolvedValueOnce(mockWinery as never);
-      mockDb.experience.findFirst.mockResolvedValueOnce(mockExperience as never);
+      mockDb.experience.findFirst.mockResolvedValueOnce(
+        mockExperience as never
+      );
 
       const invalidSlots = [
         { dayOfWeek: 1, startTime: '14:00', endTime: '09:00', isActive: true },
@@ -252,7 +274,9 @@ describe('Availability Actions', () => {
     it('returns VALIDATION_ERROR for invalid day of week', async () => {
       mockAuth.mockResolvedValueOnce(mockSession);
       mockDb.winery.findUnique.mockResolvedValueOnce(mockWinery as never);
-      mockDb.experience.findFirst.mockResolvedValueOnce(mockExperience as never);
+      mockDb.experience.findFirst.mockResolvedValueOnce(
+        mockExperience as never
+      );
 
       const invalidSlots = [
         { dayOfWeek: 7, startTime: '09:00', endTime: '12:00', isActive: true },
@@ -270,7 +294,9 @@ describe('Availability Actions', () => {
     it('successfully updates slots via transaction', async () => {
       mockAuth.mockResolvedValueOnce(mockSession);
       mockDb.winery.findUnique.mockResolvedValueOnce(mockWinery as never);
-      mockDb.experience.findFirst.mockResolvedValueOnce(mockExperience as never);
+      mockDb.experience.findFirst.mockResolvedValueOnce(
+        mockExperience as never
+      );
       mockDb.$transaction.mockImplementationOnce(async (fn: Function) => {
         await fn({
           availabilitySlot: {
@@ -291,7 +317,9 @@ describe('Availability Actions', () => {
     it('handles empty slots array', async () => {
       mockAuth.mockResolvedValueOnce(mockSession);
       mockDb.winery.findUnique.mockResolvedValueOnce(mockWinery as never);
-      mockDb.experience.findFirst.mockResolvedValueOnce(mockExperience as never);
+      mockDb.experience.findFirst.mockResolvedValueOnce(
+        mockExperience as never
+      );
       mockDb.$transaction.mockImplementationOnce(async (fn: Function) => {
         await fn({
           availabilitySlot: {
@@ -434,7 +462,9 @@ describe('Availability Actions', () => {
         id: 'exp-123',
         winery: { userId: 'user-123' },
       } as never);
-      mockDb.blockedDate.findUnique.mockResolvedValueOnce({ id: 'bd-1' } as never);
+      mockDb.blockedDate.findUnique.mockResolvedValueOnce({
+        id: 'bd-1',
+      } as never);
 
       const result = await blockDate('exp-123', testDate);
 
@@ -506,7 +536,9 @@ describe('Availability Actions', () => {
         id: 'exp-123',
         winery: { userId: 'user-123' },
       } as never);
-      mockDb.blockedDate.deleteMany.mockResolvedValueOnce({ count: 1 } as never);
+      mockDb.blockedDate.deleteMany.mockResolvedValueOnce({
+        count: 1,
+      } as never);
 
       const result = await unblockDate('exp-123', testDate);
 
@@ -549,7 +581,9 @@ describe('Availability Actions', () => {
         id: 'winery-123',
         experiences: [{ id: 'exp-1' }, { id: 'exp-2' }],
       } as never);
-      mockDb.blockedDate.createMany.mockResolvedValueOnce({ count: 2 } as never);
+      mockDb.blockedDate.createMany.mockResolvedValueOnce({
+        count: 2,
+      } as never);
 
       const result = await blockDateForAllExperiences(testDate, 'Holiday');
 
@@ -592,7 +626,9 @@ describe('Availability Actions', () => {
     it('successfully unblocks date for all experiences', async () => {
       mockAuth.mockResolvedValueOnce(mockSession);
       mockDb.winery.findUnique.mockResolvedValueOnce(mockWinery as never);
-      mockDb.blockedDate.deleteMany.mockResolvedValueOnce({ count: 3 } as never);
+      mockDb.blockedDate.deleteMany.mockResolvedValueOnce({
+        count: 3,
+      } as never);
 
       const result = await unblockDateForAllExperiences(testDate);
 

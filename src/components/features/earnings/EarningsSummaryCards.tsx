@@ -1,6 +1,13 @@
 'use client';
 
-import { Wallet, Calendar, Clock, TrendingUp, TrendingDown, Info } from 'lucide-react';
+import {
+  Wallet,
+  Calendar,
+  Clock,
+  TrendingUp,
+  TrendingDown,
+  Info,
+} from 'lucide-react';
 import { format } from 'date-fns';
 import { useTranslations } from 'next-intl';
 import { formatCHF } from '@/lib/utils/currency';
@@ -31,25 +38,25 @@ export function EarningsSummaryCards({ summary }: EarningsSummaryCardsProps) {
   const trendIsPositive = trendPercentage >= 0;
 
   return (
-    <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
       {/* Card 1 - Total Earnings (Current Month) */}
-      <div className="flex flex-col justify-between h-40 p-6 bg-white rounded-xl border border-border shadow-sm group hover:border-primary/30 transition-colors">
+      <div className="group flex h-40 flex-col justify-between rounded-xl border border-border bg-white p-6 shadow-sm transition-colors hover:border-primary/30">
         <div className="flex items-center justify-between">
-          <p className="text-[#915564] text-sm font-medium">
+          <p className="text-sm font-medium text-[#915564]">
             {t('totalEarnings')} ({summary.currentMonthLabel})
           </p>
-          <div className="p-2 bg-primary/10 rounded-lg text-primary">
+          <div className="rounded-lg bg-primary/10 p-2 text-primary">
             <Wallet className="h-5 w-5" />
           </div>
         </div>
         <div>
-          <h3 className="text-3xl font-extrabold text-foreground tabular-nums">
+          <h3 className="text-3xl font-extrabold tabular-nums text-foreground">
             {formatCHF(summary.thisMonth)}
           </h3>
           {summary.lastMonth > 0 && (
             <div
               className={cn(
-                'flex items-center gap-1 mt-2 text-sm font-bold',
+                'mt-2 flex items-center gap-1 text-sm font-bold',
                 trendIsPositive ? 'text-green-600' : 'text-red-600'
               )}
             >
@@ -62,25 +69,29 @@ export function EarningsSummaryCards({ summary }: EarningsSummaryCardsProps) {
                 {trendIsPositive ? '+' : ''}
                 {trendPercentage.toFixed(1)}%
               </span>
-              <span className="text-[#915564] font-normal ml-1">{t('vsLastMonth')}</span>
+              <span className="ml-1 font-normal text-[#915564]">
+                {t('vsLastMonth')}
+              </span>
             </div>
           )}
         </div>
       </div>
 
       {/* Card 2 - Year to Date */}
-      <div className="flex flex-col justify-between h-40 p-6 bg-white rounded-xl border border-border shadow-sm group hover:border-primary/30 transition-colors">
+      <div className="group flex h-40 flex-col justify-between rounded-xl border border-border bg-white p-6 shadow-sm transition-colors hover:border-primary/30">
         <div className="flex items-center justify-between">
-          <p className="text-[#915564] text-sm font-medium">{t('yearToDate')}</p>
-          <div className="p-2 bg-primary/10 rounded-lg text-primary">
+          <p className="text-sm font-medium text-[#915564]">
+            {t('yearToDate')}
+          </p>
+          <div className="rounded-lg bg-primary/10 p-2 text-primary">
             <Calendar className="h-5 w-5" />
           </div>
         </div>
         <div>
-          <h3 className="text-3xl font-extrabold text-foreground tabular-nums">
+          <h3 className="text-3xl font-extrabold tabular-nums text-foreground">
             {formatCHF(summary.yearToDate)}
           </h3>
-          <div className="flex items-center gap-1 mt-2 text-sm text-[#915564] font-medium">
+          <div className="mt-2 flex items-center gap-1 text-sm font-medium text-[#915564]">
             <Info className="h-4 w-4" />
             <span>{t('grossRevenue')}</span>
           </div>
@@ -88,20 +99,22 @@ export function EarningsSummaryCards({ summary }: EarningsSummaryCardsProps) {
       </div>
 
       {/* Card 3 - Pending Payouts */}
-      <div className="flex flex-col justify-between h-40 p-6 bg-white rounded-xl border border-border shadow-sm group hover:border-primary/30 transition-colors">
+      <div className="group flex h-40 flex-col justify-between rounded-xl border border-border bg-white p-6 shadow-sm transition-colors hover:border-primary/30">
         <div className="flex items-center justify-between">
-          <p className="text-[#915564] text-sm font-medium">{t('pendingPayouts')}</p>
-          <div className="p-2 bg-yellow-50 rounded-lg text-yellow-600">
+          <p className="text-sm font-medium text-[#915564]">
+            {t('pendingPayouts')}
+          </p>
+          <div className="rounded-lg bg-yellow-50 p-2 text-yellow-600">
             <Clock className="h-5 w-5" />
           </div>
         </div>
         <div>
-          <h3 className="text-3xl font-extrabold text-foreground tabular-nums">
+          <h3 className="text-3xl font-extrabold tabular-nums text-foreground">
             {formatCHF(summary.pendingPayout)}
           </h3>
-          <div className="flex items-center gap-1 mt-2 text-sm text-[#915564] font-medium">
+          <div className="mt-2 flex items-center gap-1 text-sm font-medium text-[#915564]">
             <span>{t('estArrival')}</span>
-            <span className="text-foreground font-bold">
+            <span className="font-bold text-foreground">
               {summary.nextPayoutDate
                 ? format(summary.nextPayoutDate, 'MMM d')
                 : '—'}

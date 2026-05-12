@@ -46,7 +46,14 @@ export function WineryActionButtons({
   isRejecting,
   onApproveClick,
   onRejectToggle,
-}: Pick<WineryActionsPanelProps, 'isPending' | 'isApproving' | 'isRejecting' | 'onApproveClick' | 'onRejectToggle'>) {
+}: Pick<
+  WineryActionsPanelProps,
+  | 'isPending'
+  | 'isApproving'
+  | 'isRejecting'
+  | 'onApproveClick'
+  | 'onRejectToggle'
+>) {
   const t = useTranslations('admin');
 
   if (!isPending) return null;
@@ -56,7 +63,7 @@ export function WineryActionButtons({
       <Button
         onClick={onApproveClick}
         disabled={isApproving || isRejecting}
-        className="bg-emerald-600 hover:bg-emerald-700 shadow-md"
+        className="bg-emerald-600 shadow-md hover:bg-emerald-700"
         size="lg"
       >
         <CheckCircle className="mr-2 h-5 w-5" />
@@ -103,7 +110,10 @@ export function WineryActionsPanel({
   return (
     <>
       {/* Approval Confirmation Dialog */}
-      <AlertDialog open={showApproveDialog} onOpenChange={onApproveDialogChange}>
+      <AlertDialog
+        open={showApproveDialog}
+        onOpenChange={onApproveDialogChange}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t('approveWinery')}</AlertDialogTitle>
@@ -177,10 +187,7 @@ export function WineryActionsPanel({
               >
                 {t('confirmRejection')}
               </Button>
-              <Button
-                variant="outline"
-                onClick={onRejectFormCancel}
-              >
+              <Button variant="outline" onClick={onRejectFormCancel}>
                 {tCommon('buttons.cancel')}
               </Button>
             </div>

@@ -40,26 +40,26 @@ export function MobileBookingBar({
 
   return (
     <>
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-warm-xl z-40">
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 bg-white p-4 shadow-warm-xl lg:hidden">
+        <div className="mx-auto flex max-w-7xl items-center justify-between">
           <div>
             <span className="text-lg font-bold text-foreground">
               {formatCHF(price)}
             </span>
-            <span className="text-sm text-gray-500 ml-1">
+            <span className="ml-1 text-sm text-gray-500">
               / {t('perPerson')}
             </span>
           </div>
           {isBookingEnabled ? (
             <Button
-              className="bg-primary hover:bg-primary-hover text-white font-bold px-6"
+              className="hover:bg-primary-hover bg-primary px-6 font-bold text-white"
               onClick={() => setIsDrawerOpen(true)}
             >
               {t('bookNow')}
             </Button>
           ) : (
             <Button
-              className="bg-primary text-white font-bold px-6 opacity-90"
+              className="bg-primary px-6 font-bold text-white opacity-90"
               disabled
             >
               {t('bookNow')}

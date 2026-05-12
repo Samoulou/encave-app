@@ -15,7 +15,11 @@ import { generatePageMetadata } from '@/lib/seo/metadata';
 import { formatDate } from '@/lib/i18n/formatters';
 import type { Locale } from '@/i18n/routing';
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
   return generatePageMetadata({
     locale: locale as Locale,
@@ -24,7 +28,11 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   });
 }
 
-export default async function WineryProfilePage({ params }: { params: Promise<{ locale: string }> }) {
+export default async function WineryProfilePage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
   const session = await auth();
 
@@ -76,9 +84,7 @@ export default async function WineryProfilePage({ params }: { params: Promise<{ 
                 </h1>
                 {isVerified && <VerifiedBadge size="md" />}
               </div>
-              <p className="text-slate-600">
-                {t('manageProfile')}
-              </p>
+              <p className="text-slate-600">{t('manageProfile')}</p>
               {winery.updatedAt && (
                 <p className="flex items-center gap-1.5 text-sm text-slate-500">
                   <svg
@@ -95,7 +101,12 @@ export default async function WineryProfilePage({ params }: { params: Promise<{ 
                       d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  {t('lastUpdatedDate', { date: formatDate(new Date(winery.updatedAt), locale as Locale) })}
+                  {t('lastUpdatedDate', {
+                    date: formatDate(
+                      new Date(winery.updatedAt),
+                      locale as Locale
+                    ),
+                  })}
                 </p>
               )}
             </div>

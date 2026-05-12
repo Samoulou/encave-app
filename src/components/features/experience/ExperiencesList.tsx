@@ -62,9 +62,8 @@ export function ExperiencesList({ experiences }: ExperiencesListProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [archiveModalOpen, setArchiveModalOpen] = useState(false);
-  const [experienceToArchive, setExperienceToArchive] = useState<Experience | null>(
-    null
-  );
+  const [experienceToArchive, setExperienceToArchive] =
+    useState<Experience | null>(null);
 
   const handlePublish = async (experienceId: string) => {
     startTransition(async () => {
@@ -171,7 +170,7 @@ export function ExperiencesList({ experiences }: ExperiencesListProps) {
 
             {/* Content */}
             <CardContent className="p-4">
-              <h3 className="font-display text-lg font-semibold text-slate-900 line-clamp-1">
+              <h3 className="line-clamp-1 font-display text-lg font-semibold text-slate-900">
                 {experience.title}
               </h3>
 
@@ -187,7 +186,8 @@ export function ExperiencesList({ experiences }: ExperiencesListProps) {
               </div>
 
               <p className="mt-2 text-xs text-slate-500">
-                Updated {formatDistanceToNow(new Date(experience.updatedAt))} ago
+                Updated {formatDistanceToNow(new Date(experience.updatedAt))}{' '}
+                ago
               </p>
 
               {/* Actions */}

@@ -150,7 +150,10 @@ describe('Client Actions', () => {
     it('successfully cancels with refund when >24h before', async () => {
       mockAuth.mockResolvedValueOnce(mockSession);
       mockDb.booking.findFirst.mockResolvedValueOnce(mockBooking as never);
-      mockProcessRefund.mockResolvedValueOnce({ refundId: 're_123', amount: 10000 });
+      mockProcessRefund.mockResolvedValueOnce({
+        refundId: 're_123',
+        amount: 10000,
+      });
       mockDb.booking.update.mockResolvedValueOnce({
         id: 'booking-123',
         status: 'CANCELLED_BY_CLIENT',
@@ -198,7 +201,10 @@ describe('Client Actions', () => {
     it('returns UNAUTHORIZED when not authenticated', async () => {
       mockAuth.mockResolvedValueOnce(null);
 
-      const result = await updateClientProfile({ name: 'New Name', preferredLocale: 'EN' });
+      const result = await updateClientProfile({
+        name: 'New Name',
+        preferredLocale: 'EN',
+      });
 
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -209,7 +215,10 @@ describe('Client Actions', () => {
     it('returns VALIDATION_ERROR for empty name', async () => {
       mockAuth.mockResolvedValueOnce(mockSession);
 
-      const result = await updateClientProfile({ name: '', preferredLocale: 'FR' });
+      const result = await updateClientProfile({
+        name: '',
+        preferredLocale: 'FR',
+      });
 
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -235,7 +244,10 @@ describe('Client Actions', () => {
       mockAuth.mockResolvedValueOnce(mockSession);
       mockDb.user.update.mockResolvedValueOnce({} as never);
 
-      const result = await updateClientProfile({ name: 'New Name', preferredLocale: 'EN' });
+      const result = await updateClientProfile({
+        name: 'New Name',
+        preferredLocale: 'EN',
+      });
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -252,7 +264,10 @@ describe('Client Actions', () => {
       mockAuth.mockResolvedValueOnce(mockSession);
       mockDb.user.update.mockRejectedValueOnce(new Error('DB error'));
 
-      const result = await updateClientProfile({ name: 'New Name', preferredLocale: 'FR' });
+      const result = await updateClientProfile({
+        name: 'New Name',
+        preferredLocale: 'FR',
+      });
 
       expect(result.success).toBe(false);
       if (!result.success) {

@@ -26,7 +26,7 @@ export function AnimatedCheckmark({
   return (
     <div
       className={cn(
-        'rounded-full bg-green-50 flex items-center justify-center text-green-600',
+        'flex items-center justify-center rounded-full bg-green-50 text-green-600',
         sizeClasses[size],
         className
       )}

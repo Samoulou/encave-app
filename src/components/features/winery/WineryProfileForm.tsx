@@ -48,12 +48,16 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
   const t = useTranslations('winery');
   const tCommon = useTranslations('common');
   const [isSaving, setIsSaving] = useState(false);
-  const [coverPhoto, setCoverPhoto] = useState<string | null>(winery.coverPhoto);
+  const [coverPhoto, setCoverPhoto] = useState<string | null>(
+    winery.coverPhoto
+  );
   const [galleryImages, setGalleryImages] = useState<GalleryImage[]>(
     winery.galleryImages
   );
   const [isUploadingCover, setIsUploadingCover] = useState(false);
-  const [uploadingGalleryIndex, setUploadingGalleryIndex] = useState<number | null>(null);
+  const [uploadingGalleryIndex, setUploadingGalleryIndex] = useState<
+    number | null
+  >(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const form = useForm<WineryProfileInput>({
@@ -87,28 +91,31 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [hasUnsavedChanges]);
 
-  const onSubmit = useCallback(async (data: WineryProfileInput) => {
-    setIsSaving(true);
+  const onSubmit = useCallback(
+    async (data: WineryProfileInput) => {
+      setIsSaving(true);
 
-    try {
-      const result = await updateWineryProfile(data);
+      try {
+        const result = await updateWineryProfile(data);
 
-      if (result.success) {
-        toast.success(t('profileUpdated'), {
-          description: t('changesSaved'),
-          className: 'bg-cream-50 border-gold-200',
-        });
-        setHasUnsavedChanges(false);
-        router.refresh();
-      } else {
-        toast.error(result.error.message);
+        if (result.success) {
+          toast.success(t('profileUpdated'), {
+            description: t('changesSaved'),
+            className: 'bg-cream-50 border-gold-200',
+          });
+          setHasUnsavedChanges(false);
+          router.refresh();
+        } else {
+          toast.error(result.error.message);
+        }
+      } catch {
+        toast.error(tCommon('errors.somethingWentWrong'));
+      } finally {
+        setIsSaving(false);
       }
-    } catch {
-      toast.error(tCommon('errors.somethingWentWrong'));
-    } finally {
-      setIsSaving(false);
-    }
-  }, [router, t, tCommon]);
+    },
+    [router, t, tCommon]
+  );
 
   async function handleImageUpload(file: File): Promise<string> {
     const formData = new FormData();
@@ -140,7 +147,10 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
     setIsUploadingCover(false);
   }
 
-  async function handleGalleryUpload(file: File, index: number): Promise<string> {
+  async function handleGalleryUpload(
+    file: File,
+    index: number
+  ): Promise<string> {
     setUploadingGalleryIndex(index);
     const url = await handleImageUpload(file);
 

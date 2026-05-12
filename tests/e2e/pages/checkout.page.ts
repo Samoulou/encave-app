@@ -67,8 +67,12 @@ export class CheckoutPage extends BasePage {
     this.availabilityAlert = page.getByTestId('availability-alert');
     this.availabilityVerifying = page.getByText(/verifying availability/i);
     this.availabilityError = page.getByTestId('availability-error');
-    this.capacityExceededAlert = page.getByRole('alert').filter({ hasText: /capacity.*exceeded/i });
-    this.adjustBookingLink = page.getByRole('link', { name: /adjust|change|modify/i });
+    this.capacityExceededAlert = page
+      .getByRole('alert')
+      .filter({ hasText: /capacity.*exceeded/i });
+    this.adjustBookingLink = page.getByRole('link', {
+      name: /adjust|change|modify/i,
+    });
 
     // Form
     this.form = page.getByTestId('checkout-form');
@@ -103,9 +107,15 @@ export class CheckoutPage extends BasePage {
 
     // Errors
     this.errorAlert = page.getByRole('alert').filter({ hasText: /error/i });
-    this.missingParamsError = page.getByText(/missing.*required|parameters.*missing/i);
-    this.paymentCancelledAlert = page.getByRole('alert').filter({ hasText: /cancel/i });
-    this.paymentFailedAlert = page.getByRole('alert').filter({ hasText: /fail/i });
+    this.missingParamsError = page.getByText(
+      /missing.*required|parameters.*missing/i
+    );
+    this.paymentCancelledAlert = page
+      .getByRole('alert')
+      .filter({ hasText: /cancel/i });
+    this.paymentFailedAlert = page
+      .getByRole('alert')
+      .filter({ hasText: /fail/i });
   }
 
   /**
@@ -141,7 +151,9 @@ export class CheckoutPage extends BasePage {
    */
   async waitForAvailabilityCheck() {
     // Wait for verifying message to disappear
-    await this.availabilityVerifying.waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {});
+    await this.availabilityVerifying
+      .waitFor({ state: 'hidden', timeout: 15000 })
+      .catch(() => {});
   }
 
   // === FORM INTERACTIONS ===
@@ -285,9 +297,16 @@ export class CheckoutPage extends BasePage {
     email?: string;
     phone?: string;
   }> {
-    const errors: { firstName?: string; lastName?: string; email?: string; phone?: string } = {};
-    if (await this.hasFirstNameError()) errors.firstName = await this.getFirstNameError();
-    if (await this.hasLastNameError()) errors.lastName = await this.getLastNameError();
+    const errors: {
+      firstName?: string;
+      lastName?: string;
+      email?: string;
+      phone?: string;
+    } = {};
+    if (await this.hasFirstNameError())
+      errors.firstName = await this.getFirstNameError();
+    if (await this.hasLastNameError())
+      errors.lastName = await this.getLastNameError();
     if (await this.hasEmailError()) errors.email = await this.getEmailError();
     if (await this.hasPhoneError()) errors.phone = await this.getPhoneError();
     return errors;

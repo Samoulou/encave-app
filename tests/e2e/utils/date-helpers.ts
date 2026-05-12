@@ -48,7 +48,10 @@ export function getWeeksFromNow(weeks: number): string {
  * @param dayOfWeek - 0 (Sunday) to 6 (Saturday)
  * @param skipThisWeek - If true, skips to next week even if today matches
  */
-export function getNextDayOfWeek(dayOfWeek: number, skipThisWeek: boolean = true): string {
+export function getNextDayOfWeek(
+  dayOfWeek: number,
+  skipThisWeek: boolean = true
+): string {
   const date = new Date();
   const currentDay = date.getDay();
 
@@ -119,7 +122,10 @@ export function getYear(dateString: string): number {
 /**
  * Format a date for display (e.g., "Monday, January 20, 2026")
  */
-export function formatDisplayDate(dateString: string, locale: string = 'en-US'): string {
+export function formatDisplayDate(
+  dateString: string,
+  locale: string = 'en-US'
+): string {
   return new Date(dateString).toLocaleDateString(locale, {
     weekday: 'long',
     year: 'numeric',
@@ -148,7 +154,10 @@ export function isToday(dateString: string): boolean {
 /**
  * Check if a date is within the booking window (e.g., 3 months)
  */
-export function isWithinBookingWindow(dateString: string, windowMonths: number = 3): boolean {
+export function isWithinBookingWindow(
+  dateString: string,
+  windowMonths: number = 3
+): boolean {
   const date = new Date(dateString);
   const maxDate = new Date();
   maxDate.setMonth(maxDate.getMonth() + windowMonths);
@@ -192,7 +201,10 @@ export function getDateBeyond24Hours(): { date: string; time: string } {
  */
 export function parseTimeTo24Hour(timeString: string): string {
   // Already in 24-hour format
-  if (!timeString.toLowerCase().includes('am') && !timeString.toLowerCase().includes('pm')) {
+  if (
+    !timeString.toLowerCase().includes('am') &&
+    !timeString.toLowerCase().includes('pm')
+  ) {
     return timeString;
   }
 

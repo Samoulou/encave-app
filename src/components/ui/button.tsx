@@ -46,12 +46,28 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, isLoading = false, loadingText, children, disabled, ...props }, ref) => {
+  (
+    {
+      className,
+      variant,
+      size,
+      asChild = false,
+      isLoading = false,
+      loadingText,
+      children,
+      disabled,
+      ...props
+    },
+    ref
+  ) => {
     // When loading, use button element (not Slot) to show spinner
     if (isLoading) {
       return (
         <button
-          className={cn(buttonVariants({ variant, size, className }), 'cursor-wait')}
+          className={cn(
+            buttonVariants({ variant, size, className }),
+            'cursor-wait'
+          )}
           ref={ref}
           disabled
           aria-busy="true"

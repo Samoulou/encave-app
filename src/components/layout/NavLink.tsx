@@ -37,7 +37,7 @@ export function NavLink({
       onMouseEnter={handlePrefetch}
       onFocus={handlePrefetch}
       className={cn(
-        'relative text-sm font-medium transition-colors group',
+        'group relative text-sm font-medium transition-colors',
         isActive
           ? activeClassName || 'text-burgundy-700'
           : 'text-slate-600 hover:text-burgundy-700',

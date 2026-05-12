@@ -22,7 +22,11 @@ export function WineryCard({ winery }: WineryCardProps) {
   const isVerified = winery.status === 'VERIFIED';
 
   return (
-    <Link href={`/wineries/${winery.slug}`} className="group block h-full" data-testid="winery-card">
+    <Link
+      href={`/wineries/${winery.slug}`}
+      className="group block h-full"
+      data-testid="winery-card"
+    >
       <article className="h-full overflow-hidden rounded-xl border border-stone-200/60 bg-white shadow-warm transition-all duration-300 ease-premium hover:-translate-y-1 hover:shadow-card-hover">
         {/* Image Container */}
         <div className="relative aspect-[4/3] w-full overflow-hidden">

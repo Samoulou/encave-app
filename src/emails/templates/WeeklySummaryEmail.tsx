@@ -51,7 +51,14 @@ export function WeeklySummaryEmail({
 
   return (
     <EmailLayout locale={locale} preview={t(subjects.weeklySummary, locale)}>
-      <Text style={{ fontSize: '24px', fontWeight: 'bold', color: '#7c2d12', margin: '0 0 16px 0' }}>
+      <Text
+        style={{
+          fontSize: '24px',
+          fontWeight: 'bold',
+          color: '#7c2d12',
+          margin: '0 0 16px 0',
+        }}
+      >
         {title}
       </Text>
 
@@ -59,9 +66,7 @@ export function WeeklySummaryEmail({
         {greeting} {winemakerName},
       </Text>
 
-      <Text style={{ margin: '0 0 24px 0' }}>
-        {intro}
-      </Text>
+      <Text style={{ margin: '0 0 24px 0' }}>{intro}</Text>
 
       {/* Last Week Stats */}
       <Section
@@ -72,7 +77,14 @@ export function WeeklySummaryEmail({
           margin: '0 0 16px 0',
         }}
       >
-        <Text style={{ margin: '0 0 16px 0', fontWeight: 'bold', fontSize: '16px', color: '#7c2d12' }}>
+        <Text
+          style={{
+            margin: '0 0 16px 0',
+            fontWeight: 'bold',
+            fontSize: '16px',
+            color: '#7c2d12',
+          }}
+        >
           {lastWeekSection}
         </Text>
 
@@ -80,37 +92,86 @@ export function WeeklySummaryEmail({
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <tbody>
               <tr>
-                <td style={{ padding: '12px 0', borderBottom: '1px solid #fde8d4' }}>
-                  <Text style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>
+                <td
+                  style={{
+                    padding: '12px 0',
+                    borderBottom: '1px solid #fde8d4',
+                  }}
+                >
+                  <Text
+                    style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}
+                  >
                     {bookingsLabel}
                   </Text>
                 </td>
-                <td style={{ padding: '12px 0', borderBottom: '1px solid #fde8d4', textAlign: 'right' }}>
-                  <Text style={{ margin: 0, fontWeight: 'bold', fontSize: '20px', color: '#7c2d12' }}>
+                <td
+                  style={{
+                    padding: '12px 0',
+                    borderBottom: '1px solid #fde8d4',
+                    textAlign: 'right',
+                  }}
+                >
+                  <Text
+                    style={{
+                      margin: 0,
+                      fontWeight: 'bold',
+                      fontSize: '20px',
+                      color: '#7c2d12',
+                    }}
+                  >
                     {lastWeekStats.bookings}
                   </Text>
                 </td>
               </tr>
               <tr>
-                <td style={{ padding: '12px 0', borderBottom: '1px solid #fde8d4' }}>
-                  <Text style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>
+                <td
+                  style={{
+                    padding: '12px 0',
+                    borderBottom: '1px solid #fde8d4',
+                  }}
+                >
+                  <Text
+                    style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}
+                  >
                     {guestsLabel}
                   </Text>
                 </td>
-                <td style={{ padding: '12px 0', borderBottom: '1px solid #fde8d4', textAlign: 'right' }}>
-                  <Text style={{ margin: 0, fontWeight: 'bold', fontSize: '20px', color: '#7c2d12' }}>
+                <td
+                  style={{
+                    padding: '12px 0',
+                    borderBottom: '1px solid #fde8d4',
+                    textAlign: 'right',
+                  }}
+                >
+                  <Text
+                    style={{
+                      margin: 0,
+                      fontWeight: 'bold',
+                      fontSize: '20px',
+                      color: '#7c2d12',
+                    }}
+                  >
                     {lastWeekStats.guests}
                   </Text>
                 </td>
               </tr>
               <tr>
                 <td style={{ padding: '12px 0' }}>
-                  <Text style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>
+                  <Text
+                    style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}
+                  >
                     {revenueLabel}
                   </Text>
                 </td>
                 <td style={{ padding: '12px 0', textAlign: 'right' }}>
-                  <Text style={{ margin: 0, fontWeight: 'bold', fontSize: '20px', color: '#16a34a' }}>
+                  <Text
+                    style={{
+                      margin: 0,
+                      fontWeight: 'bold',
+                      fontSize: '20px',
+                      color: '#16a34a',
+                    }}
+                  >
                     {formatEmailPrice(lastWeekStats.revenue)}
                   </Text>
                 </td>
@@ -133,7 +194,14 @@ export function WeeklySummaryEmail({
           margin: '0 0 24px 0',
         }}
       >
-        <Text style={{ margin: '0 0 16px 0', fontWeight: 'bold', fontSize: '16px', color: '#374151' }}>
+        <Text
+          style={{
+            margin: '0 0 16px 0',
+            fontWeight: 'bold',
+            fontSize: '16px',
+            color: '#374151',
+          }}
+        >
           {thisWeekSection}
         </Text>
 
@@ -141,25 +209,54 @@ export function WeeklySummaryEmail({
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <tbody>
               <tr>
-                <td style={{ padding: '12px 0', borderBottom: '1px solid #e5e7eb' }}>
-                  <Text style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>
+                <td
+                  style={{
+                    padding: '12px 0',
+                    borderBottom: '1px solid #e5e7eb',
+                  }}
+                >
+                  <Text
+                    style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}
+                  >
                     {upcomingLabel}
                   </Text>
                 </td>
-                <td style={{ padding: '12px 0', borderBottom: '1px solid #e5e7eb', textAlign: 'right' }}>
-                  <Text style={{ margin: 0, fontWeight: 'bold', fontSize: '20px', color: '#374151' }}>
+                <td
+                  style={{
+                    padding: '12px 0',
+                    borderBottom: '1px solid #e5e7eb',
+                    textAlign: 'right',
+                  }}
+                >
+                  <Text
+                    style={{
+                      margin: 0,
+                      fontWeight: 'bold',
+                      fontSize: '20px',
+                      color: '#374151',
+                    }}
+                  >
                     {thisWeekPreview.bookings}
                   </Text>
                 </td>
               </tr>
               <tr>
                 <td style={{ padding: '12px 0' }}>
-                  <Text style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>
+                  <Text
+                    style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}
+                  >
                     {guestsLabel}
                   </Text>
                 </td>
                 <td style={{ padding: '12px 0', textAlign: 'right' }}>
-                  <Text style={{ margin: 0, fontWeight: 'bold', fontSize: '20px', color: '#374151' }}>
+                  <Text
+                    style={{
+                      margin: 0,
+                      fontWeight: 'bold',
+                      fontSize: '20px',
+                      color: '#374151',
+                    }}
+                  >
                     {thisWeekPreview.guests}
                   </Text>
                 </td>
@@ -173,7 +270,13 @@ export function WeeklySummaryEmail({
         )}
       </Section>
 
-      <Hr style={{ border: 'none', borderTop: '1px solid #e5e7eb', margin: '24px 0' }} />
+      <Hr
+        style={{
+          border: 'none',
+          borderTop: '1px solid #e5e7eb',
+          margin: '24px 0',
+        }}
+      />
 
       <div style={{ textAlign: 'center', margin: '0 0 24px 0' }}>
         <EmailButton href={dashboardUrl}>{viewDashboard}</EmailButton>

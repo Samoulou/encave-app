@@ -59,7 +59,7 @@ export function ExperienceCard({
       className={cn('group block h-full', className)}
       data-testid="experience-card"
     >
-      <Card className="h-full flex flex-col overflow-hidden">
+      <Card className="flex h-full flex-col overflow-hidden">
         {/* Cover Photo */}
         <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
           <ImageWithFallback
@@ -82,7 +82,7 @@ export function ExperienceCard({
         </div>
 
         {/* Content */}
-        <CardContent className="flex flex-col flex-1 p-5">
+        <CardContent className="flex flex-1 flex-col p-5">
           {/* Winery Name */}
           <p
             className="text-sm font-medium text-burgundy-600"
@@ -93,7 +93,7 @@ export function ExperienceCard({
 
           {/* Title */}
           <h3
-            className="mt-1 font-display text-lg font-semibold text-slate-900 line-clamp-2 group-hover:text-burgundy-700 transition-colors"
+            className="mt-1 line-clamp-2 font-display text-lg font-semibold text-slate-900 transition-colors group-hover:text-burgundy-700"
             data-testid="experience-title"
           >
             {experience.title}
@@ -131,7 +131,7 @@ export function ExperienceCard({
           </div>
 
           {/* Price — pinned to bottom */}
-          <div className="mt-auto pt-4 flex items-center justify-between">
+          <div className="mt-auto flex items-center justify-between pt-4">
             <span
               className="text-lg font-semibold text-slate-900"
               data-testid="experience-price"

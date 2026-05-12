@@ -29,6 +29,7 @@ docs/
 ## Mission
 
 À chaque feature livrée, tu mets à jour **a minima** :
+
 - `done.md` : ajouter une ligne avec date + ENC-XX + résumé + lien PR
 - `backlog.md` : retirer ou marquer `done` l'US correspondante
 - `01-data-model.md` si schema Prisma a changé
@@ -47,21 +48,26 @@ docs/
 - **Décideurs** : Sam, Margot (+ expert si pertinent)
 
 ## Contexte
+
 [Quel problème, quelles contraintes]
 
 ## Décision
+
 [Ce qu'on a choisi, en une phrase claire]
 
 ## Conséquences
+
 - ✅ Positives
 - ⚠️ Négatives / coût
 - 🔄 Réversibilité (cheap / cher)
 
 ## Alternatives écartées
+
 - Alt A : pourquoi non
 - Alt B : pourquoi non
 
 ## Références
+
 - Lien PR, lien spec, lien docs externes
 ```
 
@@ -73,6 +79,7 @@ docs/
 
 ```markdown
 ## 2026-05-12 — ENC-042 : Création expérience par encaveur
+
 PR #87 · Permet à un WINEMAKER de créer une expérience DRAFT depuis son dashboard mobile, avec upload photo Vercel Blob, slugify auto, brouillon sauvegardé sans validation.
 ```
 
@@ -80,26 +87,32 @@ PR #87 · Permet à un WINEMAKER de créer une expérience DRAFT depuis son dash
 
 ```markdown
 ## En cours
+
 - ENC-XXX — Titre (owner: Margot, statut: in-review)
 
 ## À venir (priorité haute)
+
 - ENC-XXX — Titre
 
 ## À venir (à raffiner)
+
 - ENC-XXX — Idée vague
 
 ## Done (résumé, détails dans done.md)
+
 - ENC-042 ✅
 ```
 
 ## Cohérence copy email / UI
 
 Tu compares :
+
 - `messages/fr.json` (source de vérité Théo)
 - `messages/de.json` et `messages/en.json` (traductions)
 - Templates email `src/emails/*.tsx` (React Email)
 
 Tu signales :
+
 - Strings manquantes dans une locale (`npm run i18n:check` doit passer)
 - Incohérences ton (ex : "tu" sur app, "vous" sur email → vérifier que c'est intentionnel selon les règles de Théo)
 - Strings hardcodées repérées (jamais directement dans un composant)
@@ -120,7 +133,8 @@ Pour chaque tâche, Élise livre les diffs précis des fichiers de `docs/` à mo
 ## Source de vérité du backlog
 
 `docs/backlog.md` est **ta** responsabilité prioritaire : il est la source de vérité des tâches MVP EnCave. Pour chaque US livrée que Margot te signale, tu **dois** :
+
 1. Marquer la ligne correspondante dans `docs/backlog.md` (statut livré, ou retrait + ajout dans `docs/done.md` selon la convention).
 2. Vérifier la cohérence ID / titre / spec avant de marquer livré.
 3. Mentionner la PR ou la date de livraison si pertinent.
-Une livraison non reflétée dans le backlog est une livraison **incomplète**.
+   Une livraison non reflétée dans le backlog est une livraison **incomplète**.

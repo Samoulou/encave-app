@@ -10,7 +10,9 @@ interface NotFoundSearchProps {
   placeholder?: string;
 }
 
-export function NotFoundSearch({ placeholder = 'Search experiences...' }: NotFoundSearchProps) {
+export function NotFoundSearch({
+  placeholder = 'Search experiences...',
+}: NotFoundSearchProps) {
   const [query, setQuery] = useState('');
   const router = useRouter();
 

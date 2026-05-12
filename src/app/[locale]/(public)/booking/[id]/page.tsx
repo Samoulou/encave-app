@@ -28,7 +28,11 @@ import { cn } from '@/lib/utils';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
   return generatePageMetadata({
     locale: locale as Locale,
@@ -116,7 +120,10 @@ function getStatusColor(status: BookingStatus) {
   }
 }
 
-export default async function BookingPage({ params, searchParams }: BookingPageProps) {
+export default async function BookingPage({
+  params,
+  searchParams,
+}: BookingPageProps) {
   const { id } = await params;
   const { token } = await searchParams;
   const t = await getTranslations('booking');
@@ -136,14 +143,17 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
   return (
     <div className="container mx-auto max-w-3xl px-4 py-12">
       {/* Status Header */}
-      <div className="flex items-center gap-3 mb-8">
+      <div className="mb-8 flex items-center gap-3">
         {getStatusIcon(booking.status)}
         <div>
           <h1 className="font-display text-2xl font-bold text-slate-900">
             {t('bookingDetails')}
           </h1>
           <span
-            className={cn('inline-block mt-1 px-2 py-1 rounded-full text-xs font-medium', getStatusColor(booking.status))}
+            className={cn(
+              'mt-1 inline-block rounded-full px-2 py-1 text-xs font-medium',
+              getStatusColor(booking.status)
+            )}
           >
             {booking.status.replace(/_/g, ' ')}
           </span>
@@ -153,15 +163,19 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
       {/* Booking Reference */}
       <Card className="mb-6">
         <CardContent className="p-6 text-center">
-          <p className="text-sm text-slate-500 mb-1">{tConfirmation('bookingReference')}</p>
-          <p className="text-2xl font-mono font-bold text-burgundy-600">{booking.reference}</p>
+          <p className="mb-1 text-sm text-slate-500">
+            {tConfirmation('bookingReference')}
+          </p>
+          <p className="font-mono text-2xl font-bold text-burgundy-600">
+            {booking.reference}
+          </p>
         </CardContent>
       </Card>
 
       {/* Experience Details */}
       <Card className="mb-6 overflow-hidden">
         <div className="flex flex-col sm:flex-row">
-          <div className="relative h-48 sm:h-auto sm:w-48 flex-shrink-0">
+          <div className="relative h-48 flex-shrink-0 sm:h-auto sm:w-48">
             <Image
               src={booking.experience.coverPhoto}
               alt={booking.experience.title}
@@ -170,34 +184,40 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
             />
           </div>
           <CardContent className="flex-1 p-6">
-            <h2 className="font-display text-xl font-bold text-slate-900 mb-4">
+            <h2 className="mb-4 font-display text-xl font-bold text-slate-900">
               {booking.experience.title}
             </h2>
 
             <div className="space-y-3">
               <div className="flex items-center gap-3 text-slate-600">
                 <Calendar className="h-5 w-5 text-burgundy-600" />
-                <span>{format(new Date(booking.date), 'EEEE, MMMM d, yyyy')}</span>
+                <span>
+                  {format(new Date(booking.date), 'EEEE, MMMM d, yyyy')}
+                </span>
               </div>
 
               <div className="flex items-center gap-3 text-slate-600">
                 <Clock className="h-5 w-5 text-burgundy-600" />
                 <span>
-                  {formatTime(booking.timeSlot)} ({booking.experience.duration} min)
+                  {formatTime(booking.timeSlot)} ({booking.experience.duration}{' '}
+                  min)
                 </span>
               </div>
 
               <div className="flex items-center gap-3 text-slate-600">
                 <Users className="h-5 w-5 text-burgundy-600" />
                 <span>
-                  {booking.guestCount} {booking.guestCount === 1 ? 'guest' : 'guests'}
+                  {booking.guestCount}{' '}
+                  {booking.guestCount === 1 ? 'guest' : 'guests'}
                 </span>
               </div>
             </div>
 
-            <div className="mt-4 pt-4 border-t border-stone-200">
+            <div className="mt-4 border-t border-stone-200 pt-4">
               <div className="flex items-baseline justify-between">
-                <span className="text-slate-600">{tConfirmation('totalPaid')}</span>
+                <span className="text-slate-600">
+                  {tConfirmation('totalPaid')}
+                </span>
                 <span className="text-xl font-bold text-burgundy-600">
                   {formatCHF(booking.totalPrice)}
                 </span>
@@ -211,7 +231,7 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
       {isConfirmed && (
         <Card className="mb-6">
           <CardContent className="p-6">
-            <h3 className="font-semibold text-slate-900 mb-4">
+            <h3 className="mb-4 font-semibold text-slate-900">
               {tConfirmation('addToCalendar')}
             </h3>
             <AddToCalendar
@@ -234,13 +254,15 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
       {/* Winery Details */}
       <Card className="mb-6">
         <CardContent className="p-6">
-          <h3 className="font-semibold text-slate-900 mb-4">{tConfirmation('wineryDetails')}</h3>
+          <h3 className="mb-4 font-semibold text-slate-900">
+            {tConfirmation('wineryDetails')}
+          </h3>
 
           <div className="space-y-3">
             <p className="font-medium text-slate-900">{booking.winery.name}</p>
 
             <div className="flex items-start gap-3 text-slate-600">
-              <MapPin className="h-5 w-5 text-burgundy-600 flex-shrink-0 mt-0.5" />
+              <MapPin className="mt-0.5 h-5 w-5 flex-shrink-0 text-burgundy-600" />
               <div>
                 <p>{booking.winery.address}</p>
                 <p>{booking.winery.commune}</p>
@@ -248,7 +270,7 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
                   href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${booking.winery.address}, ${booking.winery.commune}, Switzerland`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-sm text-burgundy-600 hover:text-burgundy-700 mt-1"
+                  className="mt-1 inline-flex items-center gap-1 text-sm text-burgundy-600 hover:text-burgundy-700"
                 >
                   {tConfirmation('getDirections')}
                   <ExternalLink className="h-3 w-3" />
@@ -258,14 +280,20 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
 
             <div className="flex items-center gap-3 text-slate-600">
               <Phone className="h-5 w-5 text-burgundy-600" />
-              <a href={`tel:${booking.winery.phone}`} className="hover:text-burgundy-600">
+              <a
+                href={`tel:${booking.winery.phone}`}
+                className="hover:text-burgundy-600"
+              >
                 {booking.winery.phone}
               </a>
             </div>
 
             <div className="flex items-center gap-3 text-slate-600">
               <Mail className="h-5 w-5 text-burgundy-600" />
-              <a href={`mailto:${booking.winery.email}`} className="hover:text-burgundy-600">
+              <a
+                href={`mailto:${booking.winery.email}`}
+                className="hover:text-burgundy-600"
+              >
                 {booking.winery.email}
               </a>
             </div>
@@ -290,23 +318,28 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
       {/* Visitor Details */}
       <Card className="mb-8">
         <CardContent className="p-6">
-          <h3 className="font-semibold text-slate-900 mb-4">{tConfirmation('yourDetails')}</h3>
+          <h3 className="mb-4 font-semibold text-slate-900">
+            {tConfirmation('yourDetails')}
+          </h3>
           <div className="space-y-2 text-slate-600">
             <p>
-              <span className="font-medium">{tConfirmation('name')}:</span> {booking.visitorName}
+              <span className="font-medium">{tConfirmation('name')}:</span>{' '}
+              {booking.visitorName}
             </p>
             <p>
-              <span className="font-medium">{tConfirmation('email')}:</span> {booking.visitorEmail}
+              <span className="font-medium">{tConfirmation('email')}:</span>{' '}
+              {booking.visitorEmail}
             </p>
             <p>
-              <span className="font-medium">{tConfirmation('phone')}:</span> {booking.visitorPhone}
+              <span className="font-medium">{tConfirmation('phone')}:</span>{' '}
+              {booking.visitorPhone}
             </p>
           </div>
         </CardContent>
       </Card>
 
       {/* Actions */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-center">
+      <div className="flex flex-col justify-center gap-4 sm:flex-row">
         <Button asChild variant="outline">
           <Link href={`/experiences/${booking.experience.slug}`}>
             {tConfirmation('viewExperience')}

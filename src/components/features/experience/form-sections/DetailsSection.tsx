@@ -29,10 +29,10 @@ export function DetailsSection({ form, sectionRef }: DetailsSectionProps) {
     <section
       ref={sectionRef}
       id="details"
-      className="bg-white border border-stone-200 rounded-xl p-6 md:p-8 scroll-mt-24 shadow-sm"
+      className="scroll-mt-24 rounded-xl border border-stone-200 bg-white p-6 shadow-sm md:p-8"
     >
       <SectionHeader icon={SlidersHorizontal} title="Details" />
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {/* Duration */}
         <FormField
           control={form.control}
@@ -47,12 +47,15 @@ export function DetailsSection({ form, sectionRef }: DetailsSectionProps) {
                   onValueChange={(value) => field.onChange(parseInt(value))}
                   value={field.value?.toString()}
                 >
-                  <SelectTrigger className="bg-slate-50 border-stone-200 h-12">
+                  <SelectTrigger className="h-12 border-stone-200 bg-slate-50">
                     <SelectValue placeholder="Select duration" />
                   </SelectTrigger>
                   <SelectContent>
                     {DURATION_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value.toString()}>
+                      <SelectItem
+                        key={option.value}
+                        value={option.value.toString()}
+                      >
                         {option.label}
                       </SelectItem>
                     ))}
@@ -75,15 +78,17 @@ export function DetailsSection({ form, sectionRef }: DetailsSectionProps) {
               </FormLabel>
               <FormControl>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 font-medium">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium text-slate-400">
                     CHF
                   </span>
                   <Input
                     type="number"
                     placeholder="45.00"
-                    className="bg-slate-50 border-stone-200 h-12 pl-12"
+                    className="h-12 border-stone-200 bg-slate-50 pl-12"
                     {...field}
-                    onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)}
+                    onChange={(e) =>
+                      field.onChange(parseFloat(e.target.value) || undefined)
+                    }
                   />
                 </div>
               </FormControl>
@@ -106,11 +111,16 @@ export function DetailsSection({ form, sectionRef }: DetailsSectionProps) {
                   <Input
                     type="number"
                     placeholder="12"
-                    className="bg-slate-50 border-stone-200 h-12 pr-10"
+                    className="h-12 border-stone-200 bg-slate-50 pr-10"
                     {...field}
-                    onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                    onChange={(e) =>
+                      field.onChange(parseInt(e.target.value) || 1)
+                    }
                   />
-                  <Users className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" aria-hidden="true" />
+                  <Users
+                    className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+                    aria-hidden="true"
+                  />
                 </div>
               </FormControl>
               <FormMessage />

@@ -1,11 +1,7 @@
 import { Text, Section } from '@react-email/components';
 import type { Locale } from '@prisma/client';
 import { EmailLayout, EmailButton } from '../components';
-import {
-  formatEmailDate,
-  formatEmailTime,
-  formatEmailGuests,
-} from '../utils';
+import { formatEmailDate, formatEmailTime, formatEmailGuests } from '../utils';
 import { t, common, bookingReminder, subjects } from '../translations';
 
 export interface BookingReminderEmailProps {
@@ -50,7 +46,14 @@ export function BookingReminderEmail({
 
   return (
     <EmailLayout locale={locale} preview={t(subjects.bookingReminder, locale)}>
-      <Text style={{ fontSize: '24px', fontWeight: 'bold', color: '#7c2d12', margin: '0 0 16px 0' }}>
+      <Text
+        style={{
+          fontSize: '24px',
+          fontWeight: 'bold',
+          color: '#7c2d12',
+          margin: '0 0 16px 0',
+        }}
+      >
         {title}
       </Text>
 
@@ -74,9 +77,7 @@ export function BookingReminderEmail({
         {greeting} {guestName},
       </Text>
 
-      <Text style={{ margin: '0 0 24px 0' }}>
-        {intro}
-      </Text>
+      <Text style={{ margin: '0 0 24px 0' }}>{intro}</Text>
 
       <Section
         style={{
@@ -89,24 +90,42 @@ export function BookingReminderEmail({
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <tbody>
             <tr>
-              <td style={{ padding: '8px 0', color: '#6b7280', width: '40%' }}>{experienceLabel}</td>
-              <td style={{ padding: '8px 0', fontWeight: '500' }}>{experienceTitle}</td>
+              <td style={{ padding: '8px 0', color: '#6b7280', width: '40%' }}>
+                {experienceLabel}
+              </td>
+              <td style={{ padding: '8px 0', fontWeight: '500' }}>
+                {experienceTitle}
+              </td>
             </tr>
             <tr>
-              <td style={{ padding: '8px 0', color: '#6b7280' }}>{wineryLabel}</td>
+              <td style={{ padding: '8px 0', color: '#6b7280' }}>
+                {wineryLabel}
+              </td>
               <td style={{ padding: '8px 0' }}>{wineryName}</td>
             </tr>
             <tr>
-              <td style={{ padding: '8px 0', color: '#6b7280' }}>{dateLabel}</td>
-              <td style={{ padding: '8px 0', fontWeight: 'bold' }}>{formatEmailDate(date, locale)}</td>
+              <td style={{ padding: '8px 0', color: '#6b7280' }}>
+                {dateLabel}
+              </td>
+              <td style={{ padding: '8px 0', fontWeight: 'bold' }}>
+                {formatEmailDate(date, locale)}
+              </td>
             </tr>
             <tr>
-              <td style={{ padding: '8px 0', color: '#6b7280' }}>{timeLabel}</td>
-              <td style={{ padding: '8px 0', fontWeight: 'bold' }}>{formatEmailTime(date, locale)}</td>
+              <td style={{ padding: '8px 0', color: '#6b7280' }}>
+                {timeLabel}
+              </td>
+              <td style={{ padding: '8px 0', fontWeight: 'bold' }}>
+                {formatEmailTime(date, locale)}
+              </td>
             </tr>
             <tr>
-              <td style={{ padding: '8px 0', color: '#6b7280' }}>{guestsLabel}</td>
-              <td style={{ padding: '8px 0' }}>{formatEmailGuests(guestCount, locale)}</td>
+              <td style={{ padding: '8px 0', color: '#6b7280' }}>
+                {guestsLabel}
+              </td>
+              <td style={{ padding: '8px 0' }}>
+                {formatEmailGuests(guestCount, locale)}
+              </td>
             </tr>
           </tbody>
         </table>
@@ -120,7 +139,9 @@ export function BookingReminderEmail({
           margin: '0 0 24px 0',
         }}
       >
-        <Text style={{ margin: '0 0 8px 0', fontWeight: 'bold', fontSize: '14px' }}>
+        <Text
+          style={{ margin: '0 0 8px 0', fontWeight: 'bold', fontSize: '14px' }}
+        >
           {wineryName}
         </Text>
         <Text style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>

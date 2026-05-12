@@ -49,14 +49,20 @@ export async function geocodeAddress(
     );
 
     if (!response.ok) {
-      logError(`Geocoding API error: ${response.status} ${response.statusText}`, undefined, { action: 'geocodeAddress' });
+      logError(
+        `Geocoding API error: ${response.status} ${response.statusText}`,
+        undefined,
+        { action: 'geocodeAddress' }
+      );
       return null;
     }
 
     const data = (await response.json()) as NominatimResponse[];
 
     if (data.length === 0) {
-      logWarn(`No geocoding results for address: ${address}`, { action: 'geocodeAddress' });
+      logWarn(`No geocoding results for address: ${address}`, {
+        action: 'geocodeAddress',
+      });
       return null;
     }
 
@@ -97,10 +103,15 @@ export async function geocodeWineryAddress(
   }
 
   // Fallback: try with just commune if full address fails
-  const fallbackResult = await geocodeAddress(`${commune}, Valais, Switzerland`);
+  const fallbackResult = await geocodeAddress(
+    `${commune}, Valais, Switzerland`
+  );
 
   if (fallbackResult) {
-    logWarn(`Full address geocoding failed, using commune center for: ${address}, ${commune}`, { action: 'geocodeWineryAddress' });
+    logWarn(
+      `Full address geocoding failed, using commune center for: ${address}, ${commune}`,
+      { action: 'geocodeWineryAddress' }
+    );
     return {
       latitude: fallbackResult.latitude,
       longitude: fallbackResult.longitude,

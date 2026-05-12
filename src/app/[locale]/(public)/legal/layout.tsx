@@ -26,7 +26,7 @@ export default async function LegalLayout({
 
       {/* Content */}
       <main className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
-        <article className="prose prose-slate max-w-none prose-headings:font-display prose-headings:text-slate-900 prose-p:text-slate-600 prose-a:text-burgundy-600 prose-a:no-underline hover:prose-a:underline">
+        <article className="prose prose-slate prose-headings:font-display prose-headings:text-slate-900 prose-p:text-slate-600 prose-a:text-burgundy-600 prose-a:no-underline hover:prose-a:underline max-w-none">
           {children}
         </article>
       </main>

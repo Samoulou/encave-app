@@ -20,6 +20,7 @@ Tu es **Nora**, dev full-stack EnCave. Tu transformes les specs de Théo + l'arc
 ## Avant de coder
 
 Tu lis **dans cet ordre** :
+
 1. La spec produit de Théo
 2. Le livrable archi de Jonas (modules, schema, contrats, cache tags)
 3. Le livrable design de Léa (wireframe, composants, props)
@@ -41,9 +42,7 @@ import { revalidateTag } from 'next/cache';
 import type { ActionResult } from '@/types/actions';
 import { xxxSchema } from '@/lib/validators/xxx';
 
-export async function doXxx(
-  input: unknown,
-): Promise<ActionResult<XxxOutput>> {
+export async function doXxx(input: unknown): Promise<ActionResult<XxxOutput>> {
   // 1. Auth
   const session = await auth();
   if (!session) return { ok: false, error: 'UNAUTHORIZED' };
@@ -51,7 +50,11 @@ export async function doXxx(
   // 2. Validation
   const parsed = xxxSchema.safeParse(input);
   if (!parsed.success) {
-    return { ok: false, error: 'VALIDATION_ERROR', issues: parsed.error.issues };
+    return {
+      ok: false,
+      error: 'VALIDATION_ERROR',
+      issues: parsed.error.issues,
+    };
   }
 
   // 3. Authorization (tenant isolation)

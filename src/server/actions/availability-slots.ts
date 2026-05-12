@@ -78,7 +78,10 @@ export async function getAvailabilitySlots(
       })),
     };
   } catch (error) {
-    logError('getAvailabilitySlots error', error, { action: 'getAvailabilitySlots', experienceId });
+    logError('getAvailabilitySlots error', error, {
+      action: 'getAvailabilitySlots',
+      experienceId,
+    });
     return {
       success: false,
       error: {
@@ -139,7 +142,15 @@ export async function updateAvailabilitySlots(
       slotsByDay[slot.dayOfWeek] = daySlots;
     }
 
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayNames = [
+      'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+    ];
     for (const day of Object.keys(slotsByDay)) {
       const dayOfWeek = parseInt(day);
       const daySlots = slotsByDay[dayOfWeek];
@@ -213,7 +224,10 @@ export async function updateAvailabilitySlots(
       data: { count: slots.length },
     };
   } catch (error) {
-    logError('updateAvailabilitySlots error', error, { action: 'updateAvailabilitySlots', experienceId });
+    logError('updateAvailabilitySlots error', error, {
+      action: 'updateAvailabilitySlots',
+      experienceId,
+    });
     return {
       success: false,
       error: {

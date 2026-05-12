@@ -24,7 +24,14 @@ export function TransactionStatusBadge({
 
   const STATUS_CONFIG: Record<
     TransactionStatus,
-    { bgColor: string; textColor: string; dotColor: string; label: string; hasDot: boolean; isPulsing: boolean }
+    {
+      bgColor: string;
+      textColor: string;
+      dotColor: string;
+      label: string;
+      hasDot: boolean;
+      isPulsing: boolean;
+    }
   > = {
     paid: {
       bgColor: 'bg-green-50',
