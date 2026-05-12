@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath, revalidateTag } from 'next/cache';
+import { revalidatePath } from 'next/cache';
 import { BookingStatus } from '@prisma/client';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
@@ -155,17 +155,11 @@ async function resolveContext(
 /**
  * Cache invalidation after a booking mutation on the event-detail page.
  *
- * Tag consumers (must match emitters here):
- *   - `event-detail:<slug>` → consumed by `getEventDetail` in
- *     `src/server/queries/event-detail.queries.ts`.
- *
- * Path consumers (other dashboard views rely on React.cache only — bumping the
- * Next router cache forces a fresh render):
- *   - `/dashboard/bookings` → list + calendar views in
- *     `src/app/[locale]/(protected)/dashboard/bookings/`.
+ * The event-detail query uses React.cache only (request-level dedup), so no
+ * persistent tag to invalidate here. We still bump the Next router cache for
+ * the bookings dashboard so list + calendar views refresh on next navigation.
  */
-function invalidate(experienceSlug: string): void {
-  revalidateTag(`event-detail:${experienceSlug}`);
+function invalidate(_experienceSlug: string): void {
   revalidatePath('/dashboard/bookings');
 }
 

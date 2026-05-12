@@ -222,7 +222,6 @@ describe('markBookingCheckedIn', () => {
         }),
       })
     );
-    expect(revalidateTag).toHaveBeenCalledWith('event-detail:tasting');
     expect(revalidatePath).toHaveBeenCalledWith('/dashboard/bookings');
   });
 });

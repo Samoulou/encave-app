@@ -1,5 +1,4 @@
 import { cache } from 'react';
-import { unstable_cache } from 'next/cache';
 import { db } from '@/server/db';
 import { BookingStatus, ExperienceStatus } from '@prisma/client';
 import { parseTimeSlot, timeSlotSchema } from '@/lib/validators/booking';
@@ -322,30 +321,20 @@ function buildEventDetail(experience: FetchedExperience): EventDetailDTO {
  * experience slug. Returns null when the experience doesn't exist, is archived,
  * or does not belong to the user's winery.
  *
- * Cached at the request level (React.cache) and persistent (unstable_cache)
- * for 60 seconds. The action layer in `src/server/actions/event-detail.ts`
- * invalidates this entry by tag (`event-detail:<experienceSlug>`).
- *
- * Note: `isLive` and the H-2 / H+2 scan window are deliberately NOT cached —
- * they depend on the current instant. Compute them in the page Server
- * Component from `startsAt` / `endsAt`.
+ * Request-level deduplication via React.cache only. We intentionally do NOT
+ * use unstable_cache here because the DTO embeds Date instances (startsAt,
+ * endsAt, createdAt, checkedInAt) and unstable_cache serializes its return
+ * value, which would turn these into ISO strings on subsequent calls and
+ * crash the Server Component on `.getTime()`. Operational dashboards must
+ * also stay fresh on every request anyway.
  */
 export const getEventDetail = cache(
-  (experienceSlug: string, userId: string) => {
-    return unstable_cache(
-      async (): Promise<EventDetailDTO | null> => {
-        const experience = await fetchExperienceForOwner(
-          experienceSlug,
-          userId
-        );
-        if (!experience) return null;
-        return buildEventDetail(experience);
-      },
-      ['event-detail', experienceSlug, userId],
-      {
-        revalidate: 60,
-        tags: [`event-detail:${experienceSlug}`],
-      }
-    )();
+  async (
+    experienceSlug: string,
+    userId: string
+  ): Promise<EventDetailDTO | null> => {
+    const experience = await fetchExperienceForOwner(experienceSlug, userId);
+    if (!experience) return null;
+    return buildEventDetail(experience);
   }
 );
