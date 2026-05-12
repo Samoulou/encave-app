@@ -186,7 +186,7 @@ Component → Server Action → Service/Query → DB
 
 ### Booking State Machine
 
-`PENDING_PAYMENT` → `CONFIRMED` → `COMPLETED` | `CANCELLED_BY_CLIENT` | `CANCELLED_BY_WINERY` | `NO_SHOW`. Never skip states. Never transition backwards.
+`PENDING_PAYMENT` → `CONFIRMED` → `COMPLETED` | `CANCELLED_BY_CLIENT` | `CANCELLED_BY_WINERY` | `NO_SHOW`. Never skip states. Backward transitions are forbidden **except** for the two operational reverts `COMPLETED → CONFIRMED` and `NO_SHOW → CONFIRMED` available only to the winery owner via `revertBookingCheckIn`/`revertBookingNoShow` server actions, within 72h after the session ends, with mandatory Pino log. See [ADR-0001](./docs/adr/0001-booking-backward-status-transitions.md).
 
 ### Payments
 

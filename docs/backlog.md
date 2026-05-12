@@ -27,7 +27,7 @@ Ces choix corrigent les divergences entre le backlog d'origine et le code réel 
 
 - **Taille** : S (≤4h) · M (≤1 jour) · L (2-3 jours)
 - **Priorité** : P0 (bloque MVP) · P1 (must avant ouverture publique) · P2 (nice-to-have)
-- **Statut** : 🆕 nouveau · 🔧 reprise d'un US partiel · 📋 issu du backlog d'origine
+- **Statut** : 🆕 nouveau · 🔧 reprise d'un US partiel · 📋 issu du backlog d'origine · ✅ livré (date dans la colonne titre)
 
 ---
 
@@ -45,7 +45,7 @@ Ces choix corrigent les divergences entre le backlog d'origine et le code réel 
 
 | ID       | Titre                                                                                                       | Taille | Statut | Spec                        |
 | -------- | ----------------------------------------------------------------------------------------------------------- | ------ | ------ | --------------------------- |
-| ENC-096  | Page détail événement encaveur (liste des inscrits par session + actions)                                   | M      | 📋     | [spec](./specs/ENC-096.md)  |
+| ENC-096  | Page détail événement encaveur (liste des inscrits par session + actions) — livrée 2026-05-12               | M      | ✅     | [spec](./specs/ENC-096.md)  |
 | ENC-100  | Page `/dashboard/scan` mobile (caméra + html5-qrcode)                                                       | M      | 📋     | [spec](./specs/ENC-100.md)  |
 | ENC-101  | Endpoint check-in : ajouter `checkedInAt` au modèle `Booking` + transition CONFIRMED → COMPLETED via scan   | S      | 📋     | [spec](./specs/ENC-101.md)  |
 | ENC-102  | Liste check-in manuelle sur page détail événement (fallback si pas de caméra)                               | S      | 📋     | [spec](./specs/ENC-102.md)  |
