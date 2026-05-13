@@ -11,7 +11,7 @@
 
 Avant d'attaquer, deux observations sur la base de code à confirmer avec Margot :
 
-1. **Route publique cave** : la spec produit parle de `/caves/{slug}`. La base de code actuelle utilise `/wineries/[slug]` (cf. `src/app/[locale]/(public)/wineries/[slug]/page.tsx`). Je m'aligne sur la route **existante** `/wineries/[slug]` pour ne pas créer de divergence. Si Théo veut absolument `/caves`, c'est une US de migration séparée (ENC-XXX).
+1. **Route publique cave** : alignement acté (décision Sam 2026-05-13) sur la route **existante** `/wineries/[slug]` (cf. `src/app/[locale]/(public)/wineries/[slug]/page.tsx`). Terminologie métier "cave" conservée en FR, routes en anglais. Spec produit corrigée.
 2. **Page "dashboard home"** : `src/app/[locale]/(protected)/dashboard/page.tsx` redirige immédiatement vers `/dashboard/bookings` (WINEMAKER) ou `/dashboard/my-bookings` (CLIENT). Il n'y a pas d'écran "accueil dashboard" canonique. **Le bandeau visibilité doit donc s'afficher sur `/dashboard/bookings`** — premier écran que l'encaveur voit après login. Justification : c'est aussi l'écran où il vient quotidiennement et où l'absence de réservations corrèle directement avec "cave invisible".
 3. **Banner Stripe existant** (`StripeWarningBanner.tsx`) : pattern visuel à réutiliser comme référence — bordure ambre, icône `AlertTriangle`, CTA secondaire. On élève le concept pour couvrir les 6 critères, pas seulement KYC.
 
@@ -476,6 +476,6 @@ Pas besoin de scroll-into-view JS — l'ancre HTML native suffit, et le focus se
 
 ## 8. Friction identifiée à signaler à Margot
 
-1. **Divergence route** `/caves` vs `/wineries` à arbitrer (cf. §0).
+1. **Divergence route** `/caves` vs `/wineries` : tranchée le 2026-05-13 (on garde `/wineries`, spec produit alignée).
 2. **Pas de dashboard home** dédié : le bandeau atterrit sur `/dashboard/bookings`. Acceptable mais à valider — alternative : créer une vraie page `/dashboard` au lieu du redirect. Hors scope cette US, à noter.
 3. **Critère `verified` non actionnable** : si l'encaveur reste bloqué en `PENDING` longtemps, le bandeau peut sembler "coincé". Une notification email "votre cave est validée" (hors-périmètre explicite) compensera. À garder en tête.

@@ -11,7 +11,7 @@
 Avant de produire les contrats, j'ai audité le code existant pour caler le doc sur la réalité. Trois points qui décalent la spec produit du code :
 
 1. **Routes : `/wineries` et `/experiences`, pas `/caves`.**
-   La spec utilise le vocabulaire FR `/caves/{slug}/{experienceSlug}`. Mais les routes effectives sont :
+   La spec produit a été alignée (décision Sam 2026-05-13) sur les routes effectives ci-dessous. Terminologie métier "cave" conservée en FR, routes en anglais.
    - `src/app/[locale]/(public)/wineries/page.tsx` (listing caves)
    - `src/app/[locale]/(public)/wineries/[slug]/page.tsx` (détail cave)
    - `src/app/[locale]/(public)/experiences/page.tsx` (listing expériences)
@@ -189,7 +189,7 @@ Pour les queries qui retournent juste un slug ou un count (sitemap, communes, pr
 
 - `src/app/[locale]/(public)/wineries/[slug]/page.tsx` — appelle déjà `getWineryBySlug` → `notFound()` si `null`. **Aucun changement de logique nécessaire**, le 404 sera automatique dès que la query est patchée. Vérifier que les messages i18n `Public.winery.notFound.*` (spec) existent / sont à ajouter dans `messages/{fr,de,en}.json` (cf checklist Nora).
 - `src/app/[locale]/(public)/experiences/[slug]/page.tsx` — appelle `getExperienceBySlug` → `notFound()` si `null`. Idem, automatique post-patch.
-- **Pas de route `/wineries/[slug]/[experienceSlug]`** dans le code. La spec parle de `/caves/{slug}/{experienceSlug}` mais ça n'existe pas — l'expérience vit à `/experiences/[slug]`. Si à terme on ajoute cette route imbriquée, elle bénéficiera du même mécanisme (re-check sur la cave parente).
+- **Pas de route `/wineries/[slug]/[experienceSlug]`** dans le code. L'expérience vit à `/experiences/[slug]` (route flat). La spec produit a été corrigée en ce sens. Si à terme on ajoute une route imbriquée, elle bénéficiera du même mécanisme (re-check sur la cave parente).
 
 ### Garantie de cohérence
 

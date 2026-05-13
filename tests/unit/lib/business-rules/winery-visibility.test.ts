@@ -208,6 +208,34 @@ describe('winery-visibility', () => {
       expect(getWineryVisibilityCriteria(pending).verified).toBe(false);
       expect(getWineryVisibilityCriteria(verified).verified).toBe(true);
     });
+
+    it('reports only `verified=false` for a SUSPENDED winery that is otherwise fully complete (ENC-027 scénario "cave masquée")', () => {
+      const suspended = happyWinery({ status: 'SUSPENDED' });
+
+      expect(isWineryPubliclyVisible(suspended)).toBe(false);
+      expect(getWineryVisibilityCriteria(suspended)).toEqual({
+        verified: false,
+        kyc: true,
+        hasPhotos: true,
+        hasDescription: true,
+        hasGeocoding: true,
+        hasPublishedExperience: true,
+      });
+    });
+
+    it('reports only `kyc=false` when Stripe charges_enabled flips to false on an otherwise visible winery', () => {
+      const lostKyc = happyWinery({ stripeOnboardingComplete: false });
+
+      expect(isWineryPubliclyVisible(lostKyc)).toBe(false);
+      expect(getWineryVisibilityCriteria(lostKyc)).toMatchObject({
+        verified: true,
+        kyc: false,
+        hasPhotos: true,
+        hasDescription: true,
+        hasGeocoding: true,
+        hasPublishedExperience: true,
+      });
+    });
   });
 
   describe('publiclyVisibleWineryWhere', () => {
