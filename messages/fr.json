@@ -1786,6 +1786,44 @@
         "confirmCta": "Confirmer",
         "cancelCta": "Retour"
       }
+    },
+    "visibility": {
+      "banner": {
+        "title": "Votre cave n'est pas encore visible publiquement",
+        "subtitle": "Complétez les éléments ci-dessous pour apparaître sur encave.ch.",
+        "cta": "Compléter mon profil",
+        "success": {
+          "title": "Votre cave est en ligne",
+          "subtitle": "Les clients peuvent la trouver et réserver vos expériences.",
+          "viewPublic": "Voir ma page publique"
+        },
+        "error": {
+          "title": "Impossible de vérifier le statut de votre cave",
+          "subtitle": "Veuillez réessayer dans un instant.",
+          "retry": "Réessayer"
+        }
+      },
+      "criteria": {
+        "verified": "Validation par l'équipe EnCave (en cours)",
+        "kyc": "Finaliser les informations bancaires (Stripe)",
+        "address": "Renseigner l'adresse exacte de votre cave",
+        "description": "Rédiger une description de votre cave",
+        "photos": "Ajouter au moins une photo de votre cave",
+        "experience": "Publier au moins une expérience",
+        "done": "Fait",
+        "srValidated": "Critère validé :",
+        "srToComplete": "Critère à compléter :",
+        "srInProgress": "Critère en cours :"
+      }
+    }
+  },
+  "Public": {
+    "winery": {
+      "notFound": {
+        "title": "Cette cave n'est pas (encore) disponible",
+        "body": "Revenez bientôt — de nouveaux encaveurs rejoignent EnCave chaque semaine.",
+        "cta": "Découvrir les autres caves"
+      }
     }
   }
 }

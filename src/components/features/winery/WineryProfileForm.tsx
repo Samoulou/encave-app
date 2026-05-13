@@ -192,26 +192,35 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
 
   return (
     <div className="space-y-10">
-      <WineryMediaSection
-        coverPhoto={coverPhoto}
-        galleryImages={galleryImages}
-        isUploadingCover={isUploadingCover}
-        uploadingGalleryIndex={uploadingGalleryIndex}
-        maxGalleryImages={maxGalleryImages}
-        onImageUpload={handleImageUpload}
-        onCoverPhotoChange={handleCoverPhotoChange}
-        onGalleryUpload={handleGalleryUpload}
-        onRemoveGalleryImage={handleRemoveGalleryImage}
-      />
+      {/* ENC-027: deep-link target for "Add photos" criterion */}
+      <div id="media" className="scroll-mt-24">
+        <WineryMediaSection
+          coverPhoto={coverPhoto}
+          galleryImages={galleryImages}
+          isUploadingCover={isUploadingCover}
+          uploadingGalleryIndex={uploadingGalleryIndex}
+          maxGalleryImages={maxGalleryImages}
+          onImageUpload={handleImageUpload}
+          onCoverPhotoChange={handleCoverPhotoChange}
+          onGalleryUpload={handleGalleryUpload}
+          onRemoveGalleryImage={handleRemoveGalleryImage}
+        />
+      </div>
 
       {/* Winery Information Section */}
       <section className="space-y-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <WineryBasicInfoSection control={form.control} />
+            {/* ENC-027: deep-link target for "Add description" criterion */}
+            <div id="description" className="scroll-mt-24">
+              <WineryBasicInfoSection control={form.control} />
+            </div>
 
             {/* Contact Details Section */}
-            <WineryContactSection control={form.control} />
+            {/* ENC-027: deep-link target for "Add address" criterion */}
+            <div id="location" className="scroll-mt-24">
+              <WineryContactSection control={form.control} />
+            </div>
 
             {/* Save Actions */}
             <div className="flex items-center justify-between border-t border-stone-200 pt-8">
