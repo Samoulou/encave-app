@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import {
-  getVerifiedWineries,
+  getPubliclyVisibleWineries,
   getDistinctCommunes,
 } from '@/server/queries/winery.queries';
 import { WineryCard } from '@/components/features/winery/WineryCard';
@@ -21,7 +21,7 @@ interface WineriesContentProps {
  */
 export async function WineriesContent({ commune }: WineriesContentProps) {
   const [wineries, communes, t] = await Promise.all([
-    getVerifiedWineries(commune),
+    getPubliclyVisibleWineries(commune),
     getDistinctCommunes(),
     getTranslations('wineries'),
   ]);

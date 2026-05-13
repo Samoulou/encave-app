@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { locales, defaultLocale } from '@/i18n/routing';
 import { getAllPublishedExperienceSlugs } from '@/server/queries/experience.queries';
-import { getAllVerifiedWinerySlugs } from '@/server/queries/winery.queries';
+import { getPubliclyVisibleWinerySlugs } from '@/server/queries/winery.queries';
 import { logError } from '@/lib/logger';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://encave.ch';
@@ -83,7 +83,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Dynamic pages - wineries
   try {
-    const winerySlugs = await getAllVerifiedWinerySlugs();
+    const winerySlugs = await getPubliclyVisibleWinerySlugs();
     for (const slug of winerySlugs) {
       entries.push(...createEntry(`/wineries/${slug}`, 'weekly', 0.8));
     }
