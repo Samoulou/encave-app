@@ -117,7 +117,7 @@ export const auth = betterAuth({
 
   // Rate limiting for security
   rateLimit: {
-    enabled: true,
+    enabled: process.env.E2E_TEST !== 'true',
     window: 60, // 1 minute window
     max: 10, // max 10 requests per window
   },

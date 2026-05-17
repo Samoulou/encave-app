@@ -96,6 +96,7 @@ export default defineConfig({
       ...(process.env.STRIPE_WEBHOOK_SECRET && {
         STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
       }),
+      E2E_TEST: 'true',
     },
   },
 });

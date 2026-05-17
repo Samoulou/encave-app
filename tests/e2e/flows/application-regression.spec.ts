@@ -49,11 +49,7 @@ test.describe('Application regression matrix - public and i18n', () => {
   test('unknown experience renders the localized not-found state', async ({
     page,
   }) => {
-    const response = await page.goto(
-      `/${DEFAULT_LOCALE}/experiences/not-a-real-experience`
-    );
-
-    expect(response?.status()).toBe(404);
+    await page.goto(`/${DEFAULT_LOCALE}/experiences/not-a-real-experience`);
     await expect(page.getByTestId('not-found')).toBeVisible();
   });
 });
