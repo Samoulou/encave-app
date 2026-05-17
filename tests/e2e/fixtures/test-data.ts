@@ -84,6 +84,8 @@ export interface TestExperience {
  * Visitor data structure (for checkout)
  */
 export interface TestVisitor {
+  firstName: string;
+  lastName: string;
   name: string;
   email: string;
   phone: string;
@@ -272,6 +274,8 @@ export const TEST_EXPERIENCES: Record<string, TestExperience> = {
 export const TEST_VISITORS: Record<string, TestVisitor> = {
   /** Standard valid visitor */
   validVisitor: {
+    firstName: 'Jean',
+    lastName: 'Test',
     name: 'Jean Test',
     email: 'jean.test@example.com',
     phone: '+41 79 123 45 67',
@@ -279,6 +283,8 @@ export const TEST_VISITORS: Record<string, TestVisitor> = {
 
   /** Swiss phone format */
   swissVisitor: {
+    firstName: 'Marie',
+    lastName: 'Exemple',
     name: 'Marie Exemple',
     email: 'marie@example.ch',
     phone: '079 987 65 43',
@@ -286,6 +292,8 @@ export const TEST_VISITORS: Record<string, TestVisitor> = {
 
   /** International visitor */
   internationalVisitor: {
+    firstName: 'John',
+    lastName: 'Smith',
     name: 'John Smith',
     email: 'john.smith@test.com',
     phone: '+1 555 123 4567',

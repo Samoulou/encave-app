@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import type { Session } from 'next-auth';
+import type { Session } from '@/server/auth';
 
 // Mock next-auth
 vi.mock('@/server/auth', () => ({
@@ -48,9 +48,10 @@ describe('Winery Profile Actions Integration Tests', () => {
     user: {
       id: 'user-123',
       email: 'winemaker@test.com',
+      name: 'Winemaker',
       role: 'WINEMAKER',
+      preferredLocale: 'FR',
     },
-    expires: new Date(Date.now() + 86400000).toISOString(),
   };
 
   const mockWinery = {

@@ -1,5 +1,15 @@
 import { test as base, Page } from '@playwright/test';
 
+const E2E_LOCALE = process.env.E2E_LOCALE ?? 'en';
+
+export function localizedPath(path: string, locale = E2E_LOCALE): string {
+  if (/^\/(fr|de|en)(\/|$)/.test(path)) {
+    return path;
+  }
+
+  return `/${locale}${path.startsWith('/') ? path : `/${path}`}`;
+}
+
 /**
  * Authentication fixtures for E2E tests
  *
@@ -66,6 +76,30 @@ export const TEST_USERS: Record<string, TestUser> = {
     name: 'Test Admin',
     role: 'admin',
   },
+  clientA: {
+    email: 'client-a@test.encave.ch',
+    password: 'TestPassword123!',
+    name: 'Client Alpha',
+    role: 'guest',
+  },
+  clientB: {
+    email: 'client-b@test.encave.ch',
+    password: 'TestPassword123!',
+    name: 'Client Beta',
+    role: 'guest',
+  },
+  winemakerVerified: {
+    email: 'winemaker-verified@test.encave.ch',
+    password: 'TestPassword123!',
+    name: 'Vigneron Verifie',
+    role: 'winery_owner',
+  },
+  winemakerPending: {
+    email: 'winemaker-pending@test.encave.ch',
+    password: 'TestPassword123!',
+    name: 'Vigneron En Attente',
+    role: 'winery_owner',
+  },
 };
 
 // ============================================================
@@ -76,7 +110,7 @@ export const TEST_USERS: Record<string, TestUser> = {
  * Perform login on a page
  */
 async function loginUser(page: Page, user: TestUser): Promise<void> {
-  await page.goto('/login');
+  await page.goto(localizedPath('/login'));
 
   // Fill login form
   await page.getByLabel(/email/i).fill(user.email);
@@ -86,7 +120,9 @@ async function loginUser(page: Page, user: TestUser): Promise<void> {
   await page.getByRole('button', { name: /sign in|log in/i }).click();
 
   // Wait for redirect (dashboard or home)
-  await page.waitForURL(/\/(dashboard|home|\/)$/);
+  await page.waitForURL(
+    /\/(dashboard|my-bookings|bookings|admin|home|en|fr|de)/
+  );
 }
 
 /**

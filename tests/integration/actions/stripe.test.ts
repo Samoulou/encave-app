@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { Session } from 'next-auth';
+import type { Session } from '@/server/auth';
 
 // Mock the auth module
 vi.mock('@/server/auth', () => ({
@@ -59,9 +59,10 @@ describe('Stripe Server Actions', () => {
     user: {
       id: 'user-123',
       email: 'winemaker@test.com',
+      name: 'Winemaker',
       role: 'WINEMAKER',
+      preferredLocale: 'FR',
     },
-    expires: new Date(Date.now() + 86400000).toISOString(),
   };
 
   const mockWinery = {

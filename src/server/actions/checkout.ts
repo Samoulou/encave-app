@@ -7,7 +7,7 @@ import { getStripe } from '@/server/stripe';
 import { db } from '@/server/db';
 import { getBaseUrl } from '@/lib/env';
 import type { ActionResult } from '@/types/actions';
-import { BookingStatus } from '@prisma/client';
+import { BookingStatus, ExperienceStatus, WineryStatus } from '@prisma/client';
 import { timeSlotSchema } from '@/lib/validators/booking';
 import { env } from '@/lib/env';
 import {
@@ -87,6 +87,7 @@ export async function createBookingAndCheckout(
           select: {
             id: true,
             name: true,
+            status: true,
             stripeAccountId: true,
             stripeOnboardingComplete: true,
           },
@@ -107,6 +108,26 @@ export async function createBookingAndCheckout(
         error: {
           code: 'VALIDATION_ERROR',
           message: 'Experience does not belong to the selected winery',
+        },
+      };
+    }
+
+    if (experience.status !== ExperienceStatus.PUBLISHED) {
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Experience is not available for booking',
+        },
+      };
+    }
+
+    if (experience.winery.status !== WineryStatus.VERIFIED) {
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Winery is not available for booking',
         },
       };
     }

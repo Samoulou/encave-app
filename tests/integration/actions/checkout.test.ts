@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { db } from '@/server/db';
-import { BookingStatus } from '@prisma/client';
+import { BookingStatus, ExperienceStatus, WineryStatus } from '@prisma/client';
 
 // Mock Stripe
 vi.mock('stripe', () => {
@@ -71,12 +71,14 @@ describe('Checkout Server Actions', () => {
       id: 'exp-1',
       title: 'Wine Tasting',
       slug: 'wine-tasting',
+      status: ExperienceStatus.PUBLISHED,
       price: 5000, // 50 CHF in cents
       minCapacity: 2,
       maxCapacity: 10,
       winery: {
         id: 'winery-1',
         name: 'Test Winery',
+        status: WineryStatus.VERIFIED,
         stripeAccountId: 'acct_test_123',
         stripeOnboardingComplete: true,
       },
@@ -119,6 +121,62 @@ describe('Checkout Server Actions', () => {
         expect(result.data.bookingReference).toBe('ENC-ABC123');
         expect(result.data.checkoutUrl).toContain('checkout.stripe.com');
       }
+    });
+
+    it('returns validation error when winery id does not match the experience', async () => {
+      vi.mocked(db.experience.findUnique).mockResolvedValue(
+        mockExperience as never
+      );
+
+      const { createBookingAndCheckout } =
+        await import('@/server/actions/checkout');
+      const result = await createBookingAndCheckout({
+        ...validInput,
+        wineryId: 'spoofed-winery',
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe('VALIDATION_ERROR');
+      }
+      expect(db.booking.create).not.toHaveBeenCalled();
+    });
+
+    it('returns validation error when experience is not published', async () => {
+      vi.mocked(db.experience.findUnique).mockResolvedValue({
+        ...mockExperience,
+        status: ExperienceStatus.DRAFT,
+      } as never);
+
+      const { createBookingAndCheckout } =
+        await import('@/server/actions/checkout');
+      const result = await createBookingAndCheckout(validInput);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe('VALIDATION_ERROR');
+      }
+      expect(db.booking.create).not.toHaveBeenCalled();
+    });
+
+    it('returns validation error when winery is not verified', async () => {
+      vi.mocked(db.experience.findUnique).mockResolvedValue({
+        ...mockExperience,
+        winery: {
+          ...mockExperience.winery,
+          status: WineryStatus.PENDING,
+        },
+      } as never);
+
+      const { createBookingAndCheckout } =
+        await import('@/server/actions/checkout');
+      const result = await createBookingAndCheckout(validInput);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe('VALIDATION_ERROR');
+      }
+      expect(db.booking.create).not.toHaveBeenCalled();
     });
 
     it('returns validation error for invalid email', async () => {
