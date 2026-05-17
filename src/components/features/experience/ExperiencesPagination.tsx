@@ -17,10 +17,11 @@ export function ExperiencesPagination({
 }: ExperiencesPaginationProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const currentSearchParams = searchParams ?? new URLSearchParams();
   const [isPending, startTransition] = useTransition();
 
   const goToPage = (page: number) => {
-    const params = new URLSearchParams(searchParams);
+    const params = new URLSearchParams(currentSearchParams);
     if (page > 1) {
       params.set('page', String(page));
     } else {

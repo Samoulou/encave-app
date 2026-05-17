@@ -23,6 +23,7 @@ export function ClientDashboardSidebar({
   userEmail,
 }: ClientDashboardSidebarProps) {
   const pathname = usePathname();
+  const currentPathname = pathname ?? '';
   const locale = useLocale();
   const router = useRouter();
   const t = useTranslations('clientDashboard.nav');
@@ -104,8 +105,8 @@ export function ClientDashboardSidebar({
             {sidebarLinks.map((link) => {
               const localizedHref = `/${locale}${link.href}`;
               const isActive =
-                pathname === localizedHref ||
-                pathname.startsWith(`${localizedHref}/`);
+                currentPathname === localizedHref ||
+                currentPathname.startsWith(`${localizedHref}/`);
               const Icon = link.icon;
 
               return (
