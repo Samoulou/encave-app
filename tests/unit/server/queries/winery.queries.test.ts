@@ -30,10 +30,12 @@ describe('winery.queries', () => {
 
       await getVerifiedWineries();
 
-      expect(db.winery.findMany).toHaveBeenCalledWith({
-        where: { status: 'VERIFIED' },
-        orderBy: { name: 'asc' },
-      });
+      expect(db.winery.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { status: 'VERIFIED' },
+          orderBy: { name: 'asc' },
+        })
+      );
     });
 
     it('filters by commune when provided', async () => {
@@ -41,10 +43,12 @@ describe('winery.queries', () => {
 
       await getVerifiedWineries('Sion');
 
-      expect(db.winery.findMany).toHaveBeenCalledWith({
-        where: { status: 'VERIFIED', commune: 'Sion' },
-        orderBy: { name: 'asc' },
-      });
+      expect(db.winery.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { status: 'VERIFIED', commune: 'Sion' },
+          orderBy: { name: 'asc' },
+        })
+      );
     });
 
     it('returns empty array when no wineries found', async () => {

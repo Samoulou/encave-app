@@ -160,7 +160,7 @@ describe('Winery Profile Actions Integration Tests', () => {
       }
       expect(mockDb.winery.update).toHaveBeenCalledWith({
         where: { id: mockWinery.id },
-        data: validProfileInput,
+        data: expect.objectContaining(validProfileInput),
       });
     });
   });

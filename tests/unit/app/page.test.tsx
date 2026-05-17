@@ -1,30 +1,44 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
+import type { ReactNode } from 'react';
+
+vi.mock('next/image', () => ({
+  default: ({ alt = '', ...props }: { alt?: string }) => (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img alt={alt} {...props} />
+  ),
+}));
 
 // Mock next-intl
 vi.mock('next-intl/server', () => ({
   setRequestLocale: vi.fn(),
   getTranslations: vi.fn(() =>
-    Promise.resolve((key: string) => {
-      const translations: Record<string, string> = {
-        title: 'Discover Valais Wine Experiences',
-        subtitle:
-          'Book unique wine tasting experiences directly with Swiss winemakers.',
-        discoverSection: 'Discover',
-        wineExperiences: 'Wine Experiences',
-        wineExperiencesDescription:
-          'Explore tastings, cellar visits, workshops...',
-        browseExperiences: 'Browse experiences',
-        ourWineries: 'Our Wineries',
-        ourWineriesDescription: 'Discover passionate winemakers...',
-        meetWinemakers: 'Meet our winemakers',
-        readyToExplore: 'Ready to explore?',
-        startJourney: 'Start your journey through the world of Swiss wines.',
-        viewAllExperiences: 'View All Experiences',
-        becomePartner: 'Become a Partner',
-      };
-      return translations[key] || key;
-    })
+    Promise.resolve(
+      Object.assign(
+        (key: string) => {
+          const translations: Record<string, string> = {
+            heroTitle: 'Discover Valais Wine Experiences',
+            heroSubtitle:
+              'Book unique wine tasting experiences directly with Swiss winemakers.',
+            heroImageAlt: 'Valais vineyard',
+            ctaImageAlt: 'Wine cellar',
+            ctaTitle: 'Ready to explore?',
+            ctaSubtitle: 'Start your journey through the world of Swiss wines.',
+            ctaButton: 'View All Experiences',
+            becomePartner: 'Become a Partner',
+          };
+          return translations[key] || key;
+        },
+        {
+          rich: (key: string) => {
+            const translations: Record<string, string> = {
+              heroTitle: 'Discover Valais Wine Experiences',
+            };
+            return translations[key] || key;
+          },
+        }
+      )
+    )
   ),
 }));
 
@@ -33,9 +47,35 @@ vi.mock('@/components/layout/Header', () => ({
   Header: () => <header data-testid="header">Header</header>,
 }));
 
+vi.mock('@/components/layout/Footer', () => ({
+  Footer: () => <footer data-testid="footer">Footer</footer>,
+}));
+
 // Mock the HealthStatus component
 vi.mock('@/components/shared/HealthStatus', () => ({
   HealthStatus: () => <div data-testid="health-status">HealthStatus</div>,
+}));
+
+vi.mock('@/components/shared/FadeIn', () => ({
+  FadeIn: ({ children }: { children: ReactNode }) => <>{children}</>,
+}));
+
+vi.mock('@/components/features/home/HeroSearchBar', () => ({
+  HeroSearchBar: () => <div data-testid="hero-search">HeroSearchBar</div>,
+}));
+
+vi.mock('@/components/features/home/PopularExperiences', () => ({
+  PopularExperiences: () => (
+    <section aria-label="Popular experiences">Popular experiences</section>
+  ),
+}));
+
+vi.mock('@/components/features/home/HowItWorks', () => ({
+  HowItWorks: () => <section aria-label="How it works">How it works</section>,
+}));
+
+vi.mock('@/server/queries/experience.queries', () => ({
+  getFeaturedExperiences: vi.fn(() => Promise.resolve([])),
 }));
 
 // Import after mocks
@@ -60,31 +100,21 @@ describe('Homepage', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders discovery section with experiences CTA', async () => {
+  it('renders hero search', async () => {
     await renderHome();
 
-    const experiencesCard = screen.getByRole('heading', {
-      name: /^wine experiences$/i,
-      level: 3,
-    });
-    expect(experiencesCard).toBeInTheDocument();
-
-    const experiencesLink = screen.getByRole('link', {
-      name: /browse experiences/i,
-    });
-    expect(experiencesLink).toHaveAttribute('href', '/experiences');
+    expect(screen.getByTestId('hero-search')).toBeInTheDocument();
   });
 
-  it('renders discovery section with wineries CTA', async () => {
+  it('renders homepage content sections', async () => {
     await renderHome();
 
-    const wineriesCard = screen.getByRole('heading', { name: /our wineries/i });
-    expect(wineriesCard).toBeInTheDocument();
-
-    const wineriesLink = screen.getByRole('link', {
-      name: /meet our winemakers/i,
-    });
-    expect(wineriesLink).toHaveAttribute('href', '/wineries');
+    expect(
+      screen.getByRole('region', { name: /popular experiences/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('region', { name: /how it works/i })
+    ).toBeInTheDocument();
   });
 
   it('renders CTA buttons section', async () => {
@@ -102,7 +132,10 @@ describe('Homepage', () => {
     const becomePartnerButton = screen.getByRole('link', {
       name: /become a partner/i,
     });
-    expect(becomePartnerButton).toHaveAttribute('href', '/register/winemaker');
+    expect(becomePartnerButton).toHaveAttribute(
+      'href',
+      '/register?winemaker=true'
+    );
   });
 
   it('includes header component', async () => {
@@ -122,8 +155,8 @@ describe('Homepage', () => {
     const main = screen.getByRole('main');
     expect(main).toHaveAttribute('id', 'main-content');
 
-    // Discovery section has proper labeling
-    const discoverSection = screen.getByRole('region', { name: /discover/i });
-    expect(discoverSection).toBeInTheDocument();
+    expect(
+      screen.getByRole('region', { name: /popular experiences/i })
+    ).toBeInTheDocument();
   });
 });

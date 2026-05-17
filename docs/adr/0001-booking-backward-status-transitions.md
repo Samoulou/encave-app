@@ -19,10 +19,10 @@ Sans exception, l'encaveur n'a aucun recours UI et doit passer par le support (M
 
 On autorise **deux** transitions arrière, scoped, dans le code applicatif :
 
-| Transition                | Server action          | Acteur                           |
-| ------------------------- | ---------------------- | -------------------------------- |
-| `COMPLETED → CONFIRMED`   | `revertBookingCheckIn` | Winery owner authentifié (auth()) |
-| `NO_SHOW → CONFIRMED`     | `revertBookingNoShow`  | Winery owner authentifié (auth()) |
+| Transition              | Server action          | Acteur                            |
+| ----------------------- | ---------------------- | --------------------------------- |
+| `COMPLETED → CONFIRMED` | `revertBookingCheckIn` | Winery owner authentifié (auth()) |
+| `NO_SHOW → CONFIRMED`   | `revertBookingNoShow`  | Winery owner authentifié (auth()) |
 
 Contraintes :
 

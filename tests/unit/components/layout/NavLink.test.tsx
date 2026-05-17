@@ -2,12 +2,12 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
 import { NavLink } from '@/components/layout/NavLink';
 
-// Mock usePathname hook
-vi.mock('next/navigation', () => ({
+vi.mock('@/i18n/navigation', async () => ({
+  ...(await vi.importActual('@/i18n/navigation')),
   usePathname: vi.fn(),
 }));
 
-import { usePathname } from 'next/navigation';
+import { usePathname } from '@/i18n/navigation';
 
 describe('NavLink', () => {
   afterEach(() => {

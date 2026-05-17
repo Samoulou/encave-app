@@ -198,6 +198,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   // Send confirmation email to visitor
   try {
     await sendBookingConfirmationEmail(booking.visitorEmail, {
+      bookingId: booking.id,
+      accessToken,
       guestName: booking.visitorName,
       experienceTitle: booking.experience.title,
       wineryName: booking.winery.name,

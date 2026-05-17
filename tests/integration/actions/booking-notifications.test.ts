@@ -155,7 +155,7 @@ describe('Booking Notification Actions', () => {
       }
     });
 
-    it('searches by both plain token and hash', async () => {
+    it('searches by SHA-256 token hash', async () => {
       vi.mocked(db.booking.findFirst).mockResolvedValue(mockBooking as never);
 
       const { getBookingByToken } = await import('@/server/actions/booking');
@@ -164,7 +164,7 @@ describe('Booking Notification Actions', () => {
       expect(db.booking.findFirst).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
-            OR: [{ accessToken }, { accessTokenHash: tokenHash }],
+            accessTokenHash: tokenHash,
           },
         })
       );

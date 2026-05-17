@@ -18,6 +18,7 @@ vi.mock('@/server/db', () => ({
       findUnique: vi.fn(),
       findMany: vi.fn(),
       create: vi.fn(),
+      createMany: vi.fn(),
       deleteMany: vi.fn(),
     },
   },
@@ -229,7 +230,9 @@ describe('Blocked Date Server Actions', () => {
     it('blocks a date for all published experiences', async () => {
       vi.mocked(auth).mockResolvedValue(mockSession as never);
       vi.mocked(db.winery.findUnique).mockResolvedValue(mockWinery as never);
-      vi.mocked(db.blockedDate.create).mockResolvedValue({} as never);
+      vi.mocked(db.blockedDate.createMany).mockResolvedValue({
+        count: 3,
+      } as never);
 
       const { blockDateForAllExperiences } =
         await import('@/server/actions/availability');
@@ -239,13 +242,22 @@ describe('Blocked Date Server Actions', () => {
       if (result.success) {
         expect(result.data.blockedCount).toBe(3);
       }
-      expect(db.blockedDate.create).toHaveBeenCalledTimes(3);
+      expect(db.blockedDate.createMany).toHaveBeenCalledWith({
+        data: expect.arrayContaining([
+          expect.objectContaining({ experienceId: 'exp-1' }),
+          expect.objectContaining({ experienceId: 'exp-2' }),
+          expect.objectContaining({ experienceId: 'exp-3' }),
+        ]),
+        skipDuplicates: true,
+      });
     });
 
     it('includes reason when provided', async () => {
       vi.mocked(auth).mockResolvedValue(mockSession as never);
       vi.mocked(db.winery.findUnique).mockResolvedValue(mockWinery as never);
-      vi.mocked(db.blockedDate.create).mockResolvedValue({} as never);
+      vi.mocked(db.blockedDate.createMany).mockResolvedValue({
+        count: 3,
+      } as never);
 
       const { blockDateForAllExperiences } =
         await import('@/server/actions/availability');
@@ -254,10 +266,13 @@ describe('Blocked Date Server Actions', () => {
         'Annual closure'
       );
 
-      expect(db.blockedDate.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          reason: 'Annual closure',
-        }),
+      expect(db.blockedDate.createMany).toHaveBeenCalledWith({
+        data: expect.arrayContaining([
+          expect.objectContaining({
+            reason: 'Annual closure',
+          }),
+        ]),
+        skipDuplicates: true,
       });
     });
 
@@ -265,11 +280,9 @@ describe('Blocked Date Server Actions', () => {
       vi.mocked(auth).mockResolvedValue(mockSession as never);
       vi.mocked(db.winery.findUnique).mockResolvedValue(mockWinery as never);
 
-      // First two succeed, third fails with unique constraint
-      vi.mocked(db.blockedDate.create)
-        .mockResolvedValueOnce({} as never)
-        .mockResolvedValueOnce({} as never)
-        .mockRejectedValueOnce(new Error('Unique constraint failed'));
+      vi.mocked(db.blockedDate.createMany).mockResolvedValue({
+        count: 2,
+      } as never);
 
       const { blockDateForAllExperiences } =
         await import('@/server/actions/availability');

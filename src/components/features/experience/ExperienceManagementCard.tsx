@@ -299,12 +299,7 @@ export function ExperienceManagementCard({
                   Inscrits
                 </Link>
               </Button>
-              <Button
-                asChild
-                size="sm"
-                variant="outline"
-                className="font-bold"
-              >
+              <Button asChild size="sm" variant="outline" className="font-bold">
                 <Link href={`/dashboard/experiences/${experience.id}/edit`}>
                   {tCommon('edit')}
                   <Edit className="ml-1 h-3.5 w-3.5" />

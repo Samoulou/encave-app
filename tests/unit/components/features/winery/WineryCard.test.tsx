@@ -50,11 +50,10 @@ describe('WineryCard', () => {
 
   it('renders placeholder when coverPhoto is null', () => {
     const wineryNoCover = { ...mockWinery, coverPhoto: null };
-    render(<WineryCard winery={wineryNoCover} />);
+    const { container } = render(<WineryCard winery={wineryNoCover} />);
 
-    // Should not have an img element
-    const img = screen.queryByRole('img');
-    expect(img).toBeNull();
+    expect(container.querySelector('img')).toBeNull();
+    expect(screen.getByRole('img', { name: 'Domaine Test' })).toBeDefined();
   });
 
   it('applies line-clamp-2 class for description truncation', () => {

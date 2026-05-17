@@ -115,6 +115,8 @@ function getLocale(locale?: Locale | null): Locale {
 // Booking Emails
 
 export interface BookingConfirmationData {
+  bookingId?: string;
+  accessToken?: string;
   guestName: string;
   experienceTitle: string;
   wineryName: string;
@@ -135,7 +137,10 @@ export async function sendBookingConfirmationEmail(
     BookingConfirmationEmail({
       locale: loc,
       ...data,
-      bookingUrl: `${getBaseUrl()}/bookings/${data.bookingRef}`,
+      bookingUrl:
+        data.bookingId && data.accessToken
+          ? `${getBaseUrl()}/fr/booking/${data.bookingId}?token=${data.accessToken}`
+          : `${getBaseUrl()}/fr`,
     })
   );
 

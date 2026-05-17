@@ -181,8 +181,8 @@ describe('Booking Server Actions', () => {
         id: 'exp-123',
         maxCapacity: 10,
         availabilitySlots: [
-          { startTime: '10:00', dayOfWeek: 6 },
-          { startTime: '14:00', dayOfWeek: 6 },
+          { startTime: '10:00', endTime: '11:00', dayOfWeek: 6 },
+          { startTime: '14:00', endTime: '15:00', dayOfWeek: 6 },
         ],
       } as never);
       vi.mocked(db.booking.groupBy).mockResolvedValue([
@@ -196,12 +196,16 @@ describe('Booking Server Actions', () => {
         expect(result.data).toHaveLength(2);
         expect(result.data[0]).toEqual({
           timeSlot: '10:00',
+          endTime: '11:00',
           remainingCapacity: 4,
+          maxCapacity: 10,
           available: true,
         });
         expect(result.data[1]).toEqual({
           timeSlot: '14:00',
+          endTime: '15:00',
           remainingCapacity: 10,
+          maxCapacity: 10,
           available: true,
         });
       }

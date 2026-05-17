@@ -58,6 +58,10 @@ vi.mock('@/lib/env', () => ({
 }));
 
 describe('Checkout Server Actions', () => {
+  const validAccessToken = 'valid-token';
+  const validAccessTokenHash =
+    '397a2a9c5bf5e2ccec38c2596b682bb1bd05fe6e4ecea6c10cf42755ff225403';
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -241,6 +245,7 @@ describe('Checkout Server Actions', () => {
         status: BookingStatus.CONFIRMED,
         visitorName: 'John Doe',
         visitorEmail: 'john@example.com',
+        accessTokenHash: validAccessTokenHash,
         date: new Date('2026-02-15'),
         timeSlot: '10:00',
         guestCount: 4,
@@ -263,7 +268,7 @@ describe('Checkout Server Actions', () => {
       vi.mocked(db.booking.findUnique).mockResolvedValue(mockBooking as never);
 
       const { getBookingById } = await import('@/server/actions/checkout');
-      const result = await getBookingById('booking-1');
+      const result = await getBookingById('booking-1', validAccessToken);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -277,7 +282,7 @@ describe('Checkout Server Actions', () => {
       vi.mocked(db.booking.findUnique).mockResolvedValue(null);
 
       const { getBookingById } = await import('@/server/actions/checkout');
-      const result = await getBookingById('nonexistent');
+      const result = await getBookingById('nonexistent', validAccessToken);
 
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -294,6 +299,7 @@ describe('Checkout Server Actions', () => {
         status: BookingStatus.CONFIRMED,
         visitorName: 'Jane Doe',
         visitorEmail: 'jane@example.com',
+        accessTokenHash: validAccessTokenHash,
         date: new Date('2026-03-01'),
         timeSlot: '14:00',
         guestCount: 2,
@@ -315,7 +321,10 @@ describe('Checkout Server Actions', () => {
 
       const { getBookingByReference } =
         await import('@/server/actions/checkout');
-      const result = await getBookingByReference('ENC-XYZ789');
+      const result = await getBookingByReference(
+        'ENC-XYZ789',
+        validAccessToken
+      );
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -329,7 +338,10 @@ describe('Checkout Server Actions', () => {
 
       const { getBookingByReference } =
         await import('@/server/actions/checkout');
-      const result = await getBookingByReference('ENC-NOTFOUND');
+      const result = await getBookingByReference(
+        'ENC-NOTFOUND',
+        validAccessToken
+      );
 
       expect(result.success).toBe(false);
       if (!result.success) {
