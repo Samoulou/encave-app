@@ -55,7 +55,7 @@ Ces choix corrigent les divergences entre le backlog d'origine et le code réel 
 
 | ID      | Titre                                                                                                 | Taille | Statut | Spec                       |
 | ------- | ----------------------------------------------------------------------------------------------------- | ------ | ------ | -------------------------- |
-| ENC-027 | Logique visibilité cave publique (critères : KYC ok + photos min + infos complètes + status VERIFIED) | S      | 📋     | [spec](./specs/ENC-027.md) |
+| ENC-027 | Logique visibilité cave publique (critères : KYC ok + photos min + infos complètes + status VERIFIED) — livrée 2026-05-13 | S      | ✅     | [spec](./specs/ENC-027.md) |
 | ENC-028 | Brancher l'envoi de `WelcomeEmail` au signup encaveur (template existe déjà)                          | S      | 🔧     | [spec](./specs/ENC-028.md) |
 
 ### Admin SAV
@@ -195,7 +195,7 @@ Ces US du backlog d'origine sont sorties du périmètre MVP suite à l'audit. Co
 
 | Priorité           | Items  | Effort estimé        |
 | ------------------ | ------ | -------------------- |
-| P0                 | 14     | ~10-12 jours-dev     |
+| P0                 | 13     | ~10-12 jours-dev     |
 | P1                 | 25     | ~20-25 jours-dev     |
 | P2                 | 6      | ~5-7 jours-dev       |
 | **Total à livrer** | **45** | **~35-45 jours-dev** |

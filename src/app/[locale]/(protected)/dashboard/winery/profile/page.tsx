@@ -145,7 +145,7 @@ export default async function WineryProfilePage({
 
         {/* Payment Status Section */}
         {isVerified && (
-          <div className="mb-8">
+          <div id="payment" className="mb-8 scroll-mt-24">
             {!winery.stripeAccountId ? (
               <StripeOnboarding wineryId={winery.id} />
             ) : (

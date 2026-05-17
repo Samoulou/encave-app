@@ -6,6 +6,7 @@ import { db } from '@/server/db';
 import { ExperienceType, ExperienceStatus, Prisma } from '@prisma/client';
 import { calculateDistance } from '@/lib/geo-utils';
 import { getLocationById } from '@/lib/constants/locations';
+import { publiclyVisibleWineryWhere } from '@/lib/business-rules/winery-visibility';
 
 export interface SearchParams {
   search?: string;
@@ -153,7 +154,7 @@ export async function searchExperiences(
         : undefined;
 
       const wineryWhere: Prisma.WineryWhereInput = {
-        status: 'VERIFIED',
+        ...publiclyVisibleWineryWhere,
         ...(params.commune && { commune: params.commune }),
       };
 
@@ -324,7 +325,7 @@ export const getExperienceCommunes = cache(
     async (): Promise<string[]> => {
       const wineries = await db.winery.findMany({
         where: {
-          status: 'VERIFIED',
+          ...publiclyVisibleWineryWhere,
           experiences: {
             some: {
               status: ExperienceStatus.PUBLISHED,
@@ -365,9 +366,7 @@ export const getExperiencePriceRange = cache(
       const result = await db.experience.aggregate({
         where: {
           status: ExperienceStatus.PUBLISHED,
-          winery: {
-            status: 'VERIFIED',
-          },
+          winery: publiclyVisibleWineryWhere,
           availabilitySlots: {
             some: {
               isActive: true,
@@ -406,9 +405,7 @@ export const getExperienceBySlug = cache(
         where: {
           slug,
           status: ExperienceStatus.PUBLISHED,
-          winery: {
-            status: 'VERIFIED',
-          },
+          winery: publiclyVisibleWineryWhere,
         },
         select: {
           id: true,
@@ -478,7 +475,7 @@ export const getRelatedExperiences = cache(
           id: { not: experienceId },
           wineryId,
           status: ExperienceStatus.PUBLISHED,
-          winery: { status: 'VERIFIED' },
+          winery: publiclyVisibleWineryWhere,
         },
         include: {
           winery: {
@@ -505,7 +502,7 @@ export const getRelatedExperiences = cache(
           wineryId: { not: wineryId },
           type,
           status: ExperienceStatus.PUBLISHED,
-          winery: { status: 'VERIFIED' },
+          winery: publiclyVisibleWineryWhere,
         },
         include: {
           winery: {
@@ -540,6 +537,7 @@ export const getExperiencesByWineryId = cache(
         where: {
           wineryId,
           status: ExperienceStatus.PUBLISHED,
+          winery: publiclyVisibleWineryWhere,
         },
         select: {
           id: true,
@@ -579,7 +577,7 @@ export const getFeaturedExperiences = cache(
       return db.experience.findMany({
         where: {
           status: ExperienceStatus.PUBLISHED,
-          winery: { status: 'VERIFIED' },
+          winery: publiclyVisibleWineryWhere,
         },
         include: {
           winery: {
@@ -613,7 +611,7 @@ export const getAllPublishedExperienceSlugs = cache(
       const experiences = await db.experience.findMany({
         where: {
           status: ExperienceStatus.PUBLISHED,
-          winery: { status: 'VERIFIED' },
+          winery: publiclyVisibleWineryWhere,
         },
         select: { slug: true },
       });

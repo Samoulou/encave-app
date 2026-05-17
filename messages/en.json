@@ -1786,6 +1786,44 @@
         "confirmCta": "Confirm",
         "cancelCta": "Back"
       }
+    },
+    "visibility": {
+      "banner": {
+        "title": "Your winery isn't publicly visible yet",
+        "subtitle": "Complete the items below to appear on encave.ch.",
+        "cta": "Complete my profile",
+        "success": {
+          "title": "Your winery is live",
+          "subtitle": "Guests can find you and book your experiences.",
+          "viewPublic": "View public page"
+        },
+        "error": {
+          "title": "We couldn't check your winery status",
+          "subtitle": "Please try again in a moment.",
+          "retry": "Retry"
+        }
+      },
+      "criteria": {
+        "verified": "Validation by the EnCave team (in progress)",
+        "kyc": "Complete your banking details (Stripe)",
+        "address": "Add your winery's full address",
+        "description": "Write a description of your winery",
+        "photos": "Add at least one photo of your winery",
+        "experience": "Publish at least one experience",
+        "done": "Done",
+        "srValidated": "Completed criterion:",
+        "srToComplete": "Pending criterion:",
+        "srInProgress": "In-progress criterion:"
+      }
+    }
+  },
+  "Public": {
+    "winery": {
+      "notFound": {
+        "title": "This winery isn't (yet) available",
+        "body": "Check back soon — new winemakers join EnCave every week.",
+        "cta": "Discover other wineries"
+      }
     }
   }
 }

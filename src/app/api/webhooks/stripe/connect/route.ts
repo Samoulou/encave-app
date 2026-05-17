@@ -5,6 +5,7 @@ import { getStripe, isStripeConfigured } from '@/server/stripe';
 import { db } from '@/server/db';
 import { env } from '@/lib/env';
 import { logError, logInfo, logWarn } from '@/lib/logger';
+import { invalidateWineryCaches } from '@/server/actions/winery-helpers';
 
 export async function POST(req: Request) {
   if (!isStripeConfigured()) {
@@ -90,7 +91,7 @@ async function handleAccountUpdated(account: Stripe.Account) {
   // Find the winery with this Stripe account
   const winery = await db.winery.findUnique({
     where: { stripeAccountId },
-    select: { id: true },
+    select: { id: true, slug: true },
   });
 
   if (!winery) {
@@ -107,6 +108,9 @@ async function handleAccountUpdated(account: Stripe.Account) {
     },
   });
 
+  // KYC flip via Stripe Connect impacts ENC-027 visibility criterion 2.
+  invalidateWineryCaches(winery.slug);
+
   logInfo('Updated winery Stripe status', {
     wineryId: winery.id,
     detailsSubmitted: account.details_submitted,
@@ -122,7 +126,7 @@ async function handleAccountDeauthorized(stripeAccountId: string) {
   // Find the winery with this Stripe account
   const winery = await db.winery.findUnique({
     where: { stripeAccountId },
-    select: { id: true },
+    select: { id: true, slug: true },
   });
 
   if (!winery) {
@@ -141,6 +145,9 @@ async function handleAccountDeauthorized(stripeAccountId: string) {
       stripeOnboardingComplete: false,
     },
   });
+
+  // Deauthorization flips KYC off → winery should leave public listings.
+  invalidateWineryCaches(winery.slug);
 
   logInfo('Winery Stripe account deauthorized', { wineryId: winery.id });
 }

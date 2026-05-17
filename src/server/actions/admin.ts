@@ -9,6 +9,7 @@ import {
 } from '@/server/services/email.service';
 import type { ActionResult } from '@/types/actions';
 import { logError, logWarn } from '@/lib/logger';
+import { invalidateWineryCaches } from './winery-helpers';
 
 const ApproveWinerySchema = z.object({
   wineryId: z.string().min(1, 'Winery ID is required'),
@@ -94,6 +95,10 @@ export async function approveWinery(
         },
       }),
     ]);
+
+    // Status flip to VERIFIED can immediately make the winery publicly
+    // visible (if all other ENC-027 criteria already match).
+    invalidateWineryCaches(winery.slug);
 
     // Send approval email (log failure but don't fail the action)
     const emailSent = await sendWineryApprovedEmail(
@@ -210,6 +215,10 @@ export async function rejectWinery(
         },
       }),
     ]);
+
+    // Defensive: a REJECTED winery should never have been visible, but
+    // invalidate caches anyway so any stale entry is purged.
+    invalidateWineryCaches(winery.slug);
 
     // Send rejection email (log failure but don't fail the action)
     const emailSent = await sendWineryRejectedEmail(

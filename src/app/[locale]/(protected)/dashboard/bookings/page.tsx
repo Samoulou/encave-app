@@ -9,6 +9,8 @@ import { BookingsSummary } from './BookingsSummary';
 import { BookingsFiltersSection } from './BookingsFiltersSection';
 import { BookingsTableSection } from './BookingsTableSection';
 import { BookingsPageHeader } from './BookingsPageHeader';
+import { VisibilityBanner } from '@/components/features/dashboard/VisibilityBanner';
+import { VisibilityBannerSkeleton } from '@/components/features/dashboard/VisibilityBannerSkeleton';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
@@ -65,6 +67,11 @@ export default async function BookingsDashboardPage({
   return (
     <WineryAccessGuard>
       <div className="space-y-6">
+        {/* ENC-027: Public visibility status banner (first item) */}
+        <Suspense fallback={<VisibilityBannerSkeleton />}>
+          <VisibilityBanner wineryId={winery.id} />
+        </Suspense>
+
         {/* Page Header with Actions */}
         <BookingsPageHeader />
 
