@@ -9,6 +9,7 @@ import {
   invalidateExperienceCaches,
   createExperienceSlugChecker,
 } from './experience-helpers';
+import { invalidateWineryCaches } from './winery-helpers';
 
 /**
  * Publish an experience (DRAFT -> PUBLISHED)
@@ -99,6 +100,9 @@ export async function publishExperience(
 
     // Invalidate caches after publishing
     invalidateExperienceCaches(wineryData?.slug, experience.slug);
+    // Publishing the first experience can flip the winery's public
+    // visibility (criterion 6 of ENC-027).
+    invalidateWineryCaches(wineryData?.slug);
 
     return {
       success: true,
@@ -180,6 +184,9 @@ export async function unpublishExperience(
 
     // Invalidate caches after unpublishing
     invalidateExperienceCaches(wineryData?.slug, experience.slug);
+    // Unpublishing the last published experience flips the winery
+    // off visibility (criterion 6 of ENC-027).
+    invalidateWineryCaches(wineryData?.slug);
 
     return {
       success: true,
@@ -261,6 +268,9 @@ export async function archiveExperience(
 
     // Invalidate caches after archiving
     invalidateExperienceCaches(wineryData?.slug, experience.slug);
+    // Archiving the last published experience flips the winery off
+    // visibility (criterion 6 of ENC-027).
+    invalidateWineryCaches(wineryData?.slug);
 
     return {
       success: true,

@@ -15,6 +15,7 @@ import { IMAGE_MAX_SIZE, WINERY_ALLOWED_TYPES } from '@/lib/validators/image';
 import type { ActionResult } from '@/types/actions';
 import { logError, logWarn } from '@/lib/logger';
 import { getPostHogServer } from '@/lib/posthog';
+import { invalidateWineryCaches } from './winery-helpers';
 
 /**
  * Check if a winery slug already exists
@@ -258,6 +259,10 @@ export async function updateWineryProfile(
       },
     });
 
+    // Profile mutations can flip visibility (description / address /
+    // geocoding) — invalidate public caches.
+    invalidateWineryCaches(winery.slug);
+
     return {
       success: true,
       data: { updatedAt: updated.updatedAt },
@@ -387,6 +392,9 @@ export async function updateWineryCoverPhoto(
       data: { coverPhoto: coverPhotoUrl },
     });
 
+    // Cover photo is a public-facing asset; refresh listings + detail page.
+    invalidateWineryCaches(winery.slug);
+
     return {
       success: true,
       data: { updatedAt: updated.updatedAt },
@@ -457,6 +465,9 @@ export async function addGalleryImage(
       },
     });
 
+    // Adding a photo can flip the "≥1 photo" visibility criterion.
+    invalidateWineryCaches(winery.slug);
+
     return {
       success: true,
       data: { id: image.id, order: image.order },
@@ -525,6 +536,9 @@ export async function removeGalleryImage(
     await db.wineryGalleryImage.delete({
       where: { id: imageId },
     });
+
+    // Removing a photo can flip the "≥1 photo" visibility criterion off.
+    invalidateWineryCaches(winery.slug);
 
     return {
       success: true,

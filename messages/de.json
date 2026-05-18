@@ -1791,6 +1791,44 @@
         "confirmCta": "Bestätigen",
         "cancelCta": "Zurück"
       }
+    },
+    "visibility": {
+      "banner": {
+        "title": "Ihr Weingut ist noch nicht öffentlich sichtbar",
+        "subtitle": "Vervollständigen Sie die untenstehenden Punkte, um auf encave.ch zu erscheinen.",
+        "cta": "Profil vervollständigen",
+        "success": {
+          "title": "Ihr Weingut ist online",
+          "subtitle": "Gäste können Sie finden und Ihre Erlebnisse buchen.",
+          "viewPublic": "Öffentliche Seite ansehen"
+        },
+        "error": {
+          "title": "Status Ihres Weinguts konnte nicht geprüft werden",
+          "subtitle": "Bitte versuchen Sie es gleich erneut.",
+          "retry": "Erneut versuchen"
+        }
+      },
+      "criteria": {
+        "verified": "Prüfung durch das EnCave-Team (läuft)",
+        "kyc": "Bankverbindung abschliessen (Stripe)",
+        "address": "Genaue Adresse Ihres Weinguts angeben",
+        "description": "Beschreibung Ihres Weinguts verfassen",
+        "photos": "Mindestens ein Foto Ihres Weinguts hinzufügen",
+        "experience": "Mindestens ein Erlebnis veröffentlichen",
+        "done": "Erledigt",
+        "srValidated": "Erledigtes Kriterium:",
+        "srToComplete": "Offenes Kriterium:",
+        "srInProgress": "Laufendes Kriterium:"
+      }
+    }
+  },
+  "Public": {
+    "winery": {
+      "notFound": {
+        "title": "Dieses Weingut ist (noch) nicht verfügbar",
+        "body": "Schauen Sie bald wieder vorbei – jede Woche kommen neue Weingüter zu EnCave dazu.",
+        "cta": "Andere Weingüter entdecken"
+      }
     }
   }
 }
