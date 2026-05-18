@@ -365,7 +365,7 @@ describe('Booking Cancellation Actions', () => {
         expect.objectContaining({
           where: {
             id: 'booking-cancel-1',
-            OR: [{ accessToken }, { accessTokenHash: tokenHash }],
+            accessTokenHash: tokenHash,
           },
         })
       );
@@ -503,7 +503,7 @@ describe('Booking Cancellation Actions', () => {
         expect.objectContaining({
           where: {
             id: 'booking-cancel-1',
-            OR: [{ accessToken }, { accessTokenHash: tokenHash }],
+            accessTokenHash: tokenHash,
           },
         })
       );

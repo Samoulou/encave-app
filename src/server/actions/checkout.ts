@@ -1,12 +1,13 @@
 'use server';
 
+import crypto from 'crypto';
 import { z } from 'zod';
 import { createId } from '@paralleldrive/cuid2';
 import { getStripe } from '@/server/stripe';
 import { db } from '@/server/db';
 import { getBaseUrl } from '@/lib/env';
 import type { ActionResult } from '@/types/actions';
-import { BookingStatus } from '@prisma/client';
+import { BookingStatus, ExperienceStatus, WineryStatus } from '@prisma/client';
 import { timeSlotSchema } from '@/lib/validators/booking';
 import { env } from '@/lib/env';
 import {
@@ -17,11 +18,11 @@ import { logError } from '@/lib/logger';
 
 /**
  * Generate booking reference using cuid2 for guaranteed uniqueness.
- * Format: EC-XXXXXXXX (EC prefix + 8 chars from cuid2)
+ * Format: ENC-XXXXXXXX (ENC prefix + 8 chars from cuid2)
  * PERF-002 FIX: Replaced N+1 query loop with synchronous cuid2 generation.
  */
 function generateBookingReference(): string {
-  return `EC-${createId().slice(0, 8).toUpperCase()}`;
+  return `ENC-${createId().slice(0, 8).toUpperCase()}`;
 }
 
 const CreateBookingSchema = z.object({
@@ -55,7 +56,6 @@ export async function createBookingAndCheckout(
 
     const {
       experienceId,
-      wineryId,
       date,
       timeSlot,
       guestCount,
@@ -87,6 +87,7 @@ export async function createBookingAndCheckout(
           select: {
             id: true,
             name: true,
+            status: true,
             stripeAccountId: true,
             stripeOnboardingComplete: true,
           },
@@ -98,6 +99,36 @@ export async function createBookingAndCheckout(
       return {
         success: false,
         error: { code: 'NOT_FOUND', message: 'Experience not found' },
+      };
+    }
+
+    if (validated.data.wineryId !== experience.winery.id) {
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Experience does not belong to the selected winery',
+        },
+      };
+    }
+
+    if (experience.status !== ExperienceStatus.PUBLISHED) {
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Experience is not available for booking',
+        },
+      };
+    }
+
+    if (experience.winery.status !== WineryStatus.VERIFIED) {
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Winery is not available for booking',
+        },
       };
     }
 
@@ -157,7 +188,7 @@ export async function createBookingAndCheckout(
             data: {
               reference,
               experienceId,
-              wineryId,
+              wineryId: experience.winery.id,
               date: bookingDate,
               timeSlot,
               guestCount,
@@ -260,7 +291,10 @@ export async function createBookingAndCheckout(
   }
 }
 
-export async function getBookingByReference(reference: string): Promise<
+export async function getBookingByReference(
+  reference: string,
+  accessToken: string
+): Promise<
   ActionResult<{
     id: string;
     reference: string;
@@ -285,6 +319,11 @@ export async function getBookingByReference(reference: string): Promise<
   }>
 > {
   try {
+    const accessTokenHash = crypto
+      .createHash('sha256')
+      .update(accessToken)
+      .digest('hex');
+
     const booking = await db.booking.findUnique({
       where: { reference },
       include: {
@@ -306,7 +345,7 @@ export async function getBookingByReference(reference: string): Promise<
       },
     });
 
-    if (!booking) {
+    if (!booking || booking.accessTokenHash !== accessTokenHash) {
       return {
         success: false,
         error: { code: 'NOT_FOUND', message: 'Booking not found' },
@@ -340,7 +379,10 @@ export async function getBookingByReference(reference: string): Promise<
   }
 }
 
-export async function getBookingById(id: string): Promise<
+export async function getBookingById(
+  id: string,
+  accessToken: string
+): Promise<
   ActionResult<{
     id: string;
     reference: string;
@@ -367,6 +409,11 @@ export async function getBookingById(id: string): Promise<
   }>
 > {
   try {
+    const accessTokenHash = crypto
+      .createHash('sha256')
+      .update(accessToken)
+      .digest('hex');
+
     const booking = await db.booking.findUnique({
       where: { id },
       include: {
@@ -390,7 +437,7 @@ export async function getBookingById(id: string): Promise<
       },
     });
 
-    if (!booking) {
+    if (!booking || booking.accessTokenHash !== accessTokenHash) {
       return {
         success: false,
         error: { code: 'NOT_FOUND', message: 'Booking not found' },

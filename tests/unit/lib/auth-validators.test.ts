@@ -17,7 +17,7 @@ describe('passwordSchema', () => {
   });
 
   it('accepts valid passwords', () => {
-    const result = passwordSchema.safeParse('password123');
+    const result = passwordSchema.safeParse('Password123!');
     expect(result.success).toBe(true);
   });
 
@@ -91,8 +91,8 @@ describe('registerSchema', () => {
     const result = registerSchema.safeParse({
       name: 'Test User',
       email: 'test@example.com',
-      password: 'password123',
-      confirmPassword: 'password123',
+      password: 'Password123!',
+      confirmPassword: 'Password123!',
       isWinemaker: false,
     });
     expect(result.success).toBe(true);
@@ -102,8 +102,8 @@ describe('registerSchema', () => {
     const result = registerSchema.safeParse({
       name: 'Winemaker User',
       email: 'winemaker@example.com',
-      password: 'password123',
-      confirmPassword: 'password123',
+      password: 'Password123!',
+      confirmPassword: 'Password123!',
       isWinemaker: true,
     });
     expect(result.success).toBe(true);

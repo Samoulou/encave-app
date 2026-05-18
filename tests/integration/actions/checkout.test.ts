@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { db } from '@/server/db';
-import { BookingStatus } from '@prisma/client';
+import { BookingStatus, ExperienceStatus, WineryStatus } from '@prisma/client';
 
 // Mock Stripe
 vi.mock('stripe', () => {
@@ -58,6 +58,10 @@ vi.mock('@/lib/env', () => ({
 }));
 
 describe('Checkout Server Actions', () => {
+  const validAccessToken = 'valid-token';
+  const validAccessTokenHash =
+    '397a2a9c5bf5e2ccec38c2596b682bb1bd05fe6e4ecea6c10cf42755ff225403';
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -67,12 +71,14 @@ describe('Checkout Server Actions', () => {
       id: 'exp-1',
       title: 'Wine Tasting',
       slug: 'wine-tasting',
+      status: ExperienceStatus.PUBLISHED,
       price: 5000, // 50 CHF in cents
       minCapacity: 2,
       maxCapacity: 10,
       winery: {
         id: 'winery-1',
         name: 'Test Winery',
+        status: WineryStatus.VERIFIED,
         stripeAccountId: 'acct_test_123',
         stripeOnboardingComplete: true,
       },
@@ -115,6 +121,62 @@ describe('Checkout Server Actions', () => {
         expect(result.data.bookingReference).toBe('ENC-ABC123');
         expect(result.data.checkoutUrl).toContain('checkout.stripe.com');
       }
+    });
+
+    it('returns validation error when winery id does not match the experience', async () => {
+      vi.mocked(db.experience.findUnique).mockResolvedValue(
+        mockExperience as never
+      );
+
+      const { createBookingAndCheckout } =
+        await import('@/server/actions/checkout');
+      const result = await createBookingAndCheckout({
+        ...validInput,
+        wineryId: 'spoofed-winery',
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe('VALIDATION_ERROR');
+      }
+      expect(db.booking.create).not.toHaveBeenCalled();
+    });
+
+    it('returns validation error when experience is not published', async () => {
+      vi.mocked(db.experience.findUnique).mockResolvedValue({
+        ...mockExperience,
+        status: ExperienceStatus.DRAFT,
+      } as never);
+
+      const { createBookingAndCheckout } =
+        await import('@/server/actions/checkout');
+      const result = await createBookingAndCheckout(validInput);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe('VALIDATION_ERROR');
+      }
+      expect(db.booking.create).not.toHaveBeenCalled();
+    });
+
+    it('returns validation error when winery is not verified', async () => {
+      vi.mocked(db.experience.findUnique).mockResolvedValue({
+        ...mockExperience,
+        winery: {
+          ...mockExperience.winery,
+          status: WineryStatus.PENDING,
+        },
+      } as never);
+
+      const { createBookingAndCheckout } =
+        await import('@/server/actions/checkout');
+      const result = await createBookingAndCheckout(validInput);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe('VALIDATION_ERROR');
+      }
+      expect(db.booking.create).not.toHaveBeenCalled();
     });
 
     it('returns validation error for invalid email', async () => {
@@ -241,6 +303,7 @@ describe('Checkout Server Actions', () => {
         status: BookingStatus.CONFIRMED,
         visitorName: 'John Doe',
         visitorEmail: 'john@example.com',
+        accessTokenHash: validAccessTokenHash,
         date: new Date('2026-02-15'),
         timeSlot: '10:00',
         guestCount: 4,
@@ -263,7 +326,7 @@ describe('Checkout Server Actions', () => {
       vi.mocked(db.booking.findUnique).mockResolvedValue(mockBooking as never);
 
       const { getBookingById } = await import('@/server/actions/checkout');
-      const result = await getBookingById('booking-1');
+      const result = await getBookingById('booking-1', validAccessToken);
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -277,7 +340,7 @@ describe('Checkout Server Actions', () => {
       vi.mocked(db.booking.findUnique).mockResolvedValue(null);
 
       const { getBookingById } = await import('@/server/actions/checkout');
-      const result = await getBookingById('nonexistent');
+      const result = await getBookingById('nonexistent', validAccessToken);
 
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -294,6 +357,7 @@ describe('Checkout Server Actions', () => {
         status: BookingStatus.CONFIRMED,
         visitorName: 'Jane Doe',
         visitorEmail: 'jane@example.com',
+        accessTokenHash: validAccessTokenHash,
         date: new Date('2026-03-01'),
         timeSlot: '14:00',
         guestCount: 2,
@@ -315,7 +379,10 @@ describe('Checkout Server Actions', () => {
 
       const { getBookingByReference } =
         await import('@/server/actions/checkout');
-      const result = await getBookingByReference('ENC-XYZ789');
+      const result = await getBookingByReference(
+        'ENC-XYZ789',
+        validAccessToken
+      );
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -329,7 +396,10 @@ describe('Checkout Server Actions', () => {
 
       const { getBookingByReference } =
         await import('@/server/actions/checkout');
-      const result = await getBookingByReference('ENC-NOTFOUND');
+      const result = await getBookingByReference(
+        'ENC-NOTFOUND',
+        validAccessToken
+      );
 
       expect(result.success).toBe(false);
       if (!result.success) {

@@ -365,9 +365,12 @@ export async function duplicateExperience(
       });
 
       // Copy gallery images
-      if (experience.galleryImages.length > 0) {
+      const galleryImages = experience.galleryImages ?? [];
+      const availabilitySlots = experience.availabilitySlots ?? [];
+
+      if (galleryImages.length > 0) {
         await tx.experienceGalleryImage.createMany({
-          data: experience.galleryImages.map((img, index) => ({
+          data: galleryImages.map((img, index) => ({
             experienceId: newExperience.id,
             url: img.url,
             order: index,
@@ -376,9 +379,9 @@ export async function duplicateExperience(
       }
 
       // Copy availability slots (AC8)
-      if (experience.availabilitySlots.length > 0) {
+      if (availabilitySlots.length > 0) {
         await tx.availabilitySlot.createMany({
-          data: experience.availabilitySlots.map((slot) => ({
+          data: availabilitySlots.map((slot) => ({
             experienceId: newExperience.id,
             dayOfWeek: slot.dayOfWeek,
             startTime: slot.startTime,

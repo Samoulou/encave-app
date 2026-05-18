@@ -86,13 +86,16 @@ const findUniqueMock = vi.mocked(db.booking.findUnique);
 const updateMock = vi.mocked(db.booking.update);
 
 function mockCtxBooking(overrides: Partial<CtxBookingShape> = {}): void {
+  const recentPastDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  recentPastDate.setUTCHours(0, 0, 0, 0);
+
   const value: CtxBookingShape = {
     id: VALID_BOOKING_ID,
     status: BookingStatus.CONFIRMED,
     guestCount: 2,
     // A session that ended well in the past so the noShow + revert guards pass
     // by default. Individual tests override `date` to flip the time-window.
-    date: new Date('2026-05-10T00:00:00Z'),
+    date: recentPastDate,
     timeSlot: '10:00',
     experience: {
       id: 'exp-1',

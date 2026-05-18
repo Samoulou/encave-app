@@ -60,7 +60,7 @@ describe('ExperienceDetails', () => {
       />
     );
 
-    expect(screen.getByText('1h')).toBeDefined();
+    expect(screen.getByText('1 hour')).toBeDefined();
   });
 
   it('formats duration over 1 hour correctly', () => {
@@ -73,7 +73,7 @@ describe('ExperienceDetails', () => {
       />
     );
 
-    expect(screen.getByText('1h 30min')).toBeDefined();
+    expect(screen.getByText('1 hour 30 min')).toBeDefined();
   });
 
   it('formats capacity range correctly', () => {

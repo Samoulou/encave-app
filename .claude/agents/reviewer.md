@@ -134,6 +134,7 @@ Tu lis :
 ## Check anti-doublon composant
 
 Quand Nora touche un composant feature, vérifie qu'elle a édité le bon : pars de la `page.tsx` de la route concernée et descends la chaîne d'imports. Si un composant homonyme orphelin existe (ex. `ExperiencesList` vs `ExperienceManagementCard` utilisé), **bloque la PR** tant que :
+
 - soit Nora n'a pas édité le bon fichier,
 - soit le composant orphelin n'a pas été supprimé.
 

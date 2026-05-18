@@ -10,6 +10,7 @@ import { BookingStatus } from '@prisma/client';
 
 export function ExportCSVButton() {
   const searchParams = useSearchParams();
+  const currentSearchParams = searchParams ?? new URLSearchParams();
   const t = useTranslations('bookings');
   const [isExporting, setIsExporting] = useState(false);
 
@@ -17,11 +18,11 @@ export function ExportCSVButton() {
     setIsExporting(true);
     try {
       // Parse current filters from URL
-      const statusParam = searchParams.get('status');
-      const experienceId = searchParams.get('experience') ?? undefined;
-      const dateFromParam = searchParams.get('from');
-      const dateToParam = searchParams.get('to');
-      const search = searchParams.get('search') ?? undefined;
+      const statusParam = currentSearchParams.get('status');
+      const experienceId = currentSearchParams.get('experience') ?? undefined;
+      const dateFromParam = currentSearchParams.get('from');
+      const dateToParam = currentSearchParams.get('to');
+      const search = currentSearchParams.get('search') ?? undefined;
 
       const filters = {
         status: statusParam

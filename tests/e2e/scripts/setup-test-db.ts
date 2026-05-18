@@ -1,38 +1,42 @@
 /**
  * Setup Test Database
  *
- * Ce script prépare la base de données pour les tests E2E :
- * 1. Reset la base (supprime toutes les données)
- * 2. Seed avec des données de test connues
- *
- * Usage:
- *   npx tsx tests/e2e/scripts/setup-test-db.ts
- *
- * Ou via npm script:
- *   npm run test:e2e:setup
+ * Prepares a deterministic database for Playwright E2E tests:
+ * 1. Reset test data
+ * 2. Seed users, wineries, experiences, availability, and bookings
  */
 
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import {
   TEST_WINERIES,
   TEST_EXPERIENCES,
-  TEST_VISITORS,
   TEST_USERS,
 } from '../fixtures/test-data';
 import { TEST_USERS as AUTH_TEST_USERS } from '../fixtures/auth.fixture';
 
 const prisma = new PrismaClient();
 
-async function main() {
-  console.log('🧹 Nettoyage de la base de données de test...');
+function hashAccessToken(token: string): string {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
 
-  // Supprimer dans l'ordre inverse des dépendances (foreign keys)
+function toDateOnly(daysFromNow: number): Date {
+  const date = new Date();
+  date.setDate(date.getDate() + daysFromNow);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+async function main() {
+  console.log('Cleaning E2E test database...');
+
   await prisma.booking.deleteMany();
   await prisma.availabilitySlot.deleteMany();
   await prisma.experience.deleteMany();
   await prisma.winery.deleteMany();
-  // Supprimer uniquement les users de test (pas tous les users)
+
   const testUserIds = Object.values(TEST_USERS).map((u) => u.id);
   const authUserEmails = Object.values(AUTH_TEST_USERS).map((u) => u.email);
 
@@ -42,12 +46,9 @@ async function main() {
     },
   });
 
-  console.log('✅ Base nettoyée');
+  console.log('Seeding E2E users...');
 
-  console.log('🌱 Seeding des données de test...');
-
-  // 0. Créer les Users (winemakers pour les wineries)
-  for (const [key, user] of Object.entries(TEST_USERS)) {
+  for (const user of Object.values(TEST_USERS)) {
     await prisma.user.create({
       data: {
         id: user.id,
@@ -56,11 +57,8 @@ async function main() {
         role: 'WINEMAKER',
       },
     });
-    console.log(`  ✓ User: ${user.name}`);
   }
 
-  // 0b. Créer les Users d'authentification (avec mots de passe)
-  console.log('  Creating auth test users...');
   const roleMapping: Record<string, 'CLIENT' | 'WINEMAKER' | 'ADMIN'> = {
     guest: 'CLIENT',
     winery_owner: 'WINEMAKER',
@@ -75,36 +73,48 @@ async function main() {
       data: {
         email: user.email,
         name: user.name,
-        password: hashedPassword,
-        role: role,
+        role,
       },
     });
-    console.log(`  ✓ Auth User: ${user.name} (${role})`);
 
-    // Create a winery for the winery_owner so they can access dashboard
+    await prisma.account.create({
+      data: {
+        userId: createdUser.id,
+        providerId: 'credential',
+        accountId: user.email,
+        password: hashedPassword,
+      },
+    });
+
     if (user.role === 'winery_owner') {
+      const isPending = key === 'winemakerPending';
+      const suffix = key.replace(/([A-Z])/g, '-$1').toLowerCase();
+      const wineryName =
+        key === 'wineryOwner' ? 'Auth Test Winery' : `E2E ${user.name} Winery`;
+
       await prisma.winery.create({
         data: {
-          name: 'Auth Test Winery',
-          slug: 'auth-test-winery',
+          name: wineryName,
+          slug:
+            key === 'wineryOwner' ? 'auth-test-winery' : `e2e-${suffix}-winery`,
           description:
-            'A test winery for authentication E2E tests with all required features enabled.',
+            'A test winery for authentication E2E tests with required dashboard states.',
           commune: 'Sion',
           address: '100 Route des Tests, 1950 Sion',
           phone: '+41 27 123 45 67',
           email: user.email,
           userId: createdUser.id,
-          stripeAccountId: 'acct_auth_test',
-          stripeOnboardingComplete: true,
-          status: 'VERIFIED',
+          stripeAccountId: isPending ? null : `acct_${key}`,
+          stripeOnboardingComplete: !isPending,
+          status: isPending ? 'PENDING' : 'VERIFIED',
         },
       });
-      console.log(`  ✓ Winery for Auth User: Auth Test Winery`);
     }
   }
 
-  // 1. Créer les Wineries
-  for (const [key, winery] of Object.entries(TEST_WINERIES)) {
+  console.log('Seeding E2E wineries...');
+
+  for (const winery of Object.values(TEST_WINERIES)) {
     await prisma.winery.create({
       data: {
         id: winery.id,
@@ -121,11 +131,11 @@ async function main() {
         status: 'VERIFIED',
       },
     });
-    console.log(`  ✓ Winery: ${winery.name}`);
   }
 
-  // 2. Créer les Experiences avec leurs disponibilités
-  for (const [key, experience] of Object.entries(TEST_EXPERIENCES)) {
+  console.log('Seeding E2E experiences...');
+
+  for (const experience of Object.values(TEST_EXPERIENCES)) {
     await prisma.experience.create({
       data: {
         id: experience.id,
@@ -149,24 +159,99 @@ async function main() {
         },
       },
     });
-    console.log(`  ✓ Experience: ${experience.title}`);
   }
 
-  console.log('');
-  console.log('🎉 Base de données de test prête !');
-  console.log('');
-  console.log('Données créées:');
+  console.log('Seeding E2E bookings...');
+
+  const bookings = [
+    {
+      id: 'test-booking-client-a-upcoming',
+      reference: 'ENC-E2E001',
+      visitor: AUTH_TEST_USERS.clientA,
+      experience: TEST_EXPERIENCES.wineTasting,
+      date: toDateOnly(7),
+      timeSlot: '10:00',
+      guestCount: 2,
+      status: 'CONFIRMED' as const,
+      token: 'token-client-a-upcoming',
+    },
+    {
+      id: 'test-booking-client-a-soon',
+      reference: 'ENC-E2E002',
+      visitor: AUTH_TEST_USERS.clientA,
+      experience: TEST_EXPERIENCES.cellarVisit,
+      date: toDateOnly(1),
+      timeSlot: '14:00',
+      guestCount: 4,
+      status: 'CONFIRMED' as const,
+      token: 'token-client-a-soon',
+    },
+    {
+      id: 'test-booking-client-b-upcoming',
+      reference: 'ENC-E2E003',
+      visitor: AUTH_TEST_USERS.clientB,
+      experience: TEST_EXPERIENCES.lowCapacity,
+      date: toDateOnly(8),
+      timeSlot: '11:00',
+      guestCount: 2,
+      status: 'CONFIRMED' as const,
+      token: 'token-client-b-upcoming',
+    },
+    {
+      id: 'test-booking-client-a-cancelled',
+      reference: 'ENC-E2E004',
+      visitor: AUTH_TEST_USERS.clientA,
+      experience: TEST_EXPERIENCES.wineTasting,
+      date: toDateOnly(-7),
+      timeSlot: '10:00',
+      guestCount: 2,
+      status: 'CANCELLED_BY_CLIENT' as const,
+      token: 'token-client-a-cancelled',
+    },
+  ];
+
+  for (const booking of bookings) {
+    const totalPrice = booking.experience.price * booking.guestCount;
+    const platformFee = Math.round(totalPrice * 0.12);
+    const winery =
+      Object.values(TEST_WINERIES).find(
+        (candidate) => candidate.id === booking.experience.wineryId
+      ) ?? TEST_WINERIES.activeWinery;
+
+    await prisma.booking.create({
+      data: {
+        id: booking.id,
+        reference: booking.reference,
+        visitorName: booking.visitor.name,
+        visitorEmail: booking.visitor.email,
+        visitorPhone: '+41 79 000 00 00',
+        experienceId: booking.experience.id,
+        wineryId: winery.id,
+        date: booking.date,
+        timeSlot: booking.timeSlot,
+        guestCount: booking.guestCount,
+        totalPrice,
+        platformFee,
+        wineryPayout: totalPrice - platformFee,
+        status: booking.status,
+        accessTokenHash: hashAccessToken(booking.token),
+        cancelledAt:
+          booking.status === 'CANCELLED_BY_CLIENT' ? new Date() : null,
+      },
+    });
+  }
+
+  console.log('E2E database ready');
   console.log(`  - ${Object.keys(TEST_USERS).length} winemaker users`);
-  console.log(
-    `  - ${Object.keys(AUTH_TEST_USERS).length} auth test users (guest, winery_owner, admin)`
-  );
+  console.log(`  - ${Object.keys(AUTH_TEST_USERS).length} auth users`);
   console.log(`  - ${Object.keys(TEST_WINERIES).length} wineries`);
   console.log(`  - ${Object.keys(TEST_EXPERIENCES).length} experiences`);
+  console.log(`  - ${bookings.length} bookings`);
 }
 
 main()
-  .catch((e) => {
-    console.error('❌ Erreur:', e);
+  .catch((error) => {
+    console.error('E2E setup failed:', error);
     process.exit(1);
   })
   .finally(async () => {

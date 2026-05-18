@@ -6,12 +6,25 @@ import {
   logEmailSent,
   logEmailFailed,
 } from '@/server/services/email-log.service';
-import { subHours } from 'date-fns';
+import { startOfDay, subHours } from 'date-fns';
 import { BookingStatus } from '@prisma/client';
 import { logError } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
+
+function toDateOnlyUTC(date: Date): Date {
+  return new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+  );
+}
+
+function getBookingStartTime(date: Date, timeSlot: string): Date {
+  const [hours, minutes] = timeSlot.split(':').map(Number);
+  const bookingStartTime = new Date(date);
+  bookingStartTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
+  return bookingStartTime;
+}
 
 export async function GET() {
   if (!(await verifyCronRequest())) {
@@ -25,14 +38,16 @@ export async function GET() {
     // Find completed bookings that ended 22-26 hours ago
     // (experience date + time slot was 22-26 hours ago)
     // We check COMPLETED status which means the experience has occurred
+    const windowStart = subHours(now, 26);
+    const windowEnd = subHours(now, 22);
     const bookings = await db.booking.findMany({
       where: {
         status: BookingStatus.COMPLETED,
         followUpSentAt: null,
         // Look for bookings that completed yesterday or earlier
         date: {
-          lte: subHours(now, 22),
-          gte: subHours(now, 48), // Don't go too far back
+          gte: toDateOnlyUTC(startOfDay(subHours(now, 48))),
+          lte: toDateOnlyUTC(startOfDay(windowEnd)),
         },
       },
       include: {
@@ -45,20 +60,17 @@ export async function GET() {
     for (const booking of bookings) {
       try {
         // Parse the time slot and calculate when experience ended
-        const [hours, minutes] = booking.timeSlot.split(':').map(Number);
-        const bookingStartTime = new Date(booking.date);
-        bookingStartTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
+        const bookingStartTime = getBookingStartTime(
+          booking.date,
+          booking.timeSlot
+        );
 
         // Add experience duration to get end time
         const experienceEndTime = new Date(
           bookingStartTime.getTime() + booking.experience.duration * 60 * 1000
         );
 
-        const hoursSinceEnd =
-          (now.getTime() - experienceEndTime.getTime()) / (1000 * 60 * 60);
-
-        // Send follow-up between 22-26 hours after the experience ended
-        if (hoursSinceEnd < 22 || hoursSinceEnd > 26) {
+        if (experienceEndTime < windowStart || experienceEndTime > windowEnd) {
           continue;
         }
 

@@ -9,12 +9,25 @@ import {
   logEmailSent,
   logEmailFailed,
 } from '@/server/services/email-log.service';
-import { addHours, subHours } from 'date-fns';
+import { addHours, startOfDay } from 'date-fns';
 import { BookingStatus } from '@prisma/client';
 import { logError } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
+
+function toDateOnlyUTC(date: Date): Date {
+  return new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+  );
+}
+
+function getBookingDateTime(date: Date, timeSlot: string): Date {
+  const [hours, minutes] = timeSlot.split(':').map(Number);
+  const bookingDateTime = new Date(date);
+  bookingDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
+  return bookingDateTime;
+}
 
 export async function GET() {
   if (!(await verifyCronRequest())) {
@@ -29,13 +42,15 @@ export async function GET() {
 
   try {
     // Find bookings for 24h reminder (between 23-25 hours from now)
+    const reminder24Start = addHours(now, 23);
+    const reminder24End = addHours(now, 25);
     const bookings24h = await db.booking.findMany({
       where: {
         status: BookingStatus.CONFIRMED,
         reminder24hSentAt: null,
         date: {
-          gte: addHours(now, 23),
-          lte: addHours(now, 25),
+          gte: toDateOnlyUTC(startOfDay(reminder24Start)),
+          lte: toDateOnlyUTC(startOfDay(reminder24End)),
         },
       },
       include: {
@@ -48,9 +63,18 @@ export async function GET() {
     for (const booking of bookings24h) {
       try {
         // Combine date and time slot for the email
-        const [hours, minutes] = booking.timeSlot.split(':').map(Number);
-        const bookingDateTime = new Date(booking.date);
-        bookingDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
+        const bookingDateTime = getBookingDateTime(
+          booking.date,
+          booking.timeSlot
+        );
+
+        if (
+          bookingDateTime < reminder24Start ||
+          bookingDateTime > reminder24End
+        ) {
+          results.reminder24h.skipped++;
+          continue;
+        }
 
         const success = await sendBookingReminderEmail(booking.visitorEmail, {
           guestName: booking.visitorName,
@@ -102,9 +126,8 @@ export async function GET() {
         reminder2hSentAt: null,
         reminder24hSentAt: { not: null }, // 24h reminder should have been sent
         date: {
-          // For same-day bookings, date equals today
-          gte: subHours(now, 1),
-          lte: addHours(now, 24),
+          gte: toDateOnlyUTC(startOfDay(now)),
+          lte: toDateOnlyUTC(startOfDay(addHours(now, 3))),
         },
       },
       include: {
@@ -117,15 +140,17 @@ export async function GET() {
     for (const booking of bookings2h) {
       try {
         // Parse the time slot and check if it's within 2h window
-        const [hours, minutes] = booking.timeSlot.split(':').map(Number);
-        const bookingDateTime = new Date(booking.date);
-        bookingDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
+        const bookingDateTime = getBookingDateTime(
+          booking.date,
+          booking.timeSlot
+        );
 
         const hoursUntilBooking =
           (bookingDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
 
         // Only send if booking is 1.5-2.5 hours away
         if (hoursUntilBooking < 1.5 || hoursUntilBooking > 2.5) {
+          results.reminder2h.skipped++;
           continue;
         }
 

@@ -1,6 +1,12 @@
 'use client';
 
-import { useState, useTransition, useEffect, useOptimistic } from 'react';
+import {
+  useState,
+  useTransition,
+  useEffect,
+  useMemo,
+  useOptimistic,
+} from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Search } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -22,11 +28,16 @@ export function ExperienceFilters({
 }: ExperienceFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const currentSearchParams = useMemo(
+    () => searchParams ?? new URLSearchParams(),
+    [searchParams]
+  );
   const [isPending, startTransition] = useTransition();
   const t = useTranslations('experience.filters');
 
-  const currentFilter = (searchParams.get('filter') as FilterStatus) || 'all';
-  const currentSearch = searchParams.get('q') || '';
+  const currentFilter =
+    (currentSearchParams.get('filter') as FilterStatus) || 'all';
+  const currentSearch = currentSearchParams.get('q') || '';
 
   const [optimisticFilter, setOptimisticFilter] = useOptimistic(currentFilter);
   const [searchValue, setSearchValue] = useState(currentSearch);
@@ -37,7 +48,7 @@ export function ExperienceFilters({
   }, [currentSearch]);
 
   const updateParams = (key: string, value: string) => {
-    const params = new URLSearchParams(searchParams);
+    const params = new URLSearchParams(currentSearchParams);
     if (value && value !== 'all') {
       params.set(key, value);
     } else {
@@ -64,7 +75,7 @@ export function ExperienceFilters({
     if (searchValue === currentSearch) return;
 
     const timer = setTimeout(() => {
-      const params = new URLSearchParams(searchParams);
+      const params = new URLSearchParams(currentSearchParams);
       if (searchValue) {
         params.set('q', searchValue);
       } else {
@@ -77,7 +88,7 @@ export function ExperienceFilters({
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [searchValue, currentSearch, router, searchParams]);
+  }, [searchValue, currentSearch, router, currentSearchParams]);
 
   const filters: {
     key: FilterStatus;

@@ -36,8 +36,8 @@ describe('Breadcrumb', () => {
 
     const links = screen.getAllByRole('link');
     expect(links).toHaveLength(2);
-    expect(links[0]?.getAttribute('href')).toBe('/');
-    expect(links[1]?.getAttribute('href')).toBe('/experiences');
+    expect(links[0]?.getAttribute('href')).toBe('/fr');
+    expect(links[1]?.getAttribute('href')).toBe('/fr/experiences');
   });
 
   it('does not render link for last item', () => {

@@ -82,7 +82,7 @@ export const createExperienceSchema = z
     ),
     description: z
       .string()
-      .min(20, 'Description must be at least 20 characters')
+      .min(100, 'Description must be at least 100 characters')
       .max(5000, 'Description must be less than 5000 characters'),
     duration: z
       .number()

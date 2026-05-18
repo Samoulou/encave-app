@@ -32,6 +32,7 @@ export function ExportEarningsButton({
   const [isExportingPDF, setIsExportingPDF] = useState(false);
   const [isOpeningStripe, setIsOpeningStripe] = useState(false);
   const searchParams = useSearchParams();
+  const currentSearchParams = searchParams ?? new URLSearchParams();
 
   const isLoading = isExporting || isExportingPDF || isOpeningStripe;
 
@@ -40,13 +41,13 @@ export function ExportEarningsButton({
     try {
       const filters: TransactionFilters = {};
 
-      const month = searchParams.get('month');
+      const month = currentSearchParams.get('month');
       if (month) filters.month = month;
 
-      const experience = searchParams.get('experience');
+      const experience = currentSearchParams.get('experience');
       if (experience) filters.experienceId = experience;
 
-      const status = searchParams.get('status');
+      const status = currentSearchParams.get('status');
       if (status) filters.status = status as TransactionFilters['status'];
 
       const result = await exportEarningsCSV(filters);

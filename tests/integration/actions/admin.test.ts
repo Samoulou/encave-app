@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import type { Session } from 'next-auth';
+import type { Session } from '@/server/auth';
 
 // Mock next-auth
 vi.mock('@/server/auth', () => ({
@@ -44,18 +44,20 @@ describe('Admin Actions Integration Tests', () => {
     user: {
       id: 'admin-123',
       email: 'admin@encave.ch',
+      name: 'Admin',
       role: 'ADMIN',
+      preferredLocale: 'FR',
     },
-    expires: new Date(Date.now() + 86400000).toISOString(),
   };
 
   const mockUserSession: Session = {
     user: {
       id: 'user-123',
       email: 'user@test.com',
+      name: 'Client',
       role: 'CLIENT',
+      preferredLocale: 'FR',
     },
-    expires: new Date(Date.now() + 86400000).toISOString(),
   };
 
   const mockPendingWinery = {

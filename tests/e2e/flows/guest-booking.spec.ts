@@ -193,9 +193,7 @@ test.describe('Parcours Guest - Sélection de Réservation', () => {
 
     // Vérifier le prix total
     const totalPrice = await bookingPage.getTotalPrice();
-    const expectedTotal = formatPrice(
-      testExperience.pricePerPerson * guestCount
-    );
+    const expectedTotal = formatPrice(testExperience.price * guestCount);
     expect(totalPrice).toContain(expectedTotal.replace('CHF ', ''));
   });
 
@@ -256,7 +254,8 @@ test.describe('Parcours Guest - Checkout', () => {
     });
 
     // Vérifier que les champs sont visibles
-    await expect(checkoutPage.nameInput).toBeVisible();
+    await expect(checkoutPage.firstNameInput).toBeVisible();
+    await expect(checkoutPage.lastNameInput).toBeVisible();
     await expect(checkoutPage.emailInput).toBeVisible();
     await expect(checkoutPage.phoneInput).toBeVisible();
   });
@@ -303,7 +302,8 @@ test.describe('Parcours Guest - Checkout', () => {
 
     // Remplir avec un email invalide
     await checkoutPage.fillForm({
-      name: 'Test User',
+      firstName: 'Test',
+      lastName: 'User',
       email: 'email-invalide',
       phone: '+41 79 123 45 67',
     });

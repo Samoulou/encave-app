@@ -46,6 +46,7 @@ function isValidReturnUrl(url: string): boolean {
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const currentSearchParams = searchParams ?? new URLSearchParams();
   const t = useTranslations('auth.login');
   const tCommon = useTranslations('common');
   const [error, setError] = useState<string | null>(null);
@@ -81,7 +82,8 @@ export function LoginForm() {
 
       // Check for callback URL (from middleware) or returnUrl parameter
       const callbackUrl =
-        searchParams.get('callbackUrl') || searchParams.get('returnUrl');
+        currentSearchParams.get('callbackUrl') ||
+        currentSearchParams.get('returnUrl');
 
       // Determine redirect destination
       let redirectPath: string;
@@ -90,9 +92,14 @@ export function LoginForm() {
         // Use callback URL if valid (for protected page access)
         redirectPath = callbackUrl;
       } else {
-        // Default redirect - server will handle role-based redirect if needed
-        // For now, redirect to home and let middleware handle protected routes
-        redirectPath = '/';
+        const role = (result.data?.user as { role?: string } | undefined)?.role;
+        if (role === 'ADMIN') {
+          redirectPath = '/admin';
+        } else if (role === 'WINEMAKER') {
+          redirectPath = '/dashboard/bookings';
+        } else {
+          redirectPath = '/dashboard';
+        }
       }
 
       router.push(redirectPath);

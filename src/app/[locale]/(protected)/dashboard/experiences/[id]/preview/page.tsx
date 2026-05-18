@@ -54,7 +54,9 @@ interface ExperiencePreviewData {
 export default function ExperiencePreviewPage() {
   const params = useParams();
   const t = useTranslations('experience');
-  const experienceId = params.id as string;
+  const rawExperienceId = params?.id;
+  const experienceId =
+    typeof rawExperienceId === 'string' ? rawExperienceId : undefined;
   const [experience, setExperience] = useState<ExperiencePreviewData | null>(
     null
   );
@@ -65,6 +67,12 @@ export default function ExperiencePreviewPage() {
     async function loadExperience() {
       setIsLoading(true);
       setError(null);
+
+      if (!experienceId) {
+        setError(t('notFound'));
+        setIsLoading(false);
+        return;
+      }
 
       const result = await getExperienceForPreview(experienceId);
 
@@ -78,7 +86,7 @@ export default function ExperiencePreviewPage() {
     }
 
     loadExperience();
-  }, [experienceId]);
+  }, [experienceId, t]);
 
   if (isLoading) {
     return (

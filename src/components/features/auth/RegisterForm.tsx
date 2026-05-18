@@ -27,13 +27,14 @@ import registerImage from '@/../public/images/register-image.jpg';
 export function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const currentSearchParams = searchParams ?? new URLSearchParams();
   const t = useTranslations('auth.register');
   const tCommon = useTranslations('common');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   // Pre-check winemaker if coming from "Become Partner" link
-  const isWinemakerFromUrl = searchParams.get('winemaker') === 'true';
+  const isWinemakerFromUrl = currentSearchParams.get('winemaker') === 'true';
 
   const form = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),

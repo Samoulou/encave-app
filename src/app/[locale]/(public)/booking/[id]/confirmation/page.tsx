@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { ArrowLeft, CalendarCheck, Clock } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { db } from '@/server/db';
+import { getStripe, isStripeConfigured } from '@/server/stripe';
 import { BookingStatus } from '@prisma/client';
 import {
   ConfirmationSuccess,
@@ -33,9 +34,31 @@ export async function generateMetadata({
 
 interface ConfirmationPageProps {
   params: Promise<{ id: string; locale: string }>;
+  searchParams: Promise<{ session_id?: string }>;
 }
 
-async function getBooking(id: string) {
+async function isValidCheckoutSession(
+  id: string,
+  sessionId: string | undefined
+): Promise<boolean> {
+  if (!sessionId || !isStripeConfigured()) {
+    return false;
+  }
+
+  try {
+    const session = await getStripe().checkout.sessions.retrieve(sessionId);
+    return session.metadata?.bookingId === id;
+  } catch {
+    return false;
+  }
+}
+
+async function getBooking(id: string, sessionId: string | undefined) {
+  const canAccess = await isValidCheckoutSession(id, sessionId);
+  if (!canAccess) {
+    return null;
+  }
+
   const booking = await db.booking.findUnique({
     where: { id },
     include: {
@@ -82,10 +105,12 @@ function formatEndTime(time: string, durationMinutes: number): string {
 
 export default async function ConfirmationPage({
   params,
+  searchParams,
 }: ConfirmationPageProps) {
   const { id, locale } = await params;
+  const { session_id: sessionId } = await searchParams;
   const t = await getTranslations('confirmation');
-  const booking = await getBooking(id);
+  const booking = await getBooking(id, sessionId);
 
   if (!booking) {
     notFound();

@@ -5,6 +5,9 @@ import { DashboardSidebar } from '@/components/layout/DashboardSidebar';
 // Mock usePathname hook
 vi.mock('next/navigation', () => ({
   usePathname: vi.fn(),
+  useRouter: vi.fn(() => ({
+    prefetch: vi.fn(),
+  })),
 }));
 
 import { usePathname } from 'next/navigation';
@@ -22,7 +25,7 @@ describe('DashboardSidebar', () => {
     render(<DashboardSidebar wineryName="Test Winery" />);
 
     expect(screen.getByText('Test Winery')).toBeInTheDocument();
-    expect(screen.getByText('Your Winery')).toBeInTheDocument();
+    expect(screen.getByText('Winemaker')).toBeInTheDocument();
   });
 
   it('renders all navigation links', () => {
@@ -41,25 +44,25 @@ describe('DashboardSidebar', () => {
 
     expect(screen.getByRole('link', { name: /experiences/i })).toHaveAttribute(
       'href',
-      '/dashboard/experiences'
+      '/fr/dashboard/experiences'
     );
     expect(
       screen.getByRole('link', { name: /winery profile/i })
-    ).toHaveAttribute('href', '/dashboard/winery/profile');
+    ).toHaveAttribute('href', '/fr/dashboard/winery/profile');
   });
 
   it('shows active state for current route', () => {
-    vi.mocked(usePathname).mockReturnValue('/dashboard/experiences');
+    vi.mocked(usePathname).mockReturnValue('/fr/dashboard/experiences');
 
     render(<DashboardSidebar wineryName="Test Winery" />);
 
     const experiencesLink = screen.getByRole('link', { name: /experiences/i });
     expect(experiencesLink).toHaveAttribute('aria-current', 'page');
-    expect(experiencesLink).toHaveClass('bg-burgundy-50');
+    expect(experiencesLink).toHaveClass('bg-primary/10');
   });
 
   it('shows active state for nested route', () => {
-    vi.mocked(usePathname).mockReturnValue('/dashboard/experiences/new');
+    vi.mocked(usePathname).mockReturnValue('/fr/dashboard/experiences/new');
 
     render(<DashboardSidebar wineryName="Test Winery" />);
 

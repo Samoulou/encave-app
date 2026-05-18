@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useCallback, useTransition, useOptimistic } from 'react';
+import { useCallback, useMemo, useTransition, useOptimistic } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
@@ -58,18 +58,22 @@ export function ExperiencesPageClient({
 }: ExperiencesPageClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const currentSearchParams = useMemo(
+    () => searchParams ?? new URLSearchParams(),
+    [searchParams]
+  );
   const t = useTranslations('search');
   const [isPending, startTransition] = useTransition();
 
   // Parse current URL params (server-confirmed state)
   const serverParams: FilterState = {
-    search: searchParams.get('q') || '',
-    types: parseTypes(searchParams.get('type')),
-    commune: searchParams.get('commune'),
-    minPrice: parseNumber(searchParams.get('minPrice')),
-    maxPrice: parseNumber(searchParams.get('maxPrice')),
-    capacity: parseNumber(searchParams.get('capacity')),
-    sort: (searchParams.get('sort') as SortOption) || 'relevance',
+    search: currentSearchParams.get('q') || '',
+    types: parseTypes(currentSearchParams.get('type')),
+    commune: currentSearchParams.get('commune'),
+    minPrice: parseNumber(currentSearchParams.get('minPrice')),
+    maxPrice: parseNumber(currentSearchParams.get('maxPrice')),
+    capacity: parseNumber(currentSearchParams.get('capacity')),
+    sort: (currentSearchParams.get('sort') as SortOption) || 'relevance',
   };
 
   // Optimistic state for instant UI updates
@@ -94,7 +98,7 @@ export function ExperiencesPageClient({
 
       // Step 2: Sync with server in background (non-blocking)
       startTransition(() => {
-        const params = new URLSearchParams(searchParams.toString());
+        const params = new URLSearchParams(currentSearchParams.toString());
 
         Object.entries(updates).forEach(([key, value]) => {
           if (
@@ -113,7 +117,7 @@ export function ExperiencesPageClient({
         router.push(`/experiences?${params.toString()}`, { scroll: false });
       });
     },
-    [router, searchParams, setOptimisticFilters]
+    [router, currentSearchParams, setOptimisticFilters]
   );
 
   // Handler functions - reset page on filter changes

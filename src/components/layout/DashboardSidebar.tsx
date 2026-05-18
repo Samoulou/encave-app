@@ -40,6 +40,7 @@ export function DashboardSidebar({
   userName,
 }: DashboardSidebarProps) {
   const pathname = usePathname();
+  const currentPathname = pathname ?? '';
   const locale = useLocale();
   const router = useRouter();
   const t = useTranslations('nav');
@@ -123,9 +124,9 @@ export function DashboardSidebar({
             {sidebarLinks.map((link) => {
               const localizedHref = `/${locale}${link.href}`;
               const isActive = link.exact
-                ? pathname === localizedHref
-                : pathname === localizedHref ||
-                  pathname.startsWith(`${localizedHref}/`);
+                ? currentPathname === localizedHref
+                : currentPathname === localizedHref ||
+                  currentPathname.startsWith(`${localizedHref}/`);
               const Icon = link.icon;
 
               return (

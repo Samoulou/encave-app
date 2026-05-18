@@ -1,21 +1,40 @@
 import { Page, Locator } from '@playwright/test';
 
+const DEFAULT_E2E_LOCALE = 'en';
+
 /**
  * Base Page Object class with common functionality
  * All page objects should extend this class
  */
 export abstract class BasePage {
   readonly page: Page;
+  readonly locale: string;
 
-  constructor(page: Page) {
+  constructor(
+    page: Page,
+    locale = process.env.E2E_LOCALE ?? DEFAULT_E2E_LOCALE
+  ) {
     this.page = page;
+    this.locale = locale;
+  }
+
+  localizedPath(path: string): string {
+    if (/^https?:\/\//.test(path)) {
+      return path;
+    }
+
+    if (/^\/(fr|de|en)(\/|$)/.test(path)) {
+      return path;
+    }
+
+    return `/${this.locale}${path.startsWith('/') ? path : `/${path}`}`;
   }
 
   /**
    * Navigate to a URL and wait for network to be idle
    */
   async goto(path: string, options?: { waitForSelector?: string }) {
-    await this.page.goto(path);
+    await this.page.goto(this.localizedPath(path));
     await this.page.waitForLoadState('networkidle');
 
     if (options?.waitForSelector) {
