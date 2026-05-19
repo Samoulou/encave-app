@@ -1,6 +1,6 @@
 'use client';
 
-import { Clock, Users, Globe, GraduationCap } from 'lucide-react';
+import { Clock, Users, Globe, GraduationCap, ShieldCheck } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { ExperienceType } from '@prisma/client';
 
@@ -52,6 +52,10 @@ export function QuickFacts({
         <span className="text-sm font-medium">
           {t(`typesDetailed.${type}`)}
         </span>
+      </div>
+      <div className="flex items-center gap-2 rounded-lg bg-primary-light px-3 py-2 text-foreground">
+        <ShieldCheck className="h-5 w-5 text-primary" />
+        <span className="text-sm font-medium">{t('ageGate.badge')}</span>
       </div>
     </div>
   );

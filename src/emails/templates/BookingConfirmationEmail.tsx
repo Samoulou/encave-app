@@ -1,4 +1,4 @@
-import { Text, Section } from '@react-email/components';
+import { Img, Text, Section } from '@react-email/components';
 import type { Locale } from '@prisma/client';
 import { EmailLayout, EmailButton } from '../components';
 import {
@@ -21,6 +21,7 @@ export interface BookingConfirmationEmailProps {
   totalPrice: number; // in cents
   bookingRef: string;
   bookingUrl: string;
+  qrCodeCid?: string;
 }
 
 export function BookingConfirmationEmail({
@@ -34,6 +35,7 @@ export function BookingConfirmationEmail({
   totalPrice,
   bookingRef,
   bookingUrl,
+  qrCodeCid,
 }: BookingConfirmationEmailProps) {
   const greeting = t(common.greeting, locale);
   const regards = t(common.regards, locale);
@@ -173,6 +175,51 @@ export function BookingConfirmationEmail({
       <div style={{ textAlign: 'center', margin: '0 0 24px 0' }}>
         <EmailButton href={bookingUrl}>{viewBooking}</EmailButton>
       </div>
+
+      <Section
+        style={{
+          backgroundColor: '#fff7ed',
+          borderRadius: '8px',
+          padding: '20px',
+          margin: '0 0 24px 0',
+          textAlign: 'center',
+        }}
+      >
+        <Text
+          style={{
+            fontSize: '16px',
+            fontWeight: 'bold',
+            margin: '0 0 12px 0',
+            color: '#7c2d12',
+          }}
+        >
+          Votre billet
+        </Text>
+        <Text style={{ margin: '0 0 12px 0' }}>
+          Presentez ce QR code a votre encaveur le jour J.
+        </Text>
+        {qrCodeCid ? (
+          <Img
+            src={`cid:${qrCodeCid}`}
+            alt="QR code de votre billet EnCave"
+            width="180"
+            height="180"
+            style={{ margin: '0 auto 12px auto' }}
+          />
+        ) : (
+          <Text style={{ margin: '0 0 12px 0' }}>
+            Retrouvez votre billet en ligne : {bookingUrl}
+          </Text>
+        )}
+        <Text style={{ margin: 0, color: '#6b7280', fontSize: '13px' }}>
+          Reference : {bookingRef}
+        </Text>
+      </Section>
+
+      <Text style={{ margin: '0 0 16px 0', fontWeight: 'bold' }}>
+        Cette experience est reservee aux personnes majeures (18 ans). Une piece
+        d&apos;identite pourra etre demandee sur place.
+      </Text>
 
       <Text style={{ margin: '0 0 16px 0' }}>{lookingForward}</Text>
 

@@ -10,6 +10,7 @@ import type { ActionResult } from '@/types/actions';
 import { BookingStatus, ExperienceStatus, WineryStatus } from '@prisma/client';
 import { timeSlotSchema } from '@/lib/validators/booking';
 import { env } from '@/lib/env';
+import { AGE_GATE_VERSION } from '@/lib/constants/consent';
 import {
   checkRateLimit,
   BOOKING_RATE_LIMIT,
@@ -34,6 +35,7 @@ const CreateBookingSchema = z.object({
   visitorName: z.string().min(2),
   visitorEmail: z.string().email(),
   visitorPhone: z.string().min(6),
+  ageConfirmed: z.literal(true),
 });
 
 export interface CheckoutResult {
@@ -200,6 +202,8 @@ export async function createBookingAndCheckout(
               visitorPhone,
               status: BookingStatus.PENDING_PAYMENT,
               expiresAt,
+              ageConfirmedAt: new Date(),
+              ageConfirmedVersion: AGE_GATE_VERSION,
             },
           });
         },

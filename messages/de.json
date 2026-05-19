@@ -461,6 +461,9 @@
       "noSlotsPreview": "Keine Verfügbarkeit konfiguriert. Fügen Sie oben Zeitfenster hinzu, um Ihren Wochenplan anzuzeigen.",
       "active": "Aktiv",
       "disabled": "Deaktiviert"
+    },
+    "ageGate": {
+      "badge": "Nur 18+"
     }
   },
   "booking": {
@@ -652,7 +655,14 @@
     "support247": "24/7 SUPPORT",
     "expiryPlaceholder": "MM/JJ",
     "cvcPlaceholder": "CVC",
-    "availabilityCheckFailed": "Verfügbarkeitsprüfung fehlgeschlagen. Bitte erneut versuchen."
+    "availabilityCheckFailed": "Verfügbarkeitsprüfung fehlgeschlagen. Bitte erneut versuchen.",
+    "ageGate": {
+      "checkboxLabel": "Ich bestaetige, dass ich mindestens 18 Jahre alt bin.",
+      "helper": "Der Winzer kann bei der Ankunft einen Ausweis verlangen.",
+      "errors": {
+        "required": "Bitte bestaetigen Sie Ihr Alter, bevor Sie zur Zahlung fortfahren."
+      }
+    }
   },
   "confirmation": {
     "bookingConfirmed": "Buchung bestatigt!",
@@ -1502,6 +1512,30 @@
       "privacy": "Datenschutz",
       "terms": "AGB",
       "cancellation": "Stornierungen"
+    },
+    "cookies": {
+      "banner": {
+        "title": "Cookie-Einstellungen",
+        "body": "Wir nutzen Cookies fuer den Betrieb der Website und, mit Ihrer Zustimmung, zur Nutzungsanalyse.",
+        "policyLink": "Datenschutz lesen",
+        "acceptAll": "Alle akzeptieren",
+        "rejectAll": "Ohne Zustimmung fortfahren",
+        "customize": "Anpassen"
+      },
+      "modal": {
+        "title": "Cookies auswaehlen",
+        "save": "Auswahl speichern"
+      },
+      "category": {
+        "necessary": {
+          "title": "Notwendig",
+          "description": "Fuer den Betrieb der Website erforderlich. Sie koennen nicht deaktiviert werden."
+        },
+        "analytics": {
+          "title": "Analyse",
+          "description": "Hilft uns zu verstehen, welche Seiten nuetzlich sind. Tool: PostHog."
+        }
+      }
     }
   },
   "landing": {
@@ -1830,5 +1864,17 @@
         "cta": "Andere Weingüter entdecken"
       }
     }
+  },
+  "scan": {
+    "title": "QR-Codes scannen",
+    "freeSubtitle": "Freier Modus - alle heutigen Termine",
+    "start": "Kamera aktivieren",
+    "stop": "Stoppen",
+    "manual": "Manueller Check-in",
+    "resultOk": "Willkommen",
+    "resultError": "Scan abgelehnt",
+    "unknown": "Unbekannter QR-Code",
+    "already": "Bereits eingecheckt",
+    "counter": "{checkedIn} / {total} Gaeste eingecheckt"
   }
 }

@@ -461,6 +461,9 @@
       "noSlotsPreview": "No availability configured. Add time slots above to preview your weekly schedule.",
       "active": "Active",
       "disabled": "Disabled"
+    },
+    "ageGate": {
+      "badge": "18+ only"
     }
   },
   "booking": {
@@ -652,7 +655,14 @@
     "support247": "24/7 SUPPORT",
     "expiryPlaceholder": "MM/YY",
     "cvcPlaceholder": "CVC",
-    "availabilityCheckFailed": "Failed to verify availability. Please try again."
+    "availabilityCheckFailed": "Failed to verify availability. Please try again.",
+    "ageGate": {
+      "checkboxLabel": "I confirm I am 18 or older.",
+      "helper": "The winemaker may ask for ID on arrival.",
+      "errors": {
+        "required": "Please confirm your age before continuing to payment."
+      }
+    }
   },
   "confirmation": {
     "bookingConfirmed": "Booking Confirmed!",
@@ -1497,6 +1507,30 @@
           "content": "For cancellation requests or questions about this policy, please contact us at:"
         }
       }
+    },
+    "cookies": {
+      "banner": {
+        "title": "Cookie preferences",
+        "body": "We use cookies to run the site and, with your consent, to understand usage.",
+        "policyLink": "Read our privacy policy",
+        "acceptAll": "Accept all",
+        "rejectAll": "Continue without accepting",
+        "customize": "Customize"
+      },
+      "modal": {
+        "title": "Choose my cookies",
+        "save": "Save choices"
+      },
+      "category": {
+        "necessary": {
+          "title": "Strictly necessary",
+          "description": "Required for the site to work. They cannot be disabled."
+        },
+        "analytics": {
+          "title": "Analytics",
+          "description": "Help us understand which pages are useful. Tool: PostHog."
+        }
+      }
     }
   },
   "landing": {
@@ -1825,5 +1859,17 @@
         "cta": "Discover other wineries"
       }
     }
+  },
+  "scan": {
+    "title": "Scan QR codes",
+    "freeSubtitle": "Free mode - all your sessions today",
+    "start": "Enable camera",
+    "stop": "Stop",
+    "manual": "Manual check-in",
+    "resultOk": "Welcome",
+    "resultError": "Scan rejected",
+    "unknown": "Unknown QR code",
+    "already": "Already checked in",
+    "counter": "{checkedIn} / {total} guests checked in"
   }
 }

@@ -4,11 +4,13 @@ import type { Locale } from '@/i18n/routing';
 import { formatDate } from '@/lib/i18n/formatters';
 import { BookingsTable } from './BookingsTable';
 import { ScanQrButton } from './ScanQrButton';
+import { CancelSessionButton } from './CancelSessionButton';
 import { SessionBadges } from './SessionBadges';
 import type { EventSessionDTO } from '@/types/event-detail';
 
 interface SessionCardProps {
   session: EventSessionDTO;
+  experienceId: string;
   experienceSlug: string;
   /** True when `now` falls inside [startsAt, endsAt]. */
   isLive: boolean;
@@ -22,6 +24,7 @@ interface SessionCardProps {
 
 export async function SessionCard({
   session,
+  experienceId,
   experienceSlug,
   isLive,
   isScanWindow,
@@ -75,11 +78,17 @@ export async function SessionCard({
         </div>
 
         {canEdit && !isPast ? (
-          <ScanQrButton
-            experienceSlug={experienceSlug}
-            sessionId={session.sessionId}
-            enabled={isScanWindow}
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            <CancelSessionButton
+              experienceId={experienceId}
+              sessionId={session.sessionId}
+            />
+            <ScanQrButton
+              experienceSlug={experienceSlug}
+              sessionId={session.sessionId}
+              enabled={isScanWindow}
+            />
+          </div>
         ) : null}
       </header>
 

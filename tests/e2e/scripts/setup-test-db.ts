@@ -103,10 +103,23 @@ async function main() {
           address: '100 Route des Tests, 1950 Sion',
           phone: '+41 27 123 45 67',
           email: user.email,
+          latitude: 46.2331,
+          longitude: 7.3606,
           userId: createdUser.id,
           stripeAccountId: isPending ? null : `acct_${key}`,
           stripeOnboardingComplete: !isPending,
+          stripeDetailsSubmitted: !isPending,
           status: isPending ? 'PENDING' : 'VERIFIED',
+          galleryImages: isPending
+            ? undefined
+            : {
+                create: [
+                  {
+                    url: `/images/test/e2e-${suffix}-winery.jpg`,
+                    order: 0,
+                  },
+                ],
+              },
         },
       });
     }
@@ -125,10 +138,23 @@ async function main() {
         address: winery.address,
         phone: winery.phone,
         email: winery.email,
+        latitude: 46.5197,
+        longitude: 6.6323,
         userId: winery.userId,
         stripeAccountId: winery.stripeConnected ? winery.stripeAccountId : null,
         stripeOnboardingComplete: winery.stripeConnected,
+        stripeDetailsSubmitted: winery.stripeConnected,
         status: 'VERIFIED',
+        galleryImages: winery.stripeConnected
+          ? {
+              create: [
+                {
+                  url: `/images/test/${winery.slug}.jpg`,
+                  order: 0,
+                },
+              ],
+            }
+          : undefined,
       },
     });
   }
