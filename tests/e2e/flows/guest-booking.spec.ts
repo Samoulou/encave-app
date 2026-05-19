@@ -326,12 +326,31 @@ test.describe('Parcours Guest - Checkout', () => {
 
     // Remplir avec des données valides
     await checkoutPage.fillForm(testVisitor);
+    await checkoutPage.confirmAge();
 
     // Soumettre
     await checkoutPage.submitPayment();
 
     // Vérifier la redirection vers Stripe
     await expect(page).toHaveURL(/checkout\.stripe\.com/);
+  });
+
+  test('la confirmation 18+ est obligatoire avant le paiement', async ({
+    page,
+  }) => {
+    const checkoutPage = new CheckoutPage(page);
+
+    await checkoutPage.navigate(testExperience.slug, {
+      date: bookingDate,
+      time: bookingTime,
+      guests: guestCount,
+    });
+
+    await checkoutPage.fillForm(testVisitor);
+    await checkoutPage.clickPay();
+
+    expect(await checkoutPage.hasAgeConfirmationError()).toBe(true);
+    await expect(page).not.toHaveURL(/checkout\.stripe\.com/);
   });
 });
 
@@ -407,6 +426,7 @@ test.describe('Parcours Complet - Happy Path', () => {
           // 6. REMPLIR LE FORMULAIRE
           const checkoutPage = new CheckoutPage(page);
           await checkoutPage.fillForm(testVisitor);
+          await checkoutPage.confirmAge();
 
           // Vérifier que le bouton Pay est actif
           const canPay = await checkoutPage.canPay();
