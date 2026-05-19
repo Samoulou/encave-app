@@ -15,6 +15,7 @@ import { IMAGE_MAX_SIZE, WINERY_ALLOWED_TYPES } from '@/lib/validators/image';
 import type { ActionResult } from '@/types/actions';
 import { logError, logWarn } from '@/lib/logger';
 import { getPostHogServer } from '@/lib/posthog';
+import { sendWelcomeEmailToWinemaker } from '@/server/services/welcome-email.service';
 import { invalidateWineryCaches } from './winery-helpers';
 
 /**
@@ -159,6 +160,13 @@ export async function createWinery(
       });
       await posthogServer.flush();
     }
+
+    void sendWelcomeEmailToWinemaker(session.user.id).catch((error) => {
+      logError('send welcome winemaker email failed', error, {
+        action: 'createWinery',
+        userId: session.user.id,
+      });
+    });
 
     return {
       success: true,

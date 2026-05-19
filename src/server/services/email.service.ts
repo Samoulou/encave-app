@@ -7,6 +7,11 @@ import {
   BookingConfirmationEmail,
   BookingReminderEmail,
   BookingCancellationEmail,
+  BookingCancelledByWineryEmail,
+  BookingExpiredEmail,
+  ManualRefundClientEmail,
+  ManualRefundWinemakerEmail,
+  AccountDeletedEmail,
   PasswordResetEmail,
   WelcomeEmail,
   EmailVerificationEmail,
@@ -20,6 +25,7 @@ import {
   WeeklySummaryEmail,
 } from '@/emails';
 import { subjects, t } from '@/emails/translations';
+import { generateBookingQrPng } from '@/server/services/qr-code.service';
 
 const resend = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null;
 const FROM_EMAIL = 'EnCave <noreply@encave.ch>';
@@ -33,6 +39,12 @@ interface SendEmailOptions {
   to: string;
   subject: string;
   html: string;
+  attachments?: {
+    filename: string;
+    content: string;
+    contentType?: string;
+    cid?: string;
+  }[];
 }
 
 /**
@@ -43,6 +55,7 @@ async function sendEmail({
   to,
   subject,
   html,
+  attachments,
 }: SendEmailOptions): Promise<boolean> {
   if (!resend) {
     logInfo('Resend not configured, skipping email', { to, subject });
@@ -56,6 +69,7 @@ async function sendEmail({
         to,
         subject,
         html,
+        attachments,
       });
 
       if (error) {
@@ -133,20 +147,99 @@ export async function sendBookingConfirmationEmail(
   locale?: Locale | null
 ): Promise<boolean> {
   const loc = getLocale(locale);
+  const bookingUrl =
+    data.bookingId && data.accessToken
+      ? `${getBaseUrl()}/fr/booking/${data.bookingId}?token=${data.accessToken}`
+      : `${getBaseUrl()}/fr`;
   const html = await render(
     BookingConfirmationEmail({
       locale: loc,
       ...data,
-      bookingUrl:
-        data.bookingId && data.accessToken
-          ? `${getBaseUrl()}/fr/booking/${data.bookingId}?token=${data.accessToken}`
-          : `${getBaseUrl()}/fr`,
+      qrCodeCid: data.accessToken ? 'booking-qr-code' : undefined,
+      bookingUrl,
+    })
+  );
+
+  const attachments: SendEmailOptions['attachments'] = [];
+  if (data.accessToken) {
+    try {
+      const qrPng = await generateBookingQrPng(bookingUrl);
+      attachments.push({
+        filename: `billet-${data.bookingRef}.png`,
+        content: qrPng.toString('base64'),
+        contentType: 'image/png',
+        cid: 'booking-qr-code',
+      });
+    } catch (error) {
+      logError('Failed to generate booking QR code', error, {
+        action: 'sendBookingConfirmationEmail',
+        bookingRef: data.bookingRef,
+      });
+    }
+  }
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.bookingConfirmation, loc),
+    html,
+    attachments,
+  });
+}
+
+export interface BookingExpiredData {
+  guestName: string;
+  experienceTitle: string;
+  date: Date;
+  experienceSlug: string;
+}
+
+export async function sendBookingExpiredEmail(
+  email: string,
+  data: BookingExpiredData,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const html = await render(
+    BookingExpiredEmail({
+      locale: loc,
+      ...data,
+      experienceUrl: `${getBaseUrl()}/fr/experiences/${data.experienceSlug}`,
     })
   );
 
   return sendEmail({
     to: email,
-    subject: t(subjects.bookingConfirmation, loc),
+    subject: 'Votre reservation EnCave a expire',
+    html,
+  });
+}
+
+export interface BookingCancelledByWineryData {
+  guestName: string;
+  winemakerName: string;
+  experienceTitle: string;
+  date: Date;
+  amountCents: number;
+  reason: string;
+}
+
+export async function sendBookingCancelledByWineryEmail(
+  email: string,
+  data: BookingCancelledByWineryData,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const html = await render(
+    BookingCancelledByWineryEmail({
+      locale: loc,
+      ...data,
+      experiencesUrl: `${getBaseUrl()}/fr/experiences`,
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: `${data.winemakerName} a du annuler votre experience`,
     html,
   });
 }
@@ -280,6 +373,25 @@ export async function sendEmailVerificationEmail(
   });
 }
 
+export async function sendAccountDeletedEmail(
+  email: string,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const html = await render(
+    AccountDeletedEmail({
+      locale: loc,
+      date: new Date(),
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: 'Votre compte EnCave a ete supprime',
+    html,
+  });
+}
+
 // Winemaker Notification Emails
 
 export interface WinemakerNewBookingData {
@@ -340,6 +452,58 @@ export async function sendWinemakerCancellationEmail(
   return sendEmail({
     to: email,
     subject: t(subjects.wineryCancellation, loc),
+    html,
+  });
+}
+
+export async function sendManualRefundClientEmail(
+  email: string,
+  data: {
+    firstName: string;
+    reference: string;
+    experienceTitle: string;
+    amountCents: number;
+  },
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const html = await render(
+    ManualRefundClientEmail({
+      locale: loc,
+      ...data,
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: 'Votre reservation EnCave a ete remboursee',
+    html,
+  });
+}
+
+export async function sendManualRefundWinemakerEmail(
+  email: string,
+  data: {
+    firstName: string;
+    reference: string;
+    experienceTitle: string;
+    date: Date;
+    amountCents: number;
+    reason: string;
+  },
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const html = await render(
+    ManualRefundWinemakerEmail({
+      locale: loc,
+      ...data,
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: 'Une reservation a ete remboursee par EnCave',
     html,
   });
 }

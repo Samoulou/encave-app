@@ -1,17 +1,18 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { useTranslations, useLocale } from 'next-intl';
-import { useForm } from 'react-hook-form';
+import { useTranslations } from 'next-intl';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import * as Sentry from '@sentry/nextjs';
 import posthog from 'posthog-js';
 import { Loader2, AlertCircle, RefreshCw, Users, Lock } from 'lucide-react';
-import Link from 'next/link';
+import { Link, useRouter } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { ContactDetailsSection } from '@/components/features/checkout/ContactDetailsSection';
 import { OrderSummary } from '@/components/features/checkout/OrderSummary';
 import { MobileOrderSummary } from '@/components/features/checkout/MobileOrderSummary';
@@ -34,6 +35,9 @@ const checkoutFormSchema = z.object({
   lastName: z.string().min(2, 'Last name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
   phone: z.string().regex(phoneRegex, 'Invalid phone number'),
+  ageConfirmed: z
+    .boolean()
+    .refine((value) => value, 'Merci de confirmer votre age.'),
 });
 
 type CheckoutFormData = z.infer<typeof checkoutFormSchema>;
@@ -59,7 +63,6 @@ export function CheckoutClient({
   guestCount,
   paymentError,
 }: CheckoutClientProps) {
-  const locale = useLocale();
   const t = useTranslations('checkout');
   const tBooking = useTranslations('booking');
   const tErrors = useTranslations('errors');
@@ -116,10 +119,14 @@ export function CheckoutClient({
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<CheckoutFormData>({
     resolver: zodResolver(checkoutFormSchema),
+    defaultValues: {
+      ageConfirmed: false,
+    },
   });
 
   // BUG-003 & BUG-013: Check availability function
@@ -150,7 +157,7 @@ export function CheckoutClient({
           // If no capacity at all, redirect back to experience page
           if (result.data.remainingCapacity === 0) {
             router.push(
-              `/${locale}/experiences/${slug}?error=no_availability&date=${date}&time=${time}`
+              `/experiences/${slug}?error=no_availability&date=${date}&time=${time}`
             );
             return;
           }
@@ -167,7 +174,7 @@ export function CheckoutClient({
         }
       }
     },
-    [date, time, guestCount, slug, router, locale, experience.id]
+    [date, time, guestCount, slug, router, experience.id]
   );
 
   // BUG-003: Validate availability on mount
@@ -216,10 +223,11 @@ export function CheckoutClient({
         visitorName: `${data.firstName} ${data.lastName}`,
         visitorEmail: data.email,
         visitorPhone: data.phone.replace(/\s/g, ''),
+        ageConfirmed: true,
       });
 
       if (result.success) {
-        router.push(result.data.checkoutUrl);
+        window.location.assign(result.data.checkoutUrl);
       } else {
         setSubmitError(result.error.message);
       }
@@ -292,7 +300,7 @@ export function CheckoutClient({
               <div className="mt-3">
                 <Button asChild variant="outline" size="sm">
                   <Link
-                    href={`/${locale}/experiences/${slug}?date=${date}&time=${time}&guests=${remainingCapacity}`}
+                    href={`/experiences/${slug}?date=${date}&time=${time}&guests=${remainingCapacity}`}
                   >
                     {t('adjustGuestCount')}
                   </Link>
@@ -361,6 +369,50 @@ export function CheckoutClient({
                     <p className="text-sm text-red-700">{submitError}</p>
                   </div>
                 )}
+
+                <div className="mb-6 rounded-lg border border-border bg-white p-4">
+                  <div className="flex items-start gap-3">
+                    <Controller
+                      name="ageConfirmed"
+                      control={control}
+                      render={({ field }) => (
+                        <Checkbox
+                          id="ageConfirmed"
+                          aria-required="true"
+                          aria-describedby="age-confirmed-help age-confirmed-error"
+                          checked={field.value}
+                          onCheckedChange={(checked) => {
+                            field.onChange(checked === true);
+                          }}
+                          onBlur={field.onBlur}
+                          ref={field.ref}
+                        />
+                      )}
+                    />
+                    <div className="space-y-1">
+                      <Label
+                        htmlFor="ageConfirmed"
+                        className="text-sm font-semibold text-foreground"
+                      >
+                        {t('ageGate.checkboxLabel')}
+                      </Label>
+                      <p
+                        id="age-confirmed-help"
+                        className="text-sm text-[#915564]"
+                      >
+                        {t('ageGate.helper')}
+                      </p>
+                      {errors.ageConfirmed && (
+                        <p
+                          id="age-confirmed-error"
+                          className="text-sm font-medium text-red-700"
+                        >
+                          {t('ageGate.errors.required')}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
 
                 {/* CTA Button - Redirects to Stripe */}
                 <Button

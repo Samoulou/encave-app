@@ -1,12 +1,16 @@
 'use server';
 
 import { z } from 'zod';
+import { BookingStatus } from '@prisma/client';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import {
+  sendManualRefundClientEmail,
+  sendManualRefundWinemakerEmail,
   sendWineryApprovedEmail,
   sendWineryRejectedEmail,
 } from '@/server/services/email.service';
+import { getStripe } from '@/server/stripe';
 import type { ActionResult } from '@/types/actions';
 import { logError, logWarn } from '@/lib/logger';
 import { invalidateWineryCaches } from './winery-helpers';
@@ -18,6 +22,12 @@ const ApproveWinerySchema = z.object({
 const RejectWinerySchema = z.object({
   wineryId: z.string().min(1, 'Winery ID is required'),
   reason: z.string().min(1, 'Rejection reason is required').max(1000),
+});
+
+const ManualRefundSchema = z.object({
+  bookingId: z.string().cuid(),
+  amountCents: z.number().int().positive(),
+  reason: z.string().trim().min(10).max(500),
 });
 
 /**
@@ -245,6 +255,190 @@ export async function rejectWinery(
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Something went wrong' },
+    };
+  }
+}
+
+export async function refundBookingManually(
+  input: unknown
+): Promise<ActionResult<{ refundId: string; refundedAmount: number }>> {
+  const parsed = ManualRefundSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: 'Invalid refund request' },
+    };
+  }
+
+  const session = await auth();
+  if (!session?.user) {
+    return {
+      success: false,
+      error: { code: 'UNAUTHORIZED', message: 'Please sign in' },
+    };
+  }
+  if (session.user.role !== 'ADMIN') {
+    return {
+      success: false,
+      error: { code: 'FORBIDDEN', message: 'Admin access required' },
+    };
+  }
+
+  const { bookingId, amountCents, reason } = parsed.data;
+
+  const booking = await db.booking.findUnique({
+    where: { id: bookingId },
+    include: {
+      experience: {
+        select: {
+          title: true,
+        },
+      },
+      winery: {
+        select: {
+          email: true,
+          user: {
+            select: {
+              name: true,
+              preferredLocale: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!booking) {
+    return {
+      success: false,
+      error: { code: 'NOT_FOUND', message: 'Booking not found' },
+    };
+  }
+
+  const alreadyRefunded = booking.refundAmount ?? 0;
+  const remaining = booking.totalPrice - alreadyRefunded;
+  if (remaining <= 0 || amountCents > remaining) {
+    return {
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: 'Invalid refund amount' },
+    };
+  }
+
+  if (!booking.stripePaymentIntentId?.startsWith('pi_')) {
+    return {
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: 'No captured Stripe payment intent on this booking',
+      },
+    };
+  }
+
+  try {
+    const refund = await getStripe().refunds.create(
+      {
+        payment_intent: booking.stripePaymentIntentId,
+        amount: amountCents,
+        reverse_transfer: true,
+        refund_application_fee: true,
+        metadata: {
+          bookingId: booking.id,
+          bookingReference: booking.reference,
+          adminId: session.user.id,
+          reason,
+        },
+      },
+      {
+        idempotencyKey: `admin-refund:${booking.id}:${alreadyRefunded}:${amountCents}`,
+      }
+    );
+
+    const nextRefunded = alreadyRefunded + amountCents;
+    const isFullRefund = nextRefunded >= booking.totalPrice;
+    await db.$transaction([
+      db.booking.update({
+        where: { id: booking.id },
+        data: {
+          refundIssued: isFullRefund,
+          refundAmount: nextRefunded,
+          stripeRefundId: refund.id,
+          refundError: null,
+          ...(isFullRefund &&
+          (booking.status === BookingStatus.CONFIRMED ||
+            booking.status === BookingStatus.PENDING_PAYMENT)
+            ? {
+                status: BookingStatus.CANCELLED_BY_WINERY,
+                cancelledAt: new Date(),
+                cancellationReason: 'ADMIN_REFUND',
+              }
+            : {}),
+        },
+      }),
+      db.adminAction.create({
+        data: {
+          adminId: session.user.id,
+          action: 'REFUND_BOOKING',
+          targetType: 'Booking',
+          targetId: booking.id,
+          reason,
+          metadata: {
+            refundId: refund.id,
+            amountCents,
+            type: isFullRefund ? 'FULL' : 'PARTIAL',
+          },
+        },
+      }),
+    ]);
+
+    await sendManualRefundClientEmail(booking.visitorEmail, {
+      firstName: booking.visitorName.split(' ')[0] ?? booking.visitorName,
+      reference: booking.reference,
+      experienceTitle: booking.experience.title,
+      amountCents,
+    });
+    await sendManualRefundWinemakerEmail(
+      booking.winery.email,
+      {
+        firstName: booking.winery.user.name ?? 'Bonjour',
+        reference: booking.reference,
+        experienceTitle: booking.experience.title,
+        date: booking.date,
+        amountCents,
+        reason,
+      },
+      booking.winery.user.preferredLocale
+    );
+
+    return {
+      success: true,
+      data: { refundId: refund.id, refundedAmount: nextRefunded },
+    };
+  } catch (error) {
+    await db.adminAction.create({
+      data: {
+        adminId: session.user.id,
+        action: 'REFUND_BOOKING',
+        targetType: 'Booking',
+        targetId: booking.id,
+        status: 'FAILED',
+        reason,
+        metadata: {
+          amountCents,
+          error: String(error),
+        },
+      },
+    });
+    await db.booking.update({
+      where: { id: booking.id },
+      data: { refundError: String(error) },
+    });
+    logError('Manual refund failed', error, {
+      action: 'refundBookingManually',
+      bookingId: booking.id,
+    });
+    return {
+      success: false,
+      error: { code: 'STRIPE_ERROR', message: 'Stripe refund failed' },
     };
   }
 }

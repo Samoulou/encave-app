@@ -93,7 +93,23 @@ describe('Checkout Server Actions', () => {
       visitorName: 'John Doe',
       visitorEmail: 'john@example.com',
       visitorPhone: '+41791234567',
+      ageConfirmed: true as const,
     };
+
+    it('requires age confirmation before creating Stripe checkout', async () => {
+      const { createBookingAndCheckout } =
+        await import('@/server/actions/checkout');
+      const result = await createBookingAndCheckout({
+        ...validInput,
+        ageConfirmed: false,
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe('VALIDATION_ERROR');
+      }
+      expect(db.experience.findUnique).not.toHaveBeenCalled();
+    });
 
     it('creates booking and returns checkout URL with valid input', async () => {
       vi.mocked(db.experience.findUnique).mockResolvedValue(
