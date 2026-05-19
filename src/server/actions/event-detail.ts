@@ -7,7 +7,10 @@ import { db } from '@/server/db';
 import { logError, logInfo } from '@/lib/logger';
 import { getStripe } from '@/server/stripe';
 import { sendBookingCancelledByWineryEmail } from '@/server/services/email.service';
-import { bookingIdSchema } from '@/lib/validators/eventDetail';
+import {
+  attendeeEmailsSchema,
+  bookingIdSchema,
+} from '@/lib/validators/eventDetail';
 import { parseTimeSlot, timeSlotSchema } from '@/lib/validators/booking';
 import type { ActionResult } from '@/types/actions';
 import type { BookingDTO } from '@/types/event-detail';
@@ -37,6 +40,8 @@ const cancelSessionSchema = z.object({
   sessionId: z.string().min(6),
   reason: z.string().trim().min(10).max(500),
 });
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 interface AuthorizedBooking {
   id: string;
@@ -678,5 +683,72 @@ export async function cancelEventSession(
   return {
     success: true,
     data: { cancelled, refunded, failed },
+  };
+}
+
+export async function getAttendeeEmailsForSession(
+  input: unknown
+): Promise<ActionResult<{ emails: string[]; to: string }>> {
+  const parsed = attendeeEmailsSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: 'Invalid session input' },
+    };
+  }
+
+  const session = await auth();
+  if (!session?.user) {
+    return {
+      success: false,
+      error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
+    };
+  }
+
+  const [dateKey, timeSlot] = parsed.data.sessionId.split('|');
+  if (!dateKey || !timeSlot || !timeSlotSchema.safeParse(timeSlot).success) {
+    return {
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: 'Invalid session id' },
+    };
+  }
+
+  const experience = await db.experience.findFirst({
+    where: {
+      id: parsed.data.experienceId,
+      winery: { userId: session.user.id },
+    },
+    select: { id: true },
+  });
+
+  if (!experience) {
+    return {
+      success: false,
+      error: { code: 'NOT_FOUND', message: 'Experience not found' },
+    };
+  }
+
+  const bookings = await db.booking.findMany({
+    where: {
+      experienceId: parsed.data.experienceId,
+      date: new Date(`${dateKey}T00:00:00.000Z`),
+      timeSlot,
+      status: BookingStatus.CONFIRMED,
+    },
+    select: { visitorEmail: true },
+    orderBy: { visitorEmail: 'asc' },
+  });
+
+  const emails = Array.from(
+    new Set(
+      bookings
+        .map((booking) => booking.visitorEmail.trim().toLowerCase())
+        .filter((email) => EMAIL_PATTERN.test(email))
+    )
+  );
+
+  return {
+    success: true,
+    data: { emails, to: session.user.email },
   };
 }

@@ -3,7 +3,6 @@ import { ExperienceStatus } from '@prisma/client';
 import { Badge } from '@/components/ui/badge';
 import { Link } from '@/i18n/navigation';
 import { ChevronRight, Home } from 'lucide-react';
-import { ContactGuestsButton } from './ContactGuestsButton';
 import type { EventDetailDTO } from '@/types/event-detail';
 
 interface EventDetailHeaderProps {
@@ -70,10 +69,6 @@ export async function EventDetailHeader({ event }: EventDetailHeaderProps) {
               sessions: event.activeSessionsCount,
             })}
           </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <ContactGuestsButton />
         </div>
       </div>
     </header>

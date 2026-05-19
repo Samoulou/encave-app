@@ -5,13 +5,17 @@ import { formatDate } from '@/lib/i18n/formatters';
 import { BookingsTable } from './BookingsTable';
 import { ScanQrButton } from './ScanQrButton';
 import { CancelSessionButton } from './CancelSessionButton';
+import { ContactGuestsButton } from './ContactGuestsButton';
 import { SessionBadges } from './SessionBadges';
 import type { EventSessionDTO } from '@/types/event-detail';
+import { BookingStatus } from '@prisma/client';
 
 interface SessionCardProps {
   session: EventSessionDTO;
   experienceId: string;
   experienceSlug: string;
+  experienceTitle: string;
+  wineryName: string;
   /** True when `now` falls inside [startsAt, endsAt]. */
   isLive: boolean;
   /** True when `now` falls inside the H-2 / H+2 daily scan window. */
@@ -26,6 +30,8 @@ export async function SessionCard({
   session,
   experienceId,
   experienceSlug,
+  experienceTitle,
+  wineryName,
   isLive,
   isScanWindow,
   isPast,
@@ -45,6 +51,11 @@ export async function SessionCard({
   // Mark-no-show: spec says "disabled until the end of the session". The
   // server action also enforces this (defense in depth).
   const canMarkNoShow = canEdit && session.endsAt.getTime() <= Date.now();
+  const attendeeCount = new Set(
+    session.bookings
+      .filter((booking) => booking.status === BookingStatus.CONFIRMED)
+      .map((booking) => booking.visitorEmail.trim().toLowerCase())
+  ).size;
 
   return (
     <section
@@ -79,6 +90,14 @@ export async function SessionCard({
 
         {canEdit && !isPast ? (
           <div className="flex flex-wrap items-center gap-2">
+            <ContactGuestsButton
+              experienceId={experienceId}
+              sessionId={session.sessionId}
+              attendeeCount={attendeeCount}
+              experienceTitle={experienceTitle}
+              wineryName={wineryName}
+              startsAtIso={session.startsAt.toISOString()}
+            />
             <CancelSessionButton
               experienceId={experienceId}
               sessionId={session.sessionId}

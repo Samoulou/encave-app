@@ -10,6 +10,7 @@ const protectedPatterns = ['/dashboard', '/onboarding'];
 
 // Routes that require ADMIN role (without locale prefix)
 const adminPatterns = ['/admin'];
+const ADMIN_ROLE = 'ADMIN';
 
 // Auth routes (login/register) — access control handled server-side in (auth)/layout.tsx
 
@@ -23,6 +24,46 @@ function getPathnameWithoutLocale(pathname: string): string {
 function getLocaleFromPathname(pathname: string): string {
   const match = pathname.match(new RegExp(`^/(${routing.locales.join('|')})`));
   return match?.[1] ?? routing.defaultLocale;
+}
+
+function rewriteNotFound(request: NextRequest, locale: string): NextResponse {
+  return NextResponse.rewrite(new URL(`/${locale}/not-found`, request.url), {
+    status: 404,
+  });
+}
+
+function redirectToLogin(
+  request: NextRequest,
+  locale: string,
+  pathname: string
+): NextResponse {
+  const loginUrl = new URL(`/${locale}/login`, request.url);
+  loginUrl.searchParams.set('callbackUrl', pathname);
+  return NextResponse.redirect(loginUrl);
+}
+
+async function getSessionRole(
+  request: NextRequest
+): Promise<'NO_SESSION' | 'ROLE_MISSING' | string> {
+  try {
+    const response = await fetch(new URL('/api/auth/get-session', request.url), {
+      headers: {
+        cookie: request.headers.get('cookie') ?? '',
+      },
+      cache: 'no-store',
+    });
+
+    if (!response.ok) return 'NO_SESSION';
+
+    const session = (await response.json()) as {
+      user?: { role?: string | null };
+    } | null;
+
+    if (!session?.user) return 'NO_SESSION';
+    return session.user.role ?? 'ROLE_MISSING';
+  } catch {
+    return 'NO_SESSION';
+  }
 }
 
 // Production domain that should show "Coming Soon"
@@ -95,17 +136,24 @@ export default async function middleware(request: NextRequest) {
   );
   // Redirect unauthenticated users from protected routes to login
   if ((isProtectedRoute || isAdminRoute) && !isLoggedIn) {
-    const loginUrl = new URL(`/${locale}/login`, request.url);
-    loginUrl.searchParams.set('callbackUrl', pathname);
-    return NextResponse.redirect(loginUrl);
+    return redirectToLogin(request, locale, pathname);
+  }
+
+  if (isAdminRoute) {
+    const role = await getSessionRole(request);
+    if (role === 'NO_SESSION' || role === 'ROLE_MISSING') {
+      return redirectToLogin(request, locale, pathname);
+    }
+    if (role !== ADMIN_ROLE) {
+      return rewriteNotFound(request, locale);
+    }
   }
 
   // Note: Auth route access control (redirect if already logged in) is handled
   // server-side in (auth)/layout.tsx via session validation, not cookie presence.
   // This avoids redirect loops when session cookies are expired but still present.
 
-  // Note: Admin role check requires session data which needs server-side check
-  // This will be handled in the admin layout for now
+  // Admin layout keeps a second role check as defense in depth.
 
   return intlResponse;
 }

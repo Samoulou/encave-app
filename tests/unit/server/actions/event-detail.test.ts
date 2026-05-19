@@ -7,8 +7,12 @@ vi.mock('@/server/auth', () => ({
 
 vi.mock('@/server/db', () => ({
   db: {
+    experience: {
+      findFirst: vi.fn(),
+    },
     booking: {
       findUnique: vi.fn(),
+      findMany: vi.fn(),
       update: vi.fn(),
     },
   },
@@ -32,6 +36,7 @@ import { BookingStatus } from '@prisma/client';
 import {
   markBookingCheckedIn,
   markBookingNoShow,
+  getAttendeeEmailsForSession,
   revertBookingCheckIn,
   revertBookingNoShow,
 } from '@/server/actions/event-detail';
@@ -83,7 +88,9 @@ interface DtoBookingShape {
 
 // Typed helpers — keep mocks strongly typed without resorting to `as any`/`as never`.
 const findUniqueMock = vi.mocked(db.booking.findUnique);
+const findManyMock = vi.mocked(db.booking.findMany);
 const updateMock = vi.mocked(db.booking.update);
+const findExperienceMock = vi.mocked(db.experience.findFirst);
 
 function mockCtxBooking(overrides: Partial<CtxBookingShape> = {}): void {
   const recentPastDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -547,6 +554,84 @@ describe('revertBookingNoShow', () => {
         actorId: 'user-owner',
         from: BookingStatus.NO_SHOW,
         to: BookingStatus.CONFIRMED,
+      })
+    );
+  });
+});
+
+describe('getAttendeeEmailsForSession', () => {
+  const input = {
+    experienceId: 'ckexperienceabcdefghij123456',
+    sessionId: '2026-05-20|14:00',
+  };
+
+  it('returns UNAUTHORIZED when no session', async () => {
+    vi.mocked(auth).mockResolvedValue(null);
+
+    const result = await getAttendeeEmailsForSession(input);
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe('UNAUTHORIZED');
+    }
+  });
+
+  it('returns VALIDATION_ERROR for malformed session input', async () => {
+    vi.mocked(auth).mockResolvedValue(mockSession);
+
+    const result = await getAttendeeEmailsForSession({
+      experienceId: 'not-a-cuid',
+      sessionId: 'bad',
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe('VALIDATION_ERROR');
+    }
+  });
+
+  it('returns NOT_FOUND when the experience does not belong to the caller', async () => {
+    vi.mocked(auth).mockResolvedValue(mockSession);
+    findExperienceMock.mockResolvedValueOnce(null);
+
+    const result = await getAttendeeEmailsForSession(input);
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe('NOT_FOUND');
+    }
+    expect(findManyMock).not.toHaveBeenCalled();
+  });
+
+  it('returns deduplicated confirmed attendee emails only', async () => {
+    vi.mocked(auth).mockResolvedValue(mockSession);
+    findExperienceMock.mockResolvedValueOnce({
+      id: input.experienceId,
+    } as unknown as Awaited<ReturnType<typeof db.experience.findFirst>>);
+    findManyMock.mockResolvedValueOnce([
+      { visitorEmail: ' Alice@Test.ch ' },
+      { visitorEmail: 'alice@test.ch' },
+      { visitorEmail: 'bad-email' },
+      { visitorEmail: 'bob@test.ch' },
+    ] as unknown as Awaited<ReturnType<typeof db.booking.findMany>>);
+
+    const result = await getAttendeeEmailsForSession(input);
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).toEqual({
+        to: 'enc@test.ch',
+        emails: ['alice@test.ch', 'bob@test.ch'],
+      });
+    }
+    expect(findManyMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          experienceId: input.experienceId,
+          timeSlot: '14:00',
+          status: BookingStatus.CONFIRMED,
+        }),
+        select: { visitorEmail: true },
       })
     );
   });
