@@ -93,4 +93,25 @@ test.describe('Application regression matrix', () => {
 
     expect(isBlocked).toBe(true);
   });
+
+  test('winemaker can open the field check-in scanner and manual fallback', async ({
+    page,
+  }) => {
+    await loginAs(page, TEST_USERS.winemakerVerified);
+    await page.waitForURL(/\/dashboard\/bookings/, { timeout: 10000 });
+    await page.goto(localizedPath('/dashboard/scan'));
+
+    await expect(page).toHaveURL(/\/dashboard\/scan/);
+    await expect(
+      page.getByRole('heading', { name: /scan|scanner/i })
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: /start|enable camera|d.marrer|scan/i })
+    ).toBeVisible();
+
+    await page.getByRole('link', { name: /manual|manuel/i }).click();
+
+    await expect(page).toHaveURL(/\/dashboard\/bookings/);
+    await expectPageHealthy(page);
+  });
 });

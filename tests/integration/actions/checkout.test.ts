@@ -275,6 +275,61 @@ describe('Checkout Server Actions', () => {
       }
     });
 
+    it('counts PENDING_PAYMENT bookings in capacity protection', async () => {
+      vi.mocked(db.experience.findUnique).mockResolvedValue(
+        mockExperience as never
+      );
+      vi.mocked(db.booking.aggregate).mockResolvedValue({
+        _sum: { guestCount: 7 },
+      } as never);
+
+      const { createBookingAndCheckout } =
+        await import('@/server/actions/checkout');
+      const result = await createBookingAndCheckout(validInput);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe('NO_CAPACITY');
+      }
+      expect(db.booking.aggregate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            status: {
+              in: [BookingStatus.PENDING_PAYMENT, BookingStatus.CONFIRMED],
+            },
+          }),
+        })
+      );
+    });
+
+    it('uses a serializable transaction to protect concurrent capacity checks', async () => {
+      vi.mocked(db.experience.findUnique).mockResolvedValue(
+        mockExperience as never
+      );
+      vi.mocked(db.booking.aggregate).mockResolvedValue({
+        _sum: { guestCount: 0 },
+      } as never);
+      vi.mocked(db.booking.findUnique).mockResolvedValue(null);
+      vi.mocked(db.booking.create).mockResolvedValue({
+        id: 'booking-1',
+        reference: 'ENC-ABC123',
+        status: BookingStatus.PENDING_PAYMENT,
+      } as never);
+      vi.mocked(db.booking.update).mockResolvedValue({} as never);
+
+      const { createBookingAndCheckout } =
+        await import('@/server/actions/checkout');
+      await createBookingAndCheckout(validInput);
+
+      expect(db.$transaction).toHaveBeenCalledWith(
+        expect.any(Function),
+        expect.objectContaining({
+          isolationLevel: 'Serializable',
+          timeout: 10000,
+        })
+      );
+    });
+
     it('calculates platform fee correctly', async () => {
       vi.mocked(db.experience.findUnique).mockResolvedValue(
         mockExperience as never
@@ -421,45 +476,6 @@ describe('Checkout Server Actions', () => {
       if (!result.success) {
         expect(result.error.code).toBe('NOT_FOUND');
       }
-    });
-  });
-});
-
-describe('Checkout Webhook Handler', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  describe('checkout.session.completed', () => {
-    it('updates booking status to CONFIRMED', async () => {
-      const mockBooking = {
-        id: 'booking-1',
-        reference: 'ENC-ABC123',
-        status: BookingStatus.PENDING_PAYMENT,
-      };
-
-      vi.mocked(db.booking.findUnique).mockResolvedValue(mockBooking as never);
-      vi.mocked(db.booking.update).mockResolvedValue({
-        ...mockBooking,
-        status: BookingStatus.CONFIRMED,
-      } as never);
-
-      // The actual webhook handler test would require more setup
-      // This test verifies the idempotency concept
-      expect(mockBooking.status).toBe(BookingStatus.PENDING_PAYMENT);
-    });
-
-    it('skips already confirmed bookings (idempotency)', async () => {
-      const mockBooking = {
-        id: 'booking-1',
-        reference: 'ENC-ABC123',
-        status: BookingStatus.CONFIRMED,
-      };
-
-      vi.mocked(db.booking.findUnique).mockResolvedValue(mockBooking as never);
-
-      // Webhook handler should skip update for already confirmed bookings
-      expect(mockBooking.status).toBe(BookingStatus.CONFIRMED);
     });
   });
 });

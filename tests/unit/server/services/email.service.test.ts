@@ -35,6 +35,11 @@ vi.mock('@/emails', () => ({
   BookingConfirmationEmail: vi.fn(() => null),
   BookingReminderEmail: vi.fn(() => null),
   BookingCancellationEmail: vi.fn(() => null),
+  BookingCancelledByWineryEmail: vi.fn(() => null),
+  BookingExpiredEmail: vi.fn(() => null),
+  ManualRefundClientEmail: vi.fn(() => null),
+  ManualRefundWinemakerEmail: vi.fn(() => null),
+  AccountDeletedEmail: vi.fn(() => null),
   PasswordResetEmail: vi.fn(() => null),
   WelcomeEmail: vi.fn(() => null),
   EmailVerificationEmail: vi.fn(() => null),
@@ -46,6 +51,10 @@ vi.mock('@/emails', () => ({
   DailyDigestEmail: vi.fn(() => null),
   PostExperienceFollowUpEmail: vi.fn(() => null),
   WeeklySummaryEmail: vi.fn(() => null),
+}));
+
+vi.mock('@/server/services/qr-code.service', () => ({
+  generateBookingQrPng: vi.fn().mockResolvedValue(Buffer.from('png')),
 }));
 
 // Mock email translations
@@ -75,8 +84,11 @@ vi.mock('@/emails/translations', () => ({
 // Import after all mocks
 const {
   sendBookingConfirmationEmail,
+  sendBookingCancelledByWineryEmail,
   sendBookingReminderEmail,
   sendBookingCancellationEmail,
+  sendManualRefundClientEmail,
+  sendManualRefundWinemakerEmail,
   sendPasswordResetEmail,
   sendWelcomeEmail,
   sendEmailVerificationEmail,
@@ -159,6 +171,31 @@ describe('Email Service', () => {
       const { t } = await import('@/emails/translations');
       expect(t).toHaveBeenCalledWith(expect.any(Object), 'EN');
     });
+
+    it('attaches the QR PNG when booking access data is present', async () => {
+      await sendBookingConfirmationEmail('test@example.com', {
+        ...data,
+        bookingId: 'booking-1',
+        accessToken: 'token-123',
+      });
+
+      const { generateBookingQrPng } =
+        await import('@/server/services/qr-code.service');
+      expect(generateBookingQrPng).toHaveBeenCalledWith(
+        'https://test.encave.ch/fr/booking/booking-1?token=token-123'
+      );
+      expect(mockEmailsSend).toHaveBeenCalledWith(
+        expect.objectContaining({
+          attachments: [
+            expect.objectContaining({
+              filename: 'billet-REF-123.png',
+              contentType: 'image/png',
+              cid: 'booking-qr-code',
+            }),
+          ],
+        })
+      );
+    });
   });
 
   describe('sendBookingReminderEmail', () => {
@@ -194,6 +231,52 @@ describe('Email Service', () => {
         data
       );
       expect(result).toBe(true);
+    });
+  });
+
+  describe('sendBookingCancelledByWineryEmail', () => {
+    it('sends event cancellation email successfully', async () => {
+      const result = await sendBookingCancelledByWineryEmail(
+        'test@example.com',
+        {
+          guestName: 'John',
+          winemakerName: 'Winery',
+          experienceTitle: 'Tour',
+          date: new Date(),
+          amountCents: 5000,
+          reason: 'Weather cancellation',
+        }
+      );
+
+      expect(result).toBe(true);
+    });
+  });
+
+  describe('manual refund emails', () => {
+    it('sends client and winemaker refund emails successfully', async () => {
+      const clientResult = await sendManualRefundClientEmail(
+        'client@example.com',
+        {
+          firstName: 'Alice',
+          reference: 'ENC-REFUND',
+          experienceTitle: 'Tour',
+          amountCents: 5000,
+        }
+      );
+      const winemakerResult = await sendManualRefundWinemakerEmail(
+        'owner@example.com',
+        {
+          firstName: 'Owner',
+          reference: 'ENC-REFUND',
+          experienceTitle: 'Tour',
+          date: new Date(),
+          amountCents: 5000,
+          reason: 'Support refund',
+        }
+      );
+
+      expect(clientResult).toBe(true);
+      expect(winemakerResult).toBe(true);
     });
   });
 
