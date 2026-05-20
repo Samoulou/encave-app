@@ -1,26 +1,31 @@
 import {
   ArrowRight,
+  Building2,
   Check,
   Clock,
+  FlaskConical,
+  Footprints,
   Lock,
   MapPin,
   Search,
+  Utensils,
   Users,
   Wine,
 } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import { ImageWithFallback } from '@/components/shared/ImageWithFallback';
+import { DynamicMap } from '@/components/features/map/DynamicMap';
 import { formatCHF } from '@/lib/utils/currency';
 import type { ExperienceCardData } from '@/components/features/experience/ExperienceCard';
+import type { MapWinery } from '@/components/features/map/types';
 
-const categories = [
-  ['Degustations', 'Experiences oenologiques', '🍷'],
-  ['Visites de cave', 'Dans les domaines', '🏛'],
-  ['Vendanges', 'Saisonnier', '🍇'],
-  ['Repas vignerons', 'Accords locaux', '🥖'],
-  ['Balades', 'Dans les vignes', '🥾'],
-  ['Ateliers', 'Savoir-faire', '🔬'],
-];
+const categoryLinks = [
+  ['Degustations', 'Experiences oenologiques', 'TASTING', Wine],
+  ['Visites de cave', 'Dans les domaines', 'CELLAR_VISIT', Building2],
+  ['Balades', 'Dans les vignes', 'VINEYARD_TOUR', Footprints],
+  ['Ateliers', 'Savoir-faire', 'WORKSHOP', FlaskConical],
+  ['Accords mets-vins', 'Tables locales', 'FOOD_PAIRING', Utensils],
+] as const;
 
 function formatDuration(minutes: number) {
   if (minutes >= 60) {
@@ -57,7 +62,14 @@ function ExperienceVisual({
           sizes="(max-width: 1024px) 100vw, 50vw"
         />
       ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-burgundy-900 via-burgundy-600 to-gold-400" />
+        <ImageWithFallback
+          src="/images/herobanner-image.jpg"
+          alt="Vignes valaisannes"
+          fill
+          priority={priority}
+          className="object-cover"
+          sizes="(max-width: 1024px) 100vw, 50vw"
+        />
       )}
       <div className="absolute inset-0 bg-gradient-to-br from-burgundy-900/45 via-burgundy-600/20 to-gold-400/20" />
       <div
@@ -105,7 +117,7 @@ export function HomeDesktopEditorial({
 }) {
   const featured = experiences[0];
   const cards = experiences.slice(0, 4);
-  const mapExperiences = experiences.slice(0, 6);
+  const mapWineries = buildMapWineries(experiences);
 
   return (
     <div className="bg-cream-50 text-ink-900">
@@ -129,10 +141,9 @@ export function HomeDesktopEditorial({
 
           <div className="flex max-w-[620px] items-center rounded-[18px] bg-white p-1.5 shadow-[0_18px_50px_-12px_rgba(58,14,31,.25),0_0_0_1px_rgba(154,42,72,.08)]">
             <SearchField label="Ou" value="Tout le Valais" />
-            <SearchField label="Quand" value="Voir les dates" />
-            <SearchField label="Combien" value="2 personnes" last />
+            <SearchField label="Pour" value="2+ places" last />
             <Link
-              href="/experiences"
+              href="/experiences?capacity=2"
               className="ml-1.5 inline-flex h-[62px] items-center gap-2 rounded-[14px] bg-burgundy-600 px-7 text-sm font-semibold text-white transition-colors hover:bg-burgundy-700"
             >
               <Search className="h-[15px] w-[15px]" aria-hidden="true" />
@@ -186,7 +197,7 @@ export function HomeDesktopEditorial({
             href="/experiences"
             className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-burgundy-700"
           >
-            Voir la carte interactive
+            Voir les experiences
             <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
           </Link>
         </div>
@@ -229,35 +240,17 @@ export function HomeDesktopEditorial({
       </section>
 
       <section className="grid grid-cols-[1.2fr_1fr] gap-8 px-14 py-12">
-        <div className="relative h-[340px] overflow-hidden rounded-[18px] bg-gradient-to-br from-[#d8dfc6] to-[#a7b08b]">
-          <div className="absolute inset-0 opacity-50 [background-image:linear-gradient(120deg,transparent_35%,rgba(122,138,58,.28)_35%,rgba(122,138,58,.28)_55%,transparent_55%)]" />
-          {mapExperiences.map((experience, index) => {
-            const positions = [
-              ['18%', '42%'],
-              ['34%', '58%'],
-              ['48%', '34%'],
-              ['62%', '52%'],
-              ['74%', '40%'],
-              ['86%', '60%'],
-            ];
-            const [left, top] = positions[index] ?? ['50%', '50%'];
-
-            return (
-              <div
-                key={experience.id}
-                className="absolute rounded-full border-2 border-burgundy-700 bg-white px-2.5 py-1 font-mono text-[11px] font-bold shadow-md"
-                style={{ left, top, transform: 'translate(-50%, -50%)' }}
-              >
-                {formatCHF(experience.price).replace('CHF ', '')}
-              </div>
-            );
-          })}
+        <div className="relative h-[340px] overflow-hidden rounded-[18px] border border-stone-200 bg-stone-50">
+          <DynamicMap
+            wineries={mapWineries}
+            className="h-full w-full rounded-[18px]"
+          />
           <div className="absolute left-[18px] top-[18px] rounded-lg bg-white/95 px-3.5 py-2">
             <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-burgundy-700">
               • Valais
             </div>
             <div className="mt-0.5 font-display text-lg font-semibold">
-              {mapExperiences.length} experiences
+              {mapWineries.length} domaines
             </div>
           </div>
           <Link
@@ -265,7 +258,7 @@ export function HomeDesktopEditorial({
             className="absolute bottom-[18px] right-[18px] inline-flex h-10 items-center gap-1.5 rounded-full bg-ink-900 px-[18px] text-[13px] font-semibold text-white"
           >
             <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
-            Explorer la carte
+            Voir la carte
           </Link>
         </div>
 
@@ -274,13 +267,15 @@ export function HomeDesktopEditorial({
             Par envie
           </h2>
           <div className="grid grid-cols-2 gap-2.5">
-            {categories.map(([title, description, icon]) => (
+            {categoryLinks.map(([title, description, type, Icon]) => (
               <Link
-                href="/experiences"
+                href={`/experiences?type=${type}`}
                 key={title}
                 className="flex items-center gap-3 rounded-xl border border-stone-200 bg-white px-4 py-3.5 transition-colors hover:bg-cream-100"
               >
-                <span className="text-[22px] grayscale-[.3]">{icon}</span>
+                <span className="grid h-10 w-10 place-items-center rounded-full bg-burgundy-50 text-burgundy-700">
+                  <Icon className="h-4 w-4" aria-hidden="true" />
+                </span>
                 <span>
                   <span className="block font-display text-[15px] font-semibold">
                     {title}
@@ -319,4 +314,33 @@ export function HomeDesktopEditorial({
       </section>
     </div>
   );
+}
+
+function buildMapWineries(experiences: ExperienceCardData[]): MapWinery[] {
+  const bySlug = new Map<string, MapWinery>();
+
+  experiences.forEach((experience) => {
+    const winery = experience.winery as ExperienceCardData['winery'] & {
+      id?: string;
+      coverPhoto?: string | null;
+      latitude?: number | null;
+      longitude?: number | null;
+    };
+
+    if (winery.latitude == null || winery.longitude == null) return;
+
+    const existing = bySlug.get(winery.slug);
+    bySlug.set(winery.slug, {
+      id: winery.id ?? winery.slug,
+      name: winery.name,
+      slug: winery.slug,
+      commune: winery.commune,
+      coverPhoto: winery.coverPhoto ?? experience.coverPhoto ?? null,
+      latitude: winery.latitude,
+      longitude: winery.longitude,
+      _count: { experiences: (existing?._count.experiences ?? 0) + 1 },
+    });
+  });
+
+  return Array.from(bySlug.values());
 }

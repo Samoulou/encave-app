@@ -4,17 +4,18 @@ import * as React from 'react';
 import { useCallback, useMemo, useTransition, useOptimistic } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from '@/i18n/navigation';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { ExperienceType } from '@prisma/client';
 import { SearchBar } from '@/components/features/search/SearchBar';
 import { SearchFilters } from '@/components/features/search/SearchFilters';
 import { SearchResults } from '@/components/features/search/SearchResults';
 import { ExperienceCard } from '@/components/features/experience/ExperienceCard';
+import { DynamicMap } from '@/components/features/map/DynamicMap';
 import { Button } from '@/components/ui/button';
 import { SlidersHorizontal, X, MapPin, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { formatCHF } from '@/lib/utils/currency';
 import type { ExperienceSearchResult } from '@/server/queries/experience.queries';
+import type { MapWinery } from '@/components/features/map/types';
 
 type SortOption =
   | 'relevance'
@@ -59,7 +60,6 @@ export function ExperiencesPageClient({
   locationSearch,
 }: ExperiencesPageClientProps) {
   const router = useRouter();
-  const locale = useLocale();
   const searchParams = useSearchParams();
   const currentSearchParams = useMemo(
     () => searchParams ?? new URLSearchParams(),
@@ -202,6 +202,12 @@ export function ExperiencesPageClient({
     newest: 'Plus récents',
     distance: 'Plus proche',
   };
+  const visibleSortOptions = (
+    Object.keys(sortLabels) as SortOption[]
+  ).filter(
+    (option) => option !== 'distance' || locationSearch.hasLocationSearch
+  );
+  const mapWineries = buildMapWineries(initialExperiences);
 
   return (
     <>
@@ -251,7 +257,7 @@ export function ExperiencesPageClient({
               </h2>
             </div>
             <div className="flex gap-2">
-              {(Object.keys(sortLabels) as SortOption[]).map((option) => (
+              {visibleSortOptions.map((option) => (
                 <button
                   key={option}
                   type="button"
@@ -298,53 +304,18 @@ export function ExperiencesPageClient({
           </div>
         </main>
 
-        <aside className="sticky top-24 h-[calc(100vh-7rem)] overflow-hidden rounded-[18px] border border-stone-200 bg-[#dfe8d0] shadow-audit-card">
-          <div
-            className="absolute inset-0 opacity-60"
-            style={{
-              backgroundImage:
-                'linear-gradient(120deg, transparent 35%, rgba(122,138,58,.25) 35%, rgba(122,138,58,.25) 55%, transparent 55%)',
-            }}
+        <aside className="sticky top-24 h-[calc(100vh-7rem)] overflow-hidden rounded-[18px] border border-stone-200 bg-stone-50 shadow-audit-card">
+          <DynamicMap
+            wineries={mapWineries}
+            className="h-full w-full rounded-[18px]"
           />
-          <div
-            className="absolute inset-0 opacity-40"
-            style={{
-              backgroundImage:
-                'radial-gradient(circle at 1px 1px, rgba(69,10,28,.35) 1px, transparent 0)',
-              backgroundSize: '20px 20px',
-            }}
-          />
-          {initialExperiences.slice(0, 8).map((experience, index) => {
-            const positions = [
-              ['22%', '28%'],
-              ['42%', '46%'],
-              ['62%', '32%'],
-              ['74%', '58%'],
-              ['34%', '68%'],
-              ['84%', '38%'],
-              ['54%', '76%'],
-              ['18%', '52%'],
-            ];
-            const [left, top] = positions[index] ?? ['50%', '50%'];
-
-            return (
-              <a
-                key={experience.id}
-                href={`/${locale}/experiences/${experience.slug}`}
-                className="absolute rounded-full bg-ink-900 px-3 py-1.5 font-mono text-[11px] font-bold text-white shadow-lg"
-                style={{ left, top, transform: 'translate(-50%, -50%)' }}
-              >
-                {formatCHF(experience.price).replace('CHF ', '')}
-              </a>
-            );
-          })}
           <div className="absolute left-4 top-4 rounded-xl bg-white/95 px-4 py-3 shadow-audit-card">
             <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-burgundy-700">
-              Carte
+              Domaines
             </div>
             <div className="mt-1 flex items-center gap-2 font-display text-lg font-semibold">
               <MapPin className="h-4 w-4 text-burgundy-700" />
-              {pagination.total} lieux
+              {mapWineries.length} lieux
             </div>
           </div>
         </aside>
@@ -549,4 +520,31 @@ function parseNumber(value: string | null): number | null {
   if (!value) return null;
   const num = parseInt(value, 10);
   return isNaN(num) ? null : num;
+}
+
+function buildMapWineries(experiences: ExperienceSearchResult[]): MapWinery[] {
+  const bySlug = new Map<string, MapWinery>();
+
+  experiences.forEach((experience) => {
+    if (
+      experience.winery.latitude == null ||
+      experience.winery.longitude == null
+    ) {
+      return;
+    }
+
+    const existing = bySlug.get(experience.winery.slug);
+    bySlug.set(experience.winery.slug, {
+      id: experience.winery.id,
+      name: experience.winery.name,
+      slug: experience.winery.slug,
+      commune: experience.winery.commune,
+      coverPhoto: experience.coverPhoto,
+      latitude: experience.winery.latitude,
+      longitude: experience.winery.longitude,
+      _count: { experiences: (existing?._count.experiences ?? 0) + 1 },
+    });
+  });
+
+  return Array.from(bySlug.values());
 }

@@ -10,6 +10,7 @@ import { ExperienceDetailGallery } from '@/components/features/experience/Experi
 import { LocationSection } from '@/components/features/experience/LocationSection';
 import { BookingWidget } from '@/components/features/experience/BookingWidget';
 import { MobileBookingBar } from '@/components/features/experience/MobileBookingBar';
+import { ExperienceDetailActions } from '@/components/features/experience/ExperienceDetailActions';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { ImageWithFallback } from '@/components/shared/ImageWithFallback';
 import { Header } from '@/components/layout/Header';
@@ -26,9 +27,6 @@ import {
   Check,
   Clock,
   Globe2,
-  Heart,
-  Share2,
-  Star,
   Users,
   Wine,
 } from 'lucide-react';
@@ -141,13 +139,15 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
   const locationCommune = experience.city || experience.winery.commune;
   const durationLabel = formatDuration(experience.duration);
   const paragraphs = experience.description.split('\n\n').filter(Boolean);
-  const includedItems = [
-    'Degustation guidee',
-    `${durationLabel} avec ${experience.winery.name}`,
+  const experienceTypeLabel = formatExperienceType(experience.type);
+  const practicalItems = [
+    `${durationLabel} indique par le domaine`,
     `Groupe de ${experience.minCapacity} a ${experience.maxCapacity} personnes`,
-    `Experience a ${locationCommune}`,
-    'Langues FR / DE / EN',
-    'Reservation securisee Stripe',
+    `Rendez-vous a ${locationCommune}`,
+    `${experienceTypeLabel} propose par ${experience.winery.name}`,
+    experience.winery.stripeOnboardingComplete
+      ? 'Paiement securise active'
+      : 'Reservation a confirmer avec le domaine',
   ];
 
   return (
@@ -160,7 +160,7 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
           <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-4">
             <nav className="min-w-0 overflow-x-auto whitespace-nowrap text-xs text-ink-500">
               <span className="hidden lg:inline">
-                Explorer &gt; Degustations &gt;{' '}
+                Explorer &gt; {experienceTypeLabel} &gt;{' '}
                 <strong className="font-semibold text-ink-900">
                   {experience.title}
                 </strong>
@@ -169,16 +169,7 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
                 <Breadcrumb items={breadcrumbItems} baseUrl={baseUrl} />
               </span>
             </nav>
-            <div className="hidden shrink-0 items-center gap-3 lg:flex">
-              <button className="inline-flex h-9 items-center gap-2 rounded-full border border-stone-200 bg-white px-4 text-xs font-semibold text-ink-700 transition-colors hover:border-burgundy-200 hover:text-burgundy-700">
-                <Share2 className="h-3.5 w-3.5" />
-                Partager
-              </button>
-              <button className="inline-flex h-9 items-center gap-2 rounded-full border border-stone-200 bg-white px-4 text-xs font-semibold text-ink-700 transition-colors hover:border-burgundy-200 hover:text-burgundy-700">
-                <Heart className="h-3.5 w-3.5" />
-                Enregistrer
-              </button>
-            </div>
+            <ExperienceDetailActions />
           </div>
         </div>
 
@@ -194,10 +185,6 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
               <div className="mb-3 flex flex-wrap items-center gap-3">
                 <span className="rounded-full bg-burgundy-50 px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-burgundy-700">
                   {experience.maxCapacity} places max
-                </span>
-                <span className="inline-flex items-center gap-1 text-xs font-semibold text-ink-700">
-                  <Star className="h-3.5 w-3.5 fill-gold-400 text-gold-400" />
-                  Nouveau sur EnCave
                 </span>
               </div>
               <h1 className="max-w-3xl font-display text-[2.35rem] font-medium leading-[1.05] tracking-[-0.015em] text-ink-900 sm:text-[2.9rem]">
@@ -230,12 +217,12 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
                 <MetaFact
                   icon={<Wine className="h-[18px] w-[18px]" />}
                   label="Format"
-                  value={formatExperienceType(experience.type)}
+                  value={experienceTypeLabel}
                 />
                 <MetaFact
                   icon={<Globe2 className="h-[18px] w-[18px]" />}
-                  label="Langues"
-                  value="FR / DE / EN"
+                  label="Lieu"
+                  value={locationCommune}
                 />
               </div>
 
@@ -287,10 +274,10 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
 
               <section className="mt-9">
                 <h2 className="mb-4 font-display text-2xl font-semibold text-ink-900">
-                  Ce qui est inclus
+                  Infos pratiques
                 </h2>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  {includedItems.map((item) => (
+                  {practicalItems.map((item) => (
                     <div
                       key={item}
                       className="flex items-center gap-3 text-sm text-ink-700"

@@ -14,7 +14,6 @@ import {
   Loader2,
   Minus,
   Plus,
-  Star,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TimeSlotSelector } from '@/components/features/booking/TimeSlotSelector';
@@ -199,9 +198,8 @@ export function BookingWidget({
             / {t('perPerson')}
           </span>
         </div>
-        <span className="inline-flex items-center gap-1 text-xs font-semibold text-ink-700">
-          <Star className="h-3 w-3 fill-gold-400 text-gold-400" />
-          4.9
+        <span className="rounded-full bg-burgundy-50 px-2 py-1 text-[11px] font-semibold text-burgundy-700">
+          {isBookingEnabled ? tExp('available') : t('comingSoonTitle')}
         </span>
       </div>
 

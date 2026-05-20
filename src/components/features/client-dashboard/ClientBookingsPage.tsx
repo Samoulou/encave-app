@@ -59,8 +59,6 @@ export async function ClientBookingsPage() {
         {[
           ['À venir', upcoming.length, true],
           ['Passées', past.length, false],
-          ['Brouillons', 0, false],
-          ['Favoris', 0, false],
         ].map(([label, count, selected]) => (
           <button
             key={label as string}
@@ -120,17 +118,19 @@ export async function ClientBookingsPage() {
             Recommandations
           </div>
           <p className="mt-2 text-sm text-ink-500">
-            Basé sur vos réservations et les expériences populaires en Valais.
+            Acces rapides vers les formats disponibles sur EnCave.
           </p>
           <div className="mt-5 space-y-3">
             {[
               ['Dégustation privée', 'Domaines vérifiés'],
               ['Visite de cave', 'Idéal en groupe'],
               ['Accords locaux', 'Weekend'],
-            ].map(([title, meta]) => (
+            ].map(([title, meta]) => {
+              const searchTitle = title ?? '';
+              return (
               <Link
                 key={title}
-                href="/experiences"
+                href={`/experiences?q=${encodeURIComponent(searchTitle)}`}
                 className="flex items-center gap-3 rounded-xl border border-stone-200 p-3 transition-colors hover:bg-cream-100"
               >
                 <span className="grid h-10 w-10 place-items-center rounded-full bg-burgundy-50 text-burgundy-700">
@@ -143,7 +143,8 @@ export async function ClientBookingsPage() {
                   <span className="block text-xs text-ink-500">{meta}</span>
                 </span>
               </Link>
-            ))}
+              );
+            })}
           </div>
         </aside>
       </section>
