@@ -54,17 +54,22 @@ enum Locale {
 }
 
 model User {
-  id              String   @id @default(cuid())
-  email           String   @unique
-  emailVerified   Boolean  @default(false)
-  name            String?
-  image           String?
+  id               String    @id @default(cuid())
+  email            String    @unique
+  emailVerified    Boolean   @default(false)
+  name             String?
+  image            String?
+  cookieConsent    Json?
+  anonymizedAt     DateTime?
+  suspendedAt      DateTime?
+  suspendedBy      String?
+  suspensionReason String?
   // Custom fields (not part of Better Auth core schema)
-  role            UserRole  @default(CLIENT)
-  preferredLocale Locale    @default(FR)
+  role             UserRole  @default(CLIENT)
+  preferredLocale  Locale    @default(FR)
   // Timestamps
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   accounts Account[]
   sessions Session[]
@@ -83,8 +88,8 @@ model Winery {
   phone                    String
   email                    String
   coverPhoto               String?
-  latitude                 Float?       // Geocoded from address
-  longitude                Float?       // Geocoded from address
+  latitude                 Float? // Geocoded from address
+  longitude                Float? // Geocoded from address
   userId                   String       @unique
   user                     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   status                   WineryStatus @default(PENDING)
@@ -120,13 +125,13 @@ model WineryGalleryImage {
 }
 
 model Account {
-  id        String @id @default(cuid())
-  userId    String
+  id                    String    @id @default(cuid())
+  userId                String
   // Better Auth primary fields
-  accountId  String  // Provider's user ID
-  providerId String  // Provider name (e.g., "google", "credential")
+  accountId             String // Provider's user ID
+  providerId            String // Provider name (e.g., "google", "credential")
   // Password for credential accounts (Better Auth stores password here, not in user table)
-  password  String?
+  password              String?
   // OAuth tokens
   accessToken           String?   @db.Text
   refreshToken          String?   @db.Text
@@ -135,8 +140,8 @@ model Account {
   scope                 String?
   idToken               String?   @db.Text
   // Timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @default(now()) @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -149,8 +154,8 @@ model Session {
   token     String   @unique // Better Auth session token
   userId    String
   expiresAt DateTime // Better Auth expiration
-  ipAddress String?  // Better Auth client IP
-  userAgent String?  // Better Auth user agent
+  ipAddress String? // Better Auth client IP
+  userAgent String? // Better Auth user agent
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
@@ -171,8 +176,8 @@ model VerificationToken {
 // Better Auth verification table
 model Verification {
   id         String   @id @default(cuid())
-  identifier String   // Email or other identifier
-  value      String   // Verification code/token
+  identifier String // Email or other identifier
+  value      String // Verification code/token
   expiresAt  DateTime
   createdAt  DateTime @default(now())
   updatedAt  DateTime @default(now()) @updatedAt
@@ -184,7 +189,7 @@ model VerificationLog {
   id        String   @id @default(cuid())
   wineryId  String
   winery    Winery   @relation(fields: [wineryId], references: [id], onDelete: Cascade)
-  action    String   // 'APPROVED' | 'REJECTED'
+  action    String // 'APPROVED' | 'REJECTED'
   adminId   String
   reason    String?
   createdAt DateTime @default(now())
@@ -200,17 +205,17 @@ model Experience {
   slug        String
   description String           @db.Text
   type        ExperienceType
-  duration    Int              // minutes
-  price       Int              // cents (CHF)
+  duration    Int // minutes
+  price       Int // cents (CHF)
   minCapacity Int
   maxCapacity Int
   coverPhoto  String
   // Location fields (optional - falls back to winery address if not set)
-  address     String?          // Street address
-  city        String?          // City/commune
-  zipCode     String?          // Postal code
-  latitude    Float?           // Geocoded latitude
-  longitude   Float?           // Geocoded longitude
+  address     String? // Street address
+  city        String? // City/commune
+  zipCode     String? // Postal code
+  latitude    Float? // Geocoded latitude
+  longitude   Float? // Geocoded longitude
   status      ExperienceStatus @default(DRAFT)
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
@@ -246,9 +251,9 @@ model AvailabilitySlot {
   id           String     @id @default(cuid())
   experienceId String
   experience   Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
-  dayOfWeek    Int        // 0 = Sunday, 6 = Saturday
-  startTime    String     // "HH:mm" format
-  endTime      String     // "HH:mm" format
+  dayOfWeek    Int // 0 = Sunday, 6 = Saturday
+  startTime    String // "HH:mm" format
+  endTime      String // "HH:mm" format
   isActive     Boolean    @default(true)
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
@@ -259,37 +264,42 @@ model AvailabilitySlot {
 }
 
 model Booking {
-  id                    String        @id @default(cuid())
-  reference             String        @unique // ENC-XXXXXX
-  visitorEmail          String
-  visitorName           String
-  visitorPhone          String
-  experienceId          String
-  experience            Experience    @relation(fields: [experienceId], references: [id])
-  wineryId              String
-  winery                Winery        @relation(fields: [wineryId], references: [id])
-  date                  DateTime      @db.Date
-  timeSlot              String        // "HH:mm"
-  guestCount            Int
-  totalPrice            Int           // cents
-  platformFee           Int           // cents
-  wineryPayout          Int           // cents
-  status                BookingStatus @default(PENDING_PAYMENT)
-  stripePaymentIntentId String?
-  expiresAt             DateTime?     // For pending payment reservations
-  accessTokenHash       String?       // Hash of access token for verification (SEC-002: plaintext removed)
-  confirmationSentAt    DateTime?     // When client confirmation email was sent
-  wineryNotifiedAt      DateTime?     // When winery notification was sent
-  reminder24hSentAt     DateTime?     // When 24h reminder was sent
-  reminder2hSentAt      DateTime?     // When 2h reminder was sent
-  followUpSentAt        DateTime?     // When post-experience follow-up was sent
-  cancelledAt           DateTime?     // When booking was cancelled
-  refundIssued          Boolean       @default(false)
-  refundAmount          Int?          // cents - amount refunded
-  stripeRefundId        String?       // Stripe refund ID for tracking
-  checkedInAt           DateTime?     // When client was checked in by winery (ENC-096)
-  createdAt             DateTime      @default(now())
-  updatedAt             DateTime      @updatedAt
+  id                      String        @id @default(cuid())
+  reference               String        @unique // ENC-XXXXXX
+  visitorEmail            String
+  visitorName             String
+  visitorPhone            String
+  experienceId            String
+  experience              Experience    @relation(fields: [experienceId], references: [id])
+  wineryId                String
+  winery                  Winery        @relation(fields: [wineryId], references: [id])
+  date                    DateTime      @db.Date
+  timeSlot                String // "HH:mm"
+  guestCount              Int
+  totalPrice              Int // cents
+  platformFee             Int // cents
+  wineryPayout            Int // cents
+  status                  BookingStatus @default(PENDING_PAYMENT)
+  stripeCheckoutSessionId String?
+  stripePaymentIntentId   String?
+  expiresAt               DateTime? // For pending payment reservations
+  accessTokenHash         String? // Hash of access token for verification (SEC-002: plaintext removed)
+  confirmationSentAt      DateTime? // When client confirmation email was sent
+  wineryNotifiedAt        DateTime? // When winery notification was sent
+  reminder24hSentAt       DateTime? // When 24h reminder was sent
+  reminder2hSentAt        DateTime? // When 2h reminder was sent
+  followUpSentAt          DateTime? // When post-experience follow-up was sent
+  cancelledAt             DateTime? // When booking was cancelled
+  cancellationReason      String?
+  refundIssued            Boolean       @default(false)
+  refundAmount            Int? // cents - amount refunded
+  stripeRefundId          String? // Stripe refund ID for tracking
+  refundError             String?
+  checkedInAt             DateTime? // When client was checked in by winery (ENC-096)
+  ageConfirmedAt          DateTime?
+  ageConfirmedVersion     String?
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
 
   @@index([experienceId])
   @@index([wineryId])
@@ -299,7 +309,23 @@ model Booking {
   @@index([status])
   @@index([reference])
   @@index([accessTokenHash])
+  @@index([stripeCheckoutSessionId])
+  @@index([stripePaymentIntentId])
   @@map("bookings")
+}
+
+model StripeEvent {
+  id            String   @id @default(cuid())
+  stripeEventId String   @unique
+  type          String
+  status        String   @default("PROCESSING")
+  errorMessage  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([type, createdAt])
+  @@index([status, createdAt])
+  @@map("stripe_events")
 }
 
 model BlockedDate {
@@ -352,6 +378,23 @@ model EmailLog {
   @@index([type, createdAt])
   @@index([recipientId])
   @@map("email_logs")
+}
+
+model AdminAction {
+  id         String   @id @default(cuid())
+  adminId    String
+  action     String
+  targetType String
+  targetId   String
+  status     String   @default("SUCCESS")
+  reason     String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([adminId, createdAt])
+  @@index([targetType, targetId])
+  @@index([action, createdAt])
+  @@map("admin_actions")
 }
 
 model NewsletterSubscription {

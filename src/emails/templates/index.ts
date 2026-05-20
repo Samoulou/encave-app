@@ -2,6 +2,14 @@
 export { BookingConfirmationEmail } from './BookingConfirmationEmail';
 export type { BookingConfirmationEmailProps } from './BookingConfirmationEmail';
 
+export { BookingExpiredEmail } from './BookingExpiredEmail';
+export { BookingCancelledByWineryEmail } from './BookingCancelledByWineryEmail';
+export {
+  ManualRefundClientEmail,
+  ManualRefundWinemakerEmail,
+} from './ManualRefundEmail';
+export { AccountDeletedEmail } from './AccountDeletedEmail';
+
 export { BookingReminderEmail } from './BookingReminderEmail';
 export type { BookingReminderEmailProps } from './BookingReminderEmail';
 

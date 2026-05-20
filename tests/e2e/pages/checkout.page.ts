@@ -29,6 +29,8 @@ export class CheckoutPage extends BasePage {
   readonly lastNameInput: Locator;
   readonly emailInput: Locator;
   readonly phoneInput: Locator;
+  readonly ageConfirmationCheckbox: Locator;
+  readonly ageConfirmationError: Locator;
 
   // Validation errors
   readonly firstNameError: Locator;
@@ -80,6 +82,8 @@ export class CheckoutPage extends BasePage {
     this.lastNameInput = page.getByLabel(/last name/i);
     this.emailInput = page.getByLabel(/email/i);
     this.phoneInput = page.getByLabel(/phone/i);
+    this.ageConfirmationCheckbox = page.getByLabel(/18 or older/i);
+    this.ageConfirmationError = page.locator('#age-confirmed-error');
 
     // Validation errors - locate by adjacent error elements
     this.firstNameError = page.locator('#firstName').locator('~ p');
@@ -194,6 +198,10 @@ export class CheckoutPage extends BasePage {
     await this.fillPhone(data.phone);
   }
 
+  async confirmAge() {
+    await this.ageConfirmationCheckbox.check();
+  }
+
   /**
    * Clear all form fields
    */
@@ -282,8 +290,13 @@ export class CheckoutPage extends BasePage {
       (await this.hasFirstNameError()) ||
       (await this.hasLastNameError()) ||
       (await this.hasEmailError()) ||
-      (await this.hasPhoneError())
+      (await this.hasPhoneError()) ||
+      (await this.ageConfirmationError.isVisible())
     );
+  }
+
+  async hasAgeConfirmationError(): Promise<boolean> {
+    return this.ageConfirmationError.isVisible();
   }
 
   /**

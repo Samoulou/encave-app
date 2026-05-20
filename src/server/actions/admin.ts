@@ -1,12 +1,16 @@
 'use server';
 
 import { z } from 'zod';
+import { BookingStatus, UserRole, WineryStatus } from '@prisma/client';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import {
+  sendManualRefundClientEmail,
+  sendManualRefundWinemakerEmail,
   sendWineryApprovedEmail,
   sendWineryRejectedEmail,
 } from '@/server/services/email.service';
+import { getStripe } from '@/server/stripe';
 import type { ActionResult } from '@/types/actions';
 import { logError, logWarn } from '@/lib/logger';
 import { invalidateWineryCaches } from './winery-helpers';
@@ -19,6 +23,37 @@ const RejectWinerySchema = z.object({
   wineryId: z.string().min(1, 'Winery ID is required'),
   reason: z.string().min(1, 'Rejection reason is required').max(1000),
 });
+
+const ManualRefundSchema = z.object({
+  bookingId: z.string().cuid(),
+  amountCents: z.number().int().positive(),
+  reason: z.string().trim().min(10).max(500),
+});
+
+const SuspensionSchema = z.object({
+  targetId: z.string().cuid(),
+  reason: z.string().trim().min(10).max(500),
+});
+
+async function requireAdmin(): Promise<
+  | ActionResult<{ adminId: string }>
+  | { success: true; data: { adminId: string } }
+> {
+  const session = await auth();
+  if (!session?.user) {
+    return {
+      success: false,
+      error: { code: 'UNAUTHORIZED', message: 'Please sign in' },
+    };
+  }
+  if (session.user.role !== UserRole.ADMIN) {
+    return {
+      success: false,
+      error: { code: 'FORBIDDEN', message: 'Admin access required' },
+    };
+  }
+  return { success: true, data: { adminId: session.user.id } };
+}
 
 /**
  * Approve a winery registration
@@ -247,4 +282,365 @@ export async function rejectWinery(
       error: { code: 'INTERNAL_ERROR', message: 'Something went wrong' },
     };
   }
+}
+
+export async function refundBookingManually(
+  input: unknown
+): Promise<ActionResult<{ refundId: string; refundedAmount: number }>> {
+  const parsed = ManualRefundSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: 'Invalid refund request' },
+    };
+  }
+
+  const session = await auth();
+  if (!session?.user) {
+    return {
+      success: false,
+      error: { code: 'UNAUTHORIZED', message: 'Please sign in' },
+    };
+  }
+  if (session.user.role !== 'ADMIN') {
+    return {
+      success: false,
+      error: { code: 'FORBIDDEN', message: 'Admin access required' },
+    };
+  }
+
+  const { bookingId, amountCents, reason } = parsed.data;
+
+  const booking = await db.booking.findUnique({
+    where: { id: bookingId },
+    include: {
+      experience: {
+        select: {
+          title: true,
+        },
+      },
+      winery: {
+        select: {
+          email: true,
+          user: {
+            select: {
+              name: true,
+              preferredLocale: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!booking) {
+    return {
+      success: false,
+      error: { code: 'NOT_FOUND', message: 'Booking not found' },
+    };
+  }
+
+  const alreadyRefunded = booking.refundAmount ?? 0;
+  const remaining = booking.totalPrice - alreadyRefunded;
+  if (remaining <= 0 || amountCents > remaining) {
+    return {
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: 'Invalid refund amount' },
+    };
+  }
+
+  if (!booking.stripePaymentIntentId?.startsWith('pi_')) {
+    return {
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: 'No captured Stripe payment intent on this booking',
+      },
+    };
+  }
+
+  try {
+    const refund = await getStripe().refunds.create(
+      {
+        payment_intent: booking.stripePaymentIntentId,
+        amount: amountCents,
+        reverse_transfer: true,
+        refund_application_fee: true,
+        metadata: {
+          bookingId: booking.id,
+          bookingReference: booking.reference,
+          adminId: session.user.id,
+          reason,
+        },
+      },
+      {
+        idempotencyKey: `admin-refund:${booking.id}:${alreadyRefunded}:${amountCents}`,
+      }
+    );
+
+    const nextRefunded = alreadyRefunded + amountCents;
+    const isFullRefund = nextRefunded >= booking.totalPrice;
+    await db.$transaction([
+      db.booking.update({
+        where: { id: booking.id },
+        data: {
+          refundIssued: isFullRefund,
+          refundAmount: nextRefunded,
+          stripeRefundId: refund.id,
+          refundError: null,
+          ...(isFullRefund &&
+          (booking.status === BookingStatus.CONFIRMED ||
+            booking.status === BookingStatus.PENDING_PAYMENT)
+            ? {
+                status: BookingStatus.CANCELLED_BY_WINERY,
+                cancelledAt: new Date(),
+                cancellationReason: 'ADMIN_REFUND',
+              }
+            : {}),
+        },
+      }),
+      db.adminAction.create({
+        data: {
+          adminId: session.user.id,
+          action: 'REFUND_BOOKING',
+          targetType: 'Booking',
+          targetId: booking.id,
+          reason,
+          metadata: {
+            refundId: refund.id,
+            amountCents,
+            type: isFullRefund ? 'FULL' : 'PARTIAL',
+          },
+        },
+      }),
+    ]);
+
+    await sendManualRefundClientEmail(booking.visitorEmail, {
+      firstName: booking.visitorName.split(' ')[0] ?? booking.visitorName,
+      reference: booking.reference,
+      experienceTitle: booking.experience.title,
+      amountCents,
+    });
+    await sendManualRefundWinemakerEmail(
+      booking.winery.email,
+      {
+        firstName: booking.winery.user.name ?? 'Bonjour',
+        reference: booking.reference,
+        experienceTitle: booking.experience.title,
+        date: booking.date,
+        amountCents,
+        reason,
+      },
+      booking.winery.user.preferredLocale
+    );
+
+    return {
+      success: true,
+      data: { refundId: refund.id, refundedAmount: nextRefunded },
+    };
+  } catch (error) {
+    await db.adminAction.create({
+      data: {
+        adminId: session.user.id,
+        action: 'REFUND_BOOKING',
+        targetType: 'Booking',
+        targetId: booking.id,
+        status: 'FAILED',
+        reason,
+        metadata: {
+          amountCents,
+          error: String(error),
+        },
+      },
+    });
+    await db.booking.update({
+      where: { id: booking.id },
+      data: { refundError: String(error) },
+    });
+    logError('Manual refund failed', error, {
+      action: 'refundBookingManually',
+      bookingId: booking.id,
+    });
+    return {
+      success: false,
+      error: { code: 'STRIPE_ERROR', message: 'Stripe refund failed' },
+    };
+  }
+}
+
+export async function suspendWinery(
+  input: unknown
+): Promise<ActionResult<{ status: WineryStatus }>> {
+  const parsed = SuspensionSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: 'Invalid suspension' },
+    };
+  }
+
+  const admin = await requireAdmin();
+  if (!admin.success) return admin;
+
+  const winery = await db.winery.findUnique({
+    where: { id: parsed.data.targetId },
+    select: { id: true, slug: true, status: true },
+  });
+  if (!winery) {
+    return {
+      success: false,
+      error: { code: 'NOT_FOUND', message: 'Winery not found' },
+    };
+  }
+
+  await db.$transaction([
+    db.winery.update({
+      where: { id: winery.id },
+      data: { status: WineryStatus.SUSPENDED },
+    }),
+    db.experience.updateMany({
+      where: { wineryId: winery.id, status: 'PUBLISHED' },
+      data: { status: 'ARCHIVED' },
+    }),
+    db.adminAction.create({
+      data: {
+        adminId: admin.data.adminId,
+        action: 'SUSPEND_WINERY',
+        targetType: 'Winery',
+        targetId: winery.id,
+        reason: parsed.data.reason,
+        metadata: { previousStatus: winery.status },
+      },
+    }),
+  ]);
+
+  invalidateWineryCaches(winery.slug);
+  return { success: true, data: { status: WineryStatus.SUSPENDED } };
+}
+
+export async function reinstateWinery(
+  input: unknown
+): Promise<ActionResult<{ status: WineryStatus }>> {
+  const parsed = SuspensionSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: 'Invalid reinstatement' },
+    };
+  }
+
+  const admin = await requireAdmin();
+  if (!admin.success) return admin;
+
+  const winery = await db.winery.findUnique({
+    where: { id: parsed.data.targetId },
+    select: { id: true, slug: true, status: true },
+  });
+  if (!winery) {
+    return {
+      success: false,
+      error: { code: 'NOT_FOUND', message: 'Winery not found' },
+    };
+  }
+
+  await db.$transaction([
+    db.winery.update({
+      where: { id: winery.id },
+      data: { status: WineryStatus.VERIFIED },
+    }),
+    db.adminAction.create({
+      data: {
+        adminId: admin.data.adminId,
+        action: 'REINSTATE_WINERY',
+        targetType: 'Winery',
+        targetId: winery.id,
+        reason: parsed.data.reason,
+        metadata: { previousStatus: winery.status },
+      },
+    }),
+  ]);
+
+  invalidateWineryCaches(winery.slug);
+  return { success: true, data: { status: WineryStatus.VERIFIED } };
+}
+
+export async function suspendUser(
+  input: unknown
+): Promise<ActionResult<{ suspendedAt: Date }>> {
+  const parsed = SuspensionSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: 'Invalid suspension' },
+    };
+  }
+
+  const admin = await requireAdmin();
+  if (!admin.success) return admin;
+  if (parsed.data.targetId === admin.data.adminId) {
+    return {
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: 'Cannot suspend yourself' },
+    };
+  }
+
+  const now = new Date();
+  await db.$transaction([
+    db.user.update({
+      where: { id: parsed.data.targetId },
+      data: {
+        suspendedAt: now,
+        suspendedBy: admin.data.adminId,
+        suspensionReason: parsed.data.reason,
+      },
+    }),
+    db.adminAction.create({
+      data: {
+        adminId: admin.data.adminId,
+        action: 'SUSPEND_USER',
+        targetType: 'User',
+        targetId: parsed.data.targetId,
+        reason: parsed.data.reason,
+      },
+    }),
+  ]);
+
+  return { success: true, data: { suspendedAt: now } };
+}
+
+export async function reinstateUser(
+  input: unknown
+): Promise<ActionResult<{ reinstated: boolean }>> {
+  const parsed = SuspensionSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: 'Invalid reinstatement' },
+    };
+  }
+
+  const admin = await requireAdmin();
+  if (!admin.success) return admin;
+
+  await db.$transaction([
+    db.user.update({
+      where: { id: parsed.data.targetId },
+      data: {
+        suspendedAt: null,
+        suspendedBy: null,
+        suspensionReason: null,
+      },
+    }),
+    db.adminAction.create({
+      data: {
+        adminId: admin.data.adminId,
+        action: 'REINSTATE_USER',
+        targetType: 'User',
+        targetId: parsed.data.targetId,
+        reason: parsed.data.reason,
+      },
+    }),
+  ]);
+
+  return { success: true, data: { reinstated: true } };
 }

@@ -5,10 +5,16 @@ import { BookingStatus } from '@prisma/client';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { logError, logInfo } from '@/lib/logger';
-import { bookingIdSchema } from '@/lib/validators/eventDetail';
+import { getStripe } from '@/server/stripe';
+import { sendBookingCancelledByWineryEmail } from '@/server/services/email.service';
+import {
+  attendeeEmailsSchema,
+  bookingIdSchema,
+} from '@/lib/validators/eventDetail';
 import { parseTimeSlot, timeSlotSchema } from '@/lib/validators/booking';
 import type { ActionResult } from '@/types/actions';
 import type { BookingDTO } from '@/types/event-detail';
+import { z } from 'zod';
 
 /**
  * Server actions for the winemaker event detail page (ENC-096).
@@ -28,6 +34,14 @@ const SESSION_TIMEZONE = 'Europe/Zurich';
 const REVERT_WINDOW_MS = 72 * 60 * 60 * 1000;
 
 type BookingActionData = { booking: BookingDTO };
+
+const cancelSessionSchema = z.object({
+  experienceId: z.string().cuid(),
+  sessionId: z.string().min(6),
+  reason: z.string().trim().min(10).max(500),
+});
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 interface AuthorizedBooking {
   id: string;
@@ -489,4 +503,253 @@ export async function revertBookingNoShow(
       },
     };
   }
+}
+
+export async function cancelEventSession(
+  input: unknown
+): Promise<
+  ActionResult<{ cancelled: number; refunded: number; failed: number }>
+> {
+  const parsed = cancelSessionSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: 'Invalid cancellation input',
+      },
+    };
+  }
+
+  const session = await auth();
+  if (!session?.user) {
+    return {
+      success: false,
+      error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
+    };
+  }
+
+  const [dateKey, timeSlot] = parsed.data.sessionId.split('|');
+  if (!dateKey || !timeSlot || !timeSlotSchema.safeParse(timeSlot).success) {
+    return {
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: 'Invalid session id' },
+    };
+  }
+
+  const experience = await db.experience.findUnique({
+    where: { id: parsed.data.experienceId },
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      duration: true,
+      winery: {
+        select: {
+          userId: true,
+          name: true,
+          user: { select: { preferredLocale: true } },
+        },
+      },
+    },
+  });
+
+  if (!experience) {
+    return {
+      success: false,
+      error: { code: 'NOT_FOUND', message: 'Experience not found' },
+    };
+  }
+  if (experience.winery.userId !== session.user.id) {
+    return {
+      success: false,
+      error: { code: 'FORBIDDEN', message: 'Not the owner of this session' },
+    };
+  }
+
+  const date = new Date(`${dateKey}T00:00:00.000Z`);
+  const bookings = await db.booking.findMany({
+    where: {
+      experienceId: experience.id,
+      date,
+      timeSlot,
+      status: { in: [BookingStatus.CONFIRMED, BookingStatus.PENDING_PAYMENT] },
+    },
+    select: {
+      id: true,
+      reference: true,
+      visitorEmail: true,
+      visitorName: true,
+      guestCount: true,
+      totalPrice: true,
+      status: true,
+      stripeCheckoutSessionId: true,
+      stripePaymentIntentId: true,
+    },
+  });
+
+  let cancelled = 0;
+  let refunded = 0;
+  let failed = 0;
+  const startsAt = zonedWallClockToUTC(date, timeSlot);
+
+  for (const booking of bookings) {
+    try {
+      let refundId: string | undefined;
+      if (
+        booking.status === BookingStatus.CONFIRMED &&
+        booking.stripePaymentIntentId?.startsWith('pi_')
+      ) {
+        const refund = await getStripe().refunds.create(
+          {
+            payment_intent: booking.stripePaymentIntentId,
+            amount: booking.totalPrice,
+            reverse_transfer: true,
+            refund_application_fee: true,
+            metadata: {
+              bookingId: booking.id,
+              bookingReference: booking.reference,
+              reason: parsed.data.reason,
+            },
+          },
+          {
+            idempotencyKey: `winery-session-cancel:${booking.id}:${booking.totalPrice}`,
+          }
+        );
+        refundId = refund.id;
+        refunded += booking.totalPrice;
+      }
+
+      if (
+        booking.status === BookingStatus.PENDING_PAYMENT &&
+        booking.stripeCheckoutSessionId?.startsWith('cs_')
+      ) {
+        await getStripe()
+          .checkout.sessions.expire(booking.stripeCheckoutSessionId)
+          .catch(() => undefined);
+      }
+
+      await db.booking.update({
+        where: { id: booking.id },
+        data: {
+          status: BookingStatus.CANCELLED_BY_WINERY,
+          cancelledAt: new Date(),
+          cancellationReason: parsed.data.reason,
+          refundIssued: booking.status === BookingStatus.CONFIRMED,
+          refundAmount:
+            booking.status === BookingStatus.CONFIRMED
+              ? booking.totalPrice
+              : undefined,
+          stripeRefundId: refundId,
+          refundError: null,
+        },
+      });
+
+      await sendBookingCancelledByWineryEmail(
+        booking.visitorEmail,
+        {
+          guestName: booking.visitorName,
+          winemakerName: experience.winery.name,
+          experienceTitle: experience.title,
+          date: startsAt,
+          amountCents:
+            booking.status === BookingStatus.CONFIRMED ? booking.totalPrice : 0,
+          reason: parsed.data.reason,
+        },
+        experience.winery.user.preferredLocale
+      );
+      cancelled++;
+    } catch (error) {
+      failed++;
+      await db.booking.update({
+        where: { id: booking.id },
+        data: { refundError: String(error) },
+      });
+      logError('cancelEventSession booking failed', error, {
+        action: 'cancelEventSession',
+        bookingId: booking.id,
+      });
+    }
+  }
+
+  logInfo('winery.session.cancelled', {
+    experienceId: experience.id,
+    sessionId: parsed.data.sessionId,
+    bookingsCount: bookings.length,
+    totalRefundedCents: refunded,
+    failed,
+  });
+  invalidate(experience.slug);
+
+  return {
+    success: true,
+    data: { cancelled, refunded, failed },
+  };
+}
+
+export async function getAttendeeEmailsForSession(
+  input: unknown
+): Promise<ActionResult<{ emails: string[]; to: string }>> {
+  const parsed = attendeeEmailsSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: 'Invalid session input' },
+    };
+  }
+
+  const session = await auth();
+  if (!session?.user) {
+    return {
+      success: false,
+      error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
+    };
+  }
+
+  const [dateKey, timeSlot] = parsed.data.sessionId.split('|');
+  if (!dateKey || !timeSlot || !timeSlotSchema.safeParse(timeSlot).success) {
+    return {
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: 'Invalid session id' },
+    };
+  }
+
+  const experience = await db.experience.findFirst({
+    where: {
+      id: parsed.data.experienceId,
+      winery: { userId: session.user.id },
+    },
+    select: { id: true },
+  });
+
+  if (!experience) {
+    return {
+      success: false,
+      error: { code: 'NOT_FOUND', message: 'Experience not found' },
+    };
+  }
+
+  const bookings = await db.booking.findMany({
+    where: {
+      experienceId: parsed.data.experienceId,
+      date: new Date(`${dateKey}T00:00:00.000Z`),
+      timeSlot,
+      status: BookingStatus.CONFIRMED,
+    },
+    select: { visitorEmail: true },
+    orderBy: { visitorEmail: 'asc' },
+  });
+
+  const emails = Array.from(
+    new Set(
+      bookings
+        .map((booking) => booking.visitorEmail.trim().toLowerCase())
+        .filter((email) => EMAIL_PATTERN.test(email))
+    )
+  );
+
+  return {
+    success: true,
+    data: { emails, to: session.user.email },
+  };
 }

@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { WineryDetailView } from '@/components/features/admin/WineryDetailView';
+import { AdminSuspensionControls } from '@/components/features/admin/AdminSuspensionControls';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
@@ -29,8 +30,10 @@ async function getWinery(id: string) {
     include: {
       user: {
         select: {
+          id: true,
           name: true,
           email: true,
+          suspendedAt: true,
         },
       },
       galleryImages: {
@@ -69,6 +72,29 @@ export default async function WineryDetailPage({
       </div>
 
       <WineryDetailView winery={winery} />
+
+      <div className="mt-6 space-y-4">
+        <AdminSuspensionControls
+          targetId={winery.id}
+          targetType="winery"
+          mode={winery.status === 'SUSPENDED' ? 'reinstate' : 'suspend'}
+          label={
+            winery.status === 'SUSPENDED'
+              ? 'Reinstate this winery'
+              : 'Suspend this winery'
+          }
+        />
+        <AdminSuspensionControls
+          targetId={winery.user.id}
+          targetType="user"
+          mode={winery.user.suspendedAt ? 'reinstate' : 'suspend'}
+          label={
+            winery.user.suspendedAt
+              ? 'Reinstate winery owner account'
+              : 'Suspend winery owner account'
+          }
+        />
+      </div>
     </div>
   );
 }

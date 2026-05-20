@@ -85,7 +85,9 @@ test.describe('Application regression matrix - auth and permissions', () => {
     await loginAs(page, TEST_USERS.clientA);
     await page.goto(localizedPath('/admin'));
 
-    await expect(page.getByRole('heading', { name: /admin/i })).not.toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /admin/i })
+    ).not.toBeVisible();
   });
 });
 

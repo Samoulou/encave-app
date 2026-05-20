@@ -133,7 +133,10 @@ export default async function EventDetailPage({ params }: PageProps) {
                   <SessionCard
                     key={s.sessionId}
                     session={s}
+                    experienceId={event.experience.id}
                     experienceSlug={event.experience.slug}
+                    experienceTitle={event.experience.title}
+                    wineryName={event.experience.winery.name}
                     isLive={decorated.isLive}
                     isScanWindow={group === 'today' ? isScanActive : false}
                     isPast={decorated.isPast}

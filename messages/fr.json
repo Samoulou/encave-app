@@ -461,6 +461,9 @@
       "noSlotsPreview": "Aucune disponibilité configurée. Ajoutez des créneaux horaires ci-dessus pour prévisualiser votre planning hebdomadaire.",
       "active": "Actif",
       "disabled": "Désactivé"
+    },
+    "ageGate": {
+      "badge": "Reserve aux 18+"
     }
   },
   "booking": {
@@ -652,7 +655,14 @@
     "support247": "SUPPORT 24/7",
     "expiryPlaceholder": "MM/AA",
     "cvcPlaceholder": "CVC",
-    "availabilityCheckFailed": "Échec de la vérification de disponibilité. Veuillez réessayer."
+    "availabilityCheckFailed": "Échec de la vérification de disponibilité. Veuillez réessayer.",
+    "ageGate": {
+      "checkboxLabel": "Je certifie avoir 18 ans revolus.",
+      "helper": "Une piece d'identite pourra etre demandee par l'encaveur a votre arrivee.",
+      "errors": {
+        "required": "Merci de confirmer votre age avant de poursuivre le paiement."
+      }
+    }
   },
   "confirmation": {
     "bookingConfirmed": "Réservation confirmée !",
@@ -1497,6 +1507,30 @@
           "content": "Pour les demandes d'annulation ou les questions concernant cette politique, veuillez nous contacter à:"
         }
       }
+    },
+    "cookies": {
+      "banner": {
+        "title": "Vos preferences cookies",
+        "body": "Nous utilisons des cookies pour faire fonctionner le site et, avec votre accord, pour comprendre comment il est utilise.",
+        "policyLink": "Lire notre politique de confidentialite",
+        "acceptAll": "Tout accepter",
+        "rejectAll": "Continuer sans accepter",
+        "customize": "Personnaliser"
+      },
+      "modal": {
+        "title": "Choisir mes cookies",
+        "save": "Enregistrer mes choix"
+      },
+      "category": {
+        "necessary": {
+          "title": "Strictement necessaires",
+          "description": "Indispensables au fonctionnement du site. Ils ne peuvent pas etre desactives."
+        },
+        "analytics": {
+          "title": "Mesure d'audience",
+          "description": "Nous aident a comprendre quelles pages sont utiles. Outil utilise : PostHog."
+        }
+      }
     }
   },
   "landing": {
@@ -1726,6 +1760,13 @@
         "scanDisabled": "Disponible le jour de l'événement",
         "contactAll": "Contacter les inscrits",
         "contactAllSoon": "Bientôt disponible",
+        "contactAllLoading": "Préparation...",
+        "contactAllEmpty": "Aucun inscrit à contacter pour le moment.",
+        "contactAllError": "Impossible de récupérer la liste. Réessaie.",
+        "contactAllFallbackTitle": "Trop d'inscrits pour ton client mail",
+        "contactAllFallbackBody": "Le lien mail est trop long pour s'ouvrir directement. Copie la liste d'emails ci-dessous et colle-la dans le champ BCC de ton mail.",
+        "contactAllCopy": "Copier la liste d'emails",
+        "contactAllCopied": "Emails copiés. Colle-les dans le BCC de ton mail.",
         "revertCheckIn": "Annuler le check-in",
         "revertNoShow": "Annuler le no-show",
         "markPresent": "Marquer présent",
@@ -1825,5 +1866,17 @@
         "cta": "Découvrir les autres caves"
       }
     }
+  },
+  "scan": {
+    "title": "Scanner les QR codes",
+    "freeSubtitle": "Mode libre - toutes vos sessions du jour",
+    "start": "Activer la camera",
+    "stop": "Arreter",
+    "manual": "Faire un check-in manuel",
+    "resultOk": "Bienvenue",
+    "resultError": "Scan refuse",
+    "unknown": "QR non reconnu",
+    "already": "Deja enregistre",
+    "counter": "{checkedIn} / {total} clients enregistres"
   }
 }

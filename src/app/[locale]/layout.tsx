@@ -9,6 +9,7 @@ import { SkipLink } from '@/components/shared/SkipLink';
 import { ProgressBarProvider } from '@/components/shared/ProgressBarProvider';
 import { NavigationLoader } from '@/components/shared/NavigationLoader';
 import { SentryUserSync } from '@/components/shared/SentryUserSync';
+import { CookieConsentBanner } from '@/components/shared/CookieConsentBanner';
 import {
   PostHogProvider,
   PostHogUserSync,
@@ -82,6 +83,7 @@ export default async function LocaleLayout({ children, params }: Props) {
             <NavigationLoader />
             <SentryUserSync />
             <PostHogUserSync />
+            <CookieConsentBanner />
             <Analytics />
           </PostHogProvider>
         </NextIntlClientProvider>
