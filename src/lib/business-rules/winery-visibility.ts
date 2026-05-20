@@ -125,7 +125,6 @@ export const publiclyVisibleWineryWhere = {
   description: { not: '' },
   latitude: { not: null },
   longitude: { not: null },
-  galleryImages: { some: {} },
   experiences: {
     some: { status: 'PUBLISHED' },
   },

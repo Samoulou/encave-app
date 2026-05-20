@@ -45,9 +45,11 @@ export class LoginPage extends BasePage {
     this.submitButton = page.getByRole('button', {
       name: /log in|sign in|se connecter/i,
     });
-    this.errorMessage = page.locator('.bg-red-50');
+    this.errorMessage = page
+      .getByText(/invalid email or password/i)
+      .or(page.locator('.bg-red-50'));
     this.registerLink = page.getByRole('link', {
-      name: /create account|créer un compte/i,
+      name: /create an account|create account|créer un compte|crÃ©er un compte/i,
     });
     this.rememberMeCheckbox = page.getByRole('checkbox', { name: /remember/i });
     this.showPasswordButton = page.locator('button[aria-label*="password"]');
@@ -84,6 +86,11 @@ export class LoginPage extends BasePage {
   async login(data: LoginFormData) {
     await this.fillForm(data);
     await this.submit();
+    await this.page
+      .waitForURL(/\/(dashboard|admin|onboarding\/winery)/, {
+        timeout: 15000,
+      })
+      .catch(() => {});
   }
 
   /**
@@ -98,6 +105,9 @@ export class LoginPage extends BasePage {
    * Check if error is displayed
    */
   async hasError(): Promise<boolean> {
+    await this.errorMessage
+      .waitFor({ state: 'visible', timeout: 5000 })
+      .catch(() => {});
     return this.errorMessage.isVisible();
   }
 
@@ -158,7 +168,7 @@ export class RegisterPage extends BasePage {
     this.submitButton = page.getByRole('button', {
       name: /create account|créer|sign up/i,
     });
-    this.errorMessage = page.locator('.bg-red-50');
+    this.errorMessage = page.locator('.bg-red-50').or(page.getByRole('alert'));
     this.loginLink = page.getByRole('link', { name: /sign in|se connecter/i });
     this.passwordHint = page.locator('text=/8.*characters|caractères/i');
   }
@@ -212,6 +222,9 @@ export class RegisterPage extends BasePage {
    * Check if error is displayed
    */
   async hasError(): Promise<boolean> {
+    await this.errorMessage
+      .waitFor({ state: 'visible', timeout: 5000 })
+      .catch(() => {});
     return this.errorMessage.isVisible();
   }
 

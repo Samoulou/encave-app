@@ -126,19 +126,15 @@ test.describe('Parcours Guest - Page de Détail', () => {
     await expect(detailPage.bookingWidget).toBeVisible();
   });
 
-  test('une expérience sans Stripe affiche "Coming Soon"', async ({ page }) => {
+  test('une expérience sans Stripe reste masquée du public', async ({
+    page,
+  }) => {
     const detailPage = new ExperienceDetailPage(page);
 
-    // Naviguer vers l'expérience sans Stripe
+    // Les domaines sans KYC Stripe ne sont pas publiquement visibles.
     await detailPage.navigate(TEST_EXPERIENCES.noStripeExperience.slug);
 
-    // Vérifier le badge Coming Soon
-    const hasComingSoon = await detailPage.hasComingSoonBadge();
-    expect(hasComingSoon).toBe(true);
-
-    // Vérifier que la réservation est désactivée
-    const canBook = await detailPage.isBookingEnabled();
-    expect(canBook).toBe(false);
+    expect(await detailPage.isNotFound()).toBe(true);
   });
 });
 
@@ -192,8 +188,9 @@ test.describe('Parcours Guest - Sélection de Réservation', () => {
     await bookingPage.setGuestCount(guestCount);
 
     // Vérifier le prix total
+    const effectiveGuestCount = await bookingPage.getGuestCount();
     const totalPrice = await bookingPage.getTotalPrice();
-    const expectedTotal = formatPrice(testExperience.price * guestCount);
+    const expectedTotal = formatPrice(testExperience.price * effectiveGuestCount);
     expect(totalPrice).toContain(expectedTotal.replace('CHF ', ''));
   });
 

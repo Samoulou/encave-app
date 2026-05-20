@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Clock, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -44,16 +44,13 @@ export function TimeSlotSelector({
       .then((result) => {
         if (result.success) {
           setSlots(result.data);
-          // BUG-030 FIX: Handle previously selected time
           if (selectedTime) {
             const selectedSlot = result.data.find(
-              (s) => s.timeSlot === selectedTime
+              (slot) => slot.timeSlot === selectedTime
             );
             if (selectedSlot?.available) {
-              // Time still available - update capacity for new date
               onCapacityUpdate(selectedSlot.remainingCapacity);
             } else {
-              // Time no longer available - clear selection
               onTimeChange(null);
               onCapacityUpdate(null);
             }
@@ -88,19 +85,20 @@ export function TimeSlotSelector({
     onCapacityUpdate(slot.remainingCapacity);
   };
 
-  // Format time for display in 24-hour format (e.g., "10:00" -> "10:00")
   const formatTime = (time: string) => {
     const parts = time.split(':');
     const hours = Number(parts[0] ?? 0);
     const minutes = Number(parts[1] ?? 0);
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    return `${hours.toString().padStart(2, '0')}:${minutes
+      .toString()
+      .padStart(2, '0')}`;
   };
 
   if (!selectedDate) {
     return (
-      <div className="flex flex-col items-center justify-center py-8 text-slate-400">
-        <Clock className="mb-2 h-12 w-12 opacity-50" aria-hidden="true" />
-        <p className="text-sm">{t('selectDateFirst')}</p>
+      <div className="rounded-[10px] border border-dashed border-stone-200 px-3 py-5 text-center text-xs text-ink-500">
+        <Clock className="mx-auto mb-2 h-6 w-6 opacity-50" aria-hidden="true" />
+        <p>{t('selectDateFirst')}</p>
       </div>
     );
   }
@@ -108,11 +106,11 @@ export function TimeSlotSelector({
   if (isLoading) {
     return (
       <div
-        className="flex items-center justify-center py-8"
+        className="flex items-center justify-center py-5"
         data-testid="time-slot-loading"
       >
         <Loader2
-          className="h-8 w-8 animate-spin text-burgundy-600"
+          className="h-5 w-5 animate-spin text-burgundy-600"
           aria-hidden="true"
         />
         <span className="sr-only">{tCommon('loading')}</span>
@@ -123,10 +121,10 @@ export function TimeSlotSelector({
   if (error) {
     return (
       <div
-        className="flex flex-col items-center justify-center py-8 text-red-500"
+        className="flex flex-col items-center justify-center rounded-[10px] border border-stone-200 px-3 py-5 text-center text-red-500"
         data-testid="time-slot-error"
       >
-        <p className="mb-3 text-sm">{error}</p>
+        <p className="mb-3 text-xs">{error}</p>
         <Button
           variant="outline"
           size="sm"
@@ -148,23 +146,20 @@ export function TimeSlotSelector({
 
   if (slots.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-8 text-slate-400">
-        <Clock className="mb-2 h-12 w-12 opacity-50" aria-hidden="true" />
-        <p className="text-sm">{t('noAvailability')}</p>
+      <div className="rounded-[10px] border border-dashed border-stone-200 px-3 py-5 text-center text-xs text-ink-500">
+        <Clock className="mx-auto mb-2 h-6 w-6 opacity-50" aria-hidden="true" />
+        <p>{t('noAvailability')}</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-3" data-testid="time-slot-grid">
+    <div className="grid grid-cols-2 gap-1.5" data-testid="time-slot-grid">
       {slots.map((slot) => {
         const isSelected = selectedTime === slot.timeSlot;
         const isFull = !slot.available;
         const isLowCapacity = slot.available && slot.remainingCapacity <= 3;
-        const capacityPercent =
-          slot.maxCapacity > 0
-            ? Math.round((slot.remainingCapacity / slot.maxCapacity) * 100)
-            : 0;
+        const isSunsetSlot = formatTime(slot.timeSlot).startsWith('17');
 
         return (
           <button
@@ -172,61 +167,34 @@ export function TimeSlotSelector({
             onClick={() => handleSlotSelect(slot)}
             disabled={isFull}
             className={cn(
-              'relative flex flex-col rounded-xl border-2 px-4 py-3.5 text-left transition-all',
+              'h-[54px] rounded-[10px] border-[1.5px] px-2.5 text-left transition-all',
               isFull
-                ? 'cursor-not-allowed border-stone-100 bg-stone-50 opacity-60'
+                ? 'cursor-not-allowed border-stone-200 bg-stone-50 opacity-50'
                 : isSelected
-                  ? 'border-primary bg-primary/5 shadow-sm'
-                  : 'border-stone-200 bg-white hover:border-primary/40 hover:bg-primary/[0.02]'
+                  ? 'border-burgundy-600 bg-burgundy-50'
+                  : 'border-stone-200 bg-white hover:border-burgundy-200'
             )}
           >
-            {/* Time range */}
-            <div className="flex items-center justify-between">
-              <span
-                className={cn(
-                  'text-base font-semibold',
-                  isFull ? 'text-muted-foreground' : 'text-foreground'
-                )}
-              >
-                {formatTime(slot.timeSlot)} → {formatTime(slot.endTime)}
-              </span>
-              {isFull && (
-                <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                  {t('sessionFull')}
-                </span>
+            <div
+              className={cn(
+                'text-sm font-bold',
+                isFull ? 'text-ink-300' : 'text-ink-900'
               )}
-              {isLowCapacity && (
-                <span className="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700">
-                  {t('spotsLeft', { count: slot.remainingCapacity })}
-                </span>
-              )}
+            >
+              {formatTime(slot.timeSlot)}
             </div>
-
-            {/* Capacity bar */}
-            {!isFull && (
-              <div className="mt-2.5 flex items-center gap-2.5">
-                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-stone-100">
-                  <div
-                    className={cn(
-                      'h-full rounded-full transition-all duration-500',
-                      isLowCapacity ? 'bg-orange-400' : 'bg-primary/60'
-                    )}
-                    style={{ width: `${capacityPercent}%` }}
-                  />
-                </div>
-                <span
-                  className={cn(
-                    'whitespace-nowrap text-xs',
-                    isLowCapacity
-                      ? 'font-medium text-orange-600'
-                      : 'text-muted-foreground'
-                  )}
-                  data-testid="remaining-capacity"
-                >
-                  {t('spotsLeft', { count: slot.remainingCapacity })}
-                </span>
-              </div>
-            )}
+            <div className="mt-1 flex items-center justify-between text-[10px] text-ink-500">
+              <span
+                className={cn(isLowCapacity && 'font-semibold text-gold-700')}
+              >
+                {isSunsetSlot ? 'coucher' : ''}
+              </span>
+              <span className="font-mono" data-testid="remaining-capacity">
+                {isFull
+                  ? t('sessionFull')
+                  : t('spotsLeft', { count: slot.remainingCapacity })}
+              </span>
+            </div>
           </button>
         );
       })}

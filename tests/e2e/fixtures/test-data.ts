@@ -199,7 +199,7 @@ export const TEST_EXPERIENCES: Record<string, TestExperience> = {
     minCapacity: 2,
     maxCapacity: 10,
     duration: 120,
-    coverPhoto: '/images/test/wine-tasting.jpg',
+    coverPhoto: '/images/herobanner-image.jpg',
     wineryId: TEST_WINERIES.activeWinery.id,
     availabilitySlots: [
       { dayOfWeek: 1, startTime: '10:00', endTime: '18:00' }, // Monday
@@ -222,7 +222,7 @@ export const TEST_EXPERIENCES: Record<string, TestExperience> = {
     minCapacity: 4,
     maxCapacity: 15,
     duration: 90,
-    coverPhoto: '/images/test/cellar-tour.jpg',
+    coverPhoto: '/images/herobanner-image.jpg',
     wineryId: TEST_WINERIES.activeWinery.id,
     availabilitySlots: [
       { dayOfWeek: 3, startTime: '14:00', endTime: '17:00' }, // Wednesday
@@ -241,7 +241,7 @@ export const TEST_EXPERIENCES: Record<string, TestExperience> = {
     minCapacity: 1,
     maxCapacity: 8,
     duration: 180,
-    coverPhoto: '/images/test/workshop.jpg',
+    coverPhoto: '/images/herobanner-image.jpg',
     wineryId: TEST_WINERIES.inactiveWinery.id,
     availabilitySlots: [
       { dayOfWeek: 5, startTime: '10:00', endTime: '18:00' }, // Friday
@@ -259,7 +259,7 @@ export const TEST_EXPERIENCES: Record<string, TestExperience> = {
     minCapacity: 2,
     maxCapacity: 4,
     duration: 150,
-    coverPhoto: '/images/test/exclusive-tasting.jpg',
+    coverPhoto: '/images/herobanner-image.jpg',
     wineryId: TEST_WINERIES.secondaryWinery.id,
     availabilitySlots: [
       { dayOfWeek: 4, startTime: '11:00', endTime: '15:00' }, // Thursday

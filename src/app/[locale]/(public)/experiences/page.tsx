@@ -49,6 +49,9 @@ export default async function ExperiencesPage({
   const searchParamsData = await searchParams;
   const t = await getTranslations('search');
   const tNav = await getTranslations('nav');
+  const hasLocationSearch = Boolean(
+    searchParamsData.location && searchParamsData.lat && searchParamsData.lng
+  );
 
   // Parse search parameters (fast - no DB calls, no async)
   const page = searchParamsData.page ? parseInt(searchParamsData.page, 10) : 1;
@@ -65,7 +68,10 @@ export default async function ExperiencesPage({
     capacity: searchParamsData.capacity
       ? parseInt(searchParamsData.capacity, 10)
       : undefined,
-    sort: parseSort(searchParamsData.sort),
+    sort:
+      parseSort(searchParamsData.sort) === 'distance' && !hasLocationSearch
+        ? 'relevance'
+        : parseSort(searchParamsData.sort),
     page: page > 0 ? page : 1,
     // Location-based search params
     location: searchParamsData.location || undefined,
