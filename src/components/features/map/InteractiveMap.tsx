@@ -136,19 +136,18 @@ export function InteractiveMap({
   }, [isLocating]);
 
   if (!token) {
-    return null;
+    return (
+      <MapFallback
+        className={className}
+        message={t('mapLoadError')}
+        detail="Coordonnees disponibles, carte desactivee dans cet environnement."
+      />
+    );
   }
 
   if (mapError) {
     return (
-      <div
-        className={cn(
-          'flex items-center justify-center rounded-xl bg-stone-100 text-sm text-muted-foreground',
-          className
-        )}
-      >
-        {t('mapLoadError')}
-      </div>
+      <MapFallback className={className} message={t('mapLoadError')} />
     );
   }
 
@@ -171,6 +170,28 @@ export function InteractiveMap({
           {isLocating ? t('locating') : t('myLocation')}
         </button>
       )}
+    </div>
+  );
+}
+
+function MapFallback({
+  className,
+  message,
+  detail,
+}: {
+  className?: string;
+  message: string;
+  detail?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        'flex flex-col items-center justify-center rounded-xl bg-stone-100 px-6 text-center text-sm text-muted-foreground',
+        className
+      )}
+    >
+      <span className="font-medium text-foreground">{message}</span>
+      {detail && <span className="mt-1 text-xs">{detail}</span>}
     </div>
   );
 }

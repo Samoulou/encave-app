@@ -102,16 +102,17 @@ export function ExperienceDetailGallery({
     };
   }, [lightboxOpen, goToPrevious, goToNext]);
 
-  const remainingCount =
-    images.filter((image) => getValidImageUrl(image.url)).length > 4
-      ? images.filter((image) => getValidImageUrl(image.url)).length - 4
-      : 0;
+  const validGalleryCount = images.filter((image) =>
+    getValidImageUrl(image.url)
+  ).length;
+  const totalPhotoCount = (heroImage ? 1 : 0) + validGalleryCount;
+  const remainingCount = validGalleryCount > 4 ? validGalleryCount - 4 : 0;
 
   return (
     <>
       {/* Gallery — vertical layout for side-by-side with booking widget */}
       <div
-        className="mb-10 flex flex-col gap-3"
+        className="grid gap-2 lg:h-[386px] lg:grid-cols-[2fr_1fr_1fr] lg:grid-rows-2 lg:gap-1.5"
         data-testid="experience-gallery"
       >
         {/* Hero image — full width of left column */}
@@ -120,7 +121,7 @@ export function ExperienceDetailGallery({
           onClick={() => openLightbox(0)}
           data-testid="experience-hero-image"
           className={cn(
-            'group relative aspect-[16/10] w-full overflow-hidden rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
+            'group relative aspect-[16/10] w-full overflow-hidden rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 lg:row-span-2 lg:aspect-auto lg:h-full lg:rounded-[14px_4px_4px_14px]',
             heroImage ? 'cursor-pointer' : 'cursor-default'
           )}
         >
@@ -151,21 +152,28 @@ export function ExperienceDetailGallery({
 
         {/* Secondary images — 2-col grid, fade in on scroll (hidden on mobile) */}
         {allImages.length > 1 && (
-          <div className="hidden grid-cols-2 gap-3 md:grid">
+          <>
             {allImages.slice(1, 5).map((image, index) => {
               const isLastWithMore = index === 3 && remainingCount > 0;
+              const isTopRight = index === 1;
+              const isBottomRight = index === 3;
 
               return (
                 <FadeIn key={image.id} delay={index * 150} direction="up">
                   <button
                     type="button"
                     onClick={() => openLightbox(index + 1)}
-                    className="group relative aspect-[4/3] w-full cursor-pointer overflow-hidden rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                    className={cn(
+                      'group relative hidden h-full w-full cursor-pointer overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 md:block',
+                      'aspect-[4/3] rounded-xl lg:aspect-auto lg:rounded-none',
+                      isTopRight && 'lg:rounded-[0_14px_0_0]',
+                      isBottomRight && 'lg:rounded-[0_0_14px_0]'
+                    )}
                   >
                     {isLastWithMore && (
-                      <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 transition-colors group-hover:bg-black/30">
-                        <span className="border-b-2 border-white pb-1 text-lg font-bold text-white">
-                          View All Photos
+                      <div className="absolute inset-0 z-10 flex items-end justify-end bg-black/20 p-3 transition-colors group-hover:bg-black/10">
+                        <span className="rounded-lg bg-white/95 px-3.5 py-2 text-xs font-semibold text-ink-900 shadow-audit-card">
+                          Voir les {totalPhotoCount} photos
                         </span>
                       </div>
                     )}
@@ -189,7 +197,7 @@ export function ExperienceDetailGallery({
                 </FadeIn>
               );
             })}
-          </div>
+          </>
         )}
       </div>
 

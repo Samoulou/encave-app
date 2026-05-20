@@ -161,7 +161,10 @@ export function HomeMobileEditorial({
             <div className="font-mono text-[10px] uppercase tracking-[0.1em] text-ink-500">
               Pour
             </div>
-            <div className="mt-0.5 text-sm font-semibold text-ink-900">
+            <div
+              className="mt-0.5 text-sm font-semibold text-ink-900"
+              data-testid="mobile-home-capacity"
+            >
               2+ places
             </div>
           </div>

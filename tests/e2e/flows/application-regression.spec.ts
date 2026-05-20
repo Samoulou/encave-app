@@ -96,7 +96,7 @@ test.describe('Application regression matrix - client journey', () => {
     await loginAs(page, TEST_USERS.clientA);
     await page.goto(localizedPath('/dashboard/my-bookings'));
 
-    await expect(page.getByRole('heading', { name: /My Bookings/i })).toBeVisible();
+    await expect(page.getByText('ENC-E2E002')).toBeVisible();
     await expect(page.getByText('ENC-E2E003')).not.toBeVisible();
   });
 
