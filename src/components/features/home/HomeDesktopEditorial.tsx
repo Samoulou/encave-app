@@ -124,7 +124,7 @@ export function HomeDesktopEditorial({
   return (
     <div className="bg-cream-50 text-ink-900">
       <section
-        className="relative grid min-h-[600px] grid-cols-[1.15fr_1fr] overflow-hidden border-b border-stone-200 bg-ink-900 bg-cover bg-center"
+        className="relative min-h-[600px] overflow-hidden border-b border-stone-200 bg-ink-900 bg-cover bg-center"
         style={{ backgroundImage: `url(${HERO_BANNER_IMAGE})` }}
       >
         <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-burgundy-950/55 to-black/25" />
@@ -137,7 +137,7 @@ export function HomeDesktopEditorial({
           }}
         />
 
-        <div className="relative z-10 flex flex-col justify-between px-14 py-[72px]">
+        <div className="relative z-10 flex min-h-[600px] max-w-[760px] flex-col justify-between px-14 py-[72px]">
           <div>
             <div className="font-mono text-[11px] uppercase tracking-[0.16em] text-burgundy-700">
               • Experiences disponibles en Valais
@@ -167,7 +167,7 @@ export function HomeDesktopEditorial({
           </div>
         </div>
 
-        <div className="relative z-10">
+        <div className="hidden">
           <ExperienceVisual
             experience={featured}
             priority
