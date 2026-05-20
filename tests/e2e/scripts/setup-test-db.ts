@@ -29,6 +29,13 @@ function toDateOnly(daysFromNow: number): Date {
   return date;
 }
 
+const WINERY_COORDINATES: Record<string, { latitude: number; longitude: number }> = {
+  'domaine-du-test': { latitude: 46.5197, longitude: 6.6323 },
+  'domaine-sans-stripe': { latitude: 46.2044, longitude: 6.1432 },
+  'cave-des-tests': { latitude: 46.4312, longitude: 6.9107 },
+  'auth-test-winery': { latitude: 46.2333, longitude: 7.3667 },
+};
+
 async function main() {
   console.log('Cleaning E2E test database...');
 
@@ -101,6 +108,8 @@ async function main() {
             'A test winery for authentication E2E tests with required dashboard states.',
           commune: 'Sion',
           address: '100 Route des Tests, 1950 Sion',
+          latitude: WINERY_COORDINATES['auth-test-winery'].latitude,
+          longitude: WINERY_COORDINATES['auth-test-winery'].longitude,
           phone: '+41 27 123 45 67',
           email: user.email,
           userId: createdUser.id,
@@ -123,6 +132,8 @@ async function main() {
         description: winery.description,
         commune: winery.commune,
         address: winery.address,
+        latitude: WINERY_COORDINATES[winery.slug]?.latitude ?? 46.2333,
+        longitude: WINERY_COORDINATES[winery.slug]?.longitude ?? 7.3667,
         phone: winery.phone,
         email: winery.email,
         userId: winery.userId,

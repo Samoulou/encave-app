@@ -36,7 +36,8 @@ import { formatCHF } from '@/lib/utils/currency';
 const AVAILABILITY_RECHECK_INTERVAL_MS = 60000;
 
 // Phone validation - accepts Swiss and international formats
-const phoneRegex = /^(\+41|0041|0)?[1-9][0-9]{8}$|^\+?[1-9]\d{6,14}$/;
+const phoneRegex =
+  /^(\+41|0041|0)?[\s-]?[1-9](?:[\s-]?\d){8}$|^\+?[1-9](?:[\s-]?\d){6,14}$/;
 
 const checkoutFormSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters'),
@@ -358,7 +359,11 @@ export function CheckoutClient({
         </div>
 
         {/* Main Grid Layout */}
-        <form onSubmit={handleSubmit(onSubmit)} data-testid="checkout-form">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          data-testid="checkout-form"
+          noValidate
+        >
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:gap-10">
             {/* Left Column: Contact Form & Payment Button */}
             <div className="flex flex-col gap-6">

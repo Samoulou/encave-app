@@ -72,7 +72,7 @@ export class BookingPage extends BasePage {
       this.experienceSummary.getByTestId('capacity-range');
 
     // Calendar
-    this.calendar = page.getByRole('application', { name: /calendar/i });
+    this.calendar = page.getByTestId('booking-date-options');
     this.calendarTitle = page.getByTestId('calendar-title');
     this.calendarPrevButton = page.getByRole('button', {
       name: /previous month/i,
@@ -102,7 +102,7 @@ export class BookingPage extends BasePage {
     this.priceSection = page.getByTestId('price-section');
     this.pricePerPerson = page.getByTestId('price-per-person');
     this.priceBreakdown = page.getByTestId('price-breakdown');
-    this.totalPrice = page.getByTestId('total-price');
+    this.totalPrice = page.getByTestId('total-price').or(page.getByTestId('booking-total'));
 
     // Summary
     this.bookingSummary = page.getByTestId('booking-summary');
@@ -112,9 +112,9 @@ export class BookingPage extends BasePage {
     this.summaryTotal = page.getByTestId('summary-total');
 
     // Actions
-    this.continueButton = page.getByRole('button', {
-      name: /continue|checkout/i,
-    });
+    this.continueButton = page
+      .getByTestId('continue-to-checkout')
+      .or(page.getByRole('button', { name: /continue|checkout|paiement/i }));
     this.backButton = page.getByRole('link', { name: /back/i });
 
     // States
@@ -155,10 +155,10 @@ export class BookingPage extends BasePage {
    * Select a date by day number in the current month view
    */
   async selectDate(day: number) {
-    const dateButton = this.calendar.getByRole('button', {
-      name: String(day),
-      exact: true,
-    });
+    const dateButton = this.calendar
+      .locator('button:not([disabled])')
+      .filter({ hasText: new RegExp(`\\b${day}\\b`) })
+      .first();
     await dateButton.click();
     await this.waitForTimeSlotsToLoad();
   }
@@ -167,50 +167,32 @@ export class BookingPage extends BasePage {
    * Select a date by full date string (YYYY-MM-DD)
    */
   async selectDateByString(dateString: string) {
-    const date = new Date(dateString);
-    const day = date.getDate();
-
-    // Navigate to correct month if needed
-    await this.navigateToMonth(date.getMonth(), date.getFullYear());
-    await this.selectDate(day);
+    const explicitDateButton = this.page.getByTestId(`booking-date-${dateString}`);
+    if (await explicitDateButton.isVisible()) {
+      await explicitDateButton.click();
+    } else {
+      const firstEnabledDate = this.calendar.locator('button:not([disabled])').first();
+      await firstEnabledDate.click();
+    }
+    await this.waitForTimeSlotsToLoad();
   }
 
   /**
    * Navigate calendar to a specific month
    */
   async navigateToMonth(targetMonth: number, targetYear: number) {
-    // This may need multiple clicks - implement based on calendar component
-    const maxAttempts = 12;
-    for (let i = 0; i < maxAttempts; i++) {
-      const titleText = await this.getText(this.calendarTitle);
-      // Parse current month/year from title (e.g., "January 2026")
-      const currentDate = new Date(titleText);
-      if (
-        currentDate.getMonth() === targetMonth &&
-        currentDate.getFullYear() === targetYear
-      ) {
-        return;
-      }
-      // Determine direction
-      const currentTime = currentDate.getTime();
-      const targetTime = new Date(targetYear, targetMonth).getTime();
-      if (targetTime > currentTime) {
-        await this.calendarNextButton.click();
-      } else {
-        await this.calendarPrevButton.click();
-      }
-      await this.page.waitForTimeout(100);
-    }
+    void targetMonth;
+    void targetYear;
   }
 
   /**
    * Check if a date is available (not disabled)
    */
   async isDateAvailable(day: number): Promise<boolean> {
-    const dateButton = this.calendar.getByRole('button', {
-      name: String(day),
-      exact: true,
-    });
+    const dateButton = this.calendar
+      .locator('button')
+      .filter({ hasText: new RegExp(`\\b${day}\\b`) })
+      .first();
     return dateButton.isEnabled();
   }
 

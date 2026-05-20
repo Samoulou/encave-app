@@ -58,7 +58,10 @@ export function OrderSummary({
   const total = subtotal + serviceFee;
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-white shadow-lg">
+    <div
+      className="overflow-hidden rounded-xl border border-border bg-white shadow-lg"
+      data-testid="checkout-summary"
+    >
       {/* Image Header with Gradient Overlay */}
       <div className="relative h-48 w-full">
         {experienceImage ? (
@@ -73,7 +76,10 @@ export function OrderSummary({
           <div className="h-full w-full bg-gradient-to-br from-burgundy-100 to-burgundy-200" />
         )}
         <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/60 to-transparent p-6">
-          <h3 className="text-xl font-bold leading-tight text-white drop-shadow-sm">
+          <h3
+            className="text-xl font-bold leading-tight text-white drop-shadow-sm"
+            data-testid="summary-experience-title"
+          >
             {experienceTitle}
           </h3>
         </div>
@@ -88,8 +94,13 @@ export function OrderSummary({
               <Calendar className="h-5 w-5 text-[#915564]" aria-hidden="true" />
             </div>
             <div>
-              <p className="font-bold text-foreground">{formattedDate}</p>
-              <p className="text-sm text-[#915564]">
+              <p
+                className="font-bold text-foreground"
+                data-testid="summary-date"
+              >
+                {formattedDate}
+              </p>
+              <p className="text-sm text-[#915564]" data-testid="summary-time">
                 {formatTimeRange(time, duration)}
               </p>
             </div>
@@ -101,7 +112,10 @@ export function OrderSummary({
               <Users className="h-5 w-5 text-[#915564]" aria-hidden="true" />
             </div>
             <div>
-              <p className="font-bold text-foreground">
+              <p
+                className="font-bold text-foreground"
+                data-testid="summary-guests"
+              >
                 {tBooking('guests', { count: guestCount })}
               </p>
             </div>
@@ -113,7 +127,12 @@ export function OrderSummary({
               <MapPin className="h-5 w-5 text-[#915564]" aria-hidden="true" />
             </div>
             <div>
-              <p className="font-bold text-foreground">{location}</p>
+              <p
+                className="font-bold text-foreground"
+                data-testid="summary-winery-name"
+              >
+                {location}
+              </p>
               <button
                 type="button"
                 className="cursor-pointer text-sm text-[#915564] hover:underline"
@@ -127,7 +146,7 @@ export function OrderSummary({
         {/* Pricing Breakdown */}
         <div className="space-y-3 pt-6">
           <div className="flex justify-between text-foreground">
-            <span>
+            <span data-testid="summary-price-per-person">
               {formatCHF(pricePerPerson)} ×{' '}
               {tBooking('guests', { count: guestCount })}
             </span>
@@ -141,7 +160,10 @@ export function OrderSummary({
             <span className="text-lg font-bold text-foreground">
               {t('totalCHF')}
             </span>
-            <span className="text-2xl font-bold text-primary">
+            <span
+              className="text-2xl font-bold text-primary"
+              data-testid="summary-total"
+            >
               {formatCHF(total)}
             </span>
           </div>

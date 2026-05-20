@@ -68,7 +68,7 @@ export default async function CheckoutPage({
     return (
       <div className="w-full px-4 py-10 md:px-10">
         <div className="mx-auto max-w-7xl">
-          <Alert variant="destructive">
+          <Alert variant="destructive" data-testid="missing-params-error">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{t('invalidBookingParams')}</AlertDescription>
           </Alert>

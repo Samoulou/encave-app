@@ -2,10 +2,7 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
-import {
-  getExperienceBySlug,
-  getAllPublishedExperienceSlugs,
-} from '@/server/queries/experience.queries';
+import { getExperienceBySlug } from '@/server/queries/experience.queries';
 import { ExperienceDetailGallery } from '@/components/features/experience/ExperienceDetailGallery';
 import { LocationSection } from '@/components/features/experience/LocationSection';
 import { BookingWidget } from '@/components/features/experience/BookingWidget';
@@ -20,7 +17,7 @@ import { JsonLd } from '@/components/shared/JsonLd';
 import { Skeleton } from '@/components/shared/Skeleton';
 import { generateExperienceDetailMetadata } from '@/lib/seo';
 import { getBaseUrl } from '@/lib/env';
-import { type Locale, locales } from '@/i18n/routing';
+import { type Locale } from '@/i18n/routing';
 import { Link } from '@/i18n/navigation';
 import {
   ArrowUpRight,
@@ -35,10 +32,7 @@ interface ExperiencePageProps {
   params: Promise<{ slug: string; locale: string }>;
 }
 
-export async function generateStaticParams() {
-  const slugs = await getAllPublishedExperienceSlugs();
-  return locales.flatMap((locale) => slugs.map((slug) => ({ locale, slug })));
-}
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({
   params,
@@ -183,7 +177,10 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
           <div className="relative grid grid-cols-1 gap-8 pt-8 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-12">
             <div className="min-w-0">
               <div className="mb-3 flex flex-wrap items-center gap-3">
-                <span className="rounded-full bg-burgundy-50 px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-burgundy-700">
+                <span
+                  className="rounded-full bg-burgundy-50 px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-burgundy-700"
+                  data-testid="experience-capacity"
+                >
                   {experience.maxCapacity} places max
                 </span>
               </div>
@@ -208,6 +205,7 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
                   icon={<Clock className="h-[18px] w-[18px]" />}
                   label="Duree"
                   value={durationLabel}
+                  testId="experience-duration"
                 />
                 <MetaFact
                   icon={<Users className="h-[18px] w-[18px]" />}
@@ -218,6 +216,7 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
                   icon={<Wine className="h-[18px] w-[18px]" />}
                   label="Format"
                   value={experienceTypeLabel}
+                  testId="experience-type-badge"
                 />
                 <MetaFact
                   icon={<Globe2 className="h-[18px] w-[18px]" />}
@@ -226,7 +225,10 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
                 />
               </div>
 
-              <div className="mb-8 flex items-center gap-4 rounded-[14px] border border-stone-200 bg-white p-4 shadow-audit-card">
+              <div
+                className="mb-8 flex items-center gap-4 rounded-[14px] border border-stone-200 bg-white p-4 shadow-audit-card"
+                data-testid="winery-info-card"
+              >
                 <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full bg-cream-200">
                   <ImageWithFallback
                     src={experience.winery.coverPhoto || experience.coverPhoto}
@@ -241,10 +243,16 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
                   <div className="font-mono text-[11px] uppercase tracking-[0.1em] text-ink-500">
                     Votre domaine
                   </div>
-                  <div className="font-display text-lg font-semibold text-ink-900">
+                  <div
+                    className="font-display text-lg font-semibold text-ink-900"
+                    data-testid="winery-name"
+                  >
                     {experience.winery.name}
                   </div>
-                  <div className="truncate text-xs text-ink-500">
+                  <div
+                    className="truncate text-xs text-ink-500"
+                    data-testid="winery-location"
+                  >
                     {locationAddress} · {locationCommune}
                   </div>
                 </div>
@@ -257,7 +265,7 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
                 </Link>
               </div>
 
-              <section>
+              <section data-testid="experience-description">
                 <h2 className="mb-3 font-display text-2xl font-semibold text-ink-900">
                   L&apos;experience
                 </h2>
@@ -344,10 +352,12 @@ function MetaFact({
   icon,
   label,
   value,
+  testId,
 }: {
   icon: ReactNode;
   label: string;
   value: string;
+  testId?: string;
 }) {
   return (
     <div className="flex gap-3">
@@ -356,7 +366,12 @@ function MetaFact({
         <div className="font-mono text-[10px] uppercase tracking-[0.1em] text-ink-500">
           {label}
         </div>
-        <div className="mt-1 text-sm font-semibold text-ink-900">{value}</div>
+        <div
+          className="mt-1 text-sm font-semibold text-ink-900"
+          data-testid={testId}
+        >
+          {value}
+        </div>
       </div>
     </div>
   );

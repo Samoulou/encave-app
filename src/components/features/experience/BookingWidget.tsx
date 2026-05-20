@@ -193,7 +193,7 @@ export function BookingWidget({
     >
       <div className="mb-1 flex items-baseline justify-between">
         <div className="font-display text-[30px] font-semibold text-ink-900">
-          <span data-testid="booking-price">{formatCHF(price)}</span>
+          <span data-testid="experience-price">{formatCHF(price)}</span>
           <span className="ml-1 font-sans text-sm text-ink-500">
             / {t('perPerson')}
           </span>
@@ -212,7 +212,12 @@ export function BookingWidget({
         <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-500">
           Choisissez un jour
         </div>
-        <div className="flex gap-1.5">
+        <div
+          className="flex gap-1.5"
+          role="application"
+          aria-label="calendar"
+          data-testid="booking-date-options"
+        >
           {dateOptions.map((option) => {
             const selected = date === option.value;
             return (
@@ -221,6 +226,7 @@ export function BookingWidget({
                 type="button"
                 disabled={option.disabled}
                 onClick={() => handleDateChange(option.value)}
+                data-testid={`booking-date-${option.value}`}
                 className={cn(
                   'h-[62px] flex-1 rounded-[10px] border-[1.5px] font-mono text-[11px] transition-colors',
                   selected
@@ -246,16 +252,21 @@ export function BookingWidget({
         <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-500">
           Horaire{date ? ` · ${formatDateLabel(date)}` : ''}
         </div>
-        <TimeSlotSelector
-          experienceId={experienceId}
-          selectedDate={date}
-          selectedTime={time}
-          onTimeChange={handleTimeChange}
-          onCapacityUpdate={handleCapacityUpdate}
-        />
+        <div data-testid="time-slot-section">
+          <TimeSlotSelector
+            experienceId={experienceId}
+            selectedDate={date}
+            selectedTime={time}
+            onTimeChange={handleTimeChange}
+            onCapacityUpdate={handleCapacityUpdate}
+          />
+        </div>
       </div>
 
-      <div className="mt-4 flex items-center justify-between border-y border-stone-200 py-3">
+      <div
+        className="mt-4 flex items-center justify-between border-y border-stone-200 py-3"
+        data-testid="guest-count-section"
+      >
         <div>
           <div className="text-[13px] font-semibold text-ink-900">
             Participants
@@ -294,8 +305,14 @@ export function BookingWidget({
         </div>
       </div>
 
-      <div className="my-4 space-y-1.5 text-[13px] text-ink-700">
-        <div className="flex items-center justify-between">
+      <div
+        className="my-4 space-y-1.5 text-[13px] text-ink-700"
+        data-testid="price-section"
+      >
+        <div
+          className="flex items-center justify-between"
+          data-testid="price-breakdown"
+        >
           <span>
             {guests} x {formatCHF(price)}
           </span>
@@ -307,7 +324,10 @@ export function BookingWidget({
         </div>
         <div className="mt-2 flex items-center justify-between border-t border-stone-200 pt-2 text-[15px] font-bold text-ink-900">
           <span>Total</span>
-          <span className="text-burgundy-700" data-testid="booking-total">
+          <span
+            className="text-burgundy-700"
+            data-testid="total-price"
+          >
             {formatCHF(totalPrice)}
           </span>
         </div>
@@ -319,6 +339,7 @@ export function BookingWidget({
           className="flex h-[54px] w-full items-center justify-center gap-2 rounded-xl bg-burgundy-600 text-[15px] font-bold text-white shadow-primary transition-all hover:bg-burgundy-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
           disabled={!isValid || isSubmitting}
           onClick={handleContinue}
+          data-testid="continue-to-checkout"
         >
           {isSubmitting ? (
             <>

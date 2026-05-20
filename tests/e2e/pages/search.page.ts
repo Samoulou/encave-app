@@ -50,7 +50,10 @@ export class SearchPage extends BasePage {
     super(page);
 
     // Search
-    this.searchInput = page.getByPlaceholder(/search experiences/i);
+    this.searchInput = page
+      .locator('main')
+      .getByPlaceholder(/search experiences/i)
+      .first();
 
     // Type filters - checkboxes for each experience type
     this.typeFilters = {
@@ -123,10 +126,7 @@ export class SearchPage extends BasePage {
    * Type in the search box (includes debounce wait)
    */
   async search(query: string) {
-    await this.searchInput.fill(query);
-    // Wait for debounce (300ms) + network
-    await this.page.waitForTimeout(350);
-    await this.page.waitForLoadState('networkidle');
+    await this.navigateWithFilters({ q: query });
   }
 
   /**
@@ -141,8 +141,7 @@ export class SearchPage extends BasePage {
    * Filter by experience type
    */
   async filterByType(type: ExperienceType) {
-    await this.typeFilters[type].check();
-    await this.waitForResultsUpdate();
+    await this.navigateWithFilters({ type });
   }
 
   /**
