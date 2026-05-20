@@ -34,7 +34,7 @@ export default async function Home({ params }: Props) {
   const baseUrl = getBaseUrl();
 
   // Fetch featured experiences for the homepage
-  const featuredExperiences = await getFeaturedExperiences(3);
+  const featuredExperiences = await getFeaturedExperiences(8);
 
   // SEO-003: Organization schema for home page
   const organizationSchema = {
@@ -70,7 +70,7 @@ export default async function Home({ params }: Props) {
 
         <main id="main-content">
           <div className="hidden md:block">
-            <HomeDesktopEditorial />
+            <HomeDesktopEditorial experiences={featuredExperiences} />
           </div>
 
           {/* Hero Section with Background Image */}
