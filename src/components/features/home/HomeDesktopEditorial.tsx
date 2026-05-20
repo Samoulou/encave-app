@@ -107,14 +107,6 @@ export function HomeDesktopEditorial({
         style={{ backgroundImage: `url(${HERO_BANNER_IMAGE})` }}
       >
         <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-burgundy-950/55 to-black/25" />
-        <div
-          className="absolute inset-0 opacity-25"
-          style={{
-            backgroundImage:
-              'radial-gradient(circle at 1px 1px, rgba(255,255,255,.48) 1px, transparent 0)',
-            backgroundSize: '18px 18px',
-          }}
-        />
 
         <div className="relative z-10 flex min-h-[600px] max-w-[760px] flex-col justify-between px-14 py-[72px]">
           <div>
