@@ -253,7 +253,8 @@ export function HomeMobileEditorial({
           </h2>
           <div className="flex gap-3 overflow-x-auto px-3.5 pb-1.5">
             {nearby.map((experience) => (
-              <article
+              <Link
+                href={`/experiences/${experience.slug}`}
                 key={experience.id}
                 className="min-w-[188px] overflow-hidden rounded-[14px] bg-white shadow-audit-card"
               >
@@ -274,7 +275,7 @@ export function HomeMobileEditorial({
                     </span>
                   </div>
                 </div>
-              </article>
+              </Link>
             ))}
           </div>
         </section>
