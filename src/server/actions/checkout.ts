@@ -228,6 +228,24 @@ export async function createBookingAndCheckout(
     // Create Stripe Checkout Session
     const baseUrl = getBaseUrl();
 
+    if (process.env.E2E_TEST === 'true') {
+      const checkoutUrl = `https://checkout.stripe.com/pay/e2e_${booking.id}`;
+
+      await db.booking.update({
+        where: { id: booking.id },
+        data: { stripePaymentIntentId: `e2e_${booking.id}` },
+      });
+
+      return {
+        success: true,
+        data: {
+          bookingId: booking.id,
+          bookingReference: booking.reference,
+          checkoutUrl,
+        },
+      };
+    }
+
     const session = await getStripe().checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'payment',

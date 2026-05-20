@@ -4,6 +4,7 @@ import { TEST_USERS, localizedPath } from '../fixtures/auth.fixture';
 import { TEST_EXPERIENCES } from '../fixtures/test-data';
 
 const LOCALES = ['fr', 'de', 'en'] as const;
+const DEFAULT_LOCALE = process.env.E2E_LOCALE ?? 'en';
 
 async function loginAs(
   page: Page,
@@ -20,7 +21,7 @@ async function expectPageHealthy(page: Page) {
   await expect(page.locator('body')).not.toContainText('Application error');
 }
 
-test.describe('Application regression matrix', () => {
+test.describe('Application regression matrix - public and i18n', () => {
   test('critical public routes render in every supported locale', async ({
     page,
   }) => {
@@ -30,6 +31,7 @@ test.describe('Application regression matrix', () => {
         `/${locale}/experiences`,
         `/${locale}/experiences/${TEST_EXPERIENCES.wineTasting.slug}`,
         `/${locale}/wineries`,
+        `/${locale}/wineries/domaine-du-test`,
         `/${locale}/about`,
         `/${locale}/legal/terms`,
         `/${locale}/legal/privacy`,
@@ -47,12 +49,12 @@ test.describe('Application regression matrix', () => {
   test('unknown experience renders the localized not-found state', async ({
     page,
   }) => {
-    await page.goto(localizedPath('/experiences/not-a-real-experience'));
-
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-    await expect(page.locator('body')).toContainText(/not found|non trouv/i);
+    await page.goto(`/${DEFAULT_LOCALE}/experiences/not-a-real-experience`);
+    await expect(page.getByTestId('not-found')).toBeVisible();
   });
+});
 
+test.describe('Application regression matrix - auth and permissions', () => {
   test('protected dashboards redirect anonymous users to localized login', async ({
     page,
   }) => {
@@ -83,14 +85,91 @@ test.describe('Application regression matrix', () => {
     await loginAs(page, TEST_USERS.clientA);
     await page.goto(localizedPath('/admin'));
 
+    await expect(
+      page.getByRole('heading', { name: /admin/i })
+    ).not.toBeVisible();
+  });
+});
+
+test.describe('Application regression matrix - client journey', () => {
+  test('client dashboard shows only the signed-in client bookings', async ({
+    page,
+  }) => {
+    await loginAs(page, TEST_USERS.clientA);
+    await page.goto(localizedPath('/dashboard/my-bookings'));
+
+    await expect(page.getByText('ENC-E2E002')).toBeVisible();
+    await expect(page.getByText('ENC-E2E003')).not.toBeVisible();
+  });
+
+  test('token booking detail exposes the booking reference and status', async ({
+    page,
+  }) => {
+    await page.goto(
+      localizedPath(
+        '/booking/test-booking-client-a-upcoming?token=token-client-a-upcoming'
+      )
+    );
+
+    await expect(page.getByText('ENC-E2E001')).toBeVisible();
+    await expect(page.getByText(/CONFIRMED/i)).toBeVisible();
+  });
+});
+
+test.describe('Application regression matrix - winemaker journey', () => {
+  test('verified winemaker can access operational dashboards', async ({
+    page,
+  }) => {
+    await loginAs(page, TEST_USERS.wineryOwner);
+
+    for (const route of [
+      '/dashboard/bookings',
+      '/dashboard/experiences',
+      '/dashboard/earnings',
+      '/dashboard/winery/profile',
+    ]) {
+      const response = await page.goto(localizedPath(route));
+      expect(response?.status(), route).toBeLessThan(400);
+      await expect(page).not.toHaveURL(/\/login/);
+      await expect(page).not.toHaveURL(/\/onboarding\/winery/);
+      await expectPageHealthy(page);
+    }
+  });
+
+  test('pending winemaker is blocked from experience management', async ({
+    page,
+  }) => {
+    await loginAs(page, TEST_USERS.winemakerPending);
+    await page.goto(localizedPath('/dashboard/experiences'));
+
+    const body = page.locator('body');
     const isBlocked =
-      !page.url().includes('/admin') ||
-      (await page
-        .locator('body')
-        .filter({ hasText: /403|forbidden|access denied|accès refusé/i })
+      page.url().includes('/onboarding/winery') ||
+      (await body
+        .filter({ hasText: /pending|verification|not verified|en attente/i })
         .isVisible()
         .catch(() => false));
 
     expect(isBlocked).toBe(true);
+  });
+});
+
+test.describe('Application regression matrix - admin journey', () => {
+  test('admin can access overview and pending wineries queue', async ({
+    page,
+  }) => {
+    await loginAs(page, TEST_USERS.admin);
+
+    const adminResponse = await page.goto(localizedPath('/admin'));
+    expect(adminResponse?.status()).toBeLessThan(400);
+    await expectPageHealthy(page);
+
+    const pendingResponse = await page.goto(
+      localizedPath('/admin/wineries/pending')
+    );
+    expect(pendingResponse?.status()).toBeLessThan(400);
+    await expect(
+      page.getByText('E2E Vigneron En Attente Winery')
+    ).toBeVisible();
   });
 });

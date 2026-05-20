@@ -25,19 +25,15 @@ export function WineryInfoCard({
           {t('wineryInformation')}
         </h3>
 
-        {/* Map Placeholder */}
-        <div className="relative mb-4 aspect-[4/3] w-full overflow-hidden rounded-lg bg-muted">
-          <div
-            className="absolute inset-0 bg-cover bg-center grayscale-[20%]"
-            style={{
-              backgroundImage: `url('https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(`${address}, ${commune}, Switzerland`)}&zoom=14&size=400x300&maptype=roadmap&key=placeholder')`,
-              backgroundColor: '#e5e7eb',
-            }}
-          />
-          <div className="absolute inset-0 flex items-center justify-center bg-muted/30">
-            <div className="flex size-8 -translate-y-2 transform items-center justify-center rounded-full bg-primary text-white shadow-lg">
+        <div className="relative mb-4 aspect-[4/3] w-full overflow-hidden rounded-lg bg-stone-100">
+          <div className="absolute inset-0 bg-[linear-gradient(135deg,#eef1e5,#d8dfc6)]" />
+          <div className="absolute inset-0 opacity-60 [background-image:linear-gradient(120deg,transparent_35%,rgba(122,138,58,.18)_35%,rgba(122,138,58,.18)_55%,transparent_55%)]" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center px-5 text-center">
+            <div className="mb-3 flex size-9 items-center justify-center rounded-full bg-primary text-white shadow-lg">
               <MapPin className="size-4" />
             </div>
+            <p className="text-sm font-semibold text-foreground">{commune}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{address}</p>
           </div>
         </div>
 

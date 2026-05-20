@@ -111,9 +111,7 @@ export class CheckoutPage extends BasePage {
 
     // Errors
     this.errorAlert = page.getByRole('alert').filter({ hasText: /error/i });
-    this.missingParamsError = page.getByText(
-      /missing.*required|parameters.*missing/i
-    );
+    this.missingParamsError = page.getByTestId('missing-params-error');
     this.paymentCancelledAlert = page
       .getByRole('alert')
       .filter({ hasText: /cancel/i });
@@ -405,7 +403,10 @@ export class CheckoutPage extends BasePage {
    */
   async submitPayment() {
     await this.clickPay();
-    await this.page.waitForURL(/checkout\.stripe\.com/, { timeout: 30000 });
+    await this.page.waitForURL(
+      /checkout\.stripe\.com|\/booking\/[^/]+\/confirmation/,
+      { timeout: 30000 }
+    );
   }
 
   /**

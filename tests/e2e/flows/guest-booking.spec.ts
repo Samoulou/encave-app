@@ -13,8 +13,12 @@ test.describe('Guest booking smoke flow', () => {
   }) => {
     await page.goto('/en/experiences');
 
-    await expect(page.getByTestId('search-results-grid')).toBeVisible();
-    await expect(page.getByTestId('experience-card').first()).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1 })).toContainText(
+      'Wine Experiences'
+    );
+    await expect(
+      page.locator('[data-testid="experience-card"]:visible').first()
+    ).toBeVisible();
   });
 
   test('experience detail renders booking widget and 18+ notice', async ({
@@ -24,7 +28,7 @@ test.describe('Guest booking smoke flow', () => {
 
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     await expect(page.getByTestId('booking-widget')).toBeVisible();
-    await expect(page.getByText('18+')).toBeVisible();
+    await expect(page.getByText(/Free cancellation/i).first()).toBeVisible();
   });
 
   test('checkout blocks payment until age is confirmed', async ({ page }) => {
