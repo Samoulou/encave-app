@@ -113,13 +113,13 @@ export function MobileNav({
         <Button
           variant="ghost"
           size="icon"
-          className="h-11 w-11 md:hidden"
+          className="h-10 w-10 rounded-full text-ink-900 md:hidden"
           aria-label={t('openMenu')}
         >
-          <Menu className="h-6 w-6" />
+          <Menu className="h-5 w-5" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" className="w-[300px] bg-cream-50 sm:w-[350px]">
+      <SheetContent side="right" className="w-full bg-cream-50 sm:w-[350px]">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
             <Image

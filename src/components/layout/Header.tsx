@@ -7,6 +7,7 @@ import { UserMenu } from '@/components/features/auth/UserMenu';
 import { NavLink } from '@/components/layout/NavLink';
 import { LocaleSwitcher } from '@/components/shared/LocaleSwitcher';
 import { MobileNav } from '@/components/layout/MobileNav';
+import { MobileBackButton } from '@/components/layout/MobileBackButton';
 
 export async function Header() {
   const session = await auth();
@@ -14,11 +15,15 @@ export async function Header() {
   const t = await getTranslations('nav');
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-white/95 backdrop-blur-md supports-[backdrop-filter]:bg-white/80">
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-50 w-full border-b border-stone-200/50 bg-cream-50/90 backdrop-blur-[14px] md:border-border/60 md:bg-white/95 md:backdrop-blur-md md:supports-[backdrop-filter]:bg-white/80">
+      <div className="mx-auto grid h-[52px] max-w-7xl grid-cols-[40px_1fr_40px] items-center px-[10px] md:flex md:h-20 md:justify-between md:px-6 lg:px-8">
+        <div className="md:hidden">
+          <MobileBackButton />
+        </div>
+
         <Link
           href="/"
-          className="group flex items-center gap-2"
+          className="group hidden items-center gap-2 md:flex"
           aria-label={t('goToHomepage')}
         >
           <Image
@@ -29,6 +34,13 @@ export async function Header() {
             className="h-14 w-auto"
             priority
           />
+        </Link>
+
+        <Link
+          href="/"
+          className="justify-self-center font-display text-base font-semibold tracking-[-0.01em] text-ink-900 md:hidden"
+        >
+          EnCave
         </Link>
 
         <nav
@@ -72,11 +84,13 @@ export async function Header() {
         </div>
 
         {/* Mobile navigation */}
-        <MobileNav
-          isAuthenticated={!!session?.user}
-          userName={session?.user?.name}
-          userRole={userRole}
-        />
+        <div className="justify-self-end md:hidden">
+          <MobileNav
+            isAuthenticated={!!session?.user}
+            userName={session?.user?.name}
+            userRole={userRole}
+          />
+        </div>
       </div>
     </header>
   );
