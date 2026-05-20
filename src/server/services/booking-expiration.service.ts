@@ -21,7 +21,7 @@ export async function expirePendingPaymentBookings(now = new Date()): Promise<{
       visitorEmail: true,
       visitorName: true,
       createdAt: true,
-      stripePaymentIntentId: true,
+      stripeCheckoutSessionId: true,
       date: true,
       experience: {
         select: {
@@ -61,10 +61,10 @@ export async function expirePendingPaymentBookings(now = new Date()): Promise<{
 
       if (!updated) continue;
 
-      if (candidate.stripePaymentIntentId?.startsWith('cs_')) {
+      if (candidate.stripeCheckoutSessionId?.startsWith('cs_')) {
         try {
           await getStripe().checkout.sessions.expire(
-            candidate.stripePaymentIntentId
+            candidate.stripeCheckoutSessionId
           );
         } catch (error) {
           logWarn('Failed to expire Stripe Checkout session', {

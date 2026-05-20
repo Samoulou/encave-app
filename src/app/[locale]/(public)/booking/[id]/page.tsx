@@ -17,7 +17,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { db } from '@/server/db';
 import { getBookingByToken } from '@/server/actions/booking';
 import { BookingStatus } from '@prisma/client';
 import { AddToCalendar } from '@/components/features/booking/AddToCalendar';
@@ -47,40 +46,14 @@ interface BookingPageProps {
 }
 
 async function getBooking(id: string, token?: string) {
-  // If token provided, use token-based access
-  if (token) {
-    const result = await getBookingByToken(token);
-    if (result.success && result.data.id === id) {
-      return result.data;
-    }
+  if (!token) return null;
+
+  const result = await getBookingByToken(token);
+  if (result.success && result.data.id === id) {
+    return result.data;
   }
 
-  // Otherwise, try to get booking by ID (for logged-in users or public reference lookup)
-  const booking = await db.booking.findUnique({
-    where: { id },
-    include: {
-      experience: {
-        select: {
-          title: true,
-          slug: true,
-          duration: true,
-          coverPhoto: true,
-        },
-      },
-      winery: {
-        select: {
-          name: true,
-          slug: true,
-          address: true,
-          commune: true,
-          phone: true,
-          email: true,
-        },
-      },
-    },
-  });
-
-  return booking;
+  return null;
 }
 
 function formatTime(time: string): string {

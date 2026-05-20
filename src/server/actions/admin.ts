@@ -1,7 +1,7 @@
 'use server';
 
 import { z } from 'zod';
-import { BookingStatus } from '@prisma/client';
+import { BookingStatus, UserRole, WineryStatus } from '@prisma/client';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import {
@@ -29,6 +29,31 @@ const ManualRefundSchema = z.object({
   amountCents: z.number().int().positive(),
   reason: z.string().trim().min(10).max(500),
 });
+
+const SuspensionSchema = z.object({
+  targetId: z.string().cuid(),
+  reason: z.string().trim().min(10).max(500),
+});
+
+async function requireAdmin(): Promise<
+  | ActionResult<{ adminId: string }>
+  | { success: true; data: { adminId: string } }
+> {
+  const session = await auth();
+  if (!session?.user) {
+    return {
+      success: false,
+      error: { code: 'UNAUTHORIZED', message: 'Please sign in' },
+    };
+  }
+  if (session.user.role !== UserRole.ADMIN) {
+    return {
+      success: false,
+      error: { code: 'FORBIDDEN', message: 'Admin access required' },
+    };
+  }
+  return { success: true, data: { adminId: session.user.id } };
+}
 
 /**
  * Approve a winery registration
@@ -441,4 +466,181 @@ export async function refundBookingManually(
       error: { code: 'STRIPE_ERROR', message: 'Stripe refund failed' },
     };
   }
+}
+
+export async function suspendWinery(
+  input: unknown
+): Promise<ActionResult<{ status: WineryStatus }>> {
+  const parsed = SuspensionSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: 'Invalid suspension' },
+    };
+  }
+
+  const admin = await requireAdmin();
+  if (!admin.success) return admin;
+
+  const winery = await db.winery.findUnique({
+    where: { id: parsed.data.targetId },
+    select: { id: true, slug: true, status: true },
+  });
+  if (!winery) {
+    return {
+      success: false,
+      error: { code: 'NOT_FOUND', message: 'Winery not found' },
+    };
+  }
+
+  await db.$transaction([
+    db.winery.update({
+      where: { id: winery.id },
+      data: { status: WineryStatus.SUSPENDED },
+    }),
+    db.experience.updateMany({
+      where: { wineryId: winery.id, status: 'PUBLISHED' },
+      data: { status: 'ARCHIVED' },
+    }),
+    db.adminAction.create({
+      data: {
+        adminId: admin.data.adminId,
+        action: 'SUSPEND_WINERY',
+        targetType: 'Winery',
+        targetId: winery.id,
+        reason: parsed.data.reason,
+        metadata: { previousStatus: winery.status },
+      },
+    }),
+  ]);
+
+  invalidateWineryCaches(winery.slug);
+  return { success: true, data: { status: WineryStatus.SUSPENDED } };
+}
+
+export async function reinstateWinery(
+  input: unknown
+): Promise<ActionResult<{ status: WineryStatus }>> {
+  const parsed = SuspensionSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: 'Invalid reinstatement' },
+    };
+  }
+
+  const admin = await requireAdmin();
+  if (!admin.success) return admin;
+
+  const winery = await db.winery.findUnique({
+    where: { id: parsed.data.targetId },
+    select: { id: true, slug: true, status: true },
+  });
+  if (!winery) {
+    return {
+      success: false,
+      error: { code: 'NOT_FOUND', message: 'Winery not found' },
+    };
+  }
+
+  await db.$transaction([
+    db.winery.update({
+      where: { id: winery.id },
+      data: { status: WineryStatus.VERIFIED },
+    }),
+    db.adminAction.create({
+      data: {
+        adminId: admin.data.adminId,
+        action: 'REINSTATE_WINERY',
+        targetType: 'Winery',
+        targetId: winery.id,
+        reason: parsed.data.reason,
+        metadata: { previousStatus: winery.status },
+      },
+    }),
+  ]);
+
+  invalidateWineryCaches(winery.slug);
+  return { success: true, data: { status: WineryStatus.VERIFIED } };
+}
+
+export async function suspendUser(
+  input: unknown
+): Promise<ActionResult<{ suspendedAt: Date }>> {
+  const parsed = SuspensionSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: 'Invalid suspension' },
+    };
+  }
+
+  const admin = await requireAdmin();
+  if (!admin.success) return admin;
+  if (parsed.data.targetId === admin.data.adminId) {
+    return {
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: 'Cannot suspend yourself' },
+    };
+  }
+
+  const now = new Date();
+  await db.$transaction([
+    db.user.update({
+      where: { id: parsed.data.targetId },
+      data: {
+        suspendedAt: now,
+        suspendedBy: admin.data.adminId,
+        suspensionReason: parsed.data.reason,
+      },
+    }),
+    db.adminAction.create({
+      data: {
+        adminId: admin.data.adminId,
+        action: 'SUSPEND_USER',
+        targetType: 'User',
+        targetId: parsed.data.targetId,
+        reason: parsed.data.reason,
+      },
+    }),
+  ]);
+
+  return { success: true, data: { suspendedAt: now } };
+}
+
+export async function reinstateUser(
+  input: unknown
+): Promise<ActionResult<{ reinstated: boolean }>> {
+  const parsed = SuspensionSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: 'Invalid reinstatement' },
+    };
+  }
+
+  const admin = await requireAdmin();
+  if (!admin.success) return admin;
+
+  await db.$transaction([
+    db.user.update({
+      where: { id: parsed.data.targetId },
+      data: {
+        suspendedAt: null,
+        suspendedBy: null,
+        suspensionReason: null,
+      },
+    }),
+    db.adminAction.create({
+      data: {
+        adminId: admin.data.adminId,
+        action: 'REINSTATE_USER',
+        targetType: 'User',
+        targetId: parsed.data.targetId,
+        reason: parsed.data.reason,
+      },
+    }),
+  ]);
+
+  return { success: true, data: { reinstated: true } };
 }

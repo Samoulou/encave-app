@@ -1,9 +1,16 @@
-import { auth } from '@/server/auth';
+import { auth, isCurrentUserSuspended } from '@/server/auth';
 import { redirect } from 'next/navigation';
 import { getLocale } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { db } from '@/server/db';
-import { Home, Building2, LogOut } from 'lucide-react';
+import {
+  Home,
+  Building2,
+  CalendarDays,
+  ClipboardList,
+  ShieldCheck,
+  LogOut,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 async function getPendingCount() {
@@ -20,6 +27,11 @@ export default async function AdminLayout({
   const session = await auth();
 
   if (!session?.user || session.user.role !== 'ADMIN') {
+    const locale = await getLocale();
+    redirect(`/${locale}`);
+  }
+
+  if (await isCurrentUserSuspended()) {
     const locale = await getLocale();
     redirect(`/${locale}`);
   }
@@ -59,6 +71,27 @@ export default async function AdminLayout({
                     {pendingCount}
                   </span>
                 )}
+              </Link>
+              <Link
+                href="/admin/events"
+                className="flex items-center gap-2 text-sm text-slate-600 hover:text-burgundy-700"
+              >
+                <CalendarDays className="h-4 w-4" aria-hidden="true" />
+                Events
+              </Link>
+              <Link
+                href="/admin/bookings"
+                className="flex items-center gap-2 text-sm text-slate-600 hover:text-burgundy-700"
+              >
+                <ClipboardList className="h-4 w-4" aria-hidden="true" />
+                Bookings
+              </Link>
+              <Link
+                href="/admin/compliance"
+                className="flex items-center gap-2 text-sm text-slate-600 hover:text-burgundy-700"
+              >
+                <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                Compliance
               </Link>
             </nav>
           </div>

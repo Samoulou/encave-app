@@ -373,6 +373,28 @@ describe('Payment Service', () => {
       expect(mockCheckoutSessionsRetrieve).toHaveBeenCalledWith('cs_test123');
       expect(mockRefundsCreate).toHaveBeenCalledWith({
         payment_intent: 'pi_test456',
+        reverse_transfer: true,
+        refund_application_fee: true,
+      });
+    });
+
+    it('processes refund directly from a payment intent ID', async () => {
+      mockRefundsCreate.mockResolvedValue({
+        id: 're_test789',
+        amount: 20000,
+        status: 'succeeded',
+      });
+
+      const result = await processRefund('pi_test456', true);
+
+      expect(result).toEqual({
+        refundId: 're_test789',
+        amount: 20000,
+      });
+      expect(mockCheckoutSessionsRetrieve).not.toHaveBeenCalled();
+      expect(mockRefundsCreate).toHaveBeenCalledWith({
+        payment_intent: 'pi_test456',
+        reverse_transfer: true,
         refund_application_fee: true,
       });
     });
@@ -391,6 +413,7 @@ describe('Payment Service', () => {
 
       expect(mockRefundsCreate).toHaveBeenCalledWith({
         payment_intent: 'pi_test456',
+        reverse_transfer: true,
         refund_application_fee: false,
       });
     });
@@ -409,6 +432,7 @@ describe('Payment Service', () => {
 
       expect(mockRefundsCreate).toHaveBeenCalledWith({
         payment_intent: 'pi_test456',
+        reverse_transfer: true,
         refund_application_fee: true,
       });
     });
@@ -454,6 +478,12 @@ describe('Payment Service', () => {
 
       await expect(processRefund('cs_invalid')).rejects.toThrow(
         'Session not found'
+      );
+    });
+
+    it('rejects unsupported Stripe identifiers', async () => {
+      await expect(processRefund('ch_invalid')).rejects.toThrow(
+        'Invalid Stripe payment intent ID'
       );
     });
   });

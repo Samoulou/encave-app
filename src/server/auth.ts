@@ -1,5 +1,6 @@
 import { headers } from 'next/headers';
 import { auth as betterAuth } from '@/server/better-auth';
+import { db } from '@/server/db';
 import type { UserRole, Locale } from '@prisma/client';
 import { logError } from '@/lib/logger';
 
@@ -62,6 +63,18 @@ export async function auth(): Promise<Session | null> {
     logError('Auth error', error, { action: 'auth' });
     return null;
   }
+}
+
+export async function isCurrentUserSuspended(): Promise<boolean> {
+  const session = await auth();
+  if (!session?.user) return false;
+
+  const user = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { suspendedAt: true },
+  });
+
+  return user?.suspendedAt !== null && user?.suspendedAt !== undefined;
 }
 
 /**

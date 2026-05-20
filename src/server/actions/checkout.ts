@@ -263,7 +263,7 @@ export async function createBookingAndCheckout(
     // Update booking with Stripe session ID
     await db.booking.update({
       where: { id: booking.id },
-      data: { stripePaymentIntentId: session.id },
+      data: { stripeCheckoutSessionId: session.id },
     });
 
     if (!session.url) {

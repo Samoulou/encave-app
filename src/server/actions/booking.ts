@@ -4,8 +4,9 @@ import { z } from 'zod';
 import crypto from 'crypto';
 import { differenceInHours } from 'date-fns';
 import { db } from '@/server/db';
+import { auth } from '@/server/auth';
 import type { ActionResult } from '@/types/actions';
-import { BookingStatus } from '@prisma/client';
+import { BookingStatus, UserRole } from '@prisma/client';
 import {
   sendBookingConfirmationEmail,
   sendBookingCancellationEmail,
@@ -267,6 +268,14 @@ export async function resendConfirmationEmail(
   bookingId: string
 ): Promise<ActionResult<{ sent: boolean }>> {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      return {
+        success: false,
+        error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
+      };
+    }
+
     const booking = await db.booking.findUnique({
       where: { id: bookingId },
       include: {
@@ -279,6 +288,7 @@ export async function resendConfirmationEmail(
         winery: {
           select: {
             name: true,
+            userId: true,
           },
         },
       },
@@ -288,6 +298,18 @@ export async function resendConfirmationEmail(
       return {
         success: false,
         error: { code: 'NOT_FOUND', message: 'Booking not found' },
+      };
+    }
+
+    const isClientOwner =
+      booking.visitorEmail.toLowerCase() === session.user.email.toLowerCase();
+    const isWineryOwner = booking.winery.userId === session.user.id;
+    const isAdmin = session.user.role === UserRole.ADMIN;
+
+    if (!isClientOwner && !isWineryOwner && !isAdmin) {
+      return {
+        success: false,
+        error: { code: 'FORBIDDEN', message: 'Not allowed for this booking' },
       };
     }
 
@@ -562,7 +584,7 @@ export async function cancelBooking(
       data: {
         status: BookingStatus.CANCELLED_BY_CLIENT,
         cancelledAt: new Date(),
-        refundIssued: isEligibleForRefund,
+        refundIssued: refundAmount !== null,
         refundAmount,
         stripeRefundId,
       },

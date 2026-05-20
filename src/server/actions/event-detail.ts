@@ -583,6 +583,7 @@ export async function cancelEventSession(
       guestCount: true,
       totalPrice: true,
       status: true,
+      stripeCheckoutSessionId: true,
       stripePaymentIntentId: true,
     },
   });
@@ -621,10 +622,10 @@ export async function cancelEventSession(
 
       if (
         booking.status === BookingStatus.PENDING_PAYMENT &&
-        booking.stripePaymentIntentId?.startsWith('cs_')
+        booking.stripeCheckoutSessionId?.startsWith('cs_')
       ) {
         await getStripe()
-          .checkout.sessions.expire(booking.stripePaymentIntentId)
+          .checkout.sessions.expire(booking.stripeCheckoutSessionId)
           .catch(() => undefined);
       }
 

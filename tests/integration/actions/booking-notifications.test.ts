@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import crypto from 'crypto';
 import { db } from '@/server/db';
-import { BookingStatus } from '@prisma/client';
+import { BookingStatus, UserRole } from '@prisma/client';
 
 // Mock db
 vi.mock('@/server/db', () => ({
@@ -14,14 +14,27 @@ vi.mock('@/server/db', () => ({
   },
 }));
 
+vi.mock('@/server/auth', () => ({
+  auth: vi.fn(),
+}));
+
 // Mock email service
 vi.mock('@/server/services/email.service', () => ({
   sendBookingConfirmationEmail: vi.fn().mockResolvedValue(true),
 }));
 
+import { auth } from '@/server/auth';
+
 describe('Booking Notification Actions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(auth).mockResolvedValue({
+      user: {
+        id: 'client-1',
+        email: 'john@example.com',
+        role: UserRole.CLIENT,
+      },
+    } as never);
   });
 
   describe('resendConfirmationEmail', () => {
@@ -41,6 +54,7 @@ describe('Booking Notification Actions', () => {
       },
       winery: {
         name: 'Test Winery',
+        userId: 'winemaker-1',
       },
     };
 
@@ -86,6 +100,48 @@ describe('Booking Notification Actions', () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error.code).toBe('VALIDATION_ERROR');
+      }
+    });
+
+    it('allows the winery owner to resend confirmation email', async () => {
+      vi.mocked(auth).mockResolvedValue({
+        user: {
+          id: 'winemaker-1',
+          email: 'owner@example.com',
+          role: UserRole.WINEMAKER,
+        },
+      } as never);
+      vi.mocked(db.booking.findUnique).mockResolvedValue(
+        mockConfirmedBooking as never
+      );
+      vi.mocked(db.booking.update).mockResolvedValue({} as never);
+
+      const { resendConfirmationEmail } =
+        await import('@/server/actions/booking');
+      const result = await resendConfirmationEmail('booking-1');
+
+      expect(result.success).toBe(true);
+    });
+
+    it('rejects unrelated authenticated users', async () => {
+      vi.mocked(auth).mockResolvedValue({
+        user: {
+          id: 'other-user',
+          email: 'other@example.com',
+          role: UserRole.CLIENT,
+        },
+      } as never);
+      vi.mocked(db.booking.findUnique).mockResolvedValue(
+        mockConfirmedBooking as never
+      );
+
+      const { resendConfirmationEmail } =
+        await import('@/server/actions/booking');
+      const result = await resendConfirmationEmail('booking-1');
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe('FORBIDDEN');
       }
     });
 

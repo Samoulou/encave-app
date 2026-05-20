@@ -5,7 +5,7 @@ import type Stripe from 'stripe';
 import { getStripe, isStripeConfigured } from '@/server/stripe';
 import { db } from '@/server/db';
 import { env } from '@/lib/env';
-import { BookingStatus } from '@prisma/client';
+import { BookingStatus, Prisma } from '@prisma/client';
 import {
   sendBookingConfirmationEmail,
   sendWinemakerNewBookingEmail,
@@ -55,7 +55,11 @@ export async function POST(req: Request) {
     );
   }
 
-  // Handle the event
+  const shouldProcess = await claimStripeEvent(event);
+  if (!shouldProcess) {
+    return NextResponse.json({ received: true, duplicate: true });
+  }
+
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
@@ -75,14 +79,76 @@ export async function POST(req: Request) {
         logInfo('Unhandled checkout event type', { eventType: event.type });
     }
 
+    await markStripeEventProcessed(event.id);
     return NextResponse.json({ received: true });
   } catch (error) {
     logError('Error processing checkout webhook', error);
+    await markStripeEventFailed(event.id, error);
     return NextResponse.json(
       { error: 'Webhook handler failed' },
       { status: 500 }
     );
   }
+}
+
+async function claimStripeEvent(event: Stripe.Event): Promise<boolean> {
+  try {
+    await db.stripeEvent.create({
+      data: {
+        stripeEventId: event.id,
+        type: event.type,
+        status: 'PROCESSING',
+      },
+    });
+    return true;
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2002'
+    ) {
+      const existing = await db.stripeEvent.findUnique({
+        where: { stripeEventId: event.id },
+        select: { status: true },
+      });
+
+      if (existing?.status === 'FAILED') {
+        const retry = await db.stripeEvent.updateMany({
+          where: { stripeEventId: event.id, status: 'FAILED' },
+          data: { status: 'PROCESSING', errorMessage: null },
+        });
+        return retry.count === 1;
+      }
+
+      logInfo('Duplicate Stripe checkout event skipped', {
+        eventId: event.id,
+        eventType: event.type,
+        status: existing?.status,
+      });
+      return false;
+    }
+
+    throw error;
+  }
+}
+
+async function markStripeEventProcessed(eventId: string): Promise<void> {
+  await db.stripeEvent.update({
+    where: { stripeEventId: eventId },
+    data: { status: 'PROCESSED', errorMessage: null },
+  });
+}
+
+async function markStripeEventFailed(
+  eventId: string,
+  error: unknown
+): Promise<void> {
+  await db.stripeEvent.update({
+    where: { stripeEventId: eventId },
+    data: {
+      status: 'FAILED',
+      errorMessage: error instanceof Error ? error.message : String(error),
+    },
+  });
 }
 
 /**
@@ -144,6 +210,14 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     return;
   }
 
+  if (!session.payment_intent || typeof session.payment_intent !== 'string') {
+    logError('Checkout session has no payment intent', undefined, {
+      bookingId,
+      sessionId: session.id,
+    });
+    throw new Error('Checkout session has no payment intent');
+  }
+
   // Generate secure access token for email link
   // Store only the hash for security - the plaintext token is sent in emails
   const accessToken = crypto.randomBytes(32).toString('hex');
@@ -152,17 +226,24 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     .update(accessToken)
     .digest('hex');
 
-  // Update booking to confirmed
-  // Note: We only store the hash, not the plaintext token (SEC-002 fix)
-  await db.booking.update({
-    where: { id: bookingId },
+  const updated = await db.booking.updateMany({
+    where: { id: bookingId, status: BookingStatus.PENDING_PAYMENT },
     data: {
       status: BookingStatus.CONFIRMED,
-      stripePaymentIntentId: session.payment_intent as string,
+      stripeCheckoutSessionId: session.id,
+      stripePaymentIntentId: session.payment_intent,
       expiresAt: null, // Clear expiration since payment is complete
       accessTokenHash,
     },
   });
+
+  if (updated.count !== 1) {
+    logInfo('Booking no longer pending payment after webhook claim', {
+      bookingRef: booking.reference,
+      status: booking.status,
+    });
+    return;
+  }
 
   logInfo('Booking confirmed via webhook', { bookingRef: booking.reference });
 
