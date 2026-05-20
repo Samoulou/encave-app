@@ -1,14 +1,17 @@
 import {
   Calendar,
+  Clock,
   Globe,
   Heart,
   Menu,
   Search,
   Sparkles,
-  Star,
   Users,
 } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
+import { ImageWithFallback } from '@/components/shared/ImageWithFallback';
+import { formatCHF } from '@/lib/utils/currency';
+import type { ExperienceCardData } from '@/components/features/experience/ExperienceCard';
 
 const categories = [
   ['Degustation', '🍷', 'bg-[#f6e9ec]'],
@@ -18,38 +21,42 @@ const categories = [
   ['Vigne', '🌿', 'bg-[#dde6cf]'],
 ];
 
-const nearby = [
-  {
-    estate: 'Cornulus',
-    title: '5 crus',
-    price: 'CHF 35',
-    tone: 'from-[#3a4424] to-[#7a8a3a]',
-  },
-  {
-    estate: 'La Madeleine',
-    title: 'Cepages',
-    price: 'CHF 48',
-    tone: 'from-[#3a2438] to-[#8a4a72]',
-  },
-  {
-    estate: 'Cave du Tunnel',
-    title: 'Accords',
-    price: 'CHF 65',
-    tone: 'from-[#5a3328] to-[#a45a3a]',
-  },
-];
+function formatDuration(minutes: number) {
+  if (minutes >= 60) {
+    const hours = Math.floor(minutes / 60);
+    const remaining = minutes % 60;
+    return remaining ? `${hours}h ${remaining}` : `${hours}h`;
+  }
 
-function DotVisual({
+  return `${minutes} min`;
+}
+
+function ExperienceVisual({
+  experience,
   className = '',
-  tone = 'from-[#2a0e16] to-burgundy-700',
+  priority = false,
 }: {
+  experience?: ExperienceCardData;
   className?: string;
-  tone?: string;
+  priority?: boolean;
 }) {
   return (
     <div
-      className={`relative h-full overflow-hidden bg-gradient-to-br ${tone} ${className}`}
+      className={`relative h-full overflow-hidden bg-cream-200 ${className}`}
     >
+      {experience?.coverPhoto ? (
+        <ImageWithFallback
+          src={experience.coverPhoto}
+          alt={experience.title}
+          fill
+          priority={priority}
+          className="object-cover"
+          sizes="100vw"
+        />
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-br from-[#2a0e16] to-burgundy-700" />
+      )}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-burgundy-900/15 to-black/65" />
       <div
         className="absolute inset-0 opacity-30"
         style={{
@@ -58,7 +65,6 @@ function DotVisual({
           backgroundSize: '16px 16px',
         }}
       />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_74%_24%,rgba(255,255,255,.24),transparent_46%)]" />
     </div>
   );
 }
@@ -79,12 +85,18 @@ function PriceTag({ amount, size = 20 }: { amount: string; size?: number }) {
   );
 }
 
-export function HomeMobileEditorial() {
+export function HomeMobileEditorial({
+  experiences,
+}: {
+  experiences: ExperienceCardData[];
+}) {
+  const featured = experiences[0];
+  const nearby = experiences.slice(1, 4);
+
   return (
     <div className="min-h-screen overflow-x-hidden bg-cream-50 pb-6 font-sans text-ink-900">
       <section className="relative h-[460px]">
-        <DotVisual />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-transparent to-black/65" />
+        <ExperienceVisual experience={featured} priority />
 
         <div className="absolute left-3.5 right-3.5 top-3 flex items-center justify-between text-white">
           <span className="font-display text-[22px] font-bold tracking-[-0.01em]">
@@ -109,7 +121,7 @@ export function HomeMobileEditorial() {
         <div className="absolute bottom-[108px] left-[18px] right-[18px] text-white">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-gold-400/45 bg-gold-400/20 px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.14em] text-gold-400">
             <Sparkles className="h-[11px] w-[11px]" aria-hidden="true" />
-            Valais · 142 domaines verifies
+            Valais · experiences verifiees
           </span>
           <h1 className="mt-3 font-display text-[38px] font-normal leading-[1.04] tracking-[-0.015em]">
             Le vin,{' '}
@@ -138,15 +150,15 @@ export function HomeMobileEditorial() {
               Quand
             </div>
             <div className="mt-0.5 text-sm font-semibold text-ink-900">
-              Ce week-end
+              Voir les dates
             </div>
           </div>
           <Link
-            href="/experiences?location=valais&date=weekend"
+            href="/experiences"
             className="col-span-2 inline-flex h-12 items-center justify-center gap-2 border-t border-[#efe4e6] bg-burgundy-600 text-sm font-bold text-white"
           >
             <Search className="h-4 w-4" aria-hidden="true" />
-            Explorer 142 experiences
+            Explorer les experiences
           </Link>
         </div>
       </section>
@@ -177,102 +189,96 @@ export function HomeMobileEditorial() {
         </div>
       </section>
 
-      <section className="px-3.5 py-6">
-        <h2 className="font-display text-xl font-semibold tracking-[-0.01em]">
-          A l&apos;affiche cette semaine
-        </h2>
-        <p className="mb-3.5 mt-1 text-[13px] text-ink-500">
-          Choisies par notre equipe oeno.
-        </p>
+      {featured && (
+        <section className="px-3.5 py-6">
+          <h2 className="font-display text-xl font-semibold tracking-[-0.01em]">
+            A l&apos;affiche
+          </h2>
+          <p className="mb-3.5 mt-1 text-[13px] text-ink-500">
+            Une experience disponible sur EnCave.
+          </p>
 
-        <article className="overflow-hidden rounded-[18px] bg-white shadow-audit-elevated">
-          <div className="relative aspect-[4/3]">
-            <DotVisual tone="from-[#5a1e2c] to-[#a83a58]" />
-            <button
-              className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-white/90 text-burgundy-700"
-              aria-label="Ajouter aux favoris"
-            >
-              <Heart className="h-[18px] w-[18px]" aria-hidden="true" />
-            </button>
-            <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-700">
-              • Dispo demain
-            </span>
-          </div>
-          <div className="p-4">
-            <div className="flex items-start justify-between gap-2.5">
-              <div className="min-w-0">
-                <p className="m-0 font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-burgundy-600">
-                  Domaine de Provins · Sion
-                </p>
-                <h3 className="mt-1 font-display text-lg font-semibold leading-[1.2] tracking-[-0.01em]">
-                  Heida & Petite Arvine au coucher
-                </h3>
-              </div>
-              <span className="inline-flex items-center gap-1 text-[13px] font-bold text-ink-900">
-                <Star
-                  className="h-[13px] w-[13px] fill-current"
-                  aria-hidden="true"
-                />
-                4.9
-                <span className="text-[11px] font-normal text-ink-500">
-                  (38)
-                </span>
+          <article className="overflow-hidden rounded-[18px] bg-white shadow-audit-elevated">
+            <div className="relative aspect-[4/3]">
+              <ExperienceVisual experience={featured} priority />
+              <button
+                className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-white/90 text-burgundy-700"
+                aria-label="Ajouter aux favoris"
+              >
+                <Heart className="h-[18px] w-[18px]" aria-hidden="true" />
+              </button>
+              <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-700">
+                {featured.winery.commune}
               </span>
             </div>
+            <div className="p-4">
+              <p className="m-0 font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-burgundy-600">
+                {featured.winery.name} · {featured.winery.commune}
+              </p>
+              <h3 className="mt-1 font-display text-lg font-semibold leading-[1.2] tracking-[-0.01em]">
+                {featured.title}
+              </h3>
 
-            <div className="mt-2.5 flex flex-wrap gap-1.5">
-              {['1h 30', '8 max', 'des 14h', 'francais'].map((item) => (
-                <span
-                  key={item}
-                  className="rounded-full bg-cream-200 px-2.5 py-1 font-mono text-[11px] text-ink-700"
-                >
-                  {item}
+              <div className="mt-2.5 flex flex-wrap gap-1.5">
+                <span className="rounded-full bg-cream-200 px-2.5 py-1 font-mono text-[11px] text-ink-700">
+                  <Clock className="mr-1 inline h-3 w-3" aria-hidden="true" />
+                  {formatDuration(featured.duration)}
                 </span>
-              ))}
-            </div>
+                {featured.maxCapacity != null && (
+                  <span className="rounded-full bg-cream-200 px-2.5 py-1 font-mono text-[11px] text-ink-700">
+                    <Users className="mr-1 inline h-3 w-3" aria-hidden="true" />
+                    max {featured.maxCapacity}
+                  </span>
+                )}
+              </div>
 
-            <div className="mt-3.5 flex items-center justify-between">
-              <PriceTag amount="CHF 45" />
-              <Link
-                href="/experiences"
-                className="inline-flex h-9 items-center rounded-full bg-ink-900 px-3.5 text-[13px] font-semibold text-white"
+              <div className="mt-3.5 flex items-center justify-between">
+                <PriceTag amount={formatCHF(featured.price)} />
+                <Link
+                  href={`/experiences/${featured.slug}`}
+                  className="inline-flex h-9 items-center rounded-full bg-ink-900 px-3.5 text-[13px] font-semibold text-white"
+                >
+                  Reserver →
+                </Link>
+              </div>
+            </div>
+          </article>
+        </section>
+      )}
+
+      {nearby.length > 0 && (
+        <section className="pb-6">
+          <h2 className="mx-3.5 mb-3 font-display text-xl font-semibold tracking-[-0.01em]">
+            Pres de vous
+          </h2>
+          <div className="flex gap-3 overflow-x-auto px-3.5 pb-1.5">
+            {nearby.map((experience) => (
+              <article
+                key={experience.id}
+                className="min-w-[188px] overflow-hidden rounded-[14px] bg-white shadow-audit-card"
               >
-                Reserver →
-              </Link>
-            </div>
-          </div>
-        </article>
-      </section>
-
-      <section className="pb-6">
-        <h2 className="mx-3.5 mb-3 font-display text-xl font-semibold tracking-[-0.01em]">
-          Pres de vous
-        </h2>
-        <div className="flex gap-3 overflow-x-auto px-3.5 pb-1.5">
-          {nearby.map((item) => (
-            <article
-              key={item.estate}
-              className="min-w-[188px] overflow-hidden rounded-[14px] bg-white shadow-audit-card"
-            >
-              <div className="aspect-[4/3]">
-                <DotVisual tone={item.tone} />
-              </div>
-              <div className="p-3">
-                <p className="m-0 font-mono text-[11px] font-semibold text-burgundy-600">
-                  {item.estate}
-                </p>
-                <h3 className="mt-0.5 font-display text-[15px] font-semibold">
-                  {item.title}
-                </h3>
-                <div className="mt-1.5 flex items-center justify-between">
-                  <PriceTag amount={item.price} size={14} />
-                  <span className="text-[11px] text-ink-500">·· 4.8</span>
+                <div className="aspect-[4/3]">
+                  <ExperienceVisual experience={experience} />
                 </div>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
+                <div className="p-3">
+                  <p className="m-0 font-mono text-[11px] font-semibold text-burgundy-600">
+                    {experience.winery.name}
+                  </p>
+                  <h3 className="mt-0.5 line-clamp-2 font-display text-[15px] font-semibold">
+                    {experience.title}
+                  </h3>
+                  <div className="mt-1.5 flex items-center justify-between">
+                    <PriceTag amount={formatCHF(experience.price)} size={14} />
+                    <span className="text-[11px] text-ink-500">
+                      {experience.winery.commune}
+                    </span>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
 
       <nav className="sticky bottom-0 grid h-16 grid-cols-4 border-t border-stone-200/60 bg-cream-50/95 backdrop-blur-xl">
         {[
