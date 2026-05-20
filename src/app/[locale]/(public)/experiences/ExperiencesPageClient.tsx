@@ -4,14 +4,16 @@ import * as React from 'react';
 import { useCallback, useMemo, useTransition, useOptimistic } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from '@/i18n/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { ExperienceType } from '@prisma/client';
 import { SearchBar } from '@/components/features/search/SearchBar';
 import { SearchFilters } from '@/components/features/search/SearchFilters';
 import { SearchResults } from '@/components/features/search/SearchResults';
+import { ExperienceCard } from '@/components/features/experience/ExperienceCard';
 import { Button } from '@/components/ui/button';
-import { SlidersHorizontal, X } from 'lucide-react';
+import { SlidersHorizontal, X, MapPin, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatCHF } from '@/lib/utils/currency';
 import type { ExperienceSearchResult } from '@/server/queries/experience.queries';
 
 type SortOption =
@@ -57,12 +59,12 @@ export function ExperiencesPageClient({
   locationSearch,
 }: ExperiencesPageClientProps) {
   const router = useRouter();
+  const locale = useLocale();
   const searchParams = useSearchParams();
   const currentSearchParams = useMemo(
     () => searchParams ?? new URLSearchParams(),
     [searchParams]
   );
-  const t = useTranslations('search');
   const [isPending, startTransition] = useTransition();
 
   // Parse current URL params (server-confirmed state)
@@ -193,8 +195,230 @@ export function ExperiencesPageClient({
     currentParams.maxPrice !== null ||
     currentParams.capacity !== null;
 
+  const sortLabels: Record<SortOption, string> = {
+    relevance: 'Recommandés',
+    price_asc: 'Prix ↑',
+    price_desc: 'Prix ↓',
+    newest: 'Plus récents',
+    distance: 'Plus proche',
+  };
+
   return (
-    <div className="lg:grid lg:grid-cols-[280px_1fr] lg:gap-8">
+    <>
+      <div className="hidden lg:grid lg:grid-cols-[280px_minmax(0,1fr)_360px] lg:gap-6">
+        <aside className="sticky top-24 h-[calc(100vh-7rem)] rounded-[18px] border border-stone-200 bg-white p-5 shadow-audit-card">
+          <div className="mb-5">
+            <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-burgundy-700">
+              Discovery
+            </div>
+            <h2 className="mt-1 font-display text-2xl font-semibold text-ink-900">
+              Affiner
+            </h2>
+          </div>
+          <SearchFilters
+            types={currentParams.types}
+            onTypesChange={handleTypesChange}
+            commune={currentParams.commune}
+            onCommuneChange={handleCommuneChange}
+            communes={communes}
+            minPrice={currentParams.minPrice}
+            onMinPriceChange={handleMinPriceChange}
+            maxPrice={currentParams.maxPrice}
+            onMaxPriceChange={handleMaxPriceChange}
+            capacity={currentParams.capacity}
+            onCapacityChange={handleCapacityChange}
+            onClearFilters={handleClearFilters}
+          />
+        </aside>
+
+        <main className="min-w-0">
+          <div className="mb-5 rounded-[18px] border border-stone-200 bg-white p-3 shadow-audit-card">
+            <SearchBar
+              value={currentParams.search}
+              onChange={handleSearchChange}
+              isPending={isPending}
+              className="[&_input]:border-0 [&_input]:bg-cream-50 [&_input]:shadow-none"
+            />
+          </div>
+
+          <div className="mb-5 flex items-center justify-between">
+            <div>
+              <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-burgundy-700">
+                Valais · {pagination.total} expériences
+              </p>
+              <h2 className="mt-1 font-display text-[30px] font-semibold text-ink-900">
+                Expériences disponibles
+              </h2>
+            </div>
+            <div className="flex gap-2">
+              {(Object.keys(sortLabels) as SortOption[]).map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => handleSortChange(option)}
+                  className={cn(
+                    'h-9 rounded-lg border px-3 text-xs font-semibold transition-colors',
+                    currentParams.sort === option
+                      ? 'border-burgundy-600 bg-burgundy-600 text-white'
+                      : 'border-stone-200 bg-white text-ink-700 hover:border-burgundy-200'
+                  )}
+                >
+                  {sortLabels[option]}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div
+            className={cn(
+              'space-y-4 transition-opacity duration-150',
+              isPending && 'pointer-events-none opacity-70'
+            )}
+          >
+            {initialExperiences.length > 0 ? (
+              initialExperiences.map((experience, index) => (
+                <ExperienceCard
+                  key={experience.id}
+                  experience={experience}
+                  priority={index < 2}
+                  className="[&>div]:grid [&>div]:grid-cols-[220px_1fr] [&>div]:rounded-[16px] [&_[class*='aspect']]:aspect-auto [&_[class*='aspect']]:h-full"
+                />
+              ))
+            ) : (
+              <div className="rounded-[18px] border border-dashed border-stone-300 bg-white p-10 text-center">
+                <Search className="mx-auto h-8 w-8 text-burgundy-600" />
+                <h3 className="mt-4 font-display text-xl font-semibold">
+                  Aucun résultat trouvé
+                </h3>
+                <p className="mt-2 text-sm text-ink-500">
+                  Essayez d’ajuster les filtres ou la recherche.
+                </p>
+              </div>
+            )}
+          </div>
+        </main>
+
+        <aside className="sticky top-24 h-[calc(100vh-7rem)] overflow-hidden rounded-[18px] border border-stone-200 bg-[#dfe8d0] shadow-audit-card">
+          <div
+            className="absolute inset-0 opacity-60"
+            style={{
+              backgroundImage:
+                'linear-gradient(120deg, transparent 35%, rgba(122,138,58,.25) 35%, rgba(122,138,58,.25) 55%, transparent 55%)',
+            }}
+          />
+          <div
+            className="absolute inset-0 opacity-40"
+            style={{
+              backgroundImage:
+                'radial-gradient(circle at 1px 1px, rgba(69,10,28,.35) 1px, transparent 0)',
+              backgroundSize: '20px 20px',
+            }}
+          />
+          {initialExperiences.slice(0, 8).map((experience, index) => {
+            const positions = [
+              ['22%', '28%'],
+              ['42%', '46%'],
+              ['62%', '32%'],
+              ['74%', '58%'],
+              ['34%', '68%'],
+              ['84%', '38%'],
+              ['54%', '76%'],
+              ['18%', '52%'],
+            ];
+            const [left, top] = positions[index] ?? ['50%', '50%'];
+
+            return (
+              <a
+                key={experience.id}
+                href={`/${locale}/experiences/${experience.slug}`}
+                className="absolute rounded-full bg-ink-900 px-3 py-1.5 font-mono text-[11px] font-bold text-white shadow-lg"
+                style={{ left, top, transform: 'translate(-50%, -50%)' }}
+              >
+                {formatCHF(experience.price).replace('CHF ', '')}
+              </a>
+            );
+          })}
+          <div className="absolute left-4 top-4 rounded-xl bg-white/95 px-4 py-3 shadow-audit-card">
+            <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-burgundy-700">
+              Carte
+            </div>
+            <div className="mt-1 flex items-center gap-2 font-display text-lg font-semibold">
+              <MapPin className="h-4 w-4 text-burgundy-700" />
+              {pagination.total} lieux
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <div className="lg:hidden">
+        <MobileListing
+          currentParams={currentParams}
+          showMobileFilters={showMobileFilters}
+          setShowMobileFilters={setShowMobileFilters}
+          hasActiveFilters={!!hasActiveFilters}
+          handleClearFilters={handleClearFilters}
+          handleTypesChange={handleTypesChange}
+          handleCommuneChange={handleCommuneChange}
+          handleMinPriceChange={handleMinPriceChange}
+          handleMaxPriceChange={handleMaxPriceChange}
+          handleCapacityChange={handleCapacityChange}
+          handleSearchChange={handleSearchChange}
+          handleSortChange={handleSortChange}
+          handlePageChange={handlePageChange}
+          communes={communes}
+          initialExperiences={initialExperiences}
+          pagination={pagination}
+          locationSearch={locationSearch}
+          isPending={isPending}
+        />
+      </div>
+    </>
+  );
+}
+
+function MobileListing({
+  currentParams,
+  showMobileFilters,
+  setShowMobileFilters,
+  hasActiveFilters,
+  handleClearFilters,
+  handleTypesChange,
+  handleCommuneChange,
+  handleMinPriceChange,
+  handleMaxPriceChange,
+  handleCapacityChange,
+  handleSearchChange,
+  handleSortChange,
+  handlePageChange,
+  communes,
+  initialExperiences,
+  pagination,
+  locationSearch,
+  isPending,
+}: {
+  currentParams: FilterState;
+  showMobileFilters: boolean;
+  setShowMobileFilters: (_show: boolean) => void;
+  hasActiveFilters: boolean;
+  handleClearFilters: () => void;
+  handleTypesChange: (_types: ExperienceType[]) => void;
+  handleCommuneChange: (_commune: string | null) => void;
+  handleMinPriceChange: (_price: number | null) => void;
+  handleMaxPriceChange: (_price: number | null) => void;
+  handleCapacityChange: (_capacity: number | null) => void;
+  handleSearchChange: (_value: string) => void;
+  handleSortChange: (_sort: SortOption) => void;
+  handlePageChange: (_page: number) => void;
+  communes: string[];
+  initialExperiences: ExperienceSearchResult[];
+  pagination: PaginationInfo;
+  locationSearch: LocationSearchInfo;
+  isPending: boolean;
+}) {
+  const t = useTranslations('search');
+
+  return (
+    <div>
       {/* Mobile Filter Toggle */}
       <div className="mb-4 flex items-center gap-2 lg:hidden">
         <Button
