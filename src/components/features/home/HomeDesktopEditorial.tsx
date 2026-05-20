@@ -27,6 +27,8 @@ const categoryLinks = [
   ['Accords mets-vins', 'Tables locales', 'FOOD_PAIRING', Utensils],
 ] as const;
 
+const HERO_BANNER_IMAGE = '/images/herobanner-image-original.jpg';
+
 function formatDuration(minutes: number) {
   if (minutes >= 60) {
     const hours = Math.floor(minutes / 60);
@@ -63,7 +65,7 @@ function ExperienceVisual({
         />
       ) : (
         <ImageWithFallback
-          src="/images/herobanner-image.jpg"
+          src={HERO_BANNER_IMAGE}
           alt="Vignes valaisannes"
           fill
           priority={priority}
@@ -121,19 +123,32 @@ export function HomeDesktopEditorial({
 
   return (
     <div className="bg-cream-50 text-ink-900">
-      <section className="grid min-h-[600px] grid-cols-[1.15fr_1fr] border-b border-stone-200">
-        <div className="flex flex-col justify-between px-14 py-[72px]">
+      <section
+        className="relative grid min-h-[600px] grid-cols-[1.15fr_1fr] overflow-hidden border-b border-stone-200 bg-ink-900 bg-cover bg-center"
+        style={{ backgroundImage: `url(${HERO_BANNER_IMAGE})` }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-burgundy-950/55 to-black/25" />
+        <div
+          className="absolute inset-0 opacity-25"
+          style={{
+            backgroundImage:
+              'radial-gradient(circle at 1px 1px, rgba(255,255,255,.48) 1px, transparent 0)',
+            backgroundSize: '18px 18px',
+          }}
+        />
+
+        <div className="relative z-10 flex flex-col justify-between px-14 py-[72px]">
           <div>
             <div className="font-mono text-[11px] uppercase tracking-[0.16em] text-burgundy-700">
               • Experiences disponibles en Valais
             </div>
-            <h1 className="mt-[18px] max-w-[560px] font-display text-[80px] font-light leading-[0.98] tracking-[-0.025em] text-ink-900">
+            <h1 className="mt-[18px] max-w-[560px] font-display text-[80px] font-light leading-[0.98] tracking-[-0.025em] text-white">
               Le Valais,
               <br />
-              une <em className="font-normal italic text-burgundy-700">cave</em>
+              une <em className="font-normal italic text-gold-400">cave</em>
               <br />a ciel ouvert.
             </h1>
-            <p className="mt-[22px] max-w-[480px] text-[17px] leading-[1.55] text-ink-700">
+            <p className="mt-[22px] max-w-[480px] text-[17px] leading-[1.55] text-white/85">
               Degustations privees, visites de cave et ateliers proposes par les
               domaines valaisans disponibles sur EnCave.
             </p>
@@ -152,7 +167,7 @@ export function HomeDesktopEditorial({
           </div>
         </div>
 
-        <div className="relative">
+        <div className="relative z-10">
           <ExperienceVisual
             experience={featured}
             priority
