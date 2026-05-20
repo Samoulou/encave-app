@@ -138,7 +138,7 @@ export async function cancelClientBooking(
       data: {
         status: BookingStatus.CANCELLED_BY_CLIENT,
         cancelledAt: new Date(),
-        refundIssued: isEligibleForRefund,
+        refundIssued: refundAmount !== null,
         refundAmount,
         stripeRefundId,
       },

@@ -9,7 +9,15 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { ArrowRight, Clock, MapPin, ClipboardList, Wine } from 'lucide-react';
+import {
+  ArrowRight,
+  CalendarDays,
+  Clock,
+  MapPin,
+  ClipboardList,
+  ShieldCheck,
+  Wine,
+} from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { getTranslations } from 'next-intl/server';
 import { generatePageMetadata } from '@/lib/seo/metadata';
@@ -169,6 +177,33 @@ export default async function AdminDashboard() {
                     {stats.pending}
                   </span>
                 )}
+              </Button>
+            </Link>
+            <Link href="/admin/events" className="block">
+              <Button
+                variant="outline"
+                className="h-12 w-full justify-start hover:border-burgundy-300 hover:bg-burgundy-50"
+              >
+                <CalendarDays className="mr-3 h-4 w-4 text-burgundy-500" />
+                Review events
+              </Button>
+            </Link>
+            <Link href="/admin/bookings" className="block">
+              <Button
+                variant="outline"
+                className="h-12 w-full justify-start hover:border-burgundy-300 hover:bg-burgundy-50"
+              >
+                <ClipboardList className="mr-3 h-4 w-4 text-burgundy-500" />
+                Search bookings
+              </Button>
+            </Link>
+            <Link href="/admin/compliance" className="block">
+              <Button
+                variant="outline"
+                className="h-12 w-full justify-start hover:border-burgundy-300 hover:bg-burgundy-50"
+              >
+                <ShieldCheck className="mr-3 h-4 w-4 text-burgundy-500" />
+                Compliance checklist
               </Button>
             </Link>
           </CardContent>

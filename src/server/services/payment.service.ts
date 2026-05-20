@@ -164,19 +164,30 @@ export function getPlatformCommissionRate(): number {
  * Handles both full and partial refunds, including application fee refund
  */
 export async function processRefund(
-  stripeSessionId: string,
+  stripePaymentIntentOrSessionId: string,
   refundApplicationFee: boolean = true
 ): Promise<{ refundId: string; amount: number }> {
-  // Retrieve the checkout session to get the payment intent
-  const session = await getStripe().checkout.sessions.retrieve(stripeSessionId);
+  let paymentIntentId = stripePaymentIntentOrSessionId;
 
-  if (!session.payment_intent || typeof session.payment_intent !== 'string') {
-    throw new Error('No payment intent found for this session');
+  if (stripePaymentIntentOrSessionId.startsWith('cs_')) {
+    const session = await getStripe().checkout.sessions.retrieve(
+      stripePaymentIntentOrSessionId
+    );
+
+    if (!session.payment_intent || typeof session.payment_intent !== 'string') {
+      throw new Error('No payment intent found for this session');
+    }
+
+    paymentIntentId = session.payment_intent;
   }
 
-  // Create the refund
+  if (!paymentIntentId.startsWith('pi_')) {
+    throw new Error('Invalid Stripe payment intent ID');
+  }
+
   const refund = await getStripe().refunds.create({
-    payment_intent: session.payment_intent,
+    payment_intent: paymentIntentId,
+    reverse_transfer: true,
     refund_application_fee: refundApplicationFee,
   });
 
