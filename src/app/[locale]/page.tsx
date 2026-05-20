@@ -14,7 +14,7 @@ import { PopularExperiences } from '@/components/features/home/PopularExperience
 import { HowItWorks } from '@/components/features/home/HowItWorks';
 import { HomeDesktopEditorial } from '@/components/features/home/HomeDesktopEditorial';
 import { FadeIn } from '@/components/shared/FadeIn';
-import { getFeaturedExperiences } from '@/server/queries/experience.queries';
+import { searchExperiences } from '@/server/queries/experience.queries';
 import type { Locale } from '@/i18n/routing';
 
 type Props = {
@@ -33,8 +33,11 @@ export default async function Home({ params }: Props) {
 
   const baseUrl = getBaseUrl();
 
-  // Fetch featured experiences for the homepage
-  const featuredExperiences = await getFeaturedExperiences(8);
+  // Use the same published experience source as the listing page so the
+  // editorial home stays aligned with real inventory.
+  const { experiences: featuredExperiences } = await searchExperiences({
+    limit: 8,
+  });
 
   // SEO-003: Organization schema for home page
   const organizationSchema = {

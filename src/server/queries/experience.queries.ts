@@ -161,11 +161,6 @@ export async function searchExperiences(
       const where: Prisma.ExperienceWhereInput = {
         status: ExperienceStatus.PUBLISHED,
         winery: wineryWhere,
-        availabilitySlots: {
-          some: {
-            isActive: true,
-          },
-        },
         // Search filter
         ...(params.search && {
           OR: [
@@ -329,11 +324,6 @@ export const getExperienceCommunes = cache(
           experiences: {
             some: {
               status: ExperienceStatus.PUBLISHED,
-              availabilitySlots: {
-                some: {
-                  isActive: true,
-                },
-              },
             },
           },
         },
@@ -367,11 +357,6 @@ export const getExperiencePriceRange = cache(
         where: {
           status: ExperienceStatus.PUBLISHED,
           winery: publiclyVisibleWineryWhere,
-          availabilitySlots: {
-            some: {
-              isActive: true,
-            },
-          },
         },
         _min: {
           price: true,

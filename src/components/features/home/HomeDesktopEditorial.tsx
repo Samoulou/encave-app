@@ -193,9 +193,10 @@ export function HomeDesktopEditorial({
 
         <div className="grid grid-cols-4 gap-[18px]">
           {cards.map((experience, index) => (
-            <article
+            <Link
+              href={`/experiences/${experience.slug}`}
               key={experience.id}
-              className="overflow-hidden rounded-[14px] border border-stone-200 bg-white"
+              className="group overflow-hidden rounded-[14px] border border-stone-200 bg-white transition-all hover:-translate-y-0.5 hover:border-burgundy-200 hover:shadow-audit-card"
             >
               <div className="relative h-[200px]">
                 <ExperienceVisual
@@ -217,15 +218,12 @@ export function HomeDesktopEditorial({
                   <span className="font-mono text-[11px] text-ink-500">
                     {formatCHF(experience.price)}
                   </span>
-                  <Link
-                    href={`/experiences/${experience.slug}`}
-                    className="text-xs font-bold text-burgundy-700"
-                  >
+                  <span className="text-xs font-bold text-burgundy-700">
                     Reserver →
-                  </Link>
+                  </span>
                 </div>
               </div>
-            </article>
+            </Link>
           ))}
         </div>
       </section>

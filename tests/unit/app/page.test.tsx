@@ -76,6 +76,16 @@ vi.mock('@/components/features/home/HowItWorks', () => ({
 
 vi.mock('@/server/queries/experience.queries', () => ({
   getFeaturedExperiences: vi.fn(() => Promise.resolve([])),
+  searchExperiences: vi.fn(() =>
+    Promise.resolve({
+      experiences: [],
+      total: 0,
+      page: 1,
+      limit: 8,
+      totalPages: 0,
+      hasLocationSearch: false,
+    })
+  ),
 }));
 
 // Import after mocks
