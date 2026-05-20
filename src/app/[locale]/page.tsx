@@ -12,6 +12,7 @@ import { getBaseUrl } from '@/lib/env';
 import { HeroSearchBar } from '@/components/features/home/HeroSearchBar';
 import { PopularExperiences } from '@/components/features/home/PopularExperiences';
 import { HowItWorks } from '@/components/features/home/HowItWorks';
+import { HomeMobileEditorial } from '@/components/features/home/HomeMobileEditorial';
 import { FadeIn } from '@/components/shared/FadeIn';
 import { getFeaturedExperiences } from '@/server/queries/experience.queries';
 import type { Locale } from '@/i18n/routing';
@@ -65,11 +66,17 @@ export default async function Home({ params }: Props) {
     <>
       <JsonLd data={organizationSchema} />
       <div className="min-h-screen bg-background">
-        <Header />
+        <div className="hidden md:block">
+          <Header />
+        </div>
 
         <main id="main-content">
+          <div className="md:hidden">
+            <HomeMobileEditorial />
+          </div>
+
           {/* Hero Section with Background Image */}
-          <section className="relative flex h-[350px] w-full items-center justify-center overflow-hidden sm:h-[450px] md:h-[500px] lg:h-[600px]">
+          <section className="relative hidden h-[350px] w-full items-center justify-center overflow-hidden sm:h-[450px] md:flex md:h-[500px] lg:h-[600px]">
             {/* Background Image */}
             <div className="absolute inset-0 z-0">
               {/* Gradient Overlay */}
@@ -111,7 +118,7 @@ export default async function Home({ params }: Props) {
             </div>
           </section>
 
-          <div className="mx-auto max-w-7xl space-y-24 px-4 py-16 sm:px-6 lg:px-8">
+          <div className="mx-auto hidden max-w-7xl space-y-24 px-4 py-16 sm:px-6 md:block lg:px-8">
             {/* Popular Experiences Section */}
             <FadeIn>
               <PopularExperiences experiences={featuredExperiences} />
