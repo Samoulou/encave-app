@@ -118,6 +118,7 @@ export function ExperienceDetailGallery({
         <button
           type="button"
           onClick={() => openLightbox(0)}
+          data-testid="experience-hero-image"
           className={cn(
             'group relative aspect-[16/10] w-full overflow-hidden rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
             heroImage ? 'cursor-pointer' : 'cursor-default'

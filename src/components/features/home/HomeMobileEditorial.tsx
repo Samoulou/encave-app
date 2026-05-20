@@ -1,25 +1,30 @@
 import {
+  Building2,
   Calendar,
   Clock,
+  FlaskConical,
+  Footprints,
   Globe,
   Heart,
   Menu,
   Search,
   Sparkles,
+  Utensils,
   Users,
+  Wine,
 } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import { ImageWithFallback } from '@/components/shared/ImageWithFallback';
 import { formatCHF } from '@/lib/utils/currency';
 import type { ExperienceCardData } from '@/components/features/experience/ExperienceCard';
 
-const categories = [
-  ['Degustation', '🍷', 'bg-[#f6e9ec]'],
-  ['Visite cave', '🏛', 'bg-[#efe7da]'],
-  ['Vendanges', '🍇', 'bg-[#e7ecdb]'],
-  ['Accords', '🧀', 'bg-[#f5e9d6]'],
-  ['Vigne', '🌿', 'bg-[#dde6cf]'],
-];
+const categoryLinks = [
+  ['Degustation', 'TASTING', Wine, 'bg-[#f6e9ec]'],
+  ['Visite cave', 'CELLAR_VISIT', Building2, 'bg-[#efe7da]'],
+  ['Balade vigne', 'VINEYARD_TOUR', Footprints, 'bg-[#e7ecdb]'],
+  ['Atelier', 'WORKSHOP', FlaskConical, 'bg-[#dde6cf]'],
+  ['Accords', 'FOOD_PAIRING', Utensils, 'bg-[#f5e9d6]'],
+] as const;
 
 function formatDuration(minutes: number) {
   if (minutes >= 60) {
@@ -54,7 +59,14 @@ function ExperienceVisual({
           sizes="100vw"
         />
       ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-[#2a0e16] to-burgundy-700" />
+        <ImageWithFallback
+          src="/images/herobanner-image.jpg"
+          alt="Vignes valaisannes"
+          fill
+          priority={priority}
+          className="object-cover"
+          sizes="100vw"
+        />
       )}
       <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-burgundy-900/15 to-black/65" />
       <div
@@ -147,14 +159,14 @@ export function HomeMobileEditorial({
           </div>
           <div className="px-3.5 py-3">
             <div className="font-mono text-[10px] uppercase tracking-[0.1em] text-ink-500">
-              Quand
+              Pour
             </div>
             <div className="mt-0.5 text-sm font-semibold text-ink-900">
-              Voir les dates
+              2+ places
             </div>
           </div>
           <Link
-            href="/experiences"
+            href="/experiences?capacity=2"
             className="col-span-2 inline-flex h-12 items-center justify-center gap-2 border-t border-[#efe4e6] bg-burgundy-600 text-sm font-bold text-white"
           >
             <Search className="h-4 w-4" aria-hidden="true" />
@@ -176,13 +188,15 @@ export function HomeMobileEditorial({
           </Link>
         </div>
         <div className="flex gap-2.5 overflow-x-auto px-3.5 pb-1">
-          {categories.map(([name, icon, color]) => (
+          {categoryLinks.map(([name, type, Icon, color]) => (
             <Link
-              href="/experiences"
+              href={`/experiences?type=${type}`}
               key={name}
               className={`flex min-w-24 flex-col gap-2 rounded-[14px] border border-black/5 p-3 ${color}`}
             >
-              <span className="text-[22px]">{icon}</span>
+              <span className="grid h-9 w-9 place-items-center rounded-full bg-white/70 text-burgundy-700">
+                <Icon className="h-4 w-4" aria-hidden="true" />
+              </span>
               <span className="text-xs font-semibold text-ink-700">{name}</span>
             </Link>
           ))}
@@ -289,16 +303,23 @@ export function HomeMobileEditorial({
           [Users, 'Compte', false],
         ].map(([Icon, label, active]) => {
           const NavIcon = Icon as typeof Search;
+          const navLabel = label as string;
+          const hrefByLabel: Record<string, string> = {
+            Explorer: '/experiences',
+            Favoris: '/login?callbackUrl=/dashboard/profile',
+            Reservations: '/dashboard/my-bookings',
+            Compte: '/dashboard/profile',
+          };
           return (
             <Link
-              href="/experiences"
-              key={label as string}
+              href={hrefByLabel[navLabel] ?? '/experiences'}
+              key={navLabel}
               className={`flex flex-col items-center justify-center gap-1 text-[10px] font-medium ${
                 active ? 'text-burgundy-700' : 'text-ink-500'
               }`}
             >
               <NavIcon className="h-4 w-4" aria-hidden="true" />
-              {label as string}
+              {navLabel}
             </Link>
           );
         })}

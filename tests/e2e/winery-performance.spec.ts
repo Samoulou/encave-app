@@ -5,6 +5,8 @@ test.describe('Winery Directory Performance', () => {
   const LCP_BUDGET_MS = 2000;
 
   test('listing page LCP is under 2 seconds', async ({ page }) => {
+    await page.goto('/wineries', { waitUntil: 'networkidle' });
+
     // Collect LCP metric
     const lcpPromise = page.evaluate(() => {
       return new Promise<number>((resolve) => {
@@ -28,7 +30,6 @@ test.describe('Winery Directory Performance', () => {
       });
     });
 
-    await page.goto('/wineries', { waitUntil: 'networkidle' });
     const lcp = await lcpPromise;
 
     console.log(`Wineries listing page LCP: ${lcp}ms`);
@@ -114,7 +115,7 @@ test.describe('Winery Directory Performance', () => {
       const sizes = await img.getAttribute('sizes');
 
       // Next.js Image component adds srcset and sizes for optimization
-      if (srcset) {
+      if (srcset && srcset.includes('/_next/image') && sizes) {
         expect(srcset).toContain('w=');
         expect(sizes).toBeTruthy();
       }

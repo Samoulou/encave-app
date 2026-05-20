@@ -8,7 +8,16 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import * as Sentry from '@sentry/nextjs';
 import posthog from 'posthog-js';
-import { Loader2, AlertCircle, RefreshCw, Users, Lock } from 'lucide-react';
+import {
+  Loader2,
+  AlertCircle,
+  RefreshCw,
+  Users,
+  Lock,
+  CreditCard,
+  ShieldCheck,
+  Check,
+} from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -27,7 +36,8 @@ import { formatCHF } from '@/lib/utils/currency';
 const AVAILABILITY_RECHECK_INTERVAL_MS = 60000;
 
 // Phone validation - accepts Swiss and international formats
-const phoneRegex = /^(\+41|0041|0)?[1-9][0-9]{8}$|^\+?[1-9]\d{6,14}$/;
+const phoneRegex =
+  /^(\+41|0041|0)?[\s-]?[1-9](?:[\s-]?\d){8}$|^\+?[1-9](?:[\s-]?\d){6,14}$/;
 
 const checkoutFormSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters'),
@@ -233,14 +243,34 @@ export function CheckoutClient({
   const totalPrice = experience.price * guestCount;
 
   return (
-    <div className="w-full px-4 py-10 md:px-10">
+    <div className="w-full bg-cream-50 px-4 py-10 md:px-10">
       <div className="mx-auto max-w-7xl">
         {/* Page Heading */}
-        <div className="mb-8">
-          <h1 className="mb-2 font-display text-3xl font-bold text-foreground md:text-4xl">
-            {t('pageTitle')}
-          </h1>
-          <p className="text-[#915564]">{t('pageSubtitle')}</p>
+        <div className="mb-8 grid gap-4 lg:grid-cols-[1fr_360px] lg:items-end">
+          <div>
+            <div className="font-mono text-[11px] uppercase tracking-[0.16em] text-burgundy-700">
+              Paiement sécurisé
+            </div>
+            <h1 className="mt-2 font-display text-4xl font-semibold tracking-[-0.02em] text-ink-900 md:text-5xl">
+              {t('pageTitle')}
+            </h1>
+            <p className="mt-2 max-w-2xl text-[#915564]">{t('pageSubtitle')}</p>
+          </div>
+          <div className="hidden rounded-[16px] border border-burgundy-100 bg-white p-4 shadow-audit-card lg:block">
+            <div className="flex items-center gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-full bg-burgundy-50 text-burgundy-700">
+                <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <div>
+                <p className="text-sm font-bold text-ink-900">
+                  Stripe Checkout
+                </p>
+                <p className="text-xs text-ink-500">
+                  Paiement carte et wallet, redirection sécurisée.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Error Alerts */}
@@ -329,23 +359,54 @@ export function CheckoutClient({
         </div>
 
         {/* Main Grid Layout */}
-        <form onSubmit={handleSubmit(onSubmit)} data-testid="checkout-form">
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          data-testid="checkout-form"
+          noValidate
+        >
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:gap-10">
             {/* Left Column: Contact Form & Payment Button */}
-            <div className="flex flex-col gap-8 lg:col-span-7">
-              {/* Contact Details Section */}
-              <fieldset disabled={isFormDisabled || isSubmitting}>
-                <ContactDetailsSection
-                  register={register}
-                  errors={errors}
-                  isSubmitting={isSubmitting || isFormDisabled}
-                />
-              </fieldset>
+            <div className="flex flex-col gap-6">
+              <div className="rounded-[18px] border border-stone-200 bg-white p-5 shadow-audit-card">
+                <div className="mb-4 flex items-center justify-between">
+                  <div>
+                    <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-burgundy-700">
+                      Étape 1
+                    </div>
+                    <h2 className="mt-1 font-display text-2xl font-semibold">
+                      Vos coordonnées
+                    </h2>
+                  </div>
+                  <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
+                    <Check className="mr-1 inline h-3 w-3" />
+                    Réservation tenue
+                  </span>
+                </div>
+                {/* Contact Details Section */}
+                <fieldset disabled={isFormDisabled || isSubmitting}>
+                  <ContactDetailsSection
+                    register={register}
+                    errors={errors}
+                    isSubmitting={isSubmitting || isFormDisabled}
+                  />
+                </fieldset>
+              </div>
 
               {/* Payment Section - Simplified for Stripe redirect */}
-              <section className="rounded-xl border border-border bg-white p-6 shadow-sm md:p-8">
+              <section className="rounded-[18px] border border-stone-200 bg-white p-6 shadow-audit-card md:p-8">
+                <div className="mb-5 flex items-center justify-between">
+                  <div>
+                    <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-burgundy-700">
+                      Étape 2
+                    </div>
+                    <h2 className="mt-1 font-display text-2xl font-semibold">
+                      Paiement express
+                    </h2>
+                  </div>
+                  <CreditCard className="h-6 w-6 text-burgundy-700" />
+                </div>
                 {/* Trust Badge */}
-                <div className="mb-6 flex items-center justify-center gap-2 rounded-lg border border-border bg-primary-light/50 p-3">
+                <div className="mb-6 flex items-center justify-center gap-2 rounded-xl border border-burgundy-100 bg-burgundy-50 p-3">
                   <Lock
                     className="h-4 w-4 text-foreground"
                     aria-hidden="true"
@@ -403,7 +464,7 @@ export function CheckoutClient({
             </div>
 
             {/* Right Column: Summary (Sticky) - Desktop Only */}
-            <aside className="hidden lg:col-span-5 lg:block">
+            <aside className="hidden lg:block">
               <div className="sticky top-24">
                 <OrderSummary
                   experienceTitle={experience.title}

@@ -1,10 +1,7 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
-import {
-  getExperienceBySlug,
-  getAllPublishedExperienceSlugs,
-} from '@/server/queries/experience.queries';
+import { getExperienceBySlug } from '@/server/queries/experience.queries';
 import { ExperienceDetailHeader } from '@/components/features/experience/ExperienceDetailHeader';
 import { ExperienceDetailGallery } from '@/components/features/experience/ExperienceDetailGallery';
 import { QuickFacts } from '@/components/features/experience/QuickFacts';
@@ -20,16 +17,13 @@ import { JsonLd } from '@/components/shared/JsonLd';
 import { Skeleton } from '@/components/shared/Skeleton';
 import { generateExperienceDetailMetadata } from '@/lib/seo';
 import { getBaseUrl } from '@/lib/env';
-import { type Locale, locales } from '@/i18n/routing';
+import { type Locale } from '@/i18n/routing';
 
 interface ExperiencePageProps {
   params: Promise<{ slug: string; locale: string }>;
 }
 
-export async function generateStaticParams() {
-  const slugs = await getAllPublishedExperienceSlugs();
-  return locales.flatMap((locale) => slugs.map((slug) => ({ locale, slug })));
-}
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({
   params,
