@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useTranslations } from 'next-intl';
-import { MapPin, Navigation } from 'lucide-react';
+import { Navigation } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { MapWinery } from './types';
 
@@ -184,65 +184,6 @@ export function InteractiveMap({
   );
 }
 
-function StaticMapFallback({
-  wineries,
-  onWineryClick,
-  singleWinery,
-  className,
-}: {
-  wineries: MapWinery[];
-  onWineryClick?: (_slug: string) => void;
-  singleWinery: boolean;
-  className?: string;
-}) {
-  const points = wineries.filter(
-    (w) => w.latitude != null && w.longitude != null
-  );
-
-  return (
-    <div
-      className={cn(
-        'relative overflow-hidden rounded-xl border border-stone-200 bg-cream-100',
-        className
-      )}
-    >
-      <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(150,42,72,.10),transparent_42%),linear-gradient(0deg,rgba(122,27,59,.06)_1px,transparent_1px),linear-gradient(90deg,rgba(122,27,59,.06)_1px,transparent_1px)] bg-[length:100%_100%,38px_38px,38px_38px]" />
-      {points.length > 0 ? (
-        points.map((winery) => {
-          const position = getStaticMapPosition(winery);
-          return (
-            <button
-              key={winery.id}
-              type="button"
-              onClick={() => onWineryClick?.(winery.slug)}
-              className="group absolute -translate-x-1/2 -translate-y-1/2"
-              style={{ left: `${position.x}%`, top: `${position.y}%` }}
-              aria-label={winery.name}
-              disabled={!onWineryClick && !singleWinery}
-            >
-              <span className="grid h-9 w-9 place-items-center rounded-full bg-burgundy-600 text-white shadow-audit-elevated ring-4 ring-white/85 transition-transform group-hover:scale-105">
-                <MapPin className="h-4 w-4" aria-hidden="true" />
-              </span>
-              <span className="absolute left-1/2 top-10 hidden w-max -translate-x-1/2 rounded-md bg-white px-2 py-1 text-xs font-semibold text-ink-900 shadow-audit-card group-hover:block">
-                {winery.name}
-              </span>
-            </button>
-          );
-        })
-      ) : (
-        <div className="absolute inset-0 grid place-items-center px-6 text-center">
-          <div>
-            <MapPin className="mx-auto h-8 w-8 text-burgundy-600" />
-            <p className="mt-2 text-sm font-medium text-ink-900">
-              Coordonnees indisponibles
-            </p>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 function MapFallback({
   className,
   message,
@@ -287,23 +228,6 @@ function useGeoJSON(wineries: MapWinery[]): GeoJSON.FeatureCollection {
           experienceCount: w._count.experiences,
         },
       })),
-  };
-}
-
-function getStaticMapPosition(winery: MapWinery) {
-  const longitude = winery.longitude ?? VALAIS_CENTER[0];
-  const latitude = winery.latitude ?? VALAIS_CENTER[1];
-  const minLng = 6.75;
-  const maxLng = 8.45;
-  const minLat = 45.85;
-  const maxLat = 46.55;
-
-  const x = ((longitude - minLng) / (maxLng - minLng)) * 100;
-  const y = 100 - ((latitude - minLat) / (maxLat - minLat)) * 100;
-
-  return {
-    x: Math.min(92, Math.max(8, x)),
-    y: Math.min(88, Math.max(12, y)),
   };
 }
 
