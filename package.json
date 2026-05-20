@@ -6,7 +6,7 @@
     "postinstall": "prisma generate && node scripts/fix-mapbox-types.js",
     "dev": "next dev",
     "dev:turbo": "next dev --turbo",
-    "prebuild": "dotenv -e .env.local -- prisma migrate deploy",
+    "prebuild": "node scripts/deploy-migrations.js",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

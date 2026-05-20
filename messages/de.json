@@ -155,7 +155,8 @@
       "rememberMe": "30 Tage merken",
       "orContinueWith": "Oder fortfahren mit",
       "showPassword": "Passwort anzeigen",
-      "hidePassword": "Passwort verbergen"
+      "hidePassword": "Passwort verbergen",
+      "invalidCredentials": "E-Mail-Adresse oder Passwort ist falsch."
     },
     "register": {
       "title": "Konto erstellen",
