@@ -48,7 +48,7 @@ async function main() {
 
   const output = `${deploy.stdout || ''}\n${deploy.stderr || ''}`;
   const isRecoverable =
-    output.includes('P3018') &&
+    (output.includes('P3018') || output.includes('P3009')) &&
     output.includes(RECOVERABLE_MIGRATION);
 
   if (!isRecoverable) {
