@@ -31,7 +31,7 @@ export function LocaleCurrencyChip() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="inline-flex h-9 items-center gap-1 rounded-full px-2 font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-ink-500 transition-colors hover:bg-cream-100 hover:text-ink-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+      <DropdownMenuTrigger className="inline-flex h-9 shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2 font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-ink-500 transition-colors hover:bg-cream-100 hover:text-ink-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
         {localeLabels[locale]} · CHF
         <ChevronDown className="h-3 w-3" aria-hidden="true" />
       </DropdownMenuTrigger>

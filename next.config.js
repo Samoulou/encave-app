@@ -12,6 +12,9 @@ const connectSrc = [
   'https://*.vercel-insights.com',
   'https://*.vercel-analytics.com',
   'https://*.ingest.sentry.io',
+  'https://api.mapbox.com',
+  'https://events.mapbox.com',
+  'https://*.tiles.mapbox.com',
 ];
 
 // Security headers configuration (SEC-003)

@@ -187,6 +187,13 @@ export function ExperiencesPageClient({
     });
   };
 
+  const handleWineryClick = useCallback(
+    (slug: string) => {
+      router.push(`/wineries/${slug}`);
+    },
+    [router]
+  );
+
   const hasActiveFilters =
     currentParams.search ||
     currentParams.types.length > 0 ||
@@ -202,17 +209,15 @@ export function ExperiencesPageClient({
     newest: 'Plus récents',
     distance: 'Plus proche',
   };
-  const visibleSortOptions = (
-    Object.keys(sortLabels) as SortOption[]
-  ).filter(
+  const visibleSortOptions = (Object.keys(sortLabels) as SortOption[]).filter(
     (option) => option !== 'distance' || locationSearch.hasLocationSearch
   );
   const mapWineries = buildMapWineries(initialExperiences);
 
   return (
     <>
-      <div className="hidden lg:grid lg:grid-cols-[280px_minmax(0,1fr)_360px] lg:gap-6">
-        <aside className="sticky top-24 h-[calc(100vh-7rem)] rounded-[18px] border border-stone-200 bg-white p-5 shadow-audit-card">
+      <div className="hidden lg:grid lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-8">
+        <aside className="sticky top-24 h-fit rounded-[18px] border border-stone-200 bg-white p-5 shadow-audit-card">
           <div className="mb-5">
             <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-burgundy-700">
               Discovery
@@ -238,6 +243,23 @@ export function ExperiencesPageClient({
         </aside>
 
         <main className="min-w-0">
+          <div className="relative mb-6 h-[320px] overflow-hidden rounded-[18px] border border-stone-200 bg-stone-50 shadow-audit-card">
+            <DynamicMap
+              wineries={mapWineries}
+              onWineryClick={handleWineryClick}
+              className="h-full w-full rounded-[18px]"
+            />
+            <div className="absolute left-4 top-4 rounded-xl bg-white/95 px-4 py-3 shadow-audit-card">
+              <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-burgundy-700">
+                Domaines
+              </div>
+              <div className="mt-1 flex items-center gap-2 font-display text-lg font-semibold">
+                <MapPin className="h-4 w-4 text-burgundy-700" />
+                {mapWineries.length} lieux
+              </div>
+            </div>
+          </div>
+
           <div className="mb-5 rounded-[18px] border border-stone-200 bg-white p-3 shadow-audit-card">
             <SearchBar
               value={currentParams.search}
@@ -277,7 +299,7 @@ export function ExperiencesPageClient({
 
           <div
             className={cn(
-              'space-y-4 transition-opacity duration-150',
+              'grid gap-6 transition-opacity duration-150 xl:grid-cols-2',
               isPending && 'pointer-events-none opacity-70'
             )}
           >
@@ -287,11 +309,10 @@ export function ExperiencesPageClient({
                   key={experience.id}
                   experience={experience}
                   priority={index < 2}
-                  className="[&>div]:grid [&>div]:grid-cols-[220px_1fr] [&>div]:rounded-[16px] [&_[class*='aspect']]:aspect-auto [&_[class*='aspect']]:h-full"
                 />
               ))
             ) : (
-              <div className="rounded-[18px] border border-dashed border-stone-300 bg-white p-10 text-center">
+              <div className="rounded-[18px] border border-dashed border-stone-300 bg-white p-10 text-center xl:col-span-2">
                 <Search className="mx-auto h-8 w-8 text-burgundy-600" />
                 <h3 className="mt-4 font-display text-xl font-semibold">
                   Aucun résultat trouvé
@@ -303,22 +324,6 @@ export function ExperiencesPageClient({
             )}
           </div>
         </main>
-
-        <aside className="sticky top-24 h-[calc(100vh-7rem)] overflow-hidden rounded-[18px] border border-stone-200 bg-stone-50 shadow-audit-card">
-          <DynamicMap
-            wineries={mapWineries}
-            className="h-full w-full rounded-[18px]"
-          />
-          <div className="absolute left-4 top-4 rounded-xl bg-white/95 px-4 py-3 shadow-audit-card">
-            <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-burgundy-700">
-              Domaines
-            </div>
-            <div className="mt-1 flex items-center gap-2 font-display text-lg font-semibold">
-              <MapPin className="h-4 w-4 text-burgundy-700" />
-              {mapWineries.length} lieux
-            </div>
-          </div>
-        </aside>
       </div>
 
       <div className="lg:hidden">

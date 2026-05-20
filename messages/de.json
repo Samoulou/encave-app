@@ -147,6 +147,7 @@
       "forgotPassword": "Passwort vergessen?",
       "forgotPasswordContactSupport": "Kontaktieren Sie den Support, um Ihr Passwort zuruckzusetzen",
       "passwordPlaceholder": "Geben Sie Ihr Passwort ein",
+      "invalidCredentials": "E-Mail-Adresse oder Passwort ist falsch.",
       "signingIn": "Anmeldung...",
       "logIn": "Anmelden",
       "noAccount": "Neu bei EnCave?",
@@ -155,8 +156,7 @@
       "rememberMe": "30 Tage merken",
       "orContinueWith": "Oder fortfahren mit",
       "showPassword": "Passwort anzeigen",
-      "hidePassword": "Passwort verbergen",
-      "invalidCredentials": "E-Mail-Adresse oder Passwort ist falsch."
+      "hidePassword": "Passwort verbergen"
     },
     "register": {
       "title": "Konto erstellen",
@@ -1675,7 +1675,10 @@
     "allRightsReserved": "Alle Rechte vorbehalten.",
     "navigation": "Navigation",
     "legal": "Rechtliches",
-    "brandDescription": "Buchungsplattform für Weinerlebnisse im Wallis, Schweiz."
+    "brandDescription": "Buchungsplattform für Weinerlebnisse im Wallis, Schweiz.",
+    "region": "Wallis, Schweiz",
+    "securePayment": "Sichere Zahlung",
+    "wineExperiences": "Walliser Weinerlebnisse"
   },
   "healthStatus": {
     "serviceUnavailable": "Dienst nicht verfügbar",

@@ -147,6 +147,7 @@
       "forgotPassword": "Mot de passe oublié?",
       "forgotPasswordContactSupport": "Contactez le support pour réinitialiser votre mot de passe",
       "passwordPlaceholder": "Entrez votre mot de passe",
+      "invalidCredentials": "Adresse e-mail ou mot de passe incorrect.",
       "signingIn": "Connexion en cours...",
       "logIn": "Se connecter",
       "noAccount": "Nouveau sur EnCave?",
@@ -155,8 +156,7 @@
       "rememberMe": "Se souvenir pendant 30 jours",
       "orContinueWith": "Ou continuer avec",
       "showPassword": "Afficher le mot de passe",
-      "hidePassword": "Masquer le mot de passe",
-      "invalidCredentials": "Adresse e-mail ou mot de passe incorrect."
+      "hidePassword": "Masquer le mot de passe"
     },
     "register": {
       "title": "Créer un compte",
@@ -1670,7 +1670,10 @@
     "allRightsReserved": "Tous droits réservés.",
     "navigation": "Navigation",
     "legal": "Mentions légales",
-    "brandDescription": "Plateforme de réservation d'expériences viticoles en Valais, Suisse."
+    "brandDescription": "Plateforme de réservation d'expériences viticoles en Valais, Suisse.",
+    "region": "Valais, Suisse",
+    "securePayment": "Paiement sécurisé",
+    "wineExperiences": "Expériences viticoles valaisannes"
   },
   "healthStatus": {
     "serviceUnavailable": "Service indisponible",

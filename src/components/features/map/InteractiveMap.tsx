@@ -4,13 +4,33 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useTranslations } from 'next-intl';
-import { Navigation } from 'lucide-react';
+import { MapPin, Navigation } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { MapWinery } from './types';
 
 // Valais, Switzerland center
 const VALAIS_CENTER: [number, number] = [7.6, 46.3];
 const DEFAULT_ZOOM = 9.5;
+
+const OSM_STYLE: mapboxgl.Style = {
+  version: 8,
+  glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
+  sources: {
+    osm: {
+      type: 'raster',
+      tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+      tileSize: 256,
+      attribution: '&copy; OpenStreetMap contributors',
+    },
+  },
+  layers: [
+    {
+      id: 'osm',
+      type: 'raster',
+      source: 'osm',
+    },
+  ],
+};
 
 // EnCave burgundy theme colors
 const CLUSTER_COLORS = {
@@ -46,10 +66,12 @@ export function InteractiveMap({
   const geojson = useGeoJSON(wineries);
 
   const initMap = useCallback(() => {
-    if (!mapContainer.current || !token || map.current) return;
+    if (!mapContainer.current || map.current) return;
 
     try {
-      mapboxgl.accessToken = token;
+      if (token) {
+        mapboxgl.accessToken = token;
+      }
 
       const firstWinery =
         singleWinery && wineries.length === 1 ? wineries[0] : undefined;
@@ -61,7 +83,7 @@ export function InteractiveMap({
 
       const m = new mapboxgl.Map({
         container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/light-v11',
+        style: token ? 'mapbox://styles/mapbox/light-v11' : OSM_STYLE,
         center,
         zoom,
         minZoom: 7,
@@ -135,20 +157,8 @@ export function InteractiveMap({
     );
   }, [isLocating]);
 
-  if (!token) {
-    return (
-      <MapFallback
-        className={className}
-        message={t('mapLoadError')}
-        detail="Coordonnees disponibles, carte desactivee dans cet environnement."
-      />
-    );
-  }
-
   if (mapError) {
-    return (
-      <MapFallback className={className} message={t('mapLoadError')} />
-    );
+    return <MapFallback className={className} message={t('mapLoadError')} />;
   }
 
   return (
@@ -169,6 +179,65 @@ export function InteractiveMap({
           />
           {isLocating ? t('locating') : t('myLocation')}
         </button>
+      )}
+    </div>
+  );
+}
+
+function StaticMapFallback({
+  wineries,
+  onWineryClick,
+  singleWinery,
+  className,
+}: {
+  wineries: MapWinery[];
+  onWineryClick?: (_slug: string) => void;
+  singleWinery: boolean;
+  className?: string;
+}) {
+  const points = wineries.filter(
+    (w) => w.latitude != null && w.longitude != null
+  );
+
+  return (
+    <div
+      className={cn(
+        'relative overflow-hidden rounded-xl border border-stone-200 bg-cream-100',
+        className
+      )}
+    >
+      <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(150,42,72,.10),transparent_42%),linear-gradient(0deg,rgba(122,27,59,.06)_1px,transparent_1px),linear-gradient(90deg,rgba(122,27,59,.06)_1px,transparent_1px)] bg-[length:100%_100%,38px_38px,38px_38px]" />
+      {points.length > 0 ? (
+        points.map((winery) => {
+          const position = getStaticMapPosition(winery);
+          return (
+            <button
+              key={winery.id}
+              type="button"
+              onClick={() => onWineryClick?.(winery.slug)}
+              className="group absolute -translate-x-1/2 -translate-y-1/2"
+              style={{ left: `${position.x}%`, top: `${position.y}%` }}
+              aria-label={winery.name}
+              disabled={!onWineryClick && !singleWinery}
+            >
+              <span className="grid h-9 w-9 place-items-center rounded-full bg-burgundy-600 text-white shadow-audit-elevated ring-4 ring-white/85 transition-transform group-hover:scale-105">
+                <MapPin className="h-4 w-4" aria-hidden="true" />
+              </span>
+              <span className="absolute left-1/2 top-10 hidden w-max -translate-x-1/2 rounded-md bg-white px-2 py-1 text-xs font-semibold text-ink-900 shadow-audit-card group-hover:block">
+                {winery.name}
+              </span>
+            </button>
+          );
+        })
+      ) : (
+        <div className="absolute inset-0 grid place-items-center px-6 text-center">
+          <div>
+            <MapPin className="mx-auto h-8 w-8 text-burgundy-600" />
+            <p className="mt-2 text-sm font-medium text-ink-900">
+              Coordonnees indisponibles
+            </p>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -218,6 +287,23 @@ function useGeoJSON(wineries: MapWinery[]): GeoJSON.FeatureCollection {
           experienceCount: w._count.experiences,
         },
       })),
+  };
+}
+
+function getStaticMapPosition(winery: MapWinery) {
+  const longitude = winery.longitude ?? VALAIS_CENTER[0];
+  const latitude = winery.latitude ?? VALAIS_CENTER[1];
+  const minLng = 6.75;
+  const maxLng = 8.45;
+  const minLat = 45.85;
+  const maxLat = 46.55;
+
+  const x = ((longitude - minLng) / (maxLng - minLng)) * 100;
+  const y = 100 - ((latitude - minLat) / (maxLat - minLat)) * 100;
+
+  return {
+    x: Math.min(92, Math.max(8, x)),
+    y: Math.min(88, Math.max(12, y)),
   };
 }
 
@@ -271,7 +357,7 @@ function addLayers(m: mapboxgl.Map, singleWinery: boolean) {
       filter: ['has', 'point_count'],
       layout: {
         'text-field': '{point_count_abbreviated}',
-        'text-font': ['DIN Pro Medium', 'Arial Unicode MS Bold'],
+        'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
         'text-size': 13,
       },
       paint: {
@@ -348,18 +434,18 @@ function addInteractions(
     const experienceCount = props.experienceCount as number;
 
     const imgHtml = coverPhoto
-      ? `<img src="${coverPhoto}" alt="${name}" class="h-24 w-full rounded-t-lg object-cover" />`
+      ? `<img src="${escapeAttribute(coverPhoto)}" alt="${escapeAttribute(name)}" class="h-24 w-full rounded-t-lg object-cover" />`
       : '';
 
     const html = `
       <div class="w-56 overflow-hidden rounded-lg bg-white shadow-lg">
         ${imgHtml}
         <div class="p-3">
-          <h3 class="font-semibold text-sm text-slate-900">${name}</h3>
-          <p class="mt-0.5 text-xs text-slate-500">${commune}, Valais</p>
+          <h3 class="font-semibold text-sm text-slate-900">${escapeHtml(name)}</h3>
+          <p class="mt-0.5 text-xs text-slate-500">${escapeHtml(commune)}, Valais</p>
           ${experienceCount > 0 ? `<p class="mt-1 text-xs text-burgundy-600">${t('experienceCount', { count: experienceCount })}</p>` : ''}
           <button
-            data-slug="${slug}"
+            data-slug="${escapeAttribute(slug)}"
             class="mt-2 w-full rounded-md bg-burgundy-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-burgundy-700 transition-colors"
           >
             ${t('viewWinery')}
@@ -403,4 +489,17 @@ function addInteractions(
   m.on('mouseleave', 'unclustered-point', () => {
     m.getCanvas().style.cursor = '';
   });
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function escapeAttribute(value: string) {
+  return escapeHtml(value).replaceAll('`', '&#96;');
 }

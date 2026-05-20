@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import { ImageWithFallback } from '@/components/shared/ImageWithFallback';
+import { HomeSearchPanel } from '@/components/features/home/HomeSearchPanel';
 import { formatCHF } from '@/lib/utils/currency';
 import type { ExperienceCardData } from '@/components/features/experience/ExperienceCard';
 
@@ -148,37 +149,12 @@ export function HomeMobileEditorial({
           </p>
         </div>
 
-        <div className="absolute -bottom-[26px] left-3.5 right-3.5 grid grid-cols-2 overflow-hidden rounded-[18px] bg-white shadow-[0_12px_30px_rgba(60,15,25,.18),0_2px_6px_rgba(60,15,25,.06)]">
-          <div className="border-r border-[#efe4e6] px-3.5 py-3">
-            <div className="font-mono text-[10px] uppercase tracking-[0.1em] text-ink-500">
-              Ou
-            </div>
-            <div className="mt-0.5 text-sm font-semibold text-ink-900">
-              Tout le Valais
-            </div>
-          </div>
-          <div className="px-3.5 py-3">
-            <div className="font-mono text-[10px] uppercase tracking-[0.1em] text-ink-500">
-              Pour
-            </div>
-            <div
-              className="mt-0.5 text-sm font-semibold text-ink-900"
-              data-testid="mobile-home-capacity"
-            >
-              2+ places
-            </div>
-          </div>
-          <Link
-            href="/experiences?capacity=2"
-            className="col-span-2 inline-flex h-12 items-center justify-center gap-2 border-t border-[#efe4e6] bg-burgundy-600 text-sm font-bold text-white"
-          >
-            <Search className="h-4 w-4" aria-hidden="true" />
-            Explorer les experiences
-          </Link>
+        <div className="absolute -bottom-[76px] left-3.5 right-3.5 z-20">
+          <HomeSearchPanel variant="mobile" />
         </div>
       </section>
 
-      <section className="pt-10">
+      <section className="pt-24">
         <div className="mb-2.5 flex items-baseline justify-between px-3.5">
           <h2 className="font-display text-xl font-semibold tracking-[-0.01em]">
             Par envie

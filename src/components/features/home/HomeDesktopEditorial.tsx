@@ -7,7 +7,6 @@ import {
   Footprints,
   Lock,
   MapPin,
-  Search,
   Utensils,
   Users,
   Wine,
@@ -15,6 +14,7 @@ import {
 import { Link } from '@/i18n/navigation';
 import { ImageWithFallback } from '@/components/shared/ImageWithFallback';
 import { DynamicMap } from '@/components/features/map/DynamicMap';
+import { HomeSearchPanel } from '@/components/features/home/HomeSearchPanel';
 import { formatCHF } from '@/lib/utils/currency';
 import type { ExperienceCardData } from '@/components/features/experience/ExperienceCard';
 import type { MapWinery } from '@/components/features/map/types';
@@ -91,27 +91,6 @@ function ExperienceVisual({
   );
 }
 
-function SearchField({
-  label,
-  value,
-  last,
-}: {
-  label: string;
-  value: string;
-  last?: boolean;
-}) {
-  return (
-    <div
-      className={`flex-1 px-[18px] py-3 ${last ? '' : 'border-r border-stone-200'}`}
-    >
-      <div className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-burgundy-700">
-        {label}
-      </div>
-      <div className="mt-0.5 text-sm font-semibold text-ink-900">{value}</div>
-    </div>
-  );
-}
-
 export function HomeDesktopEditorial({
   experiences,
 }: {
@@ -154,17 +133,7 @@ export function HomeDesktopEditorial({
             </p>
           </div>
 
-          <div className="flex max-w-[620px] items-center rounded-[18px] bg-white p-1.5 shadow-[0_18px_50px_-12px_rgba(58,14,31,.25),0_0_0_1px_rgba(154,42,72,.08)]">
-            <SearchField label="Ou" value="Tout le Valais" />
-            <SearchField label="Pour" value="2+ places" last />
-            <Link
-              href="/experiences?capacity=2"
-              className="ml-1.5 inline-flex h-[62px] items-center gap-2 rounded-[14px] bg-burgundy-600 px-7 text-sm font-semibold text-white transition-colors hover:bg-burgundy-700"
-            >
-              <Search className="h-[15px] w-[15px]" aria-hidden="true" />
-              Explorer
-            </Link>
-          </div>
+          <HomeSearchPanel />
         </div>
 
         <div className="hidden">
