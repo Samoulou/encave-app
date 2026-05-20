@@ -28,26 +28,58 @@ const config: Config = {
       },
       fontSize: {
         'display-xl': [
-          '3.5rem',
+          '2.375rem',
           {
-            lineHeight: '1.1',
-            letterSpacing: '-0.01em',
-            fontWeight: '700',
+            lineHeight: '2.5rem',
+            letterSpacing: '-0.015em',
+            fontWeight: '400',
           },
         ],
         'display-lg': [
-          '2.75rem',
+          '1.625rem',
           {
-            lineHeight: '1.15',
-            letterSpacing: '-0.01em',
-            fontWeight: '700',
+            lineHeight: '1.9375rem',
+            letterSpacing: '-0.015em',
+            fontWeight: '600',
           },
         ],
         'display-md': [
-          '2.25rem',
+          '1.25rem',
           {
-            lineHeight: '1.2',
-            letterSpacing: '-0.005em',
+            lineHeight: '1.5rem',
+            letterSpacing: '-0.01em',
+            fontWeight: '600',
+          },
+        ],
+        'display-sm': [
+          '1.0625rem',
+          {
+            lineHeight: '1.3125rem',
+            letterSpacing: '-0.01em',
+            fontWeight: '600',
+          },
+        ],
+        body: [
+          '0.875rem',
+          {
+            lineHeight: '1.375rem',
+            letterSpacing: '0',
+            fontWeight: '400',
+          },
+        ],
+        meta: [
+          '0.6875rem',
+          {
+            lineHeight: '0.875rem',
+            letterSpacing: '0.06em',
+            fontWeight: '500',
+          },
+        ],
+        eyebrow: [
+          '0.625rem',
+          {
+            lineHeight: '0.75rem',
+            letterSpacing: '0.14em',
             fontWeight: '600',
           },
         ],
@@ -91,26 +123,26 @@ const config: Config = {
         /* Custom brand colors */
         burgundy: {
           '50': '#fdf2f4',
-          '100': '#fce7ea',
-          '200': '#f9d0d8',
+          '100': '#fbe6ea',
+          '200': '#f5c5cf',
           '300': '#f4a9b8',
           '400': '#ed7a93',
           '500': '#e14d6f',
           '600': '#962a48',
-          '700': '#732040',
+          '700': '#7a1b3b',
           '800': '#8f1d3f',
-          '900': '#7a1b3b',
+          '900': '#3a0e1f',
           '950': '#450a1c',
         },
         gold: {
-          '50': '#fbf8f0',
+          '50': '#f8f1e0',
           '100': '#f5efd9',
-          '200': '#ebddb3',
+          '200': '#e8d9a8',
           '300': '#dcc882',
-          '400': '#c9a94e',
+          '400': '#dcc882',
           '500': '#b8973e',
           '600': '#9d7b30',
-          '700': '#7f6028',
+          '700': '#a08534',
           '800': '#6a4f26',
           '900': '#5a4324',
           '950': '#332412',
@@ -130,20 +162,28 @@ const config: Config = {
         },
         cream: {
           '50': '#fdfcfa',
-          '100': '#faf8f5',
-          '200': '#f5f2ed',
+          '100': '#faf7f1',
+          '200': '#f3ece0',
         },
         stone: {
+          '50': '#f4f1ec',
           '100': '#f5f5f4',
-          '200': '#e7e5e4',
+          '200': '#e5d2d7',
           '300': '#c4b8b0',
           '400': '#a89888',
+        },
+        ink: {
+          '300': '#c2a8af',
+          '500': '#915564',
+          '700': '#3a2429',
+          '900': '#1a0f12',
         },
         earth: {
           '400': '#6b5b4f',
           '500': '#5a4d43',
         },
         vine: {
+          DEFAULT: '#5a7a3a',
           '400': '#5a6b4a',
           '500': '#4a5a3a',
         },
@@ -153,6 +193,10 @@ const config: Config = {
         spring: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
       },
       boxShadow: {
+        'audit-card': '0 2px 10px rgb(60 15 25 / 0.05)',
+        'audit-elevated': '0 4px 20px rgb(60 15 25 / 0.06)',
+        'audit-sticky':
+          '0 -2px 24px rgb(60 15 25 / 0.10), 0 10px 24px rgb(60 15 25 / 0.12)',
         'warm-sm': '0 1px 2px rgba(122, 27, 59, 0.05)',
         warm: '0 1px 3px rgba(122, 27, 59, 0.08), 0 1px 2px rgba(122, 27, 59, 0.04)',
         'warm-md':

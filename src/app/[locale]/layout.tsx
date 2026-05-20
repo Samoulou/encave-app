@@ -31,12 +31,15 @@ const manrope = Manrope({
 
 const fraunces = Fraunces({
   subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  style: ['normal', 'italic'],
   variable: '--font-fraunces',
   display: 'swap',
 });
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
+  weight: ['500', '600', '700'],
   variable: '--font-mono',
   display: 'swap',
 });
