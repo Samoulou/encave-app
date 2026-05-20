@@ -13,7 +13,7 @@ export function AboutSection({ description }: AboutSectionProps) {
   const paragraphs = description.split('\n\n').filter(Boolean);
 
   return (
-    <section>
+    <section data-testid="experience-description">
       <h3 className="mb-4 text-2xl font-bold text-foreground">
         {t('aboutTitle')}
       </h3>

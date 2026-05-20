@@ -1,6 +1,6 @@
 'use client';
 
-import { Clock, Users, Globe, GraduationCap } from 'lucide-react';
+import { Clock, Users, GraduationCap } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { ExperienceType } from '@prisma/client';
 
@@ -8,14 +8,12 @@ interface QuickFactsProps {
   duration: number;
   maxCapacity: number;
   type: ExperienceType;
-  languages?: string[];
 }
 
 export function QuickFacts({
   duration,
   maxCapacity,
   type,
-  languages = ['FR', 'DE', 'EN'],
 }: QuickFactsProps) {
   const t = useTranslations('experience');
 
@@ -35,21 +33,19 @@ export function QuickFacts({
     <div className="flex flex-wrap gap-3 border-b border-[#f2e9eb] pb-6">
       <div className="flex items-center gap-2 rounded-lg bg-primary-light px-3 py-2 text-foreground">
         <Clock className="h-5 w-5 text-primary" />
-        <span className="text-sm font-medium">{formatDuration(duration)}</span>
+        <span className="text-sm font-medium" data-testid="experience-duration">
+          {formatDuration(duration)}
+        </span>
       </div>
       <div className="flex items-center gap-2 rounded-lg bg-primary-light px-3 py-2 text-foreground">
         <Users className="h-5 w-5 text-primary" />
-        <span className="text-sm font-medium">
+        <span className="text-sm font-medium" data-testid="experience-capacity">
           {t('maxGuests2', { count: maxCapacity })}
         </span>
       </div>
       <div className="flex items-center gap-2 rounded-lg bg-primary-light px-3 py-2 text-foreground">
-        <Globe className="h-5 w-5 text-primary" />
-        <span className="text-sm font-medium">{languages.join(' / ')}</span>
-      </div>
-      <div className="flex items-center gap-2 rounded-lg bg-primary-light px-3 py-2 text-foreground">
         <GraduationCap className="h-5 w-5 text-primary" />
-        <span className="text-sm font-medium">
+        <span className="text-sm font-medium" data-testid="experience-type-badge">
           {t(`typesDetailed.${type}`)}
         </span>
       </div>

@@ -10,16 +10,18 @@ test.describe('Desktop UX redesign', () => {
 
     await expect(page.locator('body')).not.toContainText('Ce week-end');
     await expect(page.locator('body')).not.toContainText('Voir les dates');
-    await expect(page.getByText('2+ places').first()).toBeVisible();
-
+    const capacityLink = page
+      .locator('a[href="/fr/experiences?capacity=2"]:visible')
+      .first();
+    await expect(capacityLink).toBeVisible();
+    await expect(capacityLink).toContainText('2+ places');
     await expect(
-      page.locator('a[href="/fr/experiences?capacity=2"]').first()
+      page.locator('a[href="/fr/experiences?type=TASTING"]:visible').first()
     ).toBeVisible();
     await expect(
-      page.locator('a[href="/fr/experiences?type=TASTING"]').first()
-    ).toBeVisible();
-    await expect(
-      page.locator('a[href="/fr/experiences?type=CELLAR_VISIT"]').first()
+      page
+        .locator('a[href="/fr/experiences?type=CELLAR_VISIT"]:visible')
+        .first()
     ).toBeVisible();
   });
 

@@ -168,7 +168,9 @@ export class RegisterPage extends BasePage {
     this.submitButton = page.getByRole('button', {
       name: /create account|créer|sign up/i,
     });
-    this.errorMessage = page.locator('.bg-red-50').or(page.getByRole('alert'));
+    this.errorMessage = page.locator(
+      '.bg-red-50, [role="alert"]:not(#__next-route-announcer__)'
+    );
     this.loginLink = page.getByRole('link', { name: /sign in|se connecter/i });
     this.passwordHint = page.locator('text=/8.*characters|caractères/i');
   }

@@ -24,7 +24,7 @@ export function ExperienceDetailHeader({
   const t = useTranslations('experience');
 
   return (
-    <div className="mb-8">
+    <div className="mb-8" data-testid="winery-info-card">
       <h1 className="mb-3 font-display text-3xl font-extrabold leading-tight tracking-tight text-foreground md:text-4xl lg:text-5xl">
         {title}
       </h1>
@@ -32,6 +32,7 @@ export function ExperienceDetailHeader({
         <Link
           href={`/wineries/${winerySlug}`}
           className="font-semibold text-primary hover:underline"
+          data-testid="winery-name"
         >
           {wineryName}
         </Link>
@@ -54,7 +55,7 @@ export function ExperienceDetailHeader({
         <span className="text-gray-300">•</span>
         <div className="flex items-center gap-1 text-gray-500">
           <MapPin className="h-[18px] w-[18px]" />
-          <span>{commune}, Valais</span>
+          <span data-testid="winery-location">{commune}, Valais</span>
         </div>
       </div>
     </div>

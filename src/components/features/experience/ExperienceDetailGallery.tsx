@@ -105,7 +105,7 @@ export function ExperienceDetailGallery({
   const validGalleryCount = images.filter((image) =>
     getValidImageUrl(image.url)
   ).length;
-  const totalPhotoCount = allImages.length;
+  const totalPhotoCount = (heroImage ? 1 : 0) + validGalleryCount;
   const remainingCount = validGalleryCount > 4 ? validGalleryCount - 4 : 0;
 
   return (
