@@ -22,14 +22,28 @@ const steps = [
   },
 ] as const;
 
-export function HomeZeroInventoryTour() {
+export function HomeZeroInventoryTour({
+  isSimulation = false,
+}: {
+  isSimulation?: boolean;
+}) {
   return (
     <section className="bg-cream-50 px-4 py-14 md:px-14 md:py-20">
       <div className="mx-auto max-w-5xl rounded-3xl border border-stone-200 bg-white p-6 shadow-audit-elevated md:p-10">
-        <span className="inline-flex items-center gap-2 rounded-full border border-gold-400/40 bg-gold-400/15 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.12em] text-burgundy-700">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-2 rounded-full border border-gold-400/40 bg-gold-400/15 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.12em] text-burgundy-700">
           <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
           Visite guidee EnCave
-        </span>
+          </span>
+          {isSimulation && (
+            <Link
+              href="/"
+              className="inline-flex items-center rounded-full border border-stone-300 bg-white px-3 py-1 font-mono text-[11px] uppercase tracking-[0.1em] text-ink-700"
+            >
+              Quitter la simulation
+            </Link>
+          )}
+        </div>
 
         <h1 className="mt-4 font-display text-3xl leading-tight tracking-[-0.02em] text-ink-900 md:text-5xl">
           Aucun contenu live pour le moment.
@@ -64,6 +78,12 @@ export function HomeZeroInventoryTour() {
           >
             Creer mon compte
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </Link>
+          <Link
+            href={isSimulation ? '/' : '/?simulateTour=1'}
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-stone-300 bg-white px-6 text-sm font-semibold text-ink-800"
+          >
+            {isSimulation ? 'Retour accueil reel' : 'Simuler la visite guidee'}
           </Link>
           <Link
             href="/experiences"

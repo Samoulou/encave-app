@@ -12,6 +12,7 @@ import type { Locale } from '@/i18n/routing';
 
 type Props = {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ simulateTour?: string }>;
 };
 
 export async function generateMetadata({ params }: Props) {
@@ -19,8 +20,10 @@ export async function generateMetadata({ params }: Props) {
   return generateHomeMetadata(locale as Locale);
 }
 
-export default async function Home({ params }: Props) {
+export default async function Home({ params, searchParams }: Props) {
   const { locale } = await params;
+  const { simulateTour } = await searchParams;
+  const isTourSimulation = simulateTour === '1';
   setRequestLocale(locale);
 
   const baseUrl = getBaseUrl();
@@ -66,8 +69,8 @@ export default async function Home({ params }: Props) {
         </div>
 
         <main id="main-content">
-          {featuredExperiences.length === 0 ? (
-            <HomeZeroInventoryTour />
+          {featuredExperiences.length === 0 || isTourSimulation ? (
+            <HomeZeroInventoryTour isSimulation={isTourSimulation} />
           ) : (
             <>
               <div className="md:hidden">
