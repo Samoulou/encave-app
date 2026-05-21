@@ -136,6 +136,10 @@ export function HomeZeroInventoryTour({ isSimulation = false }: { isSimulation?:
   const isFirst = index === 0;
   const isLast = index === steps.length - 1;
 
+  if (!step) {
+    return null;
+  }
+
   return (
     <section className="bg-cream-50 px-4 py-14 md:px-14 md:py-20">
       <div className="mx-auto max-w-5xl rounded-3xl border border-stone-200 bg-white p-6 shadow-audit-elevated md:p-10">
