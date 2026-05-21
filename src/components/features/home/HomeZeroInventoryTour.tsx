@@ -1,6 +1,18 @@
 'use client';
 
-import { ArrowRight, Building2, CheckCircle2, ChevronLeft, ChevronRight, Compass, MapPin, Sparkles, WalletCards, Wine } from 'lucide-react';
+import {
+  ArrowRight,
+  Building2,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Compass,
+  MapPin,
+  Sparkles,
+  WalletCards,
+  Wine,
+  type LucideIcon,
+} from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link } from '@/i18n/navigation';
 
@@ -8,7 +20,7 @@ type Step = {
   id: 'dashboard' | 'experience' | 'encaveurs';
   title: string;
   subtitle: string;
-  icon: React.ComponentType<{ className?: string; 'aria-hidden'?: boolean }>;
+  icon: LucideIcon;
   panel: React.ReactNode;
 };
 
