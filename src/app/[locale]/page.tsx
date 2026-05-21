@@ -6,6 +6,7 @@ import { generateHomeMetadata } from '@/lib/seo';
 import { getBaseUrl } from '@/lib/env';
 import { HomeMobileEditorial } from '@/components/features/home/HomeMobileEditorial';
 import { HomeDesktopEditorial } from '@/components/features/home/HomeDesktopEditorial';
+import { HomeZeroInventoryTour } from '@/components/features/home/HomeZeroInventoryTour';
 import { searchExperiences } from '@/server/queries/experience.queries';
 import type { Locale } from '@/i18n/routing';
 
@@ -65,13 +66,19 @@ export default async function Home({ params }: Props) {
         </div>
 
         <main id="main-content">
-          <div className="md:hidden">
-            <HomeMobileEditorial experiences={featuredExperiences} />
-          </div>
+          {featuredExperiences.length === 0 ? (
+            <HomeZeroInventoryTour />
+          ) : (
+            <>
+              <div className="md:hidden">
+                <HomeMobileEditorial experiences={featuredExperiences} />
+              </div>
 
-          <div className="hidden md:block">
-            <HomeDesktopEditorial experiences={featuredExperiences} />
-          </div>
+              <div className="hidden md:block">
+                <HomeDesktopEditorial experiences={featuredExperiences} />
+              </div>
+            </>
+          )}
         </main>
         <Footer />
       </div>
