@@ -1,15 +1,11 @@
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
-import crypto from 'crypto';
 import type Stripe from 'stripe';
 import { getStripe, isStripeConfigured } from '@/server/stripe';
 import { db } from '@/server/db';
 import { env } from '@/lib/env';
-import { BookingStatus } from '@prisma/client';
-import {
-  sendBookingConfirmationEmail,
-  sendWinemakerNewBookingEmail,
-} from '@/server/services/email.service';
+import { BookingStatus, Prisma } from '@prisma/client';
+import { confirmBookingFromPaidCheckoutSession } from '@/server/services/checkout-confirmation.service';
 import { logError, logInfo } from '@/lib/logger';
 
 export async function POST(req: Request) {
@@ -37,10 +33,7 @@ export async function POST(req: Request) {
 
   if (!signature) {
     logError('Missing stripe-signature header');
-    return NextResponse.json(
-      { error: 'Missing signature' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'Missing signature' }, { status: 400 });
   }
 
   let event: Stripe.Event;
@@ -50,12 +43,18 @@ export async function POST(req: Request) {
   } catch (err) {
     logError('Webhook signature verification failed', err);
     return NextResponse.json(
-      { error: `Webhook Error: ${err instanceof Error ? err.message : 'Unknown error'}` },
+      {
+        error: `Webhook Error: ${err instanceof Error ? err.message : 'Unknown error'}`,
+      },
       { status: 400 }
     );
   }
 
-  // Handle the event
+  const shouldProcess = await claimStripeEvent(event);
+  if (!shouldProcess) {
+    return NextResponse.json({ received: true, duplicate: true });
+  }
+
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
@@ -75,9 +74,11 @@ export async function POST(req: Request) {
         logInfo('Unhandled checkout event type', { eventType: event.type });
     }
 
+    await markStripeEventProcessed(event.id);
     return NextResponse.json({ received: true });
   } catch (error) {
     logError('Error processing checkout webhook', error);
+    await markStripeEventFailed(event.id, error);
     return NextResponse.json(
       { error: 'Webhook handler failed' },
       { status: 500 }
@@ -85,142 +86,78 @@ export async function POST(req: Request) {
   }
 }
 
+async function claimStripeEvent(event: Stripe.Event): Promise<boolean> {
+  try {
+    await db.stripeEvent.create({
+      data: {
+        stripeEventId: event.id,
+        type: event.type,
+        status: 'PROCESSING',
+      },
+    });
+    return true;
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2002'
+    ) {
+      const existing = await db.stripeEvent.findUnique({
+        where: { stripeEventId: event.id },
+        select: { status: true },
+      });
+
+      if (existing?.status === 'FAILED') {
+        const retry = await db.stripeEvent.updateMany({
+          where: { stripeEventId: event.id, status: 'FAILED' },
+          data: { status: 'PROCESSING', errorMessage: null },
+        });
+        return retry.count === 1;
+      }
+
+      logInfo('Duplicate Stripe checkout event skipped', {
+        eventId: event.id,
+        eventType: event.type,
+        status: existing?.status,
+      });
+      return false;
+    }
+
+    throw error;
+  }
+}
+
+async function markStripeEventProcessed(eventId: string): Promise<void> {
+  await db.stripeEvent.update({
+    where: { stripeEventId: eventId },
+    data: { status: 'PROCESSED', errorMessage: null },
+  });
+}
+
+async function markStripeEventFailed(
+  eventId: string,
+  error: unknown
+): Promise<void> {
+  await db.stripeEvent.update({
+    where: { stripeEventId: eventId },
+    data: {
+      status: 'FAILED',
+      errorMessage: error instanceof Error ? error.message : String(error),
+    },
+  });
+}
+
 /**
  * Handle checkout.session.completed event
  * Updates booking status to CONFIRMED and sends confirmation emails
  */
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
-  const bookingId = session.metadata?.bookingId;
+  const result = await confirmBookingFromPaidCheckoutSession(
+    session,
+    'webhook'
+  );
 
-  if (!bookingId) {
-    logError('No bookingId in session metadata');
-    return;
-  }
-
-  // Idempotency check - ensure we don't process twice
-  const booking = await db.booking.findUnique({
-    where: { id: bookingId },
-    include: {
-      experience: {
-        select: {
-          title: true,
-          duration: true,
-        },
-      },
-      winery: {
-        select: {
-          name: true,
-          email: true,
-          user: {
-            select: {
-              name: true,
-              preferredLocale: true,
-            },
-          },
-        },
-      },
-    },
-  });
-
-  if (!booking) {
-    logError('Booking not found', undefined, { bookingId });
-    return;
-  }
-
-  // Already confirmed - skip (idempotency)
-  if (booking.status === BookingStatus.CONFIRMED) {
-    logInfo('Booking already confirmed, skipping', { bookingRef: booking.reference });
-    return;
-  }
-
-  // Only update if still pending payment
-  if (booking.status !== BookingStatus.PENDING_PAYMENT) {
-    logInfo('Booking not pending payment, not updating', {
-      bookingRef: booking.reference,
-      status: booking.status,
-    });
-    return;
-  }
-
-  // Generate secure access token for email link
-  // Store only the hash for security - the plaintext token is sent in emails
-  const accessToken = crypto.randomBytes(32).toString('hex');
-  const accessTokenHash = crypto.createHash('sha256').update(accessToken).digest('hex');
-
-  // Update booking to confirmed
-  // Note: We only store the hash, not the plaintext token (SEC-002 fix)
-  await db.booking.update({
-    where: { id: bookingId },
-    data: {
-      status: BookingStatus.CONFIRMED,
-      stripePaymentIntentId: session.payment_intent as string,
-      expiresAt: null, // Clear expiration since payment is complete
-      accessTokenHash,
-    },
-  });
-
-  logInfo('Booking confirmed via webhook', { bookingRef: booking.reference });
-
-  // Combine date and timeSlot for email formatting
-  const [hours, minutes] = booking.timeSlot.split(':').map(Number);
-  const bookingDateTime = new Date(booking.date);
-  bookingDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
-
-  // Send confirmation email to visitor
-  try {
-    await sendBookingConfirmationEmail(
-      booking.visitorEmail,
-      {
-        guestName: booking.visitorName,
-        experienceTitle: booking.experience.title,
-        wineryName: booking.winery.name,
-        date: bookingDateTime,
-        guestCount: booking.guestCount,
-        duration: booking.experience.duration,
-        totalPrice: booking.totalPrice,
-        bookingRef: booking.reference,
-      }
-    );
-
-    // Update confirmation sent timestamp
-    await db.booking.update({
-      where: { id: bookingId },
-      data: { confirmationSentAt: new Date() },
-    });
-
-    logInfo('Confirmation email sent', { to: booking.visitorEmail, bookingRef: booking.reference });
-  } catch (error) {
-    logError('Failed to send confirmation email', error, { bookingId });
-    // Don't throw - booking is still confirmed, email failure is not critical
-  }
-
-  // Send notification to winery
-  try {
-    await sendWinemakerNewBookingEmail(
-      booking.winery.email,
-      {
-        winemakerName: booking.winery.user.name ?? 'Winemaker',
-        experienceTitle: booking.experience.title,
-        date: bookingDateTime,
-        guestCount: booking.guestCount,
-        totalPrice: booking.wineryPayout, // Show payout amount, not total
-        guestName: booking.visitorName,
-        guestEmail: booking.visitorEmail,
-        bookingRef: booking.reference,
-      },
-      booking.winery.user.preferredLocale
-    );
-
-    // Update winery notified timestamp
-    await db.booking.update({
-      where: { id: bookingId },
-      data: { wineryNotifiedAt: new Date() },
-    });
-
-    logInfo('Winery notification sent', { to: booking.winery.email, bookingRef: booking.reference });
-  } catch (error) {
-    logError('Failed to send winery notification', error, { bookingId });
-    // Don't throw - booking is still confirmed
+  if (result === 'missing_payment_intent') {
+    throw new Error('Checkout session has no payment intent');
   }
 }
 
@@ -260,5 +197,7 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
     where: { id: bookingId },
   });
 
-  logInfo('Booking deleted due to checkout session expiry', { bookingRef: booking.reference });
+  logInfo('Booking deleted due to checkout session expiry', {
+    bookingRef: booking.reference,
+  });
 }

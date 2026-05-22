@@ -2,9 +2,12 @@ import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { format } from 'date-fns';
+import type Stripe from 'stripe';
 import { ArrowLeft, CalendarCheck, Clock } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { db } from '@/server/db';
+import { getStripe, isStripeConfigured } from '@/server/stripe';
+import { confirmBookingFromPaidCheckoutSession } from '@/server/services/checkout-confirmation.service';
 import { BookingStatus } from '@prisma/client';
 import {
   ConfirmationSuccess,
@@ -18,7 +21,11 @@ import {
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
   return generatePageMetadata({
     locale: locale as Locale,
@@ -29,9 +36,35 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 interface ConfirmationPageProps {
   params: Promise<{ id: string; locale: string }>;
+  searchParams: Promise<{ session_id?: string }>;
 }
 
-async function getBooking(id: string) {
+async function getValidCheckoutSession(
+  id: string,
+  sessionId: string | undefined
+): Promise<Stripe.Checkout.Session | null> {
+  if (!sessionId || !isStripeConfigured()) {
+    return null;
+  }
+
+  try {
+    const session = await getStripe().checkout.sessions.retrieve(sessionId);
+    return session.metadata?.bookingId === id ? session : null;
+  } catch {
+    return null;
+  }
+}
+
+async function getBooking(id: string, sessionId: string | undefined) {
+  const session = await getValidCheckoutSession(id, sessionId);
+  if (!session) {
+    return null;
+  }
+
+  if (session.payment_status === 'paid') {
+    await confirmBookingFromPaidCheckoutSession(session, 'confirmation_page');
+  }
+
   const booking = await db.booking.findUnique({
     where: { id },
     include: {
@@ -56,6 +89,13 @@ async function getBooking(id: string) {
     },
   });
 
+  if (
+    booking?.stripeCheckoutSessionId &&
+    booking.stripeCheckoutSessionId !== session.id
+  ) {
+    return null;
+  }
+
   return booking;
 }
 
@@ -76,10 +116,14 @@ function formatEndTime(time: string, durationMinutes: number): string {
   return `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
 }
 
-export default async function ConfirmationPage({ params }: ConfirmationPageProps) {
+export default async function ConfirmationPage({
+  params,
+  searchParams,
+}: ConfirmationPageProps) {
   const { id, locale } = await params;
+  const { session_id: sessionId } = await searchParams;
   const t = await getTranslations('confirmation');
-  const booking = await getBooking(id);
+  const booking = await getBooking(id, sessionId);
 
   if (!booking) {
     notFound();
@@ -94,13 +138,13 @@ export default async function ConfirmationPage({ params }: ConfirmationPageProps
   // Pending Payment State
   if (isPending) {
     return (
-      <div className="flex-1 flex justify-center py-10 px-4 md:px-10">
+      <div className="flex flex-1 justify-center px-4 py-10 md:px-10">
         <div className="w-full max-w-3xl">
-          <div className="text-center mb-8">
+          <div className="mb-8 text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-yellow-100">
               <Clock className="h-10 w-10 text-yellow-600" />
             </div>
-            <h1 className="font-display text-3xl font-bold text-foreground mb-2">
+            <h1 className="mb-2 font-display text-3xl font-bold text-foreground">
               {t('paymentPending')}
             </h1>
             <p className="text-[#915564]">{t('paymentPendingDescription')}</p>
@@ -108,8 +152,10 @@ export default async function ConfirmationPage({ params }: ConfirmationPageProps
 
           <Card className="mb-6 border-border">
             <CardContent className="p-6 text-center">
-              <p className="text-sm text-[#915564] mb-1">{t('bookingReference')}</p>
-              <p className="text-2xl font-mono font-bold text-primary">
+              <p className="mb-1 text-sm text-[#915564]">
+                {t('bookingReference')}
+              </p>
+              <p className="font-mono text-2xl font-bold text-primary">
                 {booking.reference}
               </p>
             </CardContent>
@@ -121,10 +167,10 @@ export default async function ConfirmationPage({ params }: ConfirmationPageProps
 
   // Main Confirmed State - Two Column Layout
   return (
-    <div className="flex-1 flex justify-center py-10 px-4 md:px-10">
-      <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <div className="flex flex-1 justify-center px-4 py-10 md:px-10">
+      <div className="grid w-full max-w-5xl grid-cols-1 gap-8 lg:grid-cols-12">
         {/* Left Column: Confirmation & Actions */}
-        <div className="lg:col-span-8 flex flex-col gap-6">
+        <div className="flex flex-col gap-6 lg:col-span-8">
           {/* Hero Status */}
           <ConfirmationSuccess visitorEmail={booking.visitorEmail} />
 
@@ -135,7 +181,7 @@ export default async function ConfirmationPage({ params }: ConfirmationPageProps
               isConfirmed={isConfirmed}
             />
             <CardContent className="p-6 md:p-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
                 {/* Experience Info */}
                 <BookingDetailsSection
                   experienceTitle={booking.experience.title}
@@ -174,7 +220,7 @@ export default async function ConfirmationPage({ params }: ConfirmationPageProps
         </div>
 
         {/* Right Column: Winery Contact & Help */}
-        <div className="lg:col-span-4 flex flex-col gap-6">
+        <div className="flex flex-col gap-6 lg:col-span-4">
           {/* Winery Contact Card */}
           <WineryInfoCard
             address={booking.winery.address}
@@ -189,17 +235,17 @@ export default async function ConfirmationPage({ params }: ConfirmationPageProps
       </div>
 
       {/* Bottom CTA Bar */}
-      <div className="fixed bottom-0 left-0 right-0 w-full flex justify-center gap-6 py-8 pb-12 bg-gradient-to-t from-[#f8f6f6] to-transparent pointer-events-none">
+      <div className="pointer-events-none fixed bottom-0 left-0 right-0 flex w-full justify-center gap-6 bg-gradient-to-t from-[#f8f6f6] to-transparent py-8 pb-12">
         <Link
           href={`/${locale}/experiences`}
-          className="inline-flex items-center gap-2 text-[#915564] hover:text-primary transition-colors font-semibold pointer-events-auto"
+          className="pointer-events-auto inline-flex items-center gap-2 font-semibold text-[#915564] transition-colors hover:text-primary"
         >
           <ArrowLeft className="size-4" />
           {t('returnToExperiences')}
         </Link>
         <Link
           href={`/${locale}/dashboard/my-bookings`}
-          className="inline-flex items-center gap-2 text-[#915564] hover:text-primary transition-colors font-semibold pointer-events-auto"
+          className="pointer-events-auto inline-flex items-center gap-2 font-semibold text-[#915564] transition-colors hover:text-primary"
         >
           <CalendarCheck className="size-4" />
           {t('viewMyBookings')}
