@@ -2,10 +2,12 @@ import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { format } from 'date-fns';
+import type Stripe from 'stripe';
 import { ArrowLeft, CalendarCheck, Clock } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { db } from '@/server/db';
 import { getStripe, isStripeConfigured } from '@/server/stripe';
+import { confirmBookingFromPaidCheckoutSession } from '@/server/services/checkout-confirmation.service';
 import { BookingStatus } from '@prisma/client';
 import {
   ConfirmationSuccess,
@@ -37,26 +39,30 @@ interface ConfirmationPageProps {
   searchParams: Promise<{ session_id?: string }>;
 }
 
-async function isValidCheckoutSession(
+async function getValidCheckoutSession(
   id: string,
   sessionId: string | undefined
-): Promise<boolean> {
+): Promise<Stripe.Checkout.Session | null> {
   if (!sessionId || !isStripeConfigured()) {
-    return false;
+    return null;
   }
 
   try {
     const session = await getStripe().checkout.sessions.retrieve(sessionId);
-    return session.metadata?.bookingId === id;
+    return session.metadata?.bookingId === id ? session : null;
   } catch {
-    return false;
+    return null;
   }
 }
 
 async function getBooking(id: string, sessionId: string | undefined) {
-  const canAccess = await isValidCheckoutSession(id, sessionId);
-  if (!canAccess) {
+  const session = await getValidCheckoutSession(id, sessionId);
+  if (!session) {
     return null;
+  }
+
+  if (session.payment_status === 'paid') {
+    await confirmBookingFromPaidCheckoutSession(session, 'confirmation_page');
   }
 
   const booking = await db.booking.findUnique({
@@ -82,6 +88,13 @@ async function getBooking(id: string, sessionId: string | undefined) {
       },
     },
   });
+
+  if (
+    booking?.stripeCheckoutSessionId &&
+    booking.stripeCheckoutSessionId !== session.id
+  ) {
+    return null;
+  }
 
   return booking;
 }

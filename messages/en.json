@@ -543,7 +543,7 @@
       "cancelledByClient": "Cancelled by Client",
       "cancelledByWinery": "Cancelled by Winery",
       "noShow": "No-Show",
-      "pending": "Pending"
+      "pending": "Payment pending"
     },
     "guestCount": "{count, plural, =1 {# person} other {# people}}",
     "actions": {
