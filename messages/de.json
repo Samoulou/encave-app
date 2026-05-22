@@ -543,7 +543,7 @@
       "cancelledByClient": "Vom Kunden storniert",
       "cancelledByWinery": "Vom Weingut storniert",
       "noShow": "Nicht erschienen",
-      "pending": "Ausstehend"
+      "pending": "Zahlung ausstehend"
     },
     "guestCount": "{count, plural, =1 {# Person} other {# Personen}}",
     "actions": {

@@ -1,17 +1,12 @@
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
-import crypto from 'crypto';
 import type Stripe from 'stripe';
 import { getStripe, isStripeConfigured } from '@/server/stripe';
 import { db } from '@/server/db';
 import { env } from '@/lib/env';
 import { BookingStatus, Prisma } from '@prisma/client';
-import {
-  sendBookingConfirmationEmail,
-  sendWinemakerNewBookingEmail,
-} from '@/server/services/email.service';
+import { confirmBookingFromPaidCheckoutSession } from '@/server/services/checkout-confirmation.service';
 import { logError, logInfo } from '@/lib/logger';
-import { getPostHogServer } from '@/lib/posthog';
 
 export async function POST(req: Request) {
   if (!isStripeConfigured()) {
@@ -156,186 +151,13 @@ async function markStripeEventFailed(
  * Updates booking status to CONFIRMED and sends confirmation emails
  */
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
-  const bookingId = session.metadata?.bookingId;
+  const result = await confirmBookingFromPaidCheckoutSession(
+    session,
+    'webhook'
+  );
 
-  if (!bookingId) {
-    logError('No bookingId in session metadata');
-    return;
-  }
-
-  // Idempotency check - ensure we don't process twice
-  const booking = await db.booking.findUnique({
-    where: { id: bookingId },
-    include: {
-      experience: {
-        select: {
-          title: true,
-          duration: true,
-        },
-      },
-      winery: {
-        select: {
-          name: true,
-          email: true,
-          user: {
-            select: {
-              name: true,
-              preferredLocale: true,
-            },
-          },
-        },
-      },
-    },
-  });
-
-  if (!booking) {
-    logError('Booking not found', undefined, { bookingId });
-    return;
-  }
-
-  // Already confirmed - skip (idempotency)
-  if (booking.status === BookingStatus.CONFIRMED) {
-    logInfo('Booking already confirmed, skipping', {
-      bookingRef: booking.reference,
-    });
-    return;
-  }
-
-  // Only update if still pending payment
-  if (booking.status !== BookingStatus.PENDING_PAYMENT) {
-    logInfo('Booking not pending payment, not updating', {
-      bookingRef: booking.reference,
-      status: booking.status,
-    });
-    return;
-  }
-
-  if (!session.payment_intent || typeof session.payment_intent !== 'string') {
-    logError('Checkout session has no payment intent', undefined, {
-      bookingId,
-      sessionId: session.id,
-    });
+  if (result === 'missing_payment_intent') {
     throw new Error('Checkout session has no payment intent');
-  }
-
-  // Generate secure access token for email link
-  // Store only the hash for security - the plaintext token is sent in emails
-  const accessToken = crypto.randomBytes(32).toString('hex');
-  const accessTokenHash = crypto
-    .createHash('sha256')
-    .update(accessToken)
-    .digest('hex');
-
-  const updated = await db.booking.updateMany({
-    where: { id: bookingId, status: BookingStatus.PENDING_PAYMENT },
-    data: {
-      status: BookingStatus.CONFIRMED,
-      stripeCheckoutSessionId: session.id,
-      stripePaymentIntentId: session.payment_intent,
-      expiresAt: null, // Clear expiration since payment is complete
-      accessTokenHash,
-    },
-  });
-
-  if (updated.count !== 1) {
-    logInfo('Booking no longer pending payment after webhook claim', {
-      bookingRef: booking.reference,
-      status: booking.status,
-    });
-    return;
-  }
-
-  logInfo('Booking confirmed via webhook', { bookingRef: booking.reference });
-
-  // Track booking completion in PostHog (server-side)
-  const posthogServer = getPostHogServer();
-  if (posthogServer) {
-    posthogServer.capture({
-      distinctId: booking.visitorEmail,
-      event: 'booking_completed',
-      properties: {
-        booking_id: booking.id,
-        booking_reference: booking.reference,
-        experience_id: booking.experienceId,
-        experience_title: booking.experience.title,
-        winery_id: booking.wineryId,
-        winery_name: booking.winery.name,
-        date: booking.date.toISOString(),
-        time_slot: booking.timeSlot,
-        guest_count: booking.guestCount,
-        total_price_chf: booking.totalPrice / 100,
-        platform_fee_chf: booking.platformFee / 100,
-        winery_payout_chf: booking.wineryPayout / 100,
-      },
-    });
-    await posthogServer.flush();
-  }
-
-  // Combine date and timeSlot for email formatting
-  const [hours, minutes] = booking.timeSlot.split(':').map(Number);
-  const bookingDateTime = new Date(booking.date);
-  bookingDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
-
-  // Send confirmation email to visitor
-  try {
-    await sendBookingConfirmationEmail(booking.visitorEmail, {
-      bookingId: booking.id,
-      accessToken,
-      guestName: booking.visitorName,
-      experienceTitle: booking.experience.title,
-      wineryName: booking.winery.name,
-      date: bookingDateTime,
-      guestCount: booking.guestCount,
-      duration: booking.experience.duration,
-      totalPrice: booking.totalPrice,
-      bookingRef: booking.reference,
-    });
-
-    // Update confirmation sent timestamp
-    await db.booking.update({
-      where: { id: bookingId },
-      data: { confirmationSentAt: new Date() },
-    });
-
-    logInfo('Confirmation email sent', {
-      to: booking.visitorEmail,
-      bookingRef: booking.reference,
-    });
-  } catch (error) {
-    logError('Failed to send confirmation email', error, { bookingId });
-    // Don't throw - booking is still confirmed, email failure is not critical
-  }
-
-  // Send notification to winery
-  try {
-    await sendWinemakerNewBookingEmail(
-      booking.winery.email,
-      {
-        winemakerName: booking.winery.user.name ?? 'Winemaker',
-        experienceTitle: booking.experience.title,
-        date: bookingDateTime,
-        guestCount: booking.guestCount,
-        totalPrice: booking.wineryPayout, // Show payout amount, not total
-        guestName: booking.visitorName,
-        guestEmail: booking.visitorEmail,
-        bookingRef: booking.reference,
-      },
-      booking.winery.user.preferredLocale
-    );
-
-    // Update winery notified timestamp
-    await db.booking.update({
-      where: { id: bookingId },
-      data: { wineryNotifiedAt: new Date() },
-    });
-
-    logInfo('Winery notification sent', {
-      to: booking.winery.email,
-      bookingRef: booking.reference,
-    });
-  } catch (error) {
-    logError('Failed to send winery notification', error, { bookingId });
-    // Don't throw - booking is still confirmed
   }
 }
 

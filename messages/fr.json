@@ -543,7 +543,7 @@
       "cancelledByClient": "Annulé par le client",
       "cancelledByWinery": "Annulé par le domaine",
       "noShow": "Absent",
-      "pending": "En attente"
+      "pending": "Paiement en attente"
     },
     "guestCount": "{count, plural, =1 {# personne} other {# personnes}}",
     "actions": {
