@@ -41,16 +41,16 @@ export function BookingDetailsSection({
               {wineryName}
             </p>
           </div>
-          <div className="flex gap-6">
-            <div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+            <div className="min-w-0">
               <p className="text-sm text-muted-foreground">{t('date')}</p>
-              <p className="text-base font-semibold text-foreground">
+              <p className="break-words text-base font-semibold text-foreground">
                 {formattedDate}
               </p>
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-sm text-muted-foreground">{t('time')}</p>
-              <p className="text-base font-semibold text-foreground">
+              <p className="break-words text-base font-semibold text-foreground">
                 {formattedTime}
               </p>
             </div>
@@ -64,11 +64,11 @@ export function BookingDetailsSection({
         </div>
       </div>
       <div className="border-t border-border pt-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-start justify-between gap-4">
           <p className="text-base font-medium text-muted-foreground">
             {t('totalPaid')}
           </p>
-          <p className="text-xl font-bold text-foreground">
+          <p className="shrink-0 text-right text-xl font-bold text-foreground">
             {formatCHF(totalPrice)}
           </p>
         </div>

@@ -1,8 +1,11 @@
 import { useTranslations } from 'next-intl';
 import { MapPin, Phone, Mail } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { DynamicMap } from '@/components/features/map/DynamicMap';
+import type { MapWinery } from '@/components/features/map/types';
 
 interface WineryInfoCardProps {
+  winery: MapWinery;
   address: string;
   commune: string;
   phone: string;
@@ -10,13 +13,17 @@ interface WineryInfoCardProps {
 }
 
 export function WineryInfoCard({
+  winery,
   address,
   commune,
   phone,
   email,
 }: WineryInfoCardProps) {
   const t = useTranslations('confirmation');
-  const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${address}, ${commune}, Switzerland`)}`;
+  const hasCoordinates = winery.latitude != null && winery.longitude != null;
+  const googleMapsUrl = hasCoordinates
+    ? `https://www.google.com/maps/dir/?api=1&destination=${winery.latitude},${winery.longitude}`
+    : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${address}, ${commune}, Switzerland`)}`;
 
   return (
     <Card className="hover:translate-y-0 hover:shadow-card">
@@ -25,17 +32,15 @@ export function WineryInfoCard({
           {t('wineryInformation')}
         </h3>
 
-        <div className="relative mb-4 aspect-[4/3] w-full overflow-hidden rounded-lg bg-stone-100">
-          <div className="absolute inset-0 bg-[linear-gradient(135deg,#eef1e5,#d8dfc6)]" />
-          <div className="absolute inset-0 opacity-60 [background-image:linear-gradient(120deg,transparent_35%,rgba(122,138,58,.18)_35%,rgba(122,138,58,.18)_55%,transparent_55%)]" />
-          <div className="absolute inset-0 flex flex-col items-center justify-center px-5 text-center">
-            <div className="mb-3 flex size-9 items-center justify-center rounded-full bg-primary text-white shadow-lg">
-              <MapPin className="size-4" />
-            </div>
-            <p className="text-sm font-semibold text-foreground">{commune}</p>
-            <p className="mt-1 text-xs text-muted-foreground">{address}</p>
+        {hasCoordinates && (
+          <div className="mb-4 h-48 overflow-hidden rounded-lg border border-border">
+            <DynamicMap
+              wineries={[winery]}
+              singleWinery
+              className="h-full w-full rounded-none"
+            />
           </div>
-        </div>
+        )}
 
         <div className="space-y-4">
           <div className="flex items-start gap-3">
@@ -75,7 +80,7 @@ export function WineryInfoCard({
               </p>
               <a
                 href={`mailto:${email}`}
-                className="text-sm text-muted-foreground transition-colors hover:text-primary"
+                className="break-all text-sm text-muted-foreground transition-colors hover:text-primary"
               >
                 {email}
               </a>
