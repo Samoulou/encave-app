@@ -166,8 +166,6 @@ export async function confirmBookingFromPaidCheckoutSession(
     await sendBookingConfirmationEmail(
       booking.visitorEmail,
       {
-        bookingId: booking.id,
-        accessToken,
         guestName: booking.visitorName,
         experienceTitle: booking.experience.title,
         wineryName: booking.winery.name,
