@@ -78,12 +78,21 @@ async function getBooking(id: string, sessionId: string | undefined) {
       },
       winery: {
         select: {
+          id: true,
           name: true,
           slug: true,
           address: true,
           commune: true,
           phone: true,
           email: true,
+          coverPhoto: true,
+          latitude: true,
+          longitude: true,
+          _count: {
+            select: {
+              experiences: true,
+            },
+          },
         },
       },
     },
@@ -167,7 +176,7 @@ export default async function ConfirmationPage({
 
   // Main Confirmed State - Two Column Layout
   return (
-    <div className="flex flex-1 justify-center px-4 py-10 md:px-10">
+    <div className="container mx-auto max-w-5xl px-4 py-12">
       <div className="grid w-full max-w-5xl grid-cols-1 gap-8 lg:grid-cols-12">
         {/* Left Column: Confirmation & Actions */}
         <div className="flex flex-col gap-6 lg:col-span-8">
@@ -203,26 +212,58 @@ export default async function ConfirmationPage({
           </Card>
 
           {/* Action Buttons */}
-          <ConfirmationActions
-            booking={{
-              experienceTitle: booking.experience.title,
-              wineryName: booking.winery.name,
-              wineryAddress: booking.winery.address,
-              wineryCommune: booking.winery.commune,
-              date: booking.date,
-              timeSlot: booking.timeSlot,
-              durationMinutes: booking.experience.duration,
-              guestCount: booking.guestCount,
-              reference: booking.reference,
-              id: booking.id,
-            }}
-          />
+          <div className="space-y-8">
+            <ConfirmationActions
+              booking={{
+                experienceTitle: booking.experience.title,
+                wineryName: booking.winery.name,
+                wineryAddress: booking.winery.address,
+                wineryCommune: booking.winery.commune,
+                date: booking.date,
+                timeSlot: booking.timeSlot,
+                durationMinutes: booking.experience.duration,
+                guestCount: booking.guestCount,
+                reference: booking.reference,
+                id: booking.id,
+              }}
+            />
+
+            <nav
+              aria-label={t('bookingStatus')}
+              className="flex flex-col gap-3 border-t border-border pt-6 text-sm font-semibold text-muted-foreground sm:flex-row sm:items-center sm:justify-center sm:gap-6"
+            >
+              <Link
+                href={`/${locale}/experiences`}
+                className="inline-flex items-center justify-center gap-2 transition-colors hover:text-primary"
+              >
+                <ArrowLeft className="size-4 shrink-0" />
+                <span>{t('returnToExperiences')}</span>
+              </Link>
+              <Link
+                href={`/${locale}/dashboard/my-bookings`}
+                className="inline-flex items-center justify-center gap-2 transition-colors hover:text-primary"
+              >
+                <CalendarCheck className="size-4 shrink-0" />
+                <span>{t('viewMyBookings')}</span>
+              </Link>
+            </nav>
+          </div>
         </div>
 
         {/* Right Column: Winery Contact & Help */}
         <div className="flex flex-col gap-6 lg:col-span-4">
           {/* Winery Contact Card */}
           <WineryInfoCard
+            winery={{
+              id: booking.winery.id,
+              name: booking.winery.name,
+              slug: booking.winery.slug,
+              commune: booking.winery.commune,
+              coverPhoto: booking.winery.coverPhoto,
+              latitude: booking.winery.latitude,
+              longitude: booking.winery.longitude,
+              _count: booking.winery._count,
+            }}
             address={booking.winery.address}
             commune={booking.winery.commune}
             phone={booking.winery.phone}
@@ -234,23 +275,6 @@ export default async function ConfirmationPage({
         </div>
       </div>
 
-      {/* Bottom CTA Bar */}
-      <div className="pointer-events-none fixed bottom-0 left-0 right-0 flex w-full justify-center gap-6 bg-gradient-to-t from-[#f8f6f6] to-transparent py-8 pb-12">
-        <Link
-          href={`/${locale}/experiences`}
-          className="pointer-events-auto inline-flex items-center gap-2 font-semibold text-[#915564] transition-colors hover:text-primary"
-        >
-          <ArrowLeft className="size-4" />
-          {t('returnToExperiences')}
-        </Link>
-        <Link
-          href={`/${locale}/dashboard/my-bookings`}
-          className="pointer-events-auto inline-flex items-center gap-2 font-semibold text-[#915564] transition-colors hover:text-primary"
-        >
-          <CalendarCheck className="size-4" />
-          {t('viewMyBookings')}
-        </Link>
-      </div>
     </div>
   );
 }

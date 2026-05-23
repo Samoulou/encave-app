@@ -1,12 +1,16 @@
 'use client';
 
+import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Calendar, Receipt } from 'lucide-react';
+import { Calendar, Loader2, Receipt } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
   downloadICalEvent,
   createBookingCalendarEvent,
 } from '@/lib/utils/calendar';
+import { exportBookingReceiptPDF } from '@/server/actions/booking-receipt';
 
 interface ConfirmationActionsProps {
   booking: {
@@ -25,6 +29,8 @@ interface ConfirmationActionsProps {
 
 export function ConfirmationActions({ booking }: ConfirmationActionsProps) {
   const t = useTranslations('confirmation');
+  const searchParams = useSearchParams();
+  const [isDownloadingReceipt, setIsDownloadingReceipt] = useState(false);
 
   const calendarEvent = createBookingCalendarEvent({
     ...booking,
@@ -36,26 +42,66 @@ export function ConfirmationActions({ booking }: ConfirmationActionsProps) {
     downloadICalEvent(calendarEvent, `encave-booking-${booking.reference}`);
   };
 
-  const handleDownloadReceipt = () => {
-    // For now, open a print dialog as a fallback
-    // In a full implementation, this would generate a PDF
-    window.print();
+  const handleDownloadReceipt = async () => {
+    setIsDownloadingReceipt(true);
+    try {
+      const result = await exportBookingReceiptPDF(
+        booking.id,
+        searchParams?.get('session_id') ?? null
+      );
+
+      if (!result.success) {
+        toast.error(result.error?.message ?? 'Unable to generate receipt.');
+        return;
+      }
+
+      const byteCharacters = atob(result.data.pdf);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+
+      const blob = new Blob([new Uint8Array(byteNumbers)], {
+        type: 'application/pdf',
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = result.data.filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch {
+      toast.error('Unable to generate receipt.');
+    } finally {
+      setIsDownloadingReceipt(false);
+    }
   };
 
   return (
     <div className="mt-2 flex flex-col gap-4 sm:flex-row">
-      <Button onClick={handleAddToCalendar} className="h-12 flex-1" size="lg">
-        <Calendar className="mr-2 size-5" />
-        {t('addToCalendar')}
+      <Button
+        onClick={handleAddToCalendar}
+        className="min-h-12 flex-1 whitespace-normal"
+        size="lg"
+      >
+        <Calendar className="mr-2 size-5 shrink-0" />
+        <span>{t('addToCalendar')}</span>
       </Button>
       <Button
         onClick={handleDownloadReceipt}
         variant="outline"
-        className="h-12 flex-1"
+        className="min-h-12 flex-1 whitespace-normal"
         size="lg"
+        disabled={isDownloadingReceipt}
       >
-        <Receipt className="mr-2 size-5" />
-        {t('downloadReceipt')}
+        {isDownloadingReceipt ? (
+          <Loader2 className="mr-2 size-5 shrink-0 animate-spin" />
+        ) : (
+          <Receipt className="mr-2 size-5 shrink-0" />
+        )}
+        <span>{t('downloadReceipt')}</span>
       </Button>
     </div>
   );

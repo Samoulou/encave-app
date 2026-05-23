@@ -13,16 +13,18 @@ export function ConfirmationSuccess({
 
   return (
     <Card className="hover:translate-y-0 hover:shadow-card">
-      <CardContent className="flex flex-col items-center p-8 text-center">
-        <div className="mb-6">
+      <CardContent className="flex flex-col items-center px-5 py-8 text-center sm:p-8">
+        <div className="mb-5 sm:mb-6">
           <AnimatedCheckmark size="lg" />
         </div>
-        <h1 className="mb-3 font-display text-3xl font-bold leading-tight tracking-tight text-foreground md:text-4xl">
+        <h1 className="mb-3 max-w-2xl text-balance font-display text-2xl font-bold leading-tight tracking-tight text-foreground sm:text-3xl md:text-4xl">
           {t('successTitle')}
         </h1>
-        <p className="max-w-lg text-lg font-normal leading-relaxed text-muted-foreground">
+        <p className="max-w-xl text-base font-normal leading-relaxed text-muted-foreground sm:text-lg">
           {t('emailSentTo')}{' '}
-          <span className="font-semibold text-foreground">{visitorEmail}</span>{' '}
+          <span className="inline-block max-w-full break-all font-semibold text-foreground">
+            {visitorEmail}
+          </span>{' '}
           {t('withAllDetails')}
         </p>
       </CardContent>
