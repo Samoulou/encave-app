@@ -99,12 +99,13 @@ export async function confirmBookingFromPaidCheckoutSession(
   }
 
   if (
-    booking.stripeCheckoutSessionId &&
-    booking.stripeCheckoutSessionId !== session.id
+    booking.stripePaymentIntentId &&
+    booking.stripePaymentIntentId !== paymentIntentId
   ) {
-    logError('Checkout session does not match booking', undefined, {
+    logError('Payment intent does not match booking', undefined, {
       bookingId,
-      bookingSessionId: booking.stripeCheckoutSessionId,
+      bookingPaymentIntentId: booking.stripePaymentIntentId,
+      paymentIntentId,
       sessionId: session.id,
       source,
     });
@@ -138,7 +139,6 @@ export async function confirmBookingFromPaidCheckoutSession(
     where: { id: bookingId, status: BookingStatus.PENDING_PAYMENT },
     data: {
       status: BookingStatus.CONFIRMED,
-      stripeCheckoutSessionId: session.id,
       stripePaymentIntentId: paymentIntentId,
       expiresAt: null,
       accessTokenHash,

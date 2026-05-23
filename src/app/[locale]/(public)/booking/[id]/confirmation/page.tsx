@@ -89,12 +89,6 @@ async function getBooking(id: string, sessionId: string | undefined) {
     },
   });
 
-  if (
-    booking?.stripeCheckoutSessionId &&
-    booking.stripeCheckoutSessionId !== session.id
-  ) {
-    return null;
-  }
 
   return booking;
 }
