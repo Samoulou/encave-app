@@ -1,6 +1,16 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { BookingStatus } from '@prisma/client';
 
+// React.cache is not available in Vitest's React runtime, but server query
+// modules use it for request-level deduplication in Next.
+vi.mock('react', async () => {
+  const actual = await vi.importActual<typeof import('react')>('react');
+  return {
+    ...actual,
+    cache: <T extends (...args: unknown[]) => unknown>(fn: T) => fn,
+  };
+});
+
 // Mock auth
 vi.mock('@/server/auth', () => ({
   auth: vi.fn(),
@@ -18,6 +28,11 @@ vi.mock('@/server/db', () => ({
       update: vi.fn(),
     },
   },
+}));
+
+vi.mock('@/server/services/email.service', () => ({
+  sendBookingConfirmationEmail: vi.fn(),
+  sendBookingCancellationEmail: vi.fn(),
 }));
 
 import { auth } from '@/server/auth';
