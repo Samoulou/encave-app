@@ -144,7 +144,7 @@ export function HomeMobileEditorial({
           </div>
         </div>
 
-        <div className="absolute bottom-[108px] left-[18px] right-[18px] text-center text-white">
+        <div className="absolute left-[18px] right-[18px] top-1/2 -translate-y-1/2 text-white">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-gold-400/45 bg-gold-400/20 px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.14em] text-gold-400">
             <Sparkles className="h-[11px] w-[11px]" aria-hidden="true" />
             Valais · experiences verifiees
@@ -156,7 +156,7 @@ export function HomeMobileEditorial({
             </em>
             .
           </h1>
-          <p className="mx-auto mt-1.5 max-w-[280px] text-sm text-white/85">
+          <p className="mt-1.5 max-w-[280px] text-sm text-white/85">
             Degustations, ateliers et vendanges reserves directement avec le
             vigneron.
           </p>
