@@ -129,13 +129,13 @@ export function HomeMobileEditorial({
       <section className="relative h-[460px]">
         <HeroBannerVisual />
 
-        <div className="absolute left-3.5 right-3.5 top-3 flex items-center justify-between text-white">
-          <span className="font-display text-[22px] font-bold tracking-[-0.01em]">
+        <div className="absolute left-3.5 right-3.5 top-3 text-white">
+          <span className="block text-center font-display text-[22px] font-bold tracking-[-0.01em]">
             EnCave
           </span>
-          <div className="flex items-center gap-2">
+          <div className="absolute right-0 top-0 flex items-center gap-2">
             <div className="rounded-full border border-white/25 bg-white/20 text-white backdrop-blur-md">
-              <LocaleSwitcher />
+              <LocaleSwitcher triggerClassName="text-gold-100 hover:text-white" />
             </div>
             <MobileNav
               isAuthenticated={false}
@@ -144,7 +144,7 @@ export function HomeMobileEditorial({
           </div>
         </div>
 
-        <div className="absolute bottom-[108px] left-[18px] right-[18px] text-white">
+        <div className="absolute bottom-[108px] left-[18px] right-[18px] text-center text-white">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-gold-400/45 bg-gold-400/20 px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.14em] text-gold-400">
             <Sparkles className="h-[11px] w-[11px]" aria-hidden="true" />
             Valais · experiences verifiees
@@ -156,7 +156,7 @@ export function HomeMobileEditorial({
             </em>
             .
           </h1>
-          <p className="mt-1.5 max-w-[280px] text-sm text-white/85">
+          <p className="mx-auto mt-1.5 max-w-[280px] text-sm text-white/85">
             Degustations, ateliers et vendanges reserves directement avec le
             vigneron.
           </p>
