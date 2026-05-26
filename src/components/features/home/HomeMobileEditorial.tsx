@@ -27,6 +27,8 @@ const categoryLinks = [
   ['Accords', 'FOOD_PAIRING', Utensils, 'bg-[#f5e9d6]'],
 ] as const;
 
+const HERO_BANNER_IMAGE = '/images/herobanner-image-original.jpg';
+
 function formatDuration(minutes: number) {
   if (minutes >= 60) {
     const hours = Math.floor(minutes / 60);
@@ -82,6 +84,22 @@ function ExperienceVisual({
   );
 }
 
+function HeroBannerVisual() {
+  return (
+    <div className="relative h-full overflow-hidden bg-ink-900">
+      <ImageWithFallback
+        src={HERO_BANNER_IMAGE}
+        alt="Vignes valaisannes"
+        fill
+        priority
+        className="object-cover"
+        sizes="100vw"
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-burgundy-950/25 to-black/70" />
+    </div>
+  );
+}
+
 function PriceTag({ amount, size = 20 }: { amount: string; size?: number }) {
   return (
     <div className="flex items-baseline gap-1">
@@ -109,7 +127,7 @@ export function HomeMobileEditorial({
   return (
     <div className="min-h-screen overflow-x-hidden bg-cream-50 pb-6 font-sans text-ink-900">
       <section className="relative h-[460px]">
-        <ExperienceVisual experience={featured} priority />
+        <HeroBannerVisual />
 
         <div className="absolute left-3.5 right-3.5 top-3 flex items-center justify-between text-white">
           <span className="font-display text-[22px] font-bold tracking-[-0.01em]">
