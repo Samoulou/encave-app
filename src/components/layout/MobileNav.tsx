@@ -30,6 +30,7 @@ interface MobileNavProps {
   isAuthenticated: boolean;
   userName?: string | null;
   userRole?: string | null;
+  triggerClassName?: string;
 }
 
 type TranslateFn = ReturnType<typeof useTranslations<'nav'>>;
@@ -92,6 +93,7 @@ export function MobileNav({
   isAuthenticated,
   userName,
   userRole,
+  triggerClassName,
 }: MobileNavProps) {
   const [open, setOpen] = useState(false);
   const t = useTranslations('nav');
@@ -113,7 +115,7 @@ export function MobileNav({
         <Button
           variant="ghost"
           size="icon"
-          className="h-10 w-10 rounded-full text-ink-900 md:hidden"
+          className={cn('h-10 w-10 rounded-full text-ink-900 md:hidden', triggerClassName)}
           aria-label={t('openMenu')}
         >
           <Menu className="h-5 w-5" />

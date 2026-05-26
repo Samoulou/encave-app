@@ -4,9 +4,7 @@ import {
   Clock,
   FlaskConical,
   Footprints,
-  Globe,
   Heart,
-  Menu,
   Search,
   Sparkles,
   Utensils,
@@ -16,6 +14,8 @@ import {
 import { Link } from '@/i18n/navigation';
 import { ImageWithFallback } from '@/components/shared/ImageWithFallback';
 import { HomeSearchPanel } from '@/components/features/home/HomeSearchPanel';
+import { LocaleSwitcher } from '@/components/shared/LocaleSwitcher';
+import { MobileNav } from '@/components/layout/MobileNav';
 import { formatCHF } from '@/lib/utils/currency';
 import type { ExperienceCardData } from '@/components/features/experience/ExperienceCard';
 
@@ -133,19 +133,14 @@ export function HomeMobileEditorial({
           <span className="font-display text-[22px] font-bold tracking-[-0.01em]">
             EnCave
           </span>
-          <div className="flex gap-2">
-            <button
-              className="grid h-9 w-9 place-items-center rounded-full border border-white/25 bg-white/20 text-white backdrop-blur-md"
-              aria-label="Changer de langue"
-            >
-              <Globe className="h-4 w-4" aria-hidden="true" />
-            </button>
-            <button
-              className="grid h-9 w-9 place-items-center rounded-full border border-white/25 bg-white/20 text-white backdrop-blur-md"
-              aria-label="Ouvrir le menu"
-            >
-              <Menu className="h-[18px] w-[18px]" aria-hidden="true" />
-            </button>
+          <div className="flex items-center gap-2">
+            <div className="rounded-full border border-white/25 bg-white/20 text-white backdrop-blur-md">
+              <LocaleSwitcher />
+            </div>
+            <MobileNav
+              isAuthenticated={false}
+              triggerClassName="h-9 w-9 rounded-full border border-white/25 bg-white/20 text-white backdrop-blur-md"
+            />
           </div>
         </div>
 
