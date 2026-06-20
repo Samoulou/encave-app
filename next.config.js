@@ -15,6 +15,9 @@ const connectSrc = [
   'https://api.mapbox.com',
   'https://events.mapbox.com',
   'https://*.tiles.mapbox.com',
+  'https://*.tile.openstreetmap.org',
+  'https://*.basemaps.cartocdn.com',
+  'https://demotiles.maplibre.org',
 ];
 
 // Security headers configuration (SEC-003)

@@ -1,38 +1,41 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 import { useTranslations } from 'next-intl';
 import { Navigation } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { MapWinery } from './types';
 
-// Valais, Switzerland center
 const VALAIS_CENTER: [number, number] = [7.6, 46.3];
 const DEFAULT_ZOOM = 9.5;
 
-const OSM_STYLE: mapboxgl.Style = {
+const CARTO_VOYAGER_STYLE: maplibregl.StyleSpecification = {
   version: 8,
   glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
   sources: {
-    osm: {
+    carto: {
       type: 'raster',
-      tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+      tiles: [
+        'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+        'https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+        'https://c.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+        'https://d.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+      ],
       tileSize: 256,
-      attribution: '&copy; OpenStreetMap contributors',
+      attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
     },
   },
   layers: [
     {
-      id: 'osm',
+      id: 'carto',
       type: 'raster',
-      source: 'osm',
+      source: 'carto',
     },
   ],
 };
 
-// EnCave burgundy theme colors
 const CLUSTER_COLORS = {
   small: '#962a48',
   medium: '#732040',
@@ -43,7 +46,6 @@ interface InteractiveMapProps {
   wineries: MapWinery[];
   onWineryClick?: (_slug: string) => void;
   className?: string;
-  /** Single winery mode — no clustering, centered on winery */
   singleWinery?: boolean;
 }
 
@@ -55,84 +57,110 @@ export function InteractiveMap({
 }: InteractiveMapProps) {
   const t = useTranslations('wineries');
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const popup = useRef<mapboxgl.Popup | null>(null);
+  const map = useRef<maplibregl.Map | null>(null);
+  const popup = useRef<maplibregl.Popup | null>(null);
   const [isLocating, setIsLocating] = useState(false);
   const [mapError, setMapError] = useState(false);
+  const geojson = useMemo(() => buildGeoJSON(wineries), [wineries]);
 
-  const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-
-  // Build GeoJSON from wineries
-  const geojson = useGeoJSON(wineries);
+  const cleanupMap = useCallback(() => {
+    popup.current?.remove();
+    map.current?.remove();
+    map.current = null;
+  }, []);
 
   const initMap = useCallback(() => {
-    if (!mapContainer.current || map.current) return;
+    if (!mapContainer.current || map.current) return false;
+
+    const rect = mapContainer.current.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) {
+      return false;
+    }
 
     try {
-      if (token) {
-        mapboxgl.accessToken = token;
-      }
-
       const firstWinery =
         singleWinery && wineries.length === 1 ? wineries[0] : undefined;
       const center: [number, number] =
         firstWinery?.longitude != null && firstWinery?.latitude != null
           ? [firstWinery.longitude, firstWinery.latitude]
           : VALAIS_CENTER;
-      const zoom = singleWinery ? 13 : DEFAULT_ZOOM;
 
-      const m = new mapboxgl.Map({
+      const m = new maplibregl.Map({
         container: mapContainer.current,
-        style: token ? 'mapbox://styles/mapbox/light-v11' : OSM_STYLE,
+        style: CARTO_VOYAGER_STYLE,
         center,
-        zoom,
+        zoom: singleWinery ? 13 : DEFAULT_ZOOM,
         minZoom: 7,
         maxZoom: 17,
         attributionControl: false,
       });
 
       m.addControl(
-        new mapboxgl.AttributionControl({ compact: true }),
+        new maplibregl.AttributionControl({ compact: true }),
         'bottom-left'
       );
-      m.addControl(new mapboxgl.NavigationControl(), 'top-right');
+      m.addControl(new maplibregl.NavigationControl(), 'top-right');
 
       m.on('load', () => {
         addSources(m, geojson, singleWinery);
         addLayers(m, singleWinery);
         addInteractions(m, onWineryClick, t, popup);
+        m.resize();
+      });
+
+      m.on('error', (event) => {
+        if (!String(event.error?.message ?? '').includes('Failed to fetch')) {
+          setMapError(true);
+        }
       });
 
       map.current = m;
+      return true;
     } catch {
       setMapError(true);
+      return false;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, singleWinery]);
+  }, [geojson, onWineryClick, singleWinery, t, wineries]);
 
-  // Initialize map
   useEffect(() => {
-    initMap();
-    const popupInstance = popup.current;
-    const mapInstance = map.current;
-    return () => {
-      popupInstance?.remove();
-      mapInstance?.remove();
-      map.current = null;
-    };
-  }, [initMap]);
+    const container = mapContainer.current;
+    const tryInit = () => {
+      if (map.current) {
+        map.current.resize();
+        return;
+      }
 
-  // Update source data when wineries change
+      initMap();
+    };
+
+    tryInit();
+
+    const resizeObserver =
+      container && typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(tryInit)
+        : null;
+
+    if (container && resizeObserver) {
+      resizeObserver.observe(container);
+    }
+
+    window.addEventListener('resize', tryInit);
+
+    return () => {
+      window.removeEventListener('resize', tryInit);
+      resizeObserver?.disconnect();
+      cleanupMap();
+    };
+  }, [cleanupMap, initMap]);
+
   useEffect(() => {
     const m = map.current;
     if (!m || !m.isStyleLoaded()) return;
 
     const source = m.getSource('wineries') as
-      | mapboxgl.GeoJSONSource
+      | maplibregl.GeoJSONSource
       | undefined;
-    if (source) {
-      source.setData(geojson);
-    }
+    source?.setData(geojson);
   }, [geojson]);
 
   const handleLocate = useCallback(() => {
@@ -144,7 +172,7 @@ export function InteractiveMap({
         const { longitude, latitude } = pos.coords;
         map.current?.flyTo({ center: [longitude, latitude], zoom: 12 });
 
-        new mapboxgl.Marker({ color: '#4f46e5' })
+        new maplibregl.Marker({ color: '#4f46e5' })
           .setLngLat([longitude, latitude])
           .addTo(map.current!);
 
@@ -165,13 +193,12 @@ export function InteractiveMap({
     <div className={cn('relative overflow-hidden rounded-xl', className)}>
       <div ref={mapContainer} className="h-full w-full" />
 
-      {/* Locate me button */}
       {!singleWinery && (
         <button
           type="button"
           onClick={handleLocate}
           disabled={isLocating}
-          className="absolute bottom-4 left-4 z-10 flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-warm transition-colors hover:bg-stone-50 disabled:opacity-60"
+          className="absolute bottom-4 left-4 z-10 flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm font-medium text-foreground shadow-warm transition-colors hover:bg-stone-50 disabled:opacity-60"
           aria-label={t('myLocation')}
         >
           <Navigation
@@ -206,9 +233,7 @@ function MapFallback({
   );
 }
 
-// --- Helpers ---
-
-function useGeoJSON(wineries: MapWinery[]): GeoJSON.FeatureCollection {
+function buildGeoJSON(wineries: MapWinery[]): GeoJSON.FeatureCollection {
   return {
     type: 'FeatureCollection',
     features: wineries
@@ -232,7 +257,7 @@ function useGeoJSON(wineries: MapWinery[]): GeoJSON.FeatureCollection {
 }
 
 function addSources(
-  m: mapboxgl.Map,
+  m: maplibregl.Map,
   geojson: GeoJSON.FeatureCollection,
   singleWinery: boolean
 ) {
@@ -249,9 +274,8 @@ function addSources(
   });
 }
 
-function addLayers(m: mapboxgl.Map, singleWinery: boolean) {
+function addLayers(m: maplibregl.Map, singleWinery: boolean) {
   if (!singleWinery) {
-    // Cluster circles
     m.addLayer({
       id: 'clusters',
       type: 'circle',
@@ -273,7 +297,6 @@ function addLayers(m: mapboxgl.Map, singleWinery: boolean) {
       },
     });
 
-    // Cluster count labels
     m.addLayer({
       id: 'cluster-count',
       type: 'symbol',
@@ -290,7 +313,6 @@ function addLayers(m: mapboxgl.Map, singleWinery: boolean) {
     });
   }
 
-  // Individual markers
   m.addLayer({
     id: 'unclustered-point',
     type: 'circle',
@@ -306,12 +328,11 @@ function addLayers(m: mapboxgl.Map, singleWinery: boolean) {
 }
 
 function addInteractions(
-  m: mapboxgl.Map,
+  m: maplibregl.Map,
   onWineryClick: ((_slug: string) => void) | undefined,
   t: ReturnType<typeof useTranslations<'wineries'>>,
-  popupRef: React.MutableRefObject<mapboxgl.Popup | null>
+  popupRef: React.MutableRefObject<maplibregl.Popup | null>
 ) {
-  // Click on cluster → zoom in
   m.on('click', 'clusters', (e) => {
     const features = m.queryRenderedFeatures(e.point, {
       layers: ['clusters'],
@@ -320,11 +341,10 @@ function addInteractions(
     if (!feature || feature.geometry.type !== 'Point') return;
 
     const clusterId = feature.properties?.cluster_id as number | undefined;
-    const source = m.getSource('wineries') as mapboxgl.GeoJSONSource;
+    const source = m.getSource('wineries') as maplibregl.GeoJSONSource;
     if (clusterId == null) return;
 
-    source.getClusterExpansionZoom(clusterId, (err, zoom) => {
-      if (err || zoom == null) return;
+    source.getClusterExpansionZoom(clusterId).then((zoom) => {
       m.easeTo({
         center: (feature.geometry as GeoJSON.Point).coordinates as [
           number,
@@ -335,7 +355,6 @@ function addInteractions(
     });
   });
 
-  // Click on individual marker → show popup
   m.on('click', 'unclustered-point', (e) => {
     const features = m.queryRenderedFeatures(e.point, {
       layers: ['unclustered-point'],
@@ -379,7 +398,7 @@ function addInteractions(
     `;
 
     popupRef.current?.remove();
-    const p = new mapboxgl.Popup({
+    const p = new maplibregl.Popup({
       closeButton: true,
       maxWidth: '240px',
       className: 'encave-popup',
@@ -390,7 +409,6 @@ function addInteractions(
 
     popupRef.current = p;
 
-    // Handle "View winery" click inside popup
     const el = p.getElement();
     const btn = el?.querySelector('button[data-slug]');
     if (btn && onWineryClick) {
@@ -400,7 +418,6 @@ function addInteractions(
     }
   });
 
-  // Cursor styles
   m.on('mouseenter', 'clusters', () => {
     m.getCanvas().style.cursor = 'pointer';
   });
