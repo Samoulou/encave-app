@@ -44,7 +44,8 @@
       "archived": "Archiviert",
       "pending": "Ausstehend",
       "verified": "Verifiziert",
-      "rejected": "Abgelehnt"
+      "rejected": "Abgelehnt",
+      "suspended": "Gesperrt"
     },
     "days": {
       "full": {
@@ -119,7 +120,13 @@
     "myProfile": "Mein Profil",
     "roleWinemaker": "Winzer",
     "roleClient": "Kunde",
-    "roleAdmin": "Administrator"
+    "roleAdmin": "Administrator",
+    "searchPill": {
+      "aria": "Erlebnisse im Wallis für mindestens 2 Personen suchen",
+      "region": "Ganzes Wallis",
+      "subject": "Verfügbare Erlebnisse",
+      "spots": "2+ Plätze"
+    }
   },
   "locale": {
     "fr": "Francais",
@@ -374,7 +381,9 @@
       "endPlaceholder": "Ende",
       "to": "bis",
       "toggleActive": "Zeitfenster {index} aktivieren/deaktivieren",
-      "removeSlot": "Zeitfenster {index} entfernen"
+      "removeSlot": "Zeitfenster {index} entfernen",
+      "endAfterStart": "Die Endzeit muss nach der Startzeit liegen",
+      "minDuration": "Die Mindestdauer beträgt 30 Minuten"
     },
     "filters": {
       "all": "Alle",
@@ -461,10 +470,65 @@
       "allSlotsDisabled": "Alle Zeitfenster sind deaktiviert - Besucher können nicht buchen",
       "noSlotsPreview": "Keine Verfügbarkeit konfiguriert. Fügen Sie oben Zeitfenster hinzu, um Ihren Wochenplan anzuzeigen.",
       "active": "Aktiv",
-      "disabled": "Deaktiviert"
+      "disabled": "Deaktiviert",
+      "addTime": "Zeit hinzufügen",
+      "addSchedulePattern": "Wiederkehrenden Zeitplan hinzufügen"
     },
     "ageGate": {
       "badge": "Nur 18+"
+    },
+    "createNewExperience": "Neues Erlebnis erstellen",
+    "createFormSubtitle": "Füllen Sie die Details aus, um Ihr Weinerlebnis auf dem Marktplatz anzubieten.",
+    "createCardSubtitle": "Bieten Sie eine neue Verkostung, Tour oder einen Workshop an.",
+    "draftAutoSaved": "Entwurf automatisch gespeichert",
+    "saveDraft": "Entwurf speichern",
+    "publishStatus": "Veröffentlichungsstatus",
+    "visibleOnMarketplace": "Auf dem Marktplatz sichtbar",
+    "draftModeNotice": "Ihr Erlebnis befindet sich derzeit im Entwurfsmodus. Veröffentlichen Sie es, um Buchungen anzunehmen.",
+    "formSections": "Formularabschnitte",
+    "needHelp": "Brauchen Sie Hilfe?",
+    "helpText": "Lesen Sie unseren Leitfaden zur Erstellung des perfekten Weinerlebnis-Eintrags.",
+    "readGuide": "Leitfaden lesen",
+    "uploadCoverPhoto": "Titelbild hochladen",
+    "coverPhotoRecommended": "Empfohlen: 1920 x 1080 Pixel (Format 16:9). Max. 5 MB, JPEG oder PNG.",
+    "updatedSuccess": "Erlebnis aktualisiert",
+    "updatedDescription": "Ihre Änderungen wurden gespeichert.",
+    "maxCapacityLabel": "Max. Kapazität",
+    "address": "Adresse",
+    "addressHelp": "Beginnen Sie zu tippen, um eine Adresse zu suchen",
+    "selectedAddress": "Ausgewählte Adresse",
+    "coordinates": "Koordinaten",
+    "maxFileSize": "Max. 5 MB pro Datei",
+    "uploadDropzone": "Zum Hochladen klicken oder per Drag & Drop",
+    "uploadFormats": "SVG, PNG, JPG oder GIF (max. 800x400px)",
+    "coverBadge": "TITELBILD",
+    "cancelEditing": "Bearbeitung abbrechen",
+    "share": "Teilen",
+    "linkCopied": "Link kopiert",
+    "saveToWishlist": "Merken",
+    "durationOptions": {
+      "60": "1 Stunde",
+      "90": "1,5 Stunden",
+      "120": "2 Stunden",
+      "180": "3 Stunden",
+      "240": "Halber Tag"
+    },
+    "detail": {
+      "explore": "Entdecken",
+      "placesMax": "Max. {count} Plätze",
+      "group": "Gruppe",
+      "format": "Format",
+      "place": "Ort",
+      "groupValue": "{min}-{max} Pers.",
+      "viewProfile": "Profil ansehen",
+      "theExperience": "Das Erlebnis",
+      "practicalInfo": "Praktische Infos",
+      "durationIndicated": "{duration} laut Weingut",
+      "groupSize": "Gruppe von {min} bis {max} Personen",
+      "meetingPoint": "Treffpunkt in {commune}",
+      "proposedBy": "{type} angeboten von {winery}",
+      "securePaymentActive": "Sichere Zahlung aktiviert",
+      "bookingToConfirm": "Buchung mit dem Weingut zu bestätigen"
     }
   },
   "booking": {
@@ -513,7 +577,17 @@
     "sessionFull": "Ausgebucht",
     "spotsLeft": "{count} {count, plural, =1 {Platz} other {Plätze}} frei",
     "whenVisit": "Wann möchten Sie uns besuchen?",
-    "back": "Zurück"
+    "back": "Zurück",
+    "chooseDay": "Wählen Sie einen Tag",
+    "calendarLabel": "Kalender",
+    "participants": "Teilnehmer",
+    "placesRemaining": "Noch {count} Plätze verfügbar",
+    "placesMax": "Maximal {count} Plätze",
+    "serviceFee": "Servicegebühr",
+    "total": "Gesamt",
+    "securePaymentNotice": "Stripe-Zahlung · Sie werden erst bei Bestätigung belastet",
+    "loadSlotsError": "Zeitfenster konnten nicht geladen werden. Bitte versuchen Sie es erneut.",
+    "sunsetSlot": "Sonnenuntergang"
   },
   "bookings": {
     "title": "Buchungen",
@@ -879,7 +953,11 @@
       "savePreferences": "Einstellungen speichern",
       "updated": "Benachrichtigungseinstellungen aktualisiert",
       "updateFailed": "Aktualisierung der Einstellungen fehlgeschlagen",
-      "unexpectedError": "Ein unerwarteter Fehler ist aufgetreten"
+      "unexpectedError": "Ein unerwarteter Fehler ist aufgetreten",
+      "emailNotifications": "E-Mail-Benachrichtigungen",
+      "emailNotificationsDescription": "Wählen Sie, welche E-Mails Sie erhalten möchten",
+      "transactionalTitle": "Transaktionale E-Mails",
+      "transactionalDescription": "Buchungsbestätigungen, Stornierungen und Zahlungsbelege können nicht deaktiviert werden, da sie wichtige Informationen zu Ihren Buchungen enthalten."
     }
   },
   "stripe": {
@@ -1186,7 +1264,11 @@
     "locating": "Standort wird ermittelt..."
   },
   "onboarding": {
-    "step": "Schritt {current} von {total}"
+    "step": "Schritt {current} von {total}",
+    "winery": {
+      "title": "Registrieren Sie Ihr Weingut",
+      "subtitle": "Erzählen Sie uns von Ihrem Weingut, um auf EnCave zu starten und mit Weinliebhabern in Kontakt zu treten."
+    }
   },
   "metadata": {
     "siteName": "EnCave",
@@ -1796,7 +1878,8 @@
         "completed": "Anwesend",
         "noShow": "Abwesend (No-Show)",
         "cancelledByClient": "Vom Gast storniert",
-        "cancelledByWinery": "Von Ihnen storniert"
+        "cancelledByWinery": "Von Ihnen storniert",
+        "pending": "Zahlung ausstehend"
       },
       "checkIn": {
         "at": "Anwesend um {time}",
@@ -1886,6 +1969,24 @@
     "resultError": "Scan abgelehnt",
     "unknown": "Unbekannter QR-Code",
     "already": "Bereits eingecheckt",
-    "counter": "{checkedIn} / {total} Gaeste eingecheckt"
+    "counter": "{checkedIn} / {total} Gaeste eingecheckt",
+    "loadError": "Scan konnte nicht geladen werden"
+  },
+  "imageUpload": {
+    "clickToUpload": "Zum Hochladen eines Bildes klicken",
+    "selectImageFile": "Bilddatei auswählen",
+    "changePhoto": "Foto ändern",
+    "uploading": "Wird hochgeladen...",
+    "formatHint": "JPEG oder PNG, max. 5 MB",
+    "addPhotoToGallery": "Foto zur Galerie hinzufügen",
+    "addPhoto": "Foto hinzufügen",
+    "replace": "Ersetzen",
+    "remove": "Entfernen",
+    "replaceImage": "Bild ersetzen",
+    "removeImage": "Bild entfernen",
+    "uploadedImageAlt": "Hochgeladenes Bild",
+    "errorTooLarge": "Das Bild muss kleiner als 5 MB sein",
+    "errorInvalidType": "Nur JPEG- und PNG-Bilder sind erlaubt",
+    "errorUploadFailed": "Bild konnte nicht hochgeladen werden. Bitte versuchen Sie es erneut."
   }
 }

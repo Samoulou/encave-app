@@ -27,7 +27,7 @@ export function WineryLocationMap({
   return (
     <div className="overflow-hidden rounded-xl bg-white shadow-warm">
       <div className="p-4 pb-0">
-        <h3 className="font-display text-sm font-semibold text-slate-900">
+        <h3 className="font-display text-sm font-semibold text-foreground">
           {t('locationOnMap')}
         </h3>
       </div>

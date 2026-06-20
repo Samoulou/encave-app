@@ -48,10 +48,10 @@ export default async function NotFound() {
         </div>
 
         {/* Title & Description */}
-        <h1 className="font-display text-4xl font-bold text-slate-900">
+        <h1 className="font-display text-4xl font-bold text-foreground">
           {t('pageNotFound')}
         </h1>
-        <p className="mt-3 text-lg text-slate-600">
+        <p className="mt-3 text-lg text-muted-foreground">
           {t('pageNotFoundDescription')}
         </p>
 
@@ -63,7 +63,7 @@ export default async function NotFound() {
         {/* Popular Experiences */}
         {popularExperiences.length > 0 && (
           <div className="mt-10">
-            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-500">
+            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               {t('popularExperiences')}
             </h2>
             <div className="space-y-2">
@@ -73,10 +73,10 @@ export default async function NotFound() {
                   href={`/experiences/${exp.slug}`}
                   className="block rounded-lg border border-stone-200 bg-white p-3 text-left transition-all hover:border-burgundy-300 hover:shadow-warm-sm"
                 >
-                  <span className="font-medium text-slate-900">
+                  <span className="font-medium text-foreground">
                     {exp.title}
                   </span>
-                  <span className="ml-2 text-sm text-slate-500">
+                  <span className="ml-2 text-sm text-muted-foreground">
                     — {exp.winery.name}
                   </span>
                 </Link>

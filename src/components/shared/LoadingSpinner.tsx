@@ -25,7 +25,7 @@ export function LoadingSpinner({
         className={cn('animate-spin text-burgundy-600', sizeClasses[size])}
         aria-hidden="true"
       />
-      {label && <span className="text-sm text-slate-600">{label}</span>}
+      {label && <span className="text-sm text-muted-foreground">{label}</span>}
       <span className="sr-only">{label || 'Loading...'}</span>
     </div>
   );

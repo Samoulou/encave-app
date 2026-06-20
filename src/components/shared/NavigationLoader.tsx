@@ -71,7 +71,9 @@ function NavigationLoaderInner() {
     >
       <div className="flex flex-col items-center gap-3">
         <Loader2 className="h-8 w-8 animate-spin text-burgundy-600" />
-        <span className="text-sm font-medium text-slate-600">Loading...</span>
+        <span className="text-sm font-medium text-muted-foreground">
+          Loading...
+        </span>
       </div>
     </div>
   );

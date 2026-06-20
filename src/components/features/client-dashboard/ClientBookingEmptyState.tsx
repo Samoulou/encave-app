@@ -21,12 +21,12 @@ export function ClientBookingEmptyState({
     <div className="rounded-xl border border-border bg-white shadow-sm">
       <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
         <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-light">
-          <Icon className="h-8 w-8 text-[#915564]" />
+          <Icon className="h-8 w-8 text-muted-foreground" />
         </div>
         <h3 className="text-lg font-bold text-foreground">
           {isUpcoming ? t('noUpcoming') : t('noPast')}
         </h3>
-        <p className="mt-2 max-w-sm text-sm text-[#915564]">
+        <p className="mt-2 max-w-sm text-sm text-muted-foreground">
           {isUpcoming ? t('noUpcomingDescription') : t('noPastDescription')}
         </p>
         {isUpcoming && (

@@ -76,7 +76,7 @@ export default async function AdminBookingsPage({
         <h1 className="font-display text-display-md text-burgundy-700">
           Admin bookings
         </h1>
-        <p className="mt-2 text-slate-600">
+        <p className="mt-2 text-muted-foreground">
           Search reservations by reference, guest, winery, or experience for
           support and incident handling.
         </p>
@@ -89,7 +89,7 @@ export default async function AdminBookingsPage({
         <CardContent>
           <form className="grid gap-3 md:grid-cols-[1fr_220px_auto]">
             <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 name="q"
                 defaultValue={q}
@@ -119,7 +119,7 @@ export default async function AdminBookingsPage({
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-stone-50 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <tr className="bg-stone-50 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   <th className="px-6 py-4">Booking</th>
                   <th className="px-6 py-4">Guest</th>
                   <th className="px-6 py-4">Experience</th>
@@ -136,24 +136,24 @@ export default async function AdminBookingsPage({
                   return (
                     <tr key={booking.id} className="align-top">
                       <td className="px-6 py-4">
-                        <p className="font-mono font-medium text-slate-900">
+                        <p className="font-mono font-medium text-foreground">
                           {booking.reference}
                         </p>
-                        <p className="text-sm text-slate-500">
+                        <p className="text-sm text-muted-foreground">
                           {booking.date.toISOString().slice(0, 10)} ·{' '}
                           {booking.timeSlot}
                         </p>
                       </td>
                       <td className="px-6 py-4">
-                        <p className="font-medium text-slate-900">
+                        <p className="font-medium text-foreground">
                           {booking.visitorName}
                         </p>
-                        <p className="text-sm text-slate-500">
+                        <p className="text-sm text-muted-foreground">
                           {booking.visitorEmail}
                         </p>
                       </td>
                       <td className="px-6 py-4">
-                        <p className="font-medium text-slate-900">
+                        <p className="font-medium text-foreground">
                           {booking.experience.title}
                         </p>
                         <Link
@@ -176,7 +176,7 @@ export default async function AdminBookingsPage({
                           {booking.status}
                         </Badge>
                       </td>
-                      <td className="px-6 py-4 text-sm text-slate-600">
+                      <td className="px-6 py-4 text-sm text-muted-foreground">
                         <p>{formatCHF(booking.totalPrice)}</p>
                         <p>
                           Refunded:{' '}
@@ -198,7 +198,7 @@ export default async function AdminBookingsPage({
                             }
                           />
                         ) : (
-                          <p className="text-sm text-slate-500">
+                          <p className="text-sm text-muted-foreground">
                             Guest booking has no linked user account.
                           </p>
                         )}

@@ -29,14 +29,14 @@ export default function Error({
             aria-hidden="true"
           />
         </div>
-        <h1 className="font-display text-4xl font-bold text-slate-900">
+        <h1 className="font-display text-4xl font-bold text-foreground">
           {t('serverError')}
         </h1>
-        <p className="mt-3 text-lg text-slate-600">
+        <p className="mt-3 text-lg text-muted-foreground">
           {t('serverErrorDescription')}
         </p>
         {error.digest && (
-          <p className="mt-4 font-mono text-xs text-slate-400">
+          <p className="mt-4 font-mono text-xs text-muted-foreground">
             Error ID: {error.digest}
           </p>
         )}
@@ -53,7 +53,7 @@ export default function Error({
           </Button>
         </div>
         <div className="mt-10 rounded-lg border border-stone-200 bg-white p-4">
-          <div className="flex items-center justify-center gap-2 text-sm text-slate-600">
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <Mail className="h-4 w-4" aria-hidden="true" />
             <span>{t('supportContact')}</span>
           </div>

@@ -44,7 +44,8 @@
       "archived": "Archived",
       "pending": "Pending",
       "verified": "Verified",
-      "rejected": "Rejected"
+      "rejected": "Rejected",
+      "suspended": "Suspended"
     },
     "days": {
       "full": {
@@ -119,7 +120,13 @@
     "myProfile": "My Profile",
     "roleWinemaker": "Winemaker",
     "roleClient": "Client",
-    "roleAdmin": "Admin"
+    "roleAdmin": "Admin",
+    "searchPill": {
+      "aria": "Search experiences in Valais for at least 2 people",
+      "region": "All of Valais",
+      "subject": "Available experiences",
+      "spots": "2+ spots"
+    }
   },
   "locale": {
     "fr": "Francais",
@@ -374,7 +381,9 @@
       "endPlaceholder": "End",
       "to": "to",
       "toggleActive": "Toggle slot {index} active",
-      "removeSlot": "Remove slot {index}"
+      "removeSlot": "Remove slot {index}",
+      "endAfterStart": "End time must be after start time",
+      "minDuration": "Minimum duration is 30 minutes"
     },
     "filters": {
       "all": "All",
@@ -461,10 +470,65 @@
       "allSlotsDisabled": "All slots are disabled - visitors cannot book",
       "noSlotsPreview": "No availability configured. Add time slots above to preview your weekly schedule.",
       "active": "Active",
-      "disabled": "Disabled"
+      "disabled": "Disabled",
+      "addTime": "Add time",
+      "addSchedulePattern": "Add Schedule Pattern"
     },
     "ageGate": {
       "badge": "18+ only"
+    },
+    "createNewExperience": "Create New Experience",
+    "createFormSubtitle": "Fill in the details to list your wine experience on the marketplace.",
+    "createCardSubtitle": "Offer a new tasting, tour or workshop.",
+    "draftAutoSaved": "Draft Auto-Saved",
+    "saveDraft": "Save Draft",
+    "publishStatus": "Publish Status",
+    "visibleOnMarketplace": "Visible on marketplace",
+    "draftModeNotice": "Your experience is currently in Draft mode. Publish to start accepting bookings.",
+    "formSections": "Form Sections",
+    "needHelp": "Need Help?",
+    "helpText": "Check our guide on how to create the perfect wine experience listing.",
+    "readGuide": "Read Guide",
+    "uploadCoverPhoto": "Upload cover photo",
+    "coverPhotoRecommended": "Recommended: 1920 x 1080 pixels (16:9 aspect ratio). Max 5MB, JPEG or PNG.",
+    "updatedSuccess": "Experience updated successfully",
+    "updatedDescription": "Your changes have been saved.",
+    "maxCapacityLabel": "Max Capacity",
+    "address": "Address",
+    "addressHelp": "Start typing to search for an address",
+    "selectedAddress": "Selected Address",
+    "coordinates": "Coordinates",
+    "maxFileSize": "Max 5MB per file",
+    "uploadDropzone": "Click to upload or drag and drop",
+    "uploadFormats": "SVG, PNG, JPG or GIF (max. 800x400px)",
+    "coverBadge": "COVER",
+    "cancelEditing": "Cancel editing",
+    "share": "Share",
+    "linkCopied": "Link copied",
+    "saveToWishlist": "Save",
+    "durationOptions": {
+      "60": "1 hour",
+      "90": "1.5 hours",
+      "120": "2 hours",
+      "180": "3 hours",
+      "240": "Half day"
+    },
+    "detail": {
+      "explore": "Explore",
+      "placesMax": "{count} max spots",
+      "group": "Group",
+      "format": "Format",
+      "place": "Location",
+      "groupValue": "{min}-{max} ppl",
+      "viewProfile": "View profile",
+      "theExperience": "The experience",
+      "practicalInfo": "Practical info",
+      "durationIndicated": "{duration} indicated by the winery",
+      "groupSize": "Group of {min} to {max} people",
+      "meetingPoint": "Meeting point in {commune}",
+      "proposedBy": "{type} offered by {winery}",
+      "securePaymentActive": "Secure payment enabled",
+      "bookingToConfirm": "Booking to be confirmed with the winery"
     }
   },
   "booking": {
@@ -513,7 +577,17 @@
     "sessionFull": "Full",
     "spotsLeft": "{count} {count, plural, =1 {spot} other {spots}} left",
     "whenVisit": "When would you like to visit?",
-    "back": "Back"
+    "back": "Back",
+    "chooseDay": "Choose a day",
+    "calendarLabel": "Calendar",
+    "participants": "Participants",
+    "placesRemaining": "{count} spots still available",
+    "placesMax": "{count} spots maximum",
+    "serviceFee": "Service fee",
+    "total": "Total",
+    "securePaymentNotice": "Stripe payment · you will only be charged upon confirmation",
+    "loadSlotsError": "Failed to load time slots. Please try again.",
+    "sunsetSlot": "sunset"
   },
   "bookings": {
     "title": "Bookings",
@@ -879,7 +953,11 @@
       "savePreferences": "Save Preferences",
       "updated": "Notification preferences updated",
       "updateFailed": "Failed to update preferences",
-      "unexpectedError": "An unexpected error occurred"
+      "unexpectedError": "An unexpected error occurred",
+      "emailNotifications": "Email Notifications",
+      "emailNotificationsDescription": "Choose which emails you would like to receive",
+      "transactionalTitle": "Transactional Emails",
+      "transactionalDescription": "Booking confirmations, cancellations, and payment receipts cannot be disabled as they contain important information about your reservations."
     }
   },
   "stripe": {
@@ -1186,7 +1264,11 @@
     "locating": "Locating..."
   },
   "onboarding": {
-    "step": "Step {current} of {total}"
+    "step": "Step {current} of {total}",
+    "winery": {
+      "title": "Register Your Winery",
+      "subtitle": "Tell us about your winery to get started on EnCave and connect with wine enthusiasts."
+    }
   },
   "metadata": {
     "siteName": "EnCave",
@@ -1791,7 +1873,8 @@
         "completed": "Present",
         "noShow": "Absent (no-show)",
         "cancelledByClient": "Cancelled by guest",
-        "cancelledByWinery": "Cancelled by you"
+        "cancelledByWinery": "Cancelled by you",
+        "pending": "Payment pending"
       },
       "checkIn": {
         "at": "Present at {time}",
@@ -1881,6 +1964,24 @@
     "resultError": "Scan rejected",
     "unknown": "Unknown QR code",
     "already": "Already checked in",
-    "counter": "{checkedIn} / {total} guests checked in"
+    "counter": "{checkedIn} / {total} guests checked in",
+    "loadError": "Unable to load the scanner"
+  },
+  "imageUpload": {
+    "clickToUpload": "Click to upload image",
+    "selectImageFile": "Select image file",
+    "changePhoto": "Change photo",
+    "uploading": "Uploading...",
+    "formatHint": "JPEG or PNG, max 5MB",
+    "addPhotoToGallery": "Add photo to gallery",
+    "addPhoto": "Add photo",
+    "replace": "Replace",
+    "remove": "Remove",
+    "replaceImage": "Replace image",
+    "removeImage": "Remove image",
+    "uploadedImageAlt": "Uploaded image",
+    "errorTooLarge": "Image must be less than 5MB",
+    "errorInvalidType": "Only JPEG and PNG images are allowed",
+    "errorUploadFailed": "Failed to upload image. Please try again."
   }
 }

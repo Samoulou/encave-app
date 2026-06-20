@@ -34,7 +34,9 @@ export function ExperienceTypeDot({
         style={{ backgroundColor: color }}
         title={label}
       />
-      {showLabel && <span className="text-xs text-slate-600">{label}</span>}
+      {showLabel && (
+        <span className="text-xs text-muted-foreground">{label}</span>
+      )}
     </div>
   );
 }
@@ -62,7 +64,9 @@ export function ExperienceTypeDots({
         <ExperienceTypeDot key={type} type={type} size={size} />
       ))}
       {hiddenCount > 0 && (
-        <span className="text-[10px] text-slate-400">+{hiddenCount}</span>
+        <span className="text-[10px] text-muted-foreground">
+          +{hiddenCount}
+        </span>
       )}
     </div>
   );

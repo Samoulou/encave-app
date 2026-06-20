@@ -4,7 +4,7 @@ import { BookingStatus } from '@prisma/client';
 import { Mail } from 'lucide-react';
 import type { Locale } from '@/i18n/routing';
 import { formatTime } from '@/lib/i18n/formatters';
-import { BookingStatusBadge } from './BookingStatusBadge';
+import { BookingStatusBadge } from '@/components/features/booking/BookingStatusBadge';
 import { BookingActionsMenu } from './BookingActionsMenu';
 import { cn } from '@/lib/utils';
 import type { BookingDTO } from '@/types/event-detail';
@@ -30,34 +30,34 @@ export async function BookingRow({
   return (
     <tr
       className={cn(
-        'border-b border-slate-100 transition-colors hover:bg-slate-50/60',
-        cancelled && 'bg-slate-50/50 text-slate-500'
+        'border-b border-border transition-colors hover:bg-muted',
+        cancelled && 'bg-muted/50 text-muted-foreground'
       )}
     >
       <td className="px-4 py-3">
         <div className="flex flex-col">
-          <span className="text-sm font-semibold text-slate-900">
+          <span className="text-sm font-semibold text-foreground">
             {booking.visitorName}
           </span>
           <a
             href={`mailto:${booking.visitorEmail}`}
-            className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-700"
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
           >
             <Mail className="h-3 w-3" aria-hidden="true" />
             <span className="truncate">{booking.visitorEmail}</span>
           </a>
         </div>
       </td>
-      <td className="px-4 py-3 text-sm text-slate-700">
+      <td className="px-4 py-3 text-sm text-muted-foreground">
         {t('partySize.inline', { count: booking.guestCount })}
       </td>
-      <td className="px-4 py-3 font-mono text-xs text-slate-600">
+      <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
         {booking.reference}
       </td>
       <td className="px-4 py-3">
-        <BookingStatusBadge status={booking.status} />
+        <BookingStatusBadge status={booking.status} labels="attendance" />
       </td>
-      <td className="px-4 py-3 text-sm text-slate-600">
+      <td className="px-4 py-3 text-sm text-muted-foreground">
         {booking.checkedInAt
           ? t('checkIn.at', { time: formatTime(booking.checkedInAt, locale) })
           : t('checkIn.none')}

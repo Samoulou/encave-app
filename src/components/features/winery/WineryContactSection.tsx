@@ -53,10 +53,10 @@ export function WineryContactSection({ control }: WineryContactSectionProps) {
           </svg>
         </div>
         <div>
-          <h2 className="font-display text-xl font-semibold text-slate-900">
+          <h2 className="font-display text-xl font-semibold text-foreground">
             {t('contactDetails')}
           </h2>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             {t('contactDetailsDescription')}
           </p>
         </div>

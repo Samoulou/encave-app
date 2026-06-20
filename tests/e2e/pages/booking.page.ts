@@ -85,7 +85,9 @@ export class BookingPage extends BasePage {
     this.timeSlotButtons = this.timeSlotGrid.getByRole('button');
     this.timeSlotLoading = page.getByTestId('time-slot-loading');
     this.timeSlotError = page.getByTestId('time-slot-error');
-    this.timeSlotRetryButton = page.getByRole('button', { name: /retry/i });
+    // Scoped to the error container so it stays locale-agnostic (the label is
+    // translated via common.buttons.tryAgain).
+    this.timeSlotRetryButton = this.timeSlotError.getByRole('button');
 
     // Guest count
     this.guestCountSection = page.getByTestId('guest-count-section');

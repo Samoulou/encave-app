@@ -42,9 +42,9 @@ export function MobileOrderSummary(props: MobileOrderSummaryProps) {
           </span>
         </div>
         {isExpanded ? (
-          <ChevronUp className="h-5 w-5 text-[#915564]" />
+          <ChevronUp className="h-5 w-5 text-muted-foreground" />
         ) : (
-          <ChevronDown className="h-5 w-5 text-[#915564]" />
+          <ChevronDown className="h-5 w-5 text-muted-foreground" />
         )}
       </button>
 

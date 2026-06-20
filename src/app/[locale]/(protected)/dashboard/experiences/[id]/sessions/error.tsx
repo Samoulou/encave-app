@@ -30,11 +30,11 @@ export default function EventDetailError({
       <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
         <AlertTriangle className="h-8 w-8 text-red-600" aria-hidden="true" />
       </div>
-      <h1 className="font-display text-2xl font-bold text-slate-900 md:text-3xl">
+      <h1 className="font-display text-2xl font-bold text-foreground md:text-3xl">
         {t('loadFailed')}
       </h1>
       {error.digest ? (
-        <p className="mt-3 font-mono text-xs text-slate-400">
+        <p className="mt-3 font-mono text-xs text-muted-foreground">
           Error ID: {error.digest}
         </p>
       ) : null}

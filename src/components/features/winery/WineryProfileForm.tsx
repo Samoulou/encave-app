@@ -224,7 +224,7 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
 
             {/* Save Actions */}
             <div className="flex items-center justify-between border-t border-stone-200 pt-8">
-              <div className="text-sm text-slate-500">
+              <div className="text-sm text-muted-foreground">
                 {hasUnsavedChanges && (
                   <span className="flex items-center gap-2 text-amber-600">
                     <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500" />

@@ -215,10 +215,10 @@ export function AvailabilityScheduleBuilder({
       {!hasAnySlots && !showPublishedWarning && (
         <div className="rounded-xl border-2 border-dashed border-stone-300 bg-stone-50 p-8 text-center">
           <Calendar className="mx-auto mb-4 h-12 w-12 text-stone-400" />
-          <h3 className="mb-2 font-semibold text-slate-900">
+          <h3 className="mb-2 font-semibold text-foreground">
             {t('noConfigured')}
           </h3>
-          <p className="mx-auto max-w-md text-sm text-slate-600">
+          <p className="mx-auto max-w-md text-sm text-muted-foreground">
             {t('noConfiguredDescription')}
           </p>
         </div>
@@ -227,7 +227,7 @@ export function AvailabilityScheduleBuilder({
       {/* Day Selector */}
       <div>
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="font-medium text-slate-900">{t('selectDay')}</h3>
+          <h3 className="font-medium text-foreground">{t('selectDay')}</h3>
           {hasAnySlots && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -282,8 +282,8 @@ export function AvailabilityScheduleBuilder({
                     : hasOverlap
                       ? 'border-red-300 bg-red-50 text-red-700'
                       : hasSlots
-                        ? 'border-stone-300 bg-white text-slate-700 hover:border-burgundy-300'
-                        : 'border-stone-200 bg-stone-50 text-slate-500 hover:border-stone-300'
+                        ? 'border-stone-300 bg-white text-muted-foreground hover:border-burgundy-300'
+                        : 'border-stone-200 bg-stone-50 text-muted-foreground hover:border-stone-300'
                 )}
               >
                 {tDaysShort(String(day.value))}
@@ -307,7 +307,7 @@ export function AvailabilityScheduleBuilder({
 
       {/* Time Slot Picker for Selected Day */}
       <div className="rounded-xl border border-stone-200 bg-white p-6">
-        <h4 className="mb-4 font-medium text-slate-900">
+        <h4 className="mb-4 font-medium text-foreground">
           {t('dayTimeSlots', { day: tDaysFull(String(selectedDay)) })}
         </h4>
         <TimeSlotPicker
@@ -326,7 +326,7 @@ export function AvailabilityScheduleBuilder({
 
       {/* Weekly Preview */}
       <div>
-        <h3 className="mb-4 font-medium text-slate-900">
+        <h3 className="mb-4 font-medium text-foreground">
           {t('weeklyPreview')}
         </h3>
         <WeeklyCalendarPreview
@@ -341,7 +341,7 @@ export function AvailabilityScheduleBuilder({
 
       {/* Save Button */}
       <div className="flex items-center justify-between border-t border-stone-200 pt-6">
-        <div className="text-sm text-slate-500">
+        <div className="text-sm text-muted-foreground">
           {hasChanges && (
             <span className="flex items-center gap-2 text-amber-600">
               <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500" />

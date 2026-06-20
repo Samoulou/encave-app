@@ -39,7 +39,7 @@ export function HeroSearchBar() {
             value={selectedLocation}
             onChange={setSelectedLocation}
             placeholder={t('searchLocationPlaceholder')}
-            className="[&_input]:h-14 [&_input]:rounded-lg [&_input]:border-0 [&_input]:bg-transparent [&_input]:font-medium [&_input]:transition-colors [&_input]:hover:bg-gray-50 [&_input]:focus-visible:ring-0 dark:[&_input]:hover:bg-white/5"
+            className="[&_input]:h-14 [&_input]:rounded-lg [&_input]:border-0 [&_input]:bg-transparent [&_input]:font-medium [&_input]:transition-colors [&_input]:hover:bg-muted [&_input]:focus-visible:ring-0 dark:[&_input]:hover:bg-white/5"
           />
         </div>
 

@@ -69,17 +69,19 @@ export default async function SettingsPage() {
             return (
               <Card key={section.key} className="opacity-60">
                 <CardContent className="flex items-center gap-4 p-6">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-slate-100">
-                    <Icon className="h-6 w-6 text-slate-500" />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted">
+                    <Icon className="h-6 w-6 text-muted-foreground" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-medium text-slate-900">{title}</h3>
-                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+                      <h3 className="font-medium text-foreground">{title}</h3>
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
                         {t('comingSoon')}
                       </span>
                     </div>
-                    <p className="mt-1 text-sm text-slate-500">{description}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {description}
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -94,12 +96,14 @@ export default async function SettingsPage() {
                     <Icon className="h-6 w-6 text-burgundy-600" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-medium text-slate-900 group-hover:text-burgundy-700">
+                    <h3 className="font-medium text-foreground group-hover:text-burgundy-700">
                       {title}
                     </h3>
-                    <p className="mt-1 text-sm text-slate-500">{description}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {description}
+                    </p>
                   </div>
-                  <ChevronRight className="h-5 w-5 text-slate-400 transition-transform group-hover:translate-x-1 group-hover:text-burgundy-500" />
+                  <ChevronRight className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-burgundy-500" />
                 </CardContent>
               </Card>
             </Link>
@@ -110,23 +114,27 @@ export default async function SettingsPage() {
       {/* Account Info */}
       <Card>
         <CardContent className="p-6">
-          <h3 className="font-medium text-slate-900">{t('accountInfo')}</h3>
+          <h3 className="font-medium text-foreground">{t('accountInfo')}</h3>
           <div className="mt-4 space-y-3 text-sm">
             <div className="flex justify-between">
-              <span className="text-slate-500">{tCommon('labels.email')}</span>
-              <span className="font-medium text-slate-900">
+              <span className="text-muted-foreground">
+                {tCommon('labels.email')}
+              </span>
+              <span className="font-medium text-foreground">
                 {session.user.email}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-500">{tCommon('labels.name')}</span>
-              <span className="font-medium text-slate-900">
+              <span className="text-muted-foreground">
+                {tCommon('labels.name')}
+              </span>
+              <span className="font-medium text-foreground">
                 {session.user.name || t('notSet')}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-500">{t('role')}</span>
-              <span className="font-medium capitalize text-slate-900">
+              <span className="text-muted-foreground">{t('role')}</span>
+              <span className="font-medium capitalize text-foreground">
                 {session.user.role?.toLowerCase().replace('_', ' ') ||
                   t('roleUser')}
               </span>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
@@ -53,14 +54,16 @@ import type {
 
 // Form sections for navigation
 const FORM_SECTIONS = [
-  { id: 'general', label: 'General Info', icon: Info },
-  { id: 'details', label: 'Details', icon: SlidersHorizontal },
-  { id: 'media', label: 'Media', icon: ImageIcon },
-  { id: 'availability', label: 'Availability', icon: CalendarClock },
-  { id: 'location', label: 'Location', icon: MapPin },
+  { id: 'general', labelKey: 'generalInfo', icon: Info },
+  { id: 'details', labelKey: 'details', icon: SlidersHorizontal },
+  { id: 'media', labelKey: 'media', icon: ImageIcon },
+  { id: 'availability', labelKey: 'availability.title', icon: CalendarClock },
+  { id: 'location', labelKey: 'location', icon: MapPin },
 ] as const;
 
 export function CreateExperienceForm() {
+  const t = useTranslations('experience');
+  const tCommon = useTranslations('common');
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
@@ -190,7 +193,7 @@ export function CreateExperienceForm() {
       ]);
       setHasUnsavedChanges(true);
     } catch {
-      toast.error('Failed to upload image');
+      toast.error(t('toast.uploadImageFailed'));
     } finally {
       setUploadingIndex(null);
     }
@@ -218,7 +221,7 @@ export function CreateExperienceForm() {
 
     // Basic validation for draft
     if (!data.title) {
-      toast.error('Please enter a title');
+      toast.error(t('toast.titleRequired'));
       return;
     }
 
@@ -232,7 +235,7 @@ export function CreateExperienceForm() {
         .map((img) => img.url);
 
       if (!coverPhoto) {
-        toast.error('Please upload at least one image');
+        toast.error(t('toast.imageRequired'));
         setIsSubmitting(false);
         return;
       }
@@ -262,16 +265,16 @@ export function CreateExperienceForm() {
         setLastSaved(new Date());
         setHasUnsavedChanges(false);
         setCreatedExperienceId(result.data.experienceId);
-        toast.success('Draft saved');
+        toast.success(t('toast.draftSaved'));
       } else {
         toast.error(result.error.message);
       }
     } catch {
-      toast.error('Something went wrong. Please try again.');
+      toast.error(tCommon('errors.somethingWentWrong'));
     } finally {
       setIsSubmitting(false);
     }
-  }, [form, galleryImages, location, availabilitySlots]);
+  }, [form, galleryImages, location, availabilitySlots, t, tCommon]);
 
   const onSubmit = useCallback(
     async (data: CreateExperienceInput) => {
@@ -279,7 +282,7 @@ export function CreateExperienceForm() {
         galleryImages.find((img) => img.isCover)?.url || galleryImages[0]?.url;
 
       if (!coverPhoto) {
-        toast.error('Please upload at least one image');
+        toast.error(t('toast.imageRequired'));
         return;
       }
 
@@ -312,7 +315,7 @@ export function CreateExperienceForm() {
         );
 
         if (result.success) {
-          toast.success('Experience created successfully');
+          toast.success(t('toast.createdSuccess'));
           setHasUnsavedChanges(false);
           setCreatedExperienceId(result.data.experienceId);
 
@@ -322,7 +325,7 @@ export function CreateExperienceForm() {
               result.data.experienceId
             );
             if (publishResult.success) {
-              toast.success('Experience published!');
+              toast.success(t('publishedSuccess'));
               router.push('/dashboard/experiences');
             } else {
               setShowPublishDialog(true);
@@ -334,12 +337,20 @@ export function CreateExperienceForm() {
           toast.error(result.error.message);
         }
       } catch {
-        toast.error('Something went wrong. Please try again.');
+        toast.error(tCommon('errors.somethingWentWrong'));
       } finally {
         setIsSubmitting(false);
       }
     },
-    [galleryImages, isPublishEnabled, router, location, availabilitySlots]
+    [
+      galleryImages,
+      isPublishEnabled,
+      router,
+      location,
+      availabilitySlots,
+      t,
+      tCommon,
+    ]
   );
 
   const handlePublishNow = async () => {
@@ -349,12 +360,12 @@ export function CreateExperienceForm() {
     try {
       const result = await publishExperience(createdExperienceId);
       if (result.success) {
-        toast.success('Experience published!');
+        toast.success(t('publishedSuccess'));
       } else {
         toast.error(result.error.message);
       }
     } catch {
-      toast.error('Failed to publish.');
+      toast.error(t('toast.publishFailed'));
     } finally {
       setIsPublishing(false);
       setShowPublishDialog(false);
@@ -427,7 +438,7 @@ export function CreateExperienceForm() {
       if (slot.timeSlots.length === 1) {
         // If this is the last pattern, show warning and keep it
         if (prev.length === 1) {
-          toast.error('At least one schedule pattern is required');
+          toast.error(t('toast.schedulePatternRequired'));
           return prev;
         }
         return prev.filter((s) => s.id !== slotId);
@@ -506,19 +517,18 @@ export function CreateExperienceForm() {
       <div className="mx-auto max-w-[1200px] px-6 py-8 md:px-10">
         <div className="mb-10 flex flex-col justify-between gap-6 md:flex-row md:items-end">
           <div className="max-w-xl">
-            <h1 className="mb-2 font-display text-3xl font-extrabold tracking-tight text-slate-900 md:text-4xl">
-              Create New Experience
+            <h1 className="mb-2 font-display text-3xl font-extrabold tracking-tight text-foreground md:text-4xl">
+              {t('createNewExperience')}
             </h1>
-            <p className="text-base text-slate-500">
-              Fill in the details to list your wine experience on the
-              marketplace.
+            <p className="text-base text-muted-foreground">
+              {t('createFormSubtitle')}
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-3">
             {lastSaved && (
-              <div className="hidden items-center gap-1.5 rounded-full bg-stone-100 px-3 py-1.5 text-xs font-medium text-slate-400 sm:flex">
+              <div className="hidden items-center gap-1.5 rounded-full bg-stone-100 px-3 py-1.5 text-xs font-medium text-muted-foreground sm:flex">
                 <span className="block size-2 rounded-full bg-emerald-500" />
-                Draft Auto-Saved
+                {t('draftAutoSaved')}
               </div>
             )}
             <Button
@@ -529,7 +539,7 @@ export function CreateExperienceForm() {
               className="h-10 gap-2"
             >
               <Save className="h-4 w-4" />
-              Save Draft
+              {t('saveDraft')}
             </Button>
             <Button
               type="button"
@@ -538,7 +548,7 @@ export function CreateExperienceForm() {
               className="h-10 gap-2"
             >
               <Send className="h-4 w-4" />
-              Publish
+              {t('publish')}
             </Button>
           </div>
         </div>
@@ -608,12 +618,12 @@ export function CreateExperienceForm() {
           <div className="space-y-6 lg:sticky lg:top-24 lg:col-span-4">
             {/* Publish Status Card */}
             <div className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
-              <h3 className="mb-4 text-xs font-bold uppercase tracking-wider text-slate-500">
-                Publish Status
+              <h3 className="mb-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                {t('publishStatus')}
               </h3>
               <div className="mb-4 flex items-center justify-between">
-                <span className="font-medium text-slate-900">
-                  Visible on marketplace
+                <span className="font-medium text-foreground">
+                  {t('visibleOnMarketplace')}
                 </span>
                 <Switch
                   checked={isPublishEnabled}
@@ -625,18 +635,15 @@ export function CreateExperienceForm() {
                   className="mt-0.5 h-4 w-4 shrink-0"
                   aria-hidden="true"
                 />
-                <span>
-                  Your experience is currently in <strong>Draft</strong> mode.
-                  Publish to start accepting bookings.
-                </span>
+                <span>{t('draftModeNotice')}</span>
               </div>
             </div>
 
             {/* Section Navigation */}
             <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
               <div className="border-b border-stone-100 bg-stone-50/50 p-4">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                  Form Sections
+                <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  {t('formSections')}
                 </h3>
               </div>
               <div className="flex flex-col">
@@ -651,15 +658,15 @@ export function CreateExperienceForm() {
                       className={cn(
                         'flex items-center gap-3 border-l-2 px-4 py-3 text-left text-sm font-medium transition-colors',
                         isActive
-                          ? 'border-primary bg-stone-50 text-slate-700'
-                          : 'border-transparent text-slate-500 hover:bg-stone-50 hover:text-slate-900'
+                          ? 'border-primary bg-stone-50 text-foreground'
+                          : 'border-transparent text-muted-foreground hover:bg-stone-50 hover:text-foreground'
                       )}
                     >
                       <Icon
                         className={cn('h-4 w-4', isActive && 'text-primary')}
                         aria-hidden="true"
                       />
-                      {section.label}
+                      {t(section.labelKey)}
                     </button>
                   );
                 })}
@@ -669,13 +676,12 @@ export function CreateExperienceForm() {
             {/* Help Widget */}
             <div className="group relative cursor-pointer overflow-hidden rounded-xl bg-indigo-900 p-5 text-white">
               <div className="absolute -right-4 -top-4 size-24 rounded-full bg-white/10 transition-transform group-hover:scale-110" />
-              <h3 className="relative z-10 mb-1 font-bold">Need Help?</h3>
+              <h3 className="relative z-10 mb-1 font-bold">{t('needHelp')}</h3>
               <p className="relative z-10 mb-3 text-sm text-indigo-200">
-                Check our guide on how to create the perfect wine experience
-                listing.
+                {t('helpText')}
               </p>
               <span className="relative z-10 text-xs font-bold underline">
-                Read Guide →
+                {t('readGuide')} →
               </span>
             </div>
           </div>
@@ -686,10 +692,9 @@ export function CreateExperienceForm() {
       <Dialog open={showPublishDialog} onOpenChange={setShowPublishDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Experience Created!</DialogTitle>
+            <DialogTitle>{t('publishDialog.title')}</DialogTitle>
             <DialogDescription>
-              Your experience has been saved as a draft. Would you like to
-              publish it now so visitors can see it?
+              {t('publishDialog.description')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-col gap-2 sm:flex-row">
@@ -702,14 +707,16 @@ export function CreateExperienceForm() {
               disabled={isPublishing}
               className="w-full sm:w-auto"
             >
-              Keep as Draft
+              {t('publishDialog.keepAsDraft')}
             </Button>
             <Button
               onClick={handlePublishNow}
               disabled={isPublishing}
               className="w-full sm:w-auto"
             >
-              {isPublishing ? 'Publishing...' : 'Publish Now'}
+              {isPublishing
+                ? t('publishDialog.publishing')
+                : t('publishDialog.publishNow')}
             </Button>
           </DialogFooter>
         </DialogContent>

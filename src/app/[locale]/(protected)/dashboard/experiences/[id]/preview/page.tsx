@@ -107,10 +107,10 @@ export default function ExperiencePreviewPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-cream-50">
         <div className="text-center">
-          <h1 className="mb-2 text-2xl font-semibold text-slate-900">
+          <h1 className="mb-2 text-2xl font-semibold text-foreground">
             {t('notFound')}
           </h1>
-          <p className="mb-4 text-slate-600">
+          <p className="mb-4 text-muted-foreground">
             {error || 'Unable to load the experience preview.'}
           </p>
           <Button asChild>

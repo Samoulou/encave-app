@@ -51,11 +51,11 @@ function SectionHeader({
         {icon}
       </div>
       <div>
-        <h2 className="font-display text-xl font-semibold text-slate-900">
+        <h2 className="font-display text-xl font-semibold text-foreground">
           {title}
         </h2>
         {description && (
-          <p className="mt-1 text-sm text-slate-600">{description}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
         )}
       </div>
     </div>
@@ -144,7 +144,7 @@ export function WineryMediaSection({
           </div>
 
           {/* 16:9 Aspect Ratio Guidance */}
-          <p className="mt-3 flex items-center gap-2 text-sm text-slate-500">
+          <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
             <svg
               className="h-4 w-4"
               fill="none"
@@ -194,7 +194,7 @@ export function WineryMediaSection({
           {galleryImages.map((image, index) => (
             <div
               key={image.id}
-              className="group relative aspect-square overflow-hidden rounded-xl border-2 border-stone-200 bg-slate-100 transition-all duration-300 hover:border-burgundy-300 hover:shadow-lg"
+              className="group relative aspect-square overflow-hidden rounded-xl border-2 border-stone-200 bg-muted transition-all duration-300 hover:border-burgundy-300 hover:shadow-lg"
             >
               <Image
                 src={image.url}
@@ -253,7 +253,7 @@ export function WineryMediaSection({
           ))}
         </div>
 
-        <p className="text-sm text-slate-500">{t('galleryHelpFull')}</p>
+        <p className="text-sm text-muted-foreground">{t('galleryHelpFull')}</p>
       </section>
 
       {/* Confirmation dialog for gallery image deletion */}

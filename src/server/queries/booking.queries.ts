@@ -2,8 +2,6 @@ import { cache } from 'react';
 import { db } from '@/server/db';
 import { BookingStatus, Prisma } from '@prisma/client';
 import {
-  startOfWeek,
-  endOfWeek,
   startOfMonth,
   endOfMonth,
   addDays,
@@ -179,11 +177,8 @@ export const getBookingSummary = cache(async function getBookingSummary(
   const todayUTC = localDateToUTC(now);
   const tomorrowUTC = localDateToUTC(addDays(now, 1));
 
-  // Week boundaries (Monday start)
-  const weekStartLocal = startOfWeek(now, { weekStartsOn: 1 });
-  const weekEndLocal = endOfWeek(now, { weekStartsOn: 1 });
-  const weekStartUTC = localDateToUTC(weekStartLocal);
-  const weekEndUTC = localDateToUTC(addDays(weekEndLocal, 1)); // Day after to include full end day
+  // Rolling upcoming window: today through the next 7 calendar days.
+  const upcomingWindowEndUTC = localDateToUTC(addDays(now, 8));
 
   // Month boundaries
   const monthStartLocal = startOfMonth(now);
@@ -205,11 +200,11 @@ export const getBookingSummary = cache(async function getBookingSummary(
       _count: true,
       _sum: { guestCount: true },
     }),
-    // This week's bookings
+    // Upcoming bookings for the next 7 days
     db.booking.aggregate({
       where: {
         wineryId,
-        date: { gte: weekStartUTC, lt: weekEndUTC },
+        date: { gte: todayUTC, lt: upcomingWindowEndUTC },
         status: { in: activeStatuses },
       },
       _count: true,

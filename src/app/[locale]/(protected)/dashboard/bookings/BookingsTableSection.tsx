@@ -15,6 +15,8 @@ import {
 import { CalendarViewWrapper } from './CalendarViewWrapper';
 import { getTranslations } from 'next-intl/server';
 
+const DEFAULT_BOOKING_DATE_TO = new Date(Date.UTC(9999, 11, 31));
+
 interface BookingsTableSectionProps {
   wineryId: string;
   params: {
@@ -41,6 +43,7 @@ export async function BookingsTableSection({
   const t = await getTranslations('bookings');
   // Parse filters from URL params
   const filters: BookingFiltersType = {};
+  const hasExplicitDateFilter = Boolean(params.from || params.to);
 
   if (params.status) {
     filters.status = params.status.split(',') as BookingStatus[];
@@ -56,6 +59,11 @@ export async function BookingsTableSection({
 
   if (params.to) {
     filters.dateTo = new Date(params.to);
+  }
+
+  if (!hasExplicitDateFilter) {
+    filters.dateFrom = localDateToUTC(new Date());
+    filters.dateTo = DEFAULT_BOOKING_DATE_TO;
   }
 
   if (params.search) {
@@ -116,5 +124,11 @@ export async function BookingsTableSection({
         />
       )}
     </>
+  );
+}
+
+function localDateToUTC(date: Date): Date {
+  return new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
   );
 }

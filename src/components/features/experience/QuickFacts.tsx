@@ -10,11 +10,7 @@ interface QuickFactsProps {
   type: ExperienceType;
 }
 
-export function QuickFacts({
-  duration,
-  maxCapacity,
-  type,
-}: QuickFactsProps) {
+export function QuickFacts({ duration, maxCapacity, type }: QuickFactsProps) {
   const t = useTranslations('experience');
 
   const formatDuration = (minutes: number): string => {
@@ -45,7 +41,10 @@ export function QuickFacts({
       </div>
       <div className="flex items-center gap-2 rounded-lg bg-primary-light px-3 py-2 text-foreground">
         <GraduationCap className="h-5 w-5 text-primary" />
-        <span className="text-sm font-medium" data-testid="experience-type-badge">
+        <span
+          className="text-sm font-medium"
+          data-testid="experience-type-badge"
+        >
           {t(`typesDetailed.${type}`)}
         </span>
       </div>

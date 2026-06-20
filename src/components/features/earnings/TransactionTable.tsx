@@ -60,7 +60,7 @@ function TransactionTableComponent({ transactions }: TransactionTableProps) {
           className="w-full whitespace-nowrap text-left text-sm"
           aria-label={t('tableLabel')}
         >
-          <thead className="border-b border-border bg-gray-50 text-xs font-medium uppercase tracking-wider text-[#915564]">
+          <thead className="border-b border-border bg-muted text-xs font-medium uppercase tracking-wider text-muted-foreground">
             <tr>
               <th scope="col" className="px-6 py-4">
                 {t('date')}
@@ -94,7 +94,7 @@ function TransactionTableComponent({ transactions }: TransactionTableProps) {
                 </td>
 
                 {/* Booking ID */}
-                <td className="px-6 py-4 font-mono text-xs text-[#915564]">
+                <td className="px-6 py-4 font-mono text-xs text-muted-foreground">
                   #{transaction.bookingId}
                 </td>
 
@@ -106,7 +106,7 @@ function TransactionTableComponent({ transactions }: TransactionTableProps) {
                   <div className="flex items-center gap-2">
                     {transaction.customer.avatarUrl ? (
                       <div
-                        className="h-6 w-6 flex-shrink-0 rounded-full bg-gray-200 bg-cover bg-center"
+                        className="h-6 w-6 flex-shrink-0 rounded-full bg-muted bg-cover bg-center"
                         style={{
                           backgroundImage: `url(${transaction.customer.avatarUrl})`,
                         }}

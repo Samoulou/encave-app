@@ -18,11 +18,13 @@ export function EmptyState({ title, description, icon }: EmptyStateProps) {
           {icon ?? <Wine className="h-10 w-10 text-burgundy-400" />}
         </div>
 
-        <h3 className="font-display text-xl font-semibold text-slate-900">
+        <h3 className="font-display text-xl font-semibold text-foreground">
           {title}
         </h3>
         {description && (
-          <p className="mx-auto mt-3 max-w-md text-slate-600">{description}</p>
+          <p className="mx-auto mt-3 max-w-md text-muted-foreground">
+            {description}
+          </p>
         )}
 
         {/* Decorative vine ornament */}

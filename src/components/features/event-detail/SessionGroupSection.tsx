@@ -42,21 +42,21 @@ export function SessionGroupSection({
         aria-expanded={open}
         className={cn(
           'flex w-full items-center justify-between gap-3 rounded-lg px-2 py-2 text-left transition-colors',
-          'hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
+          'hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
         )}
       >
         <h2
           id={`group-${group}`}
-          className="font-display text-lg font-bold tracking-tight text-slate-900"
+          className="font-display text-lg font-bold tracking-tight text-foreground"
         >
           {title}
-          <span className="ml-2 text-sm font-medium text-slate-500">
+          <span className="ml-2 text-sm font-medium text-muted-foreground">
             ({count})
           </span>
         </h2>
         <ChevronDown
           className={cn(
-            'h-5 w-5 text-slate-500 transition-transform',
+            'h-5 w-5 text-muted-foreground transition-transform',
             open && 'rotate-180'
           )}
           aria-hidden="true"
@@ -66,7 +66,7 @@ export function SessionGroupSection({
       {open ? (
         <div className="flex flex-col gap-4">
           {count === 0 && emptyLabel ? (
-            <p className="text-sm text-slate-500">{emptyLabel}</p>
+            <p className="text-sm text-muted-foreground">{emptyLabel}</p>
           ) : (
             children
           )}

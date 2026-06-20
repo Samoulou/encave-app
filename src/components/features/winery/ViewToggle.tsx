@@ -38,7 +38,7 @@ export function ViewToggle({ className }: ViewToggleProps) {
           'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
           current === 'grid'
             ? 'bg-burgundy-50 text-burgundy-700'
-            : 'text-slate-500 hover:text-slate-700'
+            : 'text-muted-foreground hover:text-foreground'
         )}
       >
         <Grid3X3 className="h-4 w-4" />
@@ -53,7 +53,7 @@ export function ViewToggle({ className }: ViewToggleProps) {
           'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
           current === 'map'
             ? 'bg-burgundy-50 text-burgundy-700'
-            : 'text-slate-500 hover:text-slate-700'
+            : 'text-muted-foreground hover:text-foreground'
         )}
       >
         <Map className="h-4 w-4" />

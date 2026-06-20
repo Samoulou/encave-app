@@ -50,7 +50,7 @@ export function PendingWineriesTable({
     <Card className="shadow-warm">
       <CardHeader className="border-b border-stone-100">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-muted-foreground">
             {t('showingPending', { count: filteredWineries.length })}
           </p>
           <div className="flex items-center gap-3">
@@ -99,8 +99,8 @@ export function PendingWineriesTable({
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
               <Wine className="h-8 w-8 text-green-600" />
             </div>
-            <p className="font-medium text-slate-900">{t('allCaughtUp')}</p>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="font-medium text-foreground">{t('allCaughtUp')}</p>
+            <p className="mt-1 text-sm text-muted-foreground">
               {t('noPendingWineries')}
             </p>
           </div>
@@ -108,7 +108,7 @@ export function PendingWineriesTable({
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-stone-50/80 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <tr className="bg-stone-50/80 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   <th className="px-6 py-4">{t('wineryName')}</th>
                   <th className="px-6 py-4">{t('commune')}</th>
                   <th className="px-6 py-4">{t('applicant')}</th>
@@ -123,21 +123,21 @@ export function PendingWineriesTable({
                     className="transition-colors hover:bg-burgundy-50/40"
                   >
                     <td className="px-6 py-4">
-                      <span className="font-medium text-slate-900">
+                      <span className="font-medium text-foreground">
                         {winery.name}
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="inline-flex items-center gap-1.5 text-sm text-slate-600">
-                        <MapPin className="h-3.5 w-3.5 text-slate-400" />
+                      <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+                        <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
                         {winery.commune}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-600">
+                    <td className="px-6 py-4 text-sm text-muted-foreground">
                       {winery.user.email}
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-sm text-slate-500">
+                      <span className="text-sm text-muted-foreground">
                         {formatDistanceToNow(new Date(winery.createdAt), {
                           addSuffix: true,
                         })}

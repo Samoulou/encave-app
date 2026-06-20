@@ -109,10 +109,10 @@ export function RegisterForm() {
     >
       {/* Heading */}
       <div className="flex flex-col gap-2">
-        <h1 className="font-display text-3xl font-bold text-slate-900">
+        <h1 className="font-display text-3xl font-bold text-foreground">
           {t('title')}
         </h1>
-        <p className="text-[#915564]">{t('subtitle')}</p>
+        <p className="text-muted-foreground">{t('subtitle')}</p>
       </div>
 
       {/* Form */}
@@ -176,7 +176,7 @@ export function RegisterForm() {
                     {...field}
                   />
                 </FormControl>
-                <p className="mt-1.5 text-xs text-slate-500">
+                <p className="mt-1.5 text-xs text-muted-foreground">
                   {t('passwordHint')}
                 </p>
                 <FormMessage />
@@ -230,7 +230,7 @@ export function RegisterForm() {
                     />
                     {t('iAmWinemaker')}
                   </FormLabel>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-sm text-muted-foreground">
                     {t('winemakerDescription')}
                   </p>
                 </div>
@@ -247,7 +247,7 @@ export function RegisterForm() {
             {t('createAccount')}
           </Button>
 
-          <p className="text-center text-sm text-slate-600">
+          <p className="text-center text-sm text-muted-foreground">
             {t('haveAccount')}{' '}
             <Link
               href="/login"

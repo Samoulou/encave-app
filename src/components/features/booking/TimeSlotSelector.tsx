@@ -61,7 +61,7 @@ export function TimeSlotSelector({
         }
       })
       .catch(() => {
-        setError('Failed to load time slots. Please try again.');
+        setError(t('loadSlotsError'));
         setSlots([]);
       })
       .finally(() => {
@@ -73,6 +73,7 @@ export function TimeSlotSelector({
     selectedTime,
     onTimeChange,
     onCapacityUpdate,
+    t,
   ]);
 
   useEffect(() => {
@@ -136,7 +137,7 @@ export function TimeSlotSelector({
           ) : (
             <>
               <RefreshCw className="mr-1 h-4 w-4" aria-hidden="true" />
-              Retry
+              {tCommon('buttons.tryAgain')}
             </>
           )}
         </Button>
@@ -187,7 +188,7 @@ export function TimeSlotSelector({
               <span
                 className={cn(isLowCapacity && 'font-semibold text-gold-700')}
               >
-                {isSunsetSlot ? 'coucher' : ''}
+                {isSunsetSlot ? t('sunsetSlot') : ''}
               </span>
               <span className="font-mono" data-testid="remaining-capacity">
                 {isFull

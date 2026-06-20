@@ -33,21 +33,21 @@ export async function EventDetailHeader({ event }: EventDetailHeaderProps) {
     <header className="flex flex-col gap-4">
       <nav
         aria-label="Breadcrumb"
-        className="flex items-center gap-1.5 text-sm text-slate-500"
+        className="flex items-center gap-1.5 text-sm text-muted-foreground"
       >
         <Link
           href="/dashboard"
-          className="flex items-center gap-1 hover:text-slate-900"
+          className="flex items-center gap-1 hover:text-foreground"
         >
           <Home className="h-3.5 w-3.5" aria-hidden="true" />
           <span className="sr-only">{t('breadcrumb.dashboard')}</span>
         </Link>
         <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
-        <Link href="/dashboard/experiences" className="hover:text-slate-900">
+        <Link href="/dashboard/experiences" className="hover:text-foreground">
           {t('breadcrumb.events')}
         </Link>
         <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
-        <span className="truncate font-medium text-slate-900">
+        <span className="truncate font-medium text-foreground">
           {experience.title}
         </span>
       </nav>
@@ -55,14 +55,14 @@ export async function EventDetailHeader({ event }: EventDetailHeaderProps) {
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="font-display text-2xl font-black tracking-tight text-slate-900 md:text-3xl">
+            <h1 className="font-display text-2xl font-black tracking-tight text-foreground md:text-3xl">
               {experience.title}
             </h1>
             <Badge variant={STATUS_VARIANT[experience.status]}>
               {t(`status.${STATUS_KEY[experience.status]}`)}
             </Badge>
           </div>
-          <p className="text-sm text-slate-500" aria-live="polite">
+          <p className="text-sm text-muted-foreground" aria-live="polite">
             {t('summary.active', {
               confirmed: event.totalConfirmedSeats,
               total: event.totalActiveCapacity,

@@ -69,7 +69,7 @@ export function MobileBookingBar({
     <>
       <div
         className={cn(
-          'fixed bottom-0 left-0 right-0 z-40 translate-y-full border-t border-gray-200 bg-white p-4 opacity-0 shadow-warm-xl transition duration-200 ease-out lg:hidden',
+          'fixed bottom-0 left-0 right-0 z-40 translate-y-full border-t border-border bg-white p-4 opacity-0 shadow-warm-xl transition duration-200 ease-out lg:hidden',
           'pb-[calc(1rem+env(safe-area-inset-bottom))]',
           isVisible && !hasFocusedInput && 'translate-y-0 opacity-100'
         )}
@@ -80,7 +80,7 @@ export function MobileBookingBar({
             <span className="text-lg font-bold text-foreground">
               {formatCHF(price)}
             </span>
-            <span className="ml-1 text-sm text-gray-500">
+            <span className="ml-1 text-sm text-muted-foreground">
               / {t('perPerson')}
             </span>
           </div>

@@ -5,6 +5,7 @@ import {
   GraduationCap,
   Info,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { UseFormReturn } from 'react-hook-form';
 import type { CreateExperienceInput } from '@/lib/validators/experience';
 import { Input } from '@/components/ui/input';
@@ -27,10 +28,10 @@ const EXPERIENCE_TYPE_ICONS = {
 } as const;
 
 const EXPERIENCE_TYPES = [
-  { value: 'TASTING' as const, label: 'Tasting' },
-  { value: 'VINEYARD_TOUR' as const, label: 'Tour' },
-  { value: 'FOOD_PAIRING' as const, label: 'Dinner' },
-  { value: 'WORKSHOP' as const, label: 'Class' },
+  { value: 'TASTING' as const },
+  { value: 'VINEYARD_TOUR' as const },
+  { value: 'FOOD_PAIRING' as const },
+  { value: 'WORKSHOP' as const },
 ];
 
 interface BasicInfoSectionProps {
@@ -39,13 +40,15 @@ interface BasicInfoSectionProps {
 }
 
 export function BasicInfoSection({ form, sectionRef }: BasicInfoSectionProps) {
+  const t = useTranslations('experience');
+
   return (
     <section
       ref={sectionRef}
       id="general"
       className="scroll-mt-24 rounded-xl border border-stone-200 bg-white p-6 shadow-sm md:p-8"
     >
-      <SectionHeader icon={Info} title="General Info" />
+      <SectionHeader icon={Info} title={t('generalInfo')} />
       <div className="space-y-6">
         {/* Title */}
         <FormField
@@ -53,13 +56,13 @@ export function BasicInfoSection({ form, sectionRef }: BasicInfoSectionProps) {
           name="title"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                Experience Title
+              <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                {t('title')}
               </FormLabel>
               <FormControl>
                 <Input
-                  placeholder="e.g. Sunset Vineyard Tasting & Tour"
-                  className="h-auto rounded-lg border-stone-200 bg-slate-50 px-4 py-3 focus:border-primary focus:ring-2 focus:ring-primary"
+                  placeholder={t('titlePlaceholder')}
+                  className="h-auto rounded-lg border-stone-200 bg-muted px-4 py-3 focus:border-primary focus:ring-2 focus:ring-primary"
                   {...field}
                 />
               </FormControl>
@@ -74,8 +77,8 @@ export function BasicInfoSection({ form, sectionRef }: BasicInfoSectionProps) {
           name="type"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                Experience Type
+              <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                {t('experienceType')}
               </FormLabel>
               <FormControl>
                 <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -96,8 +99,8 @@ export function BasicInfoSection({ form, sectionRef }: BasicInfoSectionProps) {
                           className={cn(
                             'rounded-lg border p-3 text-center transition-all',
                             isSelected
-                              ? 'border-primary bg-primary text-white'
-                              : 'border-stone-200 bg-slate-50 hover:bg-slate-100'
+                              ? 'border-primary bg-primary text-primary-foreground'
+                              : 'border-stone-200 bg-muted hover:bg-accent'
                           )}
                         >
                           <Icon
@@ -105,7 +108,7 @@ export function BasicInfoSection({ form, sectionRef }: BasicInfoSectionProps) {
                             aria-hidden="true"
                           />
                           <span className="text-sm font-medium">
-                            {type.label}
+                            {t(`types.${type.value}`)}
                           </span>
                         </div>
                       </label>
@@ -124,13 +127,13 @@ export function BasicInfoSection({ form, sectionRef }: BasicInfoSectionProps) {
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                Description
+              <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                {t('description')}
               </FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Describe the experience in detail. What can guests expect?"
-                  className="min-h-[140px] resize-none rounded-lg border-stone-200 bg-slate-50 p-4 text-sm leading-relaxed focus:border-primary focus:ring-2 focus:ring-primary"
+                  placeholder={t('descriptionPlaceholder')}
+                  className="min-h-[140px] resize-none rounded-lg border-stone-200 bg-muted p-4 text-sm leading-relaxed focus:border-primary focus:ring-2 focus:ring-primary"
                   {...field}
                 />
               </FormControl>

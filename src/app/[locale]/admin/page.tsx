@@ -73,7 +73,7 @@ export default async function AdminDashboard() {
         <h1 className="font-display text-display-md text-burgundy-700">
           {t('title')}
         </h1>
-        <p className="mt-2 text-slate-600">{t('subtitle')}</p>
+        <p className="mt-2 text-muted-foreground">{t('subtitle')}</p>
       </div>
 
       <AdminStats {...stats} />
@@ -112,7 +112,7 @@ export default async function AdminDashboard() {
                 <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
                   <Wine className="h-6 w-6 text-green-600" />
                 </div>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-muted-foreground">
                   {t('noPendingWineries')}
                 </p>
               </div>
@@ -124,14 +124,14 @@ export default async function AdminDashboard() {
                     className="flex items-center justify-between rounded-lg border border-stone-200 bg-white p-4 transition-colors hover:border-burgundy-200 hover:bg-burgundy-50/30"
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="font-medium text-slate-900">
+                      <p className="font-medium text-foreground">
                         {winery.name}
                       </p>
-                      <p className="mt-0.5 flex items-center gap-1.5 text-sm text-slate-500">
+                      <p className="mt-0.5 flex items-center gap-1.5 text-sm text-muted-foreground">
                         <MapPin className="h-3.5 w-3.5" />
                         {winery.commune}
                       </p>
-                      <p className="mt-1 text-xs text-slate-400">
+                      <p className="mt-1 text-xs text-muted-foreground">
                         {formatDistanceToNow(new Date(winery.createdAt), {
                           addSuffix: true,
                         })}

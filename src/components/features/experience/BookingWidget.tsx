@@ -7,14 +7,7 @@ import posthog from 'posthog-js';
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
 import { addDays, format, parseISO, startOfDay } from 'date-fns';
 import { de, enUS, fr } from 'date-fns/locale';
-import {
-  Check,
-  ChevronRight,
-  Lock,
-  Loader2,
-  Minus,
-  Plus,
-} from 'lucide-react';
+import { Check, ChevronRight, Lock, Loader2, Minus, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TimeSlotSelector } from '@/components/features/booking/TimeSlotSelector';
 import { formatCHF } from '@/lib/utils/currency';
@@ -210,12 +203,12 @@ export function BookingWidget({
 
       <div className="border-t border-stone-200 pt-4">
         <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-500">
-          Choisissez un jour
+          {t('chooseDay')}
         </div>
         <div
           className="flex gap-1.5"
           role="application"
-          aria-label="calendar"
+          aria-label={t('calendarLabel')}
           data-testid="booking-date-options"
         >
           {dateOptions.map((option) => {
@@ -239,9 +232,7 @@ export function BookingWidget({
                 <div className="text-[9px] uppercase tracking-[0.1em] opacity-70">
                   {option.day}
                 </div>
-                <div className="mt-0.5 text-base font-bold">
-                  {option.date}
-                </div>
+                <div className="mt-0.5 text-base font-bold">{option.date}</div>
               </button>
             );
           })}
@@ -250,7 +241,8 @@ export function BookingWidget({
 
       <div className="mt-5 border-t border-stone-200 pt-4">
         <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-500">
-          Horaire{date ? ` · ${formatDateLabel(date)}` : ''}
+          {t('time')}
+          {date ? ` · ${formatDateLabel(date)}` : ''}
         </div>
         <div data-testid="time-slot-section">
           <TimeSlotSelector
@@ -269,12 +261,12 @@ export function BookingWidget({
       >
         <div>
           <div className="text-[13px] font-semibold text-ink-900">
-            Participants
+            {t('participants')}
           </div>
           <div className="text-[11px] text-ink-500">
             {remainingCapacity !== null
-              ? `${remainingCapacity} places encore disponibles`
-              : `${maxCapacity} places maximum`}
+              ? t('placesRemaining', { count: remainingCapacity })
+              : t('placesMax', { count: maxCapacity })}
           </div>
         </div>
         <div className="flex items-center gap-3.5">
@@ -319,15 +311,12 @@ export function BookingWidget({
           <span>{formatCHF(totalPrice)}</span>
         </div>
         <div className="flex items-center justify-between text-ink-500">
-          <span>Frais de service</span>
+          <span>{t('serviceFee')}</span>
           <span>{formatCHF(0)}</span>
         </div>
         <div className="mt-2 flex items-center justify-between border-t border-stone-200 pt-2 text-[15px] font-bold text-ink-900">
-          <span>Total</span>
-          <span
-            className="text-burgundy-700"
-            data-testid="total-price"
-          >
+          <span>{t('total')}</span>
+          <span className="text-burgundy-700" data-testid="total-price">
             {formatCHF(totalPrice)}
           </span>
         </div>
@@ -367,7 +356,7 @@ export function BookingWidget({
       {isBookingEnabled && (
         <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[11px] text-ink-500">
           <Lock className="h-3 w-3" />
-          Paiement Stripe · vous ne serez debite qu&apos;a la confirmation
+          {t('securePaymentNotice')}
         </p>
       )}
 

@@ -50,16 +50,16 @@ export function WineryCard({ winery }: WineryCardProps) {
 
         {/* Content */}
         <div className="p-5 sm:p-6">
-          <h3 className="font-display text-lg font-semibold text-slate-900 transition-colors group-hover:text-burgundy-700">
+          <h3 className="font-display text-lg font-semibold text-foreground transition-colors group-hover:text-burgundy-700">
             {winery.name}
           </h3>
 
-          <p className="mt-1.5 flex items-center gap-1.5 text-sm text-slate-500">
+          <p className="mt-1.5 flex items-center gap-1.5 text-sm text-muted-foreground">
             <MapPin className="h-3.5 w-3.5" />
             {winery.commune}, Valais
           </p>
 
-          <p className="mt-3 line-clamp-2 text-sm text-slate-600">
+          <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">
             {winery.description}
           </p>
 

@@ -11,11 +11,16 @@ const badgeVariants = cva(
         default: 'border-transparent bg-primary text-primary-foreground',
         secondary: 'border-transparent bg-muted text-muted-foreground',
         outline: 'border-border text-foreground',
-        success:
-          'border-transparent bg-emerald-50 text-emerald-700 border-emerald-200',
-        warning:
-          'border-transparent bg-amber-50 text-amber-700 border-amber-200',
-        destructive: 'border-transparent bg-red-50 text-red-700 border-red-200',
+        // Status variants use the semantic --success/--warning/--error tokens
+        // (not raw Tailwind palette scales) so they stay on the warm brand.
+        success: 'border-success/25 bg-success/10 text-success',
+        warning: 'border-warning/25 bg-warning/10 text-warning',
+        destructive: 'border-error/25 bg-error/10 text-error',
+        // Warm primary tint — the on-brand replacement for the cold "blue"
+        // slot (e.g. a completed booking or an in-flight transaction).
+        info: 'border-primary/20 bg-primary-light text-primary',
+        // Warm neutral (stone/ink) for inactive states (NO_SHOW, DRAFT).
+        neutral: 'border-stone-300 bg-stone-100 text-ink-700',
         gold: 'border-transparent bg-gradient-to-r from-gold-400 to-gold-500 text-white',
       },
     },

@@ -79,7 +79,7 @@ export function ExperiencesPagination({
         <Button
           variant="ghost"
           size="icon"
-          className="h-9 w-9 text-gray-400 hover:text-foreground disabled:opacity-50"
+          className="h-9 w-9 text-muted-foreground hover:text-foreground disabled:opacity-50"
           onClick={() => goToPage(currentPage - 1)}
           disabled={currentPage === 1 || isPending}
           aria-label="Previous page"
@@ -91,7 +91,7 @@ export function ExperiencesPagination({
           pageNum === 'ellipsis' ? (
             <span
               key={`ellipsis-${idx}`}
-              className="flex h-9 w-9 items-center justify-center text-gray-400"
+              className="flex h-9 w-9 items-center justify-center text-muted-foreground"
             >
               ...
             </span>
@@ -104,7 +104,7 @@ export function ExperiencesPagination({
                 'h-9 w-9 text-sm font-bold',
                 currentPage === pageNum
                   ? 'bg-primary text-white shadow-md shadow-primary/20 hover:bg-primary hover:text-white'
-                  : 'text-gray-500 hover:bg-gray-100'
+                  : 'text-muted-foreground hover:bg-muted'
               )}
               onClick={() => goToPage(pageNum)}
               disabled={isPending}
@@ -119,7 +119,7 @@ export function ExperiencesPagination({
         <Button
           variant="ghost"
           size="icon"
-          className="h-9 w-9 text-gray-400 hover:text-foreground disabled:opacity-50"
+          className="h-9 w-9 text-muted-foreground hover:text-foreground disabled:opacity-50"
           onClick={() => goToPage(currentPage + 1)}
           disabled={currentPage === totalPages || isPending}
           aria-label="Next page"

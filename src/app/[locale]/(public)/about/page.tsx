@@ -56,11 +56,11 @@ export default async function AboutPage({ params }: PageProps) {
                     aria-hidden="true"
                   />
                 </div>
-                <h2 className="font-display text-2xl font-semibold text-slate-900 sm:text-3xl">
+                <h2 className="font-display text-2xl font-semibold text-foreground sm:text-3xl">
                   {t('valais.title')}
                 </h2>
               </div>
-              <div className="space-y-4 leading-relaxed text-slate-700">
+              <div className="space-y-4 leading-relaxed text-ink-700">
                 <p>{t('valais.paragraph1')}</p>
                 <p>{t('valais.paragraph2')}</p>
                 <p className="font-medium italic text-burgundy-700">
@@ -80,11 +80,11 @@ export default async function AboutPage({ params }: PageProps) {
                     aria-hidden="true"
                   />
                 </div>
-                <h2 className="font-display text-2xl font-semibold text-slate-900 sm:text-3xl">
+                <h2 className="font-display text-2xl font-semibold text-foreground sm:text-3xl">
                   {t('mission.title')}
                 </h2>
               </div>
-              <p className="leading-relaxed text-slate-700">
+              <p className="leading-relaxed text-ink-700">
                 {t('mission.content')}
               </p>
             </CardContent>
@@ -100,15 +100,15 @@ export default async function AboutPage({ params }: PageProps) {
                     aria-hidden="true"
                   />
                 </div>
-                <h2 className="font-display text-2xl font-semibold text-slate-900 sm:text-3xl">
+                <h2 className="font-display text-2xl font-semibold text-foreground sm:text-3xl">
                   {t('contact.title')}
                 </h2>
               </div>
-              <p className="mb-6 leading-relaxed text-slate-700">
+              <p className="mb-6 leading-relaxed text-ink-700">
                 {t('contact.content')}
               </p>
               <div className="flex flex-col gap-4 border-t border-stone-200 pt-4 sm:flex-row sm:items-center">
-                <p className="font-display text-xl font-semibold text-slate-900">
+                <p className="font-display text-xl font-semibold text-foreground">
                   {t('contact.name')}
                 </p>
                 <a

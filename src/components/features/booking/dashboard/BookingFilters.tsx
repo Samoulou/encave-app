@@ -104,7 +104,7 @@ export function BookingFilters({ experiences }: BookingFiltersProps) {
           )}
           {t('filters.filter')}
           {activeFilterCount > 0 && (
-            <span className="ml-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1.5 text-xs font-bold text-white">
+            <span className="ml-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1.5 text-xs font-bold text-primary-foreground">
               {activeFilterCount}
             </span>
           )}

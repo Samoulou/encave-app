@@ -39,7 +39,7 @@ export default async function AdminLayout({
   const pendingCount = await getPendingCount();
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-muted">
       <header className="border-b bg-white">
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-8">
@@ -52,14 +52,14 @@ export default async function AdminLayout({
             >
               <Link
                 href="/admin"
-                className="flex items-center gap-2 text-sm text-slate-600 hover:text-burgundy-700"
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-burgundy-700"
               >
                 <Home className="h-4 w-4" aria-hidden="true" />
                 Dashboard
               </Link>
               <Link
                 href="/admin/wineries/pending"
-                className="flex items-center gap-2 text-sm text-slate-600 hover:text-burgundy-700"
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-burgundy-700"
               >
                 <Building2 className="h-4 w-4" aria-hidden="true" />
                 Pending Wineries
@@ -74,21 +74,21 @@ export default async function AdminLayout({
               </Link>
               <Link
                 href="/admin/events"
-                className="flex items-center gap-2 text-sm text-slate-600 hover:text-burgundy-700"
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-burgundy-700"
               >
                 <CalendarDays className="h-4 w-4" aria-hidden="true" />
                 Events
               </Link>
               <Link
                 href="/admin/bookings"
-                className="flex items-center gap-2 text-sm text-slate-600 hover:text-burgundy-700"
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-burgundy-700"
               >
                 <ClipboardList className="h-4 w-4" aria-hidden="true" />
                 Bookings
               </Link>
               <Link
                 href="/admin/compliance"
-                className="flex items-center gap-2 text-sm text-slate-600 hover:text-burgundy-700"
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-burgundy-700"
               >
                 <ShieldCheck className="h-4 w-4" aria-hidden="true" />
                 Compliance
@@ -96,7 +96,9 @@ export default async function AdminLayout({
             </nav>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-slate-600">{session.user.email}</span>
+            <span className="text-sm text-muted-foreground">
+              {session.user.email}
+            </span>
             <form action="/api/auth/signout" method="POST">
               <Button variant="outline" size="sm" type="submit">
                 <LogOut className="mr-2 h-4 w-4" aria-hidden="true" />

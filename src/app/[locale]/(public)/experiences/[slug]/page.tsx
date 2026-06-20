@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
+import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { getExperienceBySlug } from '@/server/queries/experience.queries';
 import { ExperienceDetailGallery } from '@/components/features/experience/ExperienceDetailGallery';
 import { LocationSection } from '@/components/features/experience/LocationSection';
@@ -19,14 +20,7 @@ import { generateExperienceDetailMetadata } from '@/lib/seo';
 import { getBaseUrl } from '@/lib/env';
 import { type Locale } from '@/i18n/routing';
 import { Link } from '@/i18n/navigation';
-import {
-  ArrowUpRight,
-  Check,
-  Clock,
-  Globe2,
-  Users,
-  Wine,
-} from 'lucide-react';
+import { ArrowUpRight, Check, Clock, Globe2, Users, Wine } from 'lucide-react';
 
 interface ExperiencePageProps {
   params: Promise<{ slug: string; locale: string }>;
@@ -41,7 +35,8 @@ export async function generateMetadata({
   const experience = await getExperienceBySlug(slug);
 
   if (!experience) {
-    return { title: 'Experience Not Found | EnCave' };
+    const t = await getTranslations({ locale, namespace: 'experience' });
+    return { title: `${t('notFound')} | EnCave` };
   }
 
   return generateExperienceDetailMetadata(
@@ -54,12 +49,17 @@ export async function generateMetadata({
 }
 
 export default async function ExperiencePage({ params }: ExperiencePageProps) {
-  const { slug } = await params;
+  const { slug, locale } = await params;
+  setRequestLocale(locale);
+
   const experience = await getExperienceBySlug(slug);
 
   if (!experience) {
     notFound();
   }
+
+  const t = await getTranslations('experience');
+  const tNav = await getTranslations('nav');
 
   const baseUrl = getBaseUrl();
   const nextAvailableDate = getNextAvailableDate(
@@ -125,23 +125,29 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
   };
 
   const breadcrumbItems = [
-    { label: 'Home', href: '/' },
-    { label: 'Experiences', href: '/experiences' },
+    { label: tNav('home'), href: '/' },
+    { label: tNav('experiences'), href: '/experiences' },
     { label: experience.title },
   ];
   const locationAddress = experience.address || experience.winery.address;
   const locationCommune = experience.city || experience.winery.commune;
   const durationLabel = formatDuration(experience.duration);
   const paragraphs = experience.description.split('\n\n').filter(Boolean);
-  const experienceTypeLabel = formatExperienceType(experience.type);
+  const experienceTypeLabel = t(`types.${experience.type}`);
   const practicalItems = [
-    `${durationLabel} indique par le domaine`,
-    `Groupe de ${experience.minCapacity} a ${experience.maxCapacity} personnes`,
-    `Rendez-vous a ${locationCommune}`,
-    `${experienceTypeLabel} propose par ${experience.winery.name}`,
+    t('detail.durationIndicated', { duration: durationLabel }),
+    t('detail.groupSize', {
+      min: experience.minCapacity,
+      max: experience.maxCapacity,
+    }),
+    t('detail.meetingPoint', { commune: locationCommune }),
+    t('detail.proposedBy', {
+      type: experienceTypeLabel,
+      winery: experience.winery.name,
+    }),
     experience.winery.stripeOnboardingComplete
-      ? 'Paiement securise active'
-      : 'Reservation a confirmer avec le domaine',
+      ? t('detail.securePaymentActive')
+      : t('detail.bookingToConfirm'),
   ];
 
   return (
@@ -154,7 +160,7 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
           <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-4">
             <nav className="min-w-0 overflow-x-auto whitespace-nowrap text-xs text-ink-500">
               <span className="hidden lg:inline">
-                Explorer &gt; {experienceTypeLabel} &gt;{' '}
+                {t('detail.explore')} &gt; {experienceTypeLabel} &gt;{' '}
                 <strong className="font-semibold text-ink-900">
                   {experience.title}
                 </strong>
@@ -181,7 +187,7 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
                   className="rounded-full bg-burgundy-50 px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-burgundy-700"
                   data-testid="experience-capacity"
                 >
-                  {experience.maxCapacity} places max
+                  {t('detail.placesMax', { count: experience.maxCapacity })}
                 </span>
               </div>
               <h1 className="max-w-3xl font-display text-[2.35rem] font-medium leading-[1.05] tracking-[-0.015em] text-ink-900 sm:text-[2.9rem]">
@@ -203,24 +209,27 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
               <div className="my-7 grid gap-4 border-y border-stone-200 py-5 sm:grid-cols-2 lg:grid-cols-4">
                 <MetaFact
                   icon={<Clock className="h-[18px] w-[18px]" />}
-                  label="Duree"
+                  label={t('duration')}
                   value={durationLabel}
                   testId="experience-duration"
                 />
                 <MetaFact
                   icon={<Users className="h-[18px] w-[18px]" />}
-                  label="Groupe"
-                  value={`${experience.minCapacity}-${experience.maxCapacity} pers.`}
+                  label={t('detail.group')}
+                  value={t('detail.groupValue', {
+                    min: experience.minCapacity,
+                    max: experience.maxCapacity,
+                  })}
                 />
                 <MetaFact
                   icon={<Wine className="h-[18px] w-[18px]" />}
-                  label="Format"
+                  label={t('detail.format')}
                   value={experienceTypeLabel}
                   testId="experience-type-badge"
                 />
                 <MetaFact
                   icon={<Globe2 className="h-[18px] w-[18px]" />}
-                  label="Lieu"
+                  label={t('detail.place')}
                   value={locationCommune}
                 />
               </div>
@@ -241,7 +250,7 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="font-mono text-[11px] uppercase tracking-[0.1em] text-ink-500">
-                    Votre domaine
+                    {tNav('yourWinery')}
                   </div>
                   <div
                     className="font-display text-lg font-semibold text-ink-900"
@@ -260,14 +269,14 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
                   href={`/wineries/${experience.winery.slug}`}
                   className="hidden h-9 items-center gap-1 rounded-full border border-stone-200 px-4 text-xs font-semibold text-ink-700 transition-colors hover:border-burgundy-200 hover:text-burgundy-700 sm:inline-flex"
                 >
-                  Voir le profil
+                  {t('detail.viewProfile')}
                   <ArrowUpRight className="h-3.5 w-3.5" />
                 </Link>
               </div>
 
               <section data-testid="experience-description">
                 <h2 className="mb-3 font-display text-2xl font-semibold text-ink-900">
-                  L&apos;experience
+                  {t('detail.theExperience')}
                 </h2>
                 <div className="max-w-3xl space-y-4 text-[15px] leading-7 text-ink-700">
                   {paragraphs.length > 0 ? (
@@ -282,7 +291,7 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
 
               <section className="mt-9">
                 <h2 className="mb-4 font-display text-2xl font-semibold text-ink-900">
-                  Infos pratiques
+                  {t('detail.practicalInfo')}
                 </h2>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {practicalItems.map((item) => (
@@ -304,7 +313,9 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
                   wineryName={experience.winery.name}
                   winerySlug={experience.winery.slug}
                   latitude={experience.latitude || experience.winery.latitude}
-                  longitude={experience.longitude || experience.winery.longitude}
+                  longitude={
+                    experience.longitude || experience.winery.longitude
+                  }
                 />
               </div>
 
@@ -419,14 +430,6 @@ function formatDuration(minutes: number) {
   const hours = Math.floor(minutes / 60);
   const remaining = minutes % 60;
   return remaining > 0 ? `${hours}h ${remaining}` : `${hours}h`;
-}
-
-function formatExperienceType(type: string) {
-  return type
-    .toLowerCase()
-    .split('_')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
 }
 
 function RelatedExperiencesSkeleton() {

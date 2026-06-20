@@ -104,14 +104,17 @@ export function ExperienceFilters({
   return (
     <div
       className={cn(
-        'flex flex-col justify-between gap-4 rounded-xl border border-[#e5dbdd]/50 bg-white p-2 shadow-sm transition-opacity lg:flex-row lg:items-center',
+        'flex flex-col justify-between gap-4 rounded-xl border border-border/50 bg-white p-2 shadow-sm transition-opacity lg:flex-row lg:items-center',
         isPending && 'opacity-70'
       )}
     >
       {/* Search */}
       <div className="relative w-full lg:max-w-md">
         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-          <Search className="h-5 w-5 text-gray-400" aria-hidden="true" />
+          <Search
+            className="h-5 w-5 text-muted-foreground"
+            aria-hidden="true"
+          />
         </div>
         <Input
           type="text"
@@ -119,7 +122,7 @@ export function ExperienceFilters({
           onChange={(e) => handleSearchChange(e.target.value)}
           placeholder={t('searchPlaceholder')}
           aria-label={t('searchPlaceholder')}
-          className="border-none bg-[#f8f6f6] pl-10 focus:ring-2 focus:ring-primary/50"
+          className="border-none bg-muted pl-10 focus:ring-2 focus:ring-primary/50"
         />
       </div>
 
@@ -133,7 +136,7 @@ export function ExperienceFilters({
               'whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition-colors',
               optimisticFilter === filter.key
                 ? 'bg-primary text-white shadow-md shadow-primary/20'
-                : 'bg-[#f8f6f6] text-gray-600 hover:bg-gray-200'
+                : 'bg-muted text-muted-foreground hover:bg-accent'
             )}
           >
             {t(filter.labelKey)}

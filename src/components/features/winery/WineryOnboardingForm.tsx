@@ -135,7 +135,7 @@ export function WineryOnboardingForm() {
                           ? 'text-amber-600'
                           : descriptionLength > MAX_DESCRIPTION_LENGTH - 50
                             ? 'text-red-500'
-                            : 'text-slate-400'
+                            : 'text-muted-foreground'
                       )}
                     >
                       {descriptionLength}/{MAX_DESCRIPTION_LENGTH}
@@ -208,9 +208,9 @@ export function WineryOnboardingForm() {
 
         {/* Section: Contact */}
         <section className="space-y-6">
-          <div className="flex items-center gap-3 rounded-lg bg-slate-100 px-4 py-3">
+          <div className="flex items-center gap-3 rounded-lg bg-cream-100 px-4 py-3">
             <span className="text-xl">📞</span>
-            <h2 className="font-semibold text-slate-900">{t('contact')}</h2>
+            <h2 className="font-semibold text-foreground">{t('contact')}</h2>
           </div>
 
           <div className="space-y-6 pl-1">

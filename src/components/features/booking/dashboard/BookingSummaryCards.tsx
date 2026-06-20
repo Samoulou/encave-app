@@ -29,10 +29,10 @@ export function BookingSummaryCards({ summary }: BookingSummaryCardsProps) {
       {/* Total Bookings Card */}
       <div className="flex flex-col gap-1 rounded-xl border border-border bg-white p-5 shadow-sm">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-medium uppercase tracking-wider text-[#915564]">
+          <p className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
             {t('totalBookings')}
           </p>
-          <CalendarCheck className="h-5 w-5 text-[#915564]" />
+          <CalendarCheck className="h-5 w-5 text-muted-foreground" />
         </div>
         <div className="mt-2 flex items-baseline gap-3">
           <p className="text-3xl font-bold text-foreground">
@@ -44,10 +44,10 @@ export function BookingSummaryCards({ summary }: BookingSummaryCardsProps) {
       {/* Upcoming (7 Days) Card */}
       <div className="flex flex-col gap-1 rounded-xl border border-border bg-white p-5 shadow-sm">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-medium uppercase tracking-wider text-[#915564]">
+          <p className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
             {t('upcoming')}
           </p>
-          <CalendarClock className="h-5 w-5 text-[#915564]" />
+          <CalendarClock className="h-5 w-5 text-muted-foreground" />
         </div>
         <div className="mt-2 flex items-baseline gap-3">
           <p className="text-3xl font-bold text-foreground">
@@ -59,17 +59,19 @@ export function BookingSummaryCards({ summary }: BookingSummaryCardsProps) {
       {/* Occupancy Rate Card */}
       <div className="flex flex-col gap-1 rounded-xl border border-border bg-white p-5 shadow-sm">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-medium uppercase tracking-wider text-[#915564]">
+          <p className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
             {t('occupancyRate')}
           </p>
-          <PieChart className="h-5 w-5 text-[#915564]" />
+          <PieChart className="h-5 w-5 text-muted-foreground" />
         </div>
         <div className="mt-2 flex flex-col gap-2">
           <div className="flex items-baseline justify-between">
             <p className="text-3xl font-bold text-foreground">
               {occupancyRate}%
             </p>
-            <span className="text-sm text-[#915564]">{t('avgThisMonth')}</span>
+            <span className="text-sm text-muted-foreground">
+              {t('avgThisMonth')}
+            </span>
           </div>
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-primary-light">
             <div

@@ -1,9 +1,21 @@
+import { useTranslations } from 'next-intl';
 import { CalendarClock, Clock, Plus, Trash2, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TimeSlotEditor } from '../TimeSlotEditor';
 import { SectionHeader } from './SectionHeader';
 import { DAYS_OF_WEEK } from './types';
-import type { AvailabilitySlot } from './types';
+import type { AvailabilitySlot, DayOfWeek } from './types';
+
+// Maps day codes to JS day indices used by the shared common.days.short keys.
+const DAY_TO_INDEX: Record<DayOfWeek, number> = {
+  SUN: 0,
+  MON: 1,
+  TUE: 2,
+  WED: 3,
+  THU: 4,
+  FRI: 5,
+  SAT: 6,
+};
 
 interface AvailabilitySectionProps {
   availabilitySlots: AvailabilitySlot[];
@@ -36,19 +48,22 @@ export function AvailabilitySection({
   onAddPattern,
   sectionRef,
 }: AvailabilitySectionProps) {
+  const t = useTranslations('experience');
+  const tCommon = useTranslations('common');
+
   return (
     <section
       ref={sectionRef}
       id="availability"
       className="scroll-mt-24 rounded-xl border border-stone-200 bg-white p-6 shadow-sm md:p-8"
     >
-      <SectionHeader icon={CalendarClock} title="Availability" />
+      <SectionHeader icon={CalendarClock} title={t('availability.title')} />
       <div className="space-y-4">
         {/* Availability Slots */}
         {availabilitySlots.map((slot) => (
           <div
             key={slot.id}
-            className="rounded-lg border border-stone-200 bg-slate-50 p-4"
+            className="rounded-lg border border-stone-200 bg-muted p-4"
           >
             {/* Pattern Header with Delete */}
             <div className="mb-4 flex items-center justify-between">
@@ -63,14 +78,14 @@ export function AvailabilitySection({
                       className={cn(
                         'rounded px-3 py-1 text-xs font-bold transition-colors',
                         isSelected
-                          ? 'bg-primary text-white'
-                          : 'border border-stone-200 bg-white text-slate-400'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'border border-stone-200 bg-white text-muted-foreground'
                       )}
                       onClick={() =>
                         onDayToggle(slot.id, day.value, isSelected)
                       }
                     >
-                      {day.label}
+                      {tCommon(`days.short.${DAY_TO_INDEX[day.value]}`)}
                     </button>
                   );
                 })}
@@ -80,7 +95,7 @@ export function AvailabilitySection({
                 type="button"
                 onClick={() => onDeletePattern(slot.id)}
                 className="p-1 text-slate-400 transition-colors hover:text-red-500"
-                aria-label="Delete schedule pattern"
+                aria-label={t('deleteSchedulePattern')}
               >
                 <Trash2 className="h-4 w-4" />
               </button>
@@ -125,14 +140,14 @@ export function AvailabilitySection({
                       onClick={() => onEditTimeSlot(slot.id, idx)}
                       className="ml-2 text-xs font-bold text-primary opacity-0 transition-opacity hover:underline group-hover:opacity-100"
                     >
-                      Edit
+                      {tCommon('buttons.edit')}
                     </button>
                     {/* Delete Time Slot Button */}
                     <button
                       type="button"
                       onClick={() => onDeleteTimeSlot(slot.id, idx)}
                       className="text-slate-400 opacity-0 transition-opacity hover:text-red-500 group-hover:opacity-100"
-                      aria-label="Delete time slot"
+                      aria-label={t('deleteTimeSlot')}
                     >
                       <X className="h-4 w-4" aria-hidden="true" />
                     </button>
@@ -147,7 +162,7 @@ export function AvailabilitySection({
                 className="flex items-center gap-1 rounded border border-dashed border-primary/30 px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/5"
               >
                 <Plus className="h-4 w-4" aria-hidden="true" />
-                Add time
+                {t('availability.addTime')}
               </button>
             </div>
           </div>
@@ -156,11 +171,11 @@ export function AvailabilitySection({
         {/* Add Schedule Button */}
         <button
           type="button"
-          className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-stone-300 py-3 text-sm font-bold text-slate-500 transition-colors hover:border-primary hover:text-primary"
+          className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-stone-300 py-3 text-sm font-bold text-muted-foreground transition-colors hover:border-primary hover:text-primary"
           onClick={onAddPattern}
         >
           <Plus className="h-4 w-4" aria-hidden="true" />
-          Add Schedule Pattern
+          {t('availability.addSchedulePattern')}
         </button>
       </div>
     </section>

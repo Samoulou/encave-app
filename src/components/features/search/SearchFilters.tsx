@@ -104,7 +104,7 @@ export function SearchFilters({
     <div className={cn('space-y-6', className)}>
       {/* Header with clear button */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-slate-900">
+        <div className="flex items-center gap-2 text-foreground">
           <SlidersHorizontal className="h-5 w-5" aria-hidden="true" />
           <span className="font-medium">{t('filters')}</span>
         </div>
@@ -113,7 +113,7 @@ export function SearchFilters({
             variant="ghost"
             size="sm"
             onClick={onClearFilters}
-            className="h-8 px-2 text-sm text-slate-600 hover:text-slate-900"
+            className="h-8 px-2 text-sm text-muted-foreground hover:text-foreground"
           >
             <X className="mr-1 h-4 w-4" />
             {t('clear')}
@@ -123,7 +123,7 @@ export function SearchFilters({
 
       {/* Experience Type */}
       <div className="space-y-3">
-        <Label className="text-sm font-medium text-slate-700">
+        <Label className="text-sm font-medium text-foreground">
           {t('experienceType')}
         </Label>
         <div className="space-y-2">
@@ -136,7 +136,7 @@ export function SearchFilters({
               />
               <Label
                 htmlFor={`type-${typeValue}`}
-                className="cursor-pointer text-sm font-normal text-slate-600"
+                className="cursor-pointer text-sm font-normal text-muted-foreground"
               >
                 {tExp(typeValue)}
               </Label>
@@ -147,7 +147,7 @@ export function SearchFilters({
 
       {/* Commune */}
       <div className="space-y-3">
-        <Label className="text-sm font-medium text-slate-700">
+        <Label className="text-sm font-medium text-foreground">
           {t('location')}
         </Label>
         <Select
@@ -170,7 +170,7 @@ export function SearchFilters({
 
       {/* Price Range */}
       <div className="space-y-3">
-        <Label className="text-sm font-medium text-slate-700">
+        <Label className="text-sm font-medium text-foreground">
           {t('priceRange')}
         </Label>
         <div className="flex items-center gap-2">
@@ -185,7 +185,7 @@ export function SearchFilters({
             className="h-10"
             aria-label={t('minPrice')}
           />
-          <span className="text-slate-400">-</span>
+          <span className="text-muted-foreground">-</span>
           <Input
             type="number"
             min={0}
@@ -202,7 +202,7 @@ export function SearchFilters({
 
       {/* Capacity */}
       <div className="space-y-3">
-        <Label className="text-sm font-medium text-slate-700">
+        <Label className="text-sm font-medium text-foreground">
           {t('groupSize')}
         </Label>
         <Input

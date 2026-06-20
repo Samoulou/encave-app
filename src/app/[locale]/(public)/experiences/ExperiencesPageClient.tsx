@@ -278,14 +278,14 @@ export function ExperiencesPageClient({
                 Expériences disponibles
               </h2>
             </div>
-            <div className="flex gap-2">
+            <div className="flex min-w-max gap-2">
               {visibleSortOptions.map((option) => (
                 <button
                   key={option}
                   type="button"
                   onClick={() => handleSortChange(option)}
                   className={cn(
-                    'h-9 rounded-lg border px-3 text-xs font-semibold transition-colors',
+                    'h-9 shrink-0 whitespace-nowrap rounded-lg border px-3 text-xs font-semibold transition-colors',
                     currentParams.sort === option
                       ? 'border-burgundy-600 bg-burgundy-600 text-white'
                       : 'border-stone-200 bg-white text-ink-700 hover:border-burgundy-200'

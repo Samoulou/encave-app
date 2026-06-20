@@ -21,12 +21,12 @@ export function EarningsPageHeader() {
           <li>
             <Link
               href="/dashboard"
-              className="text-[#915564] transition-colors hover:text-primary"
+              className="text-muted-foreground transition-colors hover:text-primary"
             >
               {tNav('dashboard')}
             </Link>
           </li>
-          <li className="text-[#915564]/50" aria-hidden="true">
+          <li className="text-muted-foreground/50" aria-hidden="true">
             /
           </li>
           <li>
@@ -41,7 +41,7 @@ export function EarningsPageHeader() {
           <h1 className="font-display text-3xl font-black tracking-tight text-foreground md:text-4xl">
             {t('title')}
           </h1>
-          <p className="text-base text-[#915564]">{t('subtitle')}</p>
+          <p className="text-base text-muted-foreground">{t('subtitle')}</p>
         </div>
 
         <div className="flex items-center gap-3">

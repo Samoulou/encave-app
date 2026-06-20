@@ -35,7 +35,7 @@ export default async function EventDetailLoading() {
           {Array.from({ length: 2 }).map((__, cardIndex) => (
             <div
               key={cardIndex}
-              className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+              className="rounded-xl border border-border bg-white p-5 shadow-sm"
             >
               <div className="flex items-center justify-between">
                 <Skeleton className="h-6 w-48" />

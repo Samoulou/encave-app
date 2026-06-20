@@ -42,7 +42,7 @@ export function SocialLoginButtons() {
       {/* Divider */}
       <div className="relative flex items-center py-2">
         <div className="flex-grow border-t border-border" />
-        <span className="mx-4 flex-shrink-0 text-sm text-slate-400">
+        <span className="mx-4 flex-shrink-0 text-sm text-muted-foreground">
           {t('orContinueWith')}
         </span>
         <div className="flex-grow border-t border-border" />
@@ -52,11 +52,11 @@ export function SocialLoginButtons() {
       <Button
         type="button"
         variant="outline"
-        className="flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-border bg-white px-4 transition-colors hover:bg-slate-50"
+        className="flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-border bg-white px-4 transition-colors hover:bg-muted"
         onClick={handleGoogleSignIn}
       >
         <GoogleIcon className="h-5 w-5" />
-        <span className="text-sm font-medium text-slate-900">Google</span>
+        <span className="text-sm font-medium text-foreground">Google</span>
       </Button>
     </>
   );

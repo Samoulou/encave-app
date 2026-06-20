@@ -41,7 +41,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
             className="h-3 w-3 rounded-full"
             style={{ backgroundColor: entry.color }}
           />
-          <span className="text-[#915564]">
+          <span className="text-muted-foreground">
             {entry.dataKey === 'revenueDisplay' ? t('gross') : t('netPayout')}:
           </span>
           <span className="font-bold text-foreground">
@@ -87,18 +87,18 @@ export function EarningsChart({ data }: EarningsChartProps) {
           >
             {t('title')}
           </h2>
-          <p id="earnings-chart-desc" className="text-sm text-[#915564]">
+          <p id="earnings-chart-desc" className="text-sm text-muted-foreground">
             {t('subtitle')}
           </p>
         </div>
         <div className="flex items-center gap-4 text-xs font-medium">
           <div className="flex items-center gap-2">
             <span className="h-3 w-3 rounded-full bg-primary" />
-            <span className="text-[#915564]">{t('gross')}</span>
+            <span className="text-muted-foreground">{t('gross')}</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="h-3 w-3 rounded-full bg-gray-300" />
-            <span className="text-[#915564]">{t('netPayout')}</span>
+            <span className="text-muted-foreground">{t('netPayout')}</span>
           </div>
         </div>
       </div>

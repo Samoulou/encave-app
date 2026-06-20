@@ -79,14 +79,14 @@ export default async function WineryProfilePage({
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="space-y-3">
               <div className="flex items-center gap-3">
-                <h1 className="font-display text-display-md text-slate-900">
+                <h1 className="font-display text-display-md text-foreground">
                   {winery.name}
                 </h1>
                 {isVerified && <VerifiedBadge size="md" />}
               </div>
-              <p className="text-slate-600">{t('manageProfile')}</p>
+              <p className="text-muted-foreground">{t('manageProfile')}</p>
               {winery.updatedAt && (
-                <p className="flex items-center gap-1.5 text-sm text-slate-500">
+                <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
                   <svg
                     className="h-4 w-4"
                     fill="none"
@@ -150,7 +150,7 @@ export default async function WineryProfilePage({
               <StripeOnboarding wineryId={winery.id} />
             ) : (
               <div className="space-y-3">
-                <h2 className="text-sm font-medium text-slate-700">
+                <h2 className="text-sm font-medium text-foreground">
                   {t('paymentStatusLabel')}
                 </h2>
                 <PaymentStatus

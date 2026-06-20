@@ -46,7 +46,7 @@ export function WeeklyCalendarPreview({ slots }: WeeklyCalendarPreviewProps) {
   if (!hasAnySlots) {
     return (
       <div className="rounded-xl border-2 border-dashed border-stone-300 bg-stone-50 p-8 text-center">
-        <p className="text-slate-500">{t('noSlotsPreview')}</p>
+        <p className="text-muted-foreground">{t('noSlotsPreview')}</p>
       </div>
     );
   }
@@ -58,7 +58,7 @@ export function WeeklyCalendarPreview({ slots }: WeeklyCalendarPreviewProps) {
         {DAYS_ORDER.map((dayValue) => (
           <div
             key={dayValue}
-            className="px-2 py-3 text-center text-xs font-semibold uppercase tracking-wider text-slate-600"
+            className="px-2 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground"
           >
             {tDaysShort(String(dayValue))}
           </div>
@@ -81,7 +81,7 @@ export function WeeklyCalendarPreview({ slots }: WeeklyCalendarPreviewProps) {
             >
               {daySlots.length === 0 ? (
                 <div className="flex h-full items-center justify-center">
-                  <span className="text-xs text-slate-300">-</span>
+                  <span className="text-xs text-muted-foreground">-</span>
                 </div>
               ) : (
                 <div className="space-y-1.5">
@@ -110,7 +110,7 @@ export function WeeklyCalendarPreview({ slots }: WeeklyCalendarPreviewProps) {
       </div>
 
       {/* Summary */}
-      <div className="border-t border-stone-200 bg-stone-50 px-4 py-2 text-xs text-slate-600">
+      <div className="border-t border-stone-200 bg-stone-50 px-4 py-2 text-xs text-muted-foreground">
         {hasActiveSlots ? (
           <span className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-green-500" />

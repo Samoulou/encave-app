@@ -248,9 +248,9 @@ function SheetAction({ icon, label, disabled, onClick }: SheetActionProps) {
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        'flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm font-medium text-slate-900 transition-colors',
-        'hover:bg-slate-100 active:bg-slate-200',
-        'disabled:cursor-not-allowed disabled:text-slate-400 disabled:hover:bg-transparent'
+        'flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm font-medium text-foreground transition-colors',
+        'hover:bg-muted active:bg-accent',
+        'disabled:cursor-not-allowed disabled:text-muted-foreground disabled:hover:bg-transparent'
       )}
     >
       {icon}

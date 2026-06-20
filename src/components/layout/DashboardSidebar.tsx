@@ -107,7 +107,7 @@ export function DashboardSidebar({
             <Link
               href={`/${locale}`}
               className="flex items-center gap-3"
-              aria-label="Go to homepage"
+              aria-label={t('goToHomepage')}
             >
               <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-white">
                 <Wine className="h-5 w-5" aria-hidden="true" />
@@ -117,10 +117,7 @@ export function DashboardSidebar({
           </div>
 
           {/* Nav Items */}
-          <nav
-            className="flex flex-col gap-2"
-            aria-label="Dashboard navigation"
-          >
+          <nav className="flex flex-col gap-2" aria-label={t('dashboardNavigation')}>
             {sidebarLinks.map((link) => {
               const localizedHref = `/${locale}${link.href}`;
               const isActive = link.exact
@@ -141,7 +138,7 @@ export function DashboardSidebar({
                     'group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors',
                     isActive
                       ? 'bg-primary/10 text-primary'
-                      : 'text-gray-600 hover:bg-gray-100'
+                      : 'text-muted-foreground hover:bg-muted'
                   )}
                   aria-current={isActive ? 'page' : undefined}
                 >
@@ -150,7 +147,7 @@ export function DashboardSidebar({
                       'h-5 w-5 transition-colors',
                       isActive
                         ? 'text-primary'
-                        : 'text-gray-500 group-hover:text-primary'
+                        : 'text-muted-foreground group-hover:text-primary'
                     )}
                     aria-hidden="true"
                   />
@@ -174,16 +171,18 @@ export function DashboardSidebar({
           onClick={() => setIsMobileOpen(false)}
           className="flex cursor-pointer items-center gap-3 rounded-lg border border-transparent px-3 py-3 transition-all hover:border-[#e5dbdd]"
         >
-          <div className="relative size-10 flex-shrink-0 overflow-hidden rounded-full bg-gray-200">
-            <div className="flex h-full w-full items-center justify-center font-medium text-gray-500">
+          <div className="relative size-10 flex-shrink-0 overflow-hidden rounded-full bg-muted">
+            <div className="flex h-full w-full items-center justify-center font-medium text-muted-foreground">
               {userName?.charAt(0)?.toUpperCase() || 'W'}
             </div>
           </div>
           <div className="flex min-w-0 flex-col">
             <p className="truncate text-sm font-bold leading-tight">
-              {userName || 'Winemaker'}
+              {userName || t('roleWinemaker')}
             </p>
-            <p className="truncate text-xs text-gray-500">{wineryName}</p>
+            <p className="truncate text-xs text-muted-foreground">
+              {wineryName}
+            </p>
           </div>
         </Link>
       </aside>

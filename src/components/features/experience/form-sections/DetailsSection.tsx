@@ -1,4 +1,5 @@
 import { SlidersHorizontal, Users } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { UseFormReturn } from 'react-hook-form';
 import type { CreateExperienceInput } from '@/lib/validators/experience';
 import { DURATION_OPTIONS } from '@/lib/validators/experience';
@@ -25,13 +26,15 @@ interface DetailsSectionProps {
 }
 
 export function DetailsSection({ form, sectionRef }: DetailsSectionProps) {
+  const t = useTranslations('experience');
+
   return (
     <section
       ref={sectionRef}
       id="details"
       className="scroll-mt-24 rounded-xl border border-stone-200 bg-white p-6 shadow-sm md:p-8"
     >
-      <SectionHeader icon={SlidersHorizontal} title="Details" />
+      <SectionHeader icon={SlidersHorizontal} title={t('details')} />
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {/* Duration */}
         <FormField
@@ -39,16 +42,16 @@ export function DetailsSection({ form, sectionRef }: DetailsSectionProps) {
           name="duration"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                Duration
+              <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                {t('duration')}
               </FormLabel>
               <FormControl>
                 <Select
                   onValueChange={(value) => field.onChange(parseInt(value))}
                   value={field.value?.toString()}
                 >
-                  <SelectTrigger className="h-12 border-stone-200 bg-slate-50">
-                    <SelectValue placeholder="Select duration" />
+                  <SelectTrigger className="h-12 border-stone-200 bg-muted">
+                    <SelectValue placeholder={t('selectDuration')} />
                   </SelectTrigger>
                   <SelectContent>
                     {DURATION_OPTIONS.map((option) => (
@@ -56,7 +59,7 @@ export function DetailsSection({ form, sectionRef }: DetailsSectionProps) {
                         key={option.value}
                         value={option.value.toString()}
                       >
-                        {option.label}
+                        {t(`durationOptions.${option.value}`)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -73,18 +76,18 @@ export function DetailsSection({ form, sectionRef }: DetailsSectionProps) {
           name="price"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                Price per Person
+              <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                {t('pricePerPersonLabel')}
               </FormLabel>
               <FormControl>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium text-slate-400">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">
                     CHF
                   </span>
                   <Input
                     type="number"
                     placeholder="45.00"
-                    className="h-12 border-stone-200 bg-slate-50 pl-12"
+                    className="h-12 border-stone-200 bg-muted pl-12"
                     {...field}
                     onChange={(e) =>
                       field.onChange(parseFloat(e.target.value) || undefined)
@@ -103,22 +106,22 @@ export function DetailsSection({ form, sectionRef }: DetailsSectionProps) {
           name="maxCapacity"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                Max Capacity
+              <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                {t('maxCapacityLabel')}
               </FormLabel>
               <FormControl>
                 <div className="relative">
                   <Input
                     type="number"
                     placeholder="12"
-                    className="h-12 border-stone-200 bg-slate-50 pr-10"
+                    className="h-12 border-stone-200 bg-muted pr-10"
                     {...field}
                     onChange={(e) =>
                       field.onChange(parseInt(e.target.value) || 1)
                     }
                   />
                   <Users
-                    className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+                    className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground"
                     aria-hidden="true"
                   />
                 </div>

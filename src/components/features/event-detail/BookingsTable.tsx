@@ -18,7 +18,7 @@ export async function BookingsTable({
 
   if (bookings.length === 0) {
     return (
-      <p className="px-4 py-6 text-center text-sm text-slate-500">
+      <p className="px-4 py-6 text-center text-sm text-muted-foreground">
         {t('session.empty')}
       </p>
     );
@@ -30,7 +30,7 @@ export async function BookingsTable({
       <div className="hidden md:block">
         <table className="w-full border-collapse">
           <thead>
-            <tr className="border-b border-slate-200 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <tr className="border-b border-border text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               <th className="px-4 py-2">{t('columns.client')}</th>
               <th className="px-4 py-2">{t('columns.partySize')}</th>
               <th className="px-4 py-2">{t('columns.reference')}</th>

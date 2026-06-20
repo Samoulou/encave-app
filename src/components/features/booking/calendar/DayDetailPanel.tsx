@@ -13,7 +13,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { BookingStatusBadge } from '@/components/features/booking/dashboard/BookingStatusBadge';
+import { BookingStatusBadge } from '@/components/features/booking/BookingStatusBadge';
 import { ExperienceTypeDot } from './ExperienceTypeDot';
 import {
   blockDateForAllExperiences,
@@ -129,17 +129,17 @@ export function DayDetailPanel({
 
         <div className="space-y-4">
           {/* Summary */}
-          <div className="flex items-center gap-4 rounded-lg bg-slate-50 p-3">
-            <div className="flex items-center gap-2 text-sm text-slate-600">
-              <span className="font-semibold text-slate-900">
+          <div className="flex items-center gap-4 rounded-lg bg-muted p-3">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span className="font-semibold text-foreground">
                 {bookings.length}
               </span>
               {t('bookingsCount', { count: bookings.length })}
             </div>
-            <div className="h-4 w-px bg-slate-200" />
-            <div className="flex items-center gap-2 text-sm text-slate-600">
+            <div className="h-4 w-px bg-border" />
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Users className="h-4 w-4" />
-              <span className="font-semibold text-slate-900">
+              <span className="font-semibold text-foreground">
                 {totalGuests}
               </span>
               {t('guestsCount', { count: totalGuests })}
@@ -147,14 +147,16 @@ export function DayDetailPanel({
           </div>
 
           {/* Block/Unblock Date */}
-          <div className="flex items-center justify-between rounded-lg border border-slate-200 p-3">
+          <div className="flex items-center justify-between rounded-lg border border-border p-3">
             <div className="text-sm">
               {isFullyBlocked ? (
-                <span className="text-slate-600">
+                <span className="text-muted-foreground">
                   {t('dateBlockedMessage')}
                 </span>
               ) : (
-                <span className="text-slate-600">{t('blockDateQuestion')}</span>
+                <span className="text-muted-foreground">
+                  {t('blockDateQuestion')}
+                </span>
               )}
             </div>
             <Button
@@ -182,7 +184,7 @@ export function DayDetailPanel({
           {/* Bookings List */}
           {bookings.length > 0 ? (
             <div className="space-y-2">
-              <h3 className="text-sm font-medium text-slate-700">
+              <h3 className="text-sm font-medium text-muted-foreground">
                 {t('bookingsTitle')}
               </h3>
               <div className="space-y-2">
@@ -190,7 +192,7 @@ export function DayDetailPanel({
                   <button
                     key={booking.id}
                     onClick={() => onBookingClick?.(booking.id)}
-                    className="w-full rounded-lg border border-slate-200 p-3 text-left transition-colors hover:bg-slate-50"
+                    className="w-full rounded-lg border border-border p-3 text-left transition-colors hover:bg-muted"
                   >
                     <div className="flex items-start justify-between">
                       <div className="space-y-1">
@@ -199,14 +201,14 @@ export function DayDetailPanel({
                             type={booking.experience.type}
                             size="sm"
                           />
-                          <span className="font-medium text-slate-900">
+                          <span className="font-medium text-foreground">
                             {booking.experience.title}
                           </span>
                         </div>
-                        <div className="text-sm text-slate-600">
+                        <div className="text-sm text-muted-foreground">
                           {booking.visitorName}
                         </div>
-                        <div className="flex items-center gap-3 text-xs text-slate-500">
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
                           <div className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
                             {booking.timeSlot}
@@ -225,7 +227,7 @@ export function DayDetailPanel({
               </div>
             </div>
           ) : (
-            <div className="rounded-lg bg-slate-50 p-4 text-center text-sm text-slate-500">
+            <div className="rounded-lg bg-muted p-4 text-center text-sm text-muted-foreground">
               {t('noBookings')}
             </div>
           )}

@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 import { Wine } from 'lucide-react';
 import type { ExperienceType } from '@prisma/client';
 import { formatCHF } from '@/lib/utils/currency';
@@ -11,20 +12,15 @@ interface ExperienceHeroProps {
   coverPhoto: string;
 }
 
-const TYPE_LABELS: Record<ExperienceType, string> = {
-  TASTING: 'Wine Tasting',
-  CELLAR_VISIT: 'Cellar Visit',
-  WORKSHOP: 'Workshop',
-  VINEYARD_TOUR: 'Vineyard Tour',
-  FOOD_PAIRING: 'Food Pairing',
-};
-
 export function ExperienceHero({
   title,
   type,
   price,
   coverPhoto,
 }: ExperienceHeroProps) {
+  const t = useTranslations('experience');
+  const tCommon = useTranslations('common');
+
   return (
     <section className="relative h-[50vh] min-h-[400px] w-full">
       {coverPhoto ? (
@@ -56,7 +52,7 @@ export function ExperienceHero({
             className="inline-flex items-center rounded-full bg-gold-400 px-3 py-1 text-sm font-medium text-gold-950"
             data-testid="experience-type-badge"
           >
-            {TYPE_LABELS[type]}
+            {t(`types.${type}`)}
           </span>
 
           {/* Title */}
@@ -71,7 +67,7 @@ export function ExperienceHero({
           >
             {formatCHF(price)}
             <span className="ml-2 text-base font-normal text-white/70">
-              per person
+              {tCommon('currency.perPerson')}
             </span>
           </p>
         </div>

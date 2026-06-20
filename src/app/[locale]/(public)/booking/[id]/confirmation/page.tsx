@@ -156,12 +156,14 @@ export default async function ConfirmationPage({
             <h1 className="mb-2 font-display text-3xl font-bold text-foreground">
               {t('paymentPending')}
             </h1>
-            <p className="text-[#915564]">{t('paymentPendingDescription')}</p>
+            <p className="text-muted-foreground">
+              {t('paymentPendingDescription')}
+            </p>
           </div>
 
           <Card className="mb-6 border-border">
             <CardContent className="p-6 text-center">
-              <p className="mb-1 text-sm text-[#915564]">
+              <p className="mb-1 text-sm text-muted-foreground">
                 {t('bookingReference')}
               </p>
               <p className="font-mono text-2xl font-bold text-primary">
@@ -274,7 +276,6 @@ export default async function ConfirmationPage({
           <ModifyBookingCard bookingId={booking.id} />
         </div>
       </div>
-
     </div>
   );
 }
