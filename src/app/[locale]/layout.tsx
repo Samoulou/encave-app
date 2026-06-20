@@ -1,5 +1,10 @@
 import { notFound } from 'next/navigation';
-import { Manrope, JetBrains_Mono, Fraunces } from 'next/font/google';
+import {
+  Nunito,
+  Averia_Serif_Libre,
+  Mukta_Vaani,
+  JetBrains_Mono,
+} from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
@@ -23,18 +28,28 @@ const Analytics = dynamic(
   { ssr: false }
 );
 
-const manrope = Manrope({
+// Title font (big headings) — Nunito (sans). Mapped to `font-display`.
+const nunito = Nunito({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700', '800'],
-  variable: '--font-manrope',
+  variable: '--font-display',
   display: 'swap',
 });
 
-const fraunces = Fraunces({
+// Serif accents / sub-headings — Averia Serif Libre. Mapped to `font-serif`.
+const averia = Averia_Serif_Libre({
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
+  weight: ['400', '700'],
   style: ['normal', 'italic'],
-  variable: '--font-fraunces',
+  variable: '--font-serif',
+  display: 'swap',
+});
+
+// Body / UI — Mukta Vaani. Mapped to `font-sans`.
+const mukta = Mukta_Vaani({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-sans',
   display: 'swap',
 });
 
@@ -72,7 +87,7 @@ export default async function LocaleLayout({ children, params }: Props) {
     <html lang={locale} suppressHydrationWarning>
       <head />
       <body
-        className={`${manrope.variable} ${fraunces.variable} ${jetbrainsMono.variable} font-sans antialiased`}
+        className={`${nunito.variable} ${averia.variable} ${mukta.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
         <NextIntlClientProvider messages={messages}>
           <PostHogProvider>

@@ -1,21 +1,36 @@
-import { Manrope, JetBrains_Mono, Fraunces } from 'next/font/google';
+import {
+  Nunito,
+  Averia_Serif_Libre,
+  Mukta_Vaani,
+  JetBrains_Mono,
+} from 'next/font/google';
 import '../globals.css';
 
-const manrope = Manrope({
+const nunito = Nunito({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700', '800'],
-  variable: '--font-manrope',
+  variable: '--font-display',
   display: 'swap',
 });
 
-const fraunces = Fraunces({
+const averia = Averia_Serif_Libre({
   subsets: ['latin'],
-  variable: '--font-fraunces',
+  weight: ['400', '700'],
+  style: ['normal', 'italic'],
+  variable: '--font-serif',
+  display: 'swap',
+});
+
+const mukta = Mukta_Vaani({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-sans',
   display: 'swap',
 });
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
+  weight: ['500', '600', '700'],
   variable: '--font-mono',
   display: 'swap',
 });
@@ -34,7 +49,7 @@ export default function ComingSoonLayout({
   return (
     <html lang="fr">
       <body
-        className={`${manrope.variable} ${fraunces.variable} ${jetbrainsMono.variable} font-sans antialiased`}
+        className={`${nunito.variable} ${averia.variable} ${mukta.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
         {children}
       </body>
