@@ -20,7 +20,7 @@ import type { ExperienceCardData } from '@/components/features/experience/Experi
 import type { MapWinery } from '@/components/features/map/types';
 
 const categoryLinks = [
-  ['Degustations', 'Experiences oenologiques', 'TASTING', Wine],
+  ['Dégustations', 'Expériences œnologiques', 'TASTING', Wine],
   ['Visites de cave', 'Dans les domaines', 'CELLAR_VISIT', Building2],
   ['Balades', 'Dans les vignes', 'VINEYARD_TOUR', Footprints],
   ['Ateliers', 'Savoir-faire', 'WORKSHOP', FlaskConical],
@@ -103,24 +103,24 @@ export function HomeDesktopEditorial({
   return (
     <div className="bg-cream-50 text-ink-900">
       <section
-        className="relative min-h-[600px] overflow-hidden border-b border-stone-200 bg-ink-900 bg-cover bg-center"
+        className="relative min-h-[600px] overflow-visible border-b border-stone-200 bg-ink-900 bg-cover bg-center"
         style={{ backgroundImage: `url(${HERO_BANNER_IMAGE})` }}
       >
         <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-burgundy-950/55 to-black/25" />
 
-        <div className="relative z-10 flex min-h-[600px] max-w-[760px] flex-col justify-between px-14 py-[72px]">
+        <div className="relative z-30 flex min-h-[600px] max-w-[760px] flex-col justify-between px-14 py-[72px]">
           <div>
             <div className="font-mono text-[11px] uppercase tracking-[0.16em] text-burgundy-700">
-              • Experiences disponibles en Valais
+              • Expériences disponibles en Valais
             </div>
             <h1 className="mt-[18px] max-w-[560px] font-display text-[80px] font-light leading-[0.98] tracking-[-0.025em] text-white">
               Le Valais,
               <br />
               une <em className="font-normal italic text-gold-400">cave</em>
-              <br />a ciel ouvert.
+              <br />à ciel ouvert.
             </h1>
             <p className="mt-[22px] max-w-[480px] text-[17px] leading-[1.55] text-white/85">
-              Degustations privees, visites de cave et ateliers proposes par les
+              Dégustations privées, visites de cave et ateliers proposés par les
               domaines valaisans disponibles sur EnCave.
             </p>
           </div>
@@ -163,17 +163,17 @@ export function HomeDesktopEditorial({
         <div className="mb-5 flex items-end justify-between">
           <div>
             <div className="font-mono text-[11px] uppercase tracking-[0.14em] text-burgundy-700">
-              • Experiences disponibles
+              • Expériences disponibles
             </div>
             <h2 className="mt-2 font-display text-[34px] font-medium tracking-[-0.01em]">
-              Reservez maintenant, partez selon vos disponibilites.
+              Réservez maintenant, partez selon vos disponibilités.
             </h2>
           </div>
           <Link
             href="/experiences"
             className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-burgundy-700"
           >
-            Voir les experiences
+            Voir les expériences
             <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
           </Link>
         </div>
@@ -206,7 +206,7 @@ export function HomeDesktopEditorial({
                     {formatCHF(experience.price)}
                   </span>
                   <span className="text-xs font-bold text-burgundy-700">
-                    Reserver →
+                    Réserver →
                   </span>
                 </div>
               </div>
@@ -273,19 +273,19 @@ export function HomeDesktopEditorial({
         </span>
         <span className="inline-flex items-center gap-2">
           <Lock className="h-3.5 w-3.5" aria-hidden="true" />
-          Paiement securise Stripe
+          Paiement sécurisé Stripe
         </span>
         <span className="inline-flex items-center gap-2">
           <Clock className="h-3.5 w-3.5" aria-hidden="true" />
-          Durees et horaires affiches par experience
+          Durées et horaires affichés par expérience
         </span>
         <span className="inline-flex items-center gap-2">
           <Users className="h-3.5 w-3.5" aria-hidden="true" />
-          Capacites indiquees par les domaines
+          Capacités indiquées par les domaines
         </span>
         <span className="inline-flex items-center gap-2">
           <Wine className="h-3.5 w-3.5" aria-hidden="true" />
-          Experiences viticoles en Valais
+          Expériences viticoles en Valais
         </span>
       </section>
     </div>

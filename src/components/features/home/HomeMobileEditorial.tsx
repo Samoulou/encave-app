@@ -20,7 +20,7 @@ import { formatCHF } from '@/lib/utils/currency';
 import type { ExperienceCardData } from '@/components/features/experience/ExperienceCard';
 
 const categoryLinks = [
-  ['Degustation', 'TASTING', Wine, 'bg-[#f6e9ec]'],
+  ['Dégustation', 'TASTING', Wine, 'bg-[#f6e9ec]'],
   ['Visite cave', 'CELLAR_VISIT', Building2, 'bg-[#efe7da]'],
   ['Balade vigne', 'VINEYARD_TOUR', Footprints, 'bg-[#e7ecdb]'],
   ['Atelier', 'WORKSHOP', FlaskConical, 'bg-[#dde6cf]'],
@@ -147,7 +147,7 @@ export function HomeMobileEditorial({
         <div className="absolute left-[18px] right-[18px] top-1/2 -translate-y-1/2 text-white">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-gold-400/45 bg-gold-400/20 px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.14em] text-gold-400">
             <Sparkles className="h-[11px] w-[11px]" aria-hidden="true" />
-            Valais · experiences verifiees
+            Valais · expériences vérifiées
           </span>
           <h1 className="mt-3 font-display text-[38px] font-normal leading-[1.04] tracking-[-0.015em]">
             Le vin,{' '}
@@ -157,7 +157,7 @@ export function HomeMobileEditorial({
             .
           </h1>
           <p className="mt-1.5 max-w-[280px] text-sm text-white/85">
-            Degustations, ateliers et vendanges reserves directement avec le
+            Dégustations, ateliers et vendanges réservés directement avec le
             vigneron.
           </p>
         </div>
@@ -198,10 +198,10 @@ export function HomeMobileEditorial({
       {featured && (
         <section className="px-3.5 py-6">
           <h2 className="font-display text-xl font-semibold tracking-[-0.01em]">
-            A l&apos;affiche
+            À l&apos;affiche
           </h2>
           <p className="mb-3.5 mt-1 text-[13px] text-ink-500">
-            Une experience disponible sur EnCave.
+            Une expérience disponible sur EnCave.
           </p>
 
           <article className="overflow-hidden rounded-[18px] bg-white shadow-audit-elevated">
@@ -244,7 +244,7 @@ export function HomeMobileEditorial({
                   href={`/experiences/${featured.slug}`}
                   className="inline-flex h-9 items-center rounded-full bg-ink-900 px-3.5 text-[13px] font-semibold text-white"
                 >
-                  Reserver →
+                  Réserver →
                 </Link>
               </div>
             </div>
@@ -255,7 +255,7 @@ export function HomeMobileEditorial({
       {nearby.length > 0 && (
         <section className="pb-6">
           <h2 className="mx-3.5 mb-3 font-display text-xl font-semibold tracking-[-0.01em]">
-            Pres de vous
+            Près de vous
           </h2>
           <div className="flex gap-3 overflow-x-auto px-3.5 pb-1.5">
             {nearby.map((experience) => (
@@ -291,7 +291,7 @@ export function HomeMobileEditorial({
         {[
           [Search, 'Explorer', true],
           [Heart, 'Favoris', false],
-          [Calendar, 'Reservations', false],
+          [Calendar, 'Réservations', false],
           [Users, 'Compte', false],
         ].map(([Icon, label, active]) => {
           const NavIcon = Icon as typeof Search;
@@ -299,7 +299,7 @@ export function HomeMobileEditorial({
           const hrefByLabel: Record<string, string> = {
             Explorer: '/experiences',
             Favoris: '/login?callbackUrl=/dashboard/profile',
-            Reservations: '/dashboard/my-bookings',
+            Réservations: '/dashboard/my-bookings',
             Compte: '/dashboard/profile',
           };
           return (
