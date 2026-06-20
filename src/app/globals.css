@@ -11,8 +11,8 @@
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
   /* shadcn/ui CSS variables for components */
-  /* Background: #fdfcfa */
-  --background: 30 43% 99%;
+  /* Background: warm ivory #fbf7f0 — lets white cards/surfaces lift off the canvas */
+  --background: 36 45% 97%;
   --foreground: 345 26% 8%;
   /* Muted: #faf7f1 */
   --muted: 38 47% 96%;
@@ -195,14 +195,14 @@ body {
 }
 
 /* Mapbox popup overrides — strip default chrome */
-.mapboxgl-popup-content {
+.maplibregl-popup-content {
   padding: 0 !important;
   border-radius: 0.5rem !important;
   box-shadow: 0 4px 20px rgba(122, 27, 59, 0.12) !important;
   overflow: hidden;
 }
 
-.mapboxgl-popup-close-button {
+.maplibregl-popup-close-button {
   font-size: 18px;
   padding: 4px 8px;
   color: #64748b;
@@ -213,12 +213,12 @@ body {
   border-radius: 4px;
 }
 
-.mapboxgl-popup-close-button:hover {
+.maplibregl-popup-close-button:hover {
   color: #1e293b;
   background-color: #f1f5f9;
 }
 
-.mapboxgl-popup-tip {
+.maplibregl-popup-tip {
   border-top-color: #fff !important;
 }
 
