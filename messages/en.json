@@ -478,13 +478,51 @@
       "allSlotsDisabled": "All slots are disabled - visitors cannot book",
       "noSlotsPreview": "No availability configured. Add time slots above to preview your weekly schedule.",
       "active": "Active",
-      "disabled": "Disabled"
+      "disabled": "Disabled",
+      "modes": {
+        "label": "Availability mode",
+        "recurring": "Recurring",
+        "punctual": "One-off"
+      },
+      "punctual": {
+        "description": "Pick specific dates and their start times — ideal for events and slots outside your weekly schedule.",
+        "selectDates": "Pick the dates",
+        "selectTimes": "Pick the times",
+        "noPicks": "Select at least one date and one time to build your slots.",
+        "picksTitle": "{count, plural, =1 {1 slot to create} other {# slots to create}}",
+        "removePick": "Remove {pick}",
+        "tooMany": "Maximum {max} slots at a time — remove a few.",
+        "submit": "Add these slots",
+        "submitting": "Adding...",
+        "added": "{count, plural, =0 {No new slots — they already existed} =1 {1 slot added} other {# slots added}}",
+        "availableAfterCreation": "One-off slots (specific dates) are configured after creation, from the experience edit page.",
+        "errors": {
+          "notFound": "Experience not found.",
+          "validation": "Invalid slots — check the dates and times.",
+          "generic": "Could not add the slots. Try again in a moment."
+        }
+      },
+      "preview": {
+        "title": "Upcoming slots",
+        "subtitle": "Preview of the next 8 occurrences visible to your clients",
+        "manageLink": "Manage the calendar",
+        "empty": "No upcoming slots — configure the availability above to generate some.",
+        "capacity": "{count, plural, =1 {1 seat} other {# seats}}",
+        "punctualBadge": "One-off",
+        "blockedBadge": "Blocked date",
+        "status": {
+          "open": "Open",
+          "closed": "Closed",
+          "cancelled": "Cancelled"
+        }
+      }
     },
     "ageGate": {
       "badge": "18+ only"
     },
     "freeCancellationUntilHours": "Free cancellation until {hours}h before.",
-    "freeCancellationUntilDays": "Free cancellation until {days, plural, =1 {# day} other {# days}} before."
+    "freeCancellationUntilDays": "Free cancellation until {days, plural, =1 {# day} other {# days}} before.",
+    "nextAvailability": "Next availability: {date} · {time}"
   },
   "booking": {
     "selectDate": "Select a date",
@@ -1204,9 +1242,31 @@
       "relevance": "Relevance",
       "priceLowToHigh": "Price: Low to High",
       "priceHighToLow": "Price: High to Low",
-      "newestFirst": "Newest First"
+      "newestFirst": "Newest First",
+      "nextAvailability": "Next availability"
     },
-    "loadingExperiences": "Loading wine experiences..."
+    "loadingExperiences": "Loading wine experiences...",
+    "date": "Date",
+    "anyDate": "Any date",
+    "dateRange": "From {from} to {to}",
+    "clearDate": "Clear date",
+    "shortcuts": {
+      "thisWeekend": "This weekend",
+      "tastings": "Tastings",
+      "withMeal": "With a meal"
+    },
+    "homePanel": {
+      "where": "Where",
+      "when": "When",
+      "guests": "For",
+      "allValais": "All of Valais",
+      "anyDate": "Any date",
+      "clearDate": "Clear date",
+      "personCount": "{count, plural, =1 {1 person} other {# people}}",
+      "addPerson": "Add a person",
+      "removePerson": "Remove a person",
+      "explore": "Explore"
+    }
   },
   "errors": {
     "somethingWentWrong": "Something went wrong!",
@@ -1927,6 +1987,58 @@
         "revertNoShowDescription": "The status will go back to Confirmed. The action is logged.",
         "confirmCta": "Confirm",
         "cancelCta": "Back"
+      },
+      "occurrences": {
+        "subtitle": "Slot calendar · default capacity: {count, plural, =1 {1 seat} other {# seats}}",
+        "editAvailability": "Edit availability",
+        "loading": "Loading the slot calendar",
+        "previousMonth": "Previous month",
+        "nextMonth": "Next month",
+        "blockedDay": "Blocked date",
+        "empty": {
+          "title": "No slots this month",
+          "description": "Slots generated from your availability will appear here.",
+          "cta": "Configure availability"
+        },
+        "legend": {
+          "open": "Open",
+          "full": "Full",
+          "closed": "Closed",
+          "blocked": "Blocked date"
+        },
+        "status": {
+          "open": "Open",
+          "closed": "Closed",
+          "cancelled": "Cancelled"
+        },
+        "sheet": {
+          "gauge": "{booked} / {capacity} seats",
+          "overrideActive": "Capacity adjusted for this slot ({count} instead of the experience setting).",
+          "legacyNote": "Session from older bookings — per-slot management is not available here.",
+          "cancelledNote": "This slot is cancelled — it can no longer be changed.",
+          "close": "Close this slot",
+          "reopen": "Reopen this slot",
+          "capacityLabel": "Adjust capacity",
+          "capacityPlaceholder": "Seats",
+          "apply": "Apply",
+          "reset": "Reset",
+          "capacityHint": "Between 1 and 50 seats. Reset returns to the experience capacity.",
+          "capacityInvalid": "Enter a number between {min} and {max}.",
+          "attendees": "{count, plural, =0 {Attendees} =1 {1 attendee} other {# attendees}}",
+          "noAttendees": "No attendees for this slot yet."
+        },
+        "toasts": {
+          "closed": "Slot closed — it can no longer be booked.",
+          "reopened": "Slot reopened.",
+          "capacityUpdated": "Capacity adjusted to {count, plural, =1 {1 seat} other {# seats}}.",
+          "capacityReset": "Capacity reset to the experience setting."
+        },
+        "errors": {
+          "notFound": "Slot not found.",
+          "conflict": "This action is not possible on a cancelled slot.",
+          "validation": "Invalid value.",
+          "generic": "Something went wrong. Try again in a moment."
+        }
       }
     },
     "visibility": {

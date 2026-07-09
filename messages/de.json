@@ -478,13 +478,51 @@
       "allSlotsDisabled": "Alle Zeitfenster sind deaktiviert - Besucher können nicht buchen",
       "noSlotsPreview": "Keine Verfügbarkeit konfiguriert. Fügen Sie oben Zeitfenster hinzu, um Ihren Wochenplan anzuzeigen.",
       "active": "Aktiv",
-      "disabled": "Deaktiviert"
+      "disabled": "Deaktiviert",
+      "modes": {
+        "label": "Verfügbarkeitsmodus",
+        "recurring": "Wiederkehrend",
+        "punctual": "Einmalig"
+      },
+      "punctual": {
+        "description": "Wählen Sie konkrete Daten und deren Startzeiten — ideal für Veranstaltungen und Termine ausserhalb Ihres Wochenplans.",
+        "selectDates": "Daten wählen",
+        "selectTimes": "Uhrzeiten wählen",
+        "noPicks": "Wählen Sie mindestens ein Datum und eine Uhrzeit, um Termine zu erstellen.",
+        "picksTitle": "{count, plural, =1 {1 Termin zu erstellen} other {# Termine zu erstellen}}",
+        "removePick": "{pick} entfernen",
+        "tooMany": "Maximal {max} Termine auf einmal — entfernen Sie einige.",
+        "submit": "Diese Termine hinzufügen",
+        "submitting": "Wird hinzugefügt...",
+        "added": "{count, plural, =0 {Keine neuen Termine — sie existierten bereits} =1 {1 Termin hinzugefügt} other {# Termine hinzugefügt}}",
+        "availableAfterCreation": "Einmalige Termine (konkrete Daten) werden nach der Erstellung auf der Bearbeitungsseite des Erlebnisses konfiguriert.",
+        "errors": {
+          "notFound": "Erlebnis nicht gefunden.",
+          "validation": "Ungültige Termine — prüfen Sie Daten und Uhrzeiten.",
+          "generic": "Termine konnten nicht hinzugefügt werden. Versuchen Sie es gleich noch einmal."
+        }
+      },
+      "preview": {
+        "title": "Nächste Termine",
+        "subtitle": "Vorschau der nächsten 8 Termine, die Ihre Kundschaft sieht",
+        "manageLink": "Kalender verwalten",
+        "empty": "Keine bevorstehenden Termine — konfigurieren Sie oben die Verfügbarkeit, um welche zu erzeugen.",
+        "capacity": "{count, plural, =1 {1 Platz} other {# Plätze}}",
+        "punctualBadge": "Einmalig",
+        "blockedBadge": "Gesperrtes Datum",
+        "status": {
+          "open": "Offen",
+          "closed": "Geschlossen",
+          "cancelled": "Abgesagt"
+        }
+      }
     },
     "ageGate": {
       "badge": "Nur 18+"
     },
     "freeCancellationUntilHours": "Kostenlose Stornierung bis {hours} Std. vorher.",
-    "freeCancellationUntilDays": "Kostenlose Stornierung bis {days, plural, =1 {# Tag} other {# Tage}} vorher."
+    "freeCancellationUntilDays": "Kostenlose Stornierung bis {days, plural, =1 {# Tag} other {# Tage}} vorher.",
+    "nextAvailability": "Nächster Termin: {date} · {time}"
   },
   "booking": {
     "selectDate": "Datum auswahlen",
@@ -1204,9 +1242,31 @@
       "relevance": "Relevanz",
       "priceLowToHigh": "Preis: aufsteigend",
       "priceHighToLow": "Preis: absteigend",
-      "newestFirst": "Neueste zuerst"
+      "newestFirst": "Neueste zuerst",
+      "nextAvailability": "Nächste Verfügbarkeit"
     },
-    "loadingExperiences": "Weinerlebnisse werden geladen..."
+    "loadingExperiences": "Weinerlebnisse werden geladen...",
+    "date": "Datum",
+    "anyDate": "Beliebiges Datum",
+    "dateRange": "Vom {from} bis {to}",
+    "clearDate": "Datum löschen",
+    "shortcuts": {
+      "thisWeekend": "Dieses Wochenende",
+      "tastings": "Degustationen",
+      "withMeal": "Mit Essen"
+    },
+    "homePanel": {
+      "where": "Wo",
+      "when": "Wann",
+      "guests": "Für",
+      "allValais": "Ganzes Wallis",
+      "anyDate": "Beliebiges Datum",
+      "clearDate": "Datum löschen",
+      "personCount": "{count, plural, =1 {1 Person} other {# Personen}}",
+      "addPerson": "Person hinzufügen",
+      "removePerson": "Person entfernen",
+      "explore": "Entdecken"
+    }
   },
   "errors": {
     "somethingWentWrong": "Etwas ist schiefgelaufen!",
@@ -1932,6 +1992,58 @@
         "revertNoShowDescription": "Der Status wird wieder auf Bestätigt gesetzt. Die Aktion wird protokolliert.",
         "confirmCta": "Bestätigen",
         "cancelCta": "Zurück"
+      },
+      "occurrences": {
+        "subtitle": "Terminkalender · Standardkapazität: {count, plural, =1 {1 Platz} other {# Plätze}}",
+        "editAvailability": "Verfügbarkeit bearbeiten",
+        "loading": "Terminkalender wird geladen",
+        "previousMonth": "Vorheriger Monat",
+        "nextMonth": "Nächster Monat",
+        "blockedDay": "Gesperrtes Datum",
+        "empty": {
+          "title": "Keine Termine in diesem Monat",
+          "description": "Aus Ihrer Verfügbarkeit erzeugte Termine erscheinen hier.",
+          "cta": "Verfügbarkeit konfigurieren"
+        },
+        "legend": {
+          "open": "Offen",
+          "full": "Ausgebucht",
+          "closed": "Geschlossen",
+          "blocked": "Gesperrtes Datum"
+        },
+        "status": {
+          "open": "Offen",
+          "closed": "Geschlossen",
+          "cancelled": "Abgesagt"
+        },
+        "sheet": {
+          "gauge": "{booked} / {capacity} Plätze",
+          "overrideActive": "Kapazität für diesen Termin angepasst ({count} statt der Erlebnis-Einstellung).",
+          "legacyNote": "Session aus älteren Buchungen — die Verwaltung pro Termin ist hier nicht verfügbar.",
+          "cancelledNote": "Dieser Termin ist abgesagt — er kann nicht mehr geändert werden.",
+          "close": "Termin schliessen",
+          "reopen": "Termin wieder öffnen",
+          "capacityLabel": "Kapazität anpassen",
+          "capacityPlaceholder": "Plätze",
+          "apply": "Übernehmen",
+          "reset": "Zurücksetzen",
+          "capacityHint": "Zwischen 1 und 50 Plätzen. Zurücksetzen kehrt zur Kapazität des Erlebnisses zurück.",
+          "capacityInvalid": "Geben Sie eine Zahl zwischen {min} und {max} ein.",
+          "attendees": "{count, plural, =0 {Angemeldete} =1 {1 angemeldete Person} other {# angemeldete Personen}}",
+          "noAttendees": "Noch keine Anmeldungen für diesen Termin."
+        },
+        "toasts": {
+          "closed": "Termin geschlossen — er ist nicht mehr buchbar.",
+          "reopened": "Termin wieder geöffnet.",
+          "capacityUpdated": "Kapazität angepasst auf {count, plural, =1 {1 Platz} other {# Plätze}}.",
+          "capacityReset": "Kapazität auf die Erlebnis-Einstellung zurückgesetzt."
+        },
+        "errors": {
+          "notFound": "Termin nicht gefunden.",
+          "conflict": "Diese Aktion ist bei einem abgesagten Termin nicht möglich.",
+          "validation": "Ungültiger Wert.",
+          "generic": "Etwas ist schiefgelaufen. Versuchen Sie es gleich noch einmal."
+        }
       }
     },
     "visibility": {

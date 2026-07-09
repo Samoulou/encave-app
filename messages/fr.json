@@ -478,13 +478,51 @@
       "allSlotsDisabled": "Tous les créneaux sont désactivés - les visiteurs ne peuvent pas réserver",
       "noSlotsPreview": "Aucune disponibilité configurée. Ajoutez des créneaux horaires ci-dessus pour prévisualiser votre planning hebdomadaire.",
       "active": "Actif",
-      "disabled": "Désactivé"
+      "disabled": "Désactivé",
+      "modes": {
+        "label": "Mode de disponibilité",
+        "recurring": "Récurrent",
+        "punctual": "Ponctuel"
+      },
+      "punctual": {
+        "description": "Choisissez des dates précises et leurs heures de début — idéal pour les événements et les créneaux hors horaire hebdomadaire.",
+        "selectDates": "Choisissez les dates",
+        "selectTimes": "Choisissez les heures",
+        "noPicks": "Sélectionnez au moins une date et une heure pour composer vos créneaux.",
+        "picksTitle": "{count, plural, =1 {1 créneau à créer} other {# créneaux à créer}}",
+        "removePick": "Retirer {pick}",
+        "tooMany": "Maximum {max} créneaux à la fois — retirez-en quelques-uns.",
+        "submit": "Ajouter ces créneaux",
+        "submitting": "Ajout en cours...",
+        "added": "{count, plural, =0 {Aucun nouveau créneau — ils existaient déjà} =1 {1 créneau ajouté} other {# créneaux ajoutés}}",
+        "availableAfterCreation": "Les créneaux ponctuels (dates précises) se configurent après la création, depuis la page de modification de l'expérience.",
+        "errors": {
+          "notFound": "Expérience introuvable.",
+          "validation": "Créneaux invalides — vérifiez les dates et les heures.",
+          "generic": "Impossible d'ajouter les créneaux. Réessayez dans un instant."
+        }
+      },
+      "preview": {
+        "title": "Prochains créneaux",
+        "subtitle": "Aperçu des 8 prochaines occurrences visibles par vos clients",
+        "manageLink": "Gérer le calendrier",
+        "empty": "Aucun créneau à venir — configurez la disponibilité ci-dessus pour en générer.",
+        "capacity": "{count, plural, =1 {1 place} other {# places}}",
+        "punctualBadge": "Ponctuel",
+        "blockedBadge": "Date bloquée",
+        "status": {
+          "open": "Ouvert",
+          "closed": "Fermé",
+          "cancelled": "Annulé"
+        }
+      }
     },
     "ageGate": {
       "badge": "Reserve aux 18+"
     },
     "freeCancellationUntilHours": "Annulation gratuite jusqu'à {hours} h avant.",
-    "freeCancellationUntilDays": "Annulation gratuite jusqu'à {days, plural, =1 {# jour} other {# jours}} avant."
+    "freeCancellationUntilDays": "Annulation gratuite jusqu'à {days, plural, =1 {# jour} other {# jours}} avant.",
+    "nextAvailability": "Prochaine dispo : {date} · {time}"
   },
   "booking": {
     "selectDate": "Choisissez une date",
@@ -1204,9 +1242,31 @@
       "relevance": "Pertinence",
       "priceLowToHigh": "Prix : croissant",
       "priceHighToLow": "Prix : décroissant",
-      "newestFirst": "Plus récents"
+      "newestFirst": "Plus récents",
+      "nextAvailability": "Prochaine disponibilité"
     },
-    "loadingExperiences": "Chargement des expériences viticoles..."
+    "loadingExperiences": "Chargement des expériences viticoles...",
+    "date": "Date",
+    "anyDate": "N'importe quand",
+    "dateRange": "Du {from} au {to}",
+    "clearDate": "Effacer la date",
+    "shortcuts": {
+      "thisWeekend": "Ce week-end",
+      "tastings": "Dégustations",
+      "withMeal": "Avec repas"
+    },
+    "homePanel": {
+      "where": "Où",
+      "when": "Quand",
+      "guests": "Pour",
+      "allValais": "Tout le Valais",
+      "anyDate": "N'importe quand",
+      "clearDate": "Effacer la date",
+      "personCount": "{count, plural, =1 {1 personne} other {# personnes}}",
+      "addPerson": "Ajouter une personne",
+      "removePerson": "Retirer une personne",
+      "explore": "Explorer"
+    }
   },
   "errors": {
     "somethingWentWrong": "Une erreur s'est produite!",
@@ -1927,6 +1987,58 @@
         "revertNoShowDescription": "Le statut repassera à Confirmée. L'action est tracée.",
         "confirmCta": "Confirmer",
         "cancelCta": "Retour"
+      },
+      "occurrences": {
+        "subtitle": "Calendrier des créneaux · capacité par défaut : {count, plural, =1 {1 place} other {# places}}",
+        "editAvailability": "Modifier les disponibilités",
+        "loading": "Chargement du calendrier des créneaux",
+        "previousMonth": "Mois précédent",
+        "nextMonth": "Mois suivant",
+        "blockedDay": "Date bloquée",
+        "empty": {
+          "title": "Aucun créneau ce mois-ci",
+          "description": "Les créneaux générés par vos disponibilités apparaîtront ici.",
+          "cta": "Configurer les disponibilités"
+        },
+        "legend": {
+          "open": "Ouvert",
+          "full": "Complet",
+          "closed": "Fermé",
+          "blocked": "Date bloquée"
+        },
+        "status": {
+          "open": "Ouvert",
+          "closed": "Fermé",
+          "cancelled": "Annulé"
+        },
+        "sheet": {
+          "gauge": "{booked} / {capacity} places",
+          "overrideActive": "Capacité ajustée pour ce créneau ({count} au lieu du réglage de l'expérience).",
+          "legacyNote": "Session issue d'anciennes réservations — la gestion à l'occurrence n'est pas disponible pour ce créneau.",
+          "cancelledNote": "Ce créneau est annulé — il ne peut plus être modifié.",
+          "close": "Fermer le créneau",
+          "reopen": "Rouvrir le créneau",
+          "capacityLabel": "Ajuster la capacité",
+          "capacityPlaceholder": "Places",
+          "apply": "Appliquer",
+          "reset": "Réinitialiser",
+          "capacityHint": "Entre 1 et 50 places. Réinitialiser revient à la capacité de l'expérience.",
+          "capacityInvalid": "Saisissez un nombre entre {min} et {max}.",
+          "attendees": "{count, plural, =0 {Inscrits} =1 {1 inscrit} other {# inscrits}}",
+          "noAttendees": "Aucun inscrit pour ce créneau pour le moment."
+        },
+        "toasts": {
+          "closed": "Créneau fermé — il n'est plus réservable.",
+          "reopened": "Créneau rouvert.",
+          "capacityUpdated": "Capacité ajustée à {count, plural, =1 {1 place} other {# places}}.",
+          "capacityReset": "Capacité réinitialisée sur celle de l'expérience."
+        },
+        "errors": {
+          "notFound": "Créneau introuvable.",
+          "conflict": "Action impossible sur un créneau annulé.",
+          "validation": "Valeur invalide.",
+          "generic": "Une erreur est survenue. Réessayez dans un instant."
+        }
       }
     },
     "visibility": {
