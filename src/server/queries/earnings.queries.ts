@@ -407,6 +407,25 @@ export const getYearToDateSummary = cache(async function getYearToDateSummary(
 });
 
 /**
+ * GMV brought to the winery by EnCave (P-03 / L-044): totalPrice sum of
+ * CONFIRMED + COMPLETED bookings, service fee excluded (platform revenue).
+ * Wrapped with React.cache for request-level deduplication.
+ */
+export const getWineryGmv = cache(async function getWineryGmv(
+  wineryId: string
+): Promise<number> {
+  const aggregate = await db.booking.aggregate({
+    where: {
+      wineryId,
+      status: { in: [BookingStatus.CONFIRMED, BookingStatus.COMPLETED] },
+    },
+    _sum: { totalPrice: true },
+  });
+
+  return aggregate._sum.totalPrice ?? 0;
+});
+
+/**
  * Get experiences for filter dropdown.
  * Wrapped with React.cache for request-level deduplication.
  */

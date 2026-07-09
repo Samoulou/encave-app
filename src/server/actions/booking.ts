@@ -7,6 +7,7 @@ import { db } from '@/server/db';
 import { auth } from '@/server/auth';
 import type { ActionResult } from '@/types/actions';
 import { BookingStatus, UserRole } from '@prisma/client';
+import type { CancellationPolicy } from '@prisma/client';
 import {
   sendBookingConfirmationEmail,
   sendBookingCancellationEmail,
@@ -190,6 +191,7 @@ export interface ExperienceForBooking {
     name: string;
     commune: string | null;
     stripeOnboardingComplete: boolean;
+    cancellationPolicy: CancellationPolicy;
   };
   availabilitySlots: {
     dayOfWeek: number;
@@ -215,6 +217,7 @@ export async function getExperienceForBooking(
             name: true,
             commune: true,
             stripeOnboardingComplete: true,
+            cancellationPolicy: true,
           },
         },
         availabilitySlots: {

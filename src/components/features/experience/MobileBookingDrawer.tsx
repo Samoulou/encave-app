@@ -37,6 +37,8 @@ interface MobileBookingDrawerProps {
   isOpen: boolean;
   onOpenChange: (_open: boolean) => void;
   price: number;
+  /** Client booking fee per ticket in cents — 0 when BOOKING_FEE is OFF. */
+  serviceFeeCentsPerGuest?: number;
   experienceSlug: string;
   experienceId: string;
   minCapacity: number;
@@ -51,6 +53,7 @@ export function MobileBookingDrawer({
   isOpen,
   onOpenChange,
   price,
+  serviceFeeCentsPerGuest = 0,
   experienceSlug,
   experienceId,
   minCapacity,
@@ -59,6 +62,7 @@ export function MobileBookingDrawer({
   availabilitySlots,
 }: MobileBookingDrawerProps) {
   const t = useTranslations('booking');
+  const tCheckout = useTranslations('checkout');
   const router = useRouter();
   const locale = useLocale();
 
@@ -90,7 +94,8 @@ export function MobileBookingDrawer({
     guests <= maxCapacity &&
     (remainingCapacity === null || guests <= remainingCapacity);
 
-  const totalPrice = price * guests;
+  const serviceFee = serviceFeeCentsPerGuest * guests;
+  const totalPrice = price * guests + serviceFee;
 
   const handleDateChange = useCallback((newDate: string | null) => {
     setDate(newDate);
@@ -276,9 +281,25 @@ export function MobileBookingDrawer({
               {isValid && (
                 <>
                   <hr className="border-dashed border-stone-200" />
+                  {serviceFee > 0 && (
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <span>
+                        {guests} × {formatCHF(price)}
+                      </span>
+                      <span>{formatCHF(price * guests)}</span>
+                    </div>
+                  )}
+                  {serviceFee > 0 && (
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <span>{tCheckout('serviceFee')}</span>
+                      <span>{formatCHF(serviceFee)}</span>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">
-                      {guests} × {formatCHF(price)}
+                      {serviceFee > 0
+                        ? tCheckout('totalCHF')
+                        : `${guests} × ${formatCHF(price)}`}
                     </span>
                     <span className="text-xl font-bold text-foreground">
                       {formatCHF(totalPrice)}

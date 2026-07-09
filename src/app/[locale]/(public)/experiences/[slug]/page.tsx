@@ -3,9 +3,12 @@ import type { ReactNode } from 'react';
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { getExperienceBySlug } from '@/server/queries/experience.queries';
+import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
+import { BOOKING_FEE_CENTS } from '@/lib/constants/pricing';
 import { ExperienceDetailGallery } from '@/components/features/experience/ExperienceDetailGallery';
 import { LocationSection } from '@/components/features/experience/LocationSection';
 import { BookingWidget } from '@/components/features/experience/BookingWidget';
+import { CancellationPolicyInfo } from '@/components/features/experience/CancellationPolicyInfo';
 import { MobileBookingBar } from '@/components/features/experience/MobileBookingBar';
 import { ExperienceDetailActions } from '@/components/features/experience/ExperienceDetailActions';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
@@ -53,6 +56,10 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
   if (!experience) {
     notFound();
   }
+
+  // Client booking fee (P-03 / L-041) — flag OFF keeps today's display.
+  const bookingFeeEnabled = await isFlagEnabled('BOOKING_FEE');
+  const serviceFeeCentsPerGuest = bookingFeeEnabled ? BOOKING_FEE_CENTS : 0;
 
   const baseUrl = getBaseUrl();
   const nextAvailableDate = getNextAvailableDate(
@@ -288,6 +295,10 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
                     </div>
                   ))}
                 </div>
+                <CancellationPolicyInfo
+                  policy={experience.winery.cancellationPolicy}
+                  className="mt-5 rounded-[14px] border border-stone-200 bg-white p-4 shadow-audit-card"
+                />
               </section>
 
               <div className="mt-10">
@@ -322,6 +333,8 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
                 maxCapacity={experience.maxCapacity}
                 duration={experience.duration}
                 availabilitySlots={experience.availabilitySlots}
+                serviceFeeCentsPerGuest={serviceFeeCentsPerGuest}
+                cancellationPolicy={experience.winery.cancellationPolicy}
               />
             </div>
           </div>
@@ -329,6 +342,7 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
 
         <MobileBookingBar
           price={experience.price}
+          serviceFeeCentsPerGuest={serviceFeeCentsPerGuest}
           experienceSlug={experience.slug}
           experienceId={experience.id}
           stripeConnected={experience.winery.stripeOnboardingComplete}

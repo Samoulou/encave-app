@@ -5,7 +5,9 @@ import { useTranslations, useLocale } from 'next-intl';
 import { format, parseISO } from 'date-fns';
 import { fr, de, enUS } from 'date-fns/locale';
 import Image from 'next/image';
+import type { CancellationPolicy } from '@prisma/client';
 import { formatCHF } from '@/lib/utils/currency';
+import { CancellationPolicyInfo } from '@/components/features/experience/CancellationPolicyInfo';
 
 const localeMap = { fr, de, en: enUS } as const;
 
@@ -19,6 +21,8 @@ interface OrderSummaryProps {
   guestCount: number;
   pricePerPerson: number;
   serviceFee?: number;
+  /** Winery cancellation policy — falls back to the legacy note if absent. */
+  cancellationPolicy?: CancellationPolicy;
 }
 
 function formatTimeRange(time: string, durationHours?: number): string {
@@ -44,6 +48,7 @@ export function OrderSummary({
   guestCount,
   pricePerPerson,
   serviceFee = 0,
+  cancellationPolicy,
 }: OrderSummaryProps) {
   const t = useTranslations('checkout');
   const tBooking = useTranslations('booking');
@@ -176,12 +181,19 @@ export function OrderSummary({
               className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#915564]"
               aria-hidden="true"
             />
-            <p className="text-xs leading-relaxed text-[#915564]">
-              <span className="font-bold text-foreground">
-                {t('freeCancellation')}
-              </span>{' '}
-              {t('cancellationPolicy')}
-            </p>
+            {cancellationPolicy ? (
+              <CancellationPolicyInfo
+                policy={cancellationPolicy}
+                className="text-xs leading-relaxed"
+              />
+            ) : (
+              <p className="text-xs leading-relaxed text-[#915564]">
+                <span className="font-bold text-foreground">
+                  {t('freeCancellation')}
+                </span>{' '}
+                {t('cancellationPolicy')}
+              </p>
+            )}
           </div>
         </div>
       </div>

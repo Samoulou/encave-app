@@ -1,7 +1,12 @@
 'use server';
 
 import { z } from 'zod';
-import { BookingStatus, UserRole, WineryStatus } from '@prisma/client';
+import {
+  BookingStatus,
+  UserRole,
+  WineryPlan,
+  WineryStatus,
+} from '@prisma/client';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import {
@@ -12,7 +17,7 @@ import {
 } from '@/server/services/email.service';
 import { getStripe } from '@/server/stripe';
 import type { ActionResult } from '@/types/actions';
-import { logError, logWarn } from '@/lib/logger';
+import { logError, logInfo, logWarn } from '@/lib/logger';
 import { invalidateWineryCaches } from './winery-helpers';
 
 const ApproveWinerySchema = z.object({
@@ -33,6 +38,13 @@ const ManualRefundSchema = z.object({
 const SuspensionSchema = z.object({
   targetId: z.string().cuid(),
   reason: z.string().trim().min(10).max(500),
+});
+
+const SetWineryPlanSchema = z.object({
+  wineryId: z.string().min(1, 'Winery ID is required'),
+  plan: z.nativeEnum(WineryPlan),
+  // UI percentage (0–100); null = platform default (PLATFORM_COMMISSION_RATE)
+  commissionRatePercent: z.number().min(0).max(100).nullable(),
 });
 
 async function requireAdmin(): Promise<
@@ -464,6 +476,96 @@ export async function refundBookingManually(
     return {
       success: false,
       error: { code: 'STRIPE_ERROR', message: 'Stripe refund failed' },
+    };
+  }
+}
+
+/**
+ * Set a winery's pricing plan and per-winery commission rate (P-03 / L-042).
+ * The rate arrives as a UI percentage (0–100) and is stored as a fraction
+ * (0–1); null falls back to the platform default (PLATFORM_COMMISSION_RATE),
+ * resolved by `getEffectiveCommissionRate` at checkout time.
+ */
+export async function setWineryPlan(
+  wineryId: string,
+  plan: WineryPlan,
+  commissionRatePercent: number | null
+): Promise<ActionResult<{ plan: WineryPlan; commissionRate: number | null }>> {
+  try {
+    const admin = await requireAdmin();
+    if (!admin.success) return admin;
+
+    const validated = SetWineryPlanSchema.safeParse({
+      wineryId,
+      plan,
+      commissionRatePercent,
+    });
+    if (!validated.success) {
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Invalid plan or commission rate',
+        },
+      };
+    }
+
+    const winery = await db.winery.findUnique({
+      where: { id: validated.data.wineryId },
+      select: { id: true, slug: true },
+    });
+    if (!winery) {
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Winery not found' },
+      };
+    }
+
+    const commissionRate =
+      validated.data.commissionRatePercent === null
+        ? null
+        : validated.data.commissionRatePercent / 100;
+
+    const [updated] = await db.$transaction([
+      db.winery.update({
+        where: { id: winery.id },
+        data: { plan: validated.data.plan, commissionRate },
+      }),
+      // Same audit trail as suspensions/refunds (money-touching change).
+      db.adminAction.create({
+        data: {
+          adminId: admin.data.adminId,
+          action: 'WINERY_PLAN_UPDATED',
+          targetType: 'Winery',
+          targetId: winery.id,
+          metadata: { plan: validated.data.plan, commissionRate },
+        },
+      }),
+    ]);
+
+    // Money-touching admin change: always logged (P-03 audit trail).
+    logInfo('winery-plan.updated', {
+      action: 'setWineryPlan',
+      wineryId: winery.id,
+      plan: updated.plan,
+      commissionRate: updated.commissionRate,
+      adminId: admin.data.adminId,
+    });
+
+    invalidateWineryCaches(winery.slug);
+
+    return {
+      success: true,
+      data: { plan: updated.plan, commissionRate: updated.commissionRate },
+    };
+  } catch (error) {
+    logError('setWineryPlan error', error, {
+      action: 'setWineryPlan',
+      wineryId,
+    });
+    return {
+      success: false,
+      error: { code: 'INTERNAL_ERROR', message: 'Something went wrong' },
     };
   }
 }

@@ -236,6 +236,17 @@
     "pricePerPersonLabel": "Preis pro Person",
     "available": "VERFÜGBAR",
     "freeCancellation": "Kostenlose Stornierung bis 24h vorher.",
+    "cancellationPolicy": {
+      "title": "Stornierungsbedingungen:",
+      "labels": {
+        "FLEXIBLE": "Flexibel",
+        "STANDARD": "Standard",
+        "STRICT": "Streng"
+      },
+      "tierHours": "{percent} % Erstattung bis {hours} Std. vor dem Erlebnis",
+      "tierDays": "{percent} % Erstattung bis {days, plural, =1 {# Tag} other {# Tage}} vor dem Erlebnis",
+      "noRefundAfter": "Danach keine Erstattung."
+    },
     "inclusions": {
       "TASTING": {
         "guidedTasting": "Geführte Weinverkostung",
@@ -471,6 +482,11 @@
     },
     "ageGate": {
       "badge": "Nur 18+"
+    },
+    "freeCancellationPolicy": {
+      "FLEXIBLE": "Kostenlose Stornierung bis 2 Std. vorher.",
+      "STANDARD": "Kostenlose Stornierung bis 24 Std. vorher.",
+      "STRICT": "Kostenlose Stornierung bis 7 Tage vorher."
     }
   },
   "booking": {
@@ -677,6 +693,7 @@
     "paymentPendingDescription": "Ihre Zahlung wird verarbeitet. Bitte warten Sie...",
     "bookingStatus": "Buchungsstatus",
     "bookingReference": "Buchungsreferenz",
+    "serviceFee": "Servicegebühr",
     "totalPaid": "Gesamtbetrag bezahlt",
     "wineryDetails": "Weingut-Details",
     "yourDetails": "Ihre Daten",
@@ -935,6 +952,10 @@
   },
   "earnings": {
     "title": "Einnahmen",
+    "gmv": {
+      "title": "EnCave hat Ihnen eingebracht",
+      "description": "Gesamtwert der über EnCave bestätigten und durchgeführten Buchungen."
+    },
     "period": {
       "selectPeriod": "Zeitraum wählen",
       "thisMonth": "Dieser Monat",
@@ -1043,6 +1064,44 @@
   "admin": {
     "title": "Admin-Dashboard",
     "subtitle": "Weingut-Verifizierungen und Plattformeinstellungen verwalten",
+    "featureFlags": {
+      "title": "Feature Flags",
+      "description": "Schalter für Geldfunktionen — sofort wirksam, ohne Deployment.",
+      "enabledToast": "{flag}: aktiviert",
+      "disabledToast": "{flag}: deaktiviert",
+      "flags": {
+        "BOOKING_FEE": "Servicegebühr (2.50 CHF/Ticket)",
+        "GIFT_CARDS": "Geschenkgutscheine",
+        "NO_SHOW_FEES": "No-Show-Gebühren",
+        "REQUESTS": "Massgeschneiderte Anfragen",
+        "TASTING_SHEET": "Degustationsblatt",
+        "COLLECTIVE_EVENTS": "Kollektive Events"
+      }
+    },
+    "monetization": {
+      "title": "Plan und Kommission",
+      "description": "Preisplan und Kommissionssatz für dieses Weingut.",
+      "planLabel": "Plan",
+      "plans": {
+        "STANDARD": "Standard",
+        "FOUNDER": "Gründer"
+      },
+      "commissionLabel": "Kommission (%)",
+      "commissionPlaceholder": "Plattform-Standardsatz",
+      "commissionHelp": "Leer lassen, um den Plattform-Standardsatz anzuwenden.",
+      "save": "Speichern",
+      "saving": "Wird gespeichert…",
+      "saved": "Plan und Kommission aktualisiert.",
+      "invalidRate": "Der Satz muss zwischen 0 und 100 liegen."
+    },
+    "businessKpis": {
+      "title": "Business-KPIs",
+      "gmv": "Gesamt-GMV",
+      "ticketsThisMonth": "Tickets diesen Monat",
+      "takeRate": "Blended Take Rate",
+      "giftCardRevenue": "Umsatz Geschenkgutscheine",
+      "giftCardLiability": "Verbindlichkeit Geschenkgutscheine"
+    },
     "pendingReview": "Ausstehende Überprüfung",
     "verified": "Verifiziert",
     "rejected": "Abgelehnt",

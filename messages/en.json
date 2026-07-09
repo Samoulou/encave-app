@@ -236,6 +236,17 @@
     "pricePerPersonLabel": "Price per person",
     "available": "AVAILABLE",
     "freeCancellation": "Free cancellation up to 24h before.",
+    "cancellationPolicy": {
+      "title": "Cancellation policy:",
+      "labels": {
+        "FLEXIBLE": "Flexible",
+        "STANDARD": "Standard",
+        "STRICT": "Strict"
+      },
+      "tierHours": "{percent}% refund up to {hours}h before the experience",
+      "tierDays": "{percent}% refund up to {days, plural, =1 {# day} other {# days}} before the experience",
+      "noRefundAfter": "No refund after that."
+    },
     "inclusions": {
       "TASTING": {
         "guidedTasting": "Guided wine tasting",
@@ -471,6 +482,11 @@
     },
     "ageGate": {
       "badge": "18+ only"
+    },
+    "freeCancellationPolicy": {
+      "FLEXIBLE": "Free cancellation until 2h before.",
+      "STANDARD": "Free cancellation until 24h before.",
+      "STRICT": "Free cancellation until 7 days before."
     }
   },
   "booking": {
@@ -677,6 +693,7 @@
     "paymentPendingDescription": "Your payment is being processed. Please wait...",
     "bookingStatus": "Booking Status",
     "bookingReference": "Booking Reference",
+    "serviceFee": "Service fee",
     "totalPaid": "Total Paid",
     "wineryDetails": "Winery Details",
     "yourDetails": "Your Details",
@@ -935,6 +952,10 @@
   },
   "earnings": {
     "title": "Earnings",
+    "gmv": {
+      "title": "EnCave brought you",
+      "description": "Total value of bookings confirmed and completed through EnCave."
+    },
     "period": {
       "selectPeriod": "Select period",
       "thisMonth": "This Month",
@@ -1043,6 +1064,44 @@
   "admin": {
     "title": "Admin Dashboard",
     "subtitle": "Manage winery verifications and platform settings",
+    "featureFlags": {
+      "title": "Feature flags",
+      "description": "Kill-switches for money features — effective immediately, no deploy.",
+      "enabledToast": "{flag}: enabled",
+      "disabledToast": "{flag}: disabled",
+      "flags": {
+        "BOOKING_FEE": "Service fee (2.50 CHF/ticket)",
+        "GIFT_CARDS": "Gift cards",
+        "NO_SHOW_FEES": "No-show fees",
+        "REQUESTS": "Custom requests",
+        "TASTING_SHEET": "Tasting sheet",
+        "COLLECTIVE_EVENTS": "Collective events"
+      }
+    },
+    "monetization": {
+      "title": "Plan & commission",
+      "description": "Pricing plan and commission rate applied to this winery.",
+      "planLabel": "Plan",
+      "plans": {
+        "STANDARD": "Standard",
+        "FOUNDER": "Founder"
+      },
+      "commissionLabel": "Commission (%)",
+      "commissionPlaceholder": "Platform default rate",
+      "commissionHelp": "Leave empty to apply the platform default rate.",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Plan and commission updated.",
+      "invalidRate": "The rate must be between 0 and 100."
+    },
+    "businessKpis": {
+      "title": "Business KPIs",
+      "gmv": "Total GMV",
+      "ticketsThisMonth": "Tickets this month",
+      "takeRate": "Blended take rate",
+      "giftCardRevenue": "Gift card revenue",
+      "giftCardLiability": "Gift card liability"
+    },
     "pendingReview": "Pending Review",
     "verified": "Verified",
     "rejected": "Rejected",
