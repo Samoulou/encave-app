@@ -526,8 +526,7 @@
     "summary": {
       "totalBookings": "Total des réservations",
       "upcoming": "À venir (7 jours)",
-      "occupancyRate": "Taux d'occupation",
-      "avgThisMonth": "Moy. ce mois"
+      "weekGuests": "Couverts (7 jours)"
     },
     "columns": {
       "bookingInfo": "Info réservation",

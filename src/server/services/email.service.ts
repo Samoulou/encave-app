@@ -58,7 +58,24 @@ async function sendEmail({
   attachments,
 }: SendEmailOptions): Promise<boolean> {
   if (!resend) {
-    logInfo('Resend not configured, skipping email', { to, subject });
+    // In production a missing RESEND_API_KEY is an outage, not a no-op:
+    // returning success would set dedup flags (confirmationSentAt, …) and
+    // mark EmailLog entries "sent" while nothing was delivered.
+    if (process.env.NODE_ENV === 'production') {
+      logError(
+        'RESEND_API_KEY missing in production — email NOT sent',
+        undefined,
+        {
+          to,
+          subject,
+        }
+      );
+      return false;
+    }
+    logInfo('Resend not configured, skipping email (non-production)', {
+      to,
+      subject,
+    });
     return true;
   }
 

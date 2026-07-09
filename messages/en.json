@@ -526,8 +526,7 @@
     "summary": {
       "totalBookings": "Total Bookings",
       "upcoming": "Upcoming (7 Days)",
-      "occupancyRate": "Occupancy Rate",
-      "avgThisMonth": "Avg. this month"
+      "weekGuests": "Guests (7 days)"
     },
     "columns": {
       "bookingInfo": "Booking Info",

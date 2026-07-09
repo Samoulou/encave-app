@@ -15,6 +15,11 @@ export async function generateMetadata({
   });
 }
 
-export default function MyBookingsPage() {
-  return <ClientBookingsPage />;
+export default async function MyBookingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const { tab } = await searchParams;
+  return <ClientBookingsPage tab={tab === 'past' ? 'past' : 'upcoming'} />;
 }

@@ -526,8 +526,7 @@
     "summary": {
       "totalBookings": "Gesamtbuchungen",
       "upcoming": "Kommend (7 Tage)",
-      "occupancyRate": "Auslastungsrate",
-      "avgThisMonth": "Durchschn. diesen Monat"
+      "weekGuests": "Gäste (7 Tage)"
     },
     "columns": {
       "bookingInfo": "Buchungsinfo",
