@@ -14,7 +14,13 @@ import { Link } from '@/i18n/navigation';
 import { Calendar, Clock, Heart, Sparkles, Wine } from 'lucide-react';
 import { formatCHF } from '@/lib/utils/currency';
 
-export async function ClientBookingsPage() {
+interface ClientBookingsPageProps {
+  tab?: 'upcoming' | 'past';
+}
+
+export async function ClientBookingsPage({
+  tab = 'upcoming',
+}: ClientBookingsPageProps) {
   const [session, locale, t] = await Promise.all([
     auth(),
     getLocale(),
@@ -31,6 +37,7 @@ export async function ClientBookingsPage() {
   ]);
   const featured = upcoming[0];
   const otherUpcoming = upcoming.slice(1);
+  const showUpcoming = tab === 'upcoming';
 
   return (
     <div className="space-y-8">
@@ -56,61 +63,77 @@ export async function ClientBookingsPage() {
       </div>
 
       <div className="flex gap-2 rounded-[16px] border border-stone-200 bg-white p-1.5 shadow-audit-card">
-        {[
-          ['À venir', upcoming.length, true],
-          ['Passées', past.length, false],
-        ].map(([label, count, selected]) => (
-          <button
-            key={label as string}
-            type="button"
-            className={`h-10 rounded-xl px-5 text-sm font-semibold ${
-              selected
+        {(
+          [
+            [t('upcoming'), upcoming.length, 'upcoming'],
+            [t('past'), past.length, 'past'],
+          ] as const
+        ).map(([label, count, value]) => (
+          <Link
+            key={value}
+            href={
+              value === 'past'
+                ? '/dashboard/my-bookings?tab=past'
+                : '/dashboard/my-bookings'
+            }
+            className={`inline-flex h-10 items-center rounded-xl px-5 text-sm font-semibold ${
+              tab === value
                 ? 'bg-ink-900 text-white'
                 : 'text-ink-500 hover:bg-cream-100'
             }`}
+            aria-current={tab === value ? 'page' : undefined}
           >
-            {label as string}{' '}
-            <span className="font-mono opacity-70">{count as number}</span>
-          </button>
+            {label} <span className="ml-1 font-mono opacity-70">{count}</span>
+          </Link>
         ))}
       </div>
 
-      {featured ? (
-        <FeaturedBooking booking={featured} />
-      ) : (
-        <ClientBookingEmptyState variant="upcoming" />
-      )}
-
-      {otherUpcoming.length > 0 && (
-        <section className="space-y-3">
-          <h2 className="font-display text-xl font-semibold text-ink-900">
-            Autres réservations à venir
-          </h2>
-          {otherUpcoming.map((booking) => (
-            <CompactBookingRow key={booking.id} booking={booking} />
-          ))}
-        </section>
-      )}
-
-      <section className="grid gap-6 lg:grid-cols-[1fr_360px]">
-        <div>
-          <h2 className="mb-4 font-display text-xl font-semibold text-ink-900">
-            {t('past')} ({past.length})
-          </h2>
-          {past.length > 0 ? (
-            <div className="space-y-4">
-              {past.map((booking) => (
-                <ClientBookingCard
-                  key={booking.id}
-                  booking={booking}
-                  variant="past"
-                />
-              ))}
-            </div>
+      {showUpcoming && (
+        <>
+          {featured ? (
+            <FeaturedBooking booking={featured} />
           ) : (
-            <ClientBookingEmptyState variant="past" />
+            <ClientBookingEmptyState variant="upcoming" />
           )}
-        </div>
+
+          {otherUpcoming.length > 0 && (
+            <section className="space-y-3">
+              <h2 className="font-display text-xl font-semibold text-ink-900">
+                Autres réservations à venir
+              </h2>
+              {otherUpcoming.map((booking) => (
+                <CompactBookingRow key={booking.id} booking={booking} />
+              ))}
+            </section>
+          )}
+        </>
+      )}
+
+      <section
+        className={
+          showUpcoming ? undefined : 'grid gap-6 lg:grid-cols-[1fr_360px]'
+        }
+      >
+        {!showUpcoming && (
+          <div>
+            <h2 className="mb-4 font-display text-xl font-semibold text-ink-900">
+              {t('past')} ({past.length})
+            </h2>
+            {past.length > 0 ? (
+              <div className="space-y-4">
+                {past.map((booking) => (
+                  <ClientBookingCard
+                    key={booking.id}
+                    booking={booking}
+                    variant="past"
+                  />
+                ))}
+              </div>
+            ) : (
+              <ClientBookingEmptyState variant="past" />
+            )}
+          </div>
+        )}
 
         <aside className="rounded-[18px] border border-stone-200 bg-white p-5 shadow-audit-card">
           <div className="flex items-center gap-2 font-display text-xl font-semibold">
@@ -128,21 +151,21 @@ export async function ClientBookingsPage() {
             ].map(([title, meta]) => {
               const searchTitle = title ?? '';
               return (
-              <Link
-                key={title}
-                href={`/experiences?q=${encodeURIComponent(searchTitle)}`}
-                className="flex items-center gap-3 rounded-xl border border-stone-200 p-3 transition-colors hover:bg-cream-100"
-              >
-                <span className="grid h-10 w-10 place-items-center rounded-full bg-burgundy-50 text-burgundy-700">
-                  <Wine className="h-4 w-4" />
-                </span>
-                <span>
-                  <span className="block text-sm font-bold text-ink-900">
-                    {title}
+                <Link
+                  key={title}
+                  href={`/experiences?q=${encodeURIComponent(searchTitle)}`}
+                  className="flex items-center gap-3 rounded-xl border border-stone-200 p-3 transition-colors hover:bg-cream-100"
+                >
+                  <span className="grid h-10 w-10 place-items-center rounded-full bg-burgundy-50 text-burgundy-700">
+                    <Wine className="h-4 w-4" />
                   </span>
-                  <span className="block text-xs text-ink-500">{meta}</span>
-                </span>
-              </Link>
+                  <span>
+                    <span className="block text-sm font-bold text-ink-900">
+                      {title}
+                    </span>
+                    <span className="block text-xs text-ink-500">{meta}</span>
+                  </span>
+                </Link>
               );
             })}
           </div>

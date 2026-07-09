@@ -526,8 +526,7 @@
     "summary": {
       "totalBookings": "Total des réservations",
       "upcoming": "À venir (7 jours)",
-      "occupancyRate": "Taux d'occupation",
-      "avgThisMonth": "Moy. ce mois"
+      "weekGuests": "Couverts (7 jours)"
     },
     "columns": {
       "bookingInfo": "Info réservation",
@@ -703,6 +702,7 @@
     "valaisSwitzerland": "Valais, Suisse",
     "checkInTicket": "Billet d'enregistrement",
     "presentQRCode": "Présentez ce code QR à votre arrivée à la réception du domaine.",
+    "qrCodeInEmail": "Votre code QR de billet vous a été envoyé par email — présentez-le à votre arrivée au domaine.",
     "wineryInformation": "Informations du domaine",
     "address": "Adresse",
     "downloadReceipt": "Télécharger le reçu",
@@ -1728,7 +1728,20 @@
       "save": "Enregistrer les modifications",
       "saving": "Enregistrement...",
       "saved": "Profil mis à jour avec succès",
-      "error": "Échec de la mise à jour du profil. Veuillez réessayer."
+      "error": "Échec de la mise à jour du profil. Veuillez réessayer.",
+      "deleteAccount": {
+        "title": "Supprimer mon compte",
+        "description": "La suppression anonymise définitivement vos données personnelles (nLPD) : identité, coordonnées et historique de réservations. Cette action est irréversible.",
+        "cta": "Supprimer mon compte",
+        "confirmTitle": "Confirmer la suppression",
+        "confirmDescription": "Vos données personnelles seront anonymisées de façon irréversible et vous serez déconnecté. Les réservations passées sont conservées sous forme anonyme à des fins comptables.",
+        "confirmLabel": "Saisissez votre email ({email}) pour confirmer :",
+        "cancel": "Annuler",
+        "confirmCta": "Supprimer définitivement",
+        "deleting": "Suppression…",
+        "errorFutureBookings": "Impossible de supprimer le compte : des réservations confirmées à venir existent. Annulez-les d'abord ou contactez le support.",
+        "errorGeneric": "La suppression a échoué. Réessayez ou contactez support@encave.ch."
+      }
     }
   },
   "Dashboard": {

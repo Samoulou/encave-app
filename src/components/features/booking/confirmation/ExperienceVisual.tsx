@@ -5,13 +5,13 @@ import { QRCodeCard } from './QRCodeCard';
 interface ExperienceVisualProps {
   coverPhoto: string;
   experienceTitle: string;
-  bookingId: string;
+  ticketUrl?: string;
 }
 
 export function ExperienceVisual({
   coverPhoto,
   experienceTitle,
-  bookingId,
+  ticketUrl,
 }: ExperienceVisualProps) {
   const t = useTranslations('confirmation');
 
@@ -30,7 +30,7 @@ export function ExperienceVisual({
           {t('valaisSwitzerland')}
         </div>
       </div>
-      <QRCodeCard bookingId={bookingId} />
+      <QRCodeCard ticketUrl={ticketUrl} />
     </div>
   );
 }

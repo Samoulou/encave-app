@@ -11,6 +11,7 @@ import { SearchFilters } from '@/components/features/search/SearchFilters';
 import { SearchResults } from '@/components/features/search/SearchResults';
 import { ExperienceCard } from '@/components/features/experience/ExperienceCard';
 import { DynamicMap } from '@/components/features/map/DynamicMap';
+import { DesktopOnly } from '@/components/shared/DesktopOnly';
 import { Button } from '@/components/ui/button';
 import { SlidersHorizontal, X, MapPin, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -244,11 +245,13 @@ export function ExperiencesPageClient({
 
         <main className="min-w-0">
           <div className="relative mb-6 h-[320px] overflow-hidden rounded-[18px] border border-stone-200 bg-stone-50 shadow-audit-card">
-            <DynamicMap
-              wineries={mapWineries}
-              onWineryClick={handleWineryClick}
-              className="h-full w-full rounded-[18px]"
-            />
+            <DesktopOnly>
+              <DynamicMap
+                wineries={mapWineries}
+                onWineryClick={handleWineryClick}
+                className="h-full w-full rounded-[18px]"
+              />
+            </DesktopOnly>
             <div className="absolute left-4 top-4 rounded-xl bg-white/95 px-4 py-3 shadow-audit-card">
               <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-burgundy-700">
                 Domaines

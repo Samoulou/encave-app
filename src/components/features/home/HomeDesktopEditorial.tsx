@@ -11,9 +11,11 @@ import {
   Users,
   Wine,
 } from 'lucide-react';
+import Image from 'next/image';
 import { Link } from '@/i18n/navigation';
 import { ImageWithFallback } from '@/components/shared/ImageWithFallback';
 import { DynamicMap } from '@/components/features/map/DynamicMap';
+import { DesktopOnly } from '@/components/shared/DesktopOnly';
 import { HomeSearchPanel } from '@/components/features/home/HomeSearchPanel';
 import { formatCHF } from '@/lib/utils/currency';
 import type { ExperienceCardData } from '@/components/features/experience/ExperienceCard';
@@ -27,7 +29,7 @@ const categoryLinks = [
   ['Accords mets-vins', 'Tables locales', 'FOOD_PAIRING', Utensils],
 ] as const;
 
-const HERO_BANNER_IMAGE = '/images/herobanner-image-original.jpg';
+const HERO_BANNER_IMAGE = '/images/herobanner-image-v2.jpg';
 
 function formatDuration(minutes: number) {
   if (minutes >= 60) {
@@ -96,16 +98,21 @@ export function HomeDesktopEditorial({
 }: {
   experiences: ExperienceCardData[];
 }) {
-  const featured = experiences[0];
   const cards = experiences.slice(0, 4);
   const mapWineries = buildMapWineries(experiences);
 
   return (
     <div className="bg-cream-50 text-ink-900">
-      <section
-        className="relative min-h-[600px] overflow-hidden border-b border-stone-200 bg-ink-900 bg-cover bg-center"
-        style={{ backgroundImage: `url(${HERO_BANNER_IMAGE})` }}
-      >
+      <section className="relative min-h-[600px] overflow-hidden border-b border-stone-200 bg-ink-900">
+        {/* L-200: optimized hero via next/image instead of a raw 4.8 MB CSS background */}
+        <Image
+          src={HERO_BANNER_IMAGE}
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+        />
         <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-burgundy-950/55 to-black/25" />
 
         <div className="relative z-10 flex min-h-[600px] max-w-[760px] flex-col justify-between px-14 py-[72px]">
@@ -116,7 +123,10 @@ export function HomeDesktopEditorial({
             <h1 className="mt-[18px] max-w-[560px] font-display text-[80px] font-light leading-[0.98] tracking-[-0.025em] text-white">
               Le Valais,
               <br />
-              une <em className="font-normal italic text-gold-400">cave</em>
+              une{' '}
+              <em className="font-display-italic font-normal italic text-gold-400">
+                cave
+              </em>
               <br />a ciel ouvert.
             </h1>
             <p className="mt-[22px] max-w-[480px] text-[17px] leading-[1.55] text-white/85">
@@ -126,36 +136,6 @@ export function HomeDesktopEditorial({
           </div>
 
           <HomeSearchPanel />
-        </div>
-
-        <div className="hidden">
-          <ExperienceVisual
-            experience={featured}
-            priority
-            label={
-              featured
-                ? `${featured.winery.name} · ${featured.winery.commune}`
-                : undefined
-            }
-          />
-          {featured && (
-            <div className="absolute bottom-8 left-8 right-8 rounded-[14px] bg-ink-900/80 p-[18px] text-white shadow-audit-elevated backdrop-blur-xl">
-              <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-gold-400">
-                • En vedette · {formatDuration(featured.duration)}
-              </div>
-              <div className="mt-1.5 font-display text-[22px] font-semibold">
-                {featured.title}
-              </div>
-              <div className="mt-1 flex justify-between text-[13px] text-white/80">
-                <span>
-                  {featured.winery.name} · {featured.winery.commune}
-                </span>
-                <span className="font-mono text-gold-400">
-                  {formatCHF(featured.price)}
-                </span>
-              </div>
-            </div>
-          )}
         </div>
       </section>
 
@@ -217,10 +197,12 @@ export function HomeDesktopEditorial({
 
       <section className="grid grid-cols-[1.2fr_1fr] gap-8 px-14 py-12">
         <div className="relative h-[340px] overflow-hidden rounded-[18px] border border-stone-200 bg-stone-50">
-          <DynamicMap
-            wineries={mapWineries}
-            className="h-full w-full rounded-[18px]"
-          />
+          <DesktopOnly>
+            <DynamicMap
+              wineries={mapWineries}
+              className="h-full w-full rounded-[18px]"
+            />
+          </DesktopOnly>
           <div className="absolute left-[18px] top-[18px] rounded-lg bg-white/95 px-3.5 py-2">
             <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-burgundy-700">
               • Valais

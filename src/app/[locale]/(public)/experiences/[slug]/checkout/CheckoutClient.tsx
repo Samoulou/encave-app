@@ -6,7 +6,6 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import * as Sentry from '@sentry/nextjs';
-import posthog from 'posthog-js';
 import {
   Loader2,
   AlertCircle,
@@ -32,6 +31,7 @@ import {
 } from '@/server/actions/booking';
 import { createBookingAndCheckout } from '@/server/actions/checkout';
 import { formatCHF } from '@/lib/utils/currency';
+import { capturePostHog } from '@/lib/posthog-client';
 
 // BUG-013: Periodic recheck interval (60 seconds)
 const AVAILABILITY_RECHECK_INTERVAL_MS = 60000;
@@ -101,7 +101,7 @@ export function CheckoutClient({
   // Track payment failure from Stripe redirect (cancelled or failed)
   useEffect(() => {
     if (paymentError) {
-      posthog.capture('booking_payment_failed', {
+      capturePostHog('booking_payment_failed', {
         experience_id: experience.id,
         experience_slug: slug,
         winery_id: experience.winery.id,
@@ -213,7 +213,7 @@ export function CheckoutClient({
   const onSubmit = async (data: CheckoutFormData) => {
     setSubmitError(null);
 
-    posthog.capture('booking_payment_initiated', {
+    capturePostHog('booking_payment_initiated', {
       experience_id: experience.id,
       experience_slug: slug,
       winery_id: experience.winery.id,

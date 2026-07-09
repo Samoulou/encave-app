@@ -248,7 +248,9 @@ function BookingReceipt({ receipt }: { receipt: BookingReceiptData }) {
               {formatCHF(receipt.totalPrice)}
             </Text>
           </View>
-          <Text style={styles.note}>Taxes et frais de service inclus</Text>
+          <Text style={styles.note}>
+            Prix TTC. EnCave n&apos;est pas assujettie à la TVA à ce jour.
+          </Text>
         </View>
 
         <View style={styles.footer}>

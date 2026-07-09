@@ -5,5 +5,4 @@ export { BookingDetailsSection } from './BookingDetailsSection';
 export { ExperienceVisual } from './ExperienceVisual';
 export { QRCodeCard } from './QRCodeCard';
 export { WineryInfoCard } from './WineryInfoCard';
-export { ModifyBookingCard } from './ModifyBookingCard';
 export { ConfirmationActions } from './ConfirmationActions';

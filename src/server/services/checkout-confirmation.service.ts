@@ -22,6 +22,16 @@ export type CheckoutConfirmationResult =
   | 'missing_payment_intent'
   | 'race_lost';
 
+export interface CheckoutConfirmationOutcome {
+  result: CheckoutConfirmationResult;
+  /**
+   * Plaintext booking access token — present ONLY when this call performed
+   * the confirmation (only the SHA-256 hash is persisted). Callers may use
+   * it to render the on-screen ticket QR; it is never recoverable later.
+   */
+  accessToken?: string;
+}
+
 function getPaymentIntentId(session: Stripe.Checkout.Session): string | null {
   if (!session.payment_intent) {
     return null;
@@ -42,12 +52,12 @@ function getPaymentIntentId(session: Stripe.Checkout.Session): string | null {
 export async function confirmBookingFromPaidCheckoutSession(
   session: Stripe.Checkout.Session,
   source: CheckoutConfirmationSource = 'webhook'
-): Promise<CheckoutConfirmationResult> {
+): Promise<CheckoutConfirmationOutcome> {
   const bookingId = session.metadata?.bookingId;
 
   if (!bookingId) {
     logError('No bookingId in session metadata');
-    return 'missing_metadata';
+    return { result: 'missing_metadata' };
   }
 
   if (session.payment_status !== 'paid') {
@@ -57,7 +67,7 @@ export async function confirmBookingFromPaidCheckoutSession(
       paymentStatus: session.payment_status,
       source,
     });
-    return 'not_paid';
+    return { result: 'not_paid' };
   }
 
   const paymentIntentId = getPaymentIntentId(session);
@@ -67,7 +77,7 @@ export async function confirmBookingFromPaidCheckoutSession(
       sessionId: session.id,
       source,
     });
-    return 'missing_payment_intent';
+    return { result: 'missing_payment_intent' };
   }
 
   const booking = await db.booking.findUnique({
@@ -96,7 +106,7 @@ export async function confirmBookingFromPaidCheckoutSession(
 
   if (!booking) {
     logError('Booking not found', undefined, { bookingId, source });
-    return 'missing_booking';
+    return { result: 'missing_booking' };
   }
 
   if (
@@ -109,7 +119,7 @@ export async function confirmBookingFromPaidCheckoutSession(
       sessionId: session.id,
       source,
     });
-    return 'session_mismatch';
+    return { result: 'session_mismatch' };
   }
 
   if (booking.status === BookingStatus.CONFIRMED) {
@@ -117,7 +127,7 @@ export async function confirmBookingFromPaidCheckoutSession(
       bookingRef: booking.reference,
       source,
     });
-    return 'already_confirmed';
+    return { result: 'already_confirmed' };
   }
 
   if (booking.status !== BookingStatus.PENDING_PAYMENT) {
@@ -126,7 +136,7 @@ export async function confirmBookingFromPaidCheckoutSession(
       status: booking.status,
       source,
     });
-    return 'not_pending';
+    return { result: 'not_pending' };
   }
 
   const accessToken = crypto.randomBytes(32).toString('hex');
@@ -151,7 +161,7 @@ export async function confirmBookingFromPaidCheckoutSession(
       bookingRef: booking.reference,
       source,
     });
-    return 'race_lost';
+    return { result: 'race_lost' };
   }
 
   logInfo('Booking confirmed from paid checkout session', {
@@ -191,6 +201,8 @@ export async function confirmBookingFromPaidCheckoutSession(
     await sendBookingConfirmationEmail(
       booking.visitorEmail,
       {
+        bookingId: booking.id,
+        accessToken,
         guestName: booking.visitorName,
         experienceTitle: booking.experience.title,
         wineryName: booking.winery.name,
@@ -250,5 +262,5 @@ export async function confirmBookingFromPaidCheckoutSession(
     });
   }
 
-  return 'confirmed';
+  return { result: 'confirmed', accessToken };
 }

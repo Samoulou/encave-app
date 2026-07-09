@@ -4,9 +4,14 @@ import type Stripe from 'stripe';
 import { getStripe, isStripeConfigured } from '@/server/stripe';
 import { db } from '@/server/db';
 import { env } from '@/lib/env';
-import { BookingStatus, Prisma } from '@prisma/client';
+import { BookingStatus } from '@prisma/client';
 import { confirmBookingFromPaidCheckoutSession } from '@/server/services/checkout-confirmation.service';
 import { logError, logInfo } from '@/lib/logger';
+import {
+  claimStripeEvent,
+  markStripeEventFailed,
+  markStripeEventProcessed,
+} from '@/server/services/stripe-event.service';
 
 export async function POST(req: Request) {
   if (!isStripeConfigured()) {
@@ -86,72 +91,12 @@ export async function POST(req: Request) {
   }
 }
 
-async function claimStripeEvent(event: Stripe.Event): Promise<boolean> {
-  try {
-    await db.stripeEvent.create({
-      data: {
-        stripeEventId: event.id,
-        type: event.type,
-        status: 'PROCESSING',
-      },
-    });
-    return true;
-  } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === 'P2002'
-    ) {
-      const existing = await db.stripeEvent.findUnique({
-        where: { stripeEventId: event.id },
-        select: { status: true },
-      });
-
-      if (existing?.status === 'FAILED') {
-        const retry = await db.stripeEvent.updateMany({
-          where: { stripeEventId: event.id, status: 'FAILED' },
-          data: { status: 'PROCESSING', errorMessage: null },
-        });
-        return retry.count === 1;
-      }
-
-      logInfo('Duplicate Stripe checkout event skipped', {
-        eventId: event.id,
-        eventType: event.type,
-        status: existing?.status,
-      });
-      return false;
-    }
-
-    throw error;
-  }
-}
-
-async function markStripeEventProcessed(eventId: string): Promise<void> {
-  await db.stripeEvent.update({
-    where: { stripeEventId: eventId },
-    data: { status: 'PROCESSED', errorMessage: null },
-  });
-}
-
-async function markStripeEventFailed(
-  eventId: string,
-  error: unknown
-): Promise<void> {
-  await db.stripeEvent.update({
-    where: { stripeEventId: eventId },
-    data: {
-      status: 'FAILED',
-      errorMessage: error instanceof Error ? error.message : String(error),
-    },
-  });
-}
-
 /**
  * Handle checkout.session.completed event
  * Updates booking status to CONFIRMED and sends confirmation emails
  */
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
-  const result = await confirmBookingFromPaidCheckoutSession(
+  const { result } = await confirmBookingFromPaidCheckoutSession(
     session,
     'webhook'
   );

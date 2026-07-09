@@ -17,6 +17,31 @@ export const subjects = {
     DE: 'Stornierung Ihrer Reservierung',
     EN: 'Your booking cancellation',
   },
+  bookingCancelledByWinery: {
+    FR: '{winemakerName} a dû annuler votre expérience',
+    DE: '{winemakerName} musste Ihr Erlebnis absagen',
+    EN: '{winemakerName} had to cancel your experience',
+  },
+  bookingExpired: {
+    FR: 'Votre réservation EnCave a expiré',
+    DE: 'Ihre EnCave-Reservierung ist abgelaufen',
+    EN: 'Your EnCave booking has expired',
+  },
+  manualRefundClient: {
+    FR: 'Votre réservation EnCave a été remboursée',
+    DE: 'Ihre EnCave-Reservierung wurde erstattet',
+    EN: 'Your EnCave booking has been refunded',
+  },
+  manualRefundWinemaker: {
+    FR: 'Une réservation a été remboursée par EnCave',
+    DE: 'Eine Reservierung wurde von EnCave erstattet',
+    EN: 'A booking has been refunded by EnCave',
+  },
+  accountDeleted: {
+    FR: 'Votre compte EnCave a été supprimé',
+    DE: 'Ihr EnCave-Konto wurde gelöscht',
+    EN: 'Your EnCave account has been deleted',
+  },
   wineryNewBooking: {
     FR: 'Nouvelle reservation recue',
     DE: 'Neue Reservierung erhalten',
@@ -87,7 +112,7 @@ export const common = {
     EN: 'Best regards',
   },
   team: {
-    FR: "L'equipe EnCave",
+    FR: "L'équipe EnCave",
     DE: 'Das EnCave-Team',
     EN: 'The EnCave Team',
   },
@@ -569,6 +594,126 @@ export const weeklySummary = {
     FR: 'Voir le tableau de bord',
     DE: 'Dashboard anzeigen',
     EN: 'View dashboard',
+  },
+} as const;
+
+// Booking cancelled by winery email strings
+export const bookingCancelledByWinery = {
+  title: {
+    FR: 'Votre encaveur a dû annuler',
+    DE: 'Ihr Winzer musste absagen',
+    EN: 'Your winemaker had to cancel',
+  },
+  intro: {
+    FR: 'Nous sommes désolés : {winemakerName} a dû annuler la session "{experienceTitle}" prévue le {date}.',
+    DE: 'Es tut uns leid: {winemakerName} musste die Session "{experienceTitle}" vom {date} absagen.',
+    EN: 'We are sorry: {winemakerName} had to cancel the session "{experienceTitle}" scheduled for {date}.',
+  },
+  reason: {
+    FR: 'Motif communiqué : "{reason}"',
+    DE: 'Angegebener Grund: "{reason}"',
+    EN: 'Reason given: "{reason}"',
+  },
+  refund: {
+    FR: 'Vous êtes intégralement remboursé. Le montant de {amount} sera crédité sur votre moyen de paiement sous 5 à 10 jours ouvrés selon votre banque.',
+    DE: 'Sie erhalten den vollen Betrag zurück. Der Betrag von {amount} wird Ihrem Zahlungsmittel je nach Bank innerhalb von 5 bis 10 Werktagen gutgeschrieben.',
+    EN: 'You will receive a full refund. The amount of {amount} will be credited to your payment method within 5 to 10 business days, depending on your bank.',
+  },
+  browseMore: {
+    FR: "Découvrir d'autres expériences",
+    DE: 'Weitere Erlebnisse entdecken',
+    EN: 'Browse more experiences',
+  },
+  apology: {
+    FR: 'Avec nos excuses,',
+    DE: 'Mit unserer Entschuldigung,',
+    EN: 'With our apologies,',
+  },
+} as const;
+
+// Booking expired email strings
+export const bookingExpired = {
+  title: {
+    FR: 'Votre réservation a expiré',
+    DE: 'Ihre Reservierung ist abgelaufen',
+    EN: 'Your booking has expired',
+  },
+  intro: {
+    FR: "Votre paiement n'a pas été finalisé dans les 30 minutes. Votre réservation pour {experienceTitle} le {date} a été annulée et votre place remise en disponibilité. Aucun montant n'a été débité.",
+    DE: 'Ihre Zahlung wurde nicht innerhalb von 30 Minuten abgeschlossen. Ihre Reservierung für {experienceTitle} am {date} wurde storniert und Ihr Platz wieder freigegeben. Es wurde kein Betrag abgebucht.',
+    EN: 'Your payment was not completed within 30 minutes. Your booking for {experienceTitle} on {date} has been cancelled and your spot released. No amount has been charged.',
+  },
+  cta: {
+    FR: "Retrouver l'expérience",
+    DE: 'Zum Erlebnis zurückkehren',
+    EN: 'Back to the experience',
+  },
+  signoff: {
+    FR: 'À très vite chez nos encaveurs,',
+    DE: 'Bis bald bei unseren Winzern,',
+    EN: 'See you soon at our winemakers,',
+  },
+} as const;
+
+// Manual refund email strings (admin-triggered refunds)
+export const manualRefund = {
+  client: {
+    title: {
+      FR: 'Votre remboursement est en route',
+      DE: 'Ihre Rückerstattung ist unterwegs',
+      EN: 'Your refund is on its way',
+    },
+    intro: {
+      FR: 'Nous vous confirmons le remboursement de {amount} pour votre réservation {reference} ({experienceTitle}).',
+      DE: 'Wir bestätigen Ihnen die Rückerstattung von {amount} für Ihre Reservierung {reference} ({experienceTitle}).',
+      EN: 'We confirm the refund of {amount} for your booking {reference} ({experienceTitle}).',
+    },
+    timing: {
+      FR: 'Les fonds réapparaîtront sur votre moyen de paiement sous 5 à 10 jours ouvrés selon votre banque.',
+      DE: 'Der Betrag wird Ihrem Zahlungsmittel je nach Bank innerhalb von 5 bis 10 Werktagen wieder gutgeschrieben.',
+      EN: 'The funds will reappear on your payment method within 5 to 10 business days, depending on your bank.',
+    },
+  },
+  winemaker: {
+    title: {
+      FR: 'Une réservation a été remboursée par EnCave',
+      DE: 'Eine Reservierung wurde von EnCave erstattet',
+      EN: 'A booking has been refunded by EnCave',
+    },
+    intro: {
+      FR: "L'équipe EnCave a procédé au remboursement de la réservation {reference} ({experienceTitle}, le {date}) pour un montant de {amount}.",
+      DE: 'Das EnCave-Team hat die Reservierung {reference} ({experienceTitle}, am {date}) in Höhe von {amount} erstattet.',
+      EN: 'The EnCave team has refunded booking {reference} ({experienceTitle}, on {date}) for an amount of {amount}.',
+    },
+    reason: {
+      FR: 'Motif communiqué : {reason}.',
+      DE: 'Angegebener Grund: {reason}.',
+      EN: 'Reason given: {reason}.',
+    },
+    deduction: {
+      FR: 'Ce montant est automatiquement déduit de votre prochain reversement Stripe Connect.',
+      DE: 'Dieser Betrag wird automatisch von Ihrer nächsten Stripe-Connect-Auszahlung abgezogen.',
+      EN: 'This amount is automatically deducted from your next Stripe Connect payout.',
+    },
+  },
+} as const;
+
+// Account deleted email strings (nLPD)
+export const accountDeleted = {
+  title: {
+    FR: 'Votre compte a été supprimé',
+    DE: 'Ihr Konto wurde gelöscht',
+    EN: 'Your account has been deleted',
+  },
+  intro: {
+    FR: 'Bonjour, nous vous confirmons la suppression de votre compte EnCave en date du {date}. Vos données personnelles ont été effacées de notre plateforme.',
+    DE: 'Guten Tag, wir bestätigen Ihnen die Löschung Ihres EnCave-Kontos per {date}. Ihre persönlichen Daten wurden von unserer Plattform entfernt.',
+    EN: 'Hello, we confirm the deletion of your EnCave account as of {date}. Your personal data has been erased from our platform.',
+  },
+  retention: {
+    FR: "Conformément au droit suisse, nous conservons l'historique anonymisé de vos réservations pendant 10 ans pour des raisons comptables.",
+    DE: 'Gemäss schweizerischem Recht bewahren wir den anonymisierten Verlauf Ihrer Reservierungen aus buchhalterischen Gründen während 10 Jahren auf.',
+    EN: 'In accordance with Swiss law, we retain the anonymised history of your bookings for 10 years for accounting purposes.',
   },
 } as const;
 
