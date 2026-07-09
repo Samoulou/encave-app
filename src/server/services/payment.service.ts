@@ -161,12 +161,22 @@ export function getPlatformCommissionRate(): number {
 
 /**
  * Process a refund for a booking
- * Handles both full and partial refunds, including application fee refund
+ * Handles both full and partial refunds, including application fee refund.
+ * Omitting `amountCents` refunds the full charge; a partial amount
+ * reverses the transfer and the application fee proportionally (Stripe).
  */
 export async function processRefund(
   stripePaymentIntentOrSessionId: string,
-  refundApplicationFee: boolean = true
+  refundApplicationFee: boolean = true,
+  amountCents?: number
 ): Promise<{ refundId: string; amount: number }> {
+  if (
+    amountCents !== undefined &&
+    (!Number.isInteger(amountCents) || amountCents <= 0)
+  ) {
+    throw new Error('Refund amount must be a positive integer (cents)');
+  }
+
   let paymentIntentId = stripePaymentIntentOrSessionId;
 
   if (stripePaymentIntentOrSessionId.startsWith('cs_')) {
@@ -189,6 +199,7 @@ export async function processRefund(
     payment_intent: paymentIntentId,
     reverse_transfer: true,
     refund_application_fee: refundApplicationFee,
+    ...(amountCents !== undefined ? { amount: amountCents } : {}),
   });
 
   return {

@@ -233,6 +233,17 @@ export const bookingCancellation = {
     DE: 'Falls Sie bereits bezahlt haben, wird Ihre Ruckerstattung innerhalb von 5-7 Werktagen bearbeitet.',
     EN: 'If you have already paid, your refund will be processed within 5-7 business days.',
   },
+  // {amount} is replaced with the exact refunded amount (policy-based).
+  refundExact: {
+    FR: 'Un remboursement de {amount} sera credite sur votre moyen de paiement sous 5-7 jours ouvrables.',
+    DE: 'Eine Ruckerstattung von {amount} wird Ihrem Zahlungsmittel innerhalb von 5-7 Werktagen gutgeschrieben.',
+    EN: 'A refund of {amount} will be credited to your payment method within 5-7 business days.',
+  },
+  noRefund: {
+    FR: "Conformement a la politique d'annulation de la cave, cette annulation ne donne pas droit a un remboursement.",
+    DE: 'Gemass den Stornierungsbedingungen des Weinguts besteht kein Anspruch auf Ruckerstattung.',
+    EN: "Per the winery's cancellation policy, this cancellation is not eligible for a refund.",
+  },
   browseMore: {
     FR: "Decouvrir d'autres experiences",
     DE: 'Weitere Erlebnisse entdecken',

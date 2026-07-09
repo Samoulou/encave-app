@@ -77,6 +77,7 @@ describe('Client Actions', () => {
       date: futureDate,
       timeSlot: '14:00',
       totalPrice: 10000,
+      serviceFeeCents: 0,
       guestCount: 4,
       reference: 'REF-123',
       stripePaymentIntentId: 'pi_test123',
@@ -84,6 +85,7 @@ describe('Client Actions', () => {
       winery: {
         name: 'Test Winery',
         email: 'winery@test.com',
+        cancellationPolicy: 'STANDARD',
         user: { name: 'Winemaker', preferredLocale: 'FR' },
       },
     };

@@ -13,6 +13,7 @@ import {
   sendWinemakerCancellationEmail,
 } from '@/server/services/email.service';
 import { processRefund } from '@/server/services/payment.service';
+import { computeRefundCents } from '@/lib/business-rules/cancellation-policy';
 import { logError } from '@/lib/logger';
 
 const CheckAvailabilitySchema = z.object({
@@ -477,7 +478,7 @@ export interface CancellationResult {
 
 /**
  * Cancel a booking and process refund if eligible
- * Refund policy: Full refund if >24h before experience, no refund otherwise
+ * Refund follows the winery's cancellation policy (P-03 / L-043).
  */
 export async function cancelBooking(
   bookingId: string,
@@ -507,6 +508,7 @@ export async function cancelBooking(
           select: {
             name: true,
             email: true,
+            cancellationPolicy: true,
             user: {
               select: {
                 name: true,
@@ -560,17 +562,24 @@ export async function cancelBooking(
       };
     }
 
-    // Determine refund eligibility (>24h = full refund)
-    const isEligibleForRefund = hoursUntilExperience > 24;
+    // Refund per the winery's cancellation policy (P-03 / L-043) on the
+    // full paid amount — tickets + service fee (decision D2).
+    const paidCents = booking.totalPrice + booking.serviceFeeCents;
+    const refundDueCents = computeRefundCents(
+      booking.winery.cancellationPolicy,
+      hoursUntilExperience,
+      paidCents
+    );
     let refundAmount: number | null = null;
     let stripeRefundId: string | null = null;
 
-    // Process refund if eligible and payment was made
-    if (isEligibleForRefund && booking.stripePaymentIntentId) {
+    // Process refund if due and payment was made
+    if (refundDueCents > 0 && booking.stripePaymentIntentId) {
       try {
         const refundResult = await processRefund(
           booking.stripePaymentIntentId,
-          true
+          true,
+          refundDueCents < paidCents ? refundDueCents : undefined
         );
         refundAmount = refundResult.amount;
         stripeRefundId = refundResult.refundId;
@@ -606,13 +615,14 @@ export async function cancelBooking(
     const bookingDateTime = new Date(booking.date);
     bookingDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
 
-    // Send cancellation email to client
+    // Send cancellation email to client (exact policy-based amount)
     await sendBookingCancellationEmail(booking.visitorEmail, {
       guestName: booking.visitorName,
       experienceTitle: booking.experience.title,
       wineryName: booking.winery.name,
       date: bookingDateTime,
       totalPrice: booking.totalPrice,
+      refundAmountCents: refundAmount ?? 0,
       bookingRef: booking.reference,
     });
 
@@ -635,7 +645,7 @@ export async function cancelBooking(
       data: {
         bookingId: updatedBooking.id,
         status: updatedBooking.status,
-        refundIssued: isEligibleForRefund,
+        refundIssued: refundAmount !== null,
         refundAmount,
       },
     };
@@ -677,6 +687,9 @@ export async function getCancellationInfo(
       where: {
         id: bookingId,
         accessTokenHash: tokenHash,
+      },
+      include: {
+        winery: { select: { cancellationPolicy: true } },
       },
     });
 
@@ -725,14 +738,18 @@ export async function getCancellationInfo(
       };
     }
 
-    const isEligibleForRefund = hoursUntilExperience > 24;
-    const refundAmount = isEligibleForRefund ? booking.totalPrice : 0;
+    // Policy-based amount on the full paid total (tickets + service fee).
+    const refundAmount = computeRefundCents(
+      booking.winery.cancellationPolicy,
+      hoursUntilExperience,
+      booking.totalPrice + booking.serviceFeeCents
+    );
 
     return {
       success: true,
       data: {
         canCancel: true,
-        isEligibleForRefund,
+        isEligibleForRefund: refundAmount > 0,
         hoursUntilExperience,
         refundAmount,
       },

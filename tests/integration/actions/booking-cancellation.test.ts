@@ -62,6 +62,7 @@ describe('Booking Cancellation Actions', () => {
     timeSlot: '14:00',
     guestCount: 4,
     totalPrice: 20000,
+    serviceFeeCents: 0,
     stripePaymentIntentId: 'pi_test123',
     accessToken,
     accessTokenHash: tokenHash,
@@ -72,6 +73,7 @@ describe('Booking Cancellation Actions', () => {
     winery: {
       name: 'Test Winery',
       email: 'winery@example.com',
+      cancellationPolicy: 'STANDARD',
       user: {
         name: 'Winemaker Name',
         preferredLocale: 'en',
@@ -122,7 +124,8 @@ describe('Booking Cancellation Actions', () => {
         expect(result.data.refundAmount).toBe(20000);
         expect(result.data.status).toBe(BookingStatus.CANCELLED_BY_CLIENT);
       }
-      expect(processRefund).toHaveBeenCalledWith('pi_test123', true);
+      // Third arg undefined = full refund (policy grants 100%).
+      expect(processRefund).toHaveBeenCalledWith('pi_test123', true, undefined);
     });
 
     it('cancels booking without refund when <24h before experience', async () => {
@@ -156,8 +159,8 @@ describe('Booking Cancellation Actions', () => {
       expect(processRefund).not.toHaveBeenCalled();
     });
 
-    it('uses server timestamp for 24h boundary (exactly at 24h)', async () => {
-      // Set booking exactly 24 hours from now - should NOT get refund (>24 required)
+    it('refunds at exactly 24h — boundary included in the STANDARD tier (D1)', async () => {
+      // D1 barème: « 100 % jusqu'à 24 h » — the boundary itself refunds.
       const bookingAt24h = {
         ...mockConfirmedBooking,
         date: new Date('2026-01-12'), // Tomorrow
@@ -175,10 +178,40 @@ describe('Booking Cancellation Actions', () => {
 
       expect(result.success).toBe(true);
       if (result.success) {
-        // Exactly 24h = no refund (policy is >24h)
-        expect(result.data.refundIssued).toBe(false);
+        // Exactly 24h = 100% refund (STANDARD tier is >= 24h)
+        expect(result.data.refundIssued).toBe(true);
       }
-      expect(processRefund).not.toHaveBeenCalled();
+      expect(processRefund).toHaveBeenCalledWith('pi_test123', true, undefined);
+    });
+
+    it('refunds 50% of tickets + fee on the STRICT middle tier (D2)', async () => {
+      const strictBooking = {
+        ...mockConfirmedBooking,
+        serviceFeeCents: 1000,
+        date: new Date('2026-01-14'), // 72h before → STRICT 50% tier
+        timeSlot: '10:00',
+        winery: {
+          ...mockConfirmedBooking.winery,
+          cancellationPolicy: 'STRICT',
+        },
+      };
+      vi.mocked(db.booking.findFirst).mockResolvedValue(strictBooking as never);
+      vi.mocked(db.booking.update).mockResolvedValue({
+        ...strictBooking,
+        status: BookingStatus.CANCELLED_BY_CLIENT,
+      } as never);
+      vi.mocked(processRefund).mockResolvedValue({
+        refundId: 're_partial',
+        amount: 10500,
+      });
+
+      const { cancelBooking } = await import('@/server/actions/booking');
+      const result = await cancelBooking('booking-cancel-1', accessToken);
+
+      expect(result.success).toBe(true);
+      // paid = 20000 + 1000 fee; 50% = 10500 — exact partial amount sent
+      // to Stripe, fee included (decision D2).
+      expect(processRefund).toHaveBeenCalledWith('pi_test123', true, 10500);
     });
 
     it('returns NOT_FOUND for invalid access token', async () => {

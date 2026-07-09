@@ -11,6 +11,12 @@ export interface BookingCancellationEmailProps {
   wineryName: string;
   date: Date;
   totalPrice: number; // in cents
+  /**
+   * Exact refunded amount in cents (per the winery's cancellation
+   * policy). null = unknown (legacy callers) → generic wording;
+   * 0 = explicitly no refund.
+   */
+  refundAmountCents?: number | null;
   bookingRef: string;
   experiencesUrl: string;
 }
@@ -22,6 +28,7 @@ export function BookingCancellationEmail({
   wineryName,
   date,
   totalPrice,
+  refundAmountCents = null,
   bookingRef: _bookingRef,
   experiencesUrl,
 }: BookingCancellationEmailProps) {
@@ -32,7 +39,15 @@ export function BookingCancellationEmail({
 
   const title = t(bookingCancellation.title, locale);
   const intro = t(bookingCancellation.intro, locale);
-  const refund = t(bookingCancellation.refund, locale);
+  const refund =
+    refundAmountCents === null
+      ? t(bookingCancellation.refund, locale)
+      : refundAmountCents > 0
+        ? t(bookingCancellation.refundExact, locale).replace(
+            '{amount}',
+            formatEmailPrice(refundAmountCents)
+          )
+        : t(bookingCancellation.noRefund, locale);
   const browseMore = t(bookingCancellation.browseMore, locale);
 
   const dateLabel = t(common.date, locale);

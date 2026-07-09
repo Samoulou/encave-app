@@ -11,6 +11,12 @@ import { BookingStatus, ExperienceStatus, WineryStatus } from '@prisma/client';
 import { timeSlotSchema } from '@/lib/validators/booking';
 import { env } from '@/lib/env';
 import { AGE_GATE_VERSION } from '@/lib/constants/consent';
+import { BOOKING_FEE_CENTS } from '@/lib/constants/pricing';
+import {
+  computeCommissionCents,
+  getEffectiveCommissionRate,
+} from '@/lib/business-rules/commission';
+import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
 import {
   checkRateLimit,
   BOOKING_RATE_LIMIT,
@@ -92,6 +98,7 @@ export async function createBookingAndCheckout(
             status: true,
             stripeAccountId: true,
             stripeOnboardingComplete: true,
+            commissionRate: true,
           },
         },
       },
@@ -147,10 +154,21 @@ export async function createBookingAndCheckout(
       };
     }
 
-    // Calculate prices
+    // Calculate prices. totalPrice/platformFee/wineryPayout keep their
+    // historical meaning (fee EXCLUDED); the client is charged
+    // totalPrice + serviceFeeCents. The fee and the commission both go to
+    // the platform via application_fee_amount — never to the winery.
     const totalPrice = experience.price * guestCount;
-    const platformFee = Math.round(totalPrice * env.PLATFORM_COMMISSION_RATE);
+    const commissionRate = getEffectiveCommissionRate(
+      experience.winery,
+      env.PLATFORM_COMMISSION_RATE
+    );
+    const platformFee = computeCommissionCents(totalPrice, commissionRate);
     const wineryPayout = totalPrice - platformFee;
+    const bookingFeeEnabled = await isFlagEnabled('BOOKING_FEE');
+    const serviceFeeCents = bookingFeeEnabled
+      ? BOOKING_FEE_CENTS * guestCount
+      : 0;
 
     const bookingDate = new Date(date);
     const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
@@ -196,6 +214,7 @@ export async function createBookingAndCheckout(
               guestCount,
               totalPrice,
               platformFee,
+              serviceFeeCents,
               wineryPayout,
               visitorName,
               visitorEmail,
@@ -261,9 +280,26 @@ export async function createBookingAndCheckout(
           },
           quantity: guestCount,
         },
+        // Client booking fee — always a separate visible line, never
+        // blended into the experience price (BUSINESS §2).
+        ...(serviceFeeCents > 0
+          ? [
+              {
+                price_data: {
+                  currency: 'chf',
+                  product_data: {
+                    name: 'Frais de service',
+                  },
+                  unit_amount: BOOKING_FEE_CENTS,
+                },
+                quantity: guestCount,
+              },
+            ]
+          : []),
       ],
       payment_intent_data: {
-        application_fee_amount: platformFee,
+        // Commission + client fee: both platform revenue.
+        application_fee_amount: platformFee + serviceFeeCents,
         transfer_data: {
           destination: experience.winery.stripeAccountId,
         },

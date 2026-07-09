@@ -2,17 +2,16 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { db } from '@/server/db';
 import { BookingStatus, ExperienceStatus, WineryStatus } from '@prisma/client';
 
-// Mock Stripe
+// Mock Stripe (hoisted spy so tests can assert on session payloads)
+const { sessionCreateMock } = vi.hoisted(() => ({
+  sessionCreateMock: vi.fn(),
+}));
 vi.mock('stripe', () => {
   return {
     default: vi.fn().mockImplementation(() => ({
       checkout: {
         sessions: {
-          create: vi.fn().mockResolvedValue({
-            id: 'cs_test_123',
-            url: 'https://checkout.stripe.com/pay/cs_test_123',
-            payment_intent: 'pi_test_123',
-          }),
+          create: sessionCreateMock,
         },
       },
     })),
@@ -30,6 +29,9 @@ vi.mock('@/server/db', () => ({
       findUnique: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+    },
+    featureFlag: {
+      findMany: vi.fn(),
     },
     // $transaction executes the callback with the same db object (simplified mock)
     $transaction: vi.fn(async (callback: (tx: unknown) => Promise<unknown>) => {
@@ -64,6 +66,13 @@ describe('Checkout Server Actions', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    sessionCreateMock.mockResolvedValue({
+      id: 'cs_test_123',
+      url: 'https://checkout.stripe.com/pay/cs_test_123',
+      payment_intent: 'pi_test_123',
+    });
+    // Flags default OFF (empty table) — the BOOKING_FEE tests override this.
+    vi.mocked(db.featureFlag.findMany).mockResolvedValue([] as never);
   });
 
   describe('createBookingAndCheckout', () => {
@@ -81,6 +90,7 @@ describe('Checkout Server Actions', () => {
         status: WineryStatus.VERIFIED,
         stripeAccountId: 'acct_test_123',
         stripeOnboardingComplete: true,
+        commissionRate: null,
       },
     };
 
@@ -308,6 +318,92 @@ describe('Checkout Server Actions', () => {
       expect(capturedBookingData!.totalPrice).toBe(20000);
       expect(capturedBookingData!.platformFee).toBe(2400);
       expect(capturedBookingData!.wineryPayout).toBe(17600);
+      // Flag OFF: no service fee, single Stripe line, unchanged app fee.
+      expect(capturedBookingData!.serviceFeeCents).toBe(0);
+      const sessionOff = sessionCreateMock.mock.calls[0]?.[0];
+      expect(sessionOff.line_items).toHaveLength(1);
+      expect(sessionOff.payment_intent_data.application_fee_amount).toBe(2400);
+    });
+
+    it('charges the 2.50/ticket service fee as a separate line when BOOKING_FEE is ON', async () => {
+      vi.mocked(db.featureFlag.findMany).mockResolvedValue([
+        { key: 'BOOKING_FEE', enabled: true, updatedAt: new Date() },
+      ] as never);
+      vi.mocked(db.experience.findUnique).mockResolvedValue(
+        mockExperience as never
+      );
+      vi.mocked(db.booking.aggregate).mockResolvedValue({
+        _sum: { guestCount: 0 },
+      } as never);
+      vi.mocked(db.booking.findUnique).mockResolvedValue(null);
+
+      let capturedBookingData: Record<string, unknown> | null = null;
+      vi.mocked(db.booking.create).mockImplementation(
+        (args: { data: Record<string, unknown> }) => {
+          capturedBookingData = args.data;
+          return Promise.resolve({
+            id: 'booking-1',
+            reference: 'ENC-ABC123',
+            status: BookingStatus.PENDING_PAYMENT,
+          });
+        }
+      );
+      vi.mocked(db.booking.update).mockResolvedValue({} as never);
+
+      const { createBookingAndCheckout } =
+        await import('@/server/actions/checkout');
+      await createBookingAndCheckout(validInput);
+
+      // 4 guests × 250 = 1000 cents of service fee, platform's revenue:
+      // totalPrice stays 20000, application_fee = 2400 + 1000.
+      expect(capturedBookingData).not.toBeNull();
+      expect(capturedBookingData!.totalPrice).toBe(20000);
+      expect(capturedBookingData!.serviceFeeCents).toBe(1000);
+      expect(capturedBookingData!.wineryPayout).toBe(17600);
+      const session = sessionCreateMock.mock.calls[0]?.[0];
+      expect(session.line_items).toHaveLength(2);
+      expect(session.line_items[1].price_data.unit_amount).toBe(250);
+      expect(session.line_items[1].quantity).toBe(4);
+      expect(session.payment_intent_data.application_fee_amount).toBe(3400);
+    });
+
+    it('charges only the service fee for a Founder winery (0% commission)', async () => {
+      vi.mocked(db.featureFlag.findMany).mockResolvedValue([
+        { key: 'BOOKING_FEE', enabled: true, updatedAt: new Date() },
+      ] as never);
+      vi.mocked(db.experience.findUnique).mockResolvedValue({
+        ...mockExperience,
+        winery: { ...mockExperience.winery, commissionRate: 0 },
+      } as never);
+      vi.mocked(db.booking.aggregate).mockResolvedValue({
+        _sum: { guestCount: 0 },
+      } as never);
+      vi.mocked(db.booking.findUnique).mockResolvedValue(null);
+
+      let capturedBookingData: Record<string, unknown> | null = null;
+      vi.mocked(db.booking.create).mockImplementation(
+        (args: { data: Record<string, unknown> }) => {
+          capturedBookingData = args.data;
+          return Promise.resolve({
+            id: 'booking-1',
+            reference: 'ENC-ABC123',
+            status: BookingStatus.PENDING_PAYMENT,
+          });
+        }
+      );
+      vi.mocked(db.booking.update).mockResolvedValue({} as never);
+
+      const { createBookingAndCheckout } =
+        await import('@/server/actions/checkout');
+      await createBookingAndCheckout(validInput);
+
+      // Founder: platformFee 0, full payout; app fee = client fee alone.
+      expect(capturedBookingData).not.toBeNull();
+      expect(capturedBookingData!.platformFee).toBe(0);
+      expect(capturedBookingData!.wineryPayout).toBe(20000);
+      expect(capturedBookingData!.serviceFeeCents).toBe(1000);
+      const session = sessionCreateMock.mock.calls[0]?.[0];
+      expect(session.payment_intent_data.application_fee_amount).toBe(1000);
     });
   });
 

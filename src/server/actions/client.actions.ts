@@ -9,6 +9,7 @@ import { BookingStatus, Locale } from '@prisma/client';
 import type { ActionResult } from '@/types/actions';
 import { logError } from '@/lib/logger';
 import { processRefund } from '@/server/services/payment.service';
+import { computeRefundCents } from '@/lib/business-rules/cancellation-policy';
 import {
   sendBookingCancellationEmail,
   sendWinemakerCancellationEmail,
@@ -24,7 +25,7 @@ export interface ClientCancellationResult {
 /**
  * Cancel a booking as the authenticated client.
  * Verifies the user's email matches the booking's visitorEmail.
- * Refund policy: Full refund if >24h before experience, no refund otherwise.
+ * Refund follows the winery's cancellation policy (P-03 / L-043).
  */
 export async function cancelClientBooking(
   bookingId: string
@@ -55,6 +56,7 @@ export async function cancelClientBooking(
           select: {
             name: true,
             email: true,
+            cancellationPolicy: true,
             user: {
               select: {
                 name: true,
@@ -103,16 +105,23 @@ export async function cancelClientBooking(
       };
     }
 
-    // Determine refund eligibility (>24h = full refund)
-    const isEligibleForRefund = hoursUntilExperience > 24;
+    // Refund per the winery's cancellation policy (P-03 / L-043) on the
+    // full paid amount — tickets + service fee (decision D2).
+    const paidCents = booking.totalPrice + booking.serviceFeeCents;
+    const refundDueCents = computeRefundCents(
+      booking.winery.cancellationPolicy,
+      hoursUntilExperience,
+      paidCents
+    );
     let refundAmount: number | null = null;
     let stripeRefundId: string | null = null;
 
-    if (isEligibleForRefund && booking.stripePaymentIntentId) {
+    if (refundDueCents > 0 && booking.stripePaymentIntentId) {
       try {
         const refundResult = await processRefund(
           booking.stripePaymentIntentId,
-          true
+          true,
+          refundDueCents < paidCents ? refundDueCents : undefined
         );
         refundAmount = refundResult.amount;
         stripeRefundId = refundResult.refundId;
@@ -148,13 +157,14 @@ export async function cancelClientBooking(
     const bookingDateTime = new Date(booking.date);
     bookingDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
 
-    // Send cancellation email to client
+    // Send cancellation email to client (exact policy-based amount)
     await sendBookingCancellationEmail(booking.visitorEmail, {
       guestName: booking.visitorName,
       experienceTitle: booking.experience.title,
       wineryName: booking.winery.name,
       date: bookingDateTime,
       totalPrice: booking.totalPrice,
+      refundAmountCents: refundAmount ?? 0,
       bookingRef: booking.reference,
     });
 
@@ -179,7 +189,7 @@ export async function cancelClientBooking(
       data: {
         bookingId: updatedBooking.id,
         status: updatedBooking.status,
-        refundIssued: isEligibleForRefund,
+        refundIssued: refundAmount !== null,
         refundAmount,
       },
     };
