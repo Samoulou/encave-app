@@ -4,9 +4,23 @@ import { useCallback, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { createBookingHold } from '@/server/actions/checkout';
 import { useNavigateWithTransition } from '@/hooks/useNavigateWithTransition';
+import type { ErrorCode } from '@/types/actions';
 
 /** Loose cuid shape — enough to skip garbage without a server round-trip. */
 const CUID_PATTERN = /^c[a-z0-9]{20,}$/i;
+
+/**
+ * Refusals that no retry will fix (P-05): the slot is genuinely not
+ * sellable — full, on a blocked date, no longer offered, or closed by
+ * the winery. Each maps to its own inline message under the widget;
+ * navigating to checkout would only fail later at claim time.
+ */
+const DETERMINISTIC_REFUSAL_KEYS: Partial<Record<ErrorCode, string>> = {
+  NO_CAPACITY: 'holdSlotTaken',
+  DATE_BLOCKED: 'holdDateBlocked',
+  INVALID_SLOT: 'holdSlotUnavailable',
+  OCCURRENCE_CLOSED: 'holdSlotClosed',
+};
 
 interface StoredHold {
   holdId: string;
@@ -72,8 +86,10 @@ function writeStoredHold(experienceId: string, hold: StoredHold): void {
  * - Self-block safe: the previous unclaimed hold for this experience is
  *   memorized in sessionStorage and handed back to `createBookingHold`,
  *   which releases it in the same transaction.
- * - Only a genuine NO_CAPACITY blocks the user — any other failure (rate
- *   limit, server, network) degrades softly to the hold-at-submit flow.
+ * - Only a deterministic refusal blocks the user (NO_CAPACITY,
+ *   DATE_BLOCKED, INVALID_SLOT, OCCURRENCE_CLOSED — see
+ *   DETERMINISTIC_REFUSAL_KEYS); any other failure (rate limit, server,
+ *   network) degrades softly to the hold-at-submit flow.
  */
 export function useBookingHold(experienceId: string, experienceSlug: string) {
   const t = useTranslations('booking');
@@ -122,11 +138,15 @@ export function useBookingHold(experienceId: string, experienceSlug: string) {
           params.set('holdId', result.data.holdId);
           params.set('holdToken', result.data.holdToken);
           params.set('holdExpiresAt', result.data.expiresAt);
-        } else if (result.error.code === 'NO_CAPACITY') {
-          setHoldError(t('holdSlotTaken'));
-          return;
+        } else {
+          const refusalKey = DETERMINISTIC_REFUSAL_KEYS[result.error.code];
+          if (refusalKey !== undefined) {
+            setHoldError(t(refusalKey));
+            return;
+          }
+          // Any other failure (rate limit, server, network): soft
+          // degradation, checkout without a hold.
         }
-        // Any other failure: soft degradation, checkout without a hold.
 
         navigating = true;
         navigate(

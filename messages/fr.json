@@ -571,7 +571,10 @@
     "spotsLeft": "{count} {count, plural, =1 {place restante} other {places restantes}}",
     "whenVisit": "Quand souhaitez-vous nous rendre visite ?",
     "back": "Retour",
-    "holdSlotTaken": "Ce créneau vient tout juste d'être réservé par quelqu'un d'autre. Choisissez un autre horaire."
+    "holdSlotTaken": "Ce créneau vient tout juste d'être réservé par quelqu'un d'autre. Choisissez un autre horaire.",
+    "holdDateBlocked": "Cette date n'est pas ouverte à la réservation. Choisissez une autre date.",
+    "holdSlotUnavailable": "Cet horaire n'est plus proposé pour cette date. Choisissez un autre horaire.",
+    "holdSlotClosed": "Ce créneau a été fermé par l'encaveur. Choisissez un autre horaire."
   },
   "bookings": {
     "title": "Réservations",

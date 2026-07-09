@@ -571,7 +571,10 @@
     "spotsLeft": "{count} {count, plural, =1 {spot} other {spots}} left",
     "whenVisit": "When would you like to visit?",
     "back": "Back",
-    "holdSlotTaken": "This time slot was just booked by someone else. Please pick another time."
+    "holdSlotTaken": "This time slot was just booked by someone else. Please pick another time.",
+    "holdDateBlocked": "This date isn't open for booking. Please pick another date.",
+    "holdSlotUnavailable": "This time is no longer offered on this date. Please pick another time.",
+    "holdSlotClosed": "This time slot has been closed by the winery. Please pick another time."
   },
   "bookings": {
     "title": "Bookings",

@@ -571,7 +571,10 @@
     "spotsLeft": "{count} {count, plural, =1 {Platz} other {Plätze}} frei",
     "whenVisit": "Wann möchten Sie uns besuchen?",
     "back": "Zurück",
-    "holdSlotTaken": "Dieses Zeitfenster wurde soeben von jemand anderem gebucht. Bitte wählen Sie eine andere Zeit."
+    "holdSlotTaken": "Dieses Zeitfenster wurde soeben von jemand anderem gebucht. Bitte wählen Sie eine andere Zeit.",
+    "holdDateBlocked": "Dieses Datum ist nicht buchbar. Bitte wählen Sie ein anderes Datum.",
+    "holdSlotUnavailable": "Diese Uhrzeit wird an diesem Datum nicht mehr angeboten. Bitte wählen Sie eine andere Zeit.",
+    "holdSlotClosed": "Dieses Zeitfenster wurde vom Weingut geschlossen. Bitte wählen Sie eine andere Zeit."
   },
   "bookings": {
     "title": "Buchungen",
