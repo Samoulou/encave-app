@@ -1,6 +1,6 @@
 # P-03 — Monétisation Phase 1 💰
 
-> **Statut** : en cours · **Branche** : `claude/encave-v3-business-model-8bv7bd` (fallback session, cf. P-01) · **PR** : #
+> **Statut** : reviews passées (code 8 angles + sécurité), corrections livrées · **Branche** : `claude/encave-v3-business-model-8bv7bd` (fallback session, cf. P-01) · **PR** : #
 > **Sources** : `docs/ENCAVE-V3-DELIVERY-PLAN.md` §P-03 · items L-040→L-045 · specs `docs/v3/ENCAVE-V3-BUSINESS.md` §2/§9, `docs/v3/ENCAVE-V3-PRD.md` §5
 
 ## 1. Objectif
@@ -22,13 +22,13 @@ Le modèle économique V3 devient réel et pilotable : frais de service 2.50 CHF
 
 ## 3. Definition of Done (gate — délivery plan + ajouts)
 
-- [ ] **Kill-switch prouvé < 1 min sans deploy** : flag en DB, cache ≤ 60 s, toggle admin avec invalidation immédiate — mécanisme tranché ici (cf. §7) ; **flags OFF = e2e existants verts sans modification**
-- [ ] Flag ON : checkout affiche « Frais de service 2.50 » × billets en ligne séparée ET l'encaisse (test Stripe mode test) ; reçu/relevés cohérents ; `serviceFeeCents` persisté
-- [ ] Cave Fondateur → `application_fee` = fee client seule ; cave standard → fee + taux env (tests intégration sur les deux)
-- [ ] Remboursement calculé selon la politique de la cave (tests des 3 barèmes, bornes incluses) ; montant exact dans l'email ; page légale alignée
-- [ ] « EnCave vous a apporté X CHF » visible côté cave ; GMV/passif visibles côté admin
-- [ ] Chaque nouvelle server action : tests unauthorized / validation / happy path
-- [ ] Socle transverse (§3 du delivery plan) vert ; `/security-review` (package 💰) au stade ⑤
+- [x] **Kill-switch prouvé < 1 min sans deploy** : flag en DB, cache ≤ 60 s, toggle admin avec invalidation immédiate — mécanisme tranché ici (cf. §7) ; **flags OFF = e2e existants verts sans modification**
+- [x] Flag ON : checkout affiche « Frais de service 2.50 » × billets en ligne séparée ET l'encaisse (test Stripe mode test) ; reçu/relevés cohérents ; `serviceFeeCents` persisté
+- [x] Cave Fondateur → `application_fee` = fee client seule ; cave standard → fee + taux env (tests intégration sur les deux)
+- [x] Remboursement calculé selon la politique de la cave (tests des 3 barèmes, bornes incluses) ; montant exact dans l'email ; page légale alignée
+- [x] « EnCave vous a apporté X CHF » visible côté cave ; GMV/passif visibles côté admin
+- [x] Chaque nouvelle server action : tests unauthorized / validation / happy path
+- [x] Socle transverse vert ; code-review 8 angles + security-review passées, blockers corrigés (cf. §8)
 
 ## 4. Découpage technique
 
@@ -58,3 +58,11 @@ Le modèle économique V3 devient réel et pilotable : frais de service 2.50 CHF
 - **D2 — Frais de service en cas d'annulation (validé Sam 09.07)** : remboursés au même pourcentage que le billet (100 % → tout, 50 % → moitié des frais aussi). Simple à expliquer, cohérent « pas de marge sur les frais ».
 - **D3 — Mécanisme de flags (technique)** : DB + cache 60 s + toggle admin (pas Edge Config : aucun vendor de plus, fonctionne en local/preview/staging/prod, kill-switch via admin OU SQL direct).
 - **D4 — Taux standard** : le code lit `winery.commissionRate ?? PLATFORM_COMMISSION_RATE` ; le passage 12 % → 10 % au launch est un flip d'env var par Sam, hors code.
+
+## 8. Bilan des reviews (⑤)
+
+**Code-review (8 angles, 40 candidats → 10 findings majeurs, tous corrigés)** : app fee 0 rejetée par Stripe (Fondateur + flag OFF) ; email de confirmation/PostHog sans les frais ; politique lue au moment de l'annulation au lieu du booking (→ **snapshot** `Booking.cancellationPolicy`, migration additive) ; annulation de session cave et plafond du refund admin sans les frais ; `refundIssued` zéroant les remboursements partiels dans Earnings (→ payout proportionnel) ; modal d'annulation promettant le mauvais montant ; flip du flag entre affichage et paiement (→ `FEE_CHANGED`) ; email « aucun remboursement » à tort quand pas de payment intent ; panneau flags en état périmé. Plus : badge dérivé de `POLICY_TIERS`, label Stripe localisé, sélecteur de politique côté cave (L-043), GMV avec NO_SHOW.
+
+**Security-review (NOGO → corrigé → repasse Luca)** : course au double remboursement **partiel** (2 annulations concurrentes à 50 % = 100 %, débité 2× au vigneron) fermée par claim atomique `updateMany(status: CONFIRMED)` avant Stripe + `idempotencyKey` sur `refunds.create` ; `cancelEventSession` enregistre le montant réellement remboursé ; `requireAdmin` sorti de la surface RPC ; `displayedServiceFeeCentsPerGuest` requis ; `guestCount` entier.
+
+**Dette assumée (trackée, hors gate)** : KpiCard/StatCard à unifier ; 4 agrégats admin → 2 ; pré-fetch `setWineryPlan` ; RHF sur le panneau admin commission ; blocs arrange dupliqués dans checkout.test ; labels sr-only EN des skeletons (dette préexistante) ; PDF reçu en français (dette connue) ; changement de borne à exactement 24 h (D1 « jusqu'à 24 h » inclusif — comportement voulu, remboursement accordé pile à la borne, communiqué à Sam).
