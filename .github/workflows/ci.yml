@@ -74,6 +74,25 @@ jobs:
     runs-on: ubuntu-latest
     needs: [lint-and-typecheck, test]
 
+    # The homepage is statically generated at build time and queries the
+    # database, so the build needs a real (empty) Postgres. The prebuild
+    # applies the full migration history to it — every PR to main thereby
+    # also validates a virgin-database migrate deploy.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: encave
+          POSTGRES_PASSWORD: encave
+          POSTGRES_DB: encave
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U encave"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -93,7 +112,5 @@ jobs:
       - name: Build application
         run: npm run build
         env:
-          DATABASE_URL: 'postgresql://placeholder:placeholder@localhost:5432/encave'
-          # No reachable database in CI — the prebuild migrate deploy must
-          # not run here (it runs for real on every Vercel deployment).
-          SKIP_DB_MIGRATIONS: '1'
+          DATABASE_URL: 'postgresql://encave:encave@localhost:5432/encave'
+          DIRECT_URL: 'postgresql://encave:encave@localhost:5432/encave'
