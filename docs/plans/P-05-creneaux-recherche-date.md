@@ -2,7 +2,7 @@
 
 > **Statut** : en cours · **Branche** : `claude/encave-v3-business-model-8bv7bd` (fallback session, cf. P-01) · **PR** : #
 > **Sources** : `docs/ENCAVE-V3-DELIVERY-PLAN.md` §P-05 · items L-024 (moteur), L-110, L-111, L-131, L-132 · spec `docs/v3/ENCAVE-V3-PRD.md` US-101 · `docs/v3/ENCAVE-V3-PAGES-EMAILS.md` §0.1/§2/§6
-> **Type** : non-💰 (review `high`, pas de `/code-review max`). Mais **touche le cœur capacité durci en P-04** → kill-switch env + rigueur de tests P-04.
+> **Type** : non-💰 (review `high`, pas de `/code-review max`). Mais **touche le cœur capacité durci en P-04** → kill-switch flag `OCCURRENCE_CAPACITY` + rigueur de tests P-04. **ADR : `docs/adr/0002-occurrence-authoritative-capacity.md`.**
 
 ## 1. Objectif
 
@@ -32,7 +32,7 @@ Matérialiser les créneaux : l'`ExperienceOccurrence` (posée en P-02, aujourd'
 **IN** :
 
 - **L-024 (moteur, non livré en P-02)** : service de génération d'occurrences (récurrent hebdo + ponctuel + blackouts), horizon glissant, upsert idempotent ; migration douce des bookings futurs ; cron de roulement.
-- **Bascule capacité (D1)** : `getTimeSlotsForDate`, `checkAvailability`, `createBookingHold`, `createBookingAndCheckout` occurrence-aware (résolution + upsert défensif + `occurrenceId` sur create + `capacityOverride` + `status`). `activeCapacityBookingWhere` étendu ou dupliqué proprement par occurrence (source unique, cf. P-04).
+- **Bascule capacité (D1 amendé)** : `getTimeSlotsForDate`, `checkAvailability`, `createBookingHold`, `createBookingAndCheckout` occurrence-aware — résolution hors tx, gate status + capacité effective dans la tx, `occurrenceId` stampé, **comptage `(date,timeSlot)` inchangé** (`activeCapacityBookingWhere` intact).
 - **L-131** : UI création — mode ponctuel (chips dates + heures) ET récurrent avec blackouts au tap ; aperçu live des 8 prochaines occurrences.
 - **L-132** : calendrier mensuel par expérience — fermer une occurrence, ajuster sa capacité, voir les inscrits. Repointe l'UI `event-detail` (SessionCard/grouping) sur les occurrences.
 - **L-110** : champ « Quand » home + filtre Date catalogue + tri « prochaine dispo » par défaut.
