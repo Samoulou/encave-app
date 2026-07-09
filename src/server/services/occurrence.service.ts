@@ -26,6 +26,9 @@ import { logInfo } from '@/lib/logger';
  */
 export class OccurrenceResolutionError extends Error {
   constructor(
+    // TS parameter property — used by callers; base no-unused-vars
+    // false-positives on it (same idiom as Pagination.tsx).
+    /* eslint-disable-next-line no-unused-vars */
     public readonly code: 'DATE_BLOCKED' | 'INVALID_SLOT',
     message: string
   ) {
