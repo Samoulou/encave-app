@@ -30,6 +30,61 @@ enum ExperienceType {
   WORKSHOP
   VINEYARD_TOUR
   FOOD_PAIRING
+  MEAL
+  EVENT
+}
+
+enum CancellationPolicy {
+  FLEXIBLE
+  STANDARD
+  STRICT
+}
+
+enum WineryPlan {
+  FOUNDER
+  STANDARD
+}
+
+enum GiftCardStatus {
+  ACTIVE
+  DISABLED
+  EXPIRED
+}
+
+enum GiftCardTransactionType {
+  PURCHASE
+  REDEMPTION
+  REFUND
+  ADJUSTMENT
+}
+
+enum RequestStatus {
+  PENDING
+  OFFERED
+  PAID
+  EXPIRED
+  CLOSED
+}
+
+enum RequestOfferStatus {
+  SENT
+  PAID
+  EXPIRED
+  WITHDRAWN
+}
+
+enum OccurrenceStatus {
+  OPEN
+  CLOSED
+  CANCELLED
+}
+
+enum ScheduledJobStatus {
+  PENDING
+  PROCESSING
+  DONE
+  FAILED
+  CANCELLED
 }
 
 enum ExperienceStatus {
@@ -75,13 +130,14 @@ model User {
   sessions Session[]
   winery   Winery?
 
+  @@index([suspendedAt])
   @@map("users")
 }
 
 model Winery {
-  id                       String       @id @default(cuid())
-  name                     String       @unique
-  slug                     String       @unique
+  id                       String             @id @default(cuid())
+  name                     String             @unique
+  slug                     String             @unique
   description              String
   address                  String
   commune                  String
@@ -90,23 +146,33 @@ model Winery {
   coverPhoto               String?
   latitude                 Float? // Geocoded from address
   longitude                Float? // Geocoded from address
-  userId                   String       @unique
-  user                     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  status                   WineryStatus @default(PENDING)
+  userId                   String             @unique
+  user                     User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status                   WineryStatus       @default(PENDING)
   verifiedAt               DateTime?
   verifiedBy               String?
   rejectionReason          String?
-  stripeAccountId          String?      @unique
-  stripeOnboardingComplete Boolean      @default(false)
-  stripeDetailsSubmitted   Boolean      @default(false)
-  createdAt                DateTime     @default(now())
-  updatedAt                DateTime     @updatedAt
+  stripeAccountId          String?            @unique
+  stripeOnboardingComplete Boolean            @default(false)
+  stripeDetailsSubmitted   Boolean            @default(false)
+  // V3 monetization & policies (P-02 foundations — consumed from P-03 on).
+  // commissionRate null = platform default (PLATFORM_COMMISSION_RATE env).
+  plan                     WineryPlan         @default(STANDARD)
+  commissionRate           Float?
+  cancellationPolicy       CancellationPolicy @default(STANDARD)
+  noShowFeeEnabled         Boolean            @default(false)
+  noShowFeeCents           Int                @default(1500)
+  createdAt                DateTime           @default(now())
+  updatedAt                DateTime           @updatedAt
 
   galleryImages           WineryGalleryImage[]
   verificationLogs        VerificationLog[]
   experiences             Experience[]
   bookings                Booking[]
   notificationPreferences NotificationPreferences?
+  wines                   Wine[]
+  requests                Request[]
+  eventParticipations     EventParticipant[]
 
   @@index([commune])
   @@index([status])
@@ -198,32 +264,37 @@ model VerificationLog {
 }
 
 model Experience {
-  id          String           @id @default(cuid())
-  wineryId    String
-  winery      Winery           @relation(fields: [wineryId], references: [id], onDelete: Cascade)
-  title       String
-  slug        String
-  description String           @db.Text
-  type        ExperienceType
-  duration    Int // minutes
-  price       Int // cents (CHF)
-  minCapacity Int
-  maxCapacity Int
-  coverPhoto  String
+  id           String           @id @default(cuid())
+  wineryId     String
+  winery       Winery           @relation(fields: [wineryId], references: [id], onDelete: Cascade)
+  title        String
+  slug         String
+  description  String           @db.Text
+  type         ExperienceType
+  duration     Int // minutes
+  price        Int // cents (CHF)
+  minCapacity  Int
+  maxCapacity  Int
+  // V3 (P-02 foundations): spoken languages and collective events (US-250).
+  languages    Locale[]         @default([FR])
+  isCollective Boolean          @default(false)
+  coverPhoto   String
   // Location fields (optional - falls back to winery address if not set)
-  address     String? // Street address
-  city        String? // City/commune
-  zipCode     String? // Postal code
-  latitude    Float? // Geocoded latitude
-  longitude   Float? // Geocoded longitude
-  status      ExperienceStatus @default(DRAFT)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  address      String? // Street address
+  city         String? // City/commune
+  zipCode      String? // Postal code
+  latitude     Float? // Geocoded latitude
+  longitude    Float? // Geocoded longitude
+  status       ExperienceStatus @default(DRAFT)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
 
   galleryImages     ExperienceGalleryImage[]
   availabilitySlots AvailabilitySlot[]
   bookings          Booking[]
   blockedDates      BlockedDate[]
+  occurrences       ExperienceOccurrence[]
+  participants      EventParticipant[]
 
   @@unique([wineryId, slug])
   @@index([wineryId])
@@ -264,22 +335,22 @@ model AvailabilitySlot {
 }
 
 model Booking {
-  id                      String        @id @default(cuid())
-  reference               String        @unique // ENC-XXXXXX
+  id                      String                @id @default(cuid())
+  reference               String                @unique // ENC-XXXXXX
   visitorEmail            String
   visitorName             String
   visitorPhone            String
   experienceId            String
-  experience              Experience    @relation(fields: [experienceId], references: [id])
+  experience              Experience            @relation(fields: [experienceId], references: [id])
   wineryId                String
-  winery                  Winery        @relation(fields: [wineryId], references: [id])
-  date                    DateTime      @db.Date
+  winery                  Winery                @relation(fields: [wineryId], references: [id])
+  date                    DateTime              @db.Date
   timeSlot                String // "HH:mm"
   guestCount              Int
   totalPrice              Int // cents
   platformFee             Int // cents
   wineryPayout            Int // cents
-  status                  BookingStatus @default(PENDING_PAYMENT)
+  status                  BookingStatus         @default(PENDING_PAYMENT)
   stripeCheckoutSessionId String?
   stripePaymentIntentId   String?
   expiresAt               DateTime? // For pending payment reservations
@@ -291,15 +362,21 @@ model Booking {
   followUpSentAt          DateTime? // When post-experience follow-up was sent
   cancelledAt             DateTime? // When booking was cancelled
   cancellationReason      String?
-  refundIssued            Boolean       @default(false)
+  refundIssued            Boolean               @default(false)
   refundAmount            Int? // cents - amount refunded
   stripeRefundId          String? // Stripe refund ID for tracking
   refundError             String?
   checkedInAt             DateTime? // When client was checked in by winery (ENC-096)
   ageConfirmedAt          DateTime?
   ageConfirmedVersion     String?
-  createdAt               DateTime      @default(now())
-  updatedAt               DateTime      @updatedAt
+  // V3 (P-02): optional link to a persisted occurrence. Capacity checks
+  // keep using (experienceId, date, timeSlot) until P-05 switches over.
+  occurrenceId            String?
+  occurrence              ExperienceOccurrence? @relation(fields: [occurrenceId], references: [id], onDelete: SetNull)
+  createdAt               DateTime              @default(now())
+  updatedAt               DateTime              @updatedAt
+
+  wines BookingWine[]
 
   @@index([experienceId])
   @@index([wineryId])
@@ -311,6 +388,7 @@ model Booking {
   @@index([accessTokenHash])
   @@index([stripeCheckoutSessionId])
   @@index([stripePaymentIntentId])
+  @@index([occurrenceId])
   @@map("bookings")
 }
 
@@ -404,4 +482,195 @@ model NewsletterSubscription {
   createdAt DateTime @default(now())
 
   @@map("newsletter_subscriptions")
+}
+
+// ============================================================
+// V3 foundations (P-02) — no product surface reads these yet.
+// Money invariants are enforced in SQL (CHECK + triggers) in the
+// migration, not only here. See docs/plans/P-02-schema-v3.md.
+// ============================================================
+
+model Wine {
+  id           String   @id @default(cuid())
+  wineryId     String
+  winery       Winery   @relation(fields: [wineryId], references: [id], onDelete: Cascade)
+  name         String
+  grapeVariety String
+  vintage      Int?
+  price        Int // cents (CHF)
+  available    Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  bookingWines BookingWine[]
+
+  @@index([wineryId, available])
+  @@map("wines")
+}
+
+// Tasting sheet (US-230): wines actually served during a booking.
+model BookingWine {
+  id        String   @id @default(cuid())
+  bookingId String
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  wineId    String
+  wine      Wine     @relation(fields: [wineId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([bookingId, wineId])
+  @@index([wineId])
+  @@map("booking_wines")
+}
+
+// Gift card (US-210). balance is materialized and guarded by a DB CHECK
+// (>= 0); every movement MUST append a GiftCardTransaction in the same
+// transaction. The ledger is append-only (DB trigger forbids UPDATE/DELETE).
+model GiftCard {
+  id                    String         @id @default(cuid())
+  code                  String         @unique
+  status                GiftCardStatus @default(ACTIVE)
+  initialAmount         Int // cents
+  balance               Int // cents — CHECK (balance >= 0) in migration
+  purchaserEmail        String
+  purchaserName         String?
+  recipientEmail        String?
+  recipientName         String?
+  message               String?        @db.Text
+  experienceId          String? // gift for a specific experience (optional)
+  deliverAt             DateTime? // scheduled recipient delivery
+  deliveredAt           DateTime?
+  expiresAt             DateTime // 5-year legal validity
+  stripePaymentIntentId String?
+  locale                Locale         @default(FR)
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  transactions GiftCardTransaction[]
+
+  @@index([status, expiresAt])
+  @@index([purchaserEmail])
+  @@index([recipientEmail])
+  @@map("gift_cards")
+}
+
+model GiftCardTransaction {
+  id         String                  @id @default(cuid())
+  giftCardId String
+  giftCard   GiftCard                @relation(fields: [giftCardId], references: [id], onDelete: Restrict)
+  type       GiftCardTransactionType
+  // Signed delta in cents: PURCHASE/REFUND/ADJUSTMENT > 0, REDEMPTION < 0.
+  amount     Int
+  bookingId  String?
+  note       String?
+  createdAt  DateTime                @default(now())
+
+  @@index([giftCardId, createdAt])
+  @@index([bookingId])
+  @@map("gift_card_transactions")
+}
+
+// Sur-mesure request (US-240).
+model Request {
+  id          String        @id @default(cuid())
+  reference   String        @unique // REQ-XXXXXXXX
+  status      RequestStatus @default(PENDING)
+  wineryId    String? // null = "laissez EnCave proposer"
+  winery      Winery?       @relation(fields: [wineryId], references: [id], onDelete: SetNull)
+  clientEmail String
+  clientName  String
+  clientPhone String?
+  desiredDate DateTime?     @db.Date
+  guestCount  Int
+  budget      Int? // cents, indicative
+  description String        @db.Text
+  locale      Locale        @default(FR)
+  closedAt    DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  offers RequestOffer[]
+
+  @@index([wineryId, status])
+  @@index([status, createdAt])
+  @@index([clientEmail])
+  @@map("requests")
+}
+
+model RequestOffer {
+  id                      String             @id @default(cuid())
+  requestId               String
+  request                 Request            @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  status                  RequestOfferStatus @default(SENT)
+  message                 String             @db.Text
+  totalPrice              Int // cents
+  expiresAt               DateTime
+  reminderSentAt          DateTime? // single automatic reminder (spec)
+  stripeCheckoutSessionId String?
+  bookingId               String?
+  createdAt               DateTime           @default(now())
+  updatedAt               DateTime           @updatedAt
+
+  @@index([requestId])
+  @@index([status, expiresAt])
+  @@map("request_offers")
+}
+
+// Persisted occurrence of a Slot experience (US-101). Uniqueness matches
+// the legacy (experienceId, date, timeSlot) capacity key so existing
+// bookings can be attached without rewriting the checkout (P-05).
+model ExperienceOccurrence {
+  id               String           @id @default(cuid())
+  experienceId     String
+  experience       Experience       @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  date             DateTime         @db.Date
+  startTime        String // "HH:mm" — same format as Booking.timeSlot
+  status           OccurrenceStatus @default(OPEN)
+  capacityOverride Int? // null = experience.maxCapacity — CHECK (>= 1) in migration
+  source           String           @default("RECURRING") // RECURRING | PUNCTUAL
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  bookings Booking[]
+
+  @@unique([experienceId, date, startTime])
+  @@index([experienceId, date])
+  @@index([date, status])
+  @@map("experience_occurrences")
+}
+
+// Collective events (US-250, light): participating wineries shown on the
+// event page; the experience's own winery stays the single paid organizer.
+model EventParticipant {
+  id           String     @id @default(cuid())
+  experienceId String
+  experience   Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  wineryId     String
+  winery       Winery     @relation(fields: [wineryId], references: [id], onDelete: Cascade)
+  description  String?
+  order        Int        @default(0)
+  createdAt    DateTime   @default(now())
+
+  @@unique([experienceId, wineryId])
+  @@index([wineryId])
+  @@map("event_participants")
+}
+
+// Generic deferred-job table (Vercel Cron replaces Trigger.dev — stack
+// decision). Used from P-03+ for gift-card delivery, request reminders
+// and the J+2 tasting email.
+model ScheduledJob {
+  id        String             @id @default(cuid())
+  type      String // e.g. GIFT_CARD_DELIVERY, REQUEST_OFFER_REMINDER, TASTING_RECAP
+  runAt     DateTime
+  status    ScheduledJobStatus @default(PENDING)
+  payload   Json
+  dedupeKey String?            @unique
+  attempts  Int                @default(0)
+  lastError String?
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  @@index([status, runAt])
+  @@index([type, status])
+  @@map("scheduled_jobs")
 }

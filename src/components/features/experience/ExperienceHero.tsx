@@ -17,6 +17,8 @@ const TYPE_LABELS: Record<ExperienceType, string> = {
   WORKSHOP: 'Workshop',
   VINEYARD_TOUR: 'Vineyard Tour',
   FOOD_PAIRING: 'Food Pairing',
+  MEAL: 'Meal at the Winery',
+  EVENT: 'Event',
 };
 
 export function ExperienceHero({
