@@ -17,6 +17,14 @@ on:
         description: "Type 'migrate-deploy' to confirm"
         required: true
         type: string
+      seed:
+        description: 'DESTRUCTIVE — wipes tables then reseeds. Never production.'
+        required: true
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes-wipe-and-seed'
 
 jobs:
   migrate:
@@ -60,3 +68,11 @@ jobs:
 
       - name: Migration status
         run: npx --yes prisma@5.22.0 migrate status
+
+      - name: Install dependencies (seed only)
+        if: ${{ inputs.seed == 'yes-wipe-and-seed' }}
+        run: npm ci
+
+      - name: Seed database (wipes existing data)
+        if: ${{ inputs.seed == 'yes-wipe-and-seed' }}
+        run: npx prisma db seed
