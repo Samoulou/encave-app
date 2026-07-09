@@ -181,4 +181,16 @@ describe('occurrence owner actions (P-05 / L-132)', () => {
     expect(result.success).toBe(false);
     if (!result.success) expect(result.error.code).toBe('VALIDATION_ERROR');
   });
+
+  it('rejects an impossible calendar date as VALIDATION_ERROR, not INTERNAL_ERROR', async () => {
+    // "2026-02-31" passes a naive regex but is not a real date — it must
+    // die in validation, never as an Invalid-Date RangeError downstream.
+    const result = await addPunctualOccurrences({
+      experienceId: 'ckvexp000000000000000000w',
+      picks: [{ date: '2026-02-31', startTime: '10:00' }],
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error.code).toBe('VALIDATION_ERROR');
+    expect(createPunctualOccurrences).not.toHaveBeenCalled();
+  });
 });

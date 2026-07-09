@@ -172,3 +172,122 @@ describe('URL parameter parsing helpers', () => {
     expect(parseSort(undefined)).toBe('relevance');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Date-window behavior (P-05 review fixes): today clamp, per-date blackout
+// correlation, blackout-aware nextOccurrence pick.
+// ---------------------------------------------------------------------------
+
+vi.mock('@/server/db', () => ({
+  db: {
+    experience: { findMany: vi.fn(), count: vi.fn() },
+    experienceOccurrence: { findMany: vi.fn() },
+    blockedDate: { findMany: vi.fn() },
+  },
+}));
+
+const { db } = await import('@/server/db');
+const { searchExperiences } =
+  await import('@/server/queries/experience.queries');
+const { zurichTodayAsUTCDate } =
+  await import('@/lib/business-rules/occurrence-expansion');
+
+const WINERY = {
+  id: 'w-1',
+  name: 'Cave Test',
+  slug: 'cave-test',
+  commune: 'Sion',
+  latitude: null,
+  longitude: null,
+};
+
+describe('searchExperiences date window (P-05 / L-110)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(db.experience.findMany).mockResolvedValue([] as never);
+    vi.mocked(db.experience.count).mockResolvedValue(0 as never);
+    vi.mocked(db.experienceOccurrence.findMany).mockResolvedValue([] as never);
+    vi.mocked(db.blockedDate.findMany).mockResolvedValue([] as never);
+  });
+
+  it('excludes an experience whose only OPEN occurrence sits on a blocked date', async () => {
+    const day = new Date('2099-06-05T00:00:00.000Z');
+    vi.mocked(db.experienceOccurrence.findMany).mockResolvedValue([
+      { experienceId: 'exp-blocked', date: day },
+      { experienceId: 'exp-free', date: day },
+    ] as never);
+    vi.mocked(db.blockedDate.findMany).mockResolvedValue([
+      { experienceId: 'exp-blocked', date: day },
+    ] as never);
+
+    await searchExperiences({
+      availableFrom: '2099-06-05',
+      sort: 'next_availability',
+    });
+
+    expect(db.experience.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ id: { in: ['exp-free'] } }),
+      })
+    );
+  });
+
+  it('clamps a past availableFrom to today (Zurich)', async () => {
+    await searchExperiences({
+      availableFrom: '2020-01-01',
+      availableTo: '2099-12-31',
+      sort: 'next_availability',
+    });
+
+    const args = vi.mocked(db.experienceOccurrence.findMany).mock.calls[0]?.[0];
+    const gte = (args?.where?.date as { gte?: Date } | undefined)?.gte;
+    expect(gte?.getTime()).toBe(zurichTodayAsUTCDate().getTime());
+  });
+
+  it('a window entirely in the past matches nothing without querying occurrences', async () => {
+    const result = await searchExperiences({
+      availableFrom: '2020-01-01',
+      availableTo: '2020-01-02',
+      sort: 'next_availability',
+    });
+
+    expect(db.experienceOccurrence.findMany).not.toHaveBeenCalled();
+    expect(db.experience.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ id: { in: [] } }),
+      })
+    );
+    expect(result.experiences).toEqual([]);
+  });
+
+  it('nextOccurrence skips blacked-out dates (D3 derived at read)', async () => {
+    const blockedDay = new Date('2099-07-04T00:00:00.000Z');
+    const freeDay = new Date('2099-07-11T00:00:00.000Z');
+    vi.mocked(db.experience.findMany).mockResolvedValue([
+      {
+        id: 'exp-1',
+        title: 'Dégustation',
+        slug: 'degustation',
+        description: 'x',
+        type: 'TASTING',
+        duration: 60,
+        price: 2500,
+        maxCapacity: 8,
+        coverPhoto: 'https://example.com/c.jpg',
+        createdAt: new Date('2026-01-01T00:00:00.000Z'),
+        winery: WINERY,
+        occurrences: [
+          { date: blockedDay, startTime: '10:00' },
+          { date: freeDay, startTime: '10:00' },
+        ],
+        blockedDates: [{ date: blockedDay }],
+      },
+    ] as never);
+
+    const result = await searchExperiences({ sort: 'next_availability' });
+
+    expect(result.experiences[0]?.nextOccurrence?.date.getTime()).toBe(
+      freeDay.getTime()
+    );
+  });
+});

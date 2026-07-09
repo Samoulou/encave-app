@@ -8,6 +8,7 @@
  */
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { PrismaClient, OccurrenceStatus } from '@prisma/client';
+import { zurichTodayAsUTCDate } from '@/lib/business-rules/occurrence-expansion';
 
 const url = process.env.INVARIANTS_DATABASE_URL;
 
@@ -24,10 +25,19 @@ type OccurrenceService = typeof import('@/server/services/occurrence.service');
 type CheckoutActions = typeof import('@/server/actions/checkout');
 type BookingActions = typeof import('@/server/actions/booking');
 
+/** Next Saturday at least `minDays` out, as a YYYY-MM-DD key (UTC). */
+function saturdayKeyAfter(minDays: number): string {
+  const d = new Date(Date.now() + minDays * 24 * 60 * 60 * 1000);
+  while (d.getUTCDay() !== 6) d.setUTCDate(d.getUTCDate() + 1);
+  return d.toISOString().slice(0, 10);
+}
+
 describe.skipIf(!url)('occurrence engine (P-05 / L-024, ADR-0002)', () => {
   let db: PrismaClient;
   let generateOccurrences: OccurrenceService['generateOccurrences'];
   let resolveOccurrence: OccurrenceService['resolveOccurrence'];
+  let createPunctualOccurrences: OccurrenceService['createPunctualOccurrences'];
+  let closeOrphanedRecurringOccurrences: OccurrenceService['closeOrphanedRecurringOccurrences'];
   let createBookingHold: CheckoutActions['createBookingHold'];
   let getTimeSlotsForDate: BookingActions['getTimeSlotsForDate'];
   const ids: { userId?: string; wineryId?: string; experienceId?: string } = {};
@@ -43,8 +53,12 @@ describe.skipIf(!url)('occurrence engine (P-05 / L-024, ADR-0002)', () => {
   }
 
   beforeAll(async () => {
-    ({ generateOccurrences, resolveOccurrence } =
-      await import('@/server/services/occurrence.service'));
+    ({
+      generateOccurrences,
+      resolveOccurrence,
+      createPunctualOccurrences,
+      closeOrphanedRecurringOccurrences,
+    } = await import('@/server/services/occurrence.service'));
     ({ createBookingHold } = await import('@/server/actions/checkout'));
     ({ getTimeSlotsForDate } = await import('@/server/actions/booking'));
     db = new PrismaClient({ datasourceUrl: url });
@@ -262,6 +276,175 @@ describe.skipIf(!url)('occurrence engine (P-05 / L-024, ADR-0002)', () => {
         '23:45'
       )
     ).rejects.toMatchObject({ code: 'INVALID_SLOT' });
+  });
+
+  it('refuses a PAST date even when an OPEN occurrence row exists', async () => {
+    // Stale OPEN rows are never auto-closed by time — the resolve gate
+    // must refuse them BEFORE the existing-row short-circuit.
+    const pastKey = inHorizonDateKey(-7);
+    const pastDate = new Date(`${pastKey}T00:00:00.000Z`);
+    await db.experienceOccurrence.create({
+      data: {
+        experienceId: expId(),
+        date: pastDate,
+        startTime: '10:00',
+        status: OccurrenceStatus.OPEN,
+        source: 'RECURRING',
+      },
+    });
+
+    try {
+      await expect(
+        resolveOccurrence(expId(), pastDate, '10:00')
+      ).rejects.toMatchObject({ code: 'INVALID_SLOT' });
+
+      // Full hold path: refused end to end.
+      const refused = await createBookingHold({
+        experienceId: expId(),
+        date: pastKey,
+        timeSlot: '10:00',
+        guestCount: 1,
+      });
+      expect(refused.success).toBe(false);
+      if (!refused.success) {
+        expect(refused.error.code).toBe('INVALID_SLOT');
+      }
+    } finally {
+      await db.experienceOccurrence.delete({
+        where: {
+          experienceId_date_startTime: {
+            experienceId: expId(),
+            date: pastDate,
+            startTime: '10:00',
+          },
+        },
+      });
+    }
+  });
+
+  it('materializes a weekly slot BEYOND the horizon on demand (booking window ≠ horizon)', async () => {
+    // The public picker offers 3 months; the 42d horizon only bounds
+    // eager generation. A Saturday at ~9-10 weeks must hold fine.
+    const farKey = saturdayKeyAfter(63);
+    const farDate = new Date(`${farKey}T00:00:00.000Z`);
+
+    const before = await db.experienceOccurrence.findUnique({
+      where: {
+        experienceId_date_startTime: {
+          experienceId: expId(),
+          date: farDate,
+          startTime: '10:00',
+        },
+      },
+    });
+    expect(before).toBeNull(); // beyond eager window — nothing materialized
+
+    const hold = await createBookingHold({
+      experienceId: expId(),
+      date: farKey,
+      timeSlot: '10:00',
+      guestCount: 1,
+    });
+    expect(hold.success).toBe(true);
+
+    // …while a slot with no weekly pattern behind it still refuses out
+    // there (the legitimacy gate is slot-based, not horizon-based).
+    await expect(
+      resolveOccurrence(expId(), farDate, '23:45')
+    ).rejects.toMatchObject({ code: 'INVALID_SLOT' });
+
+    if (hold.success) {
+      await db.booking.delete({ where: { id: hold.data.holdId } });
+    }
+    await db.experienceOccurrence.deleteMany({
+      where: { experienceId: expId(), date: farDate },
+    });
+  });
+
+  it('a removed weekly slot stops selling: orphaned RECURRING close, punctual/matching survive', async () => {
+    // Punctual pick on a weekday with no weekly slot behind it.
+    const punctualKey = inHorizonDateKey(5);
+    const punctualDate = new Date(`${punctualKey}T00:00:00.000Z`);
+    await createPunctualOccurrences(expId(), [
+      { date: punctualDate, startTime: '12:30' },
+    ]);
+
+    // Same "future" boundary as the service (Zurich today), or the
+    // count assertion goes flaky on Saturdays.
+    const futureFrom = zurichTodayAsUTCDate();
+    const sixteenBefore = await db.experienceOccurrence.findMany({
+      where: {
+        experienceId: expId(),
+        startTime: '16:00',
+        status: OccurrenceStatus.OPEN,
+        date: { gte: futureFrom },
+      },
+      select: { id: true },
+    });
+    expect(sixteenBefore.length).toBeGreaterThan(0);
+
+    // Owner deactivates the Saturday 16:00 slot.
+    await db.availabilitySlot.updateMany({
+      where: { experienceId: expId(), startTime: '16:00' },
+      data: { isActive: false },
+    });
+
+    try {
+      const { closed } = await closeOrphanedRecurringOccurrences(expId());
+      expect(closed).toBe(sixteenBefore.length);
+
+      const survivors = await db.experienceOccurrence.findMany({
+        where: {
+          experienceId: expId(),
+          status: OccurrenceStatus.OPEN,
+          date: { gte: futureFrom },
+        },
+        select: { startTime: true, source: true },
+      });
+      // 10:00 recurring rows and the 12:30 punctual pick are untouched.
+      expect(survivors.some((s) => s.startTime === '10:00')).toBe(true);
+      expect(survivors.some((s) => s.startTime === '12:30')).toBe(true);
+      expect(survivors.some((s) => s.startTime === '16:00')).toBe(false);
+
+      // And the closed slot refuses new holds immediately.
+      // Strictly future (tomorrow+): a today-row hold could trip the
+      // past-date gate instead of the closed gate.
+      const sixteenRow = await db.experienceOccurrence.findFirstOrThrow({
+        where: {
+          experienceId: expId(),
+          startTime: '16:00',
+          date: { gt: futureFrom },
+        },
+        orderBy: { date: 'asc' },
+      });
+      const refused = await createBookingHold({
+        experienceId: expId(),
+        date: sixteenRow.date.toISOString().slice(0, 10),
+        timeSlot: '16:00',
+        guestCount: 1,
+      });
+      expect(refused.success).toBe(false);
+      if (!refused.success) {
+        expect(refused.error.code).toBe('OCCURRENCE_CLOSED');
+      }
+    } finally {
+      // Restore fixture state for the remaining tests.
+      await db.availabilitySlot.updateMany({
+        where: { experienceId: expId(), startTime: '16:00' },
+        data: { isActive: true },
+      });
+      await db.experienceOccurrence.updateMany({
+        where: { id: { in: sixteenBefore.map((o) => o.id) } },
+        data: { status: OccurrenceStatus.OPEN },
+      });
+      await db.experienceOccurrence.deleteMany({
+        where: {
+          experienceId: expId(),
+          date: punctualDate,
+          startTime: '12:30',
+        },
+      });
+    }
   });
 
   it('kill-switch OFF restores P-04 behavior on a closed occurrence', async () => {
