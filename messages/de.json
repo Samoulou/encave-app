@@ -1733,7 +1733,20 @@
       "save": "Änderungen speichern",
       "saving": "Wird gespeichert...",
       "saved": "Profil erfolgreich aktualisiert",
-      "error": "Profil konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut."
+      "error": "Profil konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut.",
+      "deleteAccount": {
+        "title": "Mein Konto löschen",
+        "description": "Die Löschung anonymisiert Ihre persönlichen Daten endgültig (nDSG): Identität, Kontaktdaten und Buchungsverlauf. Diese Aktion ist unwiderruflich.",
+        "cta": "Mein Konto löschen",
+        "confirmTitle": "Löschung bestätigen",
+        "confirmDescription": "Ihre persönlichen Daten werden unwiderruflich anonymisiert und Sie werden abgemeldet. Vergangene Buchungen bleiben in anonymisierter Form zu Buchhaltungszwecken erhalten.",
+        "confirmLabel": "Geben Sie Ihre E-Mail ({email}) zur Bestätigung ein:",
+        "cancel": "Abbrechen",
+        "confirmCta": "Endgültig löschen",
+        "deleting": "Wird gelöscht…",
+        "errorFutureBookings": "Konto kann nicht gelöscht werden: Es bestehen bestätigte zukünftige Buchungen. Stornieren Sie diese zuerst oder kontaktieren Sie den Support.",
+        "errorGeneric": "Löschung fehlgeschlagen. Versuchen Sie es erneut oder kontaktieren Sie support@encave.ch."
+      }
     }
   },
   "Dashboard": {

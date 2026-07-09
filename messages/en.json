@@ -1728,7 +1728,20 @@
       "save": "Save Changes",
       "saving": "Saving...",
       "saved": "Profile updated successfully",
-      "error": "Failed to update profile. Please try again."
+      "error": "Failed to update profile. Please try again.",
+      "deleteAccount": {
+        "title": "Delete my account",
+        "description": "Deletion permanently anonymizes your personal data (Swiss nFADP): identity, contact details and booking history. This action is irreversible.",
+        "cta": "Delete my account",
+        "confirmTitle": "Confirm deletion",
+        "confirmDescription": "Your personal data will be irreversibly anonymized and you will be signed out. Past bookings are kept in anonymized form for accounting purposes.",
+        "confirmLabel": "Type your email ({email}) to confirm:",
+        "cancel": "Cancel",
+        "confirmCta": "Delete permanently",
+        "deleting": "Deleting…",
+        "errorFutureBookings": "Cannot delete the account: upcoming confirmed bookings exist. Cancel them first or contact support.",
+        "errorGeneric": "Deletion failed. Try again or contact support@encave.ch."
+      }
     }
   },
   "Dashboard": {
