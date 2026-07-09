@@ -21,7 +21,7 @@ on:
         required: true
         type: string
       seed:
-        description: 'DESTRUCTIVE — wipes tables then reseeds. Never production.'
+        description: 'DESTRUCTIVE — wipes tables then reseeds. Requires an explicit database_url input (never runs against the secret). Never production.'
         required: true
         default: 'no'
         type: choice
@@ -40,6 +40,14 @@ jobs:
         if: ${{ inputs.confirm != 'migrate-deploy' }}
         run: |
           echo "Confirmation phrase mismatch — aborting."
+          exit 1
+
+      # A wipe must name its target: seeding never runs against the ambient
+      # ADHOC_DATABASE_URL secret, only against an explicitly pasted URL.
+      - name: Validate seed target is explicit
+        if: ${{ inputs.seed == 'yes-wipe-and-seed' && inputs.database_url == '' }}
+        run: |
+          echo "Refusing to seed: yes-wipe-and-seed requires pasting the target database_url explicitly."
           exit 1
 
       - name: Checkout repository
