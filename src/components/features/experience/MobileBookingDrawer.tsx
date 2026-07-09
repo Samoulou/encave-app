@@ -46,6 +46,11 @@ interface MobileBookingDrawerProps {
   maxCapacity: number;
   duration: number;
   availabilitySlots: AvailabilitySlot[];
+  /**
+   * "YYYY-MM-DD" keys of bookable occurrences (P-05) — enables punctual
+   * dates that no weekly slot covers. Server-computed with dateKeyOf.
+   */
+  occurrenceDateKeys?: string[];
 }
 
 const dateLocales = { en: enUS, fr, de } as const;
@@ -61,6 +66,7 @@ export function MobileBookingDrawer({
   maxCapacity,
   duration,
   availabilitySlots,
+  occurrenceDateKeys = [],
 }: MobileBookingDrawerProps) {
   const t = useTranslations('booking');
   const tCheckout = useTranslations('checkout');
@@ -85,6 +91,12 @@ export function MobileBookingDrawer({
           .map((slot) => slot.dayOfWeek)
       ),
     [availabilitySlots]
+  );
+
+  // Punctual occurrence dates selectable on top of the weekly days (P-05).
+  const occurrenceDays = useMemo(
+    () => new Set(occurrenceDateKeys),
+    [occurrenceDateKeys]
   );
 
   // Check if form is valid
@@ -225,6 +237,7 @@ export function MobileBookingDrawer({
                 selectedDate={date}
                 onDateChange={handleDateChange}
                 availableDays={availableDays}
+                occurrenceDateKeys={occurrenceDays}
               />
             </div>
           )}

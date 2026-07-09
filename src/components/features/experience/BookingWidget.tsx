@@ -32,6 +32,11 @@ interface BookingWidgetProps {
   maxCapacity: number;
   duration: number;
   availabilitySlots?: AvailabilitySlot[];
+  /**
+   * "YYYY-MM-DD" keys of bookable occurrences (P-05) — enables punctual
+   * dates that no weekly slot covers. Server-computed with dateKeyOf.
+   */
+  occurrenceDateKeys?: string[];
   /** Client booking fee per ticket in cents — 0 when BOOKING_FEE is OFF. */
   serviceFeeCentsPerGuest?: number;
   /** Winery cancellation policy — drives the free-cancellation badge. */
@@ -49,6 +54,7 @@ export function BookingWidget({
   maxCapacity,
   duration: _duration,
   availabilitySlots = [],
+  occurrenceDateKeys = [],
   serviceFeeCentsPerGuest = 0,
   cancellationPolicy = 'STANDARD',
 }: BookingWidgetProps) {
@@ -82,6 +88,11 @@ export function BookingWidget({
     [availabilitySlots]
   );
 
+  const occurrenceDays = useMemo(
+    () => new Set(occurrenceDateKeys),
+    [occurrenceDateKeys]
+  );
+
   const dateOptions = useMemo(() => {
     const today = startOfDay(new Date());
     const loc = dateLocales[locale as keyof typeof dateLocales] ?? enUS;
@@ -94,10 +105,14 @@ export function BookingWidget({
 
     for (let offset = 0; options.length < 6 && offset < 30; offset++) {
       const candidate = addDays(today, offset);
-      const disabled = !availableDays.has(candidate.getDay());
+      const value = format(candidate, 'yyyy-MM-dd');
+      // A day is selectable when a weekly slot covers it OR a punctual
+      // occurrence exists on that exact date (P-05).
+      const disabled =
+        !availableDays.has(candidate.getDay()) && !occurrenceDays.has(value);
       if (disabled && options.length >= 5) continue;
       options.push({
-        value: format(candidate, 'yyyy-MM-dd'),
+        value,
         day: format(candidate, 'EEE', { locale: loc }).slice(0, 3),
         date: format(candidate, 'd', { locale: loc }),
         disabled,
@@ -105,7 +120,7 @@ export function BookingWidget({
     }
 
     return options;
-  }, [availableDays, locale]);
+  }, [availableDays, occurrenceDays, locale]);
 
   const isValid =
     date &&
