@@ -29,15 +29,15 @@ import {
 import { formatDate } from '@/lib/i18n/formatters';
 import { zonedWallClockToUTC } from '@/lib/datetime/zurich';
 import { dateKeyOf } from '@/lib/business-rules/occurrence-expansion';
+import {
+  OCCURRENCE_CAPACITY_MAX,
+  OCCURRENCE_CAPACITY_MIN,
+} from '@/lib/constants/occurrences';
 import { timeSlotSchema } from '@/lib/validators/booking';
 import { cn } from '@/lib/utils';
 import type { ErrorCode } from '@/types/actions';
 import type { OccurrenceCalendarEntryDTO } from '@/server/queries/occurrence.queries';
 import type { Locale } from '@/i18n/routing';
-
-/** Owner-side capacity override bounds (setOccurrenceCapacitySchema). */
-const CAPACITY_MIN = 1;
-const CAPACITY_MAX = 50;
 
 /** H-2 → H+2 scan window around the day's sessions (legacy ENC-096 rule). */
 const SCAN_WINDOW_MS = 2 * 60 * 60 * 1000;
@@ -200,8 +200,8 @@ export function OccurrenceDetailSheet({
     const parsed = Number.parseInt(capacityInput, 10);
     if (
       Number.isNaN(parsed) ||
-      parsed < CAPACITY_MIN ||
-      parsed > CAPACITY_MAX
+      parsed < OCCURRENCE_CAPACITY_MIN ||
+      parsed > OCCURRENCE_CAPACITY_MAX
     ) {
       setCapacityError(true);
       return;
@@ -376,8 +376,8 @@ export function OccurrenceDetailSheet({
                     <Input
                       id="occurrence-capacity"
                       type="number"
-                      min={CAPACITY_MIN}
-                      max={CAPACITY_MAX}
+                      min={OCCURRENCE_CAPACITY_MIN}
+                      max={OCCURRENCE_CAPACITY_MAX}
                       value={capacityInput}
                       onChange={(event) => {
                         setCapacityInput(event.target.value);
@@ -415,8 +415,8 @@ export function OccurrenceDetailSheet({
                   >
                     {capacityError
                       ? t('sheet.capacityInvalid', {
-                          min: CAPACITY_MIN,
-                          max: CAPACITY_MAX,
+                          min: OCCURRENCE_CAPACITY_MIN,
+                          max: OCCURRENCE_CAPACITY_MAX,
                         })
                       : t('sheet.capacityHint')}
                   </p>
