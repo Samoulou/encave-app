@@ -27,8 +27,10 @@ vi.mock('@/server/db', () => ({
     booking: {
       aggregate: vi.fn(),
       findUnique: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
     },
     featureFlag: {
       findMany: vi.fn(),
@@ -45,10 +47,28 @@ vi.mock('@/server/db', () => ({
   },
 }));
 
+// The in-memory rate limiter keys on visitor email / IP and persists across
+// tests in this file — stub the check (keep the real config exports) so
+// results don't depend on how many tests ran before.
+vi.mock('@/server/services/rate-limit.service', async (importOriginal) => {
+  const actual =
+    await importOriginal<
+      typeof import('@/server/services/rate-limit.service')
+    >();
+  return {
+    ...actual,
+    checkRateLimit: vi.fn().mockResolvedValue({ success: true }),
+  };
+});
+
 // The Stripe fee label is resolved via next-intl outside a request scope.
 vi.mock('next-intl/server', () => ({
   getTranslations: async () => (key: string) =>
     key === 'serviceFee' ? 'Frais de service' : key,
+}));
+
+vi.mock('next/headers', () => ({
+  headers: async () => new Headers({ 'x-forwarded-for': '203.0.113.7' }),
 }));
 
 // Mock env
@@ -90,38 +110,44 @@ describe('Checkout Server Actions', () => {
     vi.mocked(db.featureFlag.findMany).mockResolvedValue([] as never);
   });
 
+  const mockExperience = {
+    id: 'exp-1',
+    title: 'Wine Tasting',
+    slug: 'wine-tasting',
+    status: ExperienceStatus.PUBLISHED,
+    price: 5000, // 50 CHF in cents
+    minCapacity: 2,
+    maxCapacity: 10,
+    winery: {
+      id: 'winery-1',
+      name: 'Test Winery',
+      status: WineryStatus.VERIFIED,
+      stripeAccountId: 'acct_test_123',
+      stripeOnboardingComplete: true,
+      commissionRate: null,
+    },
+  };
+
+  const validInput = {
+    experienceId: 'exp-1',
+    wineryId: 'winery-1',
+    date: '2026-02-15',
+    timeSlot: '10:00',
+    guestCount: 4,
+    visitorName: 'John Doe',
+    visitorEmail: 'john@example.com',
+    visitorPhone: '+41791234567',
+    ageConfirmed: true as const,
+    displayedServiceFeeCentsPerGuest: 0,
+  };
+
+  const mockExperienceForClaim = {
+    ...mockExperience,
+    winery: { ...mockExperience.winery, cancellationPolicy: 'STANDARD' },
+  };
+  const validInputForClaim = validInput;
+
   describe('createBookingAndCheckout', () => {
-    const mockExperience = {
-      id: 'exp-1',
-      title: 'Wine Tasting',
-      slug: 'wine-tasting',
-      status: ExperienceStatus.PUBLISHED,
-      price: 5000, // 50 CHF in cents
-      minCapacity: 2,
-      maxCapacity: 10,
-      winery: {
-        id: 'winery-1',
-        name: 'Test Winery',
-        status: WineryStatus.VERIFIED,
-        stripeAccountId: 'acct_test_123',
-        stripeOnboardingComplete: true,
-        commissionRate: null,
-      },
-    };
-
-    const validInput = {
-      experienceId: 'exp-1',
-      wineryId: 'winery-1',
-      date: '2026-02-15',
-      timeSlot: '10:00',
-      guestCount: 4,
-      visitorName: 'John Doe',
-      visitorEmail: 'john@example.com',
-      visitorPhone: '+41791234567',
-      ageConfirmed: true as const,
-      displayedServiceFeeCentsPerGuest: 0,
-    };
-
     it('requires age confirmation before creating Stripe checkout', async () => {
       const { createBookingAndCheckout } =
         await import('@/server/actions/checkout');
@@ -426,6 +452,221 @@ describe('Checkout Server Actions', () => {
       expect(captured.serviceFeeCents).toBe(1000);
       const session = sessionCreateMock.mock.calls[0]?.[0];
       expect(session.payment_intent_data.application_fee_amount).toBe(1000);
+    });
+  });
+
+  describe('createBookingHold (L-050)', () => {
+    it('creates a 10-minute hold with placeholder visitor data', async () => {
+      vi.mocked(db.experience.findUnique).mockResolvedValue({
+        id: 'exp-1',
+        status: ExperienceStatus.PUBLISHED,
+        price: 5000,
+        minCapacity: 2,
+        maxCapacity: 10,
+        winery: {
+          id: 'winery-1',
+          status: WineryStatus.VERIFIED,
+          stripeAccountId: 'acct_test_123',
+          stripeOnboardingComplete: true,
+          commissionRate: null,
+          cancellationPolicy: 'STANDARD',
+        },
+      } as never);
+      vi.mocked(db.booking.aggregate).mockResolvedValue({
+        _sum: { guestCount: 0 },
+      } as never);
+      let captured: Record<string, unknown> | null = null;
+      vi.mocked(db.booking.create).mockImplementation(
+        (args: { data: Record<string, unknown> }) => {
+          captured = args.data;
+          return Promise.resolve({ id: 'hold-1', ...args.data });
+        }
+      );
+
+      const { createBookingHold } = await import('@/server/actions/checkout');
+      const result = await createBookingHold({
+        experienceId: 'exp-1',
+        date: '2026-02-15',
+        timeSlot: '10:00',
+        guestCount: 4,
+      });
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.holdId).toBe('hold-1');
+        const msLeft = new Date(result.data.expiresAt).getTime() - Date.now();
+        expect(msLeft).toBeGreaterThan(9 * 60 * 1000);
+        expect(msLeft).toBeLessThanOrEqual(10 * 60 * 1000);
+      }
+      const data = requireCaptured(captured);
+      expect(data.visitorName).toBe('');
+      expect(String(data.visitorEmail)).toMatch(/@hold\.encave\.ch$/);
+      expect(data.status).toBe(BookingStatus.PENDING_PAYMENT);
+      expect(data.serviceFeeCents).toBe(0);
+    });
+
+    it('refuses a hold when the slot lacks capacity', async () => {
+      vi.mocked(db.experience.findUnique).mockResolvedValue({
+        id: 'exp-1',
+        status: ExperienceStatus.PUBLISHED,
+        price: 5000,
+        minCapacity: 2,
+        maxCapacity: 3,
+        winery: {
+          id: 'winery-1',
+          status: WineryStatus.VERIFIED,
+          stripeAccountId: 'acct_test_123',
+          stripeOnboardingComplete: true,
+          commissionRate: null,
+          cancellationPolicy: 'STANDARD',
+        },
+      } as never);
+      vi.mocked(db.booking.aggregate).mockResolvedValue({
+        _sum: { guestCount: 2 },
+      } as never);
+
+      const { createBookingHold } = await import('@/server/actions/checkout');
+      const result = await createBookingHold({
+        experienceId: 'exp-1',
+        date: '2026-02-15',
+        timeSlot: '10:00',
+        guestCount: 2,
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe('NO_CAPACITY');
+      }
+      expect(db.booking.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('hold claim at submit (L-050)', () => {
+    it('claims a live hold instead of creating a new booking', async () => {
+      vi.mocked(db.experience.findUnique).mockResolvedValue(
+        mockExperienceForClaim as never
+      );
+      vi.mocked(db.booking.updateMany).mockResolvedValue({
+        count: 1,
+      } as never);
+      vi.mocked(db.booking.findUniqueOrThrow).mockResolvedValue({
+        id: 'hold-1',
+        reference: 'ENC-HOLD1234',
+      } as never);
+      vi.mocked(db.booking.update).mockResolvedValue({} as never);
+
+      const { createBookingAndCheckout } =
+        await import('@/server/actions/checkout');
+      const result = await createBookingAndCheckout({
+        ...validInputForClaim,
+        holdId: 'ckvhold00000000000000000w',
+      });
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.bookingId).toBe('hold-1');
+      }
+      // Claimed — no fresh create, and the claim extended the expiry.
+      expect(db.booking.create).not.toHaveBeenCalled();
+      expect(db.booking.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            id: 'ckvhold00000000000000000w',
+            status: BookingStatus.PENDING_PAYMENT,
+            expiresAt: { gt: expect.any(Date) },
+            guestCount: 4,
+          }),
+        })
+      );
+    });
+
+    it('falls back to a capacity-checked create when the hold expired', async () => {
+      vi.mocked(db.experience.findUnique).mockResolvedValue(
+        mockExperienceForClaim as never
+      );
+      vi.mocked(db.booking.updateMany).mockResolvedValue({
+        count: 0,
+      } as never);
+      vi.mocked(db.booking.aggregate).mockResolvedValue({
+        _sum: { guestCount: 0 },
+      } as never);
+      vi.mocked(db.booking.create).mockResolvedValue({
+        id: 'booking-2',
+        reference: 'ENC-NEW12345',
+        status: BookingStatus.PENDING_PAYMENT,
+      } as never);
+      vi.mocked(db.booking.update).mockResolvedValue({} as never);
+
+      const { createBookingAndCheckout } =
+        await import('@/server/actions/checkout');
+      const result = await createBookingAndCheckout({
+        ...validInputForClaim,
+        holdId: 'ckvhold00000000000000000w',
+      });
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.bookingId).toBe('booking-2');
+      }
+      expect(db.booking.create).toHaveBeenCalled();
+    });
+  });
+
+  describe('payment methods (L-051 / D4)', () => {
+    it('requests TWINT first with Link and cards', async () => {
+      vi.mocked(db.experience.findUnique).mockResolvedValue(
+        mockExperienceForClaim as never
+      );
+      vi.mocked(db.booking.aggregate).mockResolvedValue({
+        _sum: { guestCount: 0 },
+      } as never);
+      vi.mocked(db.booking.create).mockResolvedValue({
+        id: 'booking-1',
+        reference: 'ENC-ABC123',
+        status: BookingStatus.PENDING_PAYMENT,
+      } as never);
+      vi.mocked(db.booking.update).mockResolvedValue({} as never);
+
+      const { createBookingAndCheckout } =
+        await import('@/server/actions/checkout');
+      await createBookingAndCheckout(validInputForClaim);
+
+      const params = sessionCreateMock.mock.calls[0]?.[0];
+      expect(params.payment_method_types).toEqual(['twint', 'card', 'link']);
+    });
+
+    it('falls back to card-only when the account rejects TWINT (D4)', async () => {
+      vi.mocked(db.experience.findUnique).mockResolvedValue(
+        mockExperienceForClaim as never
+      );
+      vi.mocked(db.booking.aggregate).mockResolvedValue({
+        _sum: { guestCount: 0 },
+      } as never);
+      vi.mocked(db.booking.create).mockResolvedValue({
+        id: 'booking-1',
+        reference: 'ENC-ABC123',
+        status: BookingStatus.PENDING_PAYMENT,
+      } as never);
+      vi.mocked(db.booking.update).mockResolvedValue({} as never);
+      sessionCreateMock
+        .mockRejectedValueOnce(
+          new Error(
+            'The payment method type "twint" is invalid: payment_method_types'
+          )
+        )
+        .mockResolvedValueOnce({
+          id: 'cs_test_123',
+          url: 'https://checkout.stripe.com/pay/cs_test_123',
+        });
+
+      const { createBookingAndCheckout } =
+        await import('@/server/actions/checkout');
+      const result = await createBookingAndCheckout(validInputForClaim);
+
+      expect(result.success).toBe(true);
+      expect(sessionCreateMock).toHaveBeenCalledTimes(2);
+      const retryParams = sessionCreateMock.mock.calls[1]?.[0];
+      expect(retryParams.payment_method_types).toEqual(['card']);
     });
   });
 

@@ -226,6 +226,13 @@ export const BOOKING_RATE_LIMIT: RateLimitConfig = {
   windowMs: 60 * 60 * 1000, // per hour
 };
 
+// Booking holds are unauthenticated and reserve capacity for 10 min —
+// keep the per-IP budget tight to bound griefing (P-04 / L-050).
+export const HOLD_RATE_LIMIT: RateLimitConfig = {
+  maxRequests: 12,
+  windowMs: 10 * 60 * 1000, // per 10 minutes
+};
+
 export const API_RATE_LIMIT: RateLimitConfig = {
   maxRequests: 60,
   windowMs: 60 * 1000, // per minute

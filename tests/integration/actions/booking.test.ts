@@ -122,7 +122,7 @@ describe('Booking Server Actions', () => {
       }
     });
 
-    it('only counts PENDING_PAYMENT and CONFIRMED bookings', async () => {
+    it('counts CONFIRMED plus non-expired PENDING_PAYMENT holds (L-050)', async () => {
       vi.mocked(db.experience.findUnique).mockResolvedValue({
         maxCapacity: 10,
       } as never);
@@ -139,9 +139,13 @@ describe('Booking Server Actions', () => {
       expect(db.booking.aggregate).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            status: {
-              in: [BookingStatus.PENDING_PAYMENT, BookingStatus.CONFIRMED],
-            },
+            OR: [
+              { status: BookingStatus.CONFIRMED },
+              {
+                status: BookingStatus.PENDING_PAYMENT,
+                expiresAt: { gt: expect.any(Date) },
+              },
+            ],
           }),
         })
       );

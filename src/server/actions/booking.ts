@@ -65,9 +65,14 @@ export async function checkAvailability(
         experienceId,
         date: bookingDate,
         timeSlot,
-        status: {
-          in: [BookingStatus.PENDING_PAYMENT, BookingStatus.CONFIRMED],
-        },
+        // Logical hold release (L-050): expired holds free the capacity.
+        OR: [
+          { status: BookingStatus.CONFIRMED },
+          {
+            status: BookingStatus.PENDING_PAYMENT,
+            expiresAt: { gt: new Date() },
+          },
+        ],
       },
       _sum: { guestCount: true },
     });
@@ -139,9 +144,14 @@ export async function getTimeSlotsForDate(
       where: {
         experienceId,
         date: bookingDate,
-        status: {
-          in: [BookingStatus.PENDING_PAYMENT, BookingStatus.CONFIRMED],
-        },
+        // Logical hold release (L-050): expired holds free the capacity.
+        OR: [
+          { status: BookingStatus.CONFIRMED },
+          {
+            status: BookingStatus.PENDING_PAYMENT,
+            expiresAt: { gt: new Date() },
+          },
+        ],
       },
       _sum: { guestCount: true },
     });
