@@ -19,6 +19,7 @@ import {
   STRIPE_SESSION_DURATION_MINUTES,
   HOLD_EMAIL_DOMAIN,
   buildHoldPlaceholderEmail,
+  isHoldPlaceholderEmail,
 } from '@/lib/constants/booking-hold';
 import { BOOKING_FEE_CENTS } from '@/lib/constants/pricing';
 import { activeCapacityBookingWhere } from '@/lib/business-rules/capacity';
@@ -58,7 +59,15 @@ const CreateBookingSchema = z.object({
   timeSlot: timeSlotSchema, // BACK-003 FIX: Validate HH:mm format
   guestCount: z.number().int().positive(),
   visitorName: z.string().min(2),
-  visitorEmail: z.string().email(),
+  // The hold sentinel domain is the ONLY hold/booking discriminator —
+  // it must never be forgeable from the outside (security review): a
+  // paid booking on that domain would vanish from the winery dashboard.
+  visitorEmail: z
+    .string()
+    .email()
+    .refine((email) => !isHoldPlaceholderEmail(email), {
+      message: 'Reserved email domain',
+    }),
   visitorPhone: z.string().min(6),
   ageConfirmed: z.literal(true),
   /** Locale of the checkout UI — used for the Stripe line-item labels. */

@@ -250,6 +250,24 @@ describe('Checkout Server Actions', () => {
       expect(db.booking.create).not.toHaveBeenCalled();
     });
 
+    it('rejects the reserved hold sentinel domain as visitor email', async () => {
+      // Security review: the sentinel is the only hold/booking
+      // discriminator — a paid booking on that domain would be invisible
+      // to the winery dashboard and CSV export.
+      const { createBookingAndCheckout } =
+        await import('@/server/actions/checkout');
+      const result = await createBookingAndCheckout({
+        ...validInput,
+        visitorEmail: 'sneaky@hold.encave.ch',
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe('VALIDATION_ERROR');
+      }
+      expect(db.booking.create).not.toHaveBeenCalled();
+    });
+
     it('returns validation error for invalid email', async () => {
       const { createBookingAndCheckout } =
         await import('@/server/actions/checkout');
