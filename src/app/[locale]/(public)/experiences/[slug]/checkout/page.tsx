@@ -31,6 +31,8 @@ interface PageProps {
     time?: string;
     guests?: string;
     error?: string;
+    holdId?: string;
+    holdExpiresAt?: string;
   }>;
 }
 
@@ -54,6 +56,16 @@ export default async function CheckoutPage({
 
   const guestCount = guests ? parseInt(guests, 10) : null;
   const hasValidParams = date && time && guestCount && guestCount > 0;
+
+  // Hold created at « Continuer » (P-04 / L-050). Both params must be
+  // present and parseable — otherwise the checkout degrades to the
+  // hold-at-submit flow (no countdown, no claimed hold).
+  const holdId = search.holdId || null;
+  const holdExpiresAt =
+    search.holdExpiresAt && !Number.isNaN(Date.parse(search.holdExpiresAt))
+      ? search.holdExpiresAt
+      : null;
+  const hasHold = holdId !== null && holdExpiresAt !== null;
 
   // Fetch experience data on the server (eliminates client waterfall).
   // Booking fee (P-03 / L-041): the flag is read server-side so the client
@@ -102,6 +114,8 @@ export default async function CheckoutPage({
       guestCount={guestCount}
       paymentError={paymentError}
       serviceFeeCentsPerGuest={serviceFeeCentsPerGuest}
+      holdId={hasHold ? holdId : null}
+      holdExpiresAt={hasHold ? holdExpiresAt : null}
     />
   );
 }

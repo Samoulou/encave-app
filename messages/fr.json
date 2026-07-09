@@ -531,7 +531,8 @@
     "sessionFull": "Complet",
     "spotsLeft": "{count} {count, plural, =1 {place restante} other {places restantes}}",
     "whenVisit": "Quand souhaitez-vous nous rendre visite ?",
-    "back": "Retour"
+    "back": "Retour",
+    "holdSlotTaken": "Ce créneau vient tout juste d'être réservé par quelqu'un d'autre. Choisissez un autre horaire."
   },
   "bookings": {
     "title": "Réservations",
@@ -678,6 +679,11 @@
       "errors": {
         "required": "Merci de confirmer votre age avant de poursuivre le paiement."
       }
+    },
+    "hold": {
+      "remaining": "Créneau réservé pendant {time}",
+      "remainingUrgent": "Plus que {time} pour finaliser votre réservation",
+      "expired": "Créneau expiré, redirection…"
     }
   },
   "confirmation": {
@@ -1380,6 +1386,10 @@
     "unsubscribe": {
       "title": "Désabonnement | EnCave",
       "description": "Gérez vos préférences de messagerie"
+    },
+    "bookingError": {
+      "title": "Réservation interrompue | EnCave",
+      "description": "Reprenez votre réservation là où vous l'avez laissée"
     }
   },
   "about": {
@@ -1962,5 +1972,24 @@
     "unknown": "QR non reconnu",
     "already": "Deja enregistre",
     "counter": "{checkedIn} / {total} clients enregistres"
+  },
+  "bookingError": {
+    "payment": {
+      "title": "Le paiement n'a pas abouti",
+      "description": "Aucun montant n'a été débité et votre créneau est toujours réservé. Vous pouvez reprendre le paiement là où vous l'avez laissé.",
+      "descriptionHoldGone": "Aucun montant n'a été débité, mais votre créneau a été remis en vente entre-temps. Vérifiez les disponibilités — il est peut-être encore libre.",
+      "retryCta": "Réessayer le paiement"
+    },
+    "holdExpired": {
+      "title": "Votre créneau a été libéré",
+      "description": "Les 10 minutes de réservation sont écoulées, le créneau a donc été remis en vente — et personne n'a été débité. Bonne nouvelle : il est peut-être encore libre."
+    },
+    "generic": {
+      "title": "Petit couac dans la réservation",
+      "description": "Nous n'avons pas retrouvé les détails de votre réservation, mais rassurez-vous : aucun montant n'a été débité.",
+      "cta": "Découvrir les expériences"
+    },
+    "reselectCta": "Revoir les disponibilités",
+    "selectionRecap": "{date} · {time} · {guests, plural, one {# personne} other {# personnes}}"
   }
 }

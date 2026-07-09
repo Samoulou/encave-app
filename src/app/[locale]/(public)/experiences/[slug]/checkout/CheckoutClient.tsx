@@ -22,6 +22,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { ContactDetailsSection } from '@/components/features/checkout/ContactDetailsSection';
+import { HoldCountdown } from '@/components/features/checkout/HoldCountdown';
 import { OrderSummary } from '@/components/features/checkout/OrderSummary';
 import { MobileOrderSummary } from '@/components/features/checkout/MobileOrderSummary';
 import { TrustBadges } from '@/components/features/checkout/TrustBadges';
@@ -61,6 +62,10 @@ interface CheckoutClientProps {
   paymentError: string | null;
   /** Client booking fee per ticket in cents — 0 when BOOKING_FEE is OFF. */
   serviceFeeCentsPerGuest: number;
+  /** Hold created at « Continuer » (L-050) — null = degraded, no-hold flow. */
+  holdId: string | null;
+  /** ISO expiry of the hold — drives the countdown. Null with holdId null. */
+  holdExpiresAt: string | null;
 }
 
 /**
@@ -75,6 +80,8 @@ export function CheckoutClient({
   guestCount,
   paymentError,
   serviceFeeCentsPerGuest,
+  holdId,
+  holdExpiresAt,
 }: CheckoutClientProps) {
   const t = useTranslations('checkout');
   const locale = useLocale() as 'fr' | 'de' | 'en';
@@ -214,6 +221,19 @@ export function CheckoutClient({
     validateAvailability();
   }, [validateAvailability]);
 
+  // Hold ran out (L-050/L-052): the seats are released — send the client
+  // to the dedicated error page with the selection memorized for re-pick.
+  const handleHoldExpired = useCallback(() => {
+    const params = new URLSearchParams({
+      cause: 'hold-expired',
+      slug,
+      date,
+      time,
+      guests: guestCount.toString(),
+    });
+    router.push(`/reservation/erreur?${params.toString()}`);
+  }, [router, slug, date, time, guestCount]);
+
   const onSubmit = async (data: CheckoutFormData) => {
     setSubmitError(null);
 
@@ -240,6 +260,8 @@ export function CheckoutClient({
         ageConfirmed: true,
         locale,
         displayedServiceFeeCentsPerGuest: serviceFeeCentsPerGuest,
+        // Claim the upstream hold (L-050); undefined = fresh create.
+        holdId: holdId ?? undefined,
       });
 
       if (result.success) {
@@ -271,6 +293,14 @@ export function CheckoutClient({
               {t('pageTitle')}
             </h1>
             <p className="mt-2 max-w-2xl text-[#915564]">{t('pageSubtitle')}</p>
+            {holdId && holdExpiresAt && (
+              <div className="mt-4">
+                <HoldCountdown
+                  expiresAt={holdExpiresAt}
+                  onExpire={handleHoldExpired}
+                />
+              </div>
+            )}
           </div>
           <div className="hidden rounded-[16px] border border-burgundy-100 bg-white p-4 shadow-audit-card lg:block">
             <div className="flex items-center gap-3">

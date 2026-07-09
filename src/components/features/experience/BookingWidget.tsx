@@ -1,16 +1,25 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useCallback, useMemo, useState, useTransition } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import type { CancellationPolicy } from '@prisma/client';
 import { getPolicyTiers } from '@/lib/business-rules/cancellation-policy';
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
 import { addDays, format, parseISO, startOfDay } from 'date-fns';
 import { de, enUS, fr } from 'date-fns/locale';
-import { Check, ChevronRight, Lock, Loader2, Minus, Plus } from 'lucide-react';
+import {
+  AlertCircle,
+  Check,
+  ChevronRight,
+  Lock,
+  Loader2,
+  Minus,
+  Plus,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TimeSlotSelector } from '@/components/features/booking/TimeSlotSelector';
+import { createBookingHold } from '@/server/actions/checkout';
+import { useNavigateWithTransition } from '@/hooks/useNavigateWithTransition';
 import { formatCHF } from '@/lib/utils/currency';
 import { cn } from '@/lib/utils';
 import { capturePostHog } from '@/lib/posthog-client';
@@ -54,7 +63,7 @@ export function BookingWidget({
   const t = useTranslations('booking');
   const tExp = useTranslations('experience');
   const tCheckout = useTranslations('checkout');
-  const router = useRouter();
+  const { navigate, isPending: isNavigating } = useNavigateWithTransition();
   const locale = useLocale();
 
   const [queryState, setQueryState] = useQueryStates({
@@ -66,7 +75,9 @@ export function BookingWidget({
   const [remainingCapacity, setRemainingCapacity] = useState<number | null>(
     null
   );
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCreatingHold, startHoldTransition] = useTransition();
+  const [holdError, setHoldError] = useState<string | null>(null);
+  const isSubmitting = isCreatingHold || isNavigating;
 
   const { date, time, guests } = queryState;
   const isBookingEnabled = stripeConnected;
@@ -131,6 +142,7 @@ export function BookingWidget({
     (newDate: string | null) => {
       setQueryState({ date: newDate, time: null });
       setRemainingCapacity(null);
+      setHoldError(null);
     },
     [setQueryState]
   );
@@ -138,6 +150,7 @@ export function BookingWidget({
   const handleTimeChange = useCallback(
     (newTime: string | null) => {
       setQueryState({ time: newTime });
+      setHoldError(null);
     },
     [setQueryState]
   );
@@ -145,6 +158,7 @@ export function BookingWidget({
   const handleGuestsChange = useCallback(
     (newGuests: number) => {
       setQueryState({ guests: newGuests });
+      setHoldError(null);
     },
     [setQueryState]
   );
@@ -154,7 +168,7 @@ export function BookingWidget({
   }, []);
 
   const handleContinue = () => {
-    if (!isValid || !isBookingEnabled) return;
+    if (!isValid || !isBookingEnabled || !date || !time || isSubmitting) return;
 
     capturePostHog('booking_started', {
       experience_id: experienceId,
@@ -165,13 +179,38 @@ export function BookingWidget({
       total_price_chf: totalPrice / 100,
     });
 
-    setIsSubmitting(true);
-    const params = new URLSearchParams({
-      date: date!,
-      time: time!,
-      guests: guests.toString(),
+    setHoldError(null);
+    startHoldTransition(async () => {
+      const params = new URLSearchParams({
+        date,
+        time,
+        guests: guests.toString(),
+      });
+
+      // Hold the slot for 10 min BEFORE the checkout form (P-04 / L-050).
+      // Only a genuine NO_CAPACITY blocks the user — any other failure
+      // (rate limit, server, network) degrades softly to the previous
+      // hold-at-submit flow (plan §6: never block the booking).
+      try {
+        const result = await createBookingHold({
+          experienceId,
+          date,
+          timeSlot: time,
+          guestCount: guests,
+        });
+        if (result.success) {
+          params.set('holdId', result.data.holdId);
+          params.set('holdExpiresAt', result.data.expiresAt);
+        } else if (result.error.code === 'NO_CAPACITY') {
+          setHoldError(t('holdSlotTaken'));
+          return;
+        }
+      } catch {
+        // Soft degradation — continue to checkout without a hold.
+      }
+
+      navigate(`/experiences/${experienceSlug}/checkout?${params.toString()}`);
     });
-    router.push(`/experiences/${experienceSlug}/checkout?${params.toString()}`);
   };
 
   const formatDateLabel = (dateStr: string) => {
@@ -341,6 +380,20 @@ export function BookingWidget({
           </span>
         </div>
       </div>
+
+      {holdError && (
+        <div
+          role="alert"
+          data-testid="hold-capacity-error"
+          className="mb-3 flex items-start gap-2 rounded-[10px] border border-red-200 bg-red-50 p-3 text-xs font-medium text-red-700"
+        >
+          <AlertCircle
+            className="mt-0.5 h-3.5 w-3.5 shrink-0"
+            aria-hidden="true"
+          />
+          <span>{holdError}</span>
+        </div>
+      )}
 
       {isBookingEnabled ? (
         <Button

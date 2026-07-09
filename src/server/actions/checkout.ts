@@ -592,7 +592,18 @@ export async function createBookingAndCheckout(
       },
       customer_email: visitorEmail,
       success_url: `${baseUrl}/booking/${booking.id}/confirmation?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/experiences/${experience.slug}/checkout?date=${date}&time=${timeSlot}&guests=${guestCount}&error=cancelled`,
+      // Aborted/failed payment → dedicated error page (L-052). The booking
+      // row IS the hold, alive until the Stripe session expiry (+30 min) —
+      // that extended expiresAt is the authoritative one for the retry CTA.
+      cancel_url: `${baseUrl}/reservation/erreur?${new URLSearchParams({
+        cause: 'payment',
+        slug: experience.slug,
+        date,
+        time: timeSlot,
+        guests: String(guestCount),
+        holdId: booking.id,
+        holdExpiresAt: expiresAt.toISOString(),
+      }).toString()}`,
       expires_at: Math.floor(expiresAt.getTime() / 1000),
       metadata: {
         bookingId: booking.id,

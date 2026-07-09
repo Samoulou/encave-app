@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useMemo, useCallback, useTransition } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import {
+  AlertCircle,
   ArrowLeft,
   Calendar,
   Clock,
@@ -25,6 +25,8 @@ import { BookingDatePicker } from '@/components/features/booking/BookingDatePick
 import { TimeSlotSelector } from '@/components/features/booking/TimeSlotSelector';
 import { GuestCountInput } from '@/components/features/booking/GuestCountInput';
 import { BookingStepIndicator } from '@/components/features/booking/BookingStepIndicator';
+import { createBookingHold } from '@/server/actions/checkout';
+import { useNavigateWithTransition } from '@/hooks/useNavigateWithTransition';
 
 interface AvailabilitySlot {
   dayOfWeek: number;
@@ -63,7 +65,7 @@ export function MobileBookingDrawer({
 }: MobileBookingDrawerProps) {
   const t = useTranslations('booking');
   const tCheckout = useTranslations('checkout');
-  const router = useRouter();
+  const { navigate, isPending: isNavigating } = useNavigateWithTransition();
   const locale = useLocale();
 
   const [date, setDate] = useState<string | null>(null);
@@ -72,7 +74,9 @@ export function MobileBookingDrawer({
   const [remainingCapacity, setRemainingCapacity] = useState<number | null>(
     null
   );
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCreatingHold, startHoldTransition] = useTransition();
+  const [holdError, setHoldError] = useState<string | null>(null);
+  const isSubmitting = isCreatingHold || isNavigating;
   const [mobileStep, setMobileStep] = useState<1 | 2 | 3>(1);
 
   // Available days based on availability slots
@@ -101,6 +105,7 @@ export function MobileBookingDrawer({
     setDate(newDate);
     setTime(null);
     setRemainingCapacity(null);
+    setHoldError(null);
     if (newDate) {
       setMobileStep(2);
     }
@@ -108,6 +113,7 @@ export function MobileBookingDrawer({
 
   const handleTimeChange = useCallback((newTime: string | null) => {
     setTime(newTime);
+    setHoldError(null);
     if (newTime) {
       setMobileStep(3);
     }
@@ -115,6 +121,7 @@ export function MobileBookingDrawer({
 
   const handleGuestsChange = useCallback((newGuests: number) => {
     setGuests(newGuests);
+    setHoldError(null);
   }, []);
 
   const handleCapacityUpdate = useCallback((capacity: number | null) => {
@@ -130,15 +137,40 @@ export function MobileBookingDrawer({
   };
 
   const handleContinue = () => {
-    if (!isValid) return;
+    if (!isValid || !date || !time || isSubmitting) return;
 
-    setIsSubmitting(true);
-    const params = new URLSearchParams({
-      date: date!,
-      time: time!,
-      guests: guests.toString(),
+    setHoldError(null);
+    startHoldTransition(async () => {
+      const params = new URLSearchParams({
+        date,
+        time,
+        guests: guests.toString(),
+      });
+
+      // Hold the slot for 10 min BEFORE the checkout form (P-04 / L-050).
+      // Only a genuine NO_CAPACITY blocks the user — any other failure
+      // (rate limit, server, network) degrades softly to the previous
+      // hold-at-submit flow (plan §6: never block the booking).
+      try {
+        const result = await createBookingHold({
+          experienceId,
+          date,
+          timeSlot: time,
+          guestCount: guests,
+        });
+        if (result.success) {
+          params.set('holdId', result.data.holdId);
+          params.set('holdExpiresAt', result.data.expiresAt);
+        } else if (result.error.code === 'NO_CAPACITY') {
+          setHoldError(t('holdSlotTaken'));
+          return;
+        }
+      } catch {
+        // Soft degradation — continue to checkout without a hold.
+      }
+
+      navigate(`/experiences/${experienceSlug}/checkout?${params.toString()}`);
     });
-    router.push(`/experiences/${experienceSlug}/checkout?${params.toString()}`);
   };
 
   const formatTime = (t: string) => {
@@ -164,7 +196,7 @@ export function MobileBookingDrawer({
       setTime(null);
       setGuests(Math.max(2, minCapacity));
       setRemainingCapacity(null);
-      setIsSubmitting(false);
+      setHoldError(null);
     }
     onOpenChange(open);
   };
@@ -313,6 +345,19 @@ export function MobileBookingDrawer({
 
         {/* Fixed bottom button */}
         <div className="fixed bottom-0 left-0 right-0 border-t border-stone-200 bg-white p-4">
+          {holdError && mobileStep === 3 && (
+            <div
+              role="alert"
+              data-testid="hold-capacity-error"
+              className="mb-3 flex items-start gap-2 rounded-[10px] border border-red-200 bg-red-50 p-3 text-xs font-medium text-red-700"
+            >
+              <AlertCircle
+                className="mt-0.5 h-3.5 w-3.5 shrink-0"
+                aria-hidden="true"
+              />
+              <span>{holdError}</span>
+            </div>
+          )}
           {mobileStep === 1 && (
             <Button
               size="lg"

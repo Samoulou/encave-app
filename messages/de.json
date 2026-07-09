@@ -531,7 +531,8 @@
     "sessionFull": "Ausgebucht",
     "spotsLeft": "{count} {count, plural, =1 {Platz} other {Plätze}} frei",
     "whenVisit": "Wann möchten Sie uns besuchen?",
-    "back": "Zurück"
+    "back": "Zurück",
+    "holdSlotTaken": "Dieses Zeitfenster wurde soeben von jemand anderem gebucht. Bitte wählen Sie eine andere Zeit."
   },
   "bookings": {
     "title": "Buchungen",
@@ -678,6 +679,11 @@
       "errors": {
         "required": "Bitte bestaetigen Sie Ihr Alter, bevor Sie zur Zahlung fortfahren."
       }
+    },
+    "hold": {
+      "remaining": "Zeitfenster reserviert für {time}",
+      "remainingUrgent": "Nur noch {time}, um Ihre Buchung abzuschliessen",
+      "expired": "Zeitfenster abgelaufen, Weiterleitung…"
     }
   },
   "confirmation": {
@@ -1380,6 +1386,10 @@
     "unsubscribe": {
       "title": "Abmelden | EnCave",
       "description": "Verwalten Sie Ihre E-Mail-Einstellungen"
+    },
+    "bookingError": {
+      "title": "Buchung unterbrochen | EnCave",
+      "description": "Setzen Sie Ihre Buchung dort fort, wo Sie aufgehört haben"
     }
   },
   "about": {
@@ -1967,5 +1977,24 @@
     "unknown": "Unbekannter QR-Code",
     "already": "Bereits eingecheckt",
     "counter": "{checkedIn} / {total} Gaeste eingecheckt"
+  },
+  "bookingError": {
+    "payment": {
+      "title": "Ihre Zahlung wurde nicht abgeschlossen",
+      "description": "Es wurde nichts abgebucht und Ihr Zeitfenster ist weiterhin reserviert. Sie können die Zahlung genau dort fortsetzen, wo Sie aufgehört haben.",
+      "descriptionHoldGone": "Es wurde nichts abgebucht, aber Ihr Zeitfenster wurde inzwischen wieder freigegeben. Prüfen Sie die Verfügbarkeit — es ist vielleicht noch frei.",
+      "retryCta": "Zahlung erneut versuchen"
+    },
+    "holdExpired": {
+      "title": "Ihr Zeitfenster wurde freigegeben",
+      "description": "Die 10-minütige Reservierung ist abgelaufen, das Zeitfenster wurde daher wieder freigegeben — und niemandem wurde etwas abgebucht. Die gute Nachricht: Es ist vielleicht noch frei."
+    },
+    "generic": {
+      "title": "Ein kleines Missgeschick bei Ihrer Buchung",
+      "description": "Wir konnten die Details Ihrer Buchung nicht finden, aber keine Sorge: Es wurde nichts abgebucht.",
+      "cta": "Erlebnisse entdecken"
+    },
+    "reselectCta": "Verfügbarkeit erneut ansehen",
+    "selectionRecap": "{date} · {time} · {guests, plural, one {# Person} other {# Personen}}"
   }
 }
