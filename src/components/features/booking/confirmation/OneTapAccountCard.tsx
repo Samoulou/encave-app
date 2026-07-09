@@ -5,12 +5,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { CalendarCheck, Check, Sparkles } from 'lucide-react';
-import { Link, useRouter } from '@/i18n/navigation';
+import { Link } from '@/i18n/navigation';
 import {
   oneTapAccountSchema,
   type OneTapAccountInput,
 } from '@/lib/validators/auth';
 import { signIn, signUp } from '@/lib/auth-client';
+import { useNavigateWithTransition } from '@/hooks/useNavigateWithTransition';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -37,9 +38,11 @@ export function OneTapAccountCard({
   const tRegister = useTranslations('auth.register');
   const tCommon = useTranslations('common');
   const tErrors = useTranslations('errors');
-  const router = useRouter();
+  const { navigate } = useNavigateWithTransition();
 
   const [error, setError] = useState<string | null>(null);
+  // USER_ALREADY_EXISTS is not a dead end — it gets a login link.
+  const [emailAlreadyExists, setEmailAlreadyExists] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isCreated, setIsCreated] = useState(false);
 
@@ -55,6 +58,7 @@ export function OneTapAccountCard({
   async function onSubmit(data: OneTapAccountInput) {
     setIsLoading(true);
     setError(null);
+    setEmailAlreadyExists(false);
 
     try {
       const result = await signUp.email({
@@ -66,6 +70,7 @@ export function OneTapAccountCard({
       if (result.error) {
         if (result.error.code === 'USER_ALREADY_EXISTS') {
           setError(tRegister('emailExists'));
+          setEmailAlreadyExists(true);
         } else {
           setError(
             result.error.message || tCommon('errors.somethingWentWrong')
@@ -82,12 +87,14 @@ export function OneTapAccountCard({
 
       if (loginResult.error) {
         // Account created but login failed — hand over to the login page.
-        router.push('/login');
+        navigate('/login');
         return;
       }
 
+      // No router.refresh() here: a server re-render flips the page's
+      // `showOneTapAccount` gate and unmounts this card, wiping the
+      // success state and its CTA. The local state is the success UI.
       setIsCreated(true);
-      router.refresh();
     } catch {
       setError(tCommon('errors.somethingWentWrong'));
     } finally {
@@ -149,6 +156,15 @@ export function OneTapAccountCard({
               className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700"
             >
               {error}
+              {emailAlreadyExists && (
+                <Link
+                  href="/login"
+                  className="mt-1 block font-semibold underline underline-offset-2"
+                  data-testid="one-tap-login-link"
+                >
+                  {tCommon('buttons.signIn')}
+                </Link>
+              )}
             </div>
           )}
 
@@ -174,7 +190,11 @@ export function OneTapAccountCard({
               placeholder={tRegister('passwordPlaceholder')}
               autoComplete="new-password"
               aria-invalid={errors.password ? true : undefined}
-              aria-describedby="one-tap-password-hint one-tap-password-error"
+              aria-describedby={
+                errors.password
+                  ? 'one-tap-password-hint one-tap-password-error'
+                  : 'one-tap-password-hint'
+              }
               {...register('password')}
             />
             <p

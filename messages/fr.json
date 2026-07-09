@@ -172,7 +172,8 @@
       "winemakerDescription": "Cochez cette case si vous souhaitez enregistrer votre domaine et proposer des expériences",
       "creatingAccount": "Création du compte...",
       "createAccount": "Créer le compte",
-      "haveAccount": "Vous avez déjà un compte?"
+      "haveAccount": "Vous avez déjà un compte?",
+      "emailExists": "Un compte existe déjà avec cet email"
     }
   },
   "home": {
@@ -641,8 +642,6 @@
     "backToBooking": "Retour à la réservation",
     "experienceNotFound": "Expérience non trouvée",
     "invalidBookingParams": "Paramètres de réservation invalides. Veuillez recommencer.",
-    "paymentCancelled": "Paiement annulé. Vous pouvez réessayer.",
-    "paymentFailed": "Échec du paiement. Veuillez réessayer ou utiliser un autre moyen de paiement.",
     "verifyingAvailability": "Vérification de la disponibilité...",
     "capacityExceeded": "Capacité dépassée",
     "capacityExceededMessage": "Vous avez demandé {requested} personnes, mais seulement {available} places sont disponibles pour ce créneau.",
@@ -1235,7 +1234,8 @@
     "invalidPhone": "Numéro de téléphone invalide",
     "fileTooLarge": "Le fichier est trop volumineux",
     "invalidFileType": "Type de fichier non valide",
-    "uploadFailed": "Échec du téléchargement"
+    "uploadFailed": "Échec du téléchargement",
+    "errorId": "Identifiant d'erreur : {id}"
   },
   "empty": {
     "noExperiences": "Aucune expérience trouvée",

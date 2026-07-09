@@ -172,7 +172,8 @@
       "winemakerDescription": "Aktivieren Sie dieses Feld, wenn Sie Ihr Weingut registrieren und Erlebnisse anbieten mochten",
       "creatingAccount": "Konto wird erstellt...",
       "createAccount": "Konto erstellen",
-      "haveAccount": "Bereits ein Konto?"
+      "haveAccount": "Bereits ein Konto?",
+      "emailExists": "Mit dieser E-Mail-Adresse existiert bereits ein Konto"
     }
   },
   "home": {
@@ -641,8 +642,6 @@
     "backToBooking": "Zuruck zur Buchung",
     "experienceNotFound": "Erlebnis nicht gefunden",
     "invalidBookingParams": "Ungultige Buchungsparameter. Bitte versuchen Sie es erneut.",
-    "paymentCancelled": "Zahlung wurde abgebrochen. Sie konnen es erneut versuchen.",
-    "paymentFailed": "Zahlung fehlgeschlagen. Bitte versuchen Sie es erneut oder verwenden Sie eine andere Zahlungsmethode.",
     "verifyingAvailability": "Verfugbarkeit wird uberpruft...",
     "capacityExceeded": "Kapazitat uberschritten",
     "capacityExceededMessage": "Sie haben {requested} Gaste angefragt, aber nur {available} Platze sind fur diesen Zeitraum verfugbar.",
@@ -1235,7 +1234,8 @@
     "invalidPhone": "Ungultige Telefonnummer",
     "fileTooLarge": "Datei ist zu gross",
     "invalidFileType": "Ungultiger Dateityp",
-    "uploadFailed": "Upload fehlgeschlagen"
+    "uploadFailed": "Upload fehlgeschlagen",
+    "errorId": "Fehler-ID: {id}"
   },
   "empty": {
     "noExperiences": "Keine Erlebnisse gefunden",

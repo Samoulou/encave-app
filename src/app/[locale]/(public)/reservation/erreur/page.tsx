@@ -4,9 +4,11 @@ import type { ReactNode } from 'react';
 import { CalendarClock, CreditCard, SearchX } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import { BookingErrorAnalytics } from '@/components/features/checkout/BookingErrorAnalytics';
 import { Button } from '@/components/ui/button';
 import { Link } from '@/i18n/navigation';
 import { formatDate } from '@/lib/i18n/formatters';
+import { timeSlotSchema } from '@/lib/validators/booking';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
@@ -32,6 +34,7 @@ interface BookingErrorPageProps {
     time?: string;
     guests?: string;
     holdId?: string;
+    holdToken?: string;
     holdExpiresAt?: string;
   }>;
 }
@@ -56,23 +59,31 @@ export default async function BookingErrorPage({
       : null;
   const { slug, date, time } = search;
   const guestCount = search.guests ? Number.parseInt(search.guests, 10) : NaN;
+  // This is a public URL: a garbage `date` would throw a RangeError inside
+  // Intl during formatDate and crash the server render — validate BOTH
+  // date and time before any formatting.
   const hasSelection =
     Boolean(slug && date && time) &&
     Number.isInteger(guestCount) &&
-    guestCount > 0;
+    guestCount > 0 &&
+    !Number.isNaN(Date.parse(date ?? '')) &&
+    timeSlotSchema.safeParse(time).success;
 
   // Missing/invalid contract → generic fallback, never a broken screen.
   if (!cause || !hasSelection || !slug || !date || !time) {
     return (
-      <ErrorShell
-        icon={<SearchX className="h-8 w-8 text-burgundy-700" />}
-        title={t('generic.title')}
-        description={t('generic.description')}
-      >
-        <Button asChild size="lg" className="w-full sm:w-auto">
-          <Link href="/experiences">{t('generic.cta')}</Link>
-        </Button>
-      </ErrorShell>
+      <>
+        {cause && <BookingErrorAnalytics cause={cause} />}
+        <ErrorShell
+          icon={<SearchX className="h-8 w-8 text-burgundy-700" />}
+          title={t('generic.title')}
+          description={t('generic.description')}
+        >
+          <Button asChild size="lg" className="w-full sm:w-auto">
+            <Link href="/experiences">{t('generic.cta')}</Link>
+          </Button>
+        </ErrorShell>
+      </>
     );
   }
 
@@ -85,19 +96,22 @@ export default async function BookingErrorPage({
 
   // Retry only makes sense while the claimed hold (Stripe session window)
   // is still alive — the extended expiresAt from the cancel_url is
-  // authoritative here.
+  // authoritative here. The token is the ownership proof: without it the
+  // checkout could not claim the hold, so retry needs the full trio.
   const holdExpiresAtMs = search.holdExpiresAt
     ? Date.parse(search.holdExpiresAt)
     : NaN;
   const holdStillActive =
     cause === 'payment' &&
     Boolean(search.holdId) &&
+    Boolean(search.holdToken) &&
     !Number.isNaN(holdExpiresAtMs) &&
     holdExpiresAtMs > Date.now();
 
   const retryParams = new URLSearchParams(selectionParams);
-  if (search.holdId && search.holdExpiresAt) {
+  if (search.holdId && search.holdToken && search.holdExpiresAt) {
     retryParams.set('holdId', search.holdId);
+    retryParams.set('holdToken', search.holdToken);
     retryParams.set('holdExpiresAt', search.holdExpiresAt);
   }
   const retryHref = `/experiences/${slug}/checkout?${retryParams.toString()}`;
@@ -110,58 +124,64 @@ export default async function BookingErrorPage({
 
   if (cause === 'hold-expired') {
     return (
-      <ErrorShell
-        icon={<CalendarClock className="h-8 w-8 text-burgundy-700" />}
-        title={t('holdExpired.title')}
-        description={t('holdExpired.description')}
-        recap={selectionRecap}
-      >
-        <Button asChild size="lg" className="w-full sm:w-auto">
-          <Link href={reselectHref} data-testid="reselect-cta">
-            {t('reselectCta')}
-          </Link>
-        </Button>
-      </ErrorShell>
-    );
-  }
-
-  return (
-    <ErrorShell
-      icon={<CreditCard className="h-8 w-8 text-burgundy-700" />}
-      title={t('payment.title')}
-      description={
-        holdStillActive
-          ? t('payment.description')
-          : t('payment.descriptionHoldGone')
-      }
-      recap={selectionRecap}
-    >
-      {holdStillActive ? (
-        <>
+      <>
+        <BookingErrorAnalytics cause={cause} />
+        <ErrorShell
+          icon={<CalendarClock className="h-8 w-8 text-burgundy-700" />}
+          title={t('holdExpired.title')}
+          description={t('holdExpired.description')}
+          recap={selectionRecap}
+        >
           <Button asChild size="lg" className="w-full sm:w-auto">
-            <Link href={retryHref} data-testid="retry-payment-cta">
-              {t('payment.retryCta')}
-            </Link>
-          </Button>
-          <Button
-            asChild
-            size="lg"
-            variant="outline"
-            className="w-full sm:w-auto"
-          >
             <Link href={reselectHref} data-testid="reselect-cta">
               {t('reselectCta')}
             </Link>
           </Button>
-        </>
-      ) : (
-        <Button asChild size="lg" className="w-full sm:w-auto">
-          <Link href={reselectHref} data-testid="reselect-cta">
-            {t('reselectCta')}
-          </Link>
-        </Button>
-      )}
-    </ErrorShell>
+        </ErrorShell>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <BookingErrorAnalytics cause={cause} />
+      <ErrorShell
+        icon={<CreditCard className="h-8 w-8 text-burgundy-700" />}
+        title={t('payment.title')}
+        description={
+          holdStillActive
+            ? t('payment.description')
+            : t('payment.descriptionHoldGone')
+        }
+        recap={selectionRecap}
+      >
+        {holdStillActive ? (
+          <>
+            <Button asChild size="lg" className="w-full sm:w-auto">
+              <Link href={retryHref} data-testid="retry-payment-cta">
+                {t('payment.retryCta')}
+              </Link>
+            </Button>
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="w-full sm:w-auto"
+            >
+              <Link href={reselectHref} data-testid="reselect-cta">
+                {t('reselectCta')}
+              </Link>
+            </Button>
+          </>
+        ) : (
+          <Button asChild size="lg" className="w-full sm:w-auto">
+            <Link href={reselectHref} data-testid="reselect-cta">
+              {t('reselectCta')}
+            </Link>
+          </Button>
+        )}
+      </ErrorShell>
+    </>
   );
 }
 

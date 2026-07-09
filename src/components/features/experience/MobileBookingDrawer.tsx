@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useMemo, useCallback, useTransition } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import {
-  AlertCircle,
   ArrowLeft,
   Calendar,
   Clock,
@@ -22,11 +21,11 @@ import {
 } from '@/components/ui/sheet';
 import { formatCHF } from '@/lib/utils/currency';
 import { BookingDatePicker } from '@/components/features/booking/BookingDatePicker';
+import { HoldCapacityError } from '@/components/features/booking/HoldCapacityError';
 import { TimeSlotSelector } from '@/components/features/booking/TimeSlotSelector';
 import { GuestCountInput } from '@/components/features/booking/GuestCountInput';
 import { BookingStepIndicator } from '@/components/features/booking/BookingStepIndicator';
-import { createBookingHold } from '@/server/actions/checkout';
-import { useNavigateWithTransition } from '@/hooks/useNavigateWithTransition';
+import { useBookingHold } from '@/hooks/useBookingHold';
 
 interface AvailabilitySlot {
   dayOfWeek: number;
@@ -65,7 +64,6 @@ export function MobileBookingDrawer({
 }: MobileBookingDrawerProps) {
   const t = useTranslations('booking');
   const tCheckout = useTranslations('checkout');
-  const { navigate, isPending: isNavigating } = useNavigateWithTransition();
   const locale = useLocale();
 
   const [date, setDate] = useState<string | null>(null);
@@ -74,9 +72,8 @@ export function MobileBookingDrawer({
   const [remainingCapacity, setRemainingCapacity] = useState<number | null>(
     null
   );
-  const [isCreatingHold, startHoldTransition] = useTransition();
-  const [holdError, setHoldError] = useState<string | null>(null);
-  const isSubmitting = isCreatingHold || isNavigating;
+  const { continueToCheckout, isSubmitting, holdError, clearHoldError } =
+    useBookingHold(experienceId, experienceSlug);
   const [mobileStep, setMobileStep] = useState<1 | 2 | 3>(1);
 
   // Available days based on availability slots
@@ -101,28 +98,37 @@ export function MobileBookingDrawer({
   const serviceFee = serviceFeeCentsPerGuest * guests;
   const totalPrice = price * guests + serviceFee;
 
-  const handleDateChange = useCallback((newDate: string | null) => {
-    setDate(newDate);
-    setTime(null);
-    setRemainingCapacity(null);
-    setHoldError(null);
-    if (newDate) {
-      setMobileStep(2);
-    }
-  }, []);
+  const handleDateChange = useCallback(
+    (newDate: string | null) => {
+      setDate(newDate);
+      setTime(null);
+      setRemainingCapacity(null);
+      clearHoldError();
+      if (newDate) {
+        setMobileStep(2);
+      }
+    },
+    [clearHoldError]
+  );
 
-  const handleTimeChange = useCallback((newTime: string | null) => {
-    setTime(newTime);
-    setHoldError(null);
-    if (newTime) {
-      setMobileStep(3);
-    }
-  }, []);
+  const handleTimeChange = useCallback(
+    (newTime: string | null) => {
+      setTime(newTime);
+      clearHoldError();
+      if (newTime) {
+        setMobileStep(3);
+      }
+    },
+    [clearHoldError]
+  );
 
-  const handleGuestsChange = useCallback((newGuests: number) => {
-    setGuests(newGuests);
-    setHoldError(null);
-  }, []);
+  const handleGuestsChange = useCallback(
+    (newGuests: number) => {
+      setGuests(newGuests);
+      clearHoldError();
+    },
+    [clearHoldError]
+  );
 
   const handleCapacityUpdate = useCallback((capacity: number | null) => {
     setRemainingCapacity(capacity);
@@ -139,38 +145,10 @@ export function MobileBookingDrawer({
   const handleContinue = () => {
     if (!isValid || !date || !time || isSubmitting) return;
 
-    setHoldError(null);
-    startHoldTransition(async () => {
-      const params = new URLSearchParams({
-        date,
-        time,
-        guests: guests.toString(),
-      });
-
-      // Hold the slot for 10 min BEFORE the checkout form (P-04 / L-050).
-      // Only a genuine NO_CAPACITY blocks the user — any other failure
-      // (rate limit, server, network) degrades softly to the previous
-      // hold-at-submit flow (plan §6: never block the booking).
-      try {
-        const result = await createBookingHold({
-          experienceId,
-          date,
-          timeSlot: time,
-          guestCount: guests,
-        });
-        if (result.success) {
-          params.set('holdId', result.data.holdId);
-          params.set('holdExpiresAt', result.data.expiresAt);
-        } else if (result.error.code === 'NO_CAPACITY') {
-          setHoldError(t('holdSlotTaken'));
-          return;
-        }
-      } catch {
-        // Soft degradation — continue to checkout without a hold.
-      }
-
-      navigate(`/experiences/${experienceSlug}/checkout?${params.toString()}`);
-    });
+    // Hold the slot for 10 min BEFORE the checkout form (P-04 / L-050) —
+    // the shared hook owns double-click guarding, previous-hold release
+    // and soft degradation.
+    void continueToCheckout({ date, time, guests });
   };
 
   const formatTime = (t: string) => {
@@ -196,7 +174,7 @@ export function MobileBookingDrawer({
       setTime(null);
       setGuests(Math.max(2, minCapacity));
       setRemainingCapacity(null);
-      setHoldError(null);
+      clearHoldError();
     }
     onOpenChange(open);
   };
@@ -346,17 +324,7 @@ export function MobileBookingDrawer({
         {/* Fixed bottom button */}
         <div className="fixed bottom-0 left-0 right-0 border-t border-stone-200 bg-white p-4">
           {holdError && mobileStep === 3 && (
-            <div
-              role="alert"
-              data-testid="hold-capacity-error"
-              className="mb-3 flex items-start gap-2 rounded-[10px] border border-red-200 bg-red-50 p-3 text-xs font-medium text-red-700"
-            >
-              <AlertCircle
-                className="mt-0.5 h-3.5 w-3.5 shrink-0"
-                aria-hidden="true"
-              />
-              <span>{holdError}</span>
-            </div>
+            <HoldCapacityError message={holdError} />
           )}
           {mobileStep === 1 && (
             <Button

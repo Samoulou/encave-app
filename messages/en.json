@@ -172,7 +172,8 @@
       "winemakerDescription": "Check this if you want to register your winery and offer experiences",
       "creatingAccount": "Creating account...",
       "createAccount": "Create account",
-      "haveAccount": "Already have an account?"
+      "haveAccount": "Already have an account?",
+      "emailExists": "An account already exists with this email"
     }
   },
   "home": {
@@ -641,8 +642,6 @@
     "backToBooking": "Back to booking",
     "experienceNotFound": "Experience not found",
     "invalidBookingParams": "Invalid booking parameters. Please start again.",
-    "paymentCancelled": "Payment was cancelled. You can try again.",
-    "paymentFailed": "Payment failed. Please try again or use a different payment method.",
     "verifyingAvailability": "Verifying availability...",
     "capacityExceeded": "Capacity Exceeded",
     "capacityExceededMessage": "You requested {requested} guests, but only {available} spots are available for this time slot.",
@@ -1235,7 +1234,8 @@
     "invalidPhone": "Invalid phone number",
     "fileTooLarge": "File is too large",
     "invalidFileType": "Invalid file type",
-    "uploadFailed": "Upload failed"
+    "uploadFailed": "Upload failed",
+    "errorId": "Error ID: {id}"
   },
   "empty": {
     "noExperiences": "No experiences found",

@@ -1,25 +1,17 @@
 'use client';
 
-import { useCallback, useMemo, useState, useTransition } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import type { CancellationPolicy } from '@prisma/client';
 import { getPolicyTiers } from '@/lib/business-rules/cancellation-policy';
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
 import { addDays, format, parseISO, startOfDay } from 'date-fns';
 import { de, enUS, fr } from 'date-fns/locale';
-import {
-  AlertCircle,
-  Check,
-  ChevronRight,
-  Lock,
-  Loader2,
-  Minus,
-  Plus,
-} from 'lucide-react';
+import { Check, ChevronRight, Lock, Loader2, Minus, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { HoldCapacityError } from '@/components/features/booking/HoldCapacityError';
 import { TimeSlotSelector } from '@/components/features/booking/TimeSlotSelector';
-import { createBookingHold } from '@/server/actions/checkout';
-import { useNavigateWithTransition } from '@/hooks/useNavigateWithTransition';
+import { useBookingHold } from '@/hooks/useBookingHold';
 import { formatCHF } from '@/lib/utils/currency';
 import { cn } from '@/lib/utils';
 import { capturePostHog } from '@/lib/posthog-client';
@@ -63,7 +55,6 @@ export function BookingWidget({
   const t = useTranslations('booking');
   const tExp = useTranslations('experience');
   const tCheckout = useTranslations('checkout');
-  const { navigate, isPending: isNavigating } = useNavigateWithTransition();
   const locale = useLocale();
 
   const [queryState, setQueryState] = useQueryStates({
@@ -75,9 +66,8 @@ export function BookingWidget({
   const [remainingCapacity, setRemainingCapacity] = useState<number | null>(
     null
   );
-  const [isCreatingHold, startHoldTransition] = useTransition();
-  const [holdError, setHoldError] = useState<string | null>(null);
-  const isSubmitting = isCreatingHold || isNavigating;
+  const { continueToCheckout, isSubmitting, holdError, clearHoldError } =
+    useBookingHold(experienceId, experienceSlug);
 
   const { date, time, guests } = queryState;
   const isBookingEnabled = stripeConnected;
@@ -142,25 +132,25 @@ export function BookingWidget({
     (newDate: string | null) => {
       setQueryState({ date: newDate, time: null });
       setRemainingCapacity(null);
-      setHoldError(null);
+      clearHoldError();
     },
-    [setQueryState]
+    [setQueryState, clearHoldError]
   );
 
   const handleTimeChange = useCallback(
     (newTime: string | null) => {
       setQueryState({ time: newTime });
-      setHoldError(null);
+      clearHoldError();
     },
-    [setQueryState]
+    [setQueryState, clearHoldError]
   );
 
   const handleGuestsChange = useCallback(
     (newGuests: number) => {
       setQueryState({ guests: newGuests });
-      setHoldError(null);
+      clearHoldError();
     },
-    [setQueryState]
+    [setQueryState, clearHoldError]
   );
 
   const handleCapacityUpdate = useCallback((capacity: number | null) => {
@@ -179,38 +169,10 @@ export function BookingWidget({
       total_price_chf: totalPrice / 100,
     });
 
-    setHoldError(null);
-    startHoldTransition(async () => {
-      const params = new URLSearchParams({
-        date,
-        time,
-        guests: guests.toString(),
-      });
-
-      // Hold the slot for 10 min BEFORE the checkout form (P-04 / L-050).
-      // Only a genuine NO_CAPACITY blocks the user — any other failure
-      // (rate limit, server, network) degrades softly to the previous
-      // hold-at-submit flow (plan §6: never block the booking).
-      try {
-        const result = await createBookingHold({
-          experienceId,
-          date,
-          timeSlot: time,
-          guestCount: guests,
-        });
-        if (result.success) {
-          params.set('holdId', result.data.holdId);
-          params.set('holdExpiresAt', result.data.expiresAt);
-        } else if (result.error.code === 'NO_CAPACITY') {
-          setHoldError(t('holdSlotTaken'));
-          return;
-        }
-      } catch {
-        // Soft degradation — continue to checkout without a hold.
-      }
-
-      navigate(`/experiences/${experienceSlug}/checkout?${params.toString()}`);
-    });
+    // Hold the slot for 10 min BEFORE the checkout form (P-04 / L-050) —
+    // the shared hook owns double-click guarding, previous-hold release
+    // and soft degradation.
+    void continueToCheckout({ date, time, guests });
   };
 
   const formatDateLabel = (dateStr: string) => {
@@ -381,19 +343,7 @@ export function BookingWidget({
         </div>
       </div>
 
-      {holdError && (
-        <div
-          role="alert"
-          data-testid="hold-capacity-error"
-          className="mb-3 flex items-start gap-2 rounded-[10px] border border-red-200 bg-red-50 p-3 text-xs font-medium text-red-700"
-        >
-          <AlertCircle
-            className="mt-0.5 h-3.5 w-3.5 shrink-0"
-            aria-hidden="true"
-          />
-          <span>{holdError}</span>
-        </div>
-      )}
+      {holdError && <HoldCapacityError message={holdError} />}
 
       {isBookingEnabled ? (
         <Button

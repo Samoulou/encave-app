@@ -36,7 +36,7 @@ export default function Error({
         </p>
         {error.digest && (
           <p className="mt-4 font-mono text-xs text-ink-500">
-            Error ID: {error.digest}
+            {t('errorId', { id: error.digest })}
           </p>
         )}
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
