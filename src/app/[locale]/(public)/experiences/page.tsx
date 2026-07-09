@@ -86,7 +86,7 @@ export default async function ExperiencesPage({
       {/* Hero Section with background image */}
       <section className="relative min-h-[280px] w-full sm:min-h-[320px]">
         <Image
-          src="/images/herobanner-image.jpg"
+          src="/images/herobanner-image-v2.jpg"
           alt=""
           fill
           className="object-cover"

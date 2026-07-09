@@ -15,6 +15,9 @@ const connectSrc = [
   'https://api.mapbox.com',
   'https://events.mapbox.com',
   'https://*.tiles.mapbox.com',
+  // Map fallback style without Mapbox token (InteractiveMap.tsx) — L-217
+  'https://tile.openstreetmap.org',
+  'https://demotiles.maplibre.org',
 ];
 
 // Security headers configuration (SEC-003)
@@ -24,7 +27,8 @@ const securityHeaders = [
     key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://va.vercel-scripts.com https://eu.posthog.com https://eu-assets.i.posthog.com",
+      // browser.sentry-cdn.com: lazy-loaded Session Replay integration (L-205)
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://va.vercel-scripts.com https://eu.posthog.com https://eu-assets.i.posthog.com https://browser.sentry-cdn.com",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' https: data: blob:",
       "font-src 'self' https: data:",
@@ -75,6 +79,8 @@ const nextConfig = {
   },
   images: {
     formats: ['image/avif', 'image/webp'],
+    // Cache optimized images for 30 days instead of the 60 s default (L-215)
+    minimumCacheTTL: 2592000,
     remotePatterns: [
       {
         protocol: 'https',

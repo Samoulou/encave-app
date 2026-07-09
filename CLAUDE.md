@@ -41,7 +41,7 @@ Test commands use `dotenv -e .env.test --` prefix. Never run tests against produ
 - **next-intl** ^4.7.0 — locales: fr (default), de, en; localePrefix: always
 - **Tailwind** ^3.4.0 + shadcn/ui (Radix + CVA) | **Prettier** with tailwindcss plugin
 - **react-hook-form** ^7.70.0 + **Zod** ^4.3.5 (v4 API, not v3)
-- **framer-motion** ^12.25.0 | **nuqs** ^2.8.6 (URL search params)
+- **nuqs** ^2.8.6 (URL search params). framer-motion was removed in P-01 (CSS animations only) — don't reintroduce it
 - **react-day-picker** ^9.13.0 (v9, not v8)
 - **Pino** ^10.1.1 (structured logging) | **Sentry** ^10.33.0
 - **Resend** ^6.7.0 + React Email | **Vercel Blob** ^2.0.0

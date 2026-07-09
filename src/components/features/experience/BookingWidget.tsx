@@ -3,22 +3,15 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import posthog from 'posthog-js';
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
 import { addDays, format, parseISO, startOfDay } from 'date-fns';
 import { de, enUS, fr } from 'date-fns/locale';
-import {
-  Check,
-  ChevronRight,
-  Lock,
-  Loader2,
-  Minus,
-  Plus,
-} from 'lucide-react';
+import { Check, ChevronRight, Lock, Loader2, Minus, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TimeSlotSelector } from '@/components/features/booking/TimeSlotSelector';
 import { formatCHF } from '@/lib/utils/currency';
 import { cn } from '@/lib/utils';
+import { capturePostHog } from '@/lib/posthog-client';
 
 interface AvailabilitySlot {
   dayOfWeek: number;
@@ -142,7 +135,7 @@ export function BookingWidget({
   const handleContinue = () => {
     if (!isValid || !isBookingEnabled) return;
 
-    posthog.capture('booking_started', {
+    capturePostHog('booking_started', {
       experience_id: experienceId,
       experience_slug: experienceSlug,
       date,
@@ -239,9 +232,7 @@ export function BookingWidget({
                 <div className="text-[9px] uppercase tracking-[0.1em] opacity-70">
                   {option.day}
                 </div>
-                <div className="mt-0.5 text-base font-bold">
-                  {option.date}
-                </div>
+                <div className="mt-0.5 text-base font-bold">{option.date}</div>
               </button>
             );
           })}
@@ -324,10 +315,7 @@ export function BookingWidget({
         </div>
         <div className="mt-2 flex items-center justify-between border-t border-stone-200 pt-2 text-[15px] font-bold text-ink-900">
           <span>Total</span>
-          <span
-            className="text-burgundy-700"
-            data-testid="total-price"
-          >
+          <span className="text-burgundy-700" data-testid="total-price">
             {formatCHF(totalPrice)}
           </span>
         </div>

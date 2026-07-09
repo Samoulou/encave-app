@@ -27,7 +27,7 @@ const categoryLinks = [
   ['Accords', 'FOOD_PAIRING', Utensils, 'bg-[#f5e9d6]'],
 ] as const;
 
-const HERO_BANNER_IMAGE = '/images/herobanner-image-original.jpg';
+const HERO_BANNER_IMAGE = '/images/herobanner-image-v2.jpg';
 
 function formatDuration(minutes: number) {
   if (minutes >= 60) {
@@ -63,7 +63,7 @@ function ExperienceVisual({
         />
       ) : (
         <ImageWithFallback
-          src="/images/herobanner-image.jpg"
+          src="/images/herobanner-image-v2.jpg"
           alt="Vignes valaisannes"
           fill
           priority={priority}
@@ -151,7 +151,7 @@ export function HomeMobileEditorial({
           </span>
           <h1 className="mt-3 font-display text-[38px] font-normal leading-[1.04] tracking-[-0.015em]">
             Le vin,{' '}
-            <em className="font-normal italic text-gold-400">
+            <em className="font-display-italic font-normal italic text-gold-400">
               chez ceux qui le font
             </em>
             .

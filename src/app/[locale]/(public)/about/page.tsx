@@ -125,7 +125,7 @@ export default async function AboutPage({ params }: PageProps) {
 
         {/* Footer Tagline */}
         <div className="mt-16 text-center">
-          <p className="font-display text-xl italic text-burgundy-700">
+          <p className="font-display-italic text-xl italic text-burgundy-700">
             {t('footer')}
           </p>
         </div>

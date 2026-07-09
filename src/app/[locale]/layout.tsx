@@ -7,7 +7,6 @@ import dynamic from 'next/dynamic';
 import { Toaster } from '@/components/ui/sonner';
 import { SkipLink } from '@/components/shared/SkipLink';
 import { ProgressBarProvider } from '@/components/shared/ProgressBarProvider';
-import { NavigationLoader } from '@/components/shared/NavigationLoader';
 import { SentryUserSync } from '@/components/shared/SentryUserSync';
 import { CookieConsentBanner } from '@/components/shared/CookieConsentBanner';
 import {
@@ -23,24 +22,37 @@ const Analytics = dynamic(
   { ssr: false }
 );
 
+// L-206: reduced font matrix — 9 files instead of 18
+// (Fraunces was 5 weights × 2 styles, Manrope 5 weights, Mono 3 weights).
 const manrope = Manrope({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
+  weight: ['400', '600', '700'],
   variable: '--font-manrope',
   display: 'swap',
 });
 
 const fraunces = Fraunces({
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
-  style: ['normal', 'italic'],
+  weight: ['400', '600', '700'],
+  style: ['normal'],
   variable: '--font-fraunces',
+  display: 'swap',
+});
+
+// Fraunces italic is only used at regular weight (hero <em>, about quote) —
+// load that single face via the `font-display-italic` utility instead of
+// italics for every weight.
+const frauncesItalic = Fraunces({
+  subsets: ['latin'],
+  weight: ['400'],
+  style: ['italic'],
+  variable: '--font-fraunces-italic',
   display: 'swap',
 });
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
-  weight: ['500', '600', '700'],
+  weight: ['500', '700'],
   variable: '--font-mono',
   display: 'swap',
 });
@@ -70,9 +82,14 @@ export default async function LocaleLayout({ children, params }: Props) {
 
   return (
     <html lang={locale} suppressHydrationWarning>
-      <head />
+      <head>
+        {/* L-206: warm up connections to critical third-party origins */}
+        <link rel="preconnect" href="https://js.stripe.com" />
+        <link rel="preconnect" href="https://api.stripe.com" />
+        <link rel="dns-prefetch" href="https://eu.posthog.com" />
+      </head>
       <body
-        className={`${manrope.variable} ${fraunces.variable} ${jetbrainsMono.variable} font-sans antialiased`}
+        className={`${manrope.variable} ${fraunces.variable} ${frauncesItalic.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
         <NextIntlClientProvider messages={messages}>
           <PostHogProvider>
@@ -80,7 +97,6 @@ export default async function LocaleLayout({ children, params }: Props) {
             <NuqsAdapter>{children}</NuqsAdapter>
             <Toaster />
             <ProgressBarProvider />
-            <NavigationLoader />
             <SentryUserSync />
             <PostHogUserSync />
             <CookieConsentBanner />

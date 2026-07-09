@@ -38,7 +38,7 @@ export default async function WineriesPage({
           className="relative h-[40vh] min-h-[320px] w-full"
         >
           <Image
-            src="https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?q=80&w=1920&auto=format&fit=crop"
+            src="/images/herobanner-image-v2.jpg"
             alt={t('heroImageAlt')}
             fill
             className="object-cover"
