@@ -1,6 +1,6 @@
 # P-02 — Fondations schéma V3 & invariants
 
-> **Statut** : en cours · **Branche** : `claude/encave-v3-business-model-8bv7bd` (fallback session, cf. P-01) · **PR** : #
+> **Statut** : review passée, PR ouverte · **Branche** : `claude/encave-v3-business-model-8bv7bd` (fallback session, cf. P-01) · **PR** : [#92](https://github.com/Samoulou/encave-app/pull/92)
 > **Sources** : `docs/ENCAVE-V3-DELIVERY-PLAN.md` §P-02 · items L-020→L-030 · specs `docs/v3/ENCAVE-V3-PRD.md` US-101/210/220/230/240/250
 
 ## 1. Objectif

@@ -230,7 +230,7 @@ ISR/header découplé, i18n subset, Mapbox gated, index DB, invalidation propre.
 | #    | Package                        | 💰  | Dépend de  | Est.   | Cible cal. | Statut | Branche / PR                                                      |
 | ---- | ------------------------------ | --- | ---------- | ------ | ---------- | ------ | ----------------------------------------------------------------- |
 | P-01 | Fiabilisation & quick wins     |     | —          | 21 h   | S1-S2      | ✅     | PR [#90](https://github.com/Samoulou/encave-app/pull/90)          |
-| P-02 | Fondations schéma V3           |     | —          | 19 h   | S2-S3      | 🟨     | `claude/encave-v3-business-model-8bv7bd` — review ✅, PR à ouvrir |
+| P-02 | Fondations schéma V3           |     | —          | 19 h   | S2-S3      | 🟨     | PR [#92](https://github.com/Samoulou/encave-app/pull/92) — review ✅, attend merge |
 | P-03 | Monétisation Phase 1           | 💰  | P-02       | 14 h   | S4         | ⬜     |                                                                   |
 | P-04 | Checkout V3                    | 💰  | P-03       | 15.5 h | S5         | ⬜     |                                                                   |
 | P-05 | Créneaux & recherche par date  |     | P-02       | 11 h   | S6         | ⬜     |                                                                   |
