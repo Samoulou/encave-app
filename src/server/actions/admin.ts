@@ -349,6 +349,31 @@ export async function refundBookingManually(
     };
   }
 
+  // Reserve the amount ATOMICALLY before Stripe (résidu Luca B, P-03).
+  // Two concurrent refunds (admin double-click, admin + client
+  // cancellation) would both read the same `refundAmount` and both pass
+  // the cap check within the charge limit. The conditional update lets
+  // exactly one caller through; the loser sees count 0 and backs off.
+  const nextRefunded = alreadyRefunded + amountCents;
+  const reserved = await db.booking.updateMany({
+    where: {
+      id: booking.id,
+      refundAmount: booking.refundAmount,
+      stripeRefundId: booking.stripeRefundId,
+    },
+    data: { refundAmount: nextRefunded },
+  });
+  if (reserved.count === 0) {
+    return {
+      success: false,
+      error: {
+        code: 'CONFLICT',
+        message:
+          'Another refund is already in progress for this booking. Reload and check the refunded amount before retrying.',
+      },
+    };
+  }
+
   try {
     const refund = await getStripe().refunds.create(
       {
@@ -368,7 +393,6 @@ export async function refundBookingManually(
       }
     );
 
-    const nextRefunded = alreadyRefunded + amountCents;
     const isFullRefund = nextRefunded >= paidCents;
     await db.$transaction([
       db.booking.update({
@@ -443,10 +467,27 @@ export async function refundBookingManually(
         },
       },
     });
-    await db.booking.update({
-      where: { id: booking.id },
-      data: { refundError: String(error) },
-    });
+    // Release the reservation ONLY on a deterministic Stripe rejection —
+    // after an ambiguous network error the refund may have succeeded, and
+    // releasing would allow a second one once the idempotency key expires
+    // (24h). Ambiguous → keep the reserved amount + refundError for
+    // manual reconciliation (same doctrine as cancelBooking).
+    const deterministic =
+      typeof error === 'object' &&
+      error !== null &&
+      'type' in error &&
+      error.type === 'StripeInvalidRequestError';
+    if (deterministic) {
+      await db.booking.updateMany({
+        where: { id: booking.id, refundAmount: nextRefunded },
+        data: { refundAmount: booking.refundAmount },
+      });
+    } else {
+      await db.booking.update({
+        where: { id: booking.id },
+        data: { refundError: String(error) },
+      });
+    }
     logError('Manual refund failed', error, {
       action: 'refundBookingManually',
       bookingId: booking.id,
