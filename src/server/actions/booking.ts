@@ -330,15 +330,13 @@ export async function resendConfirmationEmail(
 
     // Rotate the access token so the resent email carries a working magic
     // link (only the hash is stored — the original plaintext is gone).
+    // The new hash is persisted ONLY after the provider accepted the email:
+    // a failed send must leave the customer's existing link valid.
     const accessToken = crypto.randomBytes(32).toString('hex');
     const accessTokenHash = crypto
       .createHash('sha256')
       .update(accessToken)
       .digest('hex');
-    await db.booking.update({
-      where: { id: bookingId },
-      data: { accessTokenHash },
-    });
 
     const sent = await sendBookingConfirmationEmail(booking.visitorEmail, {
       bookingId: booking.id,
@@ -356,7 +354,7 @@ export async function resendConfirmationEmail(
     if (sent) {
       await db.booking.update({
         where: { id: bookingId },
-        data: { confirmationSentAt: new Date() },
+        data: { accessTokenHash, confirmationSentAt: new Date() },
       });
     }
 

@@ -44,6 +44,7 @@ export type WineryVisibilityInput = {
   description: string;
   latitude: number | null;
   longitude: number | null;
+  coverPhoto: string | null;
   galleryImages: ReadonlyArray<{ id: string }>;
   experiences: ReadonlyArray<{ status: ExperienceStatus }>;
 };
@@ -87,7 +88,11 @@ export function getWineryVisibilityCriteria(
   return {
     verified: winery.status === 'VERIFIED',
     kyc: winery.stripeOnboardingComplete === true,
-    hasPhotos: winery.galleryImages.length >= 1,
+    // Criterion 3: the cover photo counts — the media UI stores it on the
+    // winery itself, separately from WineryGalleryImage rows.
+    hasPhotos:
+      (winery.coverPhoto ?? '').trim().length > 0 ||
+      winery.galleryImages.length >= 1,
     hasDescription: hasMeaningfulDescription(winery.description),
     hasGeocoding: winery.latitude !== null && winery.longitude !== null,
     hasPublishedExperience: winery.experiences.some(
@@ -112,12 +117,12 @@ export function isWineryPubliclyVisible(
  * visible ones at the SQL level.
  *
  * Caveat: the SQL `description: { not: '' }` only excludes strictly-empty
- * strings. Whitespace-only or HTML-empty descriptions still pass SQL but
- * MUST be filtered out in TS via `isWineryPubliclyVisible` when the query
- * returns the entity (listing / detail). For queries that only project
- * `slug` / `commune` / aggregates, the SQL filter alone is enough — the
- * delta (a handful of malformed descriptions out of MVP volumes) is
- * acceptable.
+ * strings, and `coverPhoto: { not: null }` lets an empty-string cover
+ * through. Both edge cases MUST be filtered out in TS via
+ * `isWineryPubliclyVisible` when the query returns the entity
+ * (listing / detail). For queries that only project `slug` / `commune` /
+ * aggregates, the SQL filter alone is enough — the delta (a handful of
+ * malformed rows out of MVP volumes) is acceptable.
  */
 export const publiclyVisibleWineryWhere = {
   status: 'VERIFIED',
@@ -125,9 +130,8 @@ export const publiclyVisibleWineryWhere = {
   description: { not: '' },
   latitude: { not: null },
   longitude: { not: null },
-  galleryImages: {
-    some: {},
-  },
+  // Criterion 3: cover photo OR at least one gallery image.
+  OR: [{ coverPhoto: { not: null } }, { galleryImages: { some: {} } }],
   experiences: {
     some: { status: 'PUBLISHED' },
   },

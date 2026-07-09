@@ -43,6 +43,7 @@ export async function VisibilityBanner({ wineryId }: VisibilityBannerProps) {
         description: true,
         latitude: true,
         longitude: true,
+        coverPhoto: true,
         galleryImages: { select: { id: true } },
         experiences: {
           where: { status: 'PUBLISHED' },

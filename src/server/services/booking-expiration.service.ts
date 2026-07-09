@@ -38,6 +38,37 @@ export async function expirePendingPaymentBookings(now = new Date()): Promise<{
     if (!isBefore(addMinutes(candidate.createdAt, 30), now)) continue;
 
     try {
+      // Ask Stripe BEFORE cancelling: a paid session whose
+      // checkout.session.completed webhook is late must NOT be expired
+      // locally — the webhook will confirm it. Cancelling first would
+      // strand a captured payment on a cancelled booking.
+      if (candidate.stripeCheckoutSessionId?.startsWith('cs_')) {
+        let checkoutSession;
+        try {
+          checkoutSession = await getStripe().checkout.sessions.retrieve(
+            candidate.stripeCheckoutSessionId
+          );
+        } catch (error) {
+          logWarn('Could not retrieve Checkout Session — retrying next run', {
+            action: 'expirePendingPaymentBookings',
+            bookingId: candidate.id,
+            error: String(error),
+          });
+          continue;
+        }
+        if (checkoutSession.payment_status !== 'unpaid') {
+          logWarn(
+            'Session paid but booking still pending — leaving to webhook',
+            {
+              action: 'expirePendingPaymentBookings',
+              bookingId: candidate.id,
+              paymentStatus: checkoutSession.payment_status,
+            }
+          );
+          continue;
+        }
+      }
+
       const updated = await db.$transaction(async (tx) => {
         const current = await tx.booking.findUnique({
           where: { id: candidate.id },

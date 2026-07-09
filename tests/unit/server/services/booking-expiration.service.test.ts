@@ -30,9 +30,10 @@ vi.mock('@/server/db', () => ({
 }));
 
 const expireMock = vi.fn();
+const retrieveMock = vi.fn();
 vi.mock('@/server/stripe', () => ({
   getStripe: () => ({
-    checkout: { sessions: { expire: expireMock } },
+    checkout: { sessions: { expire: expireMock, retrieve: retrieveMock } },
   }),
 }));
 
@@ -56,6 +57,7 @@ describe('expirePendingPaymentBookings', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     expireMock.mockResolvedValue({});
+    retrieveMock.mockResolvedValue({ payment_status: 'unpaid' });
   });
 
   it('cancels expired pending bookings and sends an email', async () => {
@@ -112,6 +114,55 @@ describe('expirePendingPaymentBookings', () => {
     vi.mocked(db.booking.findUnique).mockResolvedValue({
       status: BookingStatus.CONFIRMED,
     } as never);
+
+    const result = await expirePendingPaymentBookings(
+      new Date('2026-05-19T12:00:00Z')
+    );
+
+    expect(result.expired).toBe(0);
+    expect(db.booking.update).not.toHaveBeenCalled();
+    expect(sendBookingExpiredEmail).not.toHaveBeenCalled();
+  });
+
+  it('leaves a PAID session to the late webhook instead of cancelling', async () => {
+    retrieveMock.mockResolvedValue({ payment_status: 'paid' });
+    vi.mocked(db.booking.findMany).mockResolvedValue([
+      {
+        id: 'booking-1',
+        reference: 'ENC-ABC123',
+        visitorEmail: 'client@test.ch',
+        visitorName: 'Alice',
+        createdAt: new Date('2026-05-19T11:20:00Z'),
+        stripeCheckoutSessionId: 'cs_test_123',
+        date: new Date('2026-05-20T00:00:00Z'),
+        experience: { title: 'Atelier pinot', slug: 'atelier-pinot' },
+      },
+    ] as never);
+
+    const result = await expirePendingPaymentBookings(
+      new Date('2026-05-19T12:00:00Z')
+    );
+
+    expect(result.expired).toBe(0);
+    expect(db.booking.update).not.toHaveBeenCalled();
+    expect(expireMock).not.toHaveBeenCalled();
+    expect(sendBookingExpiredEmail).not.toHaveBeenCalled();
+  });
+
+  it('skips the candidate this run when Stripe cannot be reached', async () => {
+    retrieveMock.mockRejectedValue(new Error('network'));
+    vi.mocked(db.booking.findMany).mockResolvedValue([
+      {
+        id: 'booking-1',
+        reference: 'ENC-ABC123',
+        visitorEmail: 'client@test.ch',
+        visitorName: 'Alice',
+        createdAt: new Date('2026-05-19T11:20:00Z'),
+        stripeCheckoutSessionId: 'cs_test_123',
+        date: new Date('2026-05-20T00:00:00Z'),
+        experience: { title: 'Atelier pinot', slug: 'atelier-pinot' },
+      },
+    ] as never);
 
     const result = await expirePendingPaymentBookings(
       new Date('2026-05-19T12:00:00Z')
