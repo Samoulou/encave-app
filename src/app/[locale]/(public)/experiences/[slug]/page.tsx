@@ -19,14 +19,7 @@ import { generateExperienceDetailMetadata } from '@/lib/seo';
 import { getBaseUrl } from '@/lib/env';
 import { type Locale } from '@/i18n/routing';
 import { Link } from '@/i18n/navigation';
-import {
-  ArrowUpRight,
-  Check,
-  Clock,
-  Globe2,
-  Users,
-  Wine,
-} from 'lucide-react';
+import { ArrowUpRight, Check, Clock, Globe2, Users, Wine } from 'lucide-react';
 
 interface ExperiencePageProps {
   params: Promise<{ slug: string; locale: string }>;
@@ -304,7 +297,9 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
                   wineryName={experience.winery.name}
                   winerySlug={experience.winery.slug}
                   latitude={experience.latitude || experience.winery.latitude}
-                  longitude={experience.longitude || experience.winery.longitude}
+                  longitude={
+                    experience.longitude || experience.winery.longitude
+                  }
                 />
               </div>
 

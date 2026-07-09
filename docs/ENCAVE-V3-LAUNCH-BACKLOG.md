@@ -305,3 +305,12 @@ Chemin critique : `E1 (schéma) → E2 (monétisation) → E3 (checkout) → E5/
 - **Ops launch** : astreinte définie, runbooks testés, alerting téléphone, flags vérifiés (désactivation < 1 min), plan de communication (réseaux caves + SEO local + push cadeaux Noël).
 - **Le Cercle** : 2-3 conversations domaines haut de gamme + 1 sommelier (oct-nov) — zéro dev, signal 2027.
 - **Freeze** : 5–15.12 Maldives — zéro deploy, alerting actif ; page `/maintenance` prête (L-114).
+
+## 7. Notes du tour fonctionnel (Sam — à trier dans les packages)
+
+> Observations d'usage remontées par Sam en parcourant l'app. Pas urgentes, à livrer avant le launch. IDs `L-220+`. Chaque note est rattachée à un package cible ; celles sans rattachement évident sont reprises à la revue dominicale.
+
+| ID    | Note (date)                                                                                                                                                                                      | Package cible | Statut |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------- | ------ |
+| L-220 | Fiche expérience : skeleton **et** loader s'affichent pendant le chargement — ne garder que le skeleton (09.07)                                                                                  | P-06 ou P-12  | ⬜     |
+| L-221 | Fiche expérience desktop : le panneau de réservation (prix/dates/heures, colonne droite) doit s'aligner au niveau des photos — actuellement à moitié visible sous la ligne de flottaison (09.07) | P-12          | ⬜     |

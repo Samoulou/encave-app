@@ -266,21 +266,27 @@
         "localPlatter": "Lokale Käse- und Fleischplatte",
         "pairingGuidance": "Experten-Paarungsberatung",
         "tastingNotes": "Verkostungsnotizen"
-      }
+      },
+      "MEAL": "Komplettes Essen mit Weinen des Weinguts",
+      "EVENT": "Zugang zur Veranstaltung und Programm"
     },
     "types": {
       "TASTING": "Verkostung",
       "CELLAR_VISIT": "Kellerbesuch",
       "WORKSHOP": "Workshop",
       "VINEYARD_TOUR": "Weinbergtour",
-      "FOOD_PAIRING": "Wein-Speisen-Pairing"
+      "FOOD_PAIRING": "Wein-Speisen-Pairing",
+      "MEAL": "Essen auf dem Weingut",
+      "EVENT": "Veranstaltung"
     },
     "typesDetailed": {
       "TASTING": "Weinverkostung",
       "CELLAR_VISIT": "Geführte Tour",
       "WORKSHOP": "Workshop",
       "VINEYARD_TOUR": "Weinbergtour",
-      "FOOD_PAIRING": "Wein-Speisen-Pairing"
+      "FOOD_PAIRING": "Wein-Speisen-Pairing",
+      "MEAL": "Essen mit Weinbegleitung auf dem Weingut",
+      "EVENT": "Einmalige oder kollektive Veranstaltung"
     },
     "duration": "Dauer",
     "durationFormat": "{count, plural, =1 {# Stunde} other {# Stunden}}",

@@ -1,0 +1,100 @@
+name: DB Migrate (ad hoc)
+
+# Applies `prisma migrate deploy` to an arbitrary Postgres database.
+# Manual dispatch only. Preferred: set the ADHOC_DATABASE_URL repo secret
+# and leave the input empty — dispatch inputs are persisted with the run,
+# secrets are not. The input remains available for one-offs (masked from
+# the logs, never committed). Pooler or direct Neon URL both work — the
+# pooler suffix is stripped automatically for DIRECT_URL, which Prisma
+# Migrate uses.
+
+on:
+  workflow_dispatch:
+    inputs:
+      database_url:
+        description: 'Postgres connection string — leave EMPTY to use the ADHOC_DATABASE_URL secret (preferred)'
+        required: false
+        default: ''
+        type: string
+      confirm:
+        description: "Type 'migrate-deploy' to confirm"
+        required: true
+        type: string
+      seed:
+        description: 'DESTRUCTIVE — wipes tables then reseeds. Requires an explicit database_url input (never runs against the secret). Never production.'
+        required: true
+        default: 'no'
+        type: choice
+        options:
+          - 'no'
+          - 'yes-wipe-and-seed'
+
+jobs:
+  migrate:
+    name: prisma migrate deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Validate confirmation phrase
+        if: ${{ inputs.confirm != 'migrate-deploy' }}
+        run: |
+          echo "Confirmation phrase mismatch — aborting."
+          exit 1
+
+      # A wipe must name its target: seeding never runs against the ambient
+      # ADHOC_DATABASE_URL secret, only against an explicitly pasted URL.
+      - name: Validate seed target is explicit
+        if: ${{ inputs.seed == 'yes-wipe-and-seed' && inputs.database_url == '' }}
+        run: |
+          echo "Refusing to seed: yes-wipe-and-seed requires pasting the target database_url explicitly."
+          exit 1
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Prepare connection strings (masked)
+        env:
+          INPUT_URL: ${{ inputs.database_url }}
+          SECRET_URL: ${{ secrets.ADHOC_DATABASE_URL }}
+        run: |
+          RAW_URL="${INPUT_URL:-$SECRET_URL}"
+          if [ -z "$RAW_URL" ]; then
+            echo "No connection string: set the ADHOC_DATABASE_URL repo secret (preferred) or fill the database_url input."
+            exit 1
+          fi
+          case "$RAW_URL" in *$'\n'*)
+            echo "Connection string must be a single line." ; exit 1 ;;
+          esac
+          echo "::add-mask::$RAW_URL"
+          # Drop channel_binding (libpq-only param) whatever its position.
+          CLEAN=$(printf '%s' "$RAW_URL" | sed -E 's/([?&])channel_binding=[^&]*&/\1/; s/[?&]channel_binding=[^&]*$//')
+          # Neon: migrations must hit the direct endpoint, not PgBouncer.
+          DIRECT=$(printf '%s' "$CLEAN" | sed 's/-pooler\./\./')
+          echo "::add-mask::$CLEAN"
+          echo "::add-mask::$DIRECT"
+          {
+            printf 'DATABASE_URL<<__ENV_EOF__\n%s\n__ENV_EOF__\n' "$CLEAN"
+            printf 'DIRECT_URL<<__ENV_EOF__\n%s\n__ENV_EOF__\n' "$DIRECT"
+          } >> "$GITHUB_ENV"
+
+      - name: Apply migrations
+        run: npx --yes prisma@5.22.0 migrate deploy
+
+      - name: Migration status
+        run: npx --yes prisma@5.22.0 migrate status
+
+      - name: Install dependencies (seed only)
+        if: ${{ inputs.seed == 'yes-wipe-and-seed' }}
+        run: npm ci
+
+      - name: Seed database (wipes existing data)
+        if: ${{ inputs.seed == 'yes-wipe-and-seed' }}
+        env:
+          SEED_ALLOW_DESTRUCTIVE: '1'
+        run: npx prisma db seed

@@ -46,12 +46,15 @@ async function getSessionRole(
   request: NextRequest
 ): Promise<'NO_SESSION' | 'ROLE_MISSING' | string> {
   try {
-    const response = await fetch(new URL('/api/auth/get-session', request.url), {
-      headers: {
-        cookie: request.headers.get('cookie') ?? '',
-      },
-      cache: 'no-store',
-    });
+    const response = await fetch(
+      new URL('/api/auth/get-session', request.url),
+      {
+        headers: {
+          cookie: request.headers.get('cookie') ?? '',
+        },
+        cache: 'no-store',
+      }
+    );
 
     if (!response.ok) return 'NO_SESSION';
 

@@ -19,7 +19,9 @@ const localeLabels: Record<Locale, string> = {
   en: 'EN',
 };
 
-export function LocaleSwitcher({ triggerClassName }: { triggerClassName?: string } = {}) {
+export function LocaleSwitcher({
+  triggerClassName,
+}: { triggerClassName?: string } = {}) {
   const locale = useLocale() as Locale;
   const router = useRouter();
   const pathname = usePathname();

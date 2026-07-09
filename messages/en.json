@@ -266,21 +266,27 @@
         "localPlatter": "Local cheese & meat platter",
         "pairingGuidance": "Expert pairing guidance",
         "tastingNotes": "Tasting notes"
-      }
+      },
+      "MEAL": "Full meal paired with the estate’s wines",
+      "EVENT": "Event access and activities"
     },
     "types": {
       "TASTING": "Tasting",
       "CELLAR_VISIT": "Cellar Visit",
       "WORKSHOP": "Workshop",
       "VINEYARD_TOUR": "Vineyard Tour",
-      "FOOD_PAIRING": "Food Pairing"
+      "FOOD_PAIRING": "Food Pairing",
+      "MEAL": "Meal at the winery",
+      "EVENT": "Event"
     },
     "typesDetailed": {
       "TASTING": "Wine Tasting",
       "CELLAR_VISIT": "Guided Tour",
       "WORKSHOP": "Workshop",
       "VINEYARD_TOUR": "Vineyard Tour",
-      "FOOD_PAIRING": "Food Pairing"
+      "FOOD_PAIRING": "Food Pairing",
+      "MEAL": "Food & wine pairing meal at the winery",
+      "EVENT": "One-off or collective event"
     },
     "duration": "Duration",
     "durationFormat": "{count, plural, =1 {# hour} other {# hours}}",

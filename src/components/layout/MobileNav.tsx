@@ -115,7 +115,10 @@ export function MobileNav({
         <Button
           variant="ghost"
           size="icon"
-          className={cn('h-10 w-10 rounded-full text-ink-900 md:hidden', triggerClassName)}
+          className={cn(
+            'h-10 w-10 rounded-full text-ink-900 md:hidden',
+            triggerClassName
+          )}
           aria-label={t('openMenu')}
         >
           <Menu className="h-5 w-5" />

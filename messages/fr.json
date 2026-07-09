@@ -266,21 +266,27 @@
         "localPlatter": "Plateau de fromages et charcuteries locales",
         "pairingGuidance": "Conseils d'accord expert",
         "tastingNotes": "Notes de dégustation"
-      }
+      },
+      "MEAL": "Repas complet accompagné des vins du domaine",
+      "EVENT": "Accès à l’événement et animations"
     },
     "types": {
       "TASTING": "Dégustation",
       "CELLAR_VISIT": "Visite de cave",
       "WORKSHOP": "Atelier",
       "VINEYARD_TOUR": "Visite du vignoble",
-      "FOOD_PAIRING": "Accord mets-vins"
+      "FOOD_PAIRING": "Accord mets-vins",
+      "MEAL": "Repas au domaine",
+      "EVENT": "Événement"
     },
     "typesDetailed": {
       "TASTING": "Dégustation de vin",
       "CELLAR_VISIT": "Visite guidée",
       "WORKSHOP": "Atelier",
       "VINEYARD_TOUR": "Visite du vignoble",
-      "FOOD_PAIRING": "Accord mets-vins"
+      "FOOD_PAIRING": "Accord mets-vins",
+      "MEAL": "Repas accord mets-vins au domaine",
+      "EVENT": "Événement ponctuel ou collectif"
     },
     "duration": "Durée",
     "durationFormat": "{count, plural, =1 {# heure} other {# heures}}",
