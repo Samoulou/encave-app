@@ -1,6 +1,6 @@
 # P-03 — Monétisation Phase 1 💰
 
-> **Statut** : reviews passées (code 8 angles + sécurité), corrections livrées · **Branche** : `claude/encave-v3-business-model-8bv7bd` (fallback session, cf. P-01) · **PR** : #
+> **Statut** : reviews passées (code 8 angles + sécurité), corrections livrées · **Branche** : `claude/encave-v3-business-model-8bv7bd` (fallback session, cf. P-01) · **PR** : [#98](https://github.com/Samoulou/encave-app/pull/98)
 > **Sources** : `docs/ENCAVE-V3-DELIVERY-PLAN.md` §P-03 · items L-040→L-045 · specs `docs/v3/ENCAVE-V3-BUSINESS.md` §2/§9, `docs/v3/ENCAVE-V3-PRD.md` §5
 
 ## 1. Objectif
