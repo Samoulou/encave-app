@@ -733,7 +733,14 @@
     "modifyDescription": "Vous pouvez annuler ou reporter votre réservation jusqu'à 24 heures avant l'expérience.",
     "manageBooking": "Gérer la réservation",
     "returnToExperiences": "Retour aux expériences",
-    "viewMyBookings": "Voir mes réservations"
+    "viewMyBookings": "Voir mes réservations",
+    "oneTap": {
+      "title": "Retrouvez vos billets en un clic",
+      "description": "Choisissez simplement un mot de passe : votre compte sera créé avec l'email de la réservation et tous vos billets y seront rattachés automatiquement.",
+      "createCta": "Créer mon compte",
+      "successTitle": "Compte créé !",
+      "successDescription": "Vos réservations sont désormais rattachées à votre compte."
+    }
   },
   "cancellation": {
     "title": "Conditions d'annulation",

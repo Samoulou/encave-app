@@ -733,7 +733,14 @@
     "modifyDescription": "Sie können Ihre Buchung bis zu 24 Stunden vor dem Erlebnis stornieren oder verschieben.",
     "manageBooking": "Buchung verwalten",
     "returnToExperiences": "Zurück zu Erlebnissen",
-    "viewMyBookings": "Meine Buchungen ansehen"
+    "viewMyBookings": "Meine Buchungen ansehen",
+    "oneTap": {
+      "title": "Ihre Tickets mit einem Klick",
+      "description": "Wählen Sie einfach ein Passwort: Ihr Konto wird mit der Buchungs-E-Mail erstellt und alle Ihre Tickets werden ihm automatisch zugeordnet.",
+      "createCta": "Mein Konto erstellen",
+      "successTitle": "Konto erstellt!",
+      "successDescription": "Ihre Buchungen sind jetzt mit Ihrem Konto verknüpft."
+    }
   },
   "cancellation": {
     "title": "Stornierungsbedingungen",

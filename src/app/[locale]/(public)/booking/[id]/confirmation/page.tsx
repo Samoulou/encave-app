@@ -6,8 +6,10 @@ import type Stripe from 'stripe';
 import { ArrowLeft, CalendarCheck, Clock } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { db } from '@/server/db';
+import { auth } from '@/server/auth';
 import { getStripe, isStripeConfigured } from '@/server/stripe';
 import { confirmBookingFromPaidCheckoutSession } from '@/server/services/checkout-confirmation.service';
+import { userExistsByEmail } from '@/server/queries/user.queries';
 import { BookingStatus } from '@prisma/client';
 import {
   ConfirmationSuccess,
@@ -17,6 +19,7 @@ import {
   WineryInfoCard,
   ConfirmationActions,
 } from '@/components/features/booking/confirmation';
+import { OneTapAccountCard } from '@/components/features/booking/confirmation/OneTapAccountCard';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import { getBaseUrl } from '@/lib/env';
 import type { Locale } from '@/i18n/routing';
@@ -158,6 +161,14 @@ export default async function ConfirmationPage({
   const isConfirmed = booking.status === BookingStatus.CONFIRMED;
   const isPending = booking.status === BookingStatus.PENDING_PAYMENT;
 
+  // One-tap account (P-04 / L-053): only for guests whose booking email
+  // has no account yet — the check stays server-side, never in the card.
+  const [session, accountExists] = await Promise.all([
+    auth(),
+    userExistsByEmail(booking.visitorEmail),
+  ]);
+  const showOneTapAccount = !session && !accountExists;
+
   const formattedDate = format(new Date(booking.date), 'MMM d, yyyy');
   const formattedTime = `${formatTime(booking.timeSlot)} - ${formatEndTime(booking.timeSlot, booking.experience.duration)}`;
 
@@ -228,6 +239,14 @@ export default async function ConfirmationPage({
               </div>
             </CardContent>
           </Card>
+
+          {/* One-tap account creation (guests only, L-053) */}
+          {showOneTapAccount && (
+            <OneTapAccountCard
+              visitorEmail={booking.visitorEmail}
+              visitorName={booking.visitorName}
+            />
+          )}
 
           {/* Action Buttons */}
           <div className="space-y-8">

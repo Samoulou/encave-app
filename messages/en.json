@@ -733,7 +733,14 @@
     "modifyDescription": "You can cancel or reschedule your booking up to 24 hours before the experience.",
     "manageBooking": "Manage Booking",
     "returnToExperiences": "Return to Experiences",
-    "viewMyBookings": "View My Bookings"
+    "viewMyBookings": "View My Bookings",
+    "oneTap": {
+      "title": "Keep your tickets one click away",
+      "description": "Just pick a password: your account will be created with the booking email and all your tickets will be attached to it automatically.",
+      "createCta": "Create my account",
+      "successTitle": "Account created!",
+      "successDescription": "Your bookings are now attached to your account."
+    }
   },
   "cancellation": {
     "title": "Cancellation Policy",
