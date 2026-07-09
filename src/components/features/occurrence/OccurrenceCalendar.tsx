@@ -18,6 +18,13 @@ import type { Locale } from '@/i18n/routing';
 
 interface OccurrenceCalendarProps {
   experienceId: string;
+  experienceSlug: string;
+  experienceTitle: string;
+  wineryName: string;
+  /** Experience duration in minutes — drives session end computations. */
+  durationMinutes: number;
+  /** False when the experience is archived — day-J tooling hidden. */
+  canEdit: boolean;
   /** Server-resolved "YYYY-MM" month being displayed. */
   monthKey: string;
   entries: OccurrenceCalendarEntryDTO[];
@@ -49,6 +56,11 @@ function pillClass(entry: OccurrenceCalendarEntryDTO): string {
  */
 export function OccurrenceCalendar({
   experienceId,
+  experienceSlug,
+  experienceTitle,
+  wineryName,
+  durationMinutes,
+  canEdit,
   monthKey,
   entries,
 }: OccurrenceCalendarProps) {
@@ -92,6 +104,14 @@ export function OccurrenceCalendar({
     selectedKey === null
       ? null
       : (entries.find((entry) => entryKey(entry) === selectedKey) ?? null);
+
+  // Same-day entries drive the sheet's daily H-2/H+2 scan window.
+  const selectedDayEntries =
+    selectedEntry === null
+      ? []
+      : entries.filter(
+          (entry) => dateKeyOf(entry.date) === dateKeyOf(selectedEntry.date)
+        );
 
   const weekdayOrder = ['1', '2', '3', '4', '5', '6', '0'] as const;
 
@@ -246,6 +266,13 @@ export function OccurrenceCalendar({
 
       <OccurrenceDetailSheet
         entry={selectedEntry}
+        dayEntries={selectedDayEntries}
+        experienceId={experienceId}
+        experienceSlug={experienceSlug}
+        experienceTitle={experienceTitle}
+        wineryName={wineryName}
+        durationMinutes={durationMinutes}
+        canEdit={canEdit}
         onOpenChange={(open) => {
           if (!open) setSelectedKey(null);
         }}

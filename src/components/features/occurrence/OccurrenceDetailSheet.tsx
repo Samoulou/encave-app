@@ -16,12 +16,20 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { BookingActionsMenu } from '@/components/features/event-detail/BookingActionsMenu';
+import { BookingActionsSheet } from '@/components/features/event-detail/BookingActionsSheet';
+import { CancelSessionButton } from '@/components/features/event-detail/CancelSessionButton';
+import { ContactGuestsButton } from '@/components/features/event-detail/ContactGuestsButton';
+import { ScanQrButton } from '@/components/features/event-detail/ScanQrButton';
 import {
   closeOccurrence,
   reopenOccurrence,
   setOccurrenceCapacity,
 } from '@/server/actions/occurrence';
 import { formatDate } from '@/lib/i18n/formatters';
+import { zonedWallClockToUTC } from '@/lib/datetime/zurich';
+import { dateKeyOf } from '@/lib/business-rules/occurrence-expansion';
+import { timeSlotSchema } from '@/lib/validators/booking';
 import { cn } from '@/lib/utils';
 import type { ErrorCode } from '@/types/actions';
 import type { OccurrenceCalendarEntryDTO } from '@/server/queries/occurrence.queries';
@@ -31,8 +39,25 @@ import type { Locale } from '@/i18n/routing';
 const CAPACITY_MIN = 1;
 const CAPACITY_MAX = 50;
 
+/** H-2 → H+2 scan window around the day's sessions (legacy ENC-096 rule). */
+const SCAN_WINDOW_MS = 2 * 60 * 60 * 1000;
+
 interface OccurrenceDetailSheetProps {
   entry: OccurrenceCalendarEntryDTO | null;
+  /**
+   * Every entry of the selected day — the daily H-2/H+2 scan window spans
+   * all of them (first start − 2h → last end + 2h), as on the legacy
+   * sessions view.
+   */
+  dayEntries: OccurrenceCalendarEntryDTO[];
+  experienceId: string;
+  experienceSlug: string;
+  experienceTitle: string;
+  wineryName: string;
+  /** Experience duration in minutes — a session ends at start + duration. */
+  durationMinutes: number;
+  /** False when the experience is archived — operational actions hidden. */
+  canEdit: boolean;
   onOpenChange: (_open: boolean) => void;
 }
 
@@ -56,14 +81,50 @@ const ATTENDEE_STATUS_KEY: Partial<Record<BookingStatus, string>> = {
   [BookingStatus.CANCELLED_BY_WINERY]: 'cancelledByWinery',
 };
 
+/** Same palette as the legacy per-booking status badge (ENC-096). */
+const ATTENDEE_STATUS_CLASS: Partial<Record<BookingStatus, string>> = {
+  [BookingStatus.CONFIRMED]: 'bg-emerald-50 text-emerald-800',
+  [BookingStatus.COMPLETED]: 'bg-blue-50 text-blue-800',
+  [BookingStatus.NO_SHOW]: 'bg-stone-100 text-slate-700',
+  [BookingStatus.CANCELLED_BY_CLIENT]: 'bg-rose-50 text-rose-800',
+  [BookingStatus.CANCELLED_BY_WINERY]: 'bg-rose-50 text-rose-800',
+};
+
 /**
- * Occurrence detail sheet (P-05 / L-132): seat gauge, attendee list and
- * the three owner actions — close/reopen, capacity override, reset.
- * Straggler sessions (occurrenceId null, pre-engine bookings) are shown
- * read-only.
+ * UTC instant bounds of an entry's session, or null when the stored
+ * startTime is malformed (defensive — mirrors getSessionEndsAt in
+ * src/server/actions/event-detail.ts).
+ */
+function sessionBoundsOf(
+  entry: OccurrenceCalendarEntryDTO,
+  durationMinutes: number
+): { startsAt: Date; endsAt: Date } | null {
+  if (!timeSlotSchema.safeParse(entry.startTime).success) return null;
+  const startsAt = zonedWallClockToUTC(entry.date, entry.startTime);
+  return {
+    startsAt,
+    endsAt: new Date(startsAt.getTime() + durationMinutes * 60_000),
+  };
+}
+
+/**
+ * Occurrence detail sheet (P-05 / L-132): seat gauge, attendee list with
+ * per-booking day-J actions (check-in, no-show, ADR-0001 reverts), the
+ * session tools re-homed from the legacy view (scan QR, contact guests,
+ * cancel session with refunds) and the three occurrence owner actions —
+ * close/reopen, capacity override, reset. Straggler sessions
+ * (occurrenceId null, pre-engine bookings) keep the booking-level tools
+ * but not the occurrence management block.
  */
 export function OccurrenceDetailSheet({
   entry,
+  dayEntries,
+  experienceId,
+  experienceSlug,
+  experienceTitle,
+  wineryName,
+  durationMinutes,
+  canEdit,
   onOpenChange,
 }: OccurrenceDetailSheetProps) {
   const t = useTranslations('Dashboard.eventDetail.occurrences');
@@ -158,6 +219,41 @@ export function OccurrenceDetailSheet({
       ? Math.min(100, Math.round((entry.bookedCount / entry.capacity) * 100))
       : 0;
 
+  // Day-J runtime (legacy ENC-096 semantics). The sheet only mounts its
+  // content after a client-side tap, so reading the clock here is safe.
+  const now = Date.now();
+  const bounds =
+    entry === null ? null : sessionBoundsOf(entry, durationMinutes);
+  const isPastSession = bounds !== null && now > bounds.endsAt.getTime();
+  // Daily scan window: first start − 2h → last end + 2h across the day's
+  // non-cancelled sessions (a cancelled occurrence never extends it).
+  let scanActive = false;
+  for (const dayEntry of dayEntries) {
+    if (dayEntry.status === OccurrenceStatus.CANCELLED) continue;
+    const dayBounds = sessionBoundsOf(dayEntry, durationMinutes);
+    if (!dayBounds) continue;
+    if (
+      now >= dayBounds.startsAt.getTime() - SCAN_WINDOW_MS &&
+      now <= dayBounds.endsAt.getTime() + SCAN_WINDOW_MS
+    ) {
+      scanActive = true;
+      break;
+    }
+  }
+  const canCheckIn = canEdit && scanActive && !isPastSession;
+  const canMarkNoShow =
+    canEdit && bounds !== null && bounds.endsAt.getTime() <= now;
+  const sessionId =
+    entry === null ? '' : `${dateKeyOf(entry.date)}|${entry.startTime}`;
+  const confirmedAttendeeCount =
+    entry === null
+      ? 0
+      : entry.attendees.filter(
+          (attendee) => attendee.status === BookingStatus.CONFIRMED
+        ).length;
+  const showSessionTools =
+    entry !== null && canEdit && bounds !== null && !isPastSession;
+
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
@@ -238,7 +334,7 @@ export function OccurrenceDetailSheet({
               </p>
             )}
 
-            {/* Actions */}
+            {/* Occurrence management */}
             {!isLegacy && (
               <div className="space-y-4">
                 <Button
@@ -328,6 +424,31 @@ export function OccurrenceDetailSheet({
               </div>
             )}
 
+            {/* Session tools (day-J), re-homed from the legacy view:
+                scanner entry point, contact attendees, cancel session
+                with refunds. Booking-level — stragglers included. */}
+            {showSessionTools && (
+              <div className="flex flex-wrap items-center gap-2">
+                <ScanQrButton
+                  experienceSlug={experienceSlug}
+                  sessionId={sessionId}
+                  enabled={scanActive}
+                />
+                <ContactGuestsButton
+                  experienceId={experienceId}
+                  sessionId={sessionId}
+                  attendeeCount={confirmedAttendeeCount}
+                  experienceTitle={experienceTitle}
+                  wineryName={wineryName}
+                  startsAtIso={bounds.startsAt.toISOString()}
+                />
+                <CancelSessionButton
+                  experienceId={experienceId}
+                  sessionId={sessionId}
+                />
+              </div>
+            )}
+
             {/* Attendees */}
             <div className="space-y-3">
               <h3 className="font-medium text-slate-900">
@@ -341,16 +462,33 @@ export function OccurrenceDetailSheet({
                 <ul className="divide-y divide-stone-100 rounded-xl border border-stone-200 bg-white">
                   {entry.attendees.map((attendee) => {
                     const statusKey = ATTENDEE_STATUS_KEY[attendee.status];
+                    const isCancelledBooking =
+                      attendee.status === BookingStatus.CANCELLED_BY_CLIENT ||
+                      attendee.status === BookingStatus.CANCELLED_BY_WINERY;
                     return (
                       <li
                         key={attendee.bookingId}
-                        className="flex items-center justify-between gap-3 px-4 py-3"
+                        className={cn(
+                          'flex items-center justify-between gap-3 px-4 py-3',
+                          isCancelledBooking && 'bg-stone-50/60'
+                        )}
                       >
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-medium text-slate-900">
+                          <p
+                            className={cn(
+                              'truncate text-sm font-medium text-slate-900',
+                              isCancelledBooking &&
+                                'text-slate-400 line-through'
+                            )}
+                          >
                             {attendee.visitorName}
                           </p>
-                          <p className="text-xs text-slate-500">
+                          <p
+                            className={cn(
+                              'text-xs text-slate-500',
+                              isCancelledBooking && 'text-slate-400'
+                            )}
+                          >
                             {tPartySize('inline', {
                               count: attendee.guestCount,
                             })}
@@ -360,11 +498,39 @@ export function OccurrenceDetailSheet({
                             </span>
                           </p>
                         </div>
-                        {statusKey !== undefined && (
-                          <span className="shrink-0 rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-slate-600">
-                            {tBookingStatus(statusKey)}
-                          </span>
-                        )}
+                        <div className="flex shrink-0 items-center gap-1">
+                          {statusKey !== undefined && (
+                            <span
+                              className={cn(
+                                'rounded-full px-2 py-0.5 text-xs font-medium',
+                                ATTENDEE_STATUS_CLASS[attendee.status] ??
+                                  'bg-stone-100 text-slate-600'
+                              )}
+                            >
+                              {tBookingStatus(statusKey)}
+                            </span>
+                          )}
+                          {/* Per-booking actions: check-in / no-show and
+                              the ADR-0001 reverts. Both variants no-op on
+                              cancelled bookings (they render null). */}
+                          <div className="hidden md:block">
+                            <BookingActionsMenu
+                              bookingId={attendee.bookingId}
+                              status={attendee.status}
+                              canCheckIn={canCheckIn}
+                              canMarkNoShow={canMarkNoShow}
+                            />
+                          </div>
+                          <div className="md:hidden">
+                            <BookingActionsSheet
+                              bookingId={attendee.bookingId}
+                              bookingLabel={attendee.visitorName}
+                              status={attendee.status}
+                              canCheckIn={canCheckIn}
+                              canMarkNoShow={canMarkNoShow}
+                            />
+                          </div>
+                        </div>
                       </li>
                     );
                   })}

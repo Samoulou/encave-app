@@ -1890,37 +1890,14 @@
   },
   "Dashboard": {
     "eventDetail": {
-      "title": "Détail de l'événement",
       "breadcrumb": {
         "dashboard": "Tableau de bord",
         "events": "Événements"
-      },
-      "status": {
-        "draft": "Brouillon",
-        "published": "Publié",
-        "archived": "Archivé"
-      },
-      "sections": {
-        "today": "Aujourd'hui",
-        "upcoming": "Sessions à venir",
-        "past": "Sessions passées",
-        "cancelled": "Sessions annulées"
-      },
-      "summary": {
-        "active": "{confirmed} / {total} places sur {sessions, plural, =1 {1 session active} other {# sessions actives}}"
-      },
-      "session": {
-        "capacity": "{confirmed} / {total} places",
-        "empty": "Aucune réservation pour cette session",
-        "emptyCancelled": "Aucune session annulée",
-        "live": "En cours",
-        "fullBadge": "Complet"
       },
       "actions": {
         "scanQr": "Scanner les QR codes",
         "scanDisabled": "Disponible le jour de l'événement",
         "contactAll": "Contacter les inscrits",
-        "contactAllSoon": "Bientôt disponible",
         "contactAllLoading": "Préparation...",
         "contactAllEmpty": "Aucun inscrit à contacter pour le moment.",
         "contactAllError": "Impossible de récupérer la liste. Réessaie.",
@@ -1928,20 +1905,17 @@
         "contactAllFallbackBody": "Le lien mail est trop long pour s'ouvrir directement. Copie la liste d'emails ci-dessous et colle-la dans le champ BCC de ton mail.",
         "contactAllCopy": "Copier la liste d'emails",
         "contactAllCopied": "Emails copiés. Colle-les dans le BCC de ton mail.",
+        "cancelSession": "Annuler la session",
+        "cancelSessionPrompt": "Pourquoi annulez-vous cette session ? Le motif sera transmis aux participants (10 caractères minimum).",
+        "cancelSessionError": "Impossible d'annuler la session. Vérifiez le motif (10 caractères minimum) et réessayez.",
+        "cancelSessionDone": "Session annulée. Les participants ont été prévenus et remboursés.",
+        "cancelSessionPartial": "{count, plural, =1 {1 réservation n'a pas pu être annulée} other {# réservations n'ont pas pu être annulées}}. Réessayez ou contactez le support.",
         "revertCheckIn": "Annuler le check-in",
         "revertNoShow": "Annuler le no-show",
         "markPresent": "Marquer présent",
         "markNoShow": "Marquer no-show",
         "markNoShowDisabled": "Disponible après la fin de la session",
         "openMenu": "Ouvrir le menu d'actions"
-      },
-      "columns": {
-        "client": "Client",
-        "partySize": "Personnes",
-        "reference": "Référence",
-        "status": "Statut",
-        "checkIn": "Check-in",
-        "actions": "Actions"
       },
       "bookingStatus": {
         "confirmed": "Confirmée",
@@ -1950,23 +1924,10 @@
         "cancelledByClient": "Annulée par le client",
         "cancelledByWinery": "Annulée par vos soins"
       },
-      "checkIn": {
-        "at": "Présent à {time}",
-        "none": "—"
-      },
       "partySize": {
         "inline": "{count, plural, =1 {1 personne} other {# personnes}}"
       },
-      "banner": {
-        "draft": "Cet événement n'est pas publié. Aucun client ne peut le voir.",
-        "archived": "Événement archivé. Lecture seule."
-      },
-      "empty": {
-        "title": "Vous n'avez pas encore programmé de sessions",
-        "cta": "Ajouter une session"
-      },
       "errors": {
-        "notOwner": "Vous n'avez pas accès à cet événement.",
         "loadFailed": "Impossible de charger l'événement. Réessayez dans un instant.",
         "revertWindowExpired": "Impossible d'annuler après 72h.",
         "sessionNotEnded": "Disponible après la fin de la session."

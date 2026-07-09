@@ -21,6 +21,18 @@ vi.mock('@/server/actions/occurrence', () => ({
   setOccurrenceCapacity: vi.fn(),
 }));
 
+// Day-J booking actions (re-homed from the legacy event-detail view) —
+// imported by BookingActionsMenu/Sheet, CancelSessionButton and
+// ContactGuestsButton, which the sheet now renders.
+vi.mock('@/server/actions/event-detail', () => ({
+  markBookingCheckedIn: vi.fn(),
+  markBookingNoShow: vi.fn(),
+  revertBookingCheckIn: vi.fn(),
+  revertBookingNoShow: vi.fn(),
+  cancelEventSession: vi.fn(),
+  getAttendeeEmailsForSession: vi.fn(),
+}));
+
 vi.mock('sonner', () => ({
   toast: { success: vi.fn(), error: vi.fn() },
 }));
@@ -45,29 +57,57 @@ const baseEntry: OccurrenceCalendarEntryDTO = {
   ],
 };
 
+function renderSheet(
+  entry: OccurrenceCalendarEntryDTO | null,
+  overrides: Partial<{
+    dayEntries: OccurrenceCalendarEntryDTO[];
+    canEdit: boolean;
+    durationMinutes: number;
+  }> = {}
+) {
+  return render(
+    <OccurrenceDetailSheet
+      entry={entry}
+      dayEntries={overrides.dayEntries ?? (entry ? [entry] : [])}
+      experienceId="ckexperienceabcdefghij123"
+      experienceSlug="degustation-verticale"
+      experienceTitle="Dégustation verticale"
+      wineryName="Domaine X"
+      durationMinutes={overrides.durationMinutes ?? 90}
+      canEdit={overrides.canEdit ?? true}
+      onOpenChange={vi.fn()}
+    />
+  );
+}
+
 describe('OccurrenceDetailSheet', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Anchor "now" two days before baseEntry's session so the future /
+    // past / scan-window deriveds are deterministic.
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(new Date('2026-07-09T12:00:00.000Z'));
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     cleanup();
   });
 
   it('renders nothing when entry is null', () => {
-    render(<OccurrenceDetailSheet entry={null} onOpenChange={vi.fn()} />);
+    renderSheet(null);
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
   it('shows the seat gauge with the booked count', () => {
-    render(<OccurrenceDetailSheet entry={baseEntry} onOpenChange={vi.fn()} />);
+    renderSheet(baseEntry);
     const gauge = screen.getByRole('progressbar');
     expect(gauge.getAttribute('aria-valuenow')).toBe('3');
     expect(gauge.getAttribute('aria-valuemax')).toBe('8');
   });
 
   it('lists attendees with their reference', () => {
-    render(<OccurrenceDetailSheet entry={baseEntry} onOpenChange={vi.fn()} />);
+    renderSheet(baseEntry);
     expect(screen.getByText('Jean Dupont')).toBeDefined();
     expect(screen.getByText('ENC-ABC12345')).toBeDefined();
   });
@@ -77,7 +117,7 @@ describe('OccurrenceDetailSheet', () => {
       success: true,
       data: { status: OccurrenceStatus.CLOSED },
     });
-    render(<OccurrenceDetailSheet entry={baseEntry} onOpenChange={vi.fn()} />);
+    renderSheet(baseEntry);
 
     fireEvent.click(screen.getByText('sheet.close'));
 
@@ -91,12 +131,7 @@ describe('OccurrenceDetailSheet', () => {
       success: true,
       data: { status: OccurrenceStatus.OPEN },
     });
-    render(
-      <OccurrenceDetailSheet
-        entry={{ ...baseEntry, status: OccurrenceStatus.CLOSED }}
-        onOpenChange={vi.fn()}
-      />
-    );
+    renderSheet({ ...baseEntry, status: OccurrenceStatus.CLOSED });
 
     fireEvent.click(screen.getByText('sheet.reopen'));
 
@@ -110,7 +145,7 @@ describe('OccurrenceDetailSheet', () => {
       success: true,
       data: { capacityOverride: 5 },
     });
-    render(<OccurrenceDetailSheet entry={baseEntry} onOpenChange={vi.fn()} />);
+    renderSheet(baseEntry);
 
     fireEvent.change(screen.getByLabelText('sheet.capacityLabel'), {
       target: { value: '5' },
@@ -126,7 +161,7 @@ describe('OccurrenceDetailSheet', () => {
   });
 
   it('rejects an out-of-bounds capacity without calling the action', () => {
-    render(<OccurrenceDetailSheet entry={baseEntry} onOpenChange={vi.fn()} />);
+    renderSheet(baseEntry);
 
     fireEvent.change(screen.getByLabelText('sheet.capacityLabel'), {
       target: { value: '99' },
@@ -142,12 +177,7 @@ describe('OccurrenceDetailSheet', () => {
       success: true,
       data: { capacityOverride: null },
     });
-    render(
-      <OccurrenceDetailSheet
-        entry={{ ...baseEntry, capacityOverride: 4, capacity: 4 }}
-        onOpenChange={vi.fn()}
-      />
-    );
+    renderSheet({ ...baseEntry, capacityOverride: 4, capacity: 4 });
 
     fireEvent.click(screen.getByText('sheet.reset'));
 
@@ -159,13 +189,8 @@ describe('OccurrenceDetailSheet', () => {
     });
   });
 
-  it('disables management for straggler sessions (occurrenceId null)', () => {
-    render(
-      <OccurrenceDetailSheet
-        entry={{ ...baseEntry, occurrenceId: null }}
-        onOpenChange={vi.fn()}
-      />
-    );
+  it('disables occurrence management for straggler sessions (occurrenceId null)', () => {
+    renderSheet({ ...baseEntry, occurrenceId: null });
 
     expect(screen.getByText('sheet.legacyNote')).toBeDefined();
     expect(screen.queryByText('sheet.close')).toBeNull();
@@ -173,12 +198,7 @@ describe('OccurrenceDetailSheet', () => {
   });
 
   it('disables actions on a CANCELLED occurrence', () => {
-    render(
-      <OccurrenceDetailSheet
-        entry={{ ...baseEntry, status: OccurrenceStatus.CANCELLED }}
-        onOpenChange={vi.fn()}
-      />
-    );
+    renderSheet({ ...baseEntry, status: OccurrenceStatus.CANCELLED });
 
     // A non-OPEN occurrence shows the reopen action — disabled here.
     const toggleButton = screen.getByText('sheet.reopen').closest('button');
@@ -192,12 +212,83 @@ describe('OccurrenceDetailSheet', () => {
       success: false,
       error: { code: 'CONFLICT', message: 'nope' },
     });
-    render(<OccurrenceDetailSheet entry={baseEntry} onOpenChange={vi.fn()} />);
+    renderSheet(baseEntry);
 
     fireEvent.click(screen.getByText('sheet.close'));
 
     await waitFor(() => {
       expect(vi.mocked(toast.error)).toHaveBeenCalledWith('errors.conflict');
+    });
+  });
+
+  describe('day-J tooling (re-homed from the legacy sessions view)', () => {
+    it('renders per-attendee action menus for actionable bookings', () => {
+      renderSheet(baseEntry);
+
+      // Desktop dropdown + mobile bottom-sheet variants for the CONFIRMED
+      // attendee (visibility is CSS-only, both are in the DOM).
+      expect(screen.getAllByLabelText('actions.openMenu')).toHaveLength(2);
+    });
+
+    it('lists cancelled bookings struck through, without actions', () => {
+      renderSheet({
+        ...baseEntry,
+        attendees: [
+          {
+            bookingId: 'bkg_2',
+            reference: 'ENC-CANCEL01',
+            visitorName: 'Marie Annulée',
+            guestCount: 3,
+            status: BookingStatus.CANCELLED_BY_CLIENT,
+          },
+        ],
+      });
+
+      const name = screen.getByText('Marie Annulée');
+      expect(name.className).toContain('line-through');
+      expect(screen.getByText('cancelledByClient')).toBeDefined();
+      // Both action variants render null on cancelled bookings.
+      expect(screen.queryByLabelText('actions.openMenu')).toBeNull();
+    });
+
+    it('shows the session tools including the scanner entry point', () => {
+      renderSheet(baseEntry);
+
+      expect(screen.getByText('scanQr')).toBeDefined();
+      expect(screen.getByText('contactAll')).toBeDefined();
+      expect(screen.getByText('cancelSession')).toBeDefined();
+      // Two days before the session: outside the H-2/H+2 window — the
+      // scanner CTA is present but disabled.
+      const scanButton = screen.getByText('scanQr').closest('button');
+      expect(scanButton?.hasAttribute('disabled')).toBe(true);
+    });
+
+    it('enables the scanner inside the daily H-2/H+2 window', () => {
+      // 09:00 Zurich (07:00 UTC in July, CEST) — one hour before the
+      // 10:00 session: inside the window.
+      vi.setSystemTime(new Date('2026-07-11T07:00:00.000Z'));
+      renderSheet(baseEntry);
+
+      const scanButton = screen.getByText('scanQr').closest('button');
+      expect(scanButton?.hasAttribute('disabled')).toBe(false);
+    });
+
+    it('hides the session tools when the experience is archived', () => {
+      renderSheet(baseEntry, { canEdit: false });
+
+      expect(screen.queryByText('scanQr')).toBeNull();
+      expect(screen.queryByText('cancelSession')).toBeNull();
+      // Attendee list still renders, read-only day-J actions gated off.
+      expect(screen.getByText('Jean Dupont')).toBeDefined();
+    });
+
+    it('hides the session tools once the session is past', () => {
+      // Two days after the session ended.
+      vi.setSystemTime(new Date('2026-07-13T12:00:00.000Z'));
+      renderSheet(baseEntry);
+
+      expect(screen.queryByText('scanQr')).toBeNull();
+      expect(screen.queryByText('cancelSession')).toBeNull();
     });
   });
 });

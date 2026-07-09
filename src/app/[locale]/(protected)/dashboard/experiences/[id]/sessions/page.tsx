@@ -1,8 +1,10 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { ExperienceStatus } from '@prisma/client';
 import { ChevronRight, Home, Pencil } from 'lucide-react';
 import { Link, redirect } from '@/i18n/navigation';
 import { auth } from '@/server/auth';
 import { getOccurrenceCalendar } from '@/server/queries/occurrence.queries';
+import { getExperienceOperationalContext } from '@/server/queries/event-detail.queries';
 import { eventDetailIdSchema } from '@/lib/validators/eventDetail';
 import { OccurrenceCalendar } from '@/components/features/occurrence/OccurrenceCalendar';
 import { Button } from '@/components/ui/button';
@@ -54,12 +56,14 @@ export default async function ExperienceSessionsPage({
       ? moisParam
       : zurichTodayAsUTCDate().toISOString().slice(0, 7);
 
-  const calendar = await getOccurrenceCalendar(
-    experienceId,
-    session.user.id,
-    monthKey
-  );
-  if (!calendar) {
+  // Both reads tenant-gate on (experienceId, userId); the context carries
+  // the day-J fields (slug, duration, winery name, status) that the
+  // calendar DTO doesn't.
+  const [calendar, context] = await Promise.all([
+    getOccurrenceCalendar(experienceId, session.user.id, monthKey),
+    getExperienceOperationalContext(experienceId, session.user.id),
+  ]);
+  if (!calendar || !context) {
     redirect({ href: '/dashboard/experiences', locale: localeTyped });
     return null;
   }
@@ -110,6 +114,11 @@ export default async function ExperienceSessionsPage({
 
       <OccurrenceCalendar
         experienceId={calendar.experienceId}
+        experienceSlug={context.slug}
+        experienceTitle={context.title}
+        wineryName={context.wineryName}
+        durationMinutes={context.duration}
+        canEdit={context.status !== ExperienceStatus.ARCHIVED}
         monthKey={calendar.monthKey}
         entries={calendar.entries}
       />

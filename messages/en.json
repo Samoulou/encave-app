@@ -1890,37 +1890,14 @@
   },
   "Dashboard": {
     "eventDetail": {
-      "title": "Event details",
       "breadcrumb": {
         "dashboard": "Dashboard",
         "events": "Events"
-      },
-      "status": {
-        "draft": "Draft",
-        "published": "Published",
-        "archived": "Archived"
-      },
-      "sections": {
-        "today": "Today",
-        "upcoming": "Upcoming sessions",
-        "past": "Past sessions",
-        "cancelled": "Cancelled sessions"
-      },
-      "summary": {
-        "active": "{confirmed} / {total} seats across {sessions, plural, =1 {1 active session} other {# active sessions}}"
-      },
-      "session": {
-        "capacity": "{confirmed} / {total} seats",
-        "empty": "No booking for this session",
-        "emptyCancelled": "No cancelled session",
-        "live": "Live now",
-        "fullBadge": "Full"
       },
       "actions": {
         "scanQr": "Scan QR codes",
         "scanDisabled": "Available on the event day",
         "contactAll": "Contact guests",
-        "contactAllSoon": "Coming soon",
         "contactAllLoading": "Preparing...",
         "contactAllEmpty": "No guests to contact yet.",
         "contactAllError": "Could not load the guest list. Please try again.",
@@ -1928,20 +1905,17 @@
         "contactAllFallbackBody": "The mail link is too long to open directly. Copy the emails below and paste them into your email BCC field.",
         "contactAllCopy": "Copy email list",
         "contactAllCopied": "Emails copied. Paste them into your email BCC field.",
+        "cancelSession": "Cancel the session",
+        "cancelSessionPrompt": "Why are you cancelling this session? The reason will be shared with the participants (10 characters minimum).",
+        "cancelSessionError": "Could not cancel the session. Check the reason (10 characters minimum) and try again.",
+        "cancelSessionDone": "Session cancelled. Participants have been notified and refunded.",
+        "cancelSessionPartial": "{count, plural, =1 {1 booking could not be cancelled} other {# bookings could not be cancelled}}. Try again or contact support.",
         "revertCheckIn": "Cancel check-in",
         "revertNoShow": "Cancel no-show",
         "markPresent": "Mark as present",
         "markNoShow": "Mark as no-show",
         "markNoShowDisabled": "Available after the session ends",
         "openMenu": "Open actions menu"
-      },
-      "columns": {
-        "client": "Guest",
-        "partySize": "People",
-        "reference": "Reference",
-        "status": "Status",
-        "checkIn": "Check-in",
-        "actions": "Actions"
       },
       "bookingStatus": {
         "confirmed": "Confirmed",
@@ -1950,23 +1924,10 @@
         "cancelledByClient": "Cancelled by guest",
         "cancelledByWinery": "Cancelled by you"
       },
-      "checkIn": {
-        "at": "Present at {time}",
-        "none": "—"
-      },
       "partySize": {
         "inline": "{count, plural, =1 {1 person} other {# people}}"
       },
-      "banner": {
-        "draft": "This event is not published. Guests cannot see it.",
-        "archived": "Event archived. Read only."
-      },
-      "empty": {
-        "title": "You have not scheduled any session yet",
-        "cta": "Add a session"
-      },
       "errors": {
-        "notOwner": "You do not have access to this event.",
         "loadFailed": "Could not load the event. Try again in a moment.",
         "revertWindowExpired": "Cannot revert after 72h.",
         "sessionNotEnded": "Available after the session ends."

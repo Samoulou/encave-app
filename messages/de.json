@@ -1895,37 +1895,14 @@
   },
   "Dashboard": {
     "eventDetail": {
-      "title": "Veranstaltungsdetails",
       "breadcrumb": {
         "dashboard": "Dashboard",
         "events": "Veranstaltungen"
-      },
-      "status": {
-        "draft": "Entwurf",
-        "published": "Veröffentlicht",
-        "archived": "Archiviert"
-      },
-      "sections": {
-        "today": "Heute",
-        "upcoming": "Kommende Sessions",
-        "past": "Vergangene Sessions",
-        "cancelled": "Abgesagte Sessions"
-      },
-      "summary": {
-        "active": "{confirmed} / {total} Plätze auf {sessions, plural, one {1 aktive Session} other {# aktive Sessions}}"
-      },
-      "session": {
-        "capacity": "{confirmed} / {total} Plätze",
-        "empty": "Keine Buchung für diese Session",
-        "emptyCancelled": "Keine abgesagte Session",
-        "live": "Läuft jetzt",
-        "fullBadge": "Ausgebucht"
       },
       "actions": {
         "scanQr": "QR-Codes scannen",
         "scanDisabled": "Am Veranstaltungstag verfügbar",
         "contactAll": "Gäste kontaktieren",
-        "contactAllSoon": "Bald verfügbar",
         "contactAllLoading": "Wird vorbereitet...",
         "contactAllEmpty": "Noch keine Gäste zum Kontaktieren.",
         "contactAllError": "Die Gästeliste konnte nicht geladen werden. Bitte erneut versuchen.",
@@ -1933,20 +1910,17 @@
         "contactAllFallbackBody": "Der Mail-Link ist zu lang, um direkt geöffnet zu werden. Kopiere die Liste unten und füge sie in das BCC-Feld deiner E-Mail ein.",
         "contactAllCopy": "E-Mail-Liste kopieren",
         "contactAllCopied": "E-Mails kopiert. Füge sie in das BCC-Feld deiner E-Mail ein.",
+        "cancelSession": "Session absagen",
+        "cancelSessionPrompt": "Warum sagen Sie diese Session ab? Der Grund wird den Teilnehmenden mitgeteilt (mindestens 10 Zeichen).",
+        "cancelSessionError": "Die Session konnte nicht abgesagt werden. Prüfen Sie den Grund (mindestens 10 Zeichen) und versuchen Sie es erneut.",
+        "cancelSessionDone": "Session abgesagt. Die Teilnehmenden wurden informiert und erstattet.",
+        "cancelSessionPartial": "{count, plural, =1 {1 Buchung konnte nicht storniert werden} other {# Buchungen konnten nicht storniert werden}}. Versuchen Sie es erneut oder kontaktieren Sie den Support.",
         "revertCheckIn": "Check-in rückgängig machen",
         "revertNoShow": "No-Show rückgängig machen",
         "markPresent": "Als anwesend markieren",
         "markNoShow": "Als No-Show markieren",
         "markNoShowDisabled": "Nach Ende der Session verfügbar",
         "openMenu": "Aktionsmenü öffnen"
-      },
-      "columns": {
-        "client": "Gast",
-        "partySize": "Personen",
-        "reference": "Referenz",
-        "status": "Status",
-        "checkIn": "Check-in",
-        "actions": "Aktionen"
       },
       "bookingStatus": {
         "confirmed": "Bestätigt",
@@ -1955,23 +1929,10 @@
         "cancelledByClient": "Vom Gast storniert",
         "cancelledByWinery": "Von Ihnen storniert"
       },
-      "checkIn": {
-        "at": "Anwesend um {time}",
-        "none": "—"
-      },
       "partySize": {
         "inline": "{count, plural, one {1 Person} other {# Personen}}"
       },
-      "banner": {
-        "draft": "Diese Veranstaltung ist nicht veröffentlicht. Sie ist für Gäste nicht sichtbar.",
-        "archived": "Veranstaltung archiviert. Nur Lesezugriff."
-      },
-      "empty": {
-        "title": "Sie haben noch keine Sessions geplant",
-        "cta": "Session hinzufügen"
-      },
       "errors": {
-        "notOwner": "Sie haben keinen Zugriff auf diese Veranstaltung.",
         "loadFailed": "Veranstaltung konnte nicht geladen werden. Bitte erneut versuchen.",
         "revertWindowExpired": "Nach 72 Stunden nicht mehr rückgängig zu machen.",
         "sessionNotEnded": "Nach Ende der Session verfügbar."
