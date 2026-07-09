@@ -1,6 +1,6 @@
 # P-XX — <Nom du package>
 
-> **Statut** : plan / en cours / livré · **Branche** : `samuel/enc-XX-<slug>` · **PR** : #
+> **Statut** : plan / en cours / livré · **Branche** : `samuel/enc-XX-<slug>` (fallback sans Linear : `claude/p-XX-<slug>`) · **PR** : #
 > **Sources** : `docs/ENCAVE-V3-DELIVERY-PLAN.md` §P-XX · items `L-xxx` du backlog · specs `docs/v3/…`
 
 ## 1. Objectif (2 lignes max)

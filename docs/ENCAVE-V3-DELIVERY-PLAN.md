@@ -12,7 +12,7 @@
 2. **Chaque package a une DoD écrite AVANT l'implémentation** — mesurable, binaire, tous critères requis, à l'image des gates V3. Pas de DoD verte = pas de merge. La DoD est copiée dans la description de la PR et cochée ligne par ligne.
 3. **Tout ce qui touche l'argent est feature-flaggé** et livré flag OFF par défaut. Flag OFF = comportement actuel strictement inchangé (prouvé par les e2e existants).
 4. **On garde l'existant** : migrations additives uniquement, pas de réécriture cosmétique, pas de renommage de route hors epic dédié (cf. `CLAUDE.md` §V3 Convergence).
-5. **Un seul package en cours à la fois** (WIP = 1). Si un package révèle un travail imprévu > 2 h, il retourne au backlog comme item — on ne gonfle pas la PR en cours.
+5. **Un seul package actif à la fois** (WIP = 1). Exception unique : si le package courant passe ⏸ (bloqué sur décision/externe), on avance un bouche-trou (P-06/P-14/P-15) — jamais deux packages 🟨 simultanés. Si un package révèle un travail imprévu > 2 h, il retourne au backlog comme item — on ne gonfle pas la PR en cours.
 
 ## 2. La boucle de livraison
 
@@ -22,17 +22,17 @@
    ①NEXT → ②PLAN → ③BUILD → ④VERIFY → ⑤REVIEW → ⑥MERGE → ⑦UPDATE ──┘
 ```
 
-| Étape        | Quoi (précisément)                                                                                                                                                                                                                                                                          |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ① **NEXT**   | Ouvrir §5. Prendre le **premier package ⬜ dont toutes les dépendances sont ✅**. Passer son statut à 🟨.                                                                                                                                                                                   |
-| ② **PLAN**   | Écrire `docs/plans/P-XX-<slug>.md` depuis `docs/plans/TEMPLATE.md` : scope in/out, découpage technique, la **DoD copiée depuis §4** (+ critères additionnels si découverts), risques/rollback, décisions ouvertes. **Si une décision produit est ouverte → la poser à Sam AVANT de coder.** |
-| ③ **BUILD**  | Créer l'issue Linear (idéal) et sa branche `samuel/enc-XX-<slug>` depuis `dev` à jour (fallback sans Linear : `claude/p-XX-<slug>`). Implémenter par commits conventionnels `feat(enc-XX): …`. Tests écrits AVEC le code, pas après. Flags d'abord, feature ensuite.                        |
-| ④ **VERIFY** | Dérouler la DoD ligne par ligne + le socle §3. Mesurer ce qui doit l'être (Lighthouse, concurrence, EXPLAIN…). Une ligne rouge = on reste en ③.                                                                                                                                             |
-| ⑤ **REVIEW** | `/code-review high` par défaut. **`/code-review ultra` pour les packages 💰** (P-03, P-04, P-08, P-09, P-10). `/security-review` en plus sur P-08, P-09, P-14 et avant P-16. Corriger tout blocker ; re-VERIFY si le fix touche du comportement.                                            |
-| ⑥ **MERGE**  | PR vers `dev`, titre `ENC-XX: <package>`, description = résumé + DoD cochée + `Fixes ENC-XX`. CI verte obligatoire. Merge → deploy staging `encave-dev.vercel.app` → **smoke test staging** (le parcours principal du package, à la main ou e2e).                                           |
-| ⑦ **UPDATE** | Cocher §5 (✅ + n° PR). Mettre à jour `CLAUDE.md` (si conventions/comportement changent), le backlog (items faits), et les docs touchées. Démo Loom aux caves pilotes si le package est visible encaveur (DoD release du planning V3). **Retour en ①.**                                     |
+| Étape        | Quoi (précisément)                                                                                                                                                                                                                                                                                                                                                                                           |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| ① **NEXT**   | Ouvrir §5. Prendre le **premier package ⬜ dont toutes les dépendances sont ✅**. Passer son statut à 🟨.                                                                                                                                                                                                                                                                                                    |
+| ② **PLAN**   | Écrire `docs/plans/P-XX-<slug>.md` depuis `docs/plans/TEMPLATE.md` : scope in/out, découpage technique, la **DoD copiée depuis §4** (+ critères additionnels si découverts), risques/rollback, décisions ouvertes. **Si une décision produit est ouverte → la poser à Sam AVANT de coder.**                                                                                                                  |
+| ③ **BUILD**  | Créer l'issue Linear (idéal) et sa branche `samuel/enc-XX-<slug>` depuis `dev` à jour. Fallback sans Linear : branche `claude/p-XX-<slug>`, commits `feat(p-XX): …`, titre PR `P-XX: <package>` — régulariser l'issue Linear a posteriori. Implémenter par commits conventionnels `feat(enc-XX): …`. Tests écrits AVEC le code, pas après. Flags d'abord, feature ensuite.                                   |
+| ④ **VERIFY** | Dérouler la DoD ligne par ligne + le socle §3. Mesurer ce qui doit l'être (Lighthouse, concurrence, EXPLAIN…). Une ligne rouge = on reste en ③.                                                                                                                                                                                                                                                              |
+| ⑤ **REVIEW** | `/code-review high` par défaut. **`/code-review max`** (le « ultra » du planning V3 — 3 runs réservés) sur **P-04 (booking core), P-09 (gift cards), P-16 (pré-launch)**. `/security-review` sur chaque package 💰 (P-03, P-04, P-08, P-09, P-10), sur P-14 (auth), et **pendant P-16 avant la bascule** (le launch est la FIN de P-16). Corriger tout blocker ; re-VERIFY si le fix touche du comportement. |
+| ⑥ **MERGE**  | PR vers `dev`, titre `ENC-XX: <package>`, description = résumé + DoD cochée + `Fixes ENC-XX`. CI verte obligatoire. Merge → deploy staging `encave-dev.vercel.app` → **smoke test staging** (le parcours principal du package, à la main ou e2e).                                                                                                                                                            |
+| ⑦ **UPDATE** | Cocher §5 (✅ + n° PR). Mettre à jour `CLAUDE.md` (si conventions/comportement changent), le backlog (items faits), et les docs touchées. Démo Loom aux caves pilotes si le package est visible encaveur (DoD release du planning V3). **Retour en ①.**                                                                                                                                                      |
 
-**Cas d'échec en boucle** : si ④ ou ⑤ bloque > 2 sessions sur le même point, on applique les fusibles du backlog (§4 du backlog) ou on descend le package d'un cran dans l'ordre — on ne laisse jamais un package 🟨 pourrir plus d'une semaine sans décision.
+**Cas d'échec en boucle** : si ④ ou ⑤ bloque > 2 jours ouvrés sur le même point, on applique les fusibles du backlog (§4 du backlog) ou on descend le package d'un cran dans l'ordre ; la décision est notée dans le plan du package (`docs/plans/P-XX-*.md`, section Risques). Un package 🟨 sans décision depuis > 1 semaine = sujet n°1 de la revue dominicale.
 
 ## 3. Socle DoD transverse (s'applique à CHAQUE package, en plus de sa DoD propre)
 
@@ -47,9 +47,9 @@
 
 ## 4. Les packages, dans l'ordre de livraison
 
-> 💰 = package d'argent (flag + review ultra). Les items `L-xxx` renvoient au backlog. Estimations = heures de pilotage.
+> 💰 = package d'argent : feature flag obligatoire + `/security-review` (+ `/code-review max` pour P-04 et P-09 uniquement — cf. ⑤). Les items `L-xxx` renvoient au backlog. Estimations = heures de pilotage (somme des items du backlog).
 
-### P-01 — Fiabilisation & quick wins perf _(items L-001→L-013, L-200, L-204→L-206, L-215→L-217 · ~19.5 h · dépend de : rien)_
+### P-01 — Fiabilisation & quick wins perf _(items L-001→L-013, L-200, L-204→L-206, L-215→L-217 · ~21 h · dépend de : rien)_
 
 Répare tout ce qui est cassé sur l'existant + les gains perf à effort minimal. Deux PRs autorisées (bugs / perf).
 
@@ -64,7 +64,7 @@ Répare tout ce qui est cassé sur l'existant + les gains perf à effort minimal
 - [ ] Hero desktop < 500 kB total ; posthog + Sentry Replay hors du bundle initial ; ≤ 7 fichiers de police
 - [ ] **Lighthouse home mobile ≥ 65** (remesure locale, méthode du perf audit)
 
-### P-02 — Fondations schéma V3 _(L-020→L-030 · ~18 h · dépend de : rien)_
+### P-02 — Fondations schéma V3 _(L-020→L-030 · ~19 h · dépend de : rien)_
 
 Toutes les tables V3 (Wine, BookingWine, GiftCard+ledger, Request+Offer, ScheduledJob, occurrences, politiques, plans, collectifs, langues) + invariants + seed. Aucune UI.
 
@@ -76,13 +76,15 @@ Toutes les tables V3 (Wine, BookingWine, GiftCard+ledger, Request+Offer, Schedul
 - [ ] Seed V3 : 10 caves (plans/politiques variés), 40 expériences, 60 vins, requests, gift cards — `dev:db:setup` vert
 - [ ] Matrice d'isolation rôle×ressource testée sur les nouveaux modèles
 
+_Note G-R0'_ : le critère « observabilité live » du gate original est couvert par l'acquis (Sentry + Pino + Speed Insights déjà en prod) ; l'alerting complet (L-184) arrive en P-16 — renégociation documentée ici.
+
 ### P-03 — Monétisation Phase 1 💰 _(L-040→L-045 · ~14 h · dépend de : P-02)_
 
 Flags, booking fee 2.50, commission par cave (Fondateurs 0 % / 10 %), politiques d'annulation, KPIs business.
 
 **DoD** :
 
-- [ ] Système de flags : chaque flag bascule par env var sans deploy ; **flags OFF = e2e existants verts sans modification**
+- [ ] Système de flags : **kill-switch prouvé en < 1 min sans deploy** — le mécanisme (Vercel Edge Config, ou flag en DB avec cache ≤ 60 s ; une simple env var Vercel exige un redeploy et ne suffit PAS) est tranché au plan P-03 ; **flags OFF = e2e existants verts sans modification**
 - [ ] Flag ON : checkout affiche « Frais de service 2.50 » × billets en ligne séparée ET l'encaisse (test Stripe mode test) ; reçu/relevés cohérents
 - [ ] Cave Fondateur → `application_fee` = fee client seule ; cave standard → fee + 10 % (tests intégration sur les deux)
 - [ ] Remboursement calculé selon la politique de la cave (tests des 3 barèmes) ; montant exact dans l'email ; page légale alignée
@@ -111,7 +113,7 @@ Mode ponctuel + calendrier d'occurrences encaveur + champ « Quand » + tri proc
 - [ ] Calendrier mensuel : fermer une occurrence, ajuster sa capacité, voir les inscrits — chacun testé
 - [ ] Home « Où + Quand » → catalogue filtré par date réelle ; tri par défaut = prochaine dispo ; chips raccourcis fonctionnelles
 
-### P-06 — Performance structurelle _(L-201, L-202, L-203, L-207, L-212 · ~11 h · dépend de : rien, parallèle possible)_
+### P-06 — Performance structurelle _(L-201, L-202, L-203, L-207, L-212 · ~11 h · dépend de : rien — bouche-trou, avançable dès qu'un package bloque)_
 
 ISR/header découplé, i18n subset, Mapbox gated, index DB, invalidation propre.
 
@@ -123,7 +125,7 @@ ISR/header découplé, i18n subset, Mapbox gated, index DB, invalidation propre.
 - [ ] `EXPLAIN` de la recherche et de my-bookings = index scan (trigram + visitorEmail)
 - [ ] Une mutation cave n'évince plus la home ×4 locales (tags seuls)
 
-### P-07 — Fiche dégustation → boucle vin 💰(léger) _(L-060→L-064 · ~13 h · dépend de : P-02)_
+### P-07 — Fiche dégustation → boucle vin _(L-060→L-064 · ~13 h · dépend de : P-02 · feature-flaggé, review `high`)_
 
 **DoD (= US-230 + gate G-R1 « fiche utilisée »)** :
 
@@ -152,7 +154,7 @@ ISR/header découplé, i18n subset, Mapbox gated, index DB, invalidation propre.
 - [ ] `/compte/bons-cadeaux` (solde, renvoyer) et `/admin/bons-cadeaux` (**passif total = somme du ledger**, désactivation code, historique)
 - [ ] Validité 5 ans ; flag OFF = pas de champ code, pas de page /cadeaux
 
-### P-10 — Request / sur-mesure 💰 _(L-090→L-095 · ~18 h · dépend de : P-02, P-03)_
+### P-10 — Request / sur-mesure 💰 _(L-090→L-095 · ~18.5 h · dépend de : P-02, P-03)_
 
 **DoD (= US-240)** :
 
@@ -170,7 +172,7 @@ ISR/header découplé, i18n subset, Mapbox gated, index DB, invalidation propre.
 - [ ] Billetterie centrale opérationnelle ; **2 scanners différents sur le même événement sans collision** (test)
 - [ ] Chaque participant voit billets/scans en lecture ; pas de split automatique (organisateur encaisse)
 
-### P-12 — Pages publiques & légal _(L-112→L-117 · ~11 h dont 7 Should · dépend de : P-03)_
+### P-12 — Pages publiques & légal _(L-112→L-117 · ~16 h dont 7 Should · dépend de : P-03)_
 
 **DoD** :
 
@@ -180,7 +182,7 @@ ISR/header découplé, i18n subset, Mapbox gated, index DB, invalidation propre.
 - [ ] Fiche domaine : horaires + bloc sur-mesure prérempli ; empty state « Vous êtes encaveur ? »
 - [ ] Sitemap public [L] : plus aucune page ❌ au mapping GAP §6
 
-### P-13 — Espace encaveur V3 _(L-130, L-133, L-134, L-140→L-144 · ~15 h dont 5 Should · dépend de : P-05)_
+### P-13 — Espace encaveur V3 _(L-130, L-133, L-134, L-140→L-144 · ~21 h dont 7.5 Should · dépend de : P-05)_
 
 **DoD** :
 
@@ -208,7 +210,7 @@ ISR/header découplé, i18n subset, Mapbox gated, index DB, invalidation propre.
 - [ ] `/admin/utilisateurs` : recherche, anonymisation nLPD, changement de rôle — tous journalisés (AdminAction) et visibles
 - [ ] Email #22 à l'admin sur chaque inscription encaveur ; email #1 avec PDF + .ics joints ; #5 avec 3 alternatives ; rappel J-1 à 18 h la veille
 
-### P-16 — Hardening & launch _(L-180→L-189, L-208, L-210, L-211, L-213, L-214 · ~27.5 h · dépend de : TOUS)_
+### P-16 — Hardening & launch _(L-180→L-189, L-208, L-210, L-211, L-213, L-214 · ~29.5 h · dépend de : TOUS)_
 
 **DoD (= gates G-R2 + G-Launch)** :
 
@@ -218,34 +220,42 @@ ISR/header découplé, i18n subset, Mapbox gated, index DB, invalidation propre.
 - [ ] Alerting : incident simulé (webhook en échec, cron mort) → alerte reçue < 5 min ; `/api/health` probe DB/Redis/Stripe
 - [ ] Checklist nLPD signée ; **CGV couvrant cadeaux/no-show/request/politiques/fee** publiées
 - [ ] Runbooks testés à froid (incident paiement, litige no-show, kill-switch flag, restauration DB) ; astreinte définie
+- [ ] `/security-review` final passé sur l'état de bascule (Coming Soon retiré, Stripe live, flags) — 0 blocker
 - [ ] Bascule prête : gate Coming Soon retiré derrière un flag, Stripe live vérifié (TWINT, webhooks, Connect), redirections/sitemap OK
 
 ## 5. Tableau de suivi (à tenir à jour à CHAQUE merge)
 
 > Statuts : ⬜ à faire · 🟨 en cours · ✅ mergé sur `dev` · ⏸ suspendu (raison en note)
 
-| #    | Package                        | 💰  | Dépend de  | Est.   | Cible cal. | Statut | Branche / PR |
-| ---- | ------------------------------ | --- | ---------- | ------ | ---------- | ------ | ------------ |
-| P-01 | Fiabilisation & quick wins     |     | —          | 19.5 h | S1-S2      | ⬜     |              |
-| P-02 | Fondations schéma V3           |     | —          | 18 h   | S2-S3      | ⬜     |              |
-| P-03 | Monétisation Phase 1           | 💰  | P-02       | 14 h   | S4         | ⬜     |              |
-| P-04 | Checkout V3                    | 💰  | P-03       | 15.5 h | S5         | ⬜     |              |
-| P-05 | Créneaux & recherche par date  |     | P-02       | 11 h   | S6         | ⬜     |              |
-| P-06 | Performance structurelle       |     | —          | 11 h   | S6         | ⬜     |              |
-| P-07 | Boucle vin (fiche dégustation) |     | P-02       | 13 h   | S7-S8      | ⬜     |              |
-| P-08 | Anti no-show                   | 💰  | P-02, P-04 | 14 h   | S9         | ⬜     |              |
-| P-09 | Bons cadeaux                   | 💰  | P-02, P-04 | 24 h   | S10-S11    | ⬜     |              |
-| P-10 | Request / sur-mesure           | 💰  | P-02, P-03 | 18 h   | S12-S13    | ⬜     |              |
-| P-11 | Événements collectifs          |     | P-02, P-05 | 10 h   | S13-S14    | ⬜     |              |
-| P-12 | Pages publiques & légal        |     | P-03       | 11 h   | S14        | ⬜     |              |
-| P-13 | Espace encaveur V3             |     | P-05       | 15 h   | S15        | ⬜     |              |
-| P-14 | Auth V3                        |     | —          | 9 h    | S15        | ⬜     |              |
-| P-15 | Admin V3 & emails              |     | —          | 8 h    | S15        | ⬜     |              |
-| P-16 | Hardening & launch             |     | tous       | 27.5 h | S16-S17    | ⬜     |              |
+| #    | Package                        | 💰  | Dépend de  | Est.   | Cible cal. | Statut | Branche / PR                             |
+| ---- | ------------------------------ | --- | ---------- | ------ | ---------- | ------ | ---------------------------------------- |
+| P-01 | Fiabilisation & quick wins     |     | —          | 21 h   | S1-S2      | 🟨     | `claude/encave-v3-business-model-8bv7bd` |
+| P-02 | Fondations schéma V3           |     | —          | 19 h   | S2-S3      | ⬜     |                                          |
+| P-03 | Monétisation Phase 1           | 💰  | P-02       | 14 h   | S4         | ⬜     |                                          |
+| P-04 | Checkout V3                    | 💰  | P-03       | 15.5 h | S5         | ⬜     |                                          |
+| P-05 | Créneaux & recherche par date  |     | P-02       | 11 h   | S6         | ⬜     |                                          |
+| P-06 | Performance structurelle       |     | —          | 11 h   | S6-S8      | ⬜     |                                          |
+| P-07 | Boucle vin (fiche dégustation) |     | P-02       | 13 h   | S7-S8      | ⬜     |                                          |
+| P-08 | Anti no-show                   | 💰  | P-02, P-04 | 14 h   | S9         | ⬜     |                                          |
+| P-09 | Bons cadeaux                   | 💰  | P-02, P-04 | 24 h   | S10-S11    | ⬜     |                                          |
+| P-10 | Request / sur-mesure           | 💰  | P-02, P-03 | 18.5 h | S12-S13    | ⬜     |                                          |
+| P-11 | Événements collectifs          |     | P-02, P-05 | 10 h   | S13-S14    | ⬜     |                                          |
+| P-12 | Pages publiques & légal        |     | P-03       | 16 h   | S14        | ⬜     |                                          |
+| P-13 | Espace encaveur V3             |     | P-05       | 21 h   | S15        | ⬜     |                                          |
+| P-14 | Auth V3                        |     | —          | 9 h    | S15        | ⬜     |                                          |
+| P-15 | Admin V3 & emails              |     | —          | 8 h    | S15        | ⬜     |                                          |
+| P-16 | Hardening & launch             |     | tous       | 29.5 h | S16-S17    | ⬜     |                                          |
 
-Jalons macro (rappel, dates du planning V3) : **G-R0'** 02.08 (fin P-02) · **G-R1** 13.09 (fin P-07) · **G-R2** 01.11 (fin P-15) · **G-Supply** 02.11 · **🚀 LAUNCH 16.11**.
+> Le total (~236 h Must+Should) dépasse la capacité nominale (~210 h) : les Should (≈ 27 h, marqués dans le backlog) et les fusibles §4 du backlog sont la variable d'ajustement — à recaler sur la vélocité réelle après P-01/P-02.
 
-P-06, P-14, P-15 sont sans dépendance : ce sont les **bouche-trous** — si un package bloque (attente décision, attente Stripe/TWINT), on avance l'un d'eux au lieu d'attendre.
+Jalons macro (dates du planning V3) :
+
+- **G-R0'** 02.08 = fin P-02 (invariants + isolation testés ; observabilité = acquis, cf. note P-02).
+- **G-R1** 13.09 = fin P-07 (caves pilotes publient seules ; fiche dégustation utilisée 1× en réel).
+- **G-R2 code** 01.11 = fin P-15 : **toutes les features launch sont mergées sur `dev`**, et les tests de concurrence critiques sont verts depuis leurs packages (survente → P-04, double-rédemption → P-09). La validation instrumentée complète (k6 en CI, Lighthouse CI ≥ 95, axe, checklist nLPD) se fait en P-16 = semaine D1 (02–08.11) ; si P-16 révèle un échec de gate, le fusible planning s'applique : **launch 23.11**.
+- **G-Supply** 02.11 (hors code) · **🚀 LAUNCH 16.11** = fin P-16.
+
+P-06, P-14, P-15 sont sans dépendance : ce sont les **bouche-trous** — si le package courant passe ⏸ (attente décision, attente Stripe/TWINT), on avance l'un d'eux au lieu d'attendre (cf. règle 5).
 
 ## 6. Template de plan (②)
 
