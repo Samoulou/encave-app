@@ -147,10 +147,11 @@ export async function sendBookingConfirmationEmail(
   locale?: Locale | null
 ): Promise<boolean> {
   const loc = getLocale(locale);
+  const localePath = loc.toLowerCase();
   const bookingUrl =
     data.bookingId && data.accessToken
-      ? `${getBaseUrl()}/fr/booking/${data.bookingId}?token=${data.accessToken}`
-      : `${getBaseUrl()}/fr`;
+      ? `${getBaseUrl()}/${localePath}/booking/${data.bookingId}?token=${data.accessToken}`
+      : `${getBaseUrl()}/${localePath}`;
   const html = await render(
     BookingConfirmationEmail({
       locale: loc,

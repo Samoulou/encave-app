@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type Stripe from 'stripe';
+import { Prisma } from '@prisma/client';
 
 // Mock next/headers
 vi.mock('next/headers', () => ({
@@ -12,6 +13,12 @@ vi.mock('@/server/db', () => ({
     winery: {
       findUnique: vi.fn(),
       update: vi.fn(),
+    },
+    stripeEvent: {
+      create: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
     },
   },
 }));
@@ -108,6 +115,79 @@ describe('Stripe Connect Webhook Handler', () => {
 
     expect(response.status).toBe(400);
     expect(data.error).toContain('Webhook Error');
+  });
+
+  describe('idempotency (StripeEvent guard)', () => {
+    const duplicateEvent: Partial<Stripe.Event> = {
+      id: 'evt_dup_123',
+      type: 'account.updated',
+      data: {
+        object: {
+          id: 'acct_123',
+          details_submitted: true,
+          charges_enabled: true,
+        } as Stripe.Account,
+      },
+    };
+
+    it('skips a replayed event without touching the winery', async () => {
+      const req = createMockRequest('{}', 'valid_signature');
+      mockHeaders.mockResolvedValue(
+        createMockHeaders('valid_signature') as never
+      );
+      mockConstructEvent.mockReturnValue(duplicateEvent);
+      mockDb.stripeEvent.create.mockRejectedValue(
+        new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+          code: 'P2002',
+          clientVersion: '5.22.0',
+        })
+      );
+      mockDb.stripeEvent.findUnique.mockResolvedValue({
+        status: 'PROCESSED',
+      } as never);
+
+      const response = await POST(req);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.duplicate).toBe(true);
+      expect(mockDb.winery.findUnique).not.toHaveBeenCalled();
+      expect(mockDb.winery.update).not.toHaveBeenCalled();
+    });
+
+    it('retries an event whose previous attempt FAILED', async () => {
+      const req = createMockRequest('{}', 'valid_signature');
+      mockHeaders.mockResolvedValue(
+        createMockHeaders('valid_signature') as never
+      );
+      mockConstructEvent.mockReturnValue(duplicateEvent);
+      mockDb.stripeEvent.create.mockRejectedValue(
+        new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+          code: 'P2002',
+          clientVersion: '5.22.0',
+        })
+      );
+      mockDb.stripeEvent.findUnique.mockResolvedValue({
+        status: 'FAILED',
+      } as never);
+      mockDb.stripeEvent.updateMany.mockResolvedValue({ count: 1 } as never);
+      mockDb.winery.findUnique.mockResolvedValue({
+        id: 'winery-123',
+        slug: 'winery-slug',
+      } as never);
+      mockDb.winery.update.mockResolvedValue({} as never);
+
+      const response = await POST(req);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.received).toBe(true);
+      expect(mockDb.winery.update).toHaveBeenCalled();
+      expect(mockDb.stripeEvent.update).toHaveBeenCalledWith({
+        where: { stripeEventId: 'evt_dup_123' },
+        data: { status: 'PROCESSED', errorMessage: null },
+      });
+    });
   });
 
   describe('account.updated event', () => {

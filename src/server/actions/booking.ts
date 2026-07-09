@@ -328,7 +328,21 @@ export async function resendConfirmationEmail(
     const bookingDateTime = new Date(booking.date);
     bookingDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
 
+    // Rotate the access token so the resent email carries a working magic
+    // link (only the hash is stored — the original plaintext is gone).
+    const accessToken = crypto.randomBytes(32).toString('hex');
+    const accessTokenHash = crypto
+      .createHash('sha256')
+      .update(accessToken)
+      .digest('hex');
+    await db.booking.update({
+      where: { id: bookingId },
+      data: { accessTokenHash },
+    });
+
     const sent = await sendBookingConfirmationEmail(booking.visitorEmail, {
+      bookingId: booking.id,
+      accessToken,
       guestName: booking.visitorName,
       experienceTitle: booking.experience.title,
       wineryName: booking.winery.name,

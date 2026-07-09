@@ -116,6 +116,24 @@ describe('confirmBookingFromPaidCheckoutSession', () => {
     });
     expect(mockSendBookingConfirmationEmail).toHaveBeenCalledOnce();
     expect(mockSendWinemakerNewBookingEmail).toHaveBeenCalledOnce();
+
+    // The guest email must carry the plaintext access token whose SHA-256
+    // hash was persisted — this is what makes the magic ticket link work.
+    const emailData = mockSendBookingConfirmationEmail.mock.calls[0]?.[1] as {
+      bookingId?: string;
+      accessToken?: string;
+    };
+    expect(emailData.bookingId).toBe('booking-1');
+    expect(emailData.accessToken).toEqual(expect.any(String));
+    const persisted = mockDb.booking.updateMany.mock.calls[0]?.[0] as {
+      data: { accessTokenHash: string };
+    };
+    const crypto = await import('crypto');
+    const expectedHash = crypto
+      .createHash('sha256')
+      .update(emailData.accessToken ?? '')
+      .digest('hex');
+    expect(persisted.data.accessTokenHash).toBe(expectedHash);
   });
 
   it('does not confirm a booking when the Checkout Session is not paid', async () => {

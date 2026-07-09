@@ -6,6 +6,11 @@ import { db } from '@/server/db';
 import { env } from '@/lib/env';
 import { logError, logInfo, logWarn } from '@/lib/logger';
 import { invalidateWineryCaches } from '@/server/actions/winery-helpers';
+import {
+  claimStripeEvent,
+  markStripeEventFailed,
+  markStripeEventProcessed,
+} from '@/server/services/stripe-event.service';
 
 export async function POST(req: Request) {
   if (!isStripeConfigured()) {
@@ -49,6 +54,11 @@ export async function POST(req: Request) {
     );
   }
 
+  const shouldProcess = await claimStripeEvent(event);
+  if (!shouldProcess) {
+    return NextResponse.json({ received: true, duplicate: true });
+  }
+
   // Handle the event
   try {
     switch (event.type) {
@@ -71,9 +81,11 @@ export async function POST(req: Request) {
         logInfo('Unhandled event type', { eventType: event.type });
     }
 
+    await markStripeEventProcessed(event.id);
     return NextResponse.json({ received: true });
   } catch (error) {
     logError('Error processing webhook', error);
+    await markStripeEventFailed(event.id, error);
     return NextResponse.json(
       { error: 'Webhook handler failed' },
       { status: 500 }
