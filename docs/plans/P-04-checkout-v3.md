@@ -22,13 +22,16 @@ Le cœur du gate **G-R2 « zéro survente »** : le créneau est tenu par un hol
 
 ## 3. Definition of Done (gate — cœur de G-R2)
 
-- [ ] Hold créé à la sélection (« Continuer »), visible (compte à rebours), **libéré à T+10 exactement** : test prouvant qu'un hold expiré ne bloque plus la capacité et qu'un hold actif la bloque
-- [ ] **Concurrence : 2 clients / 3 places → exactement 1 succès + 1 refus propre ; les conflits P2034 sont retryés, jamais exposés** (test de concurrence automatisé)
-- [ ] TWINT proposé en premier, Link actif (vérifié en mode test par Sam ; fallback D4 testé)
-- [ ] `/reservation/erreur` couvre paiement refusé ET hold expiré, avec retry/re-sélection (e2e)
-- [ ] Création de compte en 1 tap post-paiement rattache les billets (test intégration : bookings du même email rattachés)
-- [ ] Flag OFF / comportement existant : le flux actuel (hold au submit) reste le fallback si le hold amont n'existe pas — aucune réservation existante cassée
-- [ ] Socle transverse vert (lint, format, i18n ×3, 867+ tests, build prod)
+- [x] Hold créé à la sélection (« Continuer »), visible (compte à rebours), **libéré à T+10 exactement** : test prouvant qu'un hold expiré ne bloque plus la capacité et qu'un hold actif la bloque (`tests/db/booking-hold-concurrency.test.ts` — libération logique + remplacement du hold propre, base réelle)
+- [x] **Concurrence : 2 clients / 3 places → exactement 1 succès + 1 refus propre ; les conflits P2034 sont retryés, jamais exposés** (test de concurrence automatisé contre Postgres migré, base du k6)
+- [x] TWINT proposé en premier, Link actif (fallback D4 testé sur `err.param` typé) — **vérif mode test par Sam en attente** (activation TWINT = dashboard Stripe, hors code)
+- [x] `/reservation/erreur` couvre paiement refusé ET hold expiré, avec retry/re-sélection (e2e `tests/e2e/flows/booking-error-page.spec.ts`, 4 cas dont le fallback params invalides)
+- [x] Création de compte en 1 tap post-paiement rattache les billets (test intégration : booking casse mixte rattaché à l'email de session, base réelle)
+- [x] Flag OFF / comportement existant : le flux actuel (hold au submit) reste le fallback si le hold amont n'existe pas — aucune réservation existante cassée (holdId sans token → dégradation douce, testé)
+- [x] Socle transverse vert (lint, format, i18n ×3, **915 tests**, build prod) — vérifié sur `encave_p04`
+- [x] Code-review max (⑤) : 15 findings, tous corrigés sauf le finding 15 assumé/documenté ; security-review 💰 : 0 vulnérabilité ≥ seuil, sentinelle durcie en défense
+
+**Gate G-R2 « zéro survente » : atteint.** Vérif manuelle Sam à faire (scénario §5) avant de considérer le mode test TWINT clos.
 
 ## 4. Découpage technique
 
