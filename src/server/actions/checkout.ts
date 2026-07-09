@@ -1,22 +1,27 @@
 'use server';
 
+import { headers } from 'next/headers';
 import crypto from 'crypto';
 import type Stripe from 'stripe';
 import { z } from 'zod';
 import { createId } from '@paralleldrive/cuid2';
+import { addMinutes } from 'date-fns';
 import { getStripe } from '@/server/stripe';
 import { db } from '@/server/db';
 import { getBaseUrl } from '@/lib/env';
 import { getTranslations } from 'next-intl/server';
 import type { ActionResult } from '@/types/actions';
 import { BookingStatus, ExperienceStatus, WineryStatus } from '@prisma/client';
-import { timeSlotSchema } from '@/lib/validators/booking';
+import { timeSlotSchema, createHoldSchema } from '@/lib/validators/booking';
 import { AGE_GATE_VERSION } from '@/lib/constants/consent';
 import {
   HOLD_DURATION_MINUTES,
   STRIPE_SESSION_DURATION_MINUTES,
+  HOLD_EMAIL_DOMAIN,
+  buildHoldPlaceholderEmail,
 } from '@/lib/constants/booking-hold';
 import { BOOKING_FEE_CENTS } from '@/lib/constants/pricing';
+import { activeCapacityBookingWhere } from '@/lib/business-rules/capacity';
 import {
   computeCommissionCents,
   getEffectiveCommissionRate,
@@ -25,12 +30,17 @@ import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
 import { getPlatformCommissionRate } from '@/server/services/payment.service';
 import {
   checkRateLimit,
+  getClientIp,
   BOOKING_RATE_LIMIT,
   HOLD_RATE_LIMIT,
 } from '@/server/services/rate-limit.service';
 import { withSerializableRetry } from '@/server/services/serializable-retry.service';
-import { headers } from 'next/headers';
 import { logError, logWarn } from '@/lib/logger';
+
+/** sha256 hex — same scheme as the booking access tokens (SEC-002). */
+function hashHoldToken(token: string): string {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
 
 /**
  * Generate booking reference using cuid2 for guaranteed uniqueness.
@@ -61,17 +71,18 @@ const CreateBookingSchema = z.object({
   displayedServiceFeeCentsPerGuest: z.number().int().min(0),
   /** Hold created at « Continuer » (L-050) — claimed by this submit. */
   holdId: z.string().cuid().optional(),
-});
-
-const CreateHoldSchema = z.object({
-  experienceId: z.string(),
-  date: z.string(),
-  timeSlot: timeSlotSchema,
-  guestCount: z.number().int().positive(),
+  /**
+   * Proof of hold ownership: the secret returned by createBookingHold.
+   * Without it a leaked booking id would let a third party overwrite the
+   * visitor identity of someone else's in-flight booking.
+   */
+  holdToken: z.string().min(16).optional(),
 });
 
 export interface BookingHoldResult {
   holdId: string;
+  /** Ownership secret — required to claim or replace this hold. */
+  holdToken: string;
   /** ISO timestamp — drives the checkout countdown. */
   expiresAt: string;
 }
@@ -84,10 +95,10 @@ export interface BookingHoldResult {
  * release) — the cron and the Stripe webhook only clean rows up.
  */
 export async function createBookingHold(
-  input: z.infer<typeof CreateHoldSchema>
+  input: z.infer<typeof createHoldSchema>
 ): Promise<ActionResult<BookingHoldResult>> {
   try {
-    const validated = CreateHoldSchema.safeParse(input);
+    const validated = createHoldSchema.safeParse(input);
     if (!validated.success) {
       return {
         success: false,
@@ -95,11 +106,10 @@ export async function createBookingHold(
       };
     }
     const { experienceId, date, timeSlot, guestCount } = validated.data;
+    const { previousHoldId, previousHoldToken } = validated.data;
 
     // Unauthenticated + reserves capacity → tight per-IP budget.
-    const headerList = await headers();
-    const ip =
-      headerList.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
+    const ip = getClientIp(await headers());
     const rateLimitResult = await checkRateLimit(`hold:${ip}`, HOLD_RATE_LIMIT);
     if (!rateLimitResult.success) {
       return {
@@ -160,8 +170,15 @@ export async function createBookingHold(
     );
     const platformFee = computeCommissionCents(totalPrice, commissionRate);
     const bookingDate = new Date(date);
-    const expiresAt = new Date(Date.now() + HOLD_DURATION_MINUTES * 60 * 1000);
+    const expiresAt = addMinutes(new Date(), HOLD_DURATION_MINUTES);
     const reference = generateBookingReference();
+    // Ownership secret: only its holder can claim or replace this hold.
+    const holdToken = crypto.randomBytes(24).toString('base64url');
+    const holdTokenHash = hashHoldToken(holdToken);
+    const previousHoldTokenHash =
+      previousHoldId !== undefined && previousHoldToken !== undefined
+        ? hashHoldToken(previousHoldToken)
+        : undefined;
 
     let hold;
     try {
@@ -169,18 +186,28 @@ export async function createBookingHold(
         () =>
           db.$transaction(
             async (tx) => {
+              // Release the caller's previous UNCLAIMED hold first (Back
+              // button, changed party size) — otherwise the user
+              // self-blocks on their own seats. Guarded by the token hash
+              // + sentinel email + no Stripe session: a claimed booking
+              // is never deletable this way.
+              if (previousHoldId !== undefined && previousHoldTokenHash) {
+                await tx.booking.deleteMany({
+                  where: {
+                    id: previousHoldId,
+                    status: BookingStatus.PENDING_PAYMENT,
+                    accessTokenHash: previousHoldTokenHash,
+                    visitorEmail: { endsWith: `@${HOLD_EMAIL_DOMAIN}` },
+                    stripeCheckoutSessionId: null,
+                  },
+                });
+              }
               const existingBookings = await tx.booking.aggregate({
                 where: {
                   experienceId,
                   date: bookingDate,
                   timeSlot,
-                  OR: [
-                    { status: BookingStatus.CONFIRMED },
-                    {
-                      status: BookingStatus.PENDING_PAYMENT,
-                      expiresAt: { gt: new Date() },
-                    },
-                  ],
+                  ...activeCapacityBookingWhere(),
                 },
                 _sum: { guestCount: true },
               });
@@ -202,10 +229,11 @@ export async function createBookingHold(
                   wineryPayout: totalPrice - platformFee,
                   // Placeholder visitor — replaced when the hold is claimed.
                   visitorName: '',
-                  visitorEmail: `hold-${reference.toLowerCase()}@hold.encave.ch`,
+                  visitorEmail: buildHoldPlaceholderEmail(reference),
                   visitorPhone: '',
                   status: BookingStatus.PENDING_PAYMENT,
                   cancellationPolicy: experience.winery.cancellationPolicy,
+                  accessTokenHash: holdTokenHash,
                   expiresAt,
                 },
               });
@@ -229,7 +257,11 @@ export async function createBookingHold(
 
     return {
       success: true,
-      data: { holdId: hold.id, expiresAt: expiresAt.toISOString() },
+      data: {
+        holdId: hold.id,
+        holdToken,
+        expiresAt: expiresAt.toISOString(),
+      },
     };
   } catch (error) {
     logError('createBookingHold error', error, { action: 'createBookingHold' });
@@ -384,20 +416,25 @@ export async function createBookingAndCheckout(
 
     const bookingDate = new Date(date);
     // Stripe enforces a >= 30 min session expiry; claiming a hold extends
-    // it from the 10-min form window to the payment window.
-    const expiresAt = new Date(
-      Date.now() + STRIPE_SESSION_DURATION_MINUTES * 60 * 1000
-    );
+    // it from the 10-min form window to the payment window. Refreshed to
+    // the session's actual expiry once Stripe answers.
+    const expiresAt = addMinutes(new Date(), STRIPE_SESSION_DURATION_MINUTES);
 
     // Claim the upstream hold (L-050): same slot, same party size, still
-    // alive. Atomic — a lost claim (expired hold) falls back to a fresh
+    // alive, and OWNED — the token hash proves the caller created the
+    // hold, so a leaked booking id can't hijack someone else's booking.
+    // Atomic — a lost claim (expired hold) falls back to a fresh
     // capacity-checked create below, which will answer NO_CAPACITY
     // honestly if the seats were resold.
     let booking: { id: string; reference: string } | undefined;
-    if (validated.data.holdId !== undefined) {
+    if (
+      validated.data.holdId !== undefined &&
+      validated.data.holdToken !== undefined
+    ) {
       const claimed = await db.booking.updateMany({
         where: {
           id: validated.data.holdId,
+          accessTokenHash: hashHoldToken(validated.data.holdToken),
           status: BookingStatus.PENDING_PAYMENT,
           expiresAt: { gt: new Date() },
           experienceId,
@@ -420,10 +457,29 @@ export async function createBookingAndCheckout(
         },
       });
       if (claimed.count === 1) {
-        booking = await db.booking.findUniqueOrThrow({
+        const claimedBooking = await db.booking.findUniqueOrThrow({
           where: { id: validated.data.holdId },
-          select: { id: true, reference: true },
+          select: { id: true, reference: true, stripeCheckoutSessionId: true },
         });
+        booking = claimedBooking;
+        // A re-claim (retry after payment abort) must kill the previous
+        // Stripe session: two live sessions on one booking let a stale
+        // session's expiry webhook delete a booking being paid on the
+        // newer one. Best-effort — an already-expired session throws.
+        if (claimedBooking.stripeCheckoutSessionId) {
+          try {
+            await getStripe().checkout.sessions.expire(
+              claimedBooking.stripeCheckoutSessionId
+            );
+          } catch (expireError) {
+            logWarn('Could not expire previous checkout session', {
+              action: 'createBookingAndCheckout',
+              bookingId: claimedBooking.id,
+              sessionId: claimedBooking.stripeCheckoutSessionId,
+              error: String(expireError),
+            });
+          }
+        }
       }
     }
 
@@ -442,13 +498,7 @@ export async function createBookingAndCheckout(
                   timeSlot,
                   // Logical hold release (L-050): an expired PENDING_PAYMENT
                   // hold no longer blocks capacity, whatever the cron does.
-                  OR: [
-                    { status: BookingStatus.CONFIRMED },
-                    {
-                      status: BookingStatus.PENDING_PAYMENT,
-                      expiresAt: { gt: new Date() },
-                    },
-                  ],
+                  ...activeCapacityBookingWhere(),
                 },
                 _sum: { guestCount: true },
               });
@@ -548,68 +598,96 @@ export async function createBookingAndCheckout(
     // TWINT is a Stripe-dashboard action, no deploy needed).
     const buildSessionParams = (
       paymentMethodTypes: ('twint' | 'card' | 'link')[]
-    ): Stripe.Checkout.SessionCreateParams => ({
-      payment_method_types: paymentMethodTypes,
-      mode: 'payment',
-      line_items: [
-        {
-          price_data: {
-            currency: 'chf',
-            product_data: {
-              name: experience.title,
-              description: `${guestCount} ${guestCount === 1 ? 'guest' : 'guests'} - ${experience.winery.name}`,
-            },
-            unit_amount: experience.price,
-          },
-          quantity: guestCount,
-        },
-        // Client booking fee — always a separate visible line, never
-        // blended into the experience price (BUSINESS §2).
-        ...(serviceFeeCents > 0
-          ? [
-              {
-                price_data: {
-                  currency: 'chf',
-                  product_data: {
-                    name: serviceFeeLabel,
-                  },
-                  unit_amount: BOOKING_FEE_CENTS,
-                },
-                quantity: guestCount,
+    ): Stripe.Checkout.SessionCreateParams => {
+      // Computed at CALL time, per attempt: Stripe enforces its 30-min
+      // floor against the session's creation clock, and P2034 backoff or
+      // a failed TWINT attempt can burn seconds since `expiresAt` was
+      // set. One minute of margin keeps every retry above the floor; the
+      // booking row is refreshed to the session's real expiry after
+      // creation.
+      const sessionExpiresAtUnix =
+        Math.floor(Date.now() / 1000) +
+        STRIPE_SESSION_DURATION_MINUTES * 60 +
+        60;
+      return {
+        payment_method_types: paymentMethodTypes,
+        mode: 'payment',
+        line_items: [
+          {
+            price_data: {
+              currency: 'chf',
+              product_data: {
+                name: experience.title,
+                description: `${guestCount} ${guestCount === 1 ? 'guest' : 'guests'} - ${experience.winery.name}`,
               },
-            ]
-          : []),
-      ],
-      payment_intent_data: {
-        // Commission + client fee: both platform revenue. Omitted when 0
-        // (Founder at 0% with the fee OFF) — Stripe rejects a zero fee.
-        ...(platformFee + serviceFeeCents > 0
-          ? { application_fee_amount: platformFee + serviceFeeCents }
-          : {}),
-        transfer_data: {
-          destination: stripeAccountId,
+              unit_amount: experience.price,
+            },
+            quantity: guestCount,
+          },
+          // Client booking fee — always a separate visible line, never
+          // blended into the experience price (BUSINESS §2).
+          ...(serviceFeeCents > 0
+            ? [
+                {
+                  price_data: {
+                    currency: 'chf',
+                    product_data: {
+                      name: serviceFeeLabel,
+                    },
+                    unit_amount: BOOKING_FEE_CENTS,
+                  },
+                  quantity: guestCount,
+                },
+              ]
+            : []),
+        ],
+        payment_intent_data: {
+          // Commission + client fee: both platform revenue. Omitted when 0
+          // (Founder at 0% with the fee OFF) — Stripe rejects a zero fee.
+          ...(platformFee + serviceFeeCents > 0
+            ? { application_fee_amount: platformFee + serviceFeeCents }
+            : {}),
+          transfer_data: {
+            destination: stripeAccountId,
+          },
         },
-      },
-      customer_email: visitorEmail,
-      success_url: `${baseUrl}/booking/${booking.id}/confirmation?session_id={CHECKOUT_SESSION_ID}`,
-      // Aborted/failed payment → dedicated error page (L-052). The booking
-      // row IS the hold, alive until the Stripe session expiry (+30 min) —
-      // that extended expiresAt is the authoritative one for the retry CTA.
-      cancel_url: `${baseUrl}/reservation/erreur?${new URLSearchParams({
-        cause: 'payment',
-        slug: experience.slug,
-        date,
-        time: timeSlot,
-        guests: String(guestCount),
-        holdId: booking.id,
-        holdExpiresAt: expiresAt.toISOString(),
-      }).toString()}`,
-      expires_at: Math.floor(expiresAt.getTime() / 1000),
-      metadata: {
-        bookingId: booking.id,
-        bookingReference: booking.reference,
-      },
-    });
+        customer_email: visitorEmail,
+        success_url: `${baseUrl}/booking/${booking.id}/confirmation?session_id={CHECKOUT_SESSION_ID}`,
+        // Aborted/failed payment → dedicated error page (L-052). The
+        // booking row IS the hold, alive until the Stripe session expiry —
+        // holdToken lets the legitimate visitor (and only them) retry.
+        cancel_url: `${baseUrl}/reservation/erreur?${new URLSearchParams({
+          cause: 'payment',
+          slug: experience.slug,
+          date,
+          time: timeSlot,
+          guests: String(guestCount),
+          holdId: booking.id,
+          ...(validated.data.holdToken !== undefined
+            ? { holdToken: validated.data.holdToken }
+            : {}),
+          holdExpiresAt: new Date(sessionExpiresAtUnix * 1000).toISOString(),
+        }).toString()}`,
+        expires_at: sessionExpiresAtUnix,
+        metadata: {
+          bookingId: booking.id,
+          bookingReference: booking.reference,
+        },
+      };
+    };
+
+    // A payment-method rejection is a typed Stripe error pointing at the
+    // payment_method_types param — never sniff the human message (any
+    // error mentioning « link » would trigger a doomed retry).
+    const isPaymentMethodRejection = (err: unknown): boolean => {
+      if (typeof err !== 'object' || err === null) return false;
+      const { type, param } = err as { type?: unknown; param?: unknown };
+      return (
+        type === 'StripeInvalidRequestError' &&
+        typeof param === 'string' &&
+        param.startsWith('payment_method_types')
+      );
+    };
 
     let session;
     try {
@@ -617,26 +695,32 @@ export async function createBookingAndCheckout(
         buildSessionParams(['twint', 'card', 'link'])
       );
     } catch (stripeError) {
-      const message =
-        stripeError instanceof Error
-          ? stripeError.message
-          : String(stripeError);
-      if (!/payment_method_types|twint|link/i.test(message)) {
+      if (!isPaymentMethodRejection(stripeError)) {
         throw stripeError;
       }
       logWarn('Payment method rejected — falling back to card only (D4)', {
         action: 'createBookingAndCheckout',
-        error: message,
+        error:
+          stripeError instanceof Error
+            ? stripeError.message
+            : String(stripeError),
       });
       session = await getStripe().checkout.sessions.create(
         buildSessionParams(['card'])
       );
     }
 
-    // Update booking with Stripe session ID
+    // Attach the session and align the hold's expiry on the session's
+    // REAL one — capacity release and payment window must agree, and the
+    // countdown/cancel_url promised the client this deadline.
     await db.booking.update({
       where: { id: booking.id },
-      data: { stripeCheckoutSessionId: session.id },
+      data: {
+        stripeCheckoutSessionId: session.id,
+        ...(session.expires_at
+          ? { expiresAt: new Date(session.expires_at * 1000) }
+          : {}),
+      },
     });
 
     if (!session.url) {

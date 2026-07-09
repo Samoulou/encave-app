@@ -7,7 +7,7 @@ import { db } from '@/server/db';
 import { auth } from '@/server/auth';
 import { BookingStatus, Locale } from '@prisma/client';
 import type { ActionResult } from '@/types/actions';
-import { logError } from '@/lib/logger';
+import { logError, logWarn } from '@/lib/logger';
 import { processRefund } from '@/server/services/payment.service';
 import { computeBookingRefund } from '@/lib/business-rules/cancellation-policy';
 import {
@@ -106,11 +106,10 @@ export async function cancelClientBooking(
     }
 
     // Refund per the policy snapshotted at booking (fallback: winery's
-    // current policy for legacy rows) on the full paid amount (D2).
-    const { paidCents, refundDueCents, stripeAmountArg } = computeBookingRefund(
-      booking,
-      hoursUntilExperience
-    );
+    // current policy for legacy rows) on the full paid amount (D2),
+    // minus anything already refunded (e.g. an admin partial refund).
+    const { paidCents, alreadyRefundedCents, refundDueCents, stripeAmountArg } =
+      computeBookingRefund(booking, hoursUntilExperience);
     let refundAmount: number | null = null;
     let stripeRefundId: string | null = null;
 
@@ -183,14 +182,36 @@ export async function cancelClientBooking(
       }
     }
 
-    // Record the refund outcome on the already-cancelled booking
-    const updatedBooking = await db.booking.update({
+    // Record the refund outcome on the already-cancelled booking.
+    // Conditional on the refundAmount we READ — a concurrent admin
+    // refund must not be clobbered out of the ledger (see cancelBooking).
+    if (refundAmount !== null) {
+      const recorded = await db.booking.updateMany({
+        where: { id: bookingId, refundAmount: booking.refundAmount },
+        data: {
+          refundIssued: true,
+          refundAmount: alreadyRefundedCents + refundAmount,
+          stripeRefundId,
+        },
+      });
+      if (recorded.count === 0) {
+        logWarn('Refund ledger conflict — concurrent refund writer', {
+          action: 'cancelClientBooking',
+          bookingId,
+          cancelRefundCents: refundAmount,
+          stripeRefundId,
+        });
+        await db.booking.update({
+          where: { id: bookingId },
+          data: {
+            refundError: `LEDGER_CONFLICT: cancellation refunded ${refundAmount} (${stripeRefundId}) concurrently with another refund writer — reconcile with Stripe`,
+          },
+        });
+      }
+    }
+    const updatedBooking = await db.booking.findUniqueOrThrow({
       where: { id: bookingId },
-      data: {
-        refundIssued: refundAmount !== null,
-        refundAmount,
-        stripeRefundId,
-      },
+      select: { id: true, status: true },
     });
 
     // Combine date and timeSlot for email formatting

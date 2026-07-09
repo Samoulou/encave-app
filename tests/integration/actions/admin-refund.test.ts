@@ -136,8 +136,53 @@ describe('refundBookingManually (résidu Luca B)', () => {
     );
     expect(refundsCreateMock).toHaveBeenCalledWith(
       expect.objectContaining({ payment_intent: 'pi_test_123', amount: 10500 }),
-      { idempotencyKey: `admin-refund:${mockBooking.id}:0:10500` }
+      // Fresh key per attempt: a state-derived key would replay Stripe's
+      // cached ERROR for 24h on a legitimate retry after a release.
+      {
+        idempotencyKey: expect.stringMatching(
+          new RegExp(`^admin-refund:${mockBooking.id}:`)
+        ),
+      }
     );
+  });
+
+  it('releases the reservation on a rate-limit rejection (nothing processed)', async () => {
+    refundsCreateMock.mockRejectedValue({
+      type: 'StripeRateLimitError',
+      message: 'Too many requests',
+    });
+
+    const result = await refundBookingManually(validInput);
+
+    expect(result.success).toBe(false);
+    // 429 = Stripe provably processed nothing → headroom given back;
+    // keeping it would strand the amount as phantom-refunded forever.
+    expect(db.booking.updateMany).toHaveBeenLastCalledWith({
+      where: { id: mockBooking.id, refundAmount: 10500 },
+      data: { refundAmount: null },
+    });
+  });
+
+  it('reports success when the refund succeeded but bookkeeping failed', async () => {
+    vi.mocked(db.adminAction.create).mockRejectedValueOnce(
+      new Error('transient db error')
+    );
+
+    const result = await refundBookingManually(validInput);
+
+    // Money moved — telling the admin « failed » would trigger a manual
+    // retry and a SECOND real refund (review finding).
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.refundId).toBe('re_test_1');
+    }
+    expect(db.booking.update).toHaveBeenCalledWith({
+      where: { id: mockBooking.id },
+      data: expect.objectContaining({
+        stripeRefundId: 're_test_1',
+        refundError: expect.stringContaining('BOOKKEEPING_FAILED'),
+      }),
+    });
   });
 
   it('backs off with CONFLICT when a concurrent refund won the reservation', async () => {

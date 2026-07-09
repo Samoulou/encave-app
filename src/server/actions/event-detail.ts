@@ -12,6 +12,7 @@ import {
   bookingIdSchema,
 } from '@/lib/validators/eventDetail';
 import { parseTimeSlot, timeSlotSchema } from '@/lib/validators/booking';
+import { isHoldPlaceholderEmail } from '@/lib/constants/booking-hold';
 import type { ActionResult } from '@/types/actions';
 import type { BookingDTO } from '@/types/event-detail';
 import { z } from 'zod';
@@ -596,6 +597,24 @@ export async function cancelEventSession(
 
   for (const booking of bookings) {
     try {
+      // Unclaimed hold (P-04 / L-050): placeholder visitor, no Stripe
+      // session — not a real booking. Delete it silently; emailing the
+      // sentinel address would bounce, and a CANCELLED_BY_WINERY row
+      // would pollute the winery's cancellation history.
+      if (
+        isHoldPlaceholderEmail(booking.visitorEmail) &&
+        !booking.stripeCheckoutSessionId
+      ) {
+        await db.booking.deleteMany({
+          where: {
+            id: booking.id,
+            status: BookingStatus.PENDING_PAYMENT,
+            stripeCheckoutSessionId: null,
+          },
+        });
+        continue;
+      }
+
       let refundId: string | undefined;
       if (
         booking.status === BookingStatus.CONFIRMED &&

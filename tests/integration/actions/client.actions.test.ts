@@ -9,7 +9,12 @@ vi.mock('@/server/auth', () => ({
 // Mock db
 vi.mock('@/server/db', () => ({
   db: {
-    booking: { findFirst: vi.fn(), update: vi.fn(), updateMany: vi.fn() },
+    booking: {
+      findFirst: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+    },
     user: { update: vi.fn() },
   },
 }));
@@ -158,7 +163,7 @@ describe('Client Actions', () => {
         refundId: 're_123',
         amount: 10000,
       });
-      mockDb.booking.update.mockResolvedValueOnce({
+      mockDb.booking.findUniqueOrThrow.mockResolvedValueOnce({
         id: 'booking-123',
         status: 'CANCELLED_BY_CLIENT',
       } as never);

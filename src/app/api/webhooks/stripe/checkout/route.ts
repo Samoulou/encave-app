@@ -120,7 +120,12 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
 
   const booking = await db.booking.findUnique({
     where: { id: bookingId },
-    select: { id: true, status: true, reference: true },
+    select: {
+      id: true,
+      status: true,
+      reference: true,
+      stripeCheckoutSessionId: true,
+    },
   });
 
   if (!booking) {
@@ -133,6 +138,22 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
     logInfo('Booking not pending payment, not cancelling', {
       bookingRef: booking.reference,
       status: booking.status,
+    });
+    return;
+  }
+
+  // A retry (hold re-claim) attaches a NEWER session to the same booking.
+  // Only the session the booking currently points at may destroy it —
+  // a stale session's expiry must never delete a booking being paid on
+  // the newer one (P-04 review finding).
+  if (
+    booking.stripeCheckoutSessionId &&
+    booking.stripeCheckoutSessionId !== session.id
+  ) {
+    logInfo('Stale session expired — booking has a newer session, keeping', {
+      bookingRef: booking.reference,
+      expiredSessionId: session.id,
+      currentSessionId: booking.stripeCheckoutSessionId,
     });
     return;
   }

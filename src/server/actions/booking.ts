@@ -15,12 +15,21 @@ import {
 } from '@/server/services/email.service';
 import { processRefund } from '@/server/services/payment.service';
 import { computeBookingRefund } from '@/lib/business-rules/cancellation-policy';
-import { logError } from '@/lib/logger';
+import { activeCapacityBookingWhere } from '@/lib/business-rules/capacity';
+import { logError, logWarn } from '@/lib/logger';
 
 const CheckAvailabilitySchema = z.object({
   experienceId: z.string(),
   date: z.string(),
   timeSlot: z.string(),
+  /**
+   * The caller's own hold (P-04 / L-050): the checkout page must not
+   * count the seats its visitor already reserved as competing demand —
+   * without this, booking the last free seats self-disables the form.
+   * Read-only distortion at worst; the transactional capacity checks at
+   * claim/create never exclude anything.
+   */
+  excludeBookingId: z.string().cuid().optional(),
 });
 
 export interface AvailabilityResult {
@@ -42,7 +51,7 @@ export async function checkAvailability(
       };
     }
 
-    const { experienceId, date, timeSlot } = validated.data;
+    const { experienceId, date, timeSlot, excludeBookingId } = validated.data;
 
     const experience = await db.experience.findUnique({
       where: { id: experienceId },
@@ -66,13 +75,10 @@ export async function checkAvailability(
         date: bookingDate,
         timeSlot,
         // Logical hold release (L-050): expired holds free the capacity.
-        OR: [
-          { status: BookingStatus.CONFIRMED },
-          {
-            status: BookingStatus.PENDING_PAYMENT,
-            expiresAt: { gt: new Date() },
-          },
-        ],
+        ...activeCapacityBookingWhere(),
+        ...(excludeBookingId !== undefined
+          ? { id: { not: excludeBookingId } }
+          : {}),
       },
       _sum: { guestCount: true },
     });
@@ -145,13 +151,7 @@ export async function getTimeSlotsForDate(
         experienceId,
         date: bookingDate,
         // Logical hold release (L-050): expired holds free the capacity.
-        OR: [
-          { status: BookingStatus.CONFIRMED },
-          {
-            status: BookingStatus.PENDING_PAYMENT,
-            expiresAt: { gt: new Date() },
-          },
-        ],
+        ...activeCapacityBookingWhere(),
       },
       _sum: { guestCount: true },
     });
@@ -579,11 +579,10 @@ export async function cancelBooking(
     }
 
     // Refund per the policy snapshotted at booking (fallback: winery's
-    // current policy for legacy rows) on the full paid amount (D2).
-    const { paidCents, refundDueCents, stripeAmountArg } = computeBookingRefund(
-      booking,
-      hoursUntilExperience
-    );
+    // current policy for legacy rows) on the full paid amount (D2),
+    // minus anything already refunded (e.g. an admin partial refund).
+    const { paidCents, alreadyRefundedCents, refundDueCents, stripeAmountArg } =
+      computeBookingRefund(booking, hoursUntilExperience);
     let refundAmount: number | null = null;
     let stripeRefundId: string | null = null;
 
@@ -659,14 +658,37 @@ export async function cancelBooking(
       }
     }
 
-    // Record the refund outcome on the already-cancelled booking
-    const updatedBooking = await db.booking.update({
+    // Record the refund outcome on the already-cancelled booking.
+    // Conditional on the refundAmount we READ: a concurrent admin refund
+    // that landed in between must not be clobbered out of the ledger —
+    // on conflict we keep the DB value and flag for reconciliation.
+    if (refundAmount !== null) {
+      const recorded = await db.booking.updateMany({
+        where: { id: bookingId, refundAmount: booking.refundAmount },
+        data: {
+          refundIssued: true,
+          refundAmount: alreadyRefundedCents + refundAmount,
+          stripeRefundId,
+        },
+      });
+      if (recorded.count === 0) {
+        logWarn('Refund ledger conflict — concurrent refund writer', {
+          action: 'cancelBooking',
+          bookingId,
+          cancelRefundCents: refundAmount,
+          stripeRefundId,
+        });
+        await db.booking.update({
+          where: { id: bookingId },
+          data: {
+            refundError: `LEDGER_CONFLICT: cancellation refunded ${refundAmount} (${stripeRefundId}) concurrently with another refund writer — reconcile with Stripe`,
+          },
+        });
+      }
+    }
+    const updatedBooking = await db.booking.findUniqueOrThrow({
       where: { id: bookingId },
-      data: {
-        refundIssued: refundAmount !== null,
-        refundAmount,
-        stripeRefundId,
-      },
+      select: { id: true, status: true },
     });
 
     // Combine date and timeSlot for email formatting

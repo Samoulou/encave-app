@@ -131,6 +131,40 @@ describe.skipIf(!url)('booking hold concurrency (P-04 / L-050)', () => {
     expect(sum._sum.guestCount).toBe(2);
   });
 
+  it('a second « Continuer » replaces the caller own hold instead of self-blocking', async () => {
+    const input = {
+      experienceId: expId(),
+      date: '2026-11-27',
+      timeSlot: '11:00',
+      guestCount: 2,
+    };
+
+    // First hold takes 2 of 3 seats.
+    const first = await createBookingHold(input);
+    expect(first.success).toBe(true);
+    if (!first.success) return;
+
+    // Same visitor comes back (Back button) WITHOUT handing back the
+    // previous hold → their own seats block them (only 1 seat left).
+    const withoutRelease = await createBookingHold(input);
+    expect(withoutRelease.success).toBe(false);
+
+    // Handing back the previous hold releases it in the same
+    // transaction → the re-pick succeeds.
+    const withRelease = await createBookingHold({
+      ...input,
+      previousHoldId: first.data.holdId,
+      previousHoldToken: first.data.holdToken,
+    });
+    expect(withRelease.success).toBe(true);
+
+    // The old hold row is gone — a wrong token would NOT have deleted it.
+    const oldRow = await db.booking.findUnique({
+      where: { id: first.data.holdId },
+    });
+    expect(oldRow).toBeNull();
+  });
+
   it('an expired hold releases its seats logically (no cron needed)', async () => {
     const input = {
       experienceId: expId(),

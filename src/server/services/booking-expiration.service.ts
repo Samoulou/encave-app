@@ -3,17 +3,33 @@ import { BookingStatus } from '@prisma/client';
 import { db } from '@/server/db';
 import { getStripe } from '@/server/stripe';
 import { logError, logInfo, logWarn } from '@/lib/logger';
+import { isHoldPlaceholderEmail } from '@/lib/constants/booking-hold';
 import { sendBookingExpiredEmail } from '@/server/services/email.service';
 
+/**
+ * Fallback for legacy rows without an expiresAt — every current creation
+ * path sets one, so this only guards hand-inserted data.
+ */
 const PAYMENT_EXPIRATION_MINUTES = 30;
 
 export async function expirePendingPaymentBookings(now = new Date()): Promise<{
   expired: number;
+  deletedHolds: number;
 }> {
   const candidates = await db.booking.findMany({
     where: {
       status: BookingStatus.PENDING_PAYMENT,
-      createdAt: { lt: addMinutes(now, -PAYMENT_EXPIRATION_MINUTES) },
+      // The booking's own expiry is authoritative (P-04 / L-050): a hold
+      // claimed at submit lives until its Stripe session expiry, up to
+      // createdAt + 40 min — a createdAt cutoff would cancel bookings
+      // MID-PAYMENT. Legacy rows without expiresAt fall back to createdAt.
+      OR: [
+        { expiresAt: { lt: now } },
+        {
+          expiresAt: null,
+          createdAt: { lt: addMinutes(now, -PAYMENT_EXPIRATION_MINUTES) },
+        },
+      ],
     },
     select: {
       id: true,
@@ -21,6 +37,7 @@ export async function expirePendingPaymentBookings(now = new Date()): Promise<{
       visitorEmail: true,
       visitorName: true,
       createdAt: true,
+      expiresAt: true,
       stripeCheckoutSessionId: true,
       date: true,
       experience: {
@@ -34,10 +51,33 @@ export async function expirePendingPaymentBookings(now = new Date()): Promise<{
   });
 
   let expired = 0;
+  let deletedHolds = 0;
   for (const candidate of candidates) {
-    if (!isBefore(addMinutes(candidate.createdAt, 30), now)) continue;
+    const isPastDeadline = candidate.expiresAt
+      ? isBefore(candidate.expiresAt, now)
+      : isBefore(addMinutes(candidate.createdAt, 30), now);
+    if (!isPastDeadline) continue;
 
     try {
+      // Unclaimed hold (placeholder visitor, no Stripe session): not a
+      // real booking — delete the row. No cancellation status, no email
+      // (the sentinel address would hard-bounce and poison the winery's
+      // cancellation stats).
+      if (
+        isHoldPlaceholderEmail(candidate.visitorEmail) &&
+        !candidate.stripeCheckoutSessionId
+      ) {
+        const deleted = await db.booking.deleteMany({
+          where: {
+            id: candidate.id,
+            status: BookingStatus.PENDING_PAYMENT,
+            stripeCheckoutSessionId: null,
+          },
+        });
+        if (deleted.count === 1) deletedHolds++;
+        continue;
+      }
+
       // Ask Stripe BEFORE cancelling: a paid session whose
       // checkout.session.completed webhook is late must NOT be expired
       // locally — the webhook will confirm it. Cancelling first would
@@ -106,12 +146,15 @@ export async function expirePendingPaymentBookings(now = new Date()): Promise<{
         }
       }
 
-      await sendBookingExpiredEmail(candidate.visitorEmail, {
-        guestName: candidate.visitorName,
-        experienceTitle: candidate.experience.title,
-        experienceSlug: candidate.experience.slug,
-        date: candidate.date,
-      });
+      // Never email a hold placeholder address (guaranteed bounce).
+      if (!isHoldPlaceholderEmail(candidate.visitorEmail)) {
+        await sendBookingExpiredEmail(candidate.visitorEmail, {
+          guestName: candidate.visitorName,
+          experienceTitle: candidate.experience.title,
+          experienceSlug: candidate.experience.slug,
+          date: candidate.date,
+        });
+      }
       expired++;
     } catch (error) {
       logError('Failed to expire pending booking', error, {
@@ -121,6 +164,6 @@ export async function expirePendingPaymentBookings(now = new Date()): Promise<{
     }
   }
 
-  logInfo('booking.pending_payment.expired', { expired });
-  return { expired };
+  logInfo('booking.pending_payment.expired', { expired, deletedHolds });
+  return { expired, deletedHolds };
 }

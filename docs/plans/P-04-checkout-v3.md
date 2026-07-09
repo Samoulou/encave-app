@@ -57,6 +57,28 @@ Le cœur du gate **G-R2 « zéro survente »** : le créneau est tenu par un hol
 - **D6 — Compte 1 tap** : better-auth email/password — le « 1 tap » = choisir un mot de passe (email pré-rempli, non modifiable). Magic link = post-launch. Le rattachement des billets est déjà structurel : les queries client matchent `visitorEmail` insensible à la casse — aucune colonne à ajouter.
 - **D7 — L-054 reporté (fusible)** : `setup_future_usage` + gestion des cartes au profil sortent du gate P-04 (Should, aucun impact G-R2). Fusible : à re-évaluer au P-09 (gift cards à l'encaissement introduit déjà Stripe Customer) — si non fait d'ici le launch, les clients re-saisissent leur carte, dégradation acceptable et réversible hors deploy.
 
+## 8bis. Bilan code-review max (⑤, 10 angles + 16 vérificateurs + sweep)
+
+**15 findings retenus (14 CONFIRMED, 1 PLAUSIBLE), tous corrigés sauf 1 assumé** :
+
+1. **Hijack de hold** (sécu) : le claim acceptait n'importe quel booking PENDING_PAYMENT par id → **holdToken secret** (hash sha256 dans `accessTokenHash`, réutilise la colonne SEC-002), exigé au claim, au retry et au release.
+2. **Sessions Stripe multiples par booking** : le re-claim écrasait la session sans expirer l'ancienne, et le webhook `expired` supprimait le booking sans comparer les sessions → l'ancienne session est expirée au re-claim ET le webhook ne détruit que si `session.id` correspond.
+3. **Ledger refund écrasé** : l'annulation client écrivait `refundAmount` inconditionnellement (perte d'un remboursement partiel admin concurrent) → `computeBookingRefund` soustrait le déjà-remboursé, montant Stripe toujours explicite, écriture finale conditionnelle (CAS) + `LEDGER_CONFLICT` en réconciliation.
+4. **Double refund admin** : un échec APRÈS succès Stripe (bookkeeping/email) renvoyait « failed » → try/catch séparés, succès rapporté avec `BOOKKEEPING_FAILED` consigné ; release élargi aux erreurs prouvablement non traitées (429/401/403/idempotence) ; clé d'idempotence par tentative (l'ancienne rejouait l'erreur cachée 24 h).
+5. **Self-hold** : le checkout comptait son propre hold (formulaire désactivé/éjection dès que le groupe ≥ moitié des places) → `checkAvailability({excludeBookingId})`.
+6. **Double-clic « Continuer »** : `startTransition(async)` ne couvre pas l'await en React 18 → verrou synchrone `useRef` + state (hook partagé `useBookingHold`).
+7. **Auto-blocage au 2e « Continuer »** : `previousHoldId`+token → release du hold précédent dans la transaction (prouvé sur base réelle).
+8. **Cron sur `createdAt`** : tuait un hold réclamé en plein paiement (fenêtre 30-40 min) → sélection par `expiresAt` (fallback createdAt si null).
+9. **Bounces sentinelles** : cron + annulation de session emailaient `hold-*@hold.encave.ch` → holds non réclamés SUPPRIMÉS silencieusement (pas de statut CANCELLED fantôme), constantes + `isHoldPlaceholderEmail` partagés.
+10. **Fuites dashboard/CSV/suppression** : `getWineryBookings` exclut le domaine sentinelle ; `deleteExperience` utilise la règle de capacité logique.
+11. **`expires_at` sous le plancher Stripe** (PLAUSIBLE) : timestamp recalculé par tentative +60 s de marge ; la ligne booking est réalignée sur l'expiry réel de la session.
+12. **Crash RangeError** page erreur sur `date` invalide → validation stricte des params (Nora).
+13. **Countdown pendant le submit** → gel via ref au submit (Nora) ; offset horloge serveur (Nora).
+14. **holdId malformé** → filtré au niveau page, dégradation douce (Nora).
+15. **Course paiement in-extremis vs libération logique** (webhook en retard après l'expiry, confirmation sans re-check de capacité) : **risque assumé** — fenêtre de quelques secondes exigeant un slot plein + collision exacte ; le re-check webhook avec refund automatique serait pire que le mal. Consigné ici, à revoir si un cas réel apparaît.
+
+Hors findings : funnel `booking_payment_failed` réinstauré sur la page erreur, filtre de capacité unifié (`activeCapacityBookingWhere`), `getClientIp` partagé (fallback x-real-ip), fallback TWINT sur `err.param` typé, conventions CLAUDE.md (router.push, schéma inline, date math, i18n).
+
 ## 8. Avancement build
 
 - **Core livré** (`9db687e`) : `createBookingHold` (rate limit IP 12/10 min, placeholder visiteur, transaction Serializable), libération logique des holds expirés (3 sites de calcul de capacité), claim atomique du hold au submit avec fallback création classique, `withSerializableRetry` P2034 (3 tentatives, backoff), TWINT-first `['twint','card','link']` avec fallback runtime `['card']` (D4). Tests : 25 checkout (dont hold ×2, claim ×2, payment methods ×2), 3 retry, et **test de concurrence db-gated** `tests/db/booking-hold-concurrency.test.ts` (2 holds simultanés sur 3 places → 1 succès + 1 `NO_CAPACITY` contre un vrai Postgres migré, + libération logique) — base du futur k6.

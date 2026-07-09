@@ -205,6 +205,21 @@ export async function resetRateLimit(identifier: string): Promise<void> {
   rateLimitStore.delete(identifier);
 }
 
+/**
+ * Client IP for rate-limit keys, from proxy headers. Single copy — the
+ * geocode/newsletter routes and the hold action all key on this; keep
+ * the x-real-ip fallback so a proxy that only sets it doesn't collapse
+ * every caller into one shared "unknown" bucket.
+ */
+export function getClientIp(headerList: Headers): string {
+  const forwarded = headerList.get('x-forwarded-for');
+  if (forwarded) {
+    const first = forwarded.split(',')[0]?.trim();
+    if (first) return first;
+  }
+  return headerList.get('x-real-ip')?.trim() || 'unknown';
+}
+
 // Pre-configured rate limiters for common use cases
 export const AUTH_RATE_LIMIT: RateLimitConfig = {
   maxRequests: 5, // 5 attempts
