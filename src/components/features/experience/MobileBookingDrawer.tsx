@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import {
   ArrowLeft,
@@ -22,9 +21,11 @@ import {
 } from '@/components/ui/sheet';
 import { formatCHF } from '@/lib/utils/currency';
 import { BookingDatePicker } from '@/components/features/booking/BookingDatePicker';
+import { HoldCapacityError } from '@/components/features/booking/HoldCapacityError';
 import { TimeSlotSelector } from '@/components/features/booking/TimeSlotSelector';
 import { GuestCountInput } from '@/components/features/booking/GuestCountInput';
 import { BookingStepIndicator } from '@/components/features/booking/BookingStepIndicator';
+import { useBookingHold } from '@/hooks/useBookingHold';
 
 interface AvailabilitySlot {
   dayOfWeek: number;
@@ -63,7 +64,6 @@ export function MobileBookingDrawer({
 }: MobileBookingDrawerProps) {
   const t = useTranslations('booking');
   const tCheckout = useTranslations('checkout');
-  const router = useRouter();
   const locale = useLocale();
 
   const [date, setDate] = useState<string | null>(null);
@@ -72,7 +72,8 @@ export function MobileBookingDrawer({
   const [remainingCapacity, setRemainingCapacity] = useState<number | null>(
     null
   );
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { continueToCheckout, isSubmitting, holdError, clearHoldError } =
+    useBookingHold(experienceId, experienceSlug);
   const [mobileStep, setMobileStep] = useState<1 | 2 | 3>(1);
 
   // Available days based on availability slots
@@ -97,25 +98,37 @@ export function MobileBookingDrawer({
   const serviceFee = serviceFeeCentsPerGuest * guests;
   const totalPrice = price * guests + serviceFee;
 
-  const handleDateChange = useCallback((newDate: string | null) => {
-    setDate(newDate);
-    setTime(null);
-    setRemainingCapacity(null);
-    if (newDate) {
-      setMobileStep(2);
-    }
-  }, []);
+  const handleDateChange = useCallback(
+    (newDate: string | null) => {
+      setDate(newDate);
+      setTime(null);
+      setRemainingCapacity(null);
+      clearHoldError();
+      if (newDate) {
+        setMobileStep(2);
+      }
+    },
+    [clearHoldError]
+  );
 
-  const handleTimeChange = useCallback((newTime: string | null) => {
-    setTime(newTime);
-    if (newTime) {
-      setMobileStep(3);
-    }
-  }, []);
+  const handleTimeChange = useCallback(
+    (newTime: string | null) => {
+      setTime(newTime);
+      clearHoldError();
+      if (newTime) {
+        setMobileStep(3);
+      }
+    },
+    [clearHoldError]
+  );
 
-  const handleGuestsChange = useCallback((newGuests: number) => {
-    setGuests(newGuests);
-  }, []);
+  const handleGuestsChange = useCallback(
+    (newGuests: number) => {
+      setGuests(newGuests);
+      clearHoldError();
+    },
+    [clearHoldError]
+  );
 
   const handleCapacityUpdate = useCallback((capacity: number | null) => {
     setRemainingCapacity(capacity);
@@ -130,15 +143,12 @@ export function MobileBookingDrawer({
   };
 
   const handleContinue = () => {
-    if (!isValid) return;
+    if (!isValid || !date || !time || isSubmitting) return;
 
-    setIsSubmitting(true);
-    const params = new URLSearchParams({
-      date: date!,
-      time: time!,
-      guests: guests.toString(),
-    });
-    router.push(`/experiences/${experienceSlug}/checkout?${params.toString()}`);
+    // Hold the slot for 10 min BEFORE the checkout form (P-04 / L-050) —
+    // the shared hook owns double-click guarding, previous-hold release
+    // and soft degradation.
+    void continueToCheckout({ date, time, guests });
   };
 
   const formatTime = (t: string) => {
@@ -164,7 +174,7 @@ export function MobileBookingDrawer({
       setTime(null);
       setGuests(Math.max(2, minCapacity));
       setRemainingCapacity(null);
-      setIsSubmitting(false);
+      clearHoldError();
     }
     onOpenChange(open);
   };
@@ -313,6 +323,9 @@ export function MobileBookingDrawer({
 
         {/* Fixed bottom button */}
         <div className="fixed bottom-0 left-0 right-0 border-t border-stone-200 bg-white p-4">
+          {holdError && mobileStep === 3 && (
+            <HoldCapacityError message={holdError} />
+          )}
           {mobileStep === 1 && (
             <Button
               size="lg"

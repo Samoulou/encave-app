@@ -1,17 +1,28 @@
 'use server';
 
+import { headers } from 'next/headers';
 import crypto from 'crypto';
+import type Stripe from 'stripe';
 import { z } from 'zod';
 import { createId } from '@paralleldrive/cuid2';
+import { addMinutes } from 'date-fns';
 import { getStripe } from '@/server/stripe';
 import { db } from '@/server/db';
 import { getBaseUrl } from '@/lib/env';
 import { getTranslations } from 'next-intl/server';
 import type { ActionResult } from '@/types/actions';
 import { BookingStatus, ExperienceStatus, WineryStatus } from '@prisma/client';
-import { timeSlotSchema } from '@/lib/validators/booking';
+import { timeSlotSchema, createHoldSchema } from '@/lib/validators/booking';
 import { AGE_GATE_VERSION } from '@/lib/constants/consent';
+import {
+  HOLD_DURATION_MINUTES,
+  STRIPE_SESSION_DURATION_MINUTES,
+  HOLD_EMAIL_DOMAIN,
+  buildHoldPlaceholderEmail,
+  isHoldPlaceholderEmail,
+} from '@/lib/constants/booking-hold';
 import { BOOKING_FEE_CENTS } from '@/lib/constants/pricing';
+import { activeCapacityBookingWhere } from '@/lib/business-rules/capacity';
 import {
   computeCommissionCents,
   getEffectiveCommissionRate,
@@ -20,9 +31,17 @@ import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
 import { getPlatformCommissionRate } from '@/server/services/payment.service';
 import {
   checkRateLimit,
+  getClientIp,
   BOOKING_RATE_LIMIT,
+  HOLD_RATE_LIMIT,
 } from '@/server/services/rate-limit.service';
-import { logError } from '@/lib/logger';
+import { withSerializableRetry } from '@/server/services/serializable-retry.service';
+import { logError, logWarn } from '@/lib/logger';
+
+/** sha256 hex — same scheme as the booking access tokens (SEC-002). */
+function hashHoldToken(token: string): string {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
 
 /**
  * Generate booking reference using cuid2 for guaranteed uniqueness.
@@ -40,7 +59,15 @@ const CreateBookingSchema = z.object({
   timeSlot: timeSlotSchema, // BACK-003 FIX: Validate HH:mm format
   guestCount: z.number().int().positive(),
   visitorName: z.string().min(2),
-  visitorEmail: z.string().email(),
+  // The hold sentinel domain is the ONLY hold/booking discriminator —
+  // it must never be forgeable from the outside (security review): a
+  // paid booking on that domain would vanish from the winery dashboard.
+  visitorEmail: z
+    .string()
+    .email()
+    .refine((email) => !isHoldPlaceholderEmail(email), {
+      message: 'Reserved email domain',
+    }),
   visitorPhone: z.string().min(6),
   ageConfirmed: z.literal(true),
   /** Locale of the checkout UI — used for the Stripe line-item labels. */
@@ -51,7 +78,208 @@ const CreateBookingSchema = z.object({
    * client refresh (never charge more or less than displayed).
    */
   displayedServiceFeeCentsPerGuest: z.number().int().min(0),
+  /** Hold created at « Continuer » (L-050) — claimed by this submit. */
+  holdId: z.string().cuid().optional(),
+  /**
+   * Proof of hold ownership: the secret returned by createBookingHold.
+   * Without it a leaked booking id would let a third party overwrite the
+   * visitor identity of someone else's in-flight booking.
+   */
+  holdToken: z.string().min(16).optional(),
 });
+
+export interface BookingHoldResult {
+  holdId: string;
+  /** Ownership secret — required to claim or replace this hold. */
+  holdToken: string;
+  /** ISO timestamp — drives the checkout countdown. */
+  expiresAt: string;
+}
+
+/**
+ * Reserve the slot for 10 minutes at « Continuer », BEFORE the checkout
+ * form (P-04 / L-050). The hold is a PENDING_PAYMENT booking with
+ * placeholder visitor data; the checkout submit claims and completes it.
+ * Expired holds stop counting against capacity immediately (logical
+ * release) — the cron and the Stripe webhook only clean rows up.
+ */
+export async function createBookingHold(
+  input: z.infer<typeof createHoldSchema>
+): Promise<ActionResult<BookingHoldResult>> {
+  try {
+    const validated = createHoldSchema.safeParse(input);
+    if (!validated.success) {
+      return {
+        success: false,
+        error: { code: 'VALIDATION_ERROR', message: 'Invalid input data' },
+      };
+    }
+    const { experienceId, date, timeSlot, guestCount } = validated.data;
+    const { previousHoldId, previousHoldToken } = validated.data;
+
+    // Unauthenticated + reserves capacity → tight per-IP budget.
+    const ip = getClientIp(await headers());
+    const rateLimitResult = await checkRateLimit(`hold:${ip}`, HOLD_RATE_LIMIT);
+    if (!rateLimitResult.success) {
+      return {
+        success: false,
+        error: {
+          code: 'RATE_LIMITED',
+          message: 'Too many booking attempts. Please try again later.',
+        },
+      };
+    }
+
+    const experience = await db.experience.findUnique({
+      where: { id: experienceId },
+      include: {
+        winery: {
+          select: {
+            id: true,
+            status: true,
+            stripeAccountId: true,
+            stripeOnboardingComplete: true,
+            commissionRate: true,
+            cancellationPolicy: true,
+          },
+        },
+      },
+    });
+    if (
+      !experience ||
+      experience.status !== ExperienceStatus.PUBLISHED ||
+      experience.winery.status !== WineryStatus.VERIFIED ||
+      !experience.winery.stripeAccountId ||
+      !experience.winery.stripeOnboardingComplete
+    ) {
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Experience is not available for booking',
+        },
+      };
+    }
+
+    if (
+      guestCount < experience.minCapacity ||
+      guestCount > experience.maxCapacity
+    ) {
+      return {
+        success: false,
+        error: { code: 'VALIDATION_ERROR', message: 'Invalid guest count' },
+      };
+    }
+
+    // Money snapshot — recomputed authoritatively at submit.
+    const totalPrice = experience.price * guestCount;
+    const commissionRate = getEffectiveCommissionRate(
+      experience.winery,
+      getPlatformCommissionRate()
+    );
+    const platformFee = computeCommissionCents(totalPrice, commissionRate);
+    const bookingDate = new Date(date);
+    const expiresAt = addMinutes(new Date(), HOLD_DURATION_MINUTES);
+    const reference = generateBookingReference();
+    // Ownership secret: only its holder can claim or replace this hold.
+    const holdToken = crypto.randomBytes(24).toString('base64url');
+    const holdTokenHash = hashHoldToken(holdToken);
+    const previousHoldTokenHash =
+      previousHoldId !== undefined && previousHoldToken !== undefined
+        ? hashHoldToken(previousHoldToken)
+        : undefined;
+
+    let hold;
+    try {
+      hold = await withSerializableRetry(
+        () =>
+          db.$transaction(
+            async (tx) => {
+              // Release the caller's previous UNCLAIMED hold first (Back
+              // button, changed party size) — otherwise the user
+              // self-blocks on their own seats. Guarded by the token hash
+              // + sentinel email + no Stripe session: a claimed booking
+              // is never deletable this way.
+              if (previousHoldId !== undefined && previousHoldTokenHash) {
+                await tx.booking.deleteMany({
+                  where: {
+                    id: previousHoldId,
+                    status: BookingStatus.PENDING_PAYMENT,
+                    accessTokenHash: previousHoldTokenHash,
+                    visitorEmail: { endsWith: `@${HOLD_EMAIL_DOMAIN}` },
+                    stripeCheckoutSessionId: null,
+                  },
+                });
+              }
+              const existingBookings = await tx.booking.aggregate({
+                where: {
+                  experienceId,
+                  date: bookingDate,
+                  timeSlot,
+                  ...activeCapacityBookingWhere(),
+                },
+                _sum: { guestCount: true },
+              });
+              const bookedCount = existingBookings._sum.guestCount ?? 0;
+              if (guestCount > experience.maxCapacity - bookedCount) {
+                throw new Error('NO_CAPACITY');
+              }
+              return tx.booking.create({
+                data: {
+                  reference,
+                  experienceId,
+                  wineryId: experience.winery.id,
+                  date: bookingDate,
+                  timeSlot,
+                  guestCount,
+                  totalPrice,
+                  platformFee,
+                  serviceFeeCents: 0, // set at submit (flag read then)
+                  wineryPayout: totalPrice - platformFee,
+                  // Placeholder visitor — replaced when the hold is claimed.
+                  visitorName: '',
+                  visitorEmail: buildHoldPlaceholderEmail(reference),
+                  visitorPhone: '',
+                  status: BookingStatus.PENDING_PAYMENT,
+                  cancellationPolicy: experience.winery.cancellationPolicy,
+                  accessTokenHash: holdTokenHash,
+                  expiresAt,
+                },
+              });
+            },
+            { isolationLevel: 'Serializable', timeout: 10000 }
+          ),
+        'createBookingHold'
+      );
+    } catch (txError) {
+      if (txError instanceof Error && txError.message === 'NO_CAPACITY') {
+        return {
+          success: false,
+          error: {
+            code: 'NO_CAPACITY',
+            message: 'Not enough availability for this time slot',
+          },
+        };
+      }
+      throw txError;
+    }
+
+    return {
+      success: true,
+      data: {
+        holdId: hold.id,
+        holdToken,
+        expiresAt: expiresAt.toISOString(),
+      },
+    };
+  } catch (error) {
+    logError('createBookingHold error', error, { action: 'createBookingHold' });
+    return {
+      success: false,
+      error: { code: 'INTERNAL_ERROR', message: 'Failed to hold the slot' },
+    };
+  }
+}
 
 export interface CheckoutResult {
   bookingId: string;
@@ -163,6 +391,8 @@ export async function createBookingAndCheckout(
         },
       };
     }
+    // Narrowed once here — the closure below can't see the guard.
+    const stripeAccountId = experience.winery.stripeAccountId;
 
     // Calculate prices. totalPrice/platformFee/wineryPayout keep their
     // historical meaning (fee EXCLUDED); the client is charged
@@ -194,68 +424,137 @@ export async function createBookingAndCheckout(
     }
 
     const bookingDate = new Date(date);
-    const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
+    // Stripe enforces a >= 30 min session expiry; claiming a hold extends
+    // it from the 10-min form window to the payment window. Refreshed to
+    // the session's actual expiry once Stripe answers.
+    const expiresAt = addMinutes(new Date(), STRIPE_SESSION_DURATION_MINUTES);
+
+    // Claim the upstream hold (L-050): same slot, same party size, still
+    // alive, and OWNED — the token hash proves the caller created the
+    // hold, so a leaked booking id can't hijack someone else's booking.
+    // Atomic — a lost claim (expired hold) falls back to a fresh
+    // capacity-checked create below, which will answer NO_CAPACITY
+    // honestly if the seats were resold.
+    let booking: { id: string; reference: string } | undefined;
+    if (
+      validated.data.holdId !== undefined &&
+      validated.data.holdToken !== undefined
+    ) {
+      const claimed = await db.booking.updateMany({
+        where: {
+          id: validated.data.holdId,
+          accessTokenHash: hashHoldToken(validated.data.holdToken),
+          status: BookingStatus.PENDING_PAYMENT,
+          expiresAt: { gt: new Date() },
+          experienceId,
+          date: bookingDate,
+          timeSlot,
+          guestCount,
+        },
+        data: {
+          visitorName,
+          visitorEmail,
+          visitorPhone,
+          totalPrice,
+          platformFee,
+          serviceFeeCents,
+          wineryPayout,
+          cancellationPolicy: experience.winery.cancellationPolicy,
+          expiresAt,
+          ageConfirmedAt: new Date(),
+          ageConfirmedVersion: AGE_GATE_VERSION,
+        },
+      });
+      if (claimed.count === 1) {
+        const claimedBooking = await db.booking.findUniqueOrThrow({
+          where: { id: validated.data.holdId },
+          select: { id: true, reference: true, stripeCheckoutSessionId: true },
+        });
+        booking = claimedBooking;
+        // A re-claim (retry after payment abort) must kill the previous
+        // Stripe session: two live sessions on one booking let a stale
+        // session's expiry webhook delete a booking being paid on the
+        // newer one. Best-effort — an already-expired session throws.
+        if (claimedBooking.stripeCheckoutSessionId) {
+          try {
+            await getStripe().checkout.sessions.expire(
+              claimedBooking.stripeCheckoutSessionId
+            );
+          } catch (expireError) {
+            logWarn('Could not expire previous checkout session', {
+              action: 'createBookingAndCheckout',
+              bookingId: claimedBooking.id,
+              sessionId: claimedBooking.stripeCheckoutSessionId,
+              error: String(expireError),
+            });
+          }
+        }
+      }
+    }
 
     // BACK-001 FIX: Use serializable transaction to prevent race condition double bookings
     // This ensures capacity check and booking creation are atomic
-    let booking;
     try {
-      booking = await db.$transaction(
-        async (tx) => {
-          // Check availability within transaction (atomic with create)
-          const existingBookings = await tx.booking.aggregate({
-            where: {
-              experienceId,
-              date: bookingDate,
-              timeSlot,
-              status: {
-                in: [BookingStatus.PENDING_PAYMENT, BookingStatus.CONFIRMED],
-              },
+      booking ??= await withSerializableRetry(
+        () =>
+          db.$transaction(
+            async (tx) => {
+              // Check availability within transaction (atomic with create)
+              const existingBookings = await tx.booking.aggregate({
+                where: {
+                  experienceId,
+                  date: bookingDate,
+                  timeSlot,
+                  // Logical hold release (L-050): an expired PENDING_PAYMENT
+                  // hold no longer blocks capacity, whatever the cron does.
+                  ...activeCapacityBookingWhere(),
+                },
+                _sum: { guestCount: true },
+              });
+
+              const bookedCount = existingBookings._sum.guestCount ?? 0;
+              const remainingCapacity = experience.maxCapacity - bookedCount;
+
+              if (guestCount > remainingCapacity) {
+                throw new Error('NO_CAPACITY');
+              }
+
+              // PERF-002 FIX: Generate unique reference synchronously using cuid2
+              // cuid2 guarantees uniqueness without database lookups
+              const reference = generateBookingReference();
+
+              // Create booking within same transaction
+              return tx.booking.create({
+                data: {
+                  reference,
+                  experienceId,
+                  wineryId: experience.winery.id,
+                  date: bookingDate,
+                  timeSlot,
+                  guestCount,
+                  totalPrice,
+                  platformFee,
+                  serviceFeeCents,
+                  wineryPayout,
+                  visitorName,
+                  visitorEmail,
+                  visitorPhone,
+                  status: BookingStatus.PENDING_PAYMENT,
+                  // Contractual snapshot: refunds use the policy the client
+                  // accepted here, never the winery's later edits.
+                  cancellationPolicy: experience.winery.cancellationPolicy,
+                  expiresAt,
+                  ageConfirmedAt: new Date(),
+                  ageConfirmedVersion: AGE_GATE_VERSION,
+                },
+              });
             },
-            _sum: { guestCount: true },
-          });
-
-          const bookedCount = existingBookings._sum.guestCount ?? 0;
-          const remainingCapacity = experience.maxCapacity - bookedCount;
-
-          if (guestCount > remainingCapacity) {
-            throw new Error('NO_CAPACITY');
-          }
-
-          // PERF-002 FIX: Generate unique reference synchronously using cuid2
-          // cuid2 guarantees uniqueness without database lookups
-          const reference = generateBookingReference();
-
-          // Create booking within same transaction
-          return tx.booking.create({
-            data: {
-              reference,
-              experienceId,
-              wineryId: experience.winery.id,
-              date: bookingDate,
-              timeSlot,
-              guestCount,
-              totalPrice,
-              platformFee,
-              serviceFeeCents,
-              wineryPayout,
-              visitorName,
-              visitorEmail,
-              visitorPhone,
-              status: BookingStatus.PENDING_PAYMENT,
-              // Contractual snapshot: refunds use the policy the client
-              // accepted here, never the winery's later edits.
-              cancellationPolicy: experience.winery.cancellationPolicy,
-              expiresAt,
-              ageConfirmedAt: new Date(),
-              ageConfirmedVersion: AGE_GATE_VERSION,
-            },
-          });
-        },
-        {
-          isolationLevel: 'Serializable', // Prevents concurrent booking race conditions
-          timeout: 10000, // 10 second timeout
-        }
+            {
+              isolationLevel: 'Serializable', // Prevents double bookings
+              timeout: 10000, // 10 second timeout
+            }
+          ),
+        'createBookingAndCheckout'
       );
     } catch (txError) {
       if (txError instanceof Error && txError.message === 'NO_CAPACITY') {
@@ -302,62 +601,135 @@ export async function createBookingAndCheckout(
       };
     }
 
-    const session = await getStripe().checkout.sessions.create({
-      payment_method_types: ['card'],
-      mode: 'payment',
-      line_items: [
-        {
-          price_data: {
-            currency: 'chf',
-            product_data: {
-              name: experience.title,
-              description: `${guestCount} ${guestCount === 1 ? 'guest' : 'guests'} - ${experience.winery.name}`,
-            },
-            unit_amount: experience.price,
-          },
-          quantity: guestCount,
-        },
-        // Client booking fee — always a separate visible line, never
-        // blended into the experience price (BUSINESS §2).
-        ...(serviceFeeCents > 0
-          ? [
-              {
-                price_data: {
-                  currency: 'chf',
-                  product_data: {
-                    name: serviceFeeLabel,
-                  },
-                  unit_amount: BOOKING_FEE_CENTS,
-                },
-                quantity: guestCount,
+    // TWINT first for the Swiss market, Link + cards behind (L-051).
+    // If the Stripe account has TWINT disabled, sessions.create rejects
+    // the type — fall back to card-only and log (decision D4: enabling
+    // TWINT is a Stripe-dashboard action, no deploy needed).
+    const buildSessionParams = (
+      paymentMethodTypes: ('twint' | 'card' | 'link')[]
+    ): Stripe.Checkout.SessionCreateParams => {
+      // Computed at CALL time, per attempt: Stripe enforces its 30-min
+      // floor against the session's creation clock, and P2034 backoff or
+      // a failed TWINT attempt can burn seconds since `expiresAt` was
+      // set. One minute of margin keeps every retry above the floor; the
+      // booking row is refreshed to the session's real expiry after
+      // creation.
+      const sessionExpiresAtUnix =
+        Math.floor(Date.now() / 1000) +
+        STRIPE_SESSION_DURATION_MINUTES * 60 +
+        60;
+      return {
+        payment_method_types: paymentMethodTypes,
+        mode: 'payment',
+        line_items: [
+          {
+            price_data: {
+              currency: 'chf',
+              product_data: {
+                name: experience.title,
+                description: `${guestCount} ${guestCount === 1 ? 'guest' : 'guests'} - ${experience.winery.name}`,
               },
-            ]
-          : []),
-      ],
-      payment_intent_data: {
-        // Commission + client fee: both platform revenue. Omitted when 0
-        // (Founder at 0% with the fee OFF) — Stripe rejects a zero fee.
-        ...(platformFee + serviceFeeCents > 0
-          ? { application_fee_amount: platformFee + serviceFeeCents }
-          : {}),
-        transfer_data: {
-          destination: experience.winery.stripeAccountId,
+              unit_amount: experience.price,
+            },
+            quantity: guestCount,
+          },
+          // Client booking fee — always a separate visible line, never
+          // blended into the experience price (BUSINESS §2).
+          ...(serviceFeeCents > 0
+            ? [
+                {
+                  price_data: {
+                    currency: 'chf',
+                    product_data: {
+                      name: serviceFeeLabel,
+                    },
+                    unit_amount: BOOKING_FEE_CENTS,
+                  },
+                  quantity: guestCount,
+                },
+              ]
+            : []),
+        ],
+        payment_intent_data: {
+          // Commission + client fee: both platform revenue. Omitted when 0
+          // (Founder at 0% with the fee OFF) — Stripe rejects a zero fee.
+          ...(platformFee + serviceFeeCents > 0
+            ? { application_fee_amount: platformFee + serviceFeeCents }
+            : {}),
+          transfer_data: {
+            destination: stripeAccountId,
+          },
         },
-      },
-      customer_email: visitorEmail,
-      success_url: `${baseUrl}/booking/${booking.id}/confirmation?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/experiences/${experience.slug}/checkout?date=${date}&time=${timeSlot}&guests=${guestCount}&error=cancelled`,
-      expires_at: Math.floor(expiresAt.getTime() / 1000),
-      metadata: {
-        bookingId: booking.id,
-        bookingReference: booking.reference,
-      },
-    });
+        customer_email: visitorEmail,
+        success_url: `${baseUrl}/booking/${booking.id}/confirmation?session_id={CHECKOUT_SESSION_ID}`,
+        // Aborted/failed payment → dedicated error page (L-052). The
+        // booking row IS the hold, alive until the Stripe session expiry —
+        // holdToken lets the legitimate visitor (and only them) retry.
+        cancel_url: `${baseUrl}/reservation/erreur?${new URLSearchParams({
+          cause: 'payment',
+          slug: experience.slug,
+          date,
+          time: timeSlot,
+          guests: String(guestCount),
+          holdId: booking.id,
+          ...(validated.data.holdToken !== undefined
+            ? { holdToken: validated.data.holdToken }
+            : {}),
+          holdExpiresAt: new Date(sessionExpiresAtUnix * 1000).toISOString(),
+        }).toString()}`,
+        expires_at: sessionExpiresAtUnix,
+        metadata: {
+          bookingId: booking.id,
+          bookingReference: booking.reference,
+        },
+      };
+    };
 
-    // Update booking with Stripe session ID
+    // A payment-method rejection is a typed Stripe error pointing at the
+    // payment_method_types param — never sniff the human message (any
+    // error mentioning « link » would trigger a doomed retry).
+    const isPaymentMethodRejection = (err: unknown): boolean => {
+      if (typeof err !== 'object' || err === null) return false;
+      const { type, param } = err as { type?: unknown; param?: unknown };
+      return (
+        type === 'StripeInvalidRequestError' &&
+        typeof param === 'string' &&
+        param.startsWith('payment_method_types')
+      );
+    };
+
+    let session;
+    try {
+      session = await getStripe().checkout.sessions.create(
+        buildSessionParams(['twint', 'card', 'link'])
+      );
+    } catch (stripeError) {
+      if (!isPaymentMethodRejection(stripeError)) {
+        throw stripeError;
+      }
+      logWarn('Payment method rejected — falling back to card only (D4)', {
+        action: 'createBookingAndCheckout',
+        error:
+          stripeError instanceof Error
+            ? stripeError.message
+            : String(stripeError),
+      });
+      session = await getStripe().checkout.sessions.create(
+        buildSessionParams(['card'])
+      );
+    }
+
+    // Attach the session and align the hold's expiry on the session's
+    // REAL one — capacity release and payment window must agree, and the
+    // countdown/cancel_url promised the client this deadline.
     await db.booking.update({
       where: { id: booking.id },
-      data: { stripeCheckoutSessionId: session.id },
+      data: {
+        stripeCheckoutSessionId: session.id,
+        ...(session.expires_at
+          ? { expiresAt: new Date(session.expires_at * 1000) }
+          : {}),
+      },
     });
 
     if (!session.url) {

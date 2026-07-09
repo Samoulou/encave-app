@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import type { CancellationPolicy } from '@prisma/client';
 import { getPolicyTiers } from '@/lib/business-rules/cancellation-policy';
@@ -10,7 +9,9 @@ import { addDays, format, parseISO, startOfDay } from 'date-fns';
 import { de, enUS, fr } from 'date-fns/locale';
 import { Check, ChevronRight, Lock, Loader2, Minus, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { HoldCapacityError } from '@/components/features/booking/HoldCapacityError';
 import { TimeSlotSelector } from '@/components/features/booking/TimeSlotSelector';
+import { useBookingHold } from '@/hooks/useBookingHold';
 import { formatCHF } from '@/lib/utils/currency';
 import { cn } from '@/lib/utils';
 import { capturePostHog } from '@/lib/posthog-client';
@@ -54,7 +55,6 @@ export function BookingWidget({
   const t = useTranslations('booking');
   const tExp = useTranslations('experience');
   const tCheckout = useTranslations('checkout');
-  const router = useRouter();
   const locale = useLocale();
 
   const [queryState, setQueryState] = useQueryStates({
@@ -66,7 +66,8 @@ export function BookingWidget({
   const [remainingCapacity, setRemainingCapacity] = useState<number | null>(
     null
   );
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { continueToCheckout, isSubmitting, holdError, clearHoldError } =
+    useBookingHold(experienceId, experienceSlug);
 
   const { date, time, guests } = queryState;
   const isBookingEnabled = stripeConnected;
@@ -131,22 +132,25 @@ export function BookingWidget({
     (newDate: string | null) => {
       setQueryState({ date: newDate, time: null });
       setRemainingCapacity(null);
+      clearHoldError();
     },
-    [setQueryState]
+    [setQueryState, clearHoldError]
   );
 
   const handleTimeChange = useCallback(
     (newTime: string | null) => {
       setQueryState({ time: newTime });
+      clearHoldError();
     },
-    [setQueryState]
+    [setQueryState, clearHoldError]
   );
 
   const handleGuestsChange = useCallback(
     (newGuests: number) => {
       setQueryState({ guests: newGuests });
+      clearHoldError();
     },
-    [setQueryState]
+    [setQueryState, clearHoldError]
   );
 
   const handleCapacityUpdate = useCallback((capacity: number | null) => {
@@ -154,7 +158,7 @@ export function BookingWidget({
   }, []);
 
   const handleContinue = () => {
-    if (!isValid || !isBookingEnabled) return;
+    if (!isValid || !isBookingEnabled || !date || !time || isSubmitting) return;
 
     capturePostHog('booking_started', {
       experience_id: experienceId,
@@ -165,13 +169,10 @@ export function BookingWidget({
       total_price_chf: totalPrice / 100,
     });
 
-    setIsSubmitting(true);
-    const params = new URLSearchParams({
-      date: date!,
-      time: time!,
-      guests: guests.toString(),
-    });
-    router.push(`/experiences/${experienceSlug}/checkout?${params.toString()}`);
+    // Hold the slot for 10 min BEFORE the checkout form (P-04 / L-050) —
+    // the shared hook owns double-click guarding, previous-hold release
+    // and soft degradation.
+    void continueToCheckout({ date, time, guests });
   };
 
   const formatDateLabel = (dateStr: string) => {
@@ -341,6 +342,8 @@ export function BookingWidget({
           </span>
         </div>
       </div>
+
+      {holdError && <HoldCapacityError message={holdError} />}
 
       {isBookingEnabled ? (
         <Button

@@ -232,7 +232,7 @@ ISR/header découplé, i18n subset, Mapbox gated, index DB, invalidation propre.
 | P-01 | Fiabilisation & quick wins     |     | —          | 21 h   | S1-S2      | ✅     | PR [#90](https://github.com/Samoulou/encave-app/pull/90)                         |
 | P-02 | Fondations schéma V3           |     | —          | 19 h   | S2-S3      | ✅     | PR [#92](https://github.com/Samoulou/encave-app/pull/92) + durcissements #94-#97 |
 | P-03 | Monétisation Phase 1           | 💰  | P-02       | 14 h   | S4         | 🟨     | plan `docs/plans/P-03-monetisation.md` — décisions D1-D4 actées                  |
-| P-04 | Checkout V3                    | 💰  | P-03       | 15.5 h | S5         | ⬜     |                                                                                  |
+| P-04 | Checkout V3                    | 💰  | P-03       | 15.5 h | S5         | 🟨     | PR [#99](https://github.com/Samoulou/encave-app/pull/99) → `dev` — DoD G-R2 atteint, review max + sécu passées |
 | P-05 | Créneaux & recherche par date  |     | P-02       | 11 h   | S6         | ⬜     |                                                                                  |
 | P-06 | Performance structurelle       |     | —          | 11 h   | S6-S8      | ⬜     |                                                                                  |
 | P-07 | Boucle vin (fiche dégustation) |     | P-02       | 13 h   | S7-S8      | ⬜     |                                                                                  |

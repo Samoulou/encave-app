@@ -9,6 +9,7 @@ vi.mock('@/server/db', () => ({
     booking: {
       findUnique: vi.fn(),
       findFirst: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
       update: vi.fn(),
       updateMany: vi.fn(),
     },
@@ -64,6 +65,7 @@ describe('Booking Cancellation Actions', () => {
     guestCount: 4,
     totalPrice: 20000,
     serviceFeeCents: 0,
+    refundAmount: null,
     stripePaymentIntentId: 'pi_test123',
     accessToken,
     accessTokenHash: tokenHash,
@@ -84,8 +86,13 @@ describe('Booking Cancellation Actions', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // The atomic cancellation claim succeeds by default.
+    // The atomic cancellation claim + conditional ledger write succeed
+    // by default; the final read-back returns the cancelled row.
     vi.mocked(db.booking.updateMany).mockResolvedValue({ count: 1 } as never);
+    vi.mocked(db.booking.findUniqueOrThrow).mockResolvedValue({
+      id: 'booking-cancel-1',
+      status: BookingStatus.CANCELLED_BY_CLIENT,
+    } as never);
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-01-11T10:00:00Z'));
   });
@@ -127,11 +134,12 @@ describe('Booking Cancellation Actions', () => {
         expect(result.data.refundAmount).toBe(20000);
         expect(result.data.status).toBe(BookingStatus.CANCELLED_BY_CLIENT);
       }
-      // Third arg undefined = full refund (policy grants 100%).
+      // Always an EXPLICIT amount — "refund the remaining balance" would
+      // silently change meaning under a concurrent admin refund.
       expect(processRefund).toHaveBeenCalledWith(
         'pi_test123',
         true,
-        undefined,
+        20000,
         expect.stringMatching(/^cancel-refund:/)
       );
     });
@@ -192,7 +200,7 @@ describe('Booking Cancellation Actions', () => {
       expect(processRefund).toHaveBeenCalledWith(
         'pi_test123',
         true,
-        undefined,
+        20000,
         expect.stringMatching(/^cancel-refund:/)
       );
     });
@@ -414,8 +422,9 @@ describe('Booking Cancellation Actions', () => {
       const { cancelBooking } = await import('@/server/actions/booking');
       await cancelBooking('booking-cancel-1', accessToken);
 
-      // Status flips in the atomic claim; the final update records the
-      // refund outcome.
+      // Status flips in the atomic claim; the ledger write is CONDITIONAL
+      // on the refundAmount that was read — a concurrent admin refund
+      // must never be clobbered (P-04 review finding).
       expect(db.booking.updateMany).toHaveBeenCalledWith({
         where: { id: 'booking-cancel-1', status: BookingStatus.CONFIRMED },
         data: expect.objectContaining({
@@ -423,12 +432,45 @@ describe('Booking Cancellation Actions', () => {
           cancelledAt: expect.any(Date),
         }),
       });
-      expect(db.booking.update).toHaveBeenCalledWith({
-        where: { id: 'booking-cancel-1' },
+      expect(db.booking.updateMany).toHaveBeenCalledWith({
+        where: { id: 'booking-cancel-1', refundAmount: null },
         data: expect.objectContaining({
           refundIssued: true,
           refundAmount: 20000,
           stripeRefundId: 're_test123',
+        }),
+      });
+    });
+
+    it('flags a ledger conflict instead of clobbering a concurrent refund', async () => {
+      const bookingWithFutureDate = {
+        ...mockConfirmedBooking,
+        date: new Date('2026-01-14'),
+        timeSlot: '14:00',
+      };
+      vi.mocked(db.booking.findFirst).mockResolvedValue(
+        bookingWithFutureDate as never
+      );
+      vi.mocked(processRefund).mockResolvedValue({
+        refundId: 're_test123',
+        amount: 20000,
+      });
+      // Claim wins, but the conditional ledger write loses: an admin
+      // refund changed refundAmount between our read and our write.
+      vi.mocked(db.booking.updateMany)
+        .mockResolvedValueOnce({ count: 1 } as never) // status claim
+        .mockResolvedValueOnce({ count: 0 } as never); // ledger CAS
+      vi.mocked(db.booking.update).mockResolvedValue({} as never);
+
+      const { cancelBooking } = await import('@/server/actions/booking');
+      const result = await cancelBooking('booking-cancel-1', accessToken);
+
+      expect(result.success).toBe(true);
+      // The DB value is kept; the conflict is flagged for reconciliation.
+      expect(db.booking.update).toHaveBeenCalledWith({
+        where: { id: 'booking-cancel-1' },
+        data: expect.objectContaining({
+          refundError: expect.stringContaining('LEDGER_CONFLICT'),
         }),
       });
     });

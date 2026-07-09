@@ -67,7 +67,12 @@ describe('booking.queries', () => {
 
       expect(db.booking.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { wineryId: 'winery-123' },
+          where: {
+            wineryId: 'winery-123',
+            // Unclaimed slot holds are internal capacity rows — never
+            // shown to the winery (P-04 / L-050).
+            NOT: { visitorEmail: { endsWith: '@hold.encave.ch' } },
+          },
         })
       );
       expect(result).toHaveLength(1);

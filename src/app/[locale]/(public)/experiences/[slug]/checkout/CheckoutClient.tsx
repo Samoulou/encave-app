@@ -16,12 +16,13 @@ import {
   ShieldCheck,
   Check,
 } from 'lucide-react';
-import { Link, useRouter } from '@/i18n/navigation';
+import { Link } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { ContactDetailsSection } from '@/components/features/checkout/ContactDetailsSection';
+import { HoldCountdown } from '@/components/features/checkout/HoldCountdown';
 import { OrderSummary } from '@/components/features/checkout/OrderSummary';
 import { MobileOrderSummary } from '@/components/features/checkout/MobileOrderSummary';
 import { TrustBadges } from '@/components/features/checkout/TrustBadges';
@@ -30,6 +31,7 @@ import {
   type ExperienceForBooking,
 } from '@/server/actions/booking';
 import { createBookingAndCheckout } from '@/server/actions/checkout';
+import { useNavigateWithTransition } from '@/hooks/useNavigateWithTransition';
 import { formatCHF } from '@/lib/utils/currency';
 import { capturePostHog } from '@/lib/posthog-client';
 
@@ -58,9 +60,16 @@ interface CheckoutClientProps {
   date: string;
   time: string;
   guestCount: number;
-  paymentError: string | null;
   /** Client booking fee per ticket in cents — 0 when BOOKING_FEE is OFF. */
   serviceFeeCentsPerGuest: number;
+  /** Hold created at « Continuer » (L-050) — null = degraded, no-hold flow. */
+  holdId: string | null;
+  /** Ownership secret of the hold — required to claim it at submit. */
+  holdToken: string | null;
+  /** ISO expiry of the hold — drives the countdown. Null with holdId null. */
+  holdExpiresAt: string | null;
+  /** Server clock at render — anchors the countdown against client skew. */
+  serverNowMs: number;
 }
 
 /**
@@ -73,16 +82,23 @@ export function CheckoutClient({
   date,
   time,
   guestCount,
-  paymentError,
   serviceFeeCentsPerGuest,
+  holdId,
+  holdToken,
+  holdExpiresAt,
+  serverNowMs,
 }: CheckoutClientProps) {
   const t = useTranslations('checkout');
   const locale = useLocale() as 'fr' | 'de' | 'en';
   const tBooking = useTranslations('booking');
   const tErrors = useTranslations('errors');
-  const router = useRouter();
+  const { navigate } = useNavigateWithTransition();
 
   const [submitError, setSubmitError] = useState<string | null>(null);
+  // Once the submit started, the countdown must never yank the user away —
+  // the server extends the hold to the Stripe session window, and a
+  // redirect mid-flight would abandon a live payment session.
+  const hasSubmittedRef = useRef(false);
 
   // Set Sentry booking context for all errors on this page
   useEffect(() => {
@@ -101,22 +117,6 @@ export function CheckoutClient({
       Sentry.setContext('booking', null);
     };
   }, [experience, slug, date, time, guestCount]);
-
-  // Track payment failure from Stripe redirect (cancelled or failed)
-  useEffect(() => {
-    if (paymentError) {
-      capturePostHog('booking_payment_failed', {
-        experience_id: experience.id,
-        experience_slug: slug,
-        winery_id: experience.winery.id,
-        date,
-        time_slot: time,
-        guest_count: guestCount,
-        total_price_chf: (experience.price * guestCount) / 100,
-        error_type: paymentError,
-      });
-    }
-  }, [paymentError, experience, slug, date, time, guestCount]);
 
   // BUG-003 & BUG-013: Availability state
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
@@ -156,6 +156,9 @@ export function CheckoutClient({
           experienceId: experience.id,
           date,
           timeSlot: time,
+          // Our own hold counts against capacity — exclude it, or the
+          // checkout ejects itself from the seats it is holding.
+          excludeBookingId: holdId ?? undefined,
         });
 
         if (result.success) {
@@ -170,7 +173,7 @@ export function CheckoutClient({
 
           // If no capacity at all, redirect back to experience page
           if (result.data.remainingCapacity === 0) {
-            router.push(
+            navigate(
               `/experiences/${slug}?error=no_availability&date=${date}&time=${time}`
             );
             return;
@@ -188,7 +191,7 @@ export function CheckoutClient({
         }
       }
     },
-    [date, time, guestCount, slug, router, experience.id]
+    [date, time, guestCount, slug, navigate, experience.id, holdId]
   );
 
   // BUG-003: Validate availability on mount
@@ -214,7 +217,24 @@ export function CheckoutClient({
     validateAvailability();
   }, [validateAvailability]);
 
+  // Hold ran out (L-050/L-052): the seats are released — send the client
+  // to the dedicated error page with the selection memorized for re-pick.
+  // No-op once the submit started: the server extends the hold to the
+  // Stripe session window, the local countdown is stale by then.
+  const handleHoldExpired = useCallback(() => {
+    if (hasSubmittedRef.current) return;
+    const params = new URLSearchParams({
+      cause: 'hold-expired',
+      slug,
+      date,
+      time,
+      guests: guestCount.toString(),
+    });
+    navigate(`/reservation/erreur?${params.toString()}`);
+  }, [navigate, slug, date, time, guestCount]);
+
   const onSubmit = async (data: CheckoutFormData) => {
+    hasSubmittedRef.current = true;
     setSubmitError(null);
 
     capturePostHog('booking_payment_initiated', {
@@ -240,14 +260,20 @@ export function CheckoutClient({
         ageConfirmed: true,
         locale,
         displayedServiceFeeCentsPerGuest: serviceFeeCentsPerGuest,
+        // Claim the upstream hold (L-050); undefined = fresh create.
+        // The token proves ownership — the server refuses a bare id.
+        holdId: holdId ?? undefined,
+        holdToken: holdToken ?? undefined,
       });
 
       if (result.success) {
         window.location.assign(result.data.checkoutUrl);
       } else {
+        hasSubmittedRef.current = false;
         setSubmitError(result.error.message);
       }
     } catch {
+      hasSubmittedRef.current = false;
       setSubmitError(tErrors('somethingWentWrong'));
     }
   };
@@ -271,6 +297,15 @@ export function CheckoutClient({
               {t('pageTitle')}
             </h1>
             <p className="mt-2 max-w-2xl text-[#915564]">{t('pageSubtitle')}</p>
+            {holdId && holdExpiresAt && (
+              <div className="mt-4">
+                <HoldCountdown
+                  expiresAt={holdExpiresAt}
+                  serverNowMs={serverNowMs}
+                  onExpire={handleHoldExpired}
+                />
+              </div>
+            )}
           </div>
           <div className="hidden rounded-[16px] border border-burgundy-100 bg-white p-4 shadow-audit-card lg:block">
             <div className="flex items-center gap-3">
@@ -290,17 +325,6 @@ export function CheckoutClient({
         </div>
 
         {/* Error Alerts */}
-        {paymentError && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              {paymentError === 'cancelled'
-                ? t('paymentCancelled')
-                : t('paymentFailed')}
-            </AlertDescription>
-          </Alert>
-        )}
-
         {availabilityError && (
           <Alert variant="destructive" className="mb-6">
             <AlertCircle className="h-4 w-4" />

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   getRefundPercent,
   computeRefundCents,
+  computeBookingRefund,
   getPolicyTiers,
 } from '@/lib/business-rules/cancellation-policy';
 
@@ -64,6 +65,57 @@ describe('cancellation-policy', () => {
         const hours = tiers.map((t) => t.minHours);
         expect([...hours].sort((a, b) => b - a)).toEqual(hours);
       }
+    });
+  });
+
+  describe('computeBookingRefund — already-refunded subtraction', () => {
+    const baseBooking = {
+      totalPrice: 20000,
+      serviceFeeCents: 1000,
+      refundAmount: null,
+      cancellationPolicy: 'STANDARD' as const,
+      winery: { cancellationPolicy: 'FLEXIBLE' as const },
+    };
+
+    it('uses the snapshot policy and refunds the full paid amount', () => {
+      const r = computeBookingRefund(baseBooking, 48);
+      expect(r.policy).toBe('STANDARD');
+      expect(r.paidCents).toBe(21000);
+      expect(r.refundDueCents).toBe(21000);
+      // Always explicit — "refund the remaining balance" would change
+      // meaning under a concurrent admin refund.
+      expect(r.stripeAmountArg).toBe(21000);
+    });
+
+    it('subtracts a prior partial refund from what the policy owes', () => {
+      const r = computeBookingRefund(
+        { ...baseBooking, refundAmount: 5000 },
+        48
+      );
+      expect(r.alreadyRefundedCents).toBe(5000);
+      expect(r.refundDueCents).toBe(16000);
+      expect(r.stripeAmountArg).toBe(16000);
+    });
+
+    it('never goes negative when the prior refund exceeds the policy due', () => {
+      const strict = {
+        ...baseBooking,
+        cancellationPolicy: 'STRICT' as const,
+        refundAmount: 15000, // more than the 50% tier owes (10500)
+      };
+      const r = computeBookingRefund(strict, 72);
+      expect(r.refundDueCents).toBe(0);
+      expect(r.stripeAmountArg).toBeUndefined();
+    });
+
+    it('falls back to the winery policy for legacy bookings', () => {
+      const r = computeBookingRefund(
+        { ...baseBooking, cancellationPolicy: null },
+        3
+      );
+      // FLEXIBLE fallback: 100% until 2h → still refundable at 3h.
+      expect(r.policy).toBe('FLEXIBLE');
+      expect(r.refundDueCents).toBe(21000);
     });
   });
 });

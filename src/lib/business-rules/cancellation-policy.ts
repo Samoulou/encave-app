@@ -72,11 +72,17 @@ export function getPolicyTiers(
  * by every cancellation path (guest token, client account, info screen).
  * The policy is the SNAPSHOT taken at booking time when available; the
  * winery's current policy is only a fallback for legacy bookings.
+ *
+ * `refundAmount` (already refunded, e.g. a prior admin partial refund) is
+ * SUBTRACTED from what the policy owes — the cancellation never refunds
+ * money that already went back, and the Stripe amount is always explicit
+ * so a concurrent refund can't silently change what "the rest" means.
  */
 export function computeBookingRefund(
   booking: {
     totalPrice: number;
     serviceFeeCents: number;
+    refundAmount: number | null;
     cancellationPolicy: CancellationPolicy | null;
     winery: { cancellationPolicy: CancellationPolicy };
   },
@@ -84,21 +90,22 @@ export function computeBookingRefund(
 ): {
   policy: CancellationPolicy;
   paidCents: number;
+  alreadyRefundedCents: number;
   refundDueCents: number;
-  /** Stripe amount arg: undefined = full refund of the charge. */
+  /** Stripe amount arg: always explicit when a refund is due. */
   stripeAmountArg: number | undefined;
 } {
   const policy =
     booking.cancellationPolicy ?? booking.winery.cancellationPolicy;
   const paidCents = booking.totalPrice + booking.serviceFeeCents;
-  const refundDueCents = computeRefundCents(policy, hoursUntilStart, paidCents);
+  const alreadyRefundedCents = booking.refundAmount ?? 0;
+  const policyDueCents = computeRefundCents(policy, hoursUntilStart, paidCents);
+  const refundDueCents = Math.max(0, policyDueCents - alreadyRefundedCents);
   return {
     policy,
     paidCents,
+    alreadyRefundedCents,
     refundDueCents,
-    stripeAmountArg:
-      refundDueCents > 0 && refundDueCents < paidCents
-        ? refundDueCents
-        : undefined,
+    stripeAmountArg: refundDueCents > 0 ? refundDueCents : undefined,
   };
 }

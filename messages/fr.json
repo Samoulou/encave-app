@@ -172,7 +172,8 @@
       "winemakerDescription": "Cochez cette case si vous souhaitez enregistrer votre domaine et proposer des expériences",
       "creatingAccount": "Création du compte...",
       "createAccount": "Créer le compte",
-      "haveAccount": "Vous avez déjà un compte?"
+      "haveAccount": "Vous avez déjà un compte?",
+      "emailExists": "Un compte existe déjà avec cet email"
     }
   },
   "home": {
@@ -531,7 +532,8 @@
     "sessionFull": "Complet",
     "spotsLeft": "{count} {count, plural, =1 {place restante} other {places restantes}}",
     "whenVisit": "Quand souhaitez-vous nous rendre visite ?",
-    "back": "Retour"
+    "back": "Retour",
+    "holdSlotTaken": "Ce créneau vient tout juste d'être réservé par quelqu'un d'autre. Choisissez un autre horaire."
   },
   "bookings": {
     "title": "Réservations",
@@ -640,8 +642,6 @@
     "backToBooking": "Retour à la réservation",
     "experienceNotFound": "Expérience non trouvée",
     "invalidBookingParams": "Paramètres de réservation invalides. Veuillez recommencer.",
-    "paymentCancelled": "Paiement annulé. Vous pouvez réessayer.",
-    "paymentFailed": "Échec du paiement. Veuillez réessayer ou utiliser un autre moyen de paiement.",
     "verifyingAvailability": "Vérification de la disponibilité...",
     "capacityExceeded": "Capacité dépassée",
     "capacityExceededMessage": "Vous avez demandé {requested} personnes, mais seulement {available} places sont disponibles pour ce créneau.",
@@ -678,6 +678,11 @@
       "errors": {
         "required": "Merci de confirmer votre age avant de poursuivre le paiement."
       }
+    },
+    "hold": {
+      "remaining": "Créneau réservé pendant {time}",
+      "remainingUrgent": "Plus que {time} pour finaliser votre réservation",
+      "expired": "Créneau expiré, redirection…"
     }
   },
   "confirmation": {
@@ -727,7 +732,14 @@
     "modifyDescription": "Vous pouvez annuler ou reporter votre réservation jusqu'à 24 heures avant l'expérience.",
     "manageBooking": "Gérer la réservation",
     "returnToExperiences": "Retour aux expériences",
-    "viewMyBookings": "Voir mes réservations"
+    "viewMyBookings": "Voir mes réservations",
+    "oneTap": {
+      "title": "Retrouvez vos billets en un clic",
+      "description": "Choisissez simplement un mot de passe : votre compte sera créé avec l'email de la réservation et tous vos billets y seront rattachés automatiquement.",
+      "createCta": "Créer mon compte",
+      "successTitle": "Compte créé !",
+      "successDescription": "Vos réservations sont désormais rattachées à votre compte."
+    }
   },
   "cancellation": {
     "title": "Conditions d'annulation",
@@ -1222,7 +1234,8 @@
     "invalidPhone": "Numéro de téléphone invalide",
     "fileTooLarge": "Le fichier est trop volumineux",
     "invalidFileType": "Type de fichier non valide",
-    "uploadFailed": "Échec du téléchargement"
+    "uploadFailed": "Échec du téléchargement",
+    "errorId": "Identifiant d'erreur : {id}"
   },
   "empty": {
     "noExperiences": "Aucune expérience trouvée",
@@ -1380,6 +1393,10 @@
     "unsubscribe": {
       "title": "Désabonnement | EnCave",
       "description": "Gérez vos préférences de messagerie"
+    },
+    "bookingError": {
+      "title": "Réservation interrompue | EnCave",
+      "description": "Reprenez votre réservation là où vous l'avez laissée"
     }
   },
   "about": {
@@ -1962,5 +1979,24 @@
     "unknown": "QR non reconnu",
     "already": "Deja enregistre",
     "counter": "{checkedIn} / {total} clients enregistres"
+  },
+  "bookingError": {
+    "payment": {
+      "title": "Le paiement n'a pas abouti",
+      "description": "Aucun montant n'a été débité et votre créneau est toujours réservé. Vous pouvez reprendre le paiement là où vous l'avez laissé.",
+      "descriptionHoldGone": "Aucun montant n'a été débité, mais votre créneau a été remis en vente entre-temps. Vérifiez les disponibilités — il est peut-être encore libre.",
+      "retryCta": "Réessayer le paiement"
+    },
+    "holdExpired": {
+      "title": "Votre créneau a été libéré",
+      "description": "Les 10 minutes de réservation sont écoulées, le créneau a donc été remis en vente — et personne n'a été débité. Bonne nouvelle : il est peut-être encore libre."
+    },
+    "generic": {
+      "title": "Petit couac dans la réservation",
+      "description": "Nous n'avons pas retrouvé les détails de votre réservation, mais rassurez-vous : aucun montant n'a été débité.",
+      "cta": "Découvrir les expériences"
+    },
+    "reselectCta": "Revoir les disponibilités",
+    "selectionRecap": "{date} · {time} · {guests, plural, one {# personne} other {# personnes}}"
   }
 }

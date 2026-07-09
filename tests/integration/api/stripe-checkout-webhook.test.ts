@@ -104,6 +104,62 @@ describe('Stripe checkout webhook handler', () => {
     );
   });
 
+  it('deletes the pending booking when ITS session expires', async () => {
+    const { db } = await import('@/server/db');
+    vi.mocked(db.booking.findUnique).mockResolvedValue({
+      id: 'booking-1',
+      status: 'PENDING_PAYMENT',
+      reference: 'ENC-ABC123',
+      stripeCheckoutSessionId: 'cs_test_current',
+    } as never);
+    const event = {
+      id: 'evt_checkout_expired',
+      type: 'checkout.session.expired',
+      data: {
+        object: {
+          id: 'cs_test_current',
+          metadata: { bookingId: 'booking-1' },
+        },
+      },
+    } as unknown as Stripe.Event;
+    mockConstructEvent.mockReturnValue(event);
+
+    const response = await POST(createMockRequest());
+
+    expect(response.status).toBe(200);
+    expect(db.booking.delete).toHaveBeenCalledWith({
+      where: { id: 'booking-1' },
+    });
+  });
+
+  it('keeps the booking when a STALE session expires (retry created a newer one)', async () => {
+    const { db } = await import('@/server/db');
+    // The booking now points at the retry's session — the old session's
+    // expiry must not destroy a booking being paid (P-04 review finding).
+    vi.mocked(db.booking.findUnique).mockResolvedValue({
+      id: 'booking-1',
+      status: 'PENDING_PAYMENT',
+      reference: 'ENC-ABC123',
+      stripeCheckoutSessionId: 'cs_test_newer',
+    } as never);
+    const event = {
+      id: 'evt_checkout_expired_stale',
+      type: 'checkout.session.expired',
+      data: {
+        object: {
+          id: 'cs_test_stale',
+          metadata: { bookingId: 'booking-1' },
+        },
+      },
+    } as unknown as Stripe.Event;
+    mockConstructEvent.mockReturnValue(event);
+
+    const response = await POST(createMockRequest());
+
+    expect(response.status).toBe(200);
+    expect(db.booking.delete).not.toHaveBeenCalled();
+  });
+
   it('returns 400 when the Stripe signature is missing', async () => {
     mockHeaders.mockResolvedValue(createMockHeaders(null) as never);
 

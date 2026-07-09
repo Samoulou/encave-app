@@ -27,5 +27,14 @@ export const registerSchema = z
     path: ['confirmPassword'],
   });
 
+/**
+ * Post-payment one-tap account creation (P-04 / L-053): the email and
+ * name come from the booking — the client only chooses a password.
+ */
+export const oneTapAccountSchema = z.object({
+  password: passwordSchema,
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
+export type OneTapAccountInput = z.infer<typeof oneTapAccountSchema>;

@@ -172,7 +172,8 @@
       "winemakerDescription": "Check this if you want to register your winery and offer experiences",
       "creatingAccount": "Creating account...",
       "createAccount": "Create account",
-      "haveAccount": "Already have an account?"
+      "haveAccount": "Already have an account?",
+      "emailExists": "An account already exists with this email"
     }
   },
   "home": {
@@ -531,7 +532,8 @@
     "sessionFull": "Full",
     "spotsLeft": "{count} {count, plural, =1 {spot} other {spots}} left",
     "whenVisit": "When would you like to visit?",
-    "back": "Back"
+    "back": "Back",
+    "holdSlotTaken": "This time slot was just booked by someone else. Please pick another time."
   },
   "bookings": {
     "title": "Bookings",
@@ -640,8 +642,6 @@
     "backToBooking": "Back to booking",
     "experienceNotFound": "Experience not found",
     "invalidBookingParams": "Invalid booking parameters. Please start again.",
-    "paymentCancelled": "Payment was cancelled. You can try again.",
-    "paymentFailed": "Payment failed. Please try again or use a different payment method.",
     "verifyingAvailability": "Verifying availability...",
     "capacityExceeded": "Capacity Exceeded",
     "capacityExceededMessage": "You requested {requested} guests, but only {available} spots are available for this time slot.",
@@ -678,6 +678,11 @@
       "errors": {
         "required": "Please confirm your age before continuing to payment."
       }
+    },
+    "hold": {
+      "remaining": "Slot held for {time}",
+      "remainingUrgent": "Only {time} left to complete your booking",
+      "expired": "Hold expired, redirecting…"
     }
   },
   "confirmation": {
@@ -727,7 +732,14 @@
     "modifyDescription": "You can cancel or reschedule your booking up to 24 hours before the experience.",
     "manageBooking": "Manage Booking",
     "returnToExperiences": "Return to Experiences",
-    "viewMyBookings": "View My Bookings"
+    "viewMyBookings": "View My Bookings",
+    "oneTap": {
+      "title": "Keep your tickets one click away",
+      "description": "Just pick a password: your account will be created with the booking email and all your tickets will be attached to it automatically.",
+      "createCta": "Create my account",
+      "successTitle": "Account created!",
+      "successDescription": "Your bookings are now attached to your account."
+    }
   },
   "cancellation": {
     "title": "Cancellation Policy",
@@ -1222,7 +1234,8 @@
     "invalidPhone": "Invalid phone number",
     "fileTooLarge": "File is too large",
     "invalidFileType": "Invalid file type",
-    "uploadFailed": "Upload failed"
+    "uploadFailed": "Upload failed",
+    "errorId": "Error ID: {id}"
   },
   "empty": {
     "noExperiences": "No experiences found",
@@ -1380,6 +1393,10 @@
     "unsubscribe": {
       "title": "Unsubscribe | EnCave",
       "description": "Manage your email preferences"
+    },
+    "bookingError": {
+      "title": "Booking interrupted | EnCave",
+      "description": "Pick up your booking where you left off"
     }
   },
   "about": {
@@ -1962,5 +1979,24 @@
     "unknown": "Unknown QR code",
     "already": "Already checked in",
     "counter": "{checkedIn} / {total} guests checked in"
+  },
+  "bookingError": {
+    "payment": {
+      "title": "Your payment didn't go through",
+      "description": "Nothing was charged and your slot is still being held. You can pick up the payment right where you left off.",
+      "descriptionHoldGone": "Nothing was charged, but your slot has been released in the meantime. Check the availability — it may still be free.",
+      "retryCta": "Retry payment"
+    },
+    "holdExpired": {
+      "title": "Your slot has been released",
+      "description": "The 10-minute hold has run out, so the slot went back on sale — and nobody was charged. Good news: it may still be free."
+    },
+    "generic": {
+      "title": "A small hiccup with your booking",
+      "description": "We couldn't find your booking details, but rest assured: nothing was charged.",
+      "cta": "Browse experiences"
+    },
+    "reselectCta": "See availability again",
+    "selectionRecap": "{date} · {time} · {guests, plural, one {# guest} other {# guests}}"
   }
 }

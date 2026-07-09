@@ -172,7 +172,8 @@
       "winemakerDescription": "Aktivieren Sie dieses Feld, wenn Sie Ihr Weingut registrieren und Erlebnisse anbieten mochten",
       "creatingAccount": "Konto wird erstellt...",
       "createAccount": "Konto erstellen",
-      "haveAccount": "Bereits ein Konto?"
+      "haveAccount": "Bereits ein Konto?",
+      "emailExists": "Mit dieser E-Mail-Adresse existiert bereits ein Konto"
     }
   },
   "home": {
@@ -531,7 +532,8 @@
     "sessionFull": "Ausgebucht",
     "spotsLeft": "{count} {count, plural, =1 {Platz} other {Plätze}} frei",
     "whenVisit": "Wann möchten Sie uns besuchen?",
-    "back": "Zurück"
+    "back": "Zurück",
+    "holdSlotTaken": "Dieses Zeitfenster wurde soeben von jemand anderem gebucht. Bitte wählen Sie eine andere Zeit."
   },
   "bookings": {
     "title": "Buchungen",
@@ -640,8 +642,6 @@
     "backToBooking": "Zuruck zur Buchung",
     "experienceNotFound": "Erlebnis nicht gefunden",
     "invalidBookingParams": "Ungultige Buchungsparameter. Bitte versuchen Sie es erneut.",
-    "paymentCancelled": "Zahlung wurde abgebrochen. Sie konnen es erneut versuchen.",
-    "paymentFailed": "Zahlung fehlgeschlagen. Bitte versuchen Sie es erneut oder verwenden Sie eine andere Zahlungsmethode.",
     "verifyingAvailability": "Verfugbarkeit wird uberpruft...",
     "capacityExceeded": "Kapazitat uberschritten",
     "capacityExceededMessage": "Sie haben {requested} Gaste angefragt, aber nur {available} Platze sind fur diesen Zeitraum verfugbar.",
@@ -678,6 +678,11 @@
       "errors": {
         "required": "Bitte bestaetigen Sie Ihr Alter, bevor Sie zur Zahlung fortfahren."
       }
+    },
+    "hold": {
+      "remaining": "Zeitfenster reserviert für {time}",
+      "remainingUrgent": "Nur noch {time}, um Ihre Buchung abzuschliessen",
+      "expired": "Zeitfenster abgelaufen, Weiterleitung…"
     }
   },
   "confirmation": {
@@ -727,7 +732,14 @@
     "modifyDescription": "Sie können Ihre Buchung bis zu 24 Stunden vor dem Erlebnis stornieren oder verschieben.",
     "manageBooking": "Buchung verwalten",
     "returnToExperiences": "Zurück zu Erlebnissen",
-    "viewMyBookings": "Meine Buchungen ansehen"
+    "viewMyBookings": "Meine Buchungen ansehen",
+    "oneTap": {
+      "title": "Ihre Tickets mit einem Klick",
+      "description": "Wählen Sie einfach ein Passwort: Ihr Konto wird mit der Buchungs-E-Mail erstellt und alle Ihre Tickets werden ihm automatisch zugeordnet.",
+      "createCta": "Mein Konto erstellen",
+      "successTitle": "Konto erstellt!",
+      "successDescription": "Ihre Buchungen sind jetzt mit Ihrem Konto verknüpft."
+    }
   },
   "cancellation": {
     "title": "Stornierungsbedingungen",
@@ -1222,7 +1234,8 @@
     "invalidPhone": "Ungultige Telefonnummer",
     "fileTooLarge": "Datei ist zu gross",
     "invalidFileType": "Ungultiger Dateityp",
-    "uploadFailed": "Upload fehlgeschlagen"
+    "uploadFailed": "Upload fehlgeschlagen",
+    "errorId": "Fehler-ID: {id}"
   },
   "empty": {
     "noExperiences": "Keine Erlebnisse gefunden",
@@ -1380,6 +1393,10 @@
     "unsubscribe": {
       "title": "Abmelden | EnCave",
       "description": "Verwalten Sie Ihre E-Mail-Einstellungen"
+    },
+    "bookingError": {
+      "title": "Buchung unterbrochen | EnCave",
+      "description": "Setzen Sie Ihre Buchung dort fort, wo Sie aufgehört haben"
     }
   },
   "about": {
@@ -1967,5 +1984,24 @@
     "unknown": "Unbekannter QR-Code",
     "already": "Bereits eingecheckt",
     "counter": "{checkedIn} / {total} Gaeste eingecheckt"
+  },
+  "bookingError": {
+    "payment": {
+      "title": "Ihre Zahlung wurde nicht abgeschlossen",
+      "description": "Es wurde nichts abgebucht und Ihr Zeitfenster ist weiterhin reserviert. Sie können die Zahlung genau dort fortsetzen, wo Sie aufgehört haben.",
+      "descriptionHoldGone": "Es wurde nichts abgebucht, aber Ihr Zeitfenster wurde inzwischen wieder freigegeben. Prüfen Sie die Verfügbarkeit — es ist vielleicht noch frei.",
+      "retryCta": "Zahlung erneut versuchen"
+    },
+    "holdExpired": {
+      "title": "Ihr Zeitfenster wurde freigegeben",
+      "description": "Die 10-minütige Reservierung ist abgelaufen, das Zeitfenster wurde daher wieder freigegeben — und niemandem wurde etwas abgebucht. Die gute Nachricht: Es ist vielleicht noch frei."
+    },
+    "generic": {
+      "title": "Ein kleines Missgeschick bei Ihrer Buchung",
+      "description": "Wir konnten die Details Ihrer Buchung nicht finden, aber keine Sorge: Es wurde nichts abgebucht.",
+      "cta": "Erlebnisse entdecken"
+    },
+    "reselectCta": "Verfügbarkeit erneut ansehen",
+    "selectionRecap": "{date} · {time} · {guests, plural, one {# Person} other {# Personen}}"
   }
 }

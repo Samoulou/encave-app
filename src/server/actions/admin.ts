@@ -1,6 +1,8 @@
 'use server';
 
 import { z } from 'zod';
+import type Stripe from 'stripe';
+import { createId } from '@paralleldrive/cuid2';
 import { BookingStatus, WineryPlan, WineryStatus } from '@prisma/client';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
@@ -349,8 +351,37 @@ export async function refundBookingManually(
     };
   }
 
+  // Reserve the amount ATOMICALLY before Stripe (résidu Luca B, P-03).
+  // Two concurrent refunds (admin double-click, admin + client
+  // cancellation) would both read the same `refundAmount` and both pass
+  // the cap check within the charge limit. The conditional update lets
+  // exactly one caller through; the loser sees count 0 and backs off.
+  const nextRefunded = alreadyRefunded + amountCents;
+  const reserved = await db.booking.updateMany({
+    where: {
+      id: booking.id,
+      refundAmount: booking.refundAmount,
+      stripeRefundId: booking.stripeRefundId,
+    },
+    data: { refundAmount: nextRefunded },
+  });
+  if (reserved.count === 0) {
+    return {
+      success: false,
+      error: {
+        code: 'CONFLICT',
+        message:
+          'Another refund is already in progress for this booking. Reload and check the refunded amount before retrying.',
+      },
+    };
+  }
+
+  // The Stripe call gets its OWN try/catch: a failure after a successful
+  // refund (bookkeeping, email) must never be reported as a failed
+  // refund — the admin would retry and refund the client twice.
+  let refund: Stripe.Refund;
   try {
-    const refund = await getStripe().refunds.create(
+    refund = await getStripe().refunds.create(
       {
         payment_intent: booking.stripePaymentIntentId,
         amount: amountCents,
@@ -364,12 +395,70 @@ export async function refundBookingManually(
         },
       },
       {
-        idempotencyKey: `admin-refund:${booking.id}:${alreadyRefunded}:${amountCents}`,
+        // Fresh key per attempt: concurrency is already serialized by the
+        // DB reservation above, and a state-derived key would replay
+        // Stripe's cached ERROR for 24h on a legitimate retry after a
+        // released failure. The key's only job left is to make the SDK's
+        // own network-level retries safe.
+        idempotencyKey: `admin-refund:${booking.id}:${createId()}`,
       }
     );
+  } catch (error) {
+    await db.adminAction.create({
+      data: {
+        adminId: session.user.id,
+        action: 'REFUND_BOOKING',
+        targetType: 'Booking',
+        targetId: booking.id,
+        status: 'FAILED',
+        reason,
+        metadata: {
+          amountCents,
+          error: String(error),
+        },
+      },
+    });
+    // Release the reservation only when Stripe PROVABLY processed
+    // nothing: a rejected request (invalid, unauthorized, rate-limited,
+    // idempotency conflict) never created a refund. After an ambiguous
+    // network/API error the refund may exist — keep the reserved amount
+    // + refundError for manual reconciliation (doctrine cancelBooking).
+    const errorType =
+      typeof error === 'object' && error !== null && 'type' in error
+        ? String((error as { type: unknown }).type)
+        : '';
+    const provablyNotProcessed = [
+      'StripeInvalidRequestError',
+      'StripeRateLimitError',
+      'StripeAuthenticationError',
+      'StripePermissionError',
+      'StripeIdempotencyError',
+    ].includes(errorType);
+    if (provablyNotProcessed) {
+      await db.booking.updateMany({
+        where: { id: booking.id, refundAmount: nextRefunded },
+        data: { refundAmount: booking.refundAmount },
+      });
+    } else {
+      await db.booking.update({
+        where: { id: booking.id },
+        data: { refundError: String(error) },
+      });
+    }
+    logError('Manual refund failed', error, {
+      action: 'refundBookingManually',
+      bookingId: booking.id,
+    });
+    return {
+      success: false,
+      error: { code: 'STRIPE_ERROR', message: 'Stripe refund failed' },
+    };
+  }
 
-    const nextRefunded = alreadyRefunded + amountCents;
-    const isFullRefund = nextRefunded >= paidCents;
+  // Money moved — everything from here on is best-effort bookkeeping and
+  // MUST still report success, with refundError set for reconciliation.
+  const isFullRefund = nextRefunded >= paidCents;
+  try {
     await db.$transaction([
       db.booking.update({
         where: { id: booking.id },
@@ -404,7 +493,28 @@ export async function refundBookingManually(
         },
       }),
     ]);
+  } catch (bookkeepingError) {
+    logError(
+      'Manual refund SUCCEEDED but bookkeeping failed',
+      bookkeepingError,
+      {
+        action: 'refundBookingManually',
+        bookingId: booking.id,
+        refundId: refund.id,
+      }
+    );
+    await db.booking
+      .update({
+        where: { id: booking.id },
+        data: {
+          stripeRefundId: refund.id,
+          refundError: `BOOKKEEPING_FAILED after successful refund ${refund.id} — reconcile with Stripe`,
+        },
+      })
+      .catch(() => {});
+  }
 
+  try {
     await sendManualRefundClientEmail(booking.visitorEmail, {
       firstName: booking.visitorName.split(' ')[0] ?? booking.visitorName,
       reference: booking.reference,
@@ -423,39 +533,18 @@ export async function refundBookingManually(
       },
       booking.winery.user.preferredLocale
     );
-
-    return {
-      success: true,
-      data: { refundId: refund.id, refundedAmount: nextRefunded },
-    };
-  } catch (error) {
-    await db.adminAction.create({
-      data: {
-        adminId: session.user.id,
-        action: 'REFUND_BOOKING',
-        targetType: 'Booking',
-        targetId: booking.id,
-        status: 'FAILED',
-        reason,
-        metadata: {
-          amountCents,
-          error: String(error),
-        },
-      },
-    });
-    await db.booking.update({
-      where: { id: booking.id },
-      data: { refundError: String(error) },
-    });
-    logError('Manual refund failed', error, {
+  } catch (emailError) {
+    logError('Manual refund emails failed (refund succeeded)', emailError, {
       action: 'refundBookingManually',
       bookingId: booking.id,
+      refundId: refund.id,
     });
-    return {
-      success: false,
-      error: { code: 'STRIPE_ERROR', message: 'Stripe refund failed' },
-    };
   }
+
+  return {
+    success: true,
+    data: { refundId: refund.id, refundedAmount: nextRefunded },
+  };
 }
 
 /**
