@@ -1220,6 +1220,17 @@ async function main() {
         verifiedAt: new Date('2026-01-15'),
         verifiedBy: admin.id,
         coverPhoto: wm.winery.coverPhoto,
+        // Public visibility (ENC-027) requires Stripe KYC — without these
+        // flags NOT ONE seeded winery appears on the public site. Real
+        // payments still need a genuine test-mode connected account:
+        // provide it via SEED_STRIPE_TEST_ACCOUNT (acct_...) and the first
+        // winery gets it (the column is unique, so only one can).
+        stripeOnboardingComplete: true,
+        stripeDetailsSubmitted: true,
+        stripeAccountId:
+          createdWineries.length === 0
+            ? (process.env.SEED_STRIPE_TEST_ACCOUNT ?? null)
+            : null,
         // V3 monetization & policies (P-02)
         plan: wm.winery.plan,
         commissionRate: wm.winery.commissionRate,
