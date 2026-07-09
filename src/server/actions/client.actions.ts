@@ -144,14 +144,30 @@ export async function cancelClientBooking(
         refundAmount = refundResult.amount;
         stripeRefundId = refundResult.refundId;
       } catch (refundError) {
-        // Release the claim so the client can retry.
-        await db.booking.updateMany({
-          where: {
-            id: bookingId,
-            status: BookingStatus.CANCELLED_BY_CLIENT,
-          },
-          data: { status: BookingStatus.CONFIRMED, cancelledAt: null },
-        });
+        // Release the claim ONLY on a deterministic Stripe rejection —
+        // after an ambiguous network error the refund may have succeeded,
+        // and releasing would allow a second one once the idempotency key
+        // expires (24h). Ambiguous → keep the cancellation, store the
+        // error for manual reconciliation.
+        const deterministic =
+          typeof refundError === 'object' &&
+          refundError !== null &&
+          'type' in refundError &&
+          refundError.type === 'StripeInvalidRequestError';
+        if (deterministic) {
+          await db.booking.updateMany({
+            where: {
+              id: bookingId,
+              status: BookingStatus.CANCELLED_BY_CLIENT,
+            },
+            data: { status: BookingStatus.CONFIRMED, cancelledAt: null },
+          });
+        } else {
+          await db.booking.update({
+            where: { id: bookingId },
+            data: { refundError: String(refundError) },
+          });
+        }
         logError('Refund processing error', refundError, {
           action: 'cancelClientBooking',
           bookingId,
