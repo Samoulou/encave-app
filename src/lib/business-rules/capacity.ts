@@ -22,3 +22,15 @@ export function activeCapacityBookingWhere(
     ],
   };
 }
+
+/**
+ * Effective seat count of a slot (P-05 / ADR-0002): the occurrence's
+ * override when set, the experience default otherwise. The DB CHECK
+ * guarantees override >= 1.
+ */
+export function resolveOccurrenceCapacity(
+  capacityOverride: number | null,
+  maxCapacity: number
+): number {
+  return capacityOverride ?? maxCapacity;
+}

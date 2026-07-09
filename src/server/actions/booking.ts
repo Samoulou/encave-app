@@ -15,7 +15,12 @@ import {
 } from '@/server/services/email.service';
 import { processRefund } from '@/server/services/payment.service';
 import { computeBookingRefund } from '@/lib/business-rules/cancellation-policy';
-import { activeCapacityBookingWhere } from '@/lib/business-rules/capacity';
+import {
+  activeCapacityBookingWhere,
+  resolveOccurrenceCapacity,
+} from '@/lib/business-rules/capacity';
+import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
+import { OccurrenceStatus } from '@prisma/client';
 import { logError, logWarn } from '@/lib/logger';
 
 const CheckAvailabilitySchema = z.object({
@@ -68,6 +73,40 @@ export async function checkAvailability(
     // Parse date string to Date object for comparison
     const bookingDate = new Date(date);
 
+    // Occurrence-aware capacity (P-05 / ADR-0002): the occurrence
+    // contributes the capacity NUMBER (override ?? max) and the OPEN /
+    // blackout gate; a slot without an occurrence keeps the legacy
+    // maxCapacity (defensive union — resolve materializes at hold time).
+    let slotCapacity = experience.maxCapacity;
+    let slotOpen = true;
+    if (await isFlagEnabled('OCCURRENCE_CAPACITY')) {
+      const [blocked, occurrence] = await Promise.all([
+        db.blockedDate.findUnique({
+          where: { experienceId_date: { experienceId, date: bookingDate } },
+          select: { id: true },
+        }),
+        db.experienceOccurrence.findUnique({
+          where: {
+            experienceId_date_startTime: {
+              experienceId,
+              date: bookingDate,
+              startTime: timeSlot,
+            },
+          },
+          select: { status: true, capacityOverride: true },
+        }),
+      ]);
+      if (blocked) {
+        slotOpen = false;
+      } else if (occurrence) {
+        slotOpen = occurrence.status === OccurrenceStatus.OPEN;
+        slotCapacity = resolveOccurrenceCapacity(
+          occurrence.capacityOverride,
+          experience.maxCapacity
+        );
+      }
+    }
+
     // Get total booked guests for this slot
     const bookedGuests = await db.booking.aggregate({
       where: {
@@ -84,14 +123,16 @@ export async function checkAvailability(
     });
 
     const bookedCount = bookedGuests._sum.guestCount ?? 0;
-    const remainingCapacity = experience.maxCapacity - bookedCount;
+    const remainingCapacity = slotOpen
+      ? Math.max(0, slotCapacity - bookedCount)
+      : 0;
 
     return {
       success: true,
       data: {
         available: remainingCapacity > 0,
         remainingCapacity,
-        maxCapacity: experience.maxCapacity,
+        maxCapacity: slotCapacity,
         bookedCount,
       },
     };
@@ -144,6 +185,19 @@ export async function getTimeSlotsForDate(
       };
     }
 
+    const occurrenceCapacityOn = await isFlagEnabled('OCCURRENCE_CAPACITY');
+
+    // Blackout gate (P-05 / ADR-0002 D3): a blocked date offers no slot.
+    // Fixes the pre-existing bug where public availability ignored
+    // BlockedDate entirely.
+    if (occurrenceCapacityOn) {
+      const blocked = await db.blockedDate.findUnique({
+        where: { experienceId_date: { experienceId, date: bookingDate } },
+        select: { id: true },
+      });
+      if (blocked) return { success: true, data: [] };
+    }
+
     // Get all bookings for this date
     const bookings = await db.booking.groupBy({
       by: ['timeSlot'],
@@ -160,18 +214,67 @@ export async function getTimeSlotsForDate(
       bookings.map((b) => [b.timeSlot, b._sum.guestCount ?? 0])
     );
 
-    const slots: TimeSlotAvailability[] = experience.availabilitySlots.map(
-      (slot) => {
-        const bookedCount = bookingsBySlot.get(slot.startTime) ?? 0;
-        const remainingCapacity = experience.maxCapacity - bookedCount;
-        return {
-          timeSlot: slot.startTime,
-          endTime: slot.endTime,
-          remainingCapacity,
-          maxCapacity: experience.maxCapacity,
-          available: remainingCapacity > 0,
-        };
-      }
+    // Occurrence layer (P-05): occurrences drive status + capacity and
+    // surface PUNCTUAL slots that no weekly pattern covers. Weekly slots
+    // without an occurrence keep the legacy behavior (defensive union —
+    // the occurrence materializes at hold time).
+    const occurrences = occurrenceCapacityOn
+      ? await db.experienceOccurrence.findMany({
+          where: { experienceId, date: bookingDate },
+          select: { startTime: true, status: true, capacityOverride: true },
+        })
+      : [];
+    const occurrenceBySlot = new Map(occurrences.map((o) => [o.startTime, o]));
+
+    const endTimeFor = (startTime: string): string => {
+      const [h = 0, m = 0] = startTime.split(':').map(Number);
+      const total = h * 60 + m + experience.duration;
+      const eh = Math.floor(total / 60) % 24;
+      const em = total % 60;
+      return `${String(eh).padStart(2, '0')}:${String(em).padStart(2, '0')}`;
+    };
+
+    const bySlot = new Map<string, TimeSlotAvailability>();
+    for (const slot of experience.availabilitySlots) {
+      const occurrence = occurrenceBySlot.get(slot.startTime);
+      const open = !occurrence || occurrence.status === OccurrenceStatus.OPEN;
+      const capacity = occurrence
+        ? resolveOccurrenceCapacity(
+            occurrence.capacityOverride,
+            experience.maxCapacity
+          )
+        : experience.maxCapacity;
+      const bookedCount = bookingsBySlot.get(slot.startTime) ?? 0;
+      const remainingCapacity = open ? Math.max(0, capacity - bookedCount) : 0;
+      bySlot.set(slot.startTime, {
+        timeSlot: slot.startTime,
+        endTime: slot.endTime,
+        remainingCapacity,
+        maxCapacity: capacity,
+        available: remainingCapacity > 0,
+      });
+    }
+    // PUNCTUAL (or straggler) occurrences with no weekly slot behind them.
+    for (const occurrence of occurrences) {
+      if (bySlot.has(occurrence.startTime)) continue;
+      const open = occurrence.status === OccurrenceStatus.OPEN;
+      const capacity = resolveOccurrenceCapacity(
+        occurrence.capacityOverride,
+        experience.maxCapacity
+      );
+      const bookedCount = bookingsBySlot.get(occurrence.startTime) ?? 0;
+      const remainingCapacity = open ? Math.max(0, capacity - bookedCount) : 0;
+      bySlot.set(occurrence.startTime, {
+        timeSlot: occurrence.startTime,
+        endTime: endTimeFor(occurrence.startTime),
+        remainingCapacity,
+        maxCapacity: capacity,
+        available: remainingCapacity > 0,
+      });
+    }
+
+    const slots: TimeSlotAvailability[] = Array.from(bySlot.values()).sort(
+      (a, b) => a.timeSlot.localeCompare(b.timeSlot)
     );
 
     return { success: true, data: slots };
