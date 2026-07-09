@@ -195,6 +195,29 @@ Migrations **additives** uniquement. Tout modèle d'argent a ses invariants test
 | L-188 | `/security-review` complet avant launch (CSP, secrets, webhooks, rate limits, tokens)                                                                            | 0 blocker                                         | PLANNING §8    | 1 h   |
 | L-189 | Bascule launch : retirer le gate Coming Soon du middleware, vérifier Stripe live (TWINT activé, webhooks prod, Connect), sitemap/robots, redirections            | encave.ch ouvert le 16.11 au matin                | GAP §8         | 1 h   |
 
+### E15 — Performance & Web Vitals — **20.5 h Must, 5.5 h Should** _(issu de l'audit `docs/ENCAVE-V3-PERF-AUDIT.md` — mesuré : home mobile Lighthouse 48, LCP 9.8 s vs cible 95 / 1.5 s)_
+
+| ID    | Item                                                                                                                                                                                                      | DoD                                                          | Réf          | Prio   | Est.  |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | ------------ | ------ | ----- |
+| L-200 | Hero desktop : remplacer le CSS background 4.8 MB par `next/image` optimisé ; ne rendre qu'UN éditorial par device (plus de double arbre caché + preloads invisibles)                                     | Home desktop < 1 MB ; un seul fetch hero                     | PERF §3.1    | Must   | 2 h   |
+| L-201 | Mapbox : ne pas monter la carte desktop sur mobile (gate media query avant mount) + lazy IntersectionObserver sur toutes les cartes (`DynamicMap`)                                                        | Chunk 439 kB absent du chargement initial mobile             | PERF §3.2    | Must   | 2 h   |
+| L-202 | Découpler `<Header>` de `auth()` (session dans un îlot client/Suspense) → home + listes statiques/ISR ; `generateStaticParams` + `revalidate=300` sur fiches expérience/domaine ; retirer `force-dynamic` | Home/listes/fiches servies par le CDN, revalidation par tags | PERF §3.3    | Must   | 4 h   |
+| L-203 | i18n : `NextIntlClientProvider` avec `pick()` des namespaces réellement utilisés côté client                                                                                                              | ~−80 kB de HTML sur chaque page                              | PERF §3.4    | Must   | 2 h   |
+| L-204 | posthog-js en `import()` dynamique après consentement, `autocapture` désactivé sauf besoin                                                                                                                | posthog absent du bundle initial                             | PERF §3.5    | Must   | 1 h   |
+| L-205 | Sentry Session Replay en `lazyLoadIntegration`                                                                                                                                                            | ~−50 kB gz du bundle initial                                 | PERF §3.5    | Must   | 0.5 h |
+| L-206 | Retirer `unoptimized` de la galerie fiche ; fonts : supprimer Fraunces italic + graisses superflues ; framer-motion → CSS (2 usages) ; `preconnect` Blob/Stripe + `dns-prefetch` PostHog/Mapbox           | Galerie AVIF/resize ; ≤ 7 fichiers de police                 | PERF §3.6/10 | Must   | 2 h   |
+| L-207 | Index DB : pg_trgm GIN sur recherche (title/description/nom/commune), `@@index([visitorEmail])`, composites `[wineryId,status,date]` et `[status,date]` (migration raw additive)                          | Plans de requête indexés (EXPLAIN vérifié)                   | PERF §3.7    | Must   | 2 h   |
+| L-208 | `select` sur `searchExperiences`/featured/related/crons (stop `description` dans les cartes) ; earnings en `aggregate`/`groupBy` (fix 6 requêtes séquentielles) ; `take` sur les listes non bornées       | RSC payload des listes allégé ; earnings ≤ 3 requêtes        | PERF §3.9    | Should | 2.5 h |
+| L-209 | Retry borné sur P2034 autour de la transaction Serializable du checkout + `connection_limit` sur l'URL poolée                                                                                             | Réservation concurrente = retry, pas d'erreur utilisateur    | PERF §3.8    | Must   | 1.5 h |
+| L-210 | Géocode : `AbortSignal.timeout(3s)` + `Cache-Control` + cache Redis partagé ; géocodage onboarding asynchrone (après commit) ; polling checkout pausé si `document.hidden`                                | Plus de SPOF Nominatim ; charge idle réduite                 | PERF §4.4    | Should | 1.5 h |
+| L-211 | Crons : requêtes groupées (2 requêtes au lieu de 2×N caves) + envois d'emails à concurrence bornée                                                                                                        | Digest < 30 s même à 50 caves                                | PERF §4.4    | Should | 1.5 h |
+| L-212 | Invalidation : supprimer le fan-out `revalidatePath` multi-locales (garder les tags) ; hoister le wrapper `unstable_cache` de `searchExperiences` ; retirer le fetch `getSessionRole` du middleware       | Pas de thrash ISR ; 1 résolution session par requête admin   | PERF §4.1    | Must   | 1 h   |
+| L-213 | RUM : `useReportWebVitals` → PostHog (LCP/INP/CLS attribués par route)                                                                                                                                    | Web vitals terrain visibles par page                         | PERF §2      | Should | 1 h   |
+| L-214 | A11y systémique : focus trap/restore sur la lightbox, `aria-pressed` sur pills/chips (tri, créneaux), `aria-live` sur le stepper personnes, vérif contrastes gold/cream (tokens)                          | axe (L-183) sans violation sur booking/cadeaux               | PERF §4.5    | Must   | 2 h   |
+| L-215 | Images : `minimumCacheTTL` 30 j + `deviceSizes` ajustés ; variante server de `ImageWithFallback` pour les grilles ; héros JPG → v2 154 kB ; hero wineries rapatrié d'Unsplash vers Blob                   | Plus d'image > 200 kB sur les pages découverte               | PERF §4.2    | Must   | 1.5 h |
+| L-216 | Supprimer le `NavigationLoader` (listener click global) — garder nprogress ; supprimer `HealthStatus.tsx` (dead code)                                                                                     | Un seul loader de navigation                                 | PERF §3.10   | Must   | 0.5 h |
+| L-217 | CSP `connect-src` : ajouter `tile.openstreetmap.org`/`demotiles.maplibre.org` si le fallback carte sans token est conservé (sinon exiger le token)                                                        | Carte fonctionnelle sous CSP dans les deux modes             | PERF §4.4    | Must   | 0.5 h |
+
 ---
 
 ## 2. Totaux
@@ -216,36 +239,37 @@ Migrations **additives** uniquement. Tout modèle d'argent a ses invariants test
 | E12 Auth          | 7 h        | 2 h       |
 | E13 Admin/emails  | 8 h        | —         |
 | E14 Hardening     | 20 h       | —         |
-| **Total**         | **~199 h** | **~21 h** |
+| E15 Performance   | 20.5 h     | 5.5 h     |
+| **Total**         | **~220 h** | **~27 h** |
 
-Capacité ~210 h → **le Must passe tout juste, les Should ne rentrent que si la vélocité réelle avec Claude Code dépasse l'estimation** (probable — recaler après E0+E1).
+Capacité ~210 h → **avec E15, le Must dépasse la capacité de ~10 h.** Lecture assumée : (1) les estimations sont des heures de pilotage — la vélocité réelle avec Claude Code se recale après S1-S2 ; (2) si elle ne suffit pas, l'écart se prend sur les fusibles §4 (E7 simplifié ≈ −8 h à lui seul), **jamais** sur E15 L-200→L-205 (sans eux, le gate G-R2 « Lighthouse ≥ 95 » est mathématiquement inatteignable — mesuré à 48 aujourd'hui).
 
 ---
 
 ## 3. Calendrier (9 juil → 16 nov)
 
-| Sem           | Dates       | Contenu                                                                                                                      | Jalon                 |
-| ------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------- | --------------------- |
-| S0            | 09–12.07    | Ce plan + décisions §5 + import Linear                                                                                       | Backlog actif         |
-| S1            | 13–19.07    | **E0** fiabilisation complète                                                                                                | Existant sain         |
-| S2            | 20–26.07    | **E1** part 1 : Wine, GiftCard+ledger, Request, politiques, plans, ScheduledJob                                              |                       |
-| S3            | 27.07–02.08 | **E1** part 2 : occurrences persistées, invariants, seed                                                                     | **G-R0'** (02.08)     |
-| S4            | 03–09.08    | **E2** : flags, fee 2.50, commission par cave, politiques d'annulation                                                       | Monétisation flaggée  |
-| S5            | 10–16.08    | **E3** : hold 10 min + countdown, TWINT/Link, /reservation/erreur, compte post-paiement                                      | Checkout V3           |
-| S6            | 17–23.08    | **L-131/132** créneaux ponctuels + calendrier occurrences + **L-110/111** recherche par date                                 | US-101 conforme       |
-| S7 _(courte)_ | 24–28.08    | **E4** part 1 : CRUD vins + fiche dégustation UI                                                                             |                       |
-| OFF           | 31.08–06.09 | **Edinburgh**                                                                                                                |                       |
-| S8            | 07–13.09    | **E4** part 2 : email J+2 + rappel 21 h + **L-130** page Aujourd'hui + alertes                                               | **G-R1** (13.09)      |
-| S9            | 14–20.09    | **E5** anti no-show complet (SetupIntent → prélèvement 1 tap)                                                                | US-220                |
-| S10           | 21–27.09    | **E6** part 1 : /cadeaux, checkout cadeau, PDF, envoi programmé                                                              |                       |
-| S11           | 28.09–04.10 | **E6** part 2 : rédemption checkout + verrous + compte/admin + tests concurrence                                             | US-210 — prêt Noël    |
-| S12           | 05–11.10    | **E7** part 1 : formulaire, inbox, composer l'offre                                                                          |                       |
-| S13           | 12–18.10    | **E7** part 2 : paiement offre, relances, SLA + **E8** part 1                                                                | US-240                |
-| S14           | 19–25.10    | **E8** fin (multi-scan, stats) + **E9** Must (politiques affichées, home, pages légales)                                     | US-250                |
-| S15           | 26.10–01.11 | **E12** auth (OTP, TOTP, sessions) + **E13** admin/emails + **E11** payouts réels + relevés                                  | **G-R2 code** (01.11) |
-| S16           | 02–08.11    | **E14** : k6, e2e CI, Lighthouse, axe, alerting, nLPD, CGV, runbooks + **L-140** scan offline                                | D1                    |
-| S17           | 09–15.11    | **Beta fermée** : caves fondatrices en réel, ~20 résas vrais paiements, 2-3 cadeaux, 1 request ; corrections ; L-189 bascule | D2                    |
-| 🚀            | **16.11**   | **LAUNCH** (G-R2 + G-Supply + runbooks + astreinte)                                                                          |                       |
+| Sem           | Dates       | Contenu                                                                                                                                                             | Jalon                      |
+| ------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| S0            | 09–12.07    | Ce plan + décisions §5 + import Linear                                                                                                                              | Backlog actif              |
+| S1            | 13–19.07    | **E0** fiabilisation + **E15 quick wins** (L-200, L-204, L-205, L-206, L-215, L-216, L-217)                                                                         | Existant sain + rapide     |
+| S2            | 20–26.07    | **E1** part 1 : Wine, GiftCard+ledger, Request, politiques, plans, ScheduledJob                                                                                     |                            |
+| S3            | 27.07–02.08 | **E1** part 2 : occurrences persistées, invariants, seed                                                                                                            | **G-R0'** (02.08)          |
+| S4            | 03–09.08    | **E2** : flags, fee 2.50, commission par cave, politiques d'annulation                                                                                              | Monétisation flaggée       |
+| S5            | 10–16.08    | **E3** : hold 10 min + countdown, TWINT/Link, /reservation/erreur, compte post-paiement + **L-209** retry P2034                                                     | Checkout V3                |
+| S6            | 17–23.08    | **L-131/132** créneaux ponctuels + calendrier occurrences + **L-110/111** recherche par date + **L-202/203, L-201, L-207, L-212** (ISR/header, i18n, Mapbox, index) | US-101 + LCP en zone verte |
+| S7 _(courte)_ | 24–28.08    | **E4** part 1 : CRUD vins + fiche dégustation UI                                                                                                                    |                            |
+| OFF           | 31.08–06.09 | **Edinburgh**                                                                                                                                                       |                            |
+| S8            | 07–13.09    | **E4** part 2 : email J+2 + rappel 21 h + **L-130** page Aujourd'hui + alertes                                                                                      | **G-R1** (13.09)           |
+| S9            | 14–20.09    | **E5** anti no-show complet (SetupIntent → prélèvement 1 tap)                                                                                                       | US-220                     |
+| S10           | 21–27.09    | **E6** part 1 : /cadeaux, checkout cadeau, PDF, envoi programmé                                                                                                     |                            |
+| S11           | 28.09–04.10 | **E6** part 2 : rédemption checkout + verrous + compte/admin + tests concurrence                                                                                    | US-210 — prêt Noël         |
+| S12           | 05–11.10    | **E7** part 1 : formulaire, inbox, composer l'offre                                                                                                                 |                            |
+| S13           | 12–18.10    | **E7** part 2 : paiement offre, relances, SLA + **E8** part 1                                                                                                       | US-240                     |
+| S14           | 19–25.10    | **E8** fin (multi-scan, stats) + **E9** Must (politiques affichées, home, pages légales)                                                                            | US-250                     |
+| S15           | 26.10–01.11 | **E12** auth (OTP, TOTP, sessions) + **E13** admin/emails + **E11** payouts réels + relevés                                                                         | **G-R2 code** (01.11)      |
+| S16           | 02–08.11    | **E14** : k6, e2e CI, Lighthouse, axe, alerting, nLPD, CGV, runbooks + **L-140** scan offline + **E15 solde** (L-208, L-210, L-211, L-213, L-214)                   | D1                         |
+| S17           | 09–15.11    | **Beta fermée** : caves fondatrices en réel, ~20 résas vrais paiements, 2-3 cadeaux, 1 request ; corrections ; L-189 bascule                                        | D2                         |
+| 🚀            | **16.11**   | **LAUNCH** (G-R2 + G-Supply + runbooks + astreinte)                                                                                                                 |                            |
 
 Chemin critique : `E1 (schéma) → E2 (monétisation) → E3 (checkout) → E5/E6 (no-show, cadeaux) → E7 (request) → D1 → D2`. **E6 fini au 04.10 = 6 semaines de marge avant la saison cadeaux.**
 
@@ -258,6 +282,7 @@ Chemin critique : `E1 (schéma) → E2 (monétisation) → E3 (checkout) → E5/
 5. **L-154** invitations fondateurs → onboarding assisté par Sam (validation admin rapide).
 6. **L-117 Should** (altitude/hectares/famille).
 7. **E8 réduit** : caves participantes affichées, stats en 3.3.
+8. **E15 Should** (L-208, L-210, L-211, L-213) : optimisations DB fines, RUM — reportables post-launch. Les Must L-200→L-205 ne sont **pas** des fusibles (gate G-R2 Lighthouse ≥ 95).
 
 **Jamais dégradés** : E1, E2, E3, E5, E6, E14 (l'argent et la confiance).
 

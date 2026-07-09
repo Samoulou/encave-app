@@ -249,7 +249,7 @@ If you find unused twins along the way, propose removing them (don't leave them 
 
 ## Known Debt & Pitfalls (audited 2026-07-09)
 
-Verified against `dev` — full detail in `docs/ENCAVE-V3-GAP-ANALYSIS.md` §10. Don't rediscover these; fix them when touching the area:
+Verified against `dev` — full detail in `docs/ENCAVE-V3-GAP-ANALYSIS.md` §10 and `docs/ENCAVE-V3-PERF-AUDIT.md` (measured: home mobile Lighthouse 48, LCP 9.8s vs NFR 95/1.5s — fixes tracked as backlog epic E15). Don't rediscover these; fix them when touching the area:
 
 - The confirmation email is sent WITHOUT `bookingId`/`accessToken` (`checkout-confirmation.service.ts`) → no QR attachment, ticket button links to the homepage, the guest magic link is never delivered. Same bug in `resendConfirmationEmail`
 - Only 2 of 5 cron routes are scheduled in `vercel.json` — `expire-pending-bookings` (hold release!), `follow-ups` and `weekly-summary` never run in prod
