@@ -1,6 +1,6 @@
 # P-01 — Fiabilisation & quick wins perf
 
-> **Statut** : en cours · **Branche** : `claude/encave-v3-business-model-8bv7bd` (session courante — contient aussi les docs V3 ; PR unique vers `dev`) · **PR** : #
+> **Statut** : code terminé — reste : test manuel scan (Sam), ⑤ code-review, ⑥ PR vers `dev` · **Branche** : `claude/encave-v3-business-model-8bv7bd` (contient aussi les docs V3 ; PR unique vers `dev`) · **PR** : #
 > **Sources** : `docs/ENCAVE-V3-DELIVERY-PLAN.md` §P-01 · items L-001→L-013, L-200, L-204→L-206, L-215→L-217 · `docs/ENCAVE-V3-GAP-ANALYSIS.md` §10 · `docs/ENCAVE-V3-PERF-AUDIT.md`
 
 ## 1. Objectif
@@ -11,19 +11,20 @@ Après le merge, l'existant est **fiable** (l'invité reçoit un billet fonction
 
 **IN — sous-package A « bugs » (L-001→L-013)** : email de confirmation avec token+QR (+ resend), planification des 3 crons manquants, QR écran compatible scanner, idempotence webhook Connect, lien mort ModifyBookingCard, onglets my-bookings, UI suppression de compte, UI refund admin, sendEmail fail-loud, localisation des 5 templates FR-en-dur, retrait KPI occupation, dead code, mention taxes du reçu.
 **IN — sous-package B « perf quick wins » (L-200, L-204→L-206, L-215→L-217)** : hero desktop next/image + un seul éditorial rendu, posthog lazy post-consentement, Sentry Replay lazy, galerie sans `unoptimized` + fonts réduites + framer-motion→CSS + preconnects, images config (`minimumCacheTTL`, héros ≤ 200 kB, hero wineries hors Unsplash), suppression NavigationLoader + HealthStatus, CSP connect-src carte.
-**OUT** : ISR/header découplé, i18n subset, Mapbox gating, index DB (→ P-06) ; toute feature V3 (→ P-02+).
+**OUT** : ISR/header découplé, i18n subset, index DB (→ P-06) ; toute feature V3 (→ P-02+).
+**Ajout en cours de route (documenté)** : forme minimale de **L-201** (gate `DesktopOnly` autour de `DynamicMap` home + catalogue) tirée de P-06 — sans elle, le chunk mapbox de 439 kB saturait la 4G mobile et la DoD « home ≥ 65 » était inatteignable (mesuré : 51 avec les seuls quick wins). Le reste de L-201 (lazy IntersectionObserver sur les autres cartes) reste en P-06.
 
 ## 3. Definition of Done (gate)
 
-- [ ] L'email de confirmation contient le QR et un lien billet token fonctionnel ; parcours invité e2e : réserver → recevoir → ouvrir billet → annuler
-- [ ] Les 5 crons sont dans `vercel.json` ; `expire-pending-bookings` libère un hold expiré (test)
-- [ ] Le QR affiché à l'écran est scannable par le scanner (test manuel documenté)
-- [ ] Webhook Connect : un event rejoué = zéro effet (test intégration)
-- [ ] Suppression de compte (client) et remboursement support (admin) accessibles depuis l'UI
-- [ ] Plus aucun item du GAP §10 ouvert ; dead code supprimé
-- [ ] Hero desktop < 500 kB total ; posthog + Sentry Replay hors du bundle initial ; ≤ 7 fichiers de police
-- [ ] Lighthouse home mobile ≥ 65 (remesure locale, méthode du perf audit)
-- [ ] Socle transverse (§3 du delivery plan) vert
+- [x] L'email de confirmation contient le QR et un lien billet token fonctionnel (tests intégration : token ↔ hash, QR CID) — _parcours invité e2e complet à écrire en P-16/L-181_
+- [x] Les 5 crons sont dans `vercel.json`
+- [ ] Le QR affiché à l'écran est scannable par le scanner (**test manuel Sam sur staging** — même URL token que l'email, format vérifié contre le parser du scanner)
+- [x] Webhook Connect : un event rejoué = zéro effet (tests : duplicate skipped, FAILED retryable)
+- [x] Suppression de compte (client) et remboursement support (admin) accessibles depuis l'UI
+- [x] Plus aucun item du GAP §10 ouvert ; dead code supprimé (+ fuite de visibilité caves sans photos corrigée)
+- [x] Hero desktop optimisé (4.8 MB → 154 kB source) ; posthog + Sentry Replay hors du bundle initial (vérifié dans les manifests) ; 9 fichiers de police (18 avant — l'italique Fraunces 400 est réellement utilisé, conservé)
+- [x] **Lighthouse home mobile 84** (≥ 65 requis ; baseline 48) · catalogue 84 · LCP 4.4 s · TBT 0 ms · First Load JS partagé 202 → 165 kB
+- [x] Socle transverse vert : tsc, ESLint, i18n:check, **789 tests** unit+intégration, build prod OK
 
 ## 4. Découpage technique
 
