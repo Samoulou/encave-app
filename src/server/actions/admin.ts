@@ -1,12 +1,7 @@
 'use server';
 
 import { z } from 'zod';
-import {
-  BookingStatus,
-  UserRole,
-  WineryPlan,
-  WineryStatus,
-} from '@prisma/client';
+import { BookingStatus, WineryPlan, WineryStatus } from '@prisma/client';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import {
@@ -19,6 +14,7 @@ import { getStripe } from '@/server/stripe';
 import type { ActionResult } from '@/types/actions';
 import { logError, logInfo, logWarn } from '@/lib/logger';
 import { invalidateWineryCaches } from './winery-helpers';
+import { requireAdmin } from '@/server/admin-guard';
 
 const ApproveWinerySchema = z.object({
   wineryId: z.string().min(1, 'Winery ID is required'),
@@ -46,26 +42,6 @@ const SetWineryPlanSchema = z.object({
   // UI percentage (0–100); null = platform default (PLATFORM_COMMISSION_RATE)
   commissionRatePercent: z.number().min(0).max(100).nullable(),
 });
-
-export async function requireAdmin(): Promise<
-  | ActionResult<{ adminId: string }>
-  | { success: true; data: { adminId: string } }
-> {
-  const session = await auth();
-  if (!session?.user) {
-    return {
-      success: false,
-      error: { code: 'UNAUTHORIZED', message: 'Please sign in' },
-    };
-  }
-  if (session.user.role !== UserRole.ADMIN) {
-    return {
-      success: false,
-      error: { code: 'FORBIDDEN', message: 'Admin access required' },
-    };
-  }
-  return { success: true, data: { adminId: session.user.id } };
-}
 
 /**
  * Approve a winery registration

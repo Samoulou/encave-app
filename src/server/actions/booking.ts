@@ -577,17 +577,47 @@ export async function cancelBooking(
     let refundAmount: number | null = null;
     let stripeRefundId: string | null = null;
 
+    // Atomic claim: the status flip IS the lock. Two concurrent
+    // cancellations would otherwise both pass the CONFIRMED check and
+    // both obtain a 50% partial refund (100% total, taken twice from
+    // the winery). Only the request that wins this update refunds.
+    const claimed = await db.booking.updateMany({
+      where: { id: bookingId, status: BookingStatus.CONFIRMED },
+      data: {
+        status: BookingStatus.CANCELLED_BY_CLIENT,
+        cancelledAt: new Date(),
+      },
+    });
+    if (claimed.count === 0) {
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Only confirmed bookings can be cancelled',
+        },
+      };
+    }
+
     // Process refund if due and payment was made
     if (refundDueCents > 0 && booking.stripePaymentIntentId) {
       try {
         const refundResult = await processRefund(
           booking.stripePaymentIntentId,
           true,
-          stripeAmountArg
+          stripeAmountArg,
+          `cancel-refund:${bookingId}:${refundDueCents}`
         );
         refundAmount = refundResult.amount;
         stripeRefundId = refundResult.refundId;
       } catch (refundError) {
+        // Release the claim so the client can retry.
+        await db.booking.updateMany({
+          where: {
+            id: bookingId,
+            status: BookingStatus.CANCELLED_BY_CLIENT,
+          },
+          data: { status: BookingStatus.CONFIRMED, cancelledAt: null },
+        });
         logError('Refund processing error', refundError, {
           action: 'cancelBooking',
           bookingId,
@@ -603,12 +633,10 @@ export async function cancelBooking(
       }
     }
 
-    // Update booking status
+    // Record the refund outcome on the already-cancelled booking
     const updatedBooking = await db.booking.update({
       where: { id: bookingId },
       data: {
-        status: BookingStatus.CANCELLED_BY_CLIENT,
-        cancelledAt: new Date(),
         refundIssued: refundAmount !== null,
         refundAmount,
         stripeRefundId,

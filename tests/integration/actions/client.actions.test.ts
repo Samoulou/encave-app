@@ -9,7 +9,7 @@ vi.mock('@/server/auth', () => ({
 // Mock db
 vi.mock('@/server/db', () => ({
   db: {
-    booking: { findFirst: vi.fn(), update: vi.fn() },
+    booking: { findFirst: vi.fn(), update: vi.fn(), updateMany: vi.fn() },
     user: { update: vi.fn() },
   },
 }));
@@ -60,6 +60,8 @@ describe('Client Actions', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // The atomic cancellation claim succeeds by default.
+    vi.mocked(db.booking.updateMany).mockResolvedValue({ count: 1 } as never);
   });
 
   // ========================================

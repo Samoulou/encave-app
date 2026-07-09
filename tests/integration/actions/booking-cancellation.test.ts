@@ -10,6 +10,7 @@ vi.mock('@/server/db', () => ({
       findUnique: vi.fn(),
       findFirst: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
     },
   },
 }));
@@ -83,6 +84,8 @@ describe('Booking Cancellation Actions', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // The atomic cancellation claim succeeds by default.
+    vi.mocked(db.booking.updateMany).mockResolvedValue({ count: 1 } as never);
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-01-11T10:00:00Z'));
   });
@@ -125,7 +128,12 @@ describe('Booking Cancellation Actions', () => {
         expect(result.data.status).toBe(BookingStatus.CANCELLED_BY_CLIENT);
       }
       // Third arg undefined = full refund (policy grants 100%).
-      expect(processRefund).toHaveBeenCalledWith('pi_test123', true, undefined);
+      expect(processRefund).toHaveBeenCalledWith(
+        'pi_test123',
+        true,
+        undefined,
+        expect.stringMatching(/^cancel-refund:/)
+      );
     });
 
     it('cancels booking without refund when <24h before experience', async () => {
@@ -181,7 +189,12 @@ describe('Booking Cancellation Actions', () => {
         // Exactly 24h = 100% refund (STANDARD tier is >= 24h)
         expect(result.data.refundIssued).toBe(true);
       }
-      expect(processRefund).toHaveBeenCalledWith('pi_test123', true, undefined);
+      expect(processRefund).toHaveBeenCalledWith(
+        'pi_test123',
+        true,
+        undefined,
+        expect.stringMatching(/^cancel-refund:/)
+      );
     });
 
     it('refunds 50% of tickets + fee on the STRICT middle tier (D2)', async () => {
@@ -211,7 +224,32 @@ describe('Booking Cancellation Actions', () => {
       expect(result.success).toBe(true);
       // paid = 20000 + 1000 fee; 50% = 10500 — exact partial amount sent
       // to Stripe, fee included (decision D2).
-      expect(processRefund).toHaveBeenCalledWith('pi_test123', true, 10500);
+      expect(processRefund).toHaveBeenCalledWith(
+        'pi_test123',
+        true,
+        10500,
+        'cancel-refund:booking-cancel-1:10500'
+      );
+    });
+
+    it('refunds nothing when the atomic claim is lost (concurrent cancel)', async () => {
+      vi.mocked(db.booking.findFirst).mockResolvedValue(
+        mockConfirmedBooking as never
+      );
+      // Another request already flipped CONFIRMED -> CANCELLED.
+      vi.mocked(db.booking.updateMany).mockResolvedValue({
+        count: 0,
+      } as never);
+
+      const { cancelBooking } = await import('@/server/actions/booking');
+      const result = await cancelBooking('booking-cancel-1', accessToken);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe('VALIDATION_ERROR');
+      }
+      expect(processRefund).not.toHaveBeenCalled();
+      expect(db.booking.update).not.toHaveBeenCalled();
     });
 
     it('returns NOT_FOUND for invalid access token', async () => {
@@ -376,11 +414,18 @@ describe('Booking Cancellation Actions', () => {
       const { cancelBooking } = await import('@/server/actions/booking');
       await cancelBooking('booking-cancel-1', accessToken);
 
-      expect(db.booking.update).toHaveBeenCalledWith({
-        where: { id: 'booking-cancel-1' },
+      // Status flips in the atomic claim; the final update records the
+      // refund outcome.
+      expect(db.booking.updateMany).toHaveBeenCalledWith({
+        where: { id: 'booking-cancel-1', status: BookingStatus.CONFIRMED },
         data: expect.objectContaining({
           status: BookingStatus.CANCELLED_BY_CLIENT,
           cancelledAt: expect.any(Date),
+        }),
+      });
+      expect(db.booking.update).toHaveBeenCalledWith({
+        where: { id: 'booking-cancel-1' },
+        data: expect.objectContaining({
           refundIssued: true,
           refundAmount: 20000,
           stripeRefundId: 're_test123',

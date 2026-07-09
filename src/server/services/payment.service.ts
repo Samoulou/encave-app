@@ -168,7 +168,8 @@ export function getPlatformCommissionRate(): number {
 export async function processRefund(
   stripePaymentIntentOrSessionId: string,
   refundApplicationFee: boolean = true,
-  amountCents?: number
+  amountCents?: number,
+  idempotencyKey?: string
 ): Promise<{ refundId: string; amount: number }> {
   if (
     amountCents !== undefined &&
@@ -195,12 +196,17 @@ export async function processRefund(
     throw new Error('Invalid Stripe payment intent ID');
   }
 
-  const refund = await getStripe().refunds.create({
-    payment_intent: paymentIntentId,
-    reverse_transfer: true,
-    refund_application_fee: refundApplicationFee,
-    ...(amountCents !== undefined ? { amount: amountCents } : {}),
-  });
+  const refund = await getStripe().refunds.create(
+    {
+      payment_intent: paymentIntentId,
+      reverse_transfer: true,
+      refund_application_fee: refundApplicationFee,
+      ...(amountCents !== undefined ? { amount: amountCents } : {}),
+    },
+    // Concurrent duplicates collapse into one refund at Stripe. Partial
+    // refunds made this race real (two 50% refunds both succeed).
+    idempotencyKey !== undefined ? { idempotencyKey } : undefined
+  );
 
   return {
     refundId: refund.id,

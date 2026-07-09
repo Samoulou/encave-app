@@ -119,6 +119,7 @@ describe('Checkout Server Actions', () => {
       visitorEmail: 'john@example.com',
       visitorPhone: '+41791234567',
       ageConfirmed: true as const,
+      displayedServiceFeeCentsPerGuest: 0,
     };
 
     it('requires age confirmation before creating Stripe checkout', async () => {
@@ -367,7 +368,10 @@ describe('Checkout Server Actions', () => {
 
       const { createBookingAndCheckout } =
         await import('@/server/actions/checkout');
-      await createBookingAndCheckout(validInput);
+      await createBookingAndCheckout({
+        ...validInput,
+        displayedServiceFeeCentsPerGuest: 250,
+      });
 
       // 4 guests × 250 = 1000 cents of service fee, platform's revenue:
       // totalPrice stays 20000, application_fee = 2400 + 1000.
@@ -410,7 +414,10 @@ describe('Checkout Server Actions', () => {
 
       const { createBookingAndCheckout } =
         await import('@/server/actions/checkout');
-      await createBookingAndCheckout(validInput);
+      await createBookingAndCheckout({
+        ...validInput,
+        displayedServiceFeeCentsPerGuest: 250,
+      });
 
       // Founder: platformFee 0, full payout; app fee = client fee alone.
       const captured = requireCaptured(capturedBookingData);

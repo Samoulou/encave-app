@@ -3,7 +3,7 @@
 import { revalidateTag } from 'next/cache';
 import { z } from 'zod';
 import { db } from '@/server/db';
-import { requireAdmin } from '@/server/actions/admin';
+import { requireAdmin } from '@/server/admin-guard';
 import { FLAG_KEYS, type FlagKey } from '@/lib/flags';
 import { FEATURE_FLAGS_CACHE_TAG } from '@/server/queries/feature-flags.queries';
 import { logError, logInfo } from '@/lib/logger';

@@ -640,9 +640,10 @@ export async function cancelEventSession(
           cancelledAt: new Date(),
           cancellationReason: parsed.data.reason,
           refundIssued: booking.status === BookingStatus.CONFIRMED,
+          // Record what was actually refunded — tickets + service fee.
           refundAmount:
             booking.status === BookingStatus.CONFIRMED
-              ? booking.totalPrice
+              ? booking.totalPrice + booking.serviceFeeCents
               : undefined,
           stripeRefundId: refundId,
           refundError: null,
@@ -657,7 +658,9 @@ export async function cancelEventSession(
           experienceTitle: experience.title,
           date: startsAt,
           amountCents:
-            booking.status === BookingStatus.CONFIRMED ? booking.totalPrice : 0,
+            booking.status === BookingStatus.CONFIRMED
+              ? booking.totalPrice + booking.serviceFeeCents
+              : 0,
           reason: parsed.data.reason,
         },
         experience.winery.user.preferredLocale

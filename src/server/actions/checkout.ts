@@ -38,7 +38,7 @@ const CreateBookingSchema = z.object({
   wineryId: z.string(),
   date: z.string(),
   timeSlot: timeSlotSchema, // BACK-003 FIX: Validate HH:mm format
-  guestCount: z.number().positive(),
+  guestCount: z.number().int().positive(),
   visitorName: z.string().min(2),
   visitorEmail: z.string().email(),
   visitorPhone: z.string().min(6),
@@ -50,7 +50,7 @@ const CreateBookingSchema = z.object({
    * charge would differ from the accepted total — refuse and let the
    * client refresh (never charge more or less than displayed).
    */
-  displayedServiceFeeCentsPerGuest: z.number().int().min(0).optional(),
+  displayedServiceFeeCentsPerGuest: z.number().int().min(0),
 });
 
 export interface CheckoutResult {
@@ -180,9 +180,8 @@ export async function createBookingAndCheckout(
     const serviceFeeCents = serviceFeeCentsPerGuest * guestCount;
 
     if (
-      validated.data.displayedServiceFeeCentsPerGuest !== undefined &&
       validated.data.displayedServiceFeeCentsPerGuest !==
-        serviceFeeCentsPerGuest
+      serviceFeeCentsPerGuest
     ) {
       return {
         success: false,
