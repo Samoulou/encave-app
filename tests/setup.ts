@@ -3,10 +3,12 @@ import { createElement } from 'react';
 import type { ReactNode } from 'react';
 import { vi } from 'vitest';
 
-process.env.DATABASE_URL ??=
+// ||= (not ??=): an env var wired to an unset CI secret arrives as an
+// EMPTY string, which must be replaced too — Zod requires a valid URL.
+process.env.DATABASE_URL ||=
   'postgresql://user:password@localhost:5432/encave_test';
-process.env.BETTER_AUTH_SECRET ??= 'test-secret-at-least-32-characters-long';
-process.env.NODE_ENV ??= 'test';
+process.env.BETTER_AUTH_SECRET ||= 'test-secret-at-least-32-characters-long';
+process.env.NODE_ENV ||= 'test';
 
 vi.mock('react', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react')>();
