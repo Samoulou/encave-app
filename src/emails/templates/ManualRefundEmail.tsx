@@ -2,6 +2,7 @@ import { Text } from '@react-email/components';
 import type { Locale } from '@prisma/client';
 import { EmailLayout } from '../components';
 import { formatEmailDate, formatEmailPrice } from '../utils';
+import { t, common, manualRefund, subjects } from '../translations';
 
 interface ManualRefundClientEmailProps {
   locale: Locale;
@@ -19,20 +20,24 @@ export function ManualRefundClientEmail({
   amountCents,
 }: ManualRefundClientEmailProps) {
   return (
-    <EmailLayout locale={locale} preview="Votre reservation a ete remboursee">
+    <EmailLayout
+      locale={locale}
+      preview={t(subjects.manualRefundClient, locale)}
+    >
       <Text style={{ fontSize: '24px', fontWeight: 'bold', color: '#7c2d12' }}>
-        Votre remboursement est en route
-      </Text>
-      <Text>Bonjour {firstName},</Text>
-      <Text>
-        Nous vous confirmons le remboursement de {formatEmailPrice(amountCents)}
-        pour votre reservation {reference} ({experienceTitle}).
+        {t(manualRefund.client.title, locale)}
       </Text>
       <Text>
-        Les fonds reapparaitront sur votre moyen de paiement sous 5 a 10 jours
-        ouvres selon votre banque.
+        {t(common.greeting, locale)} {firstName},
       </Text>
-      <Text>L&apos;equipe EnCave</Text>
+      <Text>
+        {t(manualRefund.client.intro, locale)
+          .replace('{amount}', formatEmailPrice(amountCents))
+          .replace('{reference}', reference)
+          .replace('{experienceTitle}', experienceTitle)}
+      </Text>
+      <Text>{t(manualRefund.client.timing, locale)}</Text>
+      <Text>{t(common.team, locale)}</Text>
     </EmailLayout>
   );
 }
@@ -57,22 +62,28 @@ export function ManualRefundWinemakerEmail({
   reason,
 }: ManualRefundWinemakerEmailProps) {
   return (
-    <EmailLayout locale={locale} preview="Une reservation a ete remboursee">
+    <EmailLayout
+      locale={locale}
+      preview={t(subjects.manualRefundWinemaker, locale)}
+    >
       <Text style={{ fontSize: '24px', fontWeight: 'bold', color: '#7c2d12' }}>
-        Une reservation a ete remboursee par EnCave
+        {t(manualRefund.winemaker.title, locale)}
       </Text>
-      <Text>Bonjour {firstName},</Text>
       <Text>
-        L&apos;equipe EnCave a procede au remboursement de la reservation{' '}
-        {reference}({experienceTitle}, le {formatEmailDate(date, locale)}) pour
-        un montant de {formatEmailPrice(amountCents)}.
+        {t(common.greeting, locale)} {firstName},
       </Text>
-      <Text>Motif communique : {reason}.</Text>
       <Text>
-        Ce montant est automatiquement deduit de votre prochain reversement
-        Stripe Connect.
+        {t(manualRefund.winemaker.intro, locale)
+          .replace('{reference}', reference)
+          .replace('{experienceTitle}', experienceTitle)
+          .replace('{date}', formatEmailDate(date, locale))
+          .replace('{amount}', formatEmailPrice(amountCents))}
       </Text>
-      <Text>L&apos;equipe EnCave</Text>
+      <Text>
+        {t(manualRefund.winemaker.reason, locale).replace('{reason}', reason)}
+      </Text>
+      <Text>{t(manualRefund.winemaker.deduction, locale)}</Text>
+      <Text>{t(common.team, locale)}</Text>
     </EmailLayout>
   );
 }

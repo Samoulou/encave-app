@@ -2,6 +2,7 @@ import { Text } from '@react-email/components';
 import type { Locale } from '@prisma/client';
 import { EmailLayout } from '../components';
 import { formatEmailDate } from '../utils';
+import { t, common, accountDeleted, subjects } from '../translations';
 
 interface AccountDeletedEmailProps {
   locale: Locale;
@@ -13,21 +14,18 @@ export function AccountDeletedEmail({
   date,
 }: AccountDeletedEmailProps) {
   return (
-    <EmailLayout locale={locale} preview="Votre compte EnCave a ete supprime">
+    <EmailLayout locale={locale} preview={t(subjects.accountDeleted, locale)}>
       <Text style={{ fontSize: '24px', fontWeight: 'bold', color: '#7c2d12' }}>
-        Votre compte a ete supprime
+        {t(accountDeleted.title, locale)}
       </Text>
       <Text>
-        Bonjour, nous vous confirmons la suppression de votre compte EnCave en
-        date du {formatEmailDate(date, locale)}. Vos donnees personnelles ont
-        ete effacees de notre plateforme.
+        {t(accountDeleted.intro, locale).replace(
+          '{date}',
+          formatEmailDate(date, locale)
+        )}
       </Text>
-      <Text>
-        Conformement au droit suisse, nous conservons l&apos;historique
-        anonymise de vos reservations pendant 10 ans pour des raisons
-        comptables.
-      </Text>
-      <Text>L&apos;equipe EnCave</Text>
+      <Text>{t(accountDeleted.retention, locale)}</Text>
+      <Text>{t(common.team, locale)}</Text>
     </EmailLayout>
   );
 }

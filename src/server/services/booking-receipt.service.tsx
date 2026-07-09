@@ -249,7 +249,7 @@ function BookingReceipt({ receipt }: { receipt: BookingReceiptData }) {
             </Text>
           </View>
           <Text style={styles.note}>
-            Prix TTC. EnCave n'est pas assujettie à la TVA à ce jour.
+            Prix TTC. EnCave n&apos;est pas assujettie à la TVA à ce jour.
           </Text>
         </View>
 
