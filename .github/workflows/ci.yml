@@ -6,8 +6,12 @@ on:
   pull_request:
     branches: [main]
 
+# CI is hermetic: no job talks to a real database (the DB-invariant tests
+# skip without INVARIANTS_DATABASE_URL), so a well-formed placeholder is all
+# the Zod env validation needs. The old secrets.DATABASE_URL resolved to an
+# empty string when unset and failed every test job.
 env:
-  DATABASE_URL: ${{ secrets.DATABASE_URL }}
+  DATABASE_URL: 'postgresql://placeholder:placeholder@localhost:5432/encave'
 
 jobs:
   lint-and-typecheck:
@@ -87,3 +91,6 @@ jobs:
         run: npm run build
         env:
           DATABASE_URL: 'postgresql://placeholder:placeholder@localhost:5432/encave'
+          # No reachable database in CI — the prebuild migrate deploy must
+          # not run here (it runs for real on every Vercel deployment).
+          SKIP_DB_MIGRATIONS: '1'
