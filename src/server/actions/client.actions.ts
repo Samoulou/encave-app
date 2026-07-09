@@ -9,6 +9,7 @@ import { BookingStatus, Locale } from '@prisma/client';
 import type { ActionResult } from '@/types/actions';
 import { logError } from '@/lib/logger';
 import { processRefund } from '@/server/services/payment.service';
+import { computeBookingRefund } from '@/lib/business-rules/cancellation-policy';
 import {
   sendBookingCancellationEmail,
   sendWinemakerCancellationEmail,
@@ -24,7 +25,7 @@ export interface ClientCancellationResult {
 /**
  * Cancel a booking as the authenticated client.
  * Verifies the user's email matches the booking's visitorEmail.
- * Refund policy: Full refund if >24h before experience, no refund otherwise.
+ * Refund follows the winery's cancellation policy (P-03 / L-043).
  */
 export async function cancelClientBooking(
   bookingId: string
@@ -55,6 +56,7 @@ export async function cancelClientBooking(
           select: {
             name: true,
             email: true,
+            cancellationPolicy: true,
             user: {
               select: {
                 name: true,
@@ -103,20 +105,69 @@ export async function cancelClientBooking(
       };
     }
 
-    // Determine refund eligibility (>24h = full refund)
-    const isEligibleForRefund = hoursUntilExperience > 24;
+    // Refund per the policy snapshotted at booking (fallback: winery's
+    // current policy for legacy rows) on the full paid amount (D2).
+    const { paidCents, refundDueCents, stripeAmountArg } = computeBookingRefund(
+      booking,
+      hoursUntilExperience
+    );
     let refundAmount: number | null = null;
     let stripeRefundId: string | null = null;
 
-    if (isEligibleForRefund && booking.stripePaymentIntentId) {
+    // Atomic claim — see cancelBooking: prevents two concurrent
+    // cancellations from both obtaining a partial refund.
+    const claimed = await db.booking.updateMany({
+      where: { id: bookingId, status: BookingStatus.CONFIRMED },
+      data: {
+        status: BookingStatus.CANCELLED_BY_CLIENT,
+        cancelledAt: new Date(),
+      },
+    });
+    if (claimed.count === 0) {
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Only confirmed bookings can be cancelled',
+        },
+      };
+    }
+
+    if (refundDueCents > 0 && booking.stripePaymentIntentId) {
       try {
         const refundResult = await processRefund(
           booking.stripePaymentIntentId,
-          true
+          true,
+          stripeAmountArg,
+          `cancel-refund:${bookingId}:${refundDueCents}`
         );
         refundAmount = refundResult.amount;
         stripeRefundId = refundResult.refundId;
       } catch (refundError) {
+        // Release the claim ONLY on a deterministic Stripe rejection —
+        // after an ambiguous network error the refund may have succeeded,
+        // and releasing would allow a second one once the idempotency key
+        // expires (24h). Ambiguous → keep the cancellation, store the
+        // error for manual reconciliation.
+        const deterministic =
+          typeof refundError === 'object' &&
+          refundError !== null &&
+          'type' in refundError &&
+          refundError.type === 'StripeInvalidRequestError';
+        if (deterministic) {
+          await db.booking.updateMany({
+            where: {
+              id: bookingId,
+              status: BookingStatus.CANCELLED_BY_CLIENT,
+            },
+            data: { status: BookingStatus.CONFIRMED, cancelledAt: null },
+          });
+        } else {
+          await db.booking.update({
+            where: { id: bookingId },
+            data: { refundError: String(refundError) },
+          });
+        }
         logError('Refund processing error', refundError, {
           action: 'cancelClientBooking',
           bookingId,
@@ -132,12 +183,10 @@ export async function cancelClientBooking(
       }
     }
 
-    // Update booking status
+    // Record the refund outcome on the already-cancelled booking
     const updatedBooking = await db.booking.update({
       where: { id: bookingId },
       data: {
-        status: BookingStatus.CANCELLED_BY_CLIENT,
-        cancelledAt: new Date(),
         refundIssued: refundAmount !== null,
         refundAmount,
         stripeRefundId,
@@ -148,13 +197,25 @@ export async function cancelClientBooking(
     const bookingDateTime = new Date(booking.date);
     bookingDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
 
-    // Send cancellation email to client
+    // Send cancellation email to client (full paid total; refund exact,
+    // or generic wording when due but unprocessable — see cancelBooking).
+    if (refundDueCents > 0 && refundAmount === null) {
+      logError(
+        'Refund due but no Stripe payment intent on booking',
+        undefined,
+        { action: 'cancelClientBooking', bookingId, refundDueCents }
+      );
+    }
     await sendBookingCancellationEmail(booking.visitorEmail, {
       guestName: booking.visitorName,
       experienceTitle: booking.experience.title,
       wineryName: booking.winery.name,
       date: bookingDateTime,
-      totalPrice: booking.totalPrice,
+      totalPrice: paidCents,
+      refundAmountCents:
+        refundDueCents > 0 && refundAmount === null
+          ? null
+          : (refundAmount ?? 0),
       bookingRef: booking.reference,
     });
 
@@ -179,7 +240,7 @@ export async function cancelClientBooking(
       data: {
         bookingId: updatedBooking.id,
         status: updatedBooking.status,
-        refundIssued: isEligibleForRefund,
+        refundIssued: refundAmount !== null,
         refundAmount,
       },
     };

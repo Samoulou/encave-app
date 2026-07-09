@@ -4,6 +4,7 @@ import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
 import { db } from '@/server/db';
 import { ExperienceType, ExperienceStatus, Prisma } from '@prisma/client';
+import type { CancellationPolicy } from '@prisma/client';
 import { calculateDistance } from '@/lib/geo-utils';
 import { getLocationById } from '@/lib/constants/locations';
 import { publiclyVisibleWineryWhere } from '@/lib/business-rules/winery-visibility';
@@ -87,6 +88,7 @@ export interface ExperienceDetail {
     latitude: number | null;
     longitude: number | null;
     stripeOnboardingComplete: boolean;
+    cancellationPolicy: CancellationPolicy;
   };
   galleryImages: Array<{
     id: string;
@@ -422,6 +424,7 @@ export const getExperienceBySlug = cache(
               latitude: true,
               longitude: true,
               stripeOnboardingComplete: true,
+              cancellationPolicy: true,
             },
           },
           galleryImages: {

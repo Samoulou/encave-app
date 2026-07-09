@@ -9,13 +9,11 @@ import { CancellationModal } from './CancellationModal';
 interface CancelBookingButtonProps {
   bookingId: string;
   accessToken: string;
-  totalPrice: number;
 }
 
 export function CancelBookingButton({
   bookingId,
   accessToken,
-  totalPrice,
 }: CancelBookingButtonProps) {
   const t = useTranslations('cancellation');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -36,7 +34,6 @@ export function CancelBookingButton({
         onClose={() => setIsModalOpen(false)}
         bookingId={bookingId}
         accessToken={accessToken}
-        totalPrice={totalPrice}
       />
     </>
   );

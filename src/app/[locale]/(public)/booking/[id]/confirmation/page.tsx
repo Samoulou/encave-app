@@ -216,6 +216,7 @@ export default async function ConfirmationPage({
                   formattedTime={formattedTime}
                   guestCount={booking.guestCount}
                   totalPrice={booking.totalPrice}
+                  serviceFeeCents={booking.serviceFeeCents}
                 />
 
                 {/* Visual/QR Side */}

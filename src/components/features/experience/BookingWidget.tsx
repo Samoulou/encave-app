@@ -3,6 +3,8 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
+import type { CancellationPolicy } from '@prisma/client';
+import { getPolicyTiers } from '@/lib/business-rules/cancellation-policy';
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
 import { addDays, format, parseISO, startOfDay } from 'date-fns';
 import { de, enUS, fr } from 'date-fns/locale';
@@ -29,6 +31,10 @@ interface BookingWidgetProps {
   maxCapacity: number;
   duration: number;
   availabilitySlots?: AvailabilitySlot[];
+  /** Client booking fee per ticket in cents — 0 when BOOKING_FEE is OFF. */
+  serviceFeeCentsPerGuest?: number;
+  /** Winery cancellation policy — drives the free-cancellation badge. */
+  cancellationPolicy?: CancellationPolicy;
 }
 
 const dateLocales = { en: enUS, fr, de } as const;
@@ -42,9 +48,12 @@ export function BookingWidget({
   maxCapacity,
   duration: _duration,
   availabilitySlots = [],
+  serviceFeeCentsPerGuest = 0,
+  cancellationPolicy = 'STANDARD',
 }: BookingWidgetProps) {
   const t = useTranslations('booking');
   const tExp = useTranslations('experience');
+  const tCheckout = useTranslations('checkout');
   const router = useRouter();
   const locale = useLocale();
 
@@ -104,7 +113,19 @@ export function BookingWidget({
     guests <= maxCapacity &&
     (remainingCapacity === null || guests <= remainingCapacity);
 
+  // Badge derived from the policy's top tier — the same source the
+  // refund engine uses, so the promise can never drift from the barème.
+  const topTier = getPolicyTiers(cancellationPolicy)[0];
+  const freeCancellationLabel =
+    topTier === undefined
+      ? null
+      : topTier.minHours % 24 === 0 && topTier.minHours >= 48
+        ? tExp('freeCancellationUntilDays', { days: topTier.minHours / 24 })
+        : tExp('freeCancellationUntilHours', { hours: topTier.minHours });
+
   const totalPrice = price * guests;
+  const serviceFee = serviceFeeCentsPerGuest * guests;
+  const totalWithFees = totalPrice + serviceFee;
 
   const handleDateChange = useCallback(
     (newDate: string | null) => {
@@ -198,7 +219,7 @@ export function BookingWidget({
 
       <div className="mb-5 flex items-center gap-1.5 text-xs font-semibold text-vine">
         <Check className="h-3.5 w-3.5" />
-        {tExp('freeCancellation')}
+        {freeCancellationLabel}
       </div>
 
       <div className="border-t border-stone-200 pt-4">
@@ -310,13 +331,13 @@ export function BookingWidget({
           <span>{formatCHF(totalPrice)}</span>
         </div>
         <div className="flex items-center justify-between text-ink-500">
-          <span>Frais de service</span>
-          <span>{formatCHF(0)}</span>
+          <span>{tCheckout('serviceFee')}</span>
+          <span>{formatCHF(serviceFee)}</span>
         </div>
         <div className="mt-2 flex items-center justify-between border-t border-stone-200 pt-2 text-[15px] font-bold text-ink-900">
           <span>Total</span>
           <span className="text-burgundy-700" data-testid="total-price">
-            {formatCHF(totalPrice)}
+            {formatCHF(totalWithFees)}
           </span>
         </div>
       </div>

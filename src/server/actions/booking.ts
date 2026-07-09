@@ -7,12 +7,14 @@ import { db } from '@/server/db';
 import { auth } from '@/server/auth';
 import type { ActionResult } from '@/types/actions';
 import { BookingStatus, UserRole } from '@prisma/client';
+import type { CancellationPolicy } from '@prisma/client';
 import {
   sendBookingConfirmationEmail,
   sendBookingCancellationEmail,
   sendWinemakerCancellationEmail,
 } from '@/server/services/email.service';
 import { processRefund } from '@/server/services/payment.service';
+import { computeBookingRefund } from '@/lib/business-rules/cancellation-policy';
 import { logError } from '@/lib/logger';
 
 const CheckAvailabilitySchema = z.object({
@@ -189,6 +191,7 @@ export interface ExperienceForBooking {
     name: string;
     commune: string | null;
     stripeOnboardingComplete: boolean;
+    cancellationPolicy: CancellationPolicy;
   };
   availabilitySlots: {
     dayOfWeek: number;
@@ -214,6 +217,7 @@ export async function getExperienceForBooking(
             name: true,
             commune: true,
             stripeOnboardingComplete: true,
+            cancellationPolicy: true,
           },
         },
         availabilitySlots: {
@@ -348,6 +352,7 @@ export async function resendConfirmationEmail(
       guestCount: booking.guestCount,
       duration: booking.experience.duration,
       totalPrice: booking.totalPrice,
+      serviceFeeCents: booking.serviceFeeCents,
       bookingRef: booking.reference,
     });
 
@@ -386,6 +391,7 @@ export async function getBookingByToken(token: string): Promise<
     timeSlot: string;
     guestCount: number;
     totalPrice: number;
+    serviceFeeCents: number;
     experience: {
       title: string;
       slug: string;
@@ -455,6 +461,7 @@ export async function getBookingByToken(token: string): Promise<
         timeSlot: booking.timeSlot,
         guestCount: booking.guestCount,
         totalPrice: booking.totalPrice,
+        serviceFeeCents: booking.serviceFeeCents,
         experience: booking.experience,
         winery: booking.winery,
       },
@@ -477,7 +484,7 @@ export interface CancellationResult {
 
 /**
  * Cancel a booking and process refund if eligible
- * Refund policy: Full refund if >24h before experience, no refund otherwise
+ * Refund follows the winery's cancellation policy (P-03 / L-043).
  */
 export async function cancelBooking(
   bookingId: string,
@@ -507,6 +514,7 @@ export async function cancelBooking(
           select: {
             name: true,
             email: true,
+            cancellationPolicy: true,
             user: {
               select: {
                 name: true,
@@ -560,21 +568,72 @@ export async function cancelBooking(
       };
     }
 
-    // Determine refund eligibility (>24h = full refund)
-    const isEligibleForRefund = hoursUntilExperience > 24;
+    // Refund per the policy snapshotted at booking (fallback: winery's
+    // current policy for legacy rows) on the full paid amount (D2).
+    const { paidCents, refundDueCents, stripeAmountArg } = computeBookingRefund(
+      booking,
+      hoursUntilExperience
+    );
     let refundAmount: number | null = null;
     let stripeRefundId: string | null = null;
 
-    // Process refund if eligible and payment was made
-    if (isEligibleForRefund && booking.stripePaymentIntentId) {
+    // Atomic claim: the status flip IS the lock. Two concurrent
+    // cancellations would otherwise both pass the CONFIRMED check and
+    // both obtain a 50% partial refund (100% total, taken twice from
+    // the winery). Only the request that wins this update refunds.
+    const claimed = await db.booking.updateMany({
+      where: { id: bookingId, status: BookingStatus.CONFIRMED },
+      data: {
+        status: BookingStatus.CANCELLED_BY_CLIENT,
+        cancelledAt: new Date(),
+      },
+    });
+    if (claimed.count === 0) {
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Only confirmed bookings can be cancelled',
+        },
+      };
+    }
+
+    // Process refund if due and payment was made
+    if (refundDueCents > 0 && booking.stripePaymentIntentId) {
       try {
         const refundResult = await processRefund(
           booking.stripePaymentIntentId,
-          true
+          true,
+          stripeAmountArg,
+          `cancel-refund:${bookingId}:${refundDueCents}`
         );
         refundAmount = refundResult.amount;
         stripeRefundId = refundResult.refundId;
       } catch (refundError) {
+        // Release the claim ONLY on a deterministic Stripe rejection —
+        // after an ambiguous network error the refund may have succeeded,
+        // and releasing would allow a second one once the idempotency key
+        // expires (24h). Ambiguous → keep the cancellation, store the
+        // error for manual reconciliation.
+        const deterministic =
+          typeof refundError === 'object' &&
+          refundError !== null &&
+          'type' in refundError &&
+          refundError.type === 'StripeInvalidRequestError';
+        if (deterministic) {
+          await db.booking.updateMany({
+            where: {
+              id: bookingId,
+              status: BookingStatus.CANCELLED_BY_CLIENT,
+            },
+            data: { status: BookingStatus.CONFIRMED, cancelledAt: null },
+          });
+        } else {
+          await db.booking.update({
+            where: { id: bookingId },
+            data: { refundError: String(refundError) },
+          });
+        }
         logError('Refund processing error', refundError, {
           action: 'cancelBooking',
           bookingId,
@@ -590,12 +649,10 @@ export async function cancelBooking(
       }
     }
 
-    // Update booking status
+    // Record the refund outcome on the already-cancelled booking
     const updatedBooking = await db.booking.update({
       where: { id: bookingId },
       data: {
-        status: BookingStatus.CANCELLED_BY_CLIENT,
-        cancelledAt: new Date(),
         refundIssued: refundAmount !== null,
         refundAmount,
         stripeRefundId,
@@ -606,13 +663,27 @@ export async function cancelBooking(
     const bookingDateTime = new Date(booking.date);
     bookingDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
 
-    // Send cancellation email to client
+    // Send cancellation email to client. Price row shows the full paid
+    // amount; refund line shows the exact processed amount — or the
+    // generic wording when a refund was due but no payment intent was on
+    // file (never affirm "no refund" to a client the policy entitles).
+    if (refundDueCents > 0 && refundAmount === null) {
+      logError(
+        'Refund due but no Stripe payment intent on booking',
+        undefined,
+        { action: 'cancelBooking', bookingId, refundDueCents }
+      );
+    }
     await sendBookingCancellationEmail(booking.visitorEmail, {
       guestName: booking.visitorName,
       experienceTitle: booking.experience.title,
       wineryName: booking.winery.name,
       date: bookingDateTime,
-      totalPrice: booking.totalPrice,
+      totalPrice: paidCents,
+      refundAmountCents:
+        refundDueCents > 0 && refundAmount === null
+          ? null
+          : (refundAmount ?? 0),
       bookingRef: booking.reference,
     });
 
@@ -635,7 +706,7 @@ export async function cancelBooking(
       data: {
         bookingId: updatedBooking.id,
         status: updatedBooking.status,
-        refundIssued: isEligibleForRefund,
+        refundIssued: refundAmount !== null,
         refundAmount,
       },
     };
@@ -677,6 +748,9 @@ export async function getCancellationInfo(
       where: {
         id: bookingId,
         accessTokenHash: tokenHash,
+      },
+      include: {
+        winery: { select: { cancellationPolicy: true } },
       },
     });
 
@@ -725,14 +799,17 @@ export async function getCancellationInfo(
       };
     }
 
-    const isEligibleForRefund = hoursUntilExperience > 24;
-    const refundAmount = isEligibleForRefund ? booking.totalPrice : 0;
+    // Policy-based amount on the full paid total (tickets + service fee).
+    const refundAmount = computeBookingRefund(
+      booking,
+      hoursUntilExperience
+    ).refundDueCents;
 
     return {
       success: true,
       data: {
         canCancel: true,
-        isEligibleForRefund,
+        isEligibleForRefund: refundAmount > 0,
         hoursUntilExperience,
         refundAmount,
       },

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { WineryDetailView } from '@/components/features/admin/WineryDetailView';
 import { AdminSuspensionControls } from '@/components/features/admin/AdminSuspensionControls';
+import { WineryMonetizationPanel } from '@/components/features/admin/WineryMonetizationPanel';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
@@ -74,6 +75,11 @@ export default async function WineryDetailPage({
       <WineryDetailView winery={winery} />
 
       <div className="mt-6 space-y-4">
+        <WineryMonetizationPanel
+          wineryId={winery.id}
+          plan={winery.plan}
+          commissionRate={winery.commissionRate}
+        />
         <AdminSuspensionControls
           targetId={winery.id}
           targetType="winery"

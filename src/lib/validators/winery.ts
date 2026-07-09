@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CancellationPolicy } from '@prisma/client';
 import { wineryImageSchema } from './image';
 
 /**
@@ -54,6 +55,20 @@ export const wineryProfileSchema = z.object({
 });
 
 export type WineryProfileInput = z.infer<typeof wineryProfileSchema>;
+
+/**
+ * Schema for the winery cancellation-policy selection (P-03 / L-043).
+ * The policy drives the refund barème applied at cancellation time
+ * (src/lib/business-rules/cancellation-policy.ts).
+ */
+export const setWineryCancellationPolicySchema = z.object({
+  wineryId: z.string().min(1, 'Winery id is required'),
+  policy: z.nativeEnum(CancellationPolicy),
+});
+
+export type SetWineryCancellationPolicyInput = z.infer<
+  typeof setWineryCancellationPolicySchema
+>;
 
 /**
  * Image file validation schema

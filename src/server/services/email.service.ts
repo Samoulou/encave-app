@@ -155,6 +155,8 @@ export interface BookingConfirmationData {
   guestCount: number;
   duration: number;
   totalPrice: number;
+  /** Client booking fee in cents (0 when BOOKING_FEE is OFF). */
+  serviceFeeCents?: number;
   bookingRef: string;
 }
 
@@ -303,6 +305,8 @@ export interface BookingCancellationData {
   wineryName: string;
   date: Date;
   totalPrice: number;
+  /** Exact refunded cents (policy-based); 0 = no refund; null = unknown. */
+  refundAmountCents?: number | null;
   bookingRef: string;
 }
 

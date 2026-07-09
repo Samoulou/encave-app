@@ -235,7 +235,17 @@
     "nearStation": "In der Nähe des Bahnhofs {commune}",
     "pricePerPersonLabel": "Preis pro Person",
     "available": "VERFÜGBAR",
-    "freeCancellation": "Kostenlose Stornierung bis 24h vorher.",
+    "cancellationPolicy": {
+      "title": "Stornierungsbedingungen:",
+      "labels": {
+        "FLEXIBLE": "Flexibel",
+        "STANDARD": "Standard",
+        "STRICT": "Streng"
+      },
+      "tierHours": "{percent} % Erstattung bis {hours} Std. vor dem Erlebnis",
+      "tierDays": "{percent} % Erstattung bis {days, plural, =1 {# Tag} other {# Tage}} vor dem Erlebnis",
+      "noRefundAfter": "Danach keine Erstattung."
+    },
     "inclusions": {
       "TASTING": {
         "guidedTasting": "Geführte Weinverkostung",
@@ -471,7 +481,9 @@
     },
     "ageGate": {
       "badge": "Nur 18+"
-    }
+    },
+    "freeCancellationUntilHours": "Kostenlose Stornierung bis {hours} Std. vorher.",
+    "freeCancellationUntilDays": "Kostenlose Stornierung bis {days, plural, =1 {# Tag} other {# Tage}} vorher."
   },
   "booking": {
     "selectDate": "Datum auswahlen",
@@ -654,8 +666,6 @@
     "viewOnMap": "Auf Karte anzeigen",
     "serviceFee": "Servicegebuhr",
     "totalCHF": "Gesamt (CHF)",
-    "freeCancellation": "Kostenlose Stornierung",
-    "cancellationPolicy": "bis 24 Stunden vor dem Erlebnis. Danach fallen 50% Gebuhr an.",
     "orderSummary": "Bestellubersicht",
     "sslEncrypted": "SSL VERSCHLUSSELT",
     "support247": "24/7 SUPPORT",
@@ -677,6 +687,7 @@
     "paymentPendingDescription": "Ihre Zahlung wird verarbeitet. Bitte warten Sie...",
     "bookingStatus": "Buchungsstatus",
     "bookingReference": "Buchungsreferenz",
+    "serviceFee": "Servicegebühr",
     "totalPaid": "Gesamtbetrag bezahlt",
     "wineryDetails": "Weingut-Details",
     "yourDetails": "Ihre Daten",
@@ -841,7 +852,15 @@
     "manageProfile": "Verwalten Sie Ihr Weingut-Profil und Fotos",
     "lastUpdatedDate": "Zuletzt aktualisiert {date}",
     "viewPublicProfile": "Öffentliches Profil anzeigen",
-    "paymentStatusLabel": "Zahlungsstatus"
+    "paymentStatusLabel": "Zahlungsstatus",
+    "cancellationPolicy": {
+      "title": "Stornierungsbedingungen",
+      "description": "Wählen Sie die Erstattungsbedingungen, die gelten, wenn ein Gast eine Buchung storniert. Sie werden bei Ihren Erlebnissen und beim Bezahlen angezeigt.",
+      "save": "Bedingungen speichern",
+      "saving": "Wird gespeichert...",
+      "updated": "Stornierungsbedingungen aktualisiert",
+      "updateError": "Die Stornierungsbedingungen konnten nicht gespeichert werden. Bitte versuchen Sie es erneut."
+    }
   },
   "dashboard": {
     "title": "Dashboard",
@@ -935,6 +954,10 @@
   },
   "earnings": {
     "title": "Einnahmen",
+    "gmv": {
+      "title": "EnCave hat Ihnen eingebracht",
+      "description": "Gesamtwert der über EnCave bestätigten und durchgeführten Buchungen."
+    },
     "period": {
       "selectPeriod": "Zeitraum wählen",
       "thisMonth": "Dieser Monat",
@@ -1043,6 +1066,44 @@
   "admin": {
     "title": "Admin-Dashboard",
     "subtitle": "Weingut-Verifizierungen und Plattformeinstellungen verwalten",
+    "featureFlags": {
+      "title": "Feature Flags",
+      "description": "Schalter für Geldfunktionen — sofort wirksam, ohne Deployment.",
+      "enabledToast": "{flag}: aktiviert",
+      "disabledToast": "{flag}: deaktiviert",
+      "flags": {
+        "BOOKING_FEE": "Servicegebühr (2.50 CHF/Ticket)",
+        "GIFT_CARDS": "Geschenkgutscheine",
+        "NO_SHOW_FEES": "No-Show-Gebühren",
+        "REQUESTS": "Massgeschneiderte Anfragen",
+        "TASTING_SHEET": "Degustationsblatt",
+        "COLLECTIVE_EVENTS": "Kollektive Events"
+      }
+    },
+    "monetization": {
+      "title": "Plan und Kommission",
+      "description": "Preisplan und Kommissionssatz für dieses Weingut.",
+      "planLabel": "Plan",
+      "plans": {
+        "STANDARD": "Standard",
+        "FOUNDER": "Gründer"
+      },
+      "commissionLabel": "Kommission (%)",
+      "commissionPlaceholder": "Plattform-Standardsatz",
+      "commissionHelp": "Leer lassen, um den Plattform-Standardsatz anzuwenden.",
+      "save": "Speichern",
+      "saving": "Wird gespeichert…",
+      "saved": "Plan und Kommission aktualisiert.",
+      "invalidRate": "Der Satz muss zwischen 0 und 100 liegen."
+    },
+    "businessKpis": {
+      "title": "Business-KPIs",
+      "gmv": "Gesamt-GMV",
+      "ticketsThisMonth": "Tickets diesen Monat",
+      "takeRate": "Blended Take Rate",
+      "giftCardRevenue": "Umsatz Geschenkgutscheine",
+      "giftCardLiability": "Verbindlichkeit Geschenkgutscheine"
+    },
     "pendingReview": "Ausstehende Überprüfung",
     "verified": "Verifiziert",
     "rejected": "Abgelehnt",
@@ -1722,7 +1783,7 @@
       "title": "Buchung stornieren",
       "confirmMessage": "Möchten Sie Ihre Buchung für \"{title}\" wirklich stornieren?",
       "refundPolicy": "Stornierungsrichtlinie",
-      "refundPolicyDetail": "Volle Rückerstattung bei Stornierung mehr als 24 Stunden vor dem Erlebnis. Keine Rückerstattung innerhalb von 24 Stunden.",
+      "refundPolicyDetail": "Ihre Rückerstattung richtet sich nach den Stornierungsbedingungen des Weinguts (siehe Erlebnisseite). Der genaue Betrag wird per E-Mail bestätigt.",
       "keepBooking": "Buchung behalten",
       "confirm": "Stornierung bestätigen",
       "cancelling": "Wird storniert...",

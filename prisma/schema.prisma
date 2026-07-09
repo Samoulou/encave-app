@@ -348,8 +348,15 @@ model Booking {
   date                    DateTime              @db.Date
   timeSlot                String // "HH:mm"
   guestCount              Int
-  totalPrice              Int // cents
-  platformFee             Int // cents
+  totalPrice              Int // cents — experience price × guests (fee EXCLUDED)
+  platformFee             Int // cents — commission only (fee excluded)
+  // Client booking fee (2.50 CHF/ticket, flag BOOKING_FEE). Platform's,
+  // never part of wineryPayout. Charged amount = totalPrice + serviceFee.
+  serviceFeeCents         Int                   @default(0)
+  // Snapshot of the winery's cancellation policy at booking time — the
+  // contractual terms the client accepted. Refunds use this, never the
+  // winery's CURRENT policy. Null = legacy booking (fallback to winery).
+  cancellationPolicy      CancellationPolicy?
   wineryPayout            Int // cents
   status                  BookingStatus         @default(PENDING_PAYMENT)
   stripeCheckoutSessionId String?
@@ -680,4 +687,16 @@ model ScheduledJob {
   @@index([status, runAt])
   @@index([type, status])
   @@map("scheduled_jobs")
+}
+
+// Money features ship behind kill-switches (delivery plan rule 3).
+// Read through a 60s cache (src/lib/flags.ts); toggled from the admin
+// (revalidateTag → immediate) or direct SQL (≤ 60s). Rows are created
+// lazily — a missing row means the flag's REGISTRY default (OFF).
+model FeatureFlag {
+  key       String   @id // e.g. BOOKING_FEE — see FLAG_REGISTRY
+  enabled   Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+
+  @@map("feature_flags")
 }

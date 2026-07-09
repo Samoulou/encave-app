@@ -235,7 +235,17 @@
     "nearStation": "Proche de la gare de {commune}",
     "pricePerPersonLabel": "Prix par personne",
     "available": "DISPONIBLE",
-    "freeCancellation": "Annulation gratuite jusqu'à 24h avant.",
+    "cancellationPolicy": {
+      "title": "Politique d'annulation :",
+      "labels": {
+        "FLEXIBLE": "Flexible",
+        "STANDARD": "Standard",
+        "STRICT": "Stricte"
+      },
+      "tierHours": "Remboursement à {percent} % jusqu'à {hours} h avant l'expérience",
+      "tierDays": "Remboursement à {percent} % jusqu'à {days, plural, =1 {# jour} other {# jours}} avant l'expérience",
+      "noRefundAfter": "Passé ce délai, aucun remboursement."
+    },
     "inclusions": {
       "TASTING": {
         "guidedTasting": "Dégustation guidée",
@@ -471,7 +481,9 @@
     },
     "ageGate": {
       "badge": "Reserve aux 18+"
-    }
+    },
+    "freeCancellationUntilHours": "Annulation gratuite jusqu'à {hours} h avant.",
+    "freeCancellationUntilDays": "Annulation gratuite jusqu'à {days, plural, =1 {# jour} other {# jours}} avant."
   },
   "booking": {
     "selectDate": "Choisissez une date",
@@ -654,8 +666,6 @@
     "viewOnMap": "Voir sur la carte",
     "serviceFee": "Frais de service",
     "totalCHF": "Total (CHF)",
-    "freeCancellation": "Annulation gratuite",
-    "cancellationPolicy": "jusqu'à 24 heures avant l'expérience. Après, des frais de 50% s'appliquent.",
     "orderSummary": "Récapitulatif",
     "sslEncrypted": "CHIFFRÉ SSL",
     "support247": "SUPPORT 24/7",
@@ -677,6 +687,7 @@
     "paymentPendingDescription": "Votre paiement est en cours de traitement. Veuillez patienter...",
     "bookingStatus": "Statut de la réservation",
     "bookingReference": "Référence de réservation",
+    "serviceFee": "Frais de service",
     "totalPaid": "Total payé",
     "wineryDetails": "Informations du domaine",
     "yourDetails": "Vos informations",
@@ -841,7 +852,15 @@
     "manageProfile": "Gérez le profil et les photos de votre domaine",
     "lastUpdatedDate": "Dernière mise à jour {date}",
     "viewPublicProfile": "Voir le profil public",
-    "paymentStatusLabel": "Statut du paiement"
+    "paymentStatusLabel": "Statut du paiement",
+    "cancellationPolicy": {
+      "title": "Politique d'annulation",
+      "description": "Choisissez les conditions de remboursement appliquées lorsqu'un client annule une réservation. Elles sont affichées sur vos expériences et au moment du paiement.",
+      "save": "Enregistrer la politique",
+      "saving": "Enregistrement...",
+      "updated": "Politique d'annulation mise à jour",
+      "updateError": "Impossible d'enregistrer la politique d'annulation. Veuillez réessayer."
+    }
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -935,6 +954,10 @@
   },
   "earnings": {
     "title": "Revenus",
+    "gmv": {
+      "title": "EnCave vous a apporté",
+      "description": "Valeur totale des réservations confirmées et réalisées via EnCave."
+    },
     "period": {
       "selectPeriod": "Sélectionner la période",
       "thisMonth": "Ce mois-ci",
@@ -1043,6 +1066,44 @@
   "admin": {
     "title": "Tableau de bord Admin",
     "subtitle": "Gérez les vérifications des domaines et les paramètres de la plateforme",
+    "featureFlags": {
+      "title": "Feature flags",
+      "description": "Interrupteurs des fonctionnalités monétaires — effet immédiat, sans déploiement.",
+      "enabledToast": "{flag} : activé",
+      "disabledToast": "{flag} : désactivé",
+      "flags": {
+        "BOOKING_FEE": "Frais de service (2.50 CHF/billet)",
+        "GIFT_CARDS": "Bons cadeaux",
+        "NO_SHOW_FEES": "Frais de no-show",
+        "REQUESTS": "Demandes sur-mesure",
+        "TASTING_SHEET": "Fiche de dégustation",
+        "COLLECTIVE_EVENTS": "Événements collectifs"
+      }
+    },
+    "monetization": {
+      "title": "Plan et commission",
+      "description": "Plan tarifaire et taux de commission appliqués à cette cave.",
+      "planLabel": "Plan",
+      "plans": {
+        "STANDARD": "Standard",
+        "FOUNDER": "Fondateur"
+      },
+      "commissionLabel": "Commission (%)",
+      "commissionPlaceholder": "Taux plateforme par défaut",
+      "commissionHelp": "Laisser vide pour appliquer le taux plateforme par défaut.",
+      "save": "Enregistrer",
+      "saving": "Enregistrement…",
+      "saved": "Plan et commission mis à jour.",
+      "invalidRate": "Le taux doit être compris entre 0 et 100."
+    },
+    "businessKpis": {
+      "title": "KPIs business",
+      "gmv": "GMV totale",
+      "ticketsThisMonth": "Billets ce mois-ci",
+      "takeRate": "Take rate blended",
+      "giftCardRevenue": "CA bons cadeaux",
+      "giftCardLiability": "Passif bons cadeaux"
+    },
     "pendingReview": "En attente de validation",
     "verified": "Vérifié",
     "rejected": "Rejeté",
@@ -1717,7 +1778,7 @@
       "title": "Annuler la réservation",
       "confirmMessage": "Êtes-vous sûr de vouloir annuler votre réservation pour \"{title}\" ?",
       "refundPolicy": "Politique d'annulation",
-      "refundPolicyDetail": "Remboursement intégral si annulé plus de 24 heures avant l'expérience. Aucun remboursement dans les 24 heures.",
+      "refundPolicyDetail": "Le remboursement est calculé selon la politique d'annulation de la cave (affichée sur la fiche de l'expérience). Le montant exact vous sera confirmé par email.",
       "keepBooking": "Garder la réservation",
       "confirm": "Confirmer l'annulation",
       "cancelling": "Annulation en cours...",

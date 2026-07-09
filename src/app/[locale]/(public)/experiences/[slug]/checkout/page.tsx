@@ -5,6 +5,8 @@ import { getTranslations } from 'next-intl/server';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { getExperienceForBooking } from '@/server/actions/booking';
+import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
+import { BOOKING_FEE_CENTS } from '@/lib/constants/pricing';
 import { CheckoutClient } from './CheckoutClient';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
@@ -53,8 +55,14 @@ export default async function CheckoutPage({
   const guestCount = guests ? parseInt(guests, 10) : null;
   const hasValidParams = date && time && guestCount && guestCount > 0;
 
-  // Fetch experience data on the server (eliminates client waterfall)
-  const result = await getExperienceForBooking(slug);
+  // Fetch experience data on the server (eliminates client waterfall).
+  // Booking fee (P-03 / L-041): the flag is read server-side so the client
+  // only ever renders the amount — flag OFF means 0, same display as before.
+  const [result, bookingFeeEnabled] = await Promise.all([
+    getExperienceForBooking(slug),
+    isFlagEnabled('BOOKING_FEE'),
+  ]);
+  const serviceFeeCentsPerGuest = bookingFeeEnabled ? BOOKING_FEE_CENTS : 0;
 
   if (!result.success) {
     // Experience not found
@@ -93,6 +101,7 @@ export default async function CheckoutPage({
       time={time}
       guestCount={guestCount}
       paymentError={paymentError}
+      serviceFeeCentsPerGuest={serviceFeeCentsPerGuest}
     />
   );
 }

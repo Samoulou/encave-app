@@ -1,5 +1,9 @@
 import { db } from '@/server/db';
+import { getFeatureFlags } from '@/server/queries/feature-flags.queries';
+import { getAdminBusinessKpis } from '@/server/queries/admin-metrics.queries';
 import { AdminStats } from '@/components/features/admin/AdminStats';
+import { AdminBusinessKpis } from '@/components/features/admin/AdminBusinessKpis';
+import { FeatureFlagsPanel } from '@/components/features/admin/FeatureFlagsPanel';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,6 +20,7 @@ import {
   MapPin,
   ClipboardList,
   ShieldCheck,
+  ToggleRight,
   Wine,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
@@ -61,9 +66,11 @@ async function getRecentPending() {
 }
 
 export default async function AdminDashboard() {
-  const [stats, recentPending, t] = await Promise.all([
+  const [stats, recentPending, flags, kpis, t] = await Promise.all([
     getWineryStats(),
     getRecentPending(),
+    getFeatureFlags(),
+    getAdminBusinessKpis(),
     getTranslations('admin'),
   ]);
 
@@ -77,6 +84,8 @@ export default async function AdminDashboard() {
       </div>
 
       <AdminStats {...stats} />
+
+      <AdminBusinessKpis kpis={kpis} />
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         {/* Recent Pending Section */}
@@ -206,6 +215,28 @@ export default async function AdminDashboard() {
                 Compliance checklist
               </Button>
             </Link>
+          </CardContent>
+        </Card>
+
+        {/* Feature Flags Section (P-03 kill-switches) */}
+        <Card className="shadow-warm">
+          <CardHeader className="border-b border-stone-100">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-burgundy-100">
+                <ToggleRight className="h-5 w-5 text-burgundy-600" />
+              </div>
+              <div>
+                <CardTitle className="font-display">
+                  {t('featureFlags.title')}
+                </CardTitle>
+                <CardDescription>
+                  {t('featureFlags.description')}
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <FeatureFlagsPanel flags={flags} />
           </CardContent>
         </Card>
       </div>

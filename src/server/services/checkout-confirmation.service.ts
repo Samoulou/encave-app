@@ -185,6 +185,8 @@ export async function confirmBookingFromPaidCheckoutSession(
         time_slot: booking.timeSlot,
         guest_count: booking.guestCount,
         total_price_chf: booking.totalPrice / 100,
+        service_fee_chf: booking.serviceFeeCents / 100,
+        total_paid_chf: (booking.totalPrice + booking.serviceFeeCents) / 100,
         platform_fee_chf: booking.platformFee / 100,
         winery_payout_chf: booking.wineryPayout / 100,
         source,
@@ -210,6 +212,7 @@ export async function confirmBookingFromPaidCheckoutSession(
         guestCount: booking.guestCount,
         duration: booking.experience.duration,
         totalPrice: booking.totalPrice,
+        serviceFeeCents: booking.serviceFeeCents,
         bookingRef: booking.reference,
       },
       booking.winery.user.preferredLocale

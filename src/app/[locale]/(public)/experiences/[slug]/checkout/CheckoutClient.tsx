@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -59,6 +59,8 @@ interface CheckoutClientProps {
   time: string;
   guestCount: number;
   paymentError: string | null;
+  /** Client booking fee per ticket in cents — 0 when BOOKING_FEE is OFF. */
+  serviceFeeCentsPerGuest: number;
 }
 
 /**
@@ -72,8 +74,10 @@ export function CheckoutClient({
   time,
   guestCount,
   paymentError,
+  serviceFeeCentsPerGuest,
 }: CheckoutClientProps) {
   const t = useTranslations('checkout');
+  const locale = useLocale() as 'fr' | 'de' | 'en';
   const tBooking = useTranslations('booking');
   const tErrors = useTranslations('errors');
   const router = useRouter();
@@ -234,6 +238,8 @@ export function CheckoutClient({
         visitorEmail: data.email,
         visitorPhone: data.phone.replace(/\s/g, ''),
         ageConfirmed: true,
+        locale,
+        displayedServiceFeeCentsPerGuest: serviceFeeCentsPerGuest,
       });
 
       if (result.success) {
@@ -249,6 +255,8 @@ export function CheckoutClient({
   // BUG-003: Form is disabled if capacity is exceeded or still checking
   const isFormDisabled = capacityExceeded || isCheckingAvailability;
   const totalPrice = experience.price * guestCount;
+  const serviceFee = serviceFeeCentsPerGuest * guestCount;
+  const totalWithFees = totalPrice + serviceFee;
 
   return (
     <div className="w-full bg-cream-50 px-4 py-10 md:px-10">
@@ -362,7 +370,8 @@ export function CheckoutClient({
             }
             guestCount={guestCount}
             pricePerPerson={experience.price}
-            serviceFee={0}
+            serviceFee={serviceFee}
+            cancellationPolicy={experience.winery.cancellationPolicy}
           />
         </div>
 
@@ -489,7 +498,9 @@ export function CheckoutClient({
                   ) : (
                     <>
                       <span>
-                        {t('confirmAndPay', { amount: formatCHF(totalPrice) })}
+                        {t('confirmAndPay', {
+                          amount: formatCHF(totalWithFees),
+                        })}
                       </span>
                       <svg
                         className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1"
@@ -529,7 +540,8 @@ export function CheckoutClient({
                   }
                   guestCount={guestCount}
                   pricePerPerson={experience.price}
-                  serviceFee={0}
+                  serviceFee={serviceFee}
+                  cancellationPolicy={experience.winery.cancellationPolicy}
                 />
 
                 {/* Capacity Status Indicator */}

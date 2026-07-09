@@ -23,6 +23,8 @@ interface MobileBookingBarProps {
   maxCapacity: number;
   duration: number;
   availabilitySlots?: AvailabilitySlot[];
+  /** Client booking fee per ticket in cents — 0 when BOOKING_FEE is OFF. */
+  serviceFeeCentsPerGuest?: number;
 }
 
 export function MobileBookingBar({
@@ -34,6 +36,7 @@ export function MobileBookingBar({
   maxCapacity,
   duration,
   availabilitySlots = [],
+  serviceFeeCentsPerGuest = 0,
 }: MobileBookingBarProps) {
   const t = useTranslations('booking');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -107,6 +110,7 @@ export function MobileBookingBar({
           isOpen={isDrawerOpen}
           onOpenChange={setIsDrawerOpen}
           price={price}
+          serviceFeeCentsPerGuest={serviceFeeCentsPerGuest}
           experienceSlug={experienceSlug}
           experienceId={experienceId}
           minCapacity={minCapacity}

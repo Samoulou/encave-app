@@ -9,6 +9,8 @@ interface BookingDetailsSectionProps {
   formattedTime: string;
   guestCount: number;
   totalPrice: number;
+  /** Client booking fee in cents — 0 for bookings made with the flag OFF. */
+  serviceFeeCents?: number;
 }
 
 export function BookingDetailsSection({
@@ -18,6 +20,7 @@ export function BookingDetailsSection({
   formattedTime,
   guestCount,
   totalPrice,
+  serviceFeeCents = 0,
 }: BookingDetailsSectionProps) {
   const t = useTranslations('confirmation');
 
@@ -64,12 +67,20 @@ export function BookingDetailsSection({
         </div>
       </div>
       <div className="border-t border-border pt-4">
+        {serviceFeeCents > 0 && (
+          <div className="mb-2 flex items-start justify-between gap-4">
+            <p className="text-sm text-muted-foreground">{t('serviceFee')}</p>
+            <p className="shrink-0 text-right text-sm font-semibold text-foreground">
+              {formatCHF(serviceFeeCents)}
+            </p>
+          </div>
+        )}
         <div className="flex items-start justify-between gap-4">
           <p className="text-base font-medium text-muted-foreground">
             {t('totalPaid')}
           </p>
           <p className="shrink-0 text-right text-xl font-bold text-foreground">
-            {formatCHF(totalPrice)}
+            {formatCHF(totalPrice + serviceFeeCents)}
           </p>
         </div>
         <p className="mt-1 text-right text-xs text-muted-foreground">

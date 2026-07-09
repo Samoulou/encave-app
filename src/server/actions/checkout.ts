@@ -6,11 +6,18 @@ import { createId } from '@paralleldrive/cuid2';
 import { getStripe } from '@/server/stripe';
 import { db } from '@/server/db';
 import { getBaseUrl } from '@/lib/env';
+import { getTranslations } from 'next-intl/server';
 import type { ActionResult } from '@/types/actions';
 import { BookingStatus, ExperienceStatus, WineryStatus } from '@prisma/client';
 import { timeSlotSchema } from '@/lib/validators/booking';
-import { env } from '@/lib/env';
 import { AGE_GATE_VERSION } from '@/lib/constants/consent';
+import { BOOKING_FEE_CENTS } from '@/lib/constants/pricing';
+import {
+  computeCommissionCents,
+  getEffectiveCommissionRate,
+} from '@/lib/business-rules/commission';
+import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
+import { getPlatformCommissionRate } from '@/server/services/payment.service';
 import {
   checkRateLimit,
   BOOKING_RATE_LIMIT,
@@ -31,11 +38,19 @@ const CreateBookingSchema = z.object({
   wineryId: z.string(),
   date: z.string(),
   timeSlot: timeSlotSchema, // BACK-003 FIX: Validate HH:mm format
-  guestCount: z.number().positive(),
+  guestCount: z.number().int().positive(),
   visitorName: z.string().min(2),
   visitorEmail: z.string().email(),
   visitorPhone: z.string().min(6),
   ageConfirmed: z.literal(true),
+  /** Locale of the checkout UI — used for the Stripe line-item labels. */
+  locale: z.enum(['fr', 'de', 'en']).optional(),
+  /**
+   * Fee/ticket the UI displayed. If the flag flipped since render, the
+   * charge would differ from the accepted total — refuse and let the
+   * client refresh (never charge more or less than displayed).
+   */
+  displayedServiceFeeCentsPerGuest: z.number().int().min(0),
 });
 
 export interface CheckoutResult {
@@ -92,6 +107,8 @@ export async function createBookingAndCheckout(
             status: true,
             stripeAccountId: true,
             stripeOnboardingComplete: true,
+            commissionRate: true,
+            cancellationPolicy: true,
           },
         },
       },
@@ -147,10 +164,34 @@ export async function createBookingAndCheckout(
       };
     }
 
-    // Calculate prices
+    // Calculate prices. totalPrice/platformFee/wineryPayout keep their
+    // historical meaning (fee EXCLUDED); the client is charged
+    // totalPrice + serviceFeeCents. The fee and the commission both go to
+    // the platform via application_fee_amount — never to the winery.
     const totalPrice = experience.price * guestCount;
-    const platformFee = Math.round(totalPrice * env.PLATFORM_COMMISSION_RATE);
+    const commissionRate = getEffectiveCommissionRate(
+      experience.winery,
+      getPlatformCommissionRate()
+    );
+    const platformFee = computeCommissionCents(totalPrice, commissionRate);
     const wineryPayout = totalPrice - platformFee;
+    const bookingFeeEnabled = await isFlagEnabled('BOOKING_FEE');
+    const serviceFeeCentsPerGuest = bookingFeeEnabled ? BOOKING_FEE_CENTS : 0;
+    const serviceFeeCents = serviceFeeCentsPerGuest * guestCount;
+
+    if (
+      validated.data.displayedServiceFeeCentsPerGuest !==
+      serviceFeeCentsPerGuest
+    ) {
+      return {
+        success: false,
+        error: {
+          code: 'FEE_CHANGED',
+          message:
+            'The service fee changed while you were booking. Please refresh.',
+        },
+      };
+    }
 
     const bookingDate = new Date(date);
     const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
@@ -196,11 +237,15 @@ export async function createBookingAndCheckout(
               guestCount,
               totalPrice,
               platformFee,
+              serviceFeeCents,
               wineryPayout,
               visitorName,
               visitorEmail,
               visitorPhone,
               status: BookingStatus.PENDING_PAYMENT,
+              // Contractual snapshot: refunds use the policy the client
+              // accepted here, never the winery's later edits.
+              cancellationPolicy: experience.winery.cancellationPolicy,
               expiresAt,
               ageConfirmedAt: new Date(),
               ageConfirmedVersion: AGE_GATE_VERSION,
@@ -224,6 +269,17 @@ export async function createBookingAndCheckout(
       }
       throw txError; // Re-throw other errors to be caught by outer catch
     }
+
+    // Stripe-hosted page label, in the client's locale.
+    const serviceFeeLabel =
+      serviceFeeCents > 0
+        ? (
+            await getTranslations({
+              locale: validated.data.locale ?? 'fr',
+              namespace: 'checkout',
+            })
+          )('serviceFee')
+        : '';
 
     // Create Stripe Checkout Session
     const baseUrl = getBaseUrl();
@@ -261,9 +317,29 @@ export async function createBookingAndCheckout(
           },
           quantity: guestCount,
         },
+        // Client booking fee — always a separate visible line, never
+        // blended into the experience price (BUSINESS §2).
+        ...(serviceFeeCents > 0
+          ? [
+              {
+                price_data: {
+                  currency: 'chf',
+                  product_data: {
+                    name: serviceFeeLabel,
+                  },
+                  unit_amount: BOOKING_FEE_CENTS,
+                },
+                quantity: guestCount,
+              },
+            ]
+          : []),
       ],
       payment_intent_data: {
-        application_fee_amount: platformFee,
+        // Commission + client fee: both platform revenue. Omitted when 0
+        // (Founder at 0% with the fee OFF) — Stripe rejects a zero fee.
+        ...(platformFee + serviceFeeCents > 0
+          ? { application_fee_amount: platformFee + serviceFeeCents }
+          : {}),
         transfer_data: {
           destination: experience.winery.stripeAccountId,
         },

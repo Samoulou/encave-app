@@ -582,6 +582,7 @@ export async function cancelEventSession(
       visitorName: true,
       guestCount: true,
       totalPrice: true,
+      serviceFeeCents: true,
       status: true,
       stripeCheckoutSessionId: true,
       stripePaymentIntentId: true,
@@ -600,10 +601,13 @@ export async function cancelEventSession(
         booking.status === BookingStatus.CONFIRMED &&
         booking.stripePaymentIntentId?.startsWith('pi_')
       ) {
+        // Winery-initiated cancellation refunds everything the client
+        // paid — tickets AND service fee (D2).
+        const paidCents = booking.totalPrice + booking.serviceFeeCents;
         const refund = await getStripe().refunds.create(
           {
             payment_intent: booking.stripePaymentIntentId,
-            amount: booking.totalPrice,
+            amount: paidCents,
             reverse_transfer: true,
             refund_application_fee: true,
             metadata: {
@@ -613,11 +617,11 @@ export async function cancelEventSession(
             },
           },
           {
-            idempotencyKey: `winery-session-cancel:${booking.id}:${booking.totalPrice}`,
+            idempotencyKey: `winery-session-cancel:${booking.id}:${paidCents}`,
           }
         );
         refundId = refund.id;
-        refunded += booking.totalPrice;
+        refunded += paidCents;
       }
 
       if (
@@ -636,9 +640,10 @@ export async function cancelEventSession(
           cancelledAt: new Date(),
           cancellationReason: parsed.data.reason,
           refundIssued: booking.status === BookingStatus.CONFIRMED,
+          // Record what was actually refunded — tickets + service fee.
           refundAmount:
             booking.status === BookingStatus.CONFIRMED
-              ? booking.totalPrice
+              ? booking.totalPrice + booking.serviceFeeCents
               : undefined,
           stripeRefundId: refundId,
           refundError: null,
@@ -653,7 +658,9 @@ export async function cancelEventSession(
           experienceTitle: experience.title,
           date: startsAt,
           amountCents:
-            booking.status === BookingStatus.CONFIRMED ? booking.totalPrice : 0,
+            booking.status === BookingStatus.CONFIRMED
+              ? booking.totalPrice + booking.serviceFeeCents
+              : 0,
           reason: parsed.data.reason,
         },
         experience.winery.user.preferredLocale
