@@ -15,6 +15,7 @@ import Image from 'next/image';
 import { Link } from '@/i18n/navigation';
 import { ImageWithFallback } from '@/components/shared/ImageWithFallback';
 import { DynamicMap } from '@/components/features/map/DynamicMap';
+import { DesktopOnly } from '@/components/shared/DesktopOnly';
 import { HomeSearchPanel } from '@/components/features/home/HomeSearchPanel';
 import { formatCHF } from '@/lib/utils/currency';
 import type { ExperienceCardData } from '@/components/features/experience/ExperienceCard';
@@ -196,10 +197,12 @@ export function HomeDesktopEditorial({
 
       <section className="grid grid-cols-[1.2fr_1fr] gap-8 px-14 py-12">
         <div className="relative h-[340px] overflow-hidden rounded-[18px] border border-stone-200 bg-stone-50">
-          <DynamicMap
-            wineries={mapWineries}
-            className="h-full w-full rounded-[18px]"
-          />
+          <DesktopOnly>
+            <DynamicMap
+              wineries={mapWineries}
+              className="h-full w-full rounded-[18px]"
+            />
+          </DesktopOnly>
           <div className="absolute left-[18px] top-[18px] rounded-lg bg-white/95 px-3.5 py-2">
             <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-burgundy-700">
               • Valais
