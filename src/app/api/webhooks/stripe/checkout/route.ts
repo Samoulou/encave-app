@@ -96,7 +96,7 @@ export async function POST(req: Request) {
  * Updates booking status to CONFIRMED and sends confirmation emails
  */
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
-  const result = await confirmBookingFromPaidCheckoutSession(
+  const { result } = await confirmBookingFromPaidCheckoutSession(
     session,
     'webhook'
   );

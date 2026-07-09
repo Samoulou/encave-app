@@ -15,10 +15,10 @@ import {
   BookingDetailsSection,
   ExperienceVisual,
   WineryInfoCard,
-  ModifyBookingCard,
   ConfirmationActions,
 } from '@/components/features/booking/confirmation';
 import { generatePageMetadata } from '@/lib/seo/metadata';
+import { getBaseUrl } from '@/lib/env';
 import type { Locale } from '@/i18n/routing';
 
 export async function generateMetadata({
@@ -61,8 +61,16 @@ async function getBooking(id: string, sessionId: string | undefined) {
     return null;
   }
 
+  // When this page wins the confirmation race it receives the plaintext
+  // access token (never recoverable later — only the hash is stored) and
+  // can render a scanner-compatible ticket QR on screen.
+  let accessToken: string | undefined;
   if (session.payment_status === 'paid') {
-    await confirmBookingFromPaidCheckoutSession(session, 'confirmation_page');
+    const outcome = await confirmBookingFromPaidCheckoutSession(
+      session,
+      'confirmation_page'
+    );
+    accessToken = outcome.accessToken;
   }
 
   const booking = await db.booking.findUnique({
@@ -105,7 +113,11 @@ async function getBooking(id: string, sessionId: string | undefined) {
     return null;
   }
 
-  return booking;
+  if (!booking) {
+    return null;
+  }
+
+  return { booking, accessToken };
 }
 
 function formatTime(time: string): string {
@@ -132,11 +144,16 @@ export default async function ConfirmationPage({
   const { id, locale } = await params;
   const { session_id: sessionId } = await searchParams;
   const t = await getTranslations('confirmation');
-  const booking = await getBooking(id, sessionId);
+  const bookingResult = await getBooking(id, sessionId);
 
-  if (!booking) {
+  if (!bookingResult) {
     notFound();
   }
+
+  const { booking, accessToken } = bookingResult;
+  const ticketUrl = accessToken
+    ? `${getBaseUrl()}/${locale}/booking/${booking.id}?token=${accessToken}`
+    : undefined;
 
   const isConfirmed = booking.status === BookingStatus.CONFIRMED;
   const isPending = booking.status === BookingStatus.PENDING_PAYMENT;
@@ -205,7 +222,7 @@ export default async function ConfirmationPage({
                 <ExperienceVisual
                   coverPhoto={booking.experience.coverPhoto}
                   experienceTitle={booking.experience.title}
-                  bookingId={booking.id}
+                  ticketUrl={ticketUrl}
                 />
               </div>
             </CardContent>
@@ -269,12 +286,8 @@ export default async function ConfirmationPage({
             phone={booking.winery.phone}
             email={booking.winery.email}
           />
-
-          {/* Need Help Card */}
-          <ModifyBookingCard bookingId={booking.id} />
         </div>
       </div>
-
     </div>
   );
 }

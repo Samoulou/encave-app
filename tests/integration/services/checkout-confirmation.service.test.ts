@@ -103,7 +103,7 @@ describe('confirmBookingFromPaidCheckoutSession', () => {
       'confirmation_page'
     );
 
-    expect(result).toBe('confirmed');
+    expect(result.result).toBe('confirmed');
     expect(mockDb.booking.updateMany).toHaveBeenCalledWith({
       where: { id: 'booking-1', status: BookingStatus.PENDING_PAYMENT },
       data: expect.objectContaining({
@@ -134,6 +134,8 @@ describe('confirmBookingFromPaidCheckoutSession', () => {
       .update(emailData.accessToken ?? '')
       .digest('hex');
     expect(persisted.data.accessTokenHash).toBe(expectedHash);
+    // The outcome exposes the same plaintext token for the on-screen QR.
+    expect(result.accessToken).toBe(emailData.accessToken);
   });
 
   it('does not confirm a booking when the Checkout Session is not paid', async () => {
@@ -142,7 +144,7 @@ describe('confirmBookingFromPaidCheckoutSession', () => {
 
     const result = await confirmBookingFromPaidCheckoutSession(unpaidSession);
 
-    expect(result).toBe('not_paid');
+    expect(result.result).toBe('not_paid');
     expect(mockDb.booking.findUnique).not.toHaveBeenCalled();
     expect(mockDb.booking.updateMany).not.toHaveBeenCalled();
     expect(mockSendBookingConfirmationEmail).not.toHaveBeenCalled();
@@ -159,7 +161,7 @@ describe('confirmBookingFromPaidCheckoutSession', () => {
       'webhook'
     );
 
-    expect(result).toBe('race_lost');
+    expect(result.result).toBe('race_lost');
     expect(mockSendBookingConfirmationEmail).not.toHaveBeenCalled();
     expect(mockSendWinemakerNewBookingEmail).not.toHaveBeenCalled();
   });
@@ -175,7 +177,7 @@ describe('confirmBookingFromPaidCheckoutSession', () => {
 
     const result = await confirmBookingFromPaidCheckoutSession(paidSession);
 
-    expect(result).toBe('session_mismatch');
+    expect(result.result).toBe('session_mismatch');
     expect(mockDb.booking.updateMany).not.toHaveBeenCalled();
     expect(mockSendBookingConfirmationEmail).not.toHaveBeenCalled();
   });
