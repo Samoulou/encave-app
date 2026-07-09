@@ -9,6 +9,14 @@ interface AnonymizeUserOptions {
   reason?: string;
 }
 
+// Booking.date is @db.Date (stored at midnight): comparing to `new Date()`
+// after 00:00 would silently exclude TODAY's sessions.
+function localDateToUTC(date: Date): Date {
+  return new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+  );
+}
+
 export async function anonymizeUser(
   userId: string,
   options: AnonymizeUserOptions = {}
@@ -21,7 +29,7 @@ export async function anonymizeUser(
           bookings: {
             where: {
               status: BookingStatus.CONFIRMED,
-              date: { gte: new Date() },
+              date: { gte: localDateToUTC(new Date()) },
             },
             select: { id: true },
           },
@@ -44,8 +52,11 @@ export async function anonymizeUser(
   await sendAccountDeletedEmail(user.email, user.preferredLocale);
 
   await db.$transaction(async (tx) => {
+    // Case-insensitive: checkout stores the visitor email as typed, and
+    // the privacy export already matches insensitively — deletion must
+    // cover the same rows.
     await tx.booking.updateMany({
-      where: { visitorEmail: user.email },
+      where: { visitorEmail: { equals: user.email, mode: 'insensitive' } },
       data: {
         visitorEmail: deletedEmail,
         visitorName: deletedName,

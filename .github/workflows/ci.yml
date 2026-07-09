@@ -12,6 +12,9 @@ on:
 # empty string when unset and failed every test job.
 env:
   DATABASE_URL: 'postgresql://placeholder:placeholder@localhost:5432/encave'
+  # next build runs with NODE_ENV=production, where env.ts requires this.
+  # A fixed placeholder, not a secret — nothing in CI signs real sessions.
+  BETTER_AUTH_SECRET: 'ci-placeholder-not-a-secret-0123456789abcdef'
 
 jobs:
   lint-and-typecheck:

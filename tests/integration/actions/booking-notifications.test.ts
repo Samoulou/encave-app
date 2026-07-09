@@ -145,7 +145,7 @@ describe('Booking Notification Actions', () => {
       }
     });
 
-    it('updates confirmationSentAt on successful send', async () => {
+    it('rotates the token and stamps confirmationSentAt only after a successful send', async () => {
       vi.mocked(db.booking.findUnique).mockResolvedValue(
         mockConfirmedBooking as never
       );
@@ -155,9 +155,16 @@ describe('Booking Notification Actions', () => {
         await import('@/server/actions/booking');
       await resendConfirmationEmail('booking-1');
 
+      // Single update AFTER the provider accepted the email: the new hash
+      // and the timestamp land together — a failed send must never
+      // invalidate the customer's previous magic link.
+      expect(db.booking.update).toHaveBeenCalledTimes(1);
       expect(db.booking.update).toHaveBeenCalledWith({
         where: { id: 'booking-1' },
-        data: { confirmationSentAt: expect.any(Date) },
+        data: {
+          accessTokenHash: expect.stringMatching(/^[0-9a-f]{64}$/),
+          confirmationSentAt: expect.any(Date),
+        },
       });
     });
   });

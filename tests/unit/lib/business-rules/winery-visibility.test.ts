@@ -19,6 +19,7 @@ function happyWinery(
     description: 'A small winery in Valais with a long tasting tradition.',
     latitude: 46.2,
     longitude: 7.4,
+    coverPhoto: null,
     galleryImages: [{ id: 'img-1' }],
     experiences: [{ status: 'PUBLISHED' }],
     ...overrides,
@@ -49,10 +50,12 @@ describe('winery-visibility', () => {
       ).toBe(false);
     });
 
-    it('returns false when there are no gallery images', () => {
-      expect(isWineryPubliclyVisible(happyWinery({ galleryImages: [] }))).toBe(
-        false
-      );
+    it('returns false without any photo (no cover, no gallery)', () => {
+      expect(
+        isWineryPubliclyVisible(
+          happyWinery({ coverPhoto: null, galleryImages: [] })
+        )
+      ).toBe(false);
     });
 
     it('returns true with a single gallery image (minimum threshold)', () => {
@@ -61,6 +64,30 @@ describe('winery-visibility', () => {
           happyWinery({ galleryImages: [{ id: 'only-one' }] })
         )
       ).toBe(true);
+    });
+
+    it('returns true with a cover photo and no gallery images', () => {
+      expect(
+        isWineryPubliclyVisible(
+          happyWinery({
+            coverPhoto: 'https://blob.encave.ch/cover.jpg',
+            galleryImages: [],
+          })
+        )
+      ).toBe(true);
+    });
+
+    it('ignores an empty or whitespace-only cover photo', () => {
+      expect(
+        isWineryPubliclyVisible(
+          happyWinery({ coverPhoto: '', galleryImages: [] })
+        )
+      ).toBe(false);
+      expect(
+        isWineryPubliclyVisible(
+          happyWinery({ coverPhoto: '   ', galleryImages: [] })
+        )
+      ).toBe(false);
     });
 
     it('returns false when latitude is null', () => {
@@ -187,6 +214,7 @@ describe('winery-visibility', () => {
         description: '',
         latitude: null,
         longitude: null,
+        coverPhoto: null,
         galleryImages: [],
         experiences: [],
       };
@@ -249,7 +277,7 @@ describe('winery-visibility', () => {
         description: { not: '' },
         latitude: { not: null },
         longitude: { not: null },
-        galleryImages: { some: {} },
+        OR: [{ coverPhoto: { not: null } }, { galleryImages: { some: {} } }],
         experiences: { some: { status: 'PUBLISHED' } },
       });
     });
