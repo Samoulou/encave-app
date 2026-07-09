@@ -227,24 +227,24 @@ ISR/header découplé, i18n subset, Mapbox gated, index DB, invalidation propre.
 
 > Statuts : ⬜ à faire · 🟨 en cours · ✅ mergé sur `dev` · ⏸ suspendu (raison en note)
 
-| #    | Package                        | 💰  | Dépend de  | Est.   | Cible cal. | Statut | Branche / PR                                                                     |
-| ---- | ------------------------------ | --- | ---------- | ------ | ---------- | ------ | -------------------------------------------------------------------------------- |
-| P-01 | Fiabilisation & quick wins     |     | —          | 21 h   | S1-S2      | ✅     | PR [#90](https://github.com/Samoulou/encave-app/pull/90)                         |
-| P-02 | Fondations schéma V3           |     | —          | 19 h   | S2-S3      | ✅     | PR [#92](https://github.com/Samoulou/encave-app/pull/92) + durcissements #94-#97 |
-| P-03 | Monétisation Phase 1           | 💰  | P-02       | 14 h   | S4         | 🟨     | plan `docs/plans/P-03-monetisation.md` — décisions D1-D4 actées                  |
+| #    | Package                        | 💰  | Dépend de  | Est.   | Cible cal. | Statut | Branche / PR                                                                                                   |
+| ---- | ------------------------------ | --- | ---------- | ------ | ---------- | ------ | -------------------------------------------------------------------------------------------------------------- |
+| P-01 | Fiabilisation & quick wins     |     | —          | 21 h   | S1-S2      | ✅     | PR [#90](https://github.com/Samoulou/encave-app/pull/90)                                                       |
+| P-02 | Fondations schéma V3           |     | —          | 19 h   | S2-S3      | ✅     | PR [#92](https://github.com/Samoulou/encave-app/pull/92) + durcissements #94-#97                               |
+| P-03 | Monétisation Phase 1           | 💰  | P-02       | 14 h   | S4         | 🟨     | plan `docs/plans/P-03-monetisation.md` — décisions D1-D4 actées                                                |
 | P-04 | Checkout V3                    | 💰  | P-03       | 15.5 h | S5         | 🟨     | PR [#99](https://github.com/Samoulou/encave-app/pull/99) → `dev` — DoD G-R2 atteint, review max + sécu passées |
-| P-05 | Créneaux & recherche par date  |     | P-02       | 11 h   | S6         | ⬜     |                                                                                  |
-| P-06 | Performance structurelle       |     | —          | 11 h   | S6-S8      | ⬜     |                                                                                  |
-| P-07 | Boucle vin (fiche dégustation) |     | P-02       | 13 h   | S7-S8      | ⬜     |                                                                                  |
-| P-08 | Anti no-show                   | 💰  | P-02, P-04 | 14 h   | S9         | ⬜     |                                                                                  |
-| P-09 | Bons cadeaux                   | 💰  | P-02, P-04 | 24 h   | S10-S11    | ⬜     |                                                                                  |
-| P-10 | Request / sur-mesure           | 💰  | P-02, P-03 | 18.5 h | S12-S13    | ⬜     |                                                                                  |
-| P-11 | Événements collectifs          |     | P-02, P-05 | 10 h   | S13-S14    | ⬜     |                                                                                  |
-| P-12 | Pages publiques & légal        |     | P-03       | 16 h   | S14        | ⬜     |                                                                                  |
-| P-13 | Espace encaveur V3             |     | P-05       | 21 h   | S15        | ⬜     |                                                                                  |
-| P-14 | Auth V3                        |     | —          | 9 h    | S15        | ⬜     |                                                                                  |
-| P-15 | Admin V3 & emails              |     | —          | 8 h    | S15        | ⬜     |                                                                                  |
-| P-16 | Hardening & launch             |     | tous       | 29.5 h | S16-S17    | ⬜     |                                                                                  |
+| P-05 | Créneaux & recherche par date  |     | P-02       | 11 h   | S6         | ⬜     |                                                                                                                |
+| P-06 | Performance structurelle       |     | —          | 11 h   | S6-S8      | ⬜     |                                                                                                                |
+| P-07 | Boucle vin (fiche dégustation) |     | P-02       | 13 h   | S7-S8      | ⬜     |                                                                                                                |
+| P-08 | Anti no-show                   | 💰  | P-02, P-04 | 14 h   | S9         | ⬜     |                                                                                                                |
+| P-09 | Bons cadeaux                   | 💰  | P-02, P-04 | 24 h   | S10-S11    | ⬜     |                                                                                                                |
+| P-10 | Request / sur-mesure           | 💰  | P-02, P-03 | 18.5 h | S12-S13    | ⬜     |                                                                                                                |
+| P-11 | Événements collectifs          |     | P-02, P-05 | 10 h   | S13-S14    | ⬜     |                                                                                                                |
+| P-12 | Pages publiques & légal        |     | P-03       | 16 h   | S14        | ⬜     |                                                                                                                |
+| P-13 | Espace encaveur V3             |     | P-05       | 21 h   | S15        | ⬜     |                                                                                                                |
+| P-14 | Auth V3                        |     | —          | 9 h    | S15        | ⬜     |                                                                                                                |
+| P-15 | Admin V3 & emails              |     | —          | 8 h    | S15        | ⬜     |                                                                                                                |
+| P-16 | Hardening & launch             |     | tous       | 29.5 h | S16-S17    | ⬜     |                                                                                                                |
 
 > Le total (~236 h Must+Should) dépasse la capacité nominale (~210 h) : les Should (≈ 27 h, marqués dans le backlog) et les fusibles §4 du backlog sont la variable d'ajustement — à recaler sur la vélocité réelle après P-01/P-02.
 
