@@ -5,6 +5,8 @@ import { db } from '@/server/db';
 import { hasOverlappingSlots } from '@/lib/constants/time-slots';
 import type { ActionResult } from '@/types/actions';
 import { logError } from '@/lib/logger';
+import { revalidateTag } from 'next/cache';
+import { generateOccurrences } from '@/server/services/occurrence.service';
 
 export interface AvailabilitySlotInput {
   id?: string;
@@ -218,6 +220,23 @@ export async function updateAvailabilitySlots(
         });
       }
     });
+
+    // Materialize the new pattern (P-05 / L-024, additive — occurrences
+    // from a removed slot survive and stay closeable by the owner).
+    // Non-blocking: the booking path's defensive resolve is the backstop.
+    try {
+      await generateOccurrences(experienceId);
+    } catch (generationError) {
+      logError(
+        'Occurrence generation failed after slots update',
+        generationError,
+        {
+          action: 'updateAvailabilitySlots',
+          experienceId,
+        }
+      );
+    }
+    revalidateTag(`occurrences:${experienceId}`);
 
     return {
       success: true,

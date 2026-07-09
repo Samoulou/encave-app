@@ -4,6 +4,8 @@ import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import type { ActionResult } from '@/types/actions';
 import { logError } from '@/lib/logger';
+import { revalidateTag } from 'next/cache';
+import { generateOccurrences } from '@/server/services/occurrence.service';
 
 /**
  * Normalize a date to UTC midnight to avoid timezone issues.
@@ -86,6 +88,11 @@ export async function blockDate(
       },
     });
 
+    // Public reads gate on BlockedDate at read time (P-05 / D3) —
+    // refresh the occurrence-backed views. Occurrences themselves are
+    // never mutated (bookings on the date survive untouched).
+    revalidateTag(`occurrences:${experienceId}`);
+
     return {
       success: true,
       data: {
@@ -149,6 +156,19 @@ export async function unblockDate(
         date: normalizedDate,
       },
     });
+
+    // The date is bookable again at read time (D3 — status was never
+    // mutated); regenerate to materialize occurrences generation had
+    // skipped while the date was blocked.
+    try {
+      await generateOccurrences(experienceId);
+    } catch (generationError) {
+      logError('Occurrence generation failed after unblock', generationError, {
+        action: 'unblockDate',
+        experienceId,
+      });
+    }
+    revalidateTag(`occurrences:${experienceId}`);
 
     return { success: true, data: { success: true } };
   } catch (error) {

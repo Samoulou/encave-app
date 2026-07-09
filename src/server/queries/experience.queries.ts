@@ -3,7 +3,13 @@
 import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
 import { db } from '@/server/db';
-import { ExperienceType, ExperienceStatus, Prisma } from '@prisma/client';
+import {
+  ExperienceType,
+  ExperienceStatus,
+  OccurrenceStatus,
+  Prisma,
+} from '@prisma/client';
+import { zurichTodayAsUTCDate } from '@/lib/business-rules/occurrence-expansion';
 import type { CancellationPolicy } from '@prisma/client';
 import { calculateDistance } from '@/lib/geo-utils';
 import { getLocationById } from '@/lib/constants/locations';
@@ -16,9 +22,21 @@ export interface SearchParams {
   minPrice?: number;
   maxPrice?: number;
   capacity?: number;
-  sort?: 'relevance' | 'price_asc' | 'price_desc' | 'newest' | 'distance';
+  sort?:
+    | 'relevance'
+    | 'price_asc'
+    | 'price_desc'
+    | 'newest'
+    | 'distance'
+    | 'next_availability';
   page?: number;
   limit?: number;
+  // Date search (P-05 / L-110): YYYY-MM-DD calendar keys (Zurich).
+  // Filters on the EXISTENCE of an OPEN occurrence in the window — the
+  // remaining-capacity refinement is deferred to L-207/P-06 (a full slot
+  // may list and show « complet » on the fiche).
+  availableFrom?: string;
+  availableTo?: string;
   // Location-based search params
   location?: string; // Location slug
   lat?: number; // Reference latitude
@@ -46,6 +64,8 @@ export interface ExperienceSearchResult {
   };
   // Distance from reference point (added when location search is used)
   distance?: number | null;
+  // Next bookable occurrence (added for the next_availability sort)
+  nextOccurrence?: { date: Date; startTime: string } | null;
 }
 
 export interface PaginatedSearchResult {
@@ -118,6 +138,9 @@ function getOrderBy(
       return { price: 'desc' };
     case 'newest':
       return { createdAt: 'desc' };
+    // next_availability is ordered in JS (Prisma can't order by a
+    // relation MIN) — the DB order below is only a stable pre-sort.
+    case 'next_availability':
     case 'relevance':
     default:
       // For relevance, we sort by newest as a fallback
@@ -199,6 +222,20 @@ export async function searchExperiences(
         ...(params.capacity !== undefined && {
           maxCapacity: { gte: params.capacity },
         }),
+        // Date window (P-05 / L-110): has an OPEN occurrence in range.
+        ...(params.availableFrom && {
+          occurrences: {
+            some: {
+              status: OccurrenceStatus.OPEN,
+              date: {
+                gte: new Date(`${params.availableFrom}T00:00:00.000Z`),
+                lte: new Date(
+                  `${params.availableTo ?? params.availableFrom}T00:00:00.000Z`
+                ),
+              },
+            },
+          },
+        }),
       };
 
       // For location-based search, we fetch all matching results and sort in JS
@@ -265,6 +302,65 @@ export async function searchExperiences(
           totalPages: Math.ceil(total / limit),
           locationName,
           hasLocationSearch: true,
+        };
+      }
+
+      // Next-availability sort (P-05 / L-110): order by the soonest OPEN
+      // future occurrence, nulls last. Ordered in JS like the distance
+      // sort — Prisma cannot order by a relation MIN. Dataset is bounded
+      // (published experiences); index refinement tracked in L-207/P-06.
+      if (params.sort === 'next_availability') {
+        const today = zurichTodayAsUTCDate();
+        const allExperiences = await db.experience.findMany({
+          where,
+          include: {
+            winery: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                commune: true,
+                latitude: true,
+                longitude: true,
+              },
+            },
+            occurrences: {
+              where: { status: OccurrenceStatus.OPEN, date: { gte: today } },
+              orderBy: [{ date: 'asc' }, { startTime: 'asc' }],
+              take: 1,
+              select: { date: true, startTime: true },
+            },
+          },
+        });
+
+        const withNext = allExperiences.map((exp) => {
+          const { occurrences, ...rest } = exp;
+          return {
+            ...rest,
+            distance: undefined,
+            nextOccurrence: occurrences[0] ?? null,
+          };
+        });
+        withNext.sort((a, b) => {
+          if (a.nextOccurrence === null && b.nextOccurrence === null) {
+            return b.createdAt.getTime() - a.createdAt.getTime();
+          }
+          if (a.nextOccurrence === null) return 1;
+          if (b.nextOccurrence === null) return -1;
+          return (
+            a.nextOccurrence.date.getTime() - b.nextOccurrence.date.getTime() ||
+            a.nextOccurrence.startTime.localeCompare(b.nextOccurrence.startTime)
+          );
+        });
+
+        const total = withNext.length;
+        return {
+          experiences: withNext.slice(skip, skip + limit),
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+          hasLocationSearch: false,
         };
       }
 
