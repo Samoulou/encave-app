@@ -54,4 +54,11 @@ Le cœur du gate **G-R2 « zéro survente »** : le créneau est tenu par un hol
 
 - **D4 — TWINT** : liste explicite `['twint','card','link']` avec fallback runtime si Stripe rejette le type (compte non activé). À vérifier par Sam en mode test après merge ; activation TWINT = dashboard Stripe, hors code.
 - **D5 — Hold sans coordonnées** : le hold amont porte un visiteur placeholder (`hold@encave.ch` + nom vide autorisé par un statut dédié ? non — on garde `PENDING_PAYMENT` avec `visitorEmail` vide contrôlé) → tranché au build : colonne nullable évitée, on stocke des placeholders explicites remplacés au submit.
-- **D6 — Compte 1 tap** : better-auth email/password — le « 1 tap » = choisir un mot de passe (email pré-rempli, non modifiable). Magic link = post-launch.
+- **D6 — Compte 1 tap** : better-auth email/password — le « 1 tap » = choisir un mot de passe (email pré-rempli, non modifiable). Magic link = post-launch. Le rattachement des billets est déjà structurel : les queries client matchent `visitorEmail` insensible à la casse — aucune colonne à ajouter.
+- **D7 — L-054 reporté (fusible)** : `setup_future_usage` + gestion des cartes au profil sortent du gate P-04 (Should, aucun impact G-R2). Fusible : à re-évaluer au P-09 (gift cards à l'encaissement introduit déjà Stripe Customer) — si non fait d'ici le launch, les clients re-saisissent leur carte, dégradation acceptable et réversible hors deploy.
+
+## 8. Avancement build
+
+- **Core livré** (`9db687e`) : `createBookingHold` (rate limit IP 12/10 min, placeholder visiteur, transaction Serializable), libération logique des holds expirés (3 sites de calcul de capacité), claim atomique du hold au submit avec fallback création classique, `withSerializableRetry` P2034 (3 tentatives, backoff), TWINT-first `['twint','card','link']` avec fallback runtime `['card']` (D4). Tests : 25 checkout (dont hold ×2, claim ×2, payment methods ×2), 3 retry, et **test de concurrence db-gated** `tests/db/booking-hold-concurrency.test.ts` (2 holds simultanés sur 3 places → 1 succès + 1 `NO_CAPACITY` contre un vrai Postgres migré, + libération logique) — base du futur k6.
+- **Résidu Luca B fermé** (`20501d5`) : `refundBookingManually` réserve le montant par `updateMany` conditionnel AVANT Stripe (perdant → `CONFLICT` propre) ; libération du claim uniquement sur rejet Stripe déterministe, sinon `refundError` pour réconciliation. 7 tests dédiés.
+- **UI en cours** (Nora) : hold au « Continuer », countdown checkout, `/reservation/erreur`, compte 1-tap (D6).
