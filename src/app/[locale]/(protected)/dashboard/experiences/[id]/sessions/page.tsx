@@ -1,63 +1,35 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { redirect } from '@/i18n/navigation';
+import { ChevronRight, Home, Pencil } from 'lucide-react';
+import { Link, redirect } from '@/i18n/navigation';
 import { auth } from '@/server/auth';
-import { getEventDetail } from '@/server/queries/event-detail.queries';
+import { getOccurrenceCalendar } from '@/server/queries/occurrence.queries';
 import { eventDetailIdSchema } from '@/lib/validators/eventDetail';
-import { EventDetailHeader } from '@/components/features/event-detail/EventDetailHeader';
-import { EventStatusBanner } from '@/components/features/event-detail/EventStatusBanner';
-import { SessionGroupSection } from '@/components/features/event-detail/SessionGroupSection';
-import { SessionCard } from '@/components/features/event-detail/SessionCard';
-import { EmptyState } from '@/components/shared/EmptyState';
+import { OccurrenceCalendar } from '@/components/features/occurrence/OccurrenceCalendar';
 import { Button } from '@/components/ui/button';
-import { Link } from '@/i18n/navigation';
-import { ExperienceStatus } from '@prisma/client';
-import { Plus } from 'lucide-react';
+import { zurichTodayAsUTCDate } from '@/lib/business-rules/occurrence-expansion';
+import { isMonthKey } from '@/lib/utils/date-key';
 import type { Locale } from '@/i18n/routing';
-import type { EventSessionDTO, SessionGroup } from '@/types/event-detail';
 
 interface PageProps {
   params: Promise<{ locale: string; id: string }>;
-}
-
-const SCAN_WINDOW_MS = 2 * 60 * 60 * 1000;
-
-interface DerivedSessionRuntime {
-  session: EventSessionDTO;
-  isLive: boolean;
-  isPast: boolean;
-}
-
-function decorate(session: EventSessionDTO): DerivedSessionRuntime {
-  const now = Date.now();
-  const isLive =
-    now >= session.startsAt.getTime() && now <= session.endsAt.getTime();
-  const isPast = now > session.endsAt.getTime();
-  return { session, isLive, isPast };
+  searchParams: Promise<{ mois?: string }>;
 }
 
 /**
- * Compute the H-2 → H+2 scan window from the day's sessions, in UTC instants.
- * Returns whether the current moment is inside the daily window AND, when so,
- * whether the given session is one of the day's sessions.
+ * Monthly occurrence calendar of an experience (P-05 / L-132).
+ * Repointed from the booking-derived "sessions" view onto
+ * `getOccurrenceCalendar` — same URL, occurrence-authoritative data.
+ * Month navigation via `?mois=YYYY-MM` (nuqs on the client).
  */
-function isScanWindowActive(daySessions: EventSessionDTO[]): boolean {
-  if (daySessions.length === 0) return false;
-  let firstStart = Number.POSITIVE_INFINITY;
-  let lastEnd = Number.NEGATIVE_INFINITY;
-  for (const session of daySessions) {
-    const start = session.startsAt.getTime();
-    const end = session.endsAt.getTime();
-    if (start < firstStart) firstStart = start;
-    if (end > lastEnd) lastEnd = end;
-  }
-  const now = Date.now();
-  return now >= firstStart - SCAN_WINDOW_MS && now <= lastEnd + SCAN_WINDOW_MS;
-}
-
-export default async function EventDetailPage({ params }: PageProps) {
-  const resolved = await params;
+export default async function ExperienceSessionsPage({
+  params,
+  searchParams,
+}: PageProps) {
+  const [resolved, resolvedSearchParams] = await Promise.all([
+    params,
+    searchParams,
+  ]);
   setRequestLocale(resolved.locale as Locale);
-
   const localeTyped = resolved.locale as Locale;
 
   const parsed = eventDetailIdSchema.safeParse({
@@ -75,79 +47,72 @@ export default async function EventDetailPage({ params }: PageProps) {
     return null;
   }
 
-  const event = await getEventDetail(experienceId, session.user.id);
-  if (!event) {
+  // Default to the current Zurich month; ignore malformed ?mois values.
+  const moisParam = resolvedSearchParams.mois;
+  const monthKey =
+    moisParam !== undefined && isMonthKey(moisParam)
+      ? moisParam
+      : zurichTodayAsUTCDate().toISOString().slice(0, 7);
+
+  const calendar = await getOccurrenceCalendar(
+    experienceId,
+    session.user.id,
+    monthKey
+  );
+  if (!calendar) {
     redirect({ href: '/dashboard/experiences', locale: localeTyped });
     return null;
   }
 
   const t = await getTranslations('Dashboard.eventDetail');
 
-  const todaySessions = event.sessions.filter((s) => s.group === 'today');
-  const isScanActive = isScanWindowActive(todaySessions);
-  const canEdit = event.experience.status !== ExperienceStatus.ARCHIVED;
-
-  const groupedSessions: Record<SessionGroup, EventSessionDTO[]> = {
-    today: todaySessions,
-    upcoming: event.sessions.filter((s) => s.group === 'upcoming'),
-    past: event.sessions.filter((s) => s.group === 'past'),
-    cancelled: event.sessions.filter((s) => s.group === 'cancelled'),
-  };
-
-  const hasAnySession = event.sessions.length > 0;
-
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 md:gap-8 md:py-10">
-      <EventDetailHeader event={event} />
-      <EventStatusBanner status={event.experience.status} />
+    <div className="mx-auto flex max-w-4xl flex-col gap-6 px-4 py-6 md:gap-8 md:py-10">
+      <header className="flex flex-col gap-4">
+        <nav
+          aria-label="Breadcrumb"
+          className="flex items-center gap-1.5 text-sm text-slate-500"
+        >
+          <Link
+            href="/dashboard"
+            className="flex items-center gap-1 hover:text-slate-900"
+          >
+            <Home className="h-3.5 w-3.5" aria-hidden="true" />
+            <span className="sr-only">{t('breadcrumb.dashboard')}</span>
+          </Link>
+          <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+          <Link href="/dashboard/experiences" className="hover:text-slate-900">
+            {t('breadcrumb.events')}
+          </Link>
+          <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+          <span className="truncate font-medium text-slate-900">
+            {calendar.title}
+          </span>
+        </nav>
 
-      {!hasAnySession ? <EmptyState title={t('empty.title')} /> : null}
-
-      {!hasAnySession ? (
-        <div className="flex justify-center">
-          <Button asChild>
-            <Link href={`/dashboard/experiences/${event.experience.id}/edit`}>
-              <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
-              {t('empty.cta')}
+        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+          <div className="flex flex-col gap-1">
+            <h1 className="font-display text-2xl font-black tracking-tight text-slate-900 md:text-3xl">
+              {calendar.title}
+            </h1>
+            <p className="text-sm text-slate-500">
+              {t('occurrences.subtitle', { count: calendar.maxCapacity })}
+            </p>
+          </div>
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/dashboard/experiences/${calendar.experienceId}/edit`}>
+              <Pencil className="mr-2 h-3.5 w-3.5" aria-hidden="true" />
+              {t('occurrences.editAvailability')}
             </Link>
           </Button>
         </div>
-      ) : null}
+      </header>
 
-      {(['today', 'upcoming', 'past', 'cancelled'] as const).map((group) => {
-        const sessions = groupedSessions[group];
-        if (sessions.length === 0 && group !== 'cancelled') return null;
-        if (sessions.length === 0 && group === 'cancelled') return null;
-
-        return (
-          <SessionGroupSection
-            key={group}
-            group={group}
-            title={t(`sections.${group}`)}
-            count={sessions.length}
-          >
-            <div className="flex flex-col gap-4">
-              {sessions.map((s) => {
-                const decorated = decorate(s);
-                return (
-                  <SessionCard
-                    key={s.sessionId}
-                    session={s}
-                    experienceId={event.experience.id}
-                    experienceSlug={event.experience.slug}
-                    experienceTitle={event.experience.title}
-                    wineryName={event.experience.winery.name}
-                    isLive={decorated.isLive}
-                    isScanWindow={group === 'today' ? isScanActive : false}
-                    isPast={decorated.isPast}
-                    canEdit={canEdit}
-                  />
-                );
-              })}
-            </div>
-          </SessionGroupSection>
-        );
-      })}
+      <OccurrenceCalendar
+        experienceId={calendar.experienceId}
+        monthKey={calendar.monthKey}
+        entries={calendar.entries}
+      />
     </div>
   );
 }
