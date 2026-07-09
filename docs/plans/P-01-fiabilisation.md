@@ -1,6 +1,6 @@
 # P-01 — Fiabilisation & quick wins perf
 
-> **Statut** : code terminé — reste : test manuel scan (Sam), ⑤ code-review, ⑥ PR vers `dev` · **Branche** : `claude/encave-v3-business-model-8bv7bd` (contient aussi les docs V3 ; PR unique vers `dev`) · **PR** : #
+> **Statut** : code terminé — reste : test manuel scan (Sam), ⑤ code-review, ⑥ PR vers `dev` · **Branche** : `claude/encave-v3-business-model-8bv7bd` (contient aussi les docs V3 ; PR unique vers `dev`) · **PR** : [#90](https://github.com/Samoulou/encave-app/pull/90)
 > **Sources** : `docs/ENCAVE-V3-DELIVERY-PLAN.md` §P-01 · items L-001→L-013, L-200, L-204→L-206, L-215→L-217 · `docs/ENCAVE-V3-GAP-ANALYSIS.md` §10 · `docs/ENCAVE-V3-PERF-AUDIT.md`
 
 ## 1. Objectif
