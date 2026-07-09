@@ -19,6 +19,7 @@ import {
   activeCapacityBookingWhere,
   resolveOccurrenceCapacity,
 } from '@/lib/business-rules/capacity';
+import { calculateEndTime } from '@/lib/constants/time-slots';
 import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
 import { OccurrenceStatus } from '@prisma/client';
 import { logError, logWarn } from '@/lib/logger';
@@ -226,14 +227,6 @@ export async function getTimeSlotsForDate(
       : [];
     const occurrenceBySlot = new Map(occurrences.map((o) => [o.startTime, o]));
 
-    const endTimeFor = (startTime: string): string => {
-      const [h = 0, m = 0] = startTime.split(':').map(Number);
-      const total = h * 60 + m + experience.duration;
-      const eh = Math.floor(total / 60) % 24;
-      const em = total % 60;
-      return `${String(eh).padStart(2, '0')}:${String(em).padStart(2, '0')}`;
-    };
-
     const bySlot = new Map<string, TimeSlotAvailability>();
     for (const slot of experience.availabilitySlots) {
       const occurrence = occurrenceBySlot.get(slot.startTime);
@@ -266,7 +259,7 @@ export async function getTimeSlotsForDate(
       const remainingCapacity = open ? Math.max(0, capacity - bookedCount) : 0;
       bySlot.set(occurrence.startTime, {
         timeSlot: occurrence.startTime,
-        endTime: endTimeFor(occurrence.startTime),
+        endTime: calculateEndTime(occurrence.startTime, experience.duration),
         remainingCapacity,
         maxCapacity: capacity,
         available: remainingCapacity > 0,

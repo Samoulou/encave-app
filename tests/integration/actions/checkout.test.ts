@@ -167,7 +167,7 @@ describe('Checkout Server Actions', () => {
   const validInput = {
     experienceId: 'exp-1',
     wineryId: 'winery-1',
-    date: '2026-02-15',
+    date: '2026-12-15',
     timeSlot: '10:00',
     guestCount: 4,
     visitorName: 'John Doe',
@@ -540,7 +540,7 @@ describe('Checkout Server Actions', () => {
       const { createBookingHold } = await import('@/server/actions/checkout');
       const result = await createBookingHold({
         experienceId: 'exp-1',
-        date: '2026-02-15',
+        date: '2026-12-15',
         timeSlot: '10:00',
         guestCount: 4,
       });
@@ -583,7 +583,7 @@ describe('Checkout Server Actions', () => {
       const { createBookingHold } = await import('@/server/actions/checkout');
       const result = await createBookingHold({
         experienceId: 'exp-1',
-        date: '2026-02-15',
+        date: '2026-12-15',
         timeSlot: '10:00',
         guestCount: 4,
         previousHoldId: 'ckvhold00000000000000000w',
@@ -627,7 +627,7 @@ describe('Checkout Server Actions', () => {
       const { createBookingHold } = await import('@/server/actions/checkout');
       const result = await createBookingHold({
         experienceId: 'exp-1',
-        date: '2026-02-15',
+        date: '2026-12-15',
         timeSlot: '10:00',
         guestCount: 2,
       });
@@ -872,7 +872,7 @@ describe('Checkout Server Actions', () => {
         visitorName: 'John Doe',
         visitorEmail: 'john@example.com',
         accessTokenHash: validAccessTokenHash,
-        date: new Date('2026-02-15'),
+        date: new Date('2026-12-15'),
         timeSlot: '10:00',
         guestCount: 4,
         totalPrice: 20000,
@@ -926,7 +926,7 @@ describe('Checkout Server Actions', () => {
         visitorName: 'Jane Doe',
         visitorEmail: 'jane@example.com',
         accessTokenHash: validAccessTokenHash,
-        date: new Date('2026-03-01'),
+        date: new Date('2026-12-01'),
         timeSlot: '14:00',
         guestCount: 2,
         totalPrice: 10000,

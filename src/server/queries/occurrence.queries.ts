@@ -3,6 +3,7 @@ import { BookingStatus, OccurrenceStatus, Prisma } from '@prisma/client';
 import { db } from '@/server/db';
 import {
   activeCapacityBookingWhere,
+  isActiveCapacityBooking,
   resolveOccurrenceCapacity,
 } from '@/lib/business-rules/capacity';
 import { OCCURRENCE_PREVIEW_COUNT } from '@/lib/constants/occurrences';
@@ -104,11 +105,17 @@ export interface OccurrenceCalendarDTO {
   entries: OccurrenceCalendarEntryDTO[];
 }
 
+// Cancelled bookings stay LISTED (who-cancelled context for refunds and
+// disputes, as on the legacy sessions view) but never count toward seats
+// (countsTowardSeats below). PENDING_PAYMENT counts toward seats while
+// its hold lives, without appearing as an attendee.
 const CALENDAR_ATTENDEE_STATUSES: BookingStatus[] = [
   BookingStatus.CONFIRMED,
   BookingStatus.COMPLETED,
   BookingStatus.NO_SHOW,
   BookingStatus.PENDING_PAYMENT,
+  BookingStatus.CANCELLED_BY_CLIENT,
+  BookingStatus.CANCELLED_BY_WINERY,
 ];
 
 /**
@@ -190,14 +197,13 @@ export const getOccurrenceCalendar = cache(async function getOccurrenceCalendar(
   const keyOf = (date: Date, startTime: string) =>
     `${date.toISOString().slice(0, 10)}|${startTime}`;
 
+  // Seats consumed at a session = the live capacity predicate (shared
+  // with every booking-path aggregate) + terminal attended statuses.
   const now = new Date();
   const countsTowardSeats = (b: (typeof bookings)[number]) =>
-    b.status === BookingStatus.CONFIRMED ||
     b.status === BookingStatus.COMPLETED ||
     b.status === BookingStatus.NO_SHOW ||
-    (b.status === BookingStatus.PENDING_PAYMENT &&
-      b.expiresAt !== null &&
-      b.expiresAt > now);
+    isActiveCapacityBooking(b, now);
 
   const entries = new Map<string, OccurrenceCalendarEntryDTO>();
   for (const o of occurrences) {

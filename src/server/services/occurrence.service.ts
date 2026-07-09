@@ -131,17 +131,71 @@ export async function createPunctualOccurrences(
 }
 
 /**
+ * Close future RECURRING occurrences that no longer match an active
+ * weekly slot — a removed slot must stop selling immediately, not after
+ * 6 weeks of orphaned OPEN rows. PUNCTUAL rows are never touched;
+ * CANCELLED stays CANCELLED; a manually reopened orphan is re-closed on
+ * the next edit (an owner insisting on a one-off date should add it as
+ * punctual). Existing bookings keep their seats — seat counting is on
+ * (date, timeSlot), not status (ADR-0002 D1) — closing only stops NEW
+ * bookings.
+ */
+export async function closeOrphanedRecurringOccurrences(
+  experienceId: string,
+  opts?: { now?: Date }
+): Promise<{ closed: number }> {
+  const from = zurichTodayAsUTCDate(opts?.now ?? new Date());
+  const [slots, occurrences] = await Promise.all([
+    db.availabilitySlot.findMany({
+      where: { experienceId, isActive: true },
+      select: { dayOfWeek: true, startTime: true },
+    }),
+    db.experienceOccurrence.findMany({
+      where: {
+        experienceId,
+        source: OccurrenceSource.RECURRING,
+        status: OccurrenceStatus.OPEN,
+        date: { gte: from },
+      },
+      select: { id: true, date: true, startTime: true },
+    }),
+  ]);
+  const activeKeys = new Set(
+    slots.map((slot) => `${slot.dayOfWeek}|${slot.startTime}`)
+  );
+  const orphanIds = occurrences
+    .filter((o) => !activeKeys.has(`${o.date.getUTCDay()}|${o.startTime}`))
+    .map((o) => o.id);
+  if (orphanIds.length === 0) return { closed: 0 };
+
+  const { count } = await db.experienceOccurrence.updateMany({
+    where: { id: { in: orphanIds }, status: OccurrenceStatus.OPEN },
+    data: { status: OccurrenceStatus.CLOSED },
+  });
+  logInfo('occurrences.orphans_closed', {
+    action: 'closeOrphanedRecurringOccurrences',
+    experienceId,
+    closed: count,
+  });
+  return { closed: count };
+}
+
+/**
  * Resolve-or-create the occurrence backing a slot — the booking path's
  * defensive backstop (hold + fallback create), run BEFORE the
  * Serializable transaction (ADR-0002 §3).
  *
- * Refuses `DATE_BLOCKED` when the date is blacked out (even for an
- * existing occurrence — BlockedDate is authoritative, decision D3) and
- * `INVALID_SLOT` when the slot matches no active weekly slot within the
- * horizon and no punctual occurrence exists (closes the pre-existing
- * hole where arbitrary slots were holdable). Never raises P2002: the
- * create path is `createMany skipDuplicates` — a racing loser silently
- * falls through to the read.
+ * Refuses `INVALID_SLOT` for any past date (a stale OPEN row for
+ * yesterday must not stay holdable), `DATE_BLOCKED` when the date is
+ * blacked out (even for an existing occurrence — BlockedDate is
+ * authoritative, decision D3) and `INVALID_SLOT` when the slot matches
+ * no active weekly slot and no punctual occurrence exists (closes the
+ * pre-existing hole where arbitrary slots were holdable). The horizon
+ * bounds EAGER generation only, never the booking window: the public
+ * picker offers 3 months, so any future date backed by an active weekly
+ * slot materializes on demand. Never raises P2002: the create path is
+ * `createMany skipDuplicates` — a racing loser silently falls through
+ * to the read.
  */
 export async function resolveOccurrence(
   experienceId: string,
@@ -149,45 +203,46 @@ export async function resolveOccurrence(
   startTime: string,
   opts?: { now?: Date }
 ): Promise<ResolvedOccurrence> {
-  const blocked = await db.blockedDate.findUnique({
-    where: { experienceId_date: { experienceId, date } },
-    select: { id: true },
-  });
+  const from = zurichTodayAsUTCDate(opts?.now ?? new Date());
+  if (date.getTime() < from.getTime()) {
+    throw new OccurrenceResolutionError(
+      'INVALID_SLOT',
+      `Date ${dateKeyOf(date)} is in the past for experience ${experienceId}`
+    );
+  }
+
+  const [blocked, existing] = await Promise.all([
+    db.blockedDate.findUnique({
+      where: { experienceId_date: { experienceId, date } },
+      select: { id: true },
+    }),
+    db.experienceOccurrence.findUnique({
+      where: {
+        experienceId_date_startTime: { experienceId, date, startTime },
+      },
+      select: { id: true, status: true, capacityOverride: true },
+    }),
+  ]);
   if (blocked) {
     throw new OccurrenceResolutionError(
       'DATE_BLOCKED',
       `Date ${dateKeyOf(date)} is blocked for experience ${experienceId}`
     );
   }
-
-  const existing = await db.experienceOccurrence.findUnique({
-    where: {
-      experienceId_date_startTime: { experienceId, date, startTime },
-    },
-    select: { id: true, status: true, capacityOverride: true },
-  });
   if (existing) return existing;
 
-  // No occurrence yet — only a legitimate recurring slot inside the
-  // horizon may be materialized on demand (punctual slots always exist
-  // already, they are created explicitly by the owner).
-  const from = zurichTodayAsUTCDate(opts?.now ?? new Date());
-  const horizonEnd = new Date(
-    from.getTime() + OCCURRENCE_HORIZON_DAYS * 24 * 60 * 60 * 1000
-  );
-  const withinHorizon =
-    date.getTime() >= from.getTime() && date.getTime() < horizonEnd.getTime();
-  const matchingSlot = withinHorizon
-    ? await db.availabilitySlot.findFirst({
-        where: {
-          experienceId,
-          dayOfWeek: date.getUTCDay(),
-          startTime,
-          isActive: true,
-        },
-        select: { id: true },
-      })
-    : null;
+  // No occurrence yet — any FUTURE date backed by an active weekly slot
+  // is legitimate (punctual slots always exist already, they are created
+  // explicitly by the owner).
+  const matchingSlot = await db.availabilitySlot.findFirst({
+    where: {
+      experienceId,
+      dayOfWeek: date.getUTCDay(),
+      startTime,
+      isActive: true,
+    },
+    select: { id: true },
+  });
   if (!matchingSlot) {
     throw new OccurrenceResolutionError(
       'INVALID_SLOT',

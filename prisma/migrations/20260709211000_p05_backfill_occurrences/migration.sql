@@ -19,7 +19,38 @@ FROM (
 ) s
 ON CONFLICT ("experienceId", "date", "startTime") DO NOTHING;
 
--- 2) Attach future bookings to their occurrence (idempotent: only NULLs).
+-- 2) Materialize the eager-generation horizon (42 days) for EVERY
+--    published experience's active weekly slots — without this, an
+--    experience with no future booking has zero occurrences until the
+--    02:00 cron: invisible in date search and sunk by the default
+--    next_availability sort for up to a day after deploy. Mirrors
+--    generateOccurrences: skips blacked-out dates, additive. CURRENT_DATE
+--    is DB-timezone (UTC on Neon) vs Zurich in app code — a one-day edge
+--    drift the nightly cron corrects; harmless for a one-shot backfill.
+--    EXTRACT(DOW) is 0=Sunday..6=Saturday, same convention as
+--    availability_slots."dayOfWeek" (JS getUTCDay).
+INSERT INTO "experience_occurrences"
+  ("id", "experienceId", "date", "startTime", "status", "source", "createdAt", "updatedAt")
+SELECT
+  'occ_' || replace(gen_random_uuid()::text, '-', ''),
+  s."experienceId", d.day, s."startTime", 'OPEN', 'RECURRING', now(), now()
+FROM "availability_slots" s
+JOIN "experiences" e ON e."id" = s."experienceId" AND e."status" = 'PUBLISHED'
+JOIN "wineries" w ON w."id" = e."wineryId" AND w."status" = 'VERIFIED'
+CROSS JOIN LATERAL generate_series(
+  CURRENT_DATE::timestamp,
+  CURRENT_DATE::timestamp + INTERVAL '41 days',
+  INTERVAL '1 day'
+) AS d(day)
+WHERE s."isActive" = true
+  AND EXTRACT(DOW FROM d.day) = s."dayOfWeek"
+  AND NOT EXISTS (
+    SELECT 1 FROM "blocked_dates" bd
+    WHERE bd."experienceId" = s."experienceId" AND bd."date" = d.day
+  )
+ON CONFLICT ("experienceId", "date", "startTime") DO NOTHING;
+
+-- 3) Attach future bookings to their occurrence (idempotent: only NULLs).
 --    Past bookings stay NULL by decision D-C (no capacity impact; the
 --    owner calendar groups by COALESCE(occurrence, (date, timeSlot))).
 UPDATE "bookings" b

@@ -10,6 +10,7 @@ import {
   Prisma,
 } from '@prisma/client';
 import { zurichTodayAsUTCDate } from '@/lib/business-rules/occurrence-expansion';
+import { isDateKey } from '@/lib/utils/date-key';
 import type { CancellationPolicy } from '@prisma/client';
 import { calculateDistance } from '@/lib/geo-utils';
 import { getLocationById } from '@/lib/constants/locations';
@@ -183,6 +184,61 @@ export async function searchExperiences(
         ...(params.commune && { commune: params.commune }),
       };
 
+      // Date window (P-05 / L-110): keep experiences with an OPEN
+      // occurrence in the window, clamped to today (Zurich) — past dates
+      // never match. BlockedDate is derived at read (D3): an OPEN
+      // occurrence on a blocked date is NOT bookable, and that per-date
+      // correlation can't be expressed in one nested Prisma filter — so
+      // we prefilter ids with two indexed reads. null = no date filter.
+      let dateWindowIds: string[] | null = null;
+      if (
+        params.availableFrom &&
+        isDateKey(params.availableFrom) &&
+        (params.availableTo === undefined || isDateKey(params.availableTo))
+      ) {
+        const today = zurichTodayAsUTCDate();
+        const rawFrom = new Date(`${params.availableFrom}T00:00:00.000Z`);
+        const from = rawFrom.getTime() > today.getTime() ? rawFrom : today;
+        const to = new Date(
+          `${params.availableTo ?? params.availableFrom}T00:00:00.000Z`
+        );
+        if (to.getTime() < from.getTime()) {
+          dateWindowIds = [];
+        } else {
+          const [open, blocked] = await Promise.all([
+            db.experienceOccurrence.findMany({
+              where: {
+                status: OccurrenceStatus.OPEN,
+                date: { gte: from, lte: to },
+                experience: { status: ExperienceStatus.PUBLISHED },
+              },
+              select: { experienceId: true, date: true },
+            }),
+            db.blockedDate.findMany({
+              where: { date: { gte: from, lte: to } },
+              select: { experienceId: true, date: true },
+            }),
+          ]);
+          const blockedKeys = new Set(
+            blocked.map(
+              (b) => `${b.experienceId}|${b.date.toISOString().slice(0, 10)}`
+            )
+          );
+          dateWindowIds = Array.from(
+            new Set(
+              open
+                .filter(
+                  (o) =>
+                    !blockedKeys.has(
+                      `${o.experienceId}|${o.date.toISOString().slice(0, 10)}`
+                    )
+                )
+                .map((o) => o.experienceId)
+            )
+          );
+        }
+      }
+
       const where: Prisma.ExperienceWhereInput = {
         status: ExperienceStatus.PUBLISHED,
         winery: wineryWhere,
@@ -222,20 +278,8 @@ export async function searchExperiences(
         ...(params.capacity !== undefined && {
           maxCapacity: { gte: params.capacity },
         }),
-        // Date window (P-05 / L-110): has an OPEN occurrence in range.
-        ...(params.availableFrom && {
-          occurrences: {
-            some: {
-              status: OccurrenceStatus.OPEN,
-              date: {
-                gte: new Date(`${params.availableFrom}T00:00:00.000Z`),
-                lte: new Date(
-                  `${params.availableTo ?? params.availableFrom}T00:00:00.000Z`
-                ),
-              },
-            },
-          },
-        }),
+        // Date window (P-05 / L-110): exact prefilter computed above.
+        ...(dateWindowIds !== null && { id: { in: dateWindowIds } }),
       };
 
       // For location-based search, we fetch all matching results and sort in JS
@@ -324,21 +368,34 @@ export async function searchExperiences(
                 longitude: true,
               },
             },
+            // take 5, not 1: the pick below skips blacked-out dates
+            // (D3 — derived at read). >5 consecutive blocked OPEN
+            // occurrences degrades to null (sorted last), acceptable.
             occurrences: {
               where: { status: OccurrenceStatus.OPEN, date: { gte: today } },
               orderBy: [{ date: 'asc' }, { startTime: 'asc' }],
-              take: 1,
+              take: 5,
               select: { date: true, startTime: true },
+            },
+            blockedDates: {
+              where: { date: { gte: today } },
+              select: { date: true },
             },
           },
         });
 
         const withNext = allExperiences.map((exp) => {
-          const { occurrences, ...rest } = exp;
+          const { occurrences, blockedDates, ...rest } = exp;
+          const blockedKeys = new Set(
+            blockedDates.map((b) => b.date.toISOString().slice(0, 10))
+          );
           return {
             ...rest,
             distance: undefined,
-            nextOccurrence: occurrences[0] ?? null,
+            nextOccurrence:
+              occurrences.find(
+                (o) => !blockedKeys.has(o.date.toISOString().slice(0, 10))
+              ) ?? null,
           };
         });
         withNext.sort((a, b) => {

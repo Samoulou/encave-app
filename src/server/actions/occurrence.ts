@@ -10,12 +10,8 @@ import {
   occurrenceIdSchema,
   setOccurrenceCapacitySchema,
   addPunctualOccurrencesSchema,
-  regenerateOccurrencesSchema,
 } from '@/lib/validators/occurrence';
-import {
-  createPunctualOccurrences,
-  generateOccurrences,
-} from '@/server/services/occurrence.service';
+import { createPunctualOccurrences } from '@/server/services/occurrence.service';
 import { invalidateExperienceCaches } from './experience-helpers';
 
 /**
@@ -63,11 +59,23 @@ function invalidateOccurrenceCaches(
   experienceSlug: string
 ) {
   invalidateExperienceCaches(winerySlug, experienceSlug);
+  // Forward-looking tag: occurrence reads are React.cache only today
+  // (per-request), so fresh data comes from the action's router.refresh —
+  // the tag exists so a future unstable_cache subscriber invalidates
+  // without touching every action.
   revalidateTag(`occurrences:${experienceId}`);
 }
 
-export async function closeOccurrence(
-  input: unknown
+/**
+ * Shared close/reopen path — identical ritual, only the target status,
+ * the CONFLICT wording and the log event differ. CANCELLED is terminal
+ * either way (refunds already ran — reopening would resell a session the
+ * clients were told is off).
+ */
+async function setOccurrenceStatus(
+  input: unknown,
+  target: typeof OccurrenceStatus.OPEN | typeof OccurrenceStatus.CLOSED,
+  actionName: 'closeOccurrence' | 'reopenOccurrence'
 ): Promise<ActionResult<{ status: OccurrenceStatus }>> {
   try {
     const session = await auth();
@@ -99,14 +107,17 @@ export async function closeOccurrence(
         success: false,
         error: {
           code: 'CONFLICT',
-          message: 'A cancelled occurrence cannot be closed',
+          message:
+            target === OccurrenceStatus.CLOSED
+              ? 'A cancelled occurrence cannot be closed'
+              : 'A cancelled occurrence cannot be reopened',
         },
       };
     }
 
     const updated = await db.experienceOccurrence.update({
       where: { id: occurrence.id },
-      data: { status: OccurrenceStatus.CLOSED },
+      data: { status: target },
       select: { status: true },
     });
     // Structure change → owner calendar + public availability refresh.
@@ -115,15 +126,20 @@ export async function closeOccurrence(
       occurrence.experience.winery.slug,
       occurrence.experience.slug
     );
-    logInfo('occurrence.closed', {
-      action: 'closeOccurrence',
-      occurrenceId: occurrence.id,
-      experienceId: occurrence.experienceId,
-      userId: session.user.id,
-    });
+    logInfo(
+      target === OccurrenceStatus.CLOSED
+        ? 'occurrence.closed'
+        : 'occurrence.reopened',
+      {
+        action: actionName,
+        occurrenceId: occurrence.id,
+        experienceId: occurrence.experienceId,
+        userId: session.user.id,
+      }
+    );
     return { success: true, data: { status: updated.status } };
   } catch (error) {
-    logError('closeOccurrence error', error, { action: 'closeOccurrence' });
+    logError(`${actionName} error`, error, { action: actionName });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Something went wrong' },
@@ -131,68 +147,16 @@ export async function closeOccurrence(
   }
 }
 
+export async function closeOccurrence(
+  input: unknown
+): Promise<ActionResult<{ status: OccurrenceStatus }>> {
+  return setOccurrenceStatus(input, OccurrenceStatus.CLOSED, 'closeOccurrence');
+}
+
 export async function reopenOccurrence(
   input: unknown
 ): Promise<ActionResult<{ status: OccurrenceStatus }>> {
-  try {
-    const session = await auth();
-    if (!session?.user) {
-      return {
-        success: false,
-        error: { code: 'UNAUTHORIZED', message: 'Please sign in to continue' },
-      };
-    }
-    const parsed = occurrenceIdSchema.safeParse(input);
-    if (!parsed.success) {
-      return {
-        success: false,
-        error: { code: 'VALIDATION_ERROR', message: 'Invalid occurrence' },
-      };
-    }
-    const occurrence = await loadOwnedOccurrence(
-      parsed.data.occurrenceId,
-      session.user.id
-    );
-    if (!occurrence) {
-      return {
-        success: false,
-        error: { code: 'NOT_FOUND', message: 'Occurrence not found' },
-      };
-    }
-    if (occurrence.status === OccurrenceStatus.CANCELLED) {
-      return {
-        success: false,
-        error: {
-          code: 'CONFLICT',
-          message: 'A cancelled occurrence cannot be reopened',
-        },
-      };
-    }
-
-    const updated = await db.experienceOccurrence.update({
-      where: { id: occurrence.id },
-      data: { status: OccurrenceStatus.OPEN },
-      select: { status: true },
-    });
-    invalidateOccurrenceCaches(
-      occurrence.experienceId,
-      occurrence.experience.winery.slug,
-      occurrence.experience.slug
-    );
-    logInfo('occurrence.reopened', {
-      action: 'reopenOccurrence',
-      occurrenceId: occurrence.id,
-      experienceId: occurrence.experienceId,
-      userId: session.user.id,
-    });
-    return { success: true, data: { status: updated.status } };
-  } catch (error) {
-    logError('reopenOccurrence error', error, { action: 'reopenOccurrence' });
-    return {
-      success: false,
-      error: { code: 'INTERNAL_ERROR', message: 'Something went wrong' },
-    };
-  }
+  return setOccurrenceStatus(input, OccurrenceStatus.OPEN, 'reopenOccurrence');
 }
 
 export async function setOccurrenceCapacity(
@@ -317,53 +281,6 @@ export async function addPunctualOccurrences(
   } catch (error) {
     logError('addPunctualOccurrences error', error, {
       action: 'addPunctualOccurrences',
-    });
-    return {
-      success: false,
-      error: { code: 'INTERNAL_ERROR', message: 'Something went wrong' },
-    };
-  }
-}
-
-export async function regenerateOccurrences(
-  input: unknown
-): Promise<ActionResult<{ created: number }>> {
-  try {
-    const session = await auth();
-    if (!session?.user) {
-      return {
-        success: false,
-        error: { code: 'UNAUTHORIZED', message: 'Please sign in to continue' },
-      };
-    }
-    const parsed = regenerateOccurrencesSchema.safeParse(input);
-    if (!parsed.success) {
-      return {
-        success: false,
-        error: { code: 'VALIDATION_ERROR', message: 'Invalid experience' },
-      };
-    }
-    const experience = await loadOwnedExperience(
-      parsed.data.experienceId,
-      session.user.id
-    );
-    if (!experience) {
-      return {
-        success: false,
-        error: { code: 'NOT_FOUND', message: 'Experience not found' },
-      };
-    }
-
-    const { created } = await generateOccurrences(experience.id);
-    invalidateOccurrenceCaches(
-      experience.id,
-      experience.winery.slug,
-      experience.slug
-    );
-    return { success: true, data: { created } };
-  } catch (error) {
-    logError('regenerateOccurrences error', error, {
-      action: 'regenerateOccurrences',
     });
     return {
       success: false,
