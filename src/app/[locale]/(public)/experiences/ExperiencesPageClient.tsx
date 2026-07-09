@@ -15,15 +15,17 @@ import { DesktopOnly } from '@/components/shared/DesktopOnly';
 import { Button } from '@/components/ui/button';
 import { SlidersHorizontal, X, MapPin, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  DEFAULT_CATALOG_SORT,
+  parseCatalogSort,
+  parseDateKeyParam,
+  parseExperienceTypes,
+  type CatalogSort,
+} from '@/lib/utils/search-params';
 import type { ExperienceSearchResult } from '@/server/queries/experience.queries';
 import type { MapWinery } from '@/components/features/map/types';
 
-type SortOption =
-  | 'relevance'
-  | 'price_asc'
-  | 'price_desc'
-  | 'newest'
-  | 'distance';
+type SortOption = CatalogSort;
 
 interface PaginationInfo {
   total: number;
@@ -52,6 +54,10 @@ interface FilterState {
   maxPrice: number | null;
   capacity: number | null;
   sort: SortOption;
+  /** "YYYY-MM-DD" date filter (P-05 / L-110), null = any date. */
+  quand: string | null;
+  /** Optional inclusive range end (weekend chip), null = single date. */
+  quandFin: string | null;
 }
 
 export function ExperiencesPageClient({
@@ -62,6 +68,7 @@ export function ExperiencesPageClient({
 }: ExperiencesPageClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const tSearch = useTranslations('search');
   const currentSearchParams = useMemo(
     () => searchParams ?? new URLSearchParams(),
     [searchParams]
@@ -71,12 +78,14 @@ export function ExperiencesPageClient({
   // Parse current URL params (server-confirmed state)
   const serverParams: FilterState = {
     search: currentSearchParams.get('q') || '',
-    types: parseTypes(currentSearchParams.get('type')),
+    types: parseExperienceTypes(currentSearchParams.get('type')),
     commune: currentSearchParams.get('commune'),
     minPrice: parseNumber(currentSearchParams.get('minPrice')),
     maxPrice: parseNumber(currentSearchParams.get('maxPrice')),
     capacity: parseNumber(currentSearchParams.get('capacity')),
-    sort: (currentSearchParams.get('sort') as SortOption) || 'relevance',
+    sort: parseCatalogSort(currentSearchParams.get('sort')),
+    quand: parseDateKeyParam(currentSearchParams.get('quand')) ?? null,
+    quandFin: parseDateKeyParam(currentSearchParams.get('quand_fin')) ?? null,
   };
 
   // Optimistic state for instant UI updates
@@ -163,8 +172,16 @@ export function ExperiencesPageClient({
 
   const handleSortChange = (sort: SortOption) => {
     updateParams(
-      { sort: sort !== 'relevance' ? sort : null, page: null },
+      { sort: sort !== DEFAULT_CATALOG_SORT ? sort : null, page: null },
       { sort }
+    );
+  };
+
+  const handleDateChange = (quand: string | null) => {
+    // Picking a single date replaces any weekend range (quand_fin).
+    updateParams(
+      { quand, quand_fin: null, page: null },
+      { quand, quandFin: null }
     );
   };
 
@@ -181,7 +198,9 @@ export function ExperiencesPageClient({
       minPrice: null,
       maxPrice: null,
       capacity: null,
-      sort: 'relevance',
+      sort: DEFAULT_CATALOG_SORT,
+      quand: null,
+      quandFin: null,
     });
     startTransition(() => {
       router.push('/experiences', { scroll: false });
@@ -201,14 +220,16 @@ export function ExperiencesPageClient({
     currentParams.commune ||
     currentParams.minPrice !== null ||
     currentParams.maxPrice !== null ||
-    currentParams.capacity !== null;
+    currentParams.capacity !== null ||
+    currentParams.quand !== null;
 
   const sortLabels: Record<SortOption, string> = {
-    relevance: 'Recommandés',
-    price_asc: 'Prix ↑',
-    price_desc: 'Prix ↓',
-    newest: 'Plus récents',
-    distance: 'Plus proche',
+    next_availability: tSearch('sort.nextAvailability'),
+    relevance: tSearch('sort.relevance'),
+    price_asc: tSearch('sort.priceLowToHigh'),
+    price_desc: tSearch('sort.priceHighToLow'),
+    newest: tSearch('sort.newestFirst'),
+    distance: tSearch('sort.distance'),
   };
   const visibleSortOptions = (Object.keys(sortLabels) as SortOption[]).filter(
     (option) => option !== 'distance' || locationSearch.hasLocationSearch
@@ -239,6 +260,9 @@ export function ExperiencesPageClient({
             onMaxPriceChange={handleMaxPriceChange}
             capacity={currentParams.capacity}
             onCapacityChange={handleCapacityChange}
+            quand={currentParams.quand}
+            quandFin={currentParams.quandFin}
+            onDateChange={handleDateChange}
             onClearFilters={handleClearFilters}
           />
         </aside>
@@ -341,6 +365,7 @@ export function ExperiencesPageClient({
           handleMinPriceChange={handleMinPriceChange}
           handleMaxPriceChange={handleMaxPriceChange}
           handleCapacityChange={handleCapacityChange}
+          handleDateChange={handleDateChange}
           handleSearchChange={handleSearchChange}
           handleSortChange={handleSortChange}
           handlePageChange={handlePageChange}
@@ -366,6 +391,7 @@ function MobileListing({
   handleMinPriceChange,
   handleMaxPriceChange,
   handleCapacityChange,
+  handleDateChange,
   handleSearchChange,
   handleSortChange,
   handlePageChange,
@@ -385,6 +411,7 @@ function MobileListing({
   handleMinPriceChange: (_price: number | null) => void;
   handleMaxPriceChange: (_price: number | null) => void;
   handleCapacityChange: (_capacity: number | null) => void;
+  handleDateChange: (_quand: string | null) => void;
   handleSearchChange: (_value: string) => void;
   handleSortChange: (_sort: SortOption) => void;
   handlePageChange: (_page: number) => void;
@@ -446,6 +473,9 @@ function MobileListing({
           onMaxPriceChange={handleMaxPriceChange}
           capacity={currentParams.capacity}
           onCapacityChange={handleCapacityChange}
+          quand={currentParams.quand}
+          quandFin={currentParams.quandFin}
+          onDateChange={handleDateChange}
           onClearFilters={handleClearFilters}
         />
       </div>
@@ -465,6 +495,9 @@ function MobileListing({
             onMaxPriceChange={handleMaxPriceChange}
             capacity={currentParams.capacity}
             onCapacityChange={handleCapacityChange}
+            quand={currentParams.quand}
+            quandFin={currentParams.quandFin}
+            onDateChange={handleDateChange}
             onClearFilters={handleClearFilters}
           />
         </div>
@@ -506,22 +539,6 @@ function MobileListing({
       </main>
     </div>
   );
-}
-
-function parseTypes(typeParam: string | null): ExperienceType[] {
-  if (!typeParam) return [];
-  const validTypes: ExperienceType[] = [
-    'TASTING',
-    'CELLAR_VISIT',
-    'WORKSHOP',
-    'VINEYARD_TOUR',
-    'FOOD_PAIRING',
-  ];
-  return typeParam
-    .split(',')
-    .filter((t): t is ExperienceType =>
-      validTypes.includes(t as ExperienceType)
-    );
 }
 
 function parseNumber(value: string | null): number | null {
