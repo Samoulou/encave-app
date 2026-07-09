@@ -51,6 +51,10 @@ Après le merge, l'existant est **fiable** (l'invité reçoit un billet fonction
 - B1 (rendu conditionnel device) : risque de mismatch SSR — approche : détection UA côté serveur (headers) OU garder les deux arbres mais démonter `DynamicMap` mobile et retirer les preloads cachés (choix au moment du code, le plus sûr des deux).
 - Rollback : revert PR ; aucun changement de schéma, aucun flag nécessaire (pas de nouveau comportement produit).
 
-## 7. Décisions ouvertes
+## 7. Post-merge : correctif Hobby (hotfix)
+
+Le déploiement Vercel a échoué : **plan Hobby = crons limités à 1 exécution/jour** (`*/10 * * * *` refusé). `expire-pending-bookings` passe en quotidien (03:00) — la libération temps réel des holds reste assurée par le webhook Stripe `checkout.session.expired` ; le cron n'est que le filet de sécurité. Avant le launch : passer Vercel Pro (crons fréquents) ou déclencher l'endpoint via un scheduler externe (décision D8 du backlog).
+
+## 7bis. Décisions ouvertes
 
 - Aucune (tout est du correctif conforme aux specs existantes).
