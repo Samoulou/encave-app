@@ -1,0 +1,62 @@
+name: DB Migrate (ad hoc)
+
+# Applies `prisma migrate deploy` to an arbitrary Postgres database.
+# Manual dispatch only. The connection string is provided at dispatch
+# time (never committed) and masked from the logs. Use the direct or
+# pooler Neon URL — the pooler suffix is stripped automatically for
+# DIRECT_URL, which Prisma Migrate uses.
+
+on:
+  workflow_dispatch:
+    inputs:
+      database_url:
+        description: 'Postgres connection string (Neon pooler or direct)'
+        required: true
+        type: string
+      confirm:
+        description: "Type 'migrate-deploy' to confirm"
+        required: true
+        type: string
+
+jobs:
+  migrate:
+    name: prisma migrate deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Validate confirmation phrase
+        if: ${{ inputs.confirm != 'migrate-deploy' }}
+        run: |
+          echo "Confirmation phrase mismatch — aborting."
+          exit 1
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Prepare connection strings (masked)
+        env:
+          RAW_URL: ${{ inputs.database_url }}
+        run: |
+          echo "::add-mask::$RAW_URL"
+          # Drop channel_binding (libpq-only param) whatever its position.
+          CLEAN=$(printf '%s' "$RAW_URL" | sed -E 's/([?&])channel_binding=[^&]*&/\1/; s/[?&]channel_binding=[^&]*$//')
+          # Neon: migrations must hit the direct endpoint, not PgBouncer.
+          DIRECT=$(printf '%s' "$CLEAN" | sed 's/-pooler\./\./')
+          echo "::add-mask::$CLEAN"
+          echo "::add-mask::$DIRECT"
+          {
+            echo "DATABASE_URL=$CLEAN"
+            echo "DIRECT_URL=$DIRECT"
+          } >> "$GITHUB_ENV"
+
+      - name: Apply migrations
+        run: npx --yes prisma@5.22.0 migrate deploy
+
+      - name: Migration status
+        run: npx --yes prisma@5.22.0 migrate status
