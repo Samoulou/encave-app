@@ -45,6 +45,12 @@ vi.mock('@/server/db', () => ({
   },
 }));
 
+// The Stripe fee label is resolved via next-intl outside a request scope.
+vi.mock('next-intl/server', () => ({
+  getTranslations: async () => (key: string) =>
+    key === 'serviceFee' ? 'Frais de service' : key,
+}));
+
 // Mock env
 vi.mock('@/lib/env', () => ({
   env: {
@@ -58,6 +64,15 @@ vi.mock('@/lib/env', () => ({
   },
   getBaseUrl: () => 'http://localhost:3000',
 }));
+
+/** Narrow the captured create() payload without `!` (CLAUDE.md rule). */
+function requireCaptured(
+  data: Record<string, unknown> | null
+): Record<string, unknown> {
+  expect(data).not.toBeNull();
+  if (data === null) throw new Error('booking.create was never called');
+  return data;
+}
 
 describe('Checkout Server Actions', () => {
   const validAccessToken = 'valid-token';
@@ -314,12 +329,12 @@ describe('Checkout Server Actions', () => {
       // Total: 5000 * 4 = 20000 cents (200 CHF)
       // Platform fee: 20000 * 0.12 = 2400 cents (24 CHF)
       // Winery payout: 20000 - 2400 = 17600 cents (176 CHF)
-      expect(capturedBookingData).not.toBeNull();
-      expect(capturedBookingData!.totalPrice).toBe(20000);
-      expect(capturedBookingData!.platformFee).toBe(2400);
-      expect(capturedBookingData!.wineryPayout).toBe(17600);
+      const captured = requireCaptured(capturedBookingData);
+      expect(captured.totalPrice).toBe(20000);
+      expect(captured.platformFee).toBe(2400);
+      expect(captured.wineryPayout).toBe(17600);
       // Flag OFF: no service fee, single Stripe line, unchanged app fee.
-      expect(capturedBookingData!.serviceFeeCents).toBe(0);
+      expect(captured.serviceFeeCents).toBe(0);
       const sessionOff = sessionCreateMock.mock.calls[0]?.[0];
       expect(sessionOff.line_items).toHaveLength(1);
       expect(sessionOff.payment_intent_data.application_fee_amount).toBe(2400);
@@ -356,10 +371,10 @@ describe('Checkout Server Actions', () => {
 
       // 4 guests × 250 = 1000 cents of service fee, platform's revenue:
       // totalPrice stays 20000, application_fee = 2400 + 1000.
-      expect(capturedBookingData).not.toBeNull();
-      expect(capturedBookingData!.totalPrice).toBe(20000);
-      expect(capturedBookingData!.serviceFeeCents).toBe(1000);
-      expect(capturedBookingData!.wineryPayout).toBe(17600);
+      const captured = requireCaptured(capturedBookingData);
+      expect(captured.totalPrice).toBe(20000);
+      expect(captured.serviceFeeCents).toBe(1000);
+      expect(captured.wineryPayout).toBe(17600);
       const session = sessionCreateMock.mock.calls[0]?.[0];
       expect(session.line_items).toHaveLength(2);
       expect(session.line_items[1].price_data.unit_amount).toBe(250);
@@ -398,10 +413,10 @@ describe('Checkout Server Actions', () => {
       await createBookingAndCheckout(validInput);
 
       // Founder: platformFee 0, full payout; app fee = client fee alone.
-      expect(capturedBookingData).not.toBeNull();
-      expect(capturedBookingData!.platformFee).toBe(0);
-      expect(capturedBookingData!.wineryPayout).toBe(20000);
-      expect(capturedBookingData!.serviceFeeCents).toBe(1000);
+      const captured = requireCaptured(capturedBookingData);
+      expect(captured.platformFee).toBe(0);
+      expect(captured.wineryPayout).toBe(20000);
+      expect(captured.serviceFeeCents).toBe(1000);
       const session = sessionCreateMock.mock.calls[0]?.[0];
       expect(session.payment_intent_data.application_fee_amount).toBe(1000);
     });

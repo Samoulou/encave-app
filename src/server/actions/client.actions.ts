@@ -9,7 +9,7 @@ import { BookingStatus, Locale } from '@prisma/client';
 import type { ActionResult } from '@/types/actions';
 import { logError } from '@/lib/logger';
 import { processRefund } from '@/server/services/payment.service';
-import { computeRefundCents } from '@/lib/business-rules/cancellation-policy';
+import { computeBookingRefund } from '@/lib/business-rules/cancellation-policy';
 import {
   sendBookingCancellationEmail,
   sendWinemakerCancellationEmail,
@@ -105,13 +105,11 @@ export async function cancelClientBooking(
       };
     }
 
-    // Refund per the winery's cancellation policy (P-03 / L-043) on the
-    // full paid amount — tickets + service fee (decision D2).
-    const paidCents = booking.totalPrice + booking.serviceFeeCents;
-    const refundDueCents = computeRefundCents(
-      booking.winery.cancellationPolicy,
-      hoursUntilExperience,
-      paidCents
+    // Refund per the policy snapshotted at booking (fallback: winery's
+    // current policy for legacy rows) on the full paid amount (D2).
+    const { paidCents, refundDueCents, stripeAmountArg } = computeBookingRefund(
+      booking,
+      hoursUntilExperience
     );
     let refundAmount: number | null = null;
     let stripeRefundId: string | null = null;
@@ -121,7 +119,7 @@ export async function cancelClientBooking(
         const refundResult = await processRefund(
           booking.stripePaymentIntentId,
           true,
-          refundDueCents < paidCents ? refundDueCents : undefined
+          stripeAmountArg
         );
         refundAmount = refundResult.amount;
         stripeRefundId = refundResult.refundId;
@@ -157,14 +155,25 @@ export async function cancelClientBooking(
     const bookingDateTime = new Date(booking.date);
     bookingDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
 
-    // Send cancellation email to client (exact policy-based amount)
+    // Send cancellation email to client (full paid total; refund exact,
+    // or generic wording when due but unprocessable — see cancelBooking).
+    if (refundDueCents > 0 && refundAmount === null) {
+      logError(
+        'Refund due but no Stripe payment intent on booking',
+        undefined,
+        { action: 'cancelClientBooking', bookingId, refundDueCents }
+      );
+    }
     await sendBookingCancellationEmail(booking.visitorEmail, {
       guestName: booking.visitorName,
       experienceTitle: booking.experience.title,
       wineryName: booking.winery.name,
       date: bookingDateTime,
-      totalPrice: booking.totalPrice,
-      refundAmountCents: refundAmount ?? 0,
+      totalPrice: paidCents,
+      refundAmountCents:
+        refundDueCents > 0 && refundAmount === null
+          ? null
+          : (refundAmount ?? 0),
       bookingRef: booking.reference,
     });
 

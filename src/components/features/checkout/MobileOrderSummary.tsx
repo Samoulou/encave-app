@@ -18,7 +18,7 @@ interface MobileOrderSummaryProps {
   pricePerPerson: number;
   serviceFee?: number;
   /** Winery cancellation policy — forwarded to the expanded summary. */
-  cancellationPolicy?: CancellationPolicy;
+  cancellationPolicy: CancellationPolicy;
 }
 
 export function MobileOrderSummary(props: MobileOrderSummaryProps) {

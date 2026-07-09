@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
+import { useRouter } from '@/i18n/navigation';
 import { toast } from 'sonner';
 import { Switch } from '@/components/ui/switch';
 import { FLAG_KEYS, type FlagKey } from '@/lib/flags';
@@ -19,16 +20,18 @@ interface FeatureFlagsPanelProps {
  */
 export function FeatureFlagsPanel({ flags }: FeatureFlagsPanelProps) {
   const t = useTranslations('admin.featureFlags');
-  const [state, setState] = useState<Record<FlagKey, boolean>>(flags);
+  const router = useRouter();
   const [pendingKey, setPendingKey] = useState<FlagKey | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
   function handleToggle(key: FlagKey, enabled: boolean) {
     setPendingKey(key);
     startTransition(async () => {
       const result = await setFeatureFlag(key, enabled);
       if (result.success) {
-        setState((prev) => ({ ...prev, [key]: result.data.enabled }));
+        // The server render is authoritative (tag already revalidated) —
+        // never mirror kill-switch state in client state.
+        router.refresh();
         toast.success(
           result.data.enabled
             ? t('enabledToast', { flag: t(`flags.${key}`) })
@@ -53,8 +56,8 @@ export function FeatureFlagsPanel({ flags }: FeatureFlagsPanelProps) {
             <p className="mt-0.5 font-mono text-xs text-slate-400">{key}</p>
           </div>
           <Switch
-            checked={state[key]}
-            disabled={isPending && pendingKey === key}
+            checked={flags[key]}
+            disabled={pendingKey === key}
             onCheckedChange={(checked) => handleToggle(key, checked)}
             aria-label={t(`flags.${key}`)}
           />

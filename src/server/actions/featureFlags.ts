@@ -2,9 +2,8 @@
 
 import { revalidateTag } from 'next/cache';
 import { z } from 'zod';
-import { UserRole } from '@prisma/client';
-import { auth } from '@/server/auth';
 import { db } from '@/server/db';
+import { requireAdmin } from '@/server/actions/admin';
 import { FLAG_KEYS, type FlagKey } from '@/lib/flags';
 import { FEATURE_FLAGS_CACHE_TAG } from '@/server/queries/feature-flags.queries';
 import { logError, logInfo } from '@/lib/logger';
@@ -25,19 +24,8 @@ export async function setFeatureFlag(
   enabled: boolean
 ): Promise<ActionResult<{ key: FlagKey; enabled: boolean }>> {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return {
-        success: false,
-        error: { code: 'UNAUTHORIZED', message: 'Please sign in' },
-      };
-    }
-    if (session.user.role !== UserRole.ADMIN) {
-      return {
-        success: false,
-        error: { code: 'FORBIDDEN', message: 'Admin access required' },
-      };
-    }
+    const admin = await requireAdmin();
+    if (!admin.success) return admin;
 
     const validated = SetFeatureFlagSchema.safeParse({ key, enabled });
     if (!validated.success) {
@@ -58,7 +46,7 @@ export async function setFeatureFlag(
     logInfo('feature-flag.toggled', {
       key: flag.key,
       enabled: flag.enabled,
-      adminId: session.user.id,
+      adminId: admin.data.adminId,
     });
 
     return {

@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import type { WineryPlan } from '@prisma/client';
+import { WineryPlan } from '@prisma/client';
 import { useRouter } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,7 +19,7 @@ import { setWineryPlan } from '@/server/actions/admin';
 
 // Local literal list (type-checked against the Prisma enum) — avoids
 // pulling @prisma/client values into the client bundle.
-const PLANS = ['STANDARD', 'FOUNDER'] as const satisfies readonly WineryPlan[];
+const PLANS = Object.values(WineryPlan);
 
 interface WineryMonetizationPanelProps {
   wineryId: string;

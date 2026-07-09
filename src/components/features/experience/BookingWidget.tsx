@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import type { CancellationPolicy } from '@prisma/client';
+import { getPolicyTiers } from '@/lib/business-rules/cancellation-policy';
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
 import { addDays, format, parseISO, startOfDay } from 'date-fns';
 import { de, enUS, fr } from 'date-fns/locale';
@@ -112,6 +113,16 @@ export function BookingWidget({
     guests <= maxCapacity &&
     (remainingCapacity === null || guests <= remainingCapacity);
 
+  // Badge derived from the policy's top tier — the same source the
+  // refund engine uses, so the promise can never drift from the barème.
+  const topTier = getPolicyTiers(cancellationPolicy)[0];
+  const freeCancellationLabel =
+    topTier === undefined
+      ? null
+      : topTier.minHours % 24 === 0 && topTier.minHours >= 48
+        ? tExp('freeCancellationUntilDays', { days: topTier.minHours / 24 })
+        : tExp('freeCancellationUntilHours', { hours: topTier.minHours });
+
   const totalPrice = price * guests;
   const serviceFee = serviceFeeCentsPerGuest * guests;
   const totalWithFees = totalPrice + serviceFee;
@@ -208,7 +219,7 @@ export function BookingWidget({
 
       <div className="mb-5 flex items-center gap-1.5 text-xs font-semibold text-vine">
         <Check className="h-3.5 w-3.5" />
-        {tExp(`freeCancellationPolicy.${cancellationPolicy}`)}
+        {freeCancellationLabel}
       </div>
 
       <div className="border-t border-stone-200 pt-4">

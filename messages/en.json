@@ -235,7 +235,6 @@
     "nearStation": "Near {commune} station",
     "pricePerPersonLabel": "Price per person",
     "available": "AVAILABLE",
-    "freeCancellation": "Free cancellation up to 24h before.",
     "cancellationPolicy": {
       "title": "Cancellation policy:",
       "labels": {
@@ -483,11 +482,8 @@
     "ageGate": {
       "badge": "18+ only"
     },
-    "freeCancellationPolicy": {
-      "FLEXIBLE": "Free cancellation until 2h before.",
-      "STANDARD": "Free cancellation until 24h before.",
-      "STRICT": "Free cancellation until 7 days before."
-    }
+    "freeCancellationUntilHours": "Free cancellation until {hours}h before.",
+    "freeCancellationUntilDays": "Free cancellation until {days, plural, =1 {# day} other {# days}} before."
   },
   "booking": {
     "selectDate": "Select a date",
@@ -670,8 +666,6 @@
     "viewOnMap": "View on map",
     "serviceFee": "Service Fee",
     "totalCHF": "Total (CHF)",
-    "freeCancellation": "Free cancellation",
-    "cancellationPolicy": "until 24 hours before the experience. After that, a 50% fee applies.",
     "orderSummary": "Order Summary",
     "sslEncrypted": "SSL ENCRYPTED",
     "support247": "24/7 SUPPORT",
@@ -858,7 +852,15 @@
     "manageProfile": "Manage your winery profile and photos",
     "lastUpdatedDate": "Last updated {date}",
     "viewPublicProfile": "View Public Profile",
-    "paymentStatusLabel": "Payment Status"
+    "paymentStatusLabel": "Payment Status",
+    "cancellationPolicy": {
+      "title": "Cancellation policy",
+      "description": "Choose the refund terms applied when a client cancels a booking. They are shown on your experiences and at checkout.",
+      "save": "Save policy",
+      "saving": "Saving...",
+      "updated": "Cancellation policy updated",
+      "updateError": "Could not save the cancellation policy. Please try again."
+    }
   },
   "dashboard": {
     "title": "Dashboard",
@@ -1776,7 +1778,7 @@
       "title": "Cancel Booking",
       "confirmMessage": "Are you sure you want to cancel your booking for \"{title}\"?",
       "refundPolicy": "Cancellation Policy",
-      "refundPolicyDetail": "Full refund if cancelled more than 24 hours before the experience. No refund within 24 hours.",
+      "refundPolicyDetail": "Your refund is calculated according to the winery's cancellation policy (shown on the experience page). The exact amount will be confirmed by email.",
       "keepBooking": "Keep Booking",
       "confirm": "Confirm Cancellation",
       "cancelling": "Cancelling...",

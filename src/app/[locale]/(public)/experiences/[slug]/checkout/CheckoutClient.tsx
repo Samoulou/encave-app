@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -77,6 +77,7 @@ export function CheckoutClient({
   serviceFeeCentsPerGuest,
 }: CheckoutClientProps) {
   const t = useTranslations('checkout');
+  const locale = useLocale() as 'fr' | 'de' | 'en';
   const tBooking = useTranslations('booking');
   const tErrors = useTranslations('errors');
   const router = useRouter();
@@ -237,6 +238,8 @@ export function CheckoutClient({
         visitorEmail: data.email,
         visitorPhone: data.phone.replace(/\s/g, ''),
         ageConfirmed: true,
+        locale,
+        displayedServiceFeeCentsPerGuest: serviceFeeCentsPerGuest,
       });
 
       if (result.success) {

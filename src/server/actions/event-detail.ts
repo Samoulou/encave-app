@@ -582,6 +582,7 @@ export async function cancelEventSession(
       visitorName: true,
       guestCount: true,
       totalPrice: true,
+      serviceFeeCents: true,
       status: true,
       stripeCheckoutSessionId: true,
       stripePaymentIntentId: true,
@@ -600,10 +601,13 @@ export async function cancelEventSession(
         booking.status === BookingStatus.CONFIRMED &&
         booking.stripePaymentIntentId?.startsWith('pi_')
       ) {
+        // Winery-initiated cancellation refunds everything the client
+        // paid — tickets AND service fee (D2).
+        const paidCents = booking.totalPrice + booking.serviceFeeCents;
         const refund = await getStripe().refunds.create(
           {
             payment_intent: booking.stripePaymentIntentId,
-            amount: booking.totalPrice,
+            amount: paidCents,
             reverse_transfer: true,
             refund_application_fee: true,
             metadata: {
@@ -613,11 +617,11 @@ export async function cancelEventSession(
             },
           },
           {
-            idempotencyKey: `winery-session-cancel:${booking.id}:${booking.totalPrice}`,
+            idempotencyKey: `winery-session-cancel:${booking.id}:${paidCents}`,
           }
         );
         refundId = refund.id;
-        refunded += booking.totalPrice;
+        refunded += paidCents;
       }
 
       if (

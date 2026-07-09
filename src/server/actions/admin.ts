@@ -47,7 +47,7 @@ const SetWineryPlanSchema = z.object({
   commissionRatePercent: z.number().min(0).max(100).nullable(),
 });
 
-async function requireAdmin(): Promise<
+export async function requireAdmin(): Promise<
   | ActionResult<{ adminId: string }>
   | { success: true; data: { adminId: string } }
 > {
@@ -353,7 +353,9 @@ export async function refundBookingManually(
   }
 
   const alreadyRefunded = booking.refundAmount ?? 0;
-  const remaining = booking.totalPrice - alreadyRefunded;
+  // Refundable base = everything the client paid (tickets + service fee).
+  const paidCents = booking.totalPrice + booking.serviceFeeCents;
+  const remaining = paidCents - alreadyRefunded;
   if (remaining <= 0 || amountCents > remaining) {
     return {
       success: false,
@@ -391,7 +393,7 @@ export async function refundBookingManually(
     );
 
     const nextRefunded = alreadyRefunded + amountCents;
-    const isFullRefund = nextRefunded >= booking.totalPrice;
+    const isFullRefund = nextRefunded >= paidCents;
     await db.$transaction([
       db.booking.update({
         where: { id: booking.id },

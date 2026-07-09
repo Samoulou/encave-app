@@ -22,7 +22,7 @@ interface OrderSummaryProps {
   pricePerPerson: number;
   serviceFee?: number;
   /** Winery cancellation policy — falls back to the legacy note if absent. */
-  cancellationPolicy?: CancellationPolicy;
+  cancellationPolicy: CancellationPolicy;
 }
 
 function formatTimeRange(time: string, durationHours?: number): string {
@@ -181,19 +181,10 @@ export function OrderSummary({
               className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#915564]"
               aria-hidden="true"
             />
-            {cancellationPolicy ? (
-              <CancellationPolicyInfo
-                policy={cancellationPolicy}
-                className="text-xs leading-relaxed"
-              />
-            ) : (
-              <p className="text-xs leading-relaxed text-[#915564]">
-                <span className="font-bold text-foreground">
-                  {t('freeCancellation')}
-                </span>{' '}
-                {t('cancellationPolicy')}
-              </p>
-            )}
+            <CancellationPolicyInfo
+              policy={cancellationPolicy}
+              className="text-xs leading-relaxed"
+            />
           </div>
         </div>
       </div>

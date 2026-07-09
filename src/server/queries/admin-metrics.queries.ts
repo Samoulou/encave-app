@@ -19,7 +19,12 @@ export interface AdminBusinessKpis {
   giftCardLiabilityCents: number;
 }
 
-const REVENUE_STATUSES = [BookingStatus.CONFIRMED, BookingStatus.COMPLETED];
+// NO_SHOW bookings kept the client's money — they count as revenue.
+const REVENUE_STATUSES = [
+  BookingStatus.CONFIRMED,
+  BookingStatus.COMPLETED,
+  BookingStatus.NO_SHOW,
+];
 
 /**
  * Business KPIs for the admin dashboard (P-03 / L-045).

@@ -51,14 +51,18 @@ export async function generateMetadata({
 
 export default async function ExperiencePage({ params }: ExperiencePageProps) {
   const { slug } = await params;
-  const experience = await getExperienceBySlug(slug);
+  // Flag read overlaps the experience fetch — this is the LCP-critical
+  // route; never serialize independent I/O here.
+  const [experience, bookingFeeEnabled] = await Promise.all([
+    getExperienceBySlug(slug),
+    isFlagEnabled('BOOKING_FEE'),
+  ]);
 
   if (!experience) {
     notFound();
   }
 
   // Client booking fee (P-03 / L-041) — flag OFF keeps today's display.
-  const bookingFeeEnabled = await isFlagEnabled('BOOKING_FEE');
   const serviceFeeCentsPerGuest = bookingFeeEnabled ? BOOKING_FEE_CENTS : 0;
 
   const baseUrl = getBaseUrl();

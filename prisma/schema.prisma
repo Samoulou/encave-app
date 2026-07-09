@@ -353,6 +353,10 @@ model Booking {
   // Client booking fee (2.50 CHF/ticket, flag BOOKING_FEE). Platform's,
   // never part of wineryPayout. Charged amount = totalPrice + serviceFee.
   serviceFeeCents         Int                   @default(0)
+  // Snapshot of the winery's cancellation policy at booking time — the
+  // contractual terms the client accepted. Refunds use this, never the
+  // winery's CURRENT policy. Null = legacy booking (fallback to winery).
+  cancellationPolicy      CancellationPolicy?
   wineryPayout            Int // cents
   status                  BookingStatus         @default(PENDING_PAYMENT)
   stripeCheckoutSessionId String?

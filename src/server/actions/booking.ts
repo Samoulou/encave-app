@@ -14,7 +14,7 @@ import {
   sendWinemakerCancellationEmail,
 } from '@/server/services/email.service';
 import { processRefund } from '@/server/services/payment.service';
-import { computeRefundCents } from '@/lib/business-rules/cancellation-policy';
+import { computeBookingRefund } from '@/lib/business-rules/cancellation-policy';
 import { logError } from '@/lib/logger';
 
 const CheckAvailabilitySchema = z.object({
@@ -352,6 +352,7 @@ export async function resendConfirmationEmail(
       guestCount: booking.guestCount,
       duration: booking.experience.duration,
       totalPrice: booking.totalPrice,
+      serviceFeeCents: booking.serviceFeeCents,
       bookingRef: booking.reference,
     });
 
@@ -390,6 +391,7 @@ export async function getBookingByToken(token: string): Promise<
     timeSlot: string;
     guestCount: number;
     totalPrice: number;
+    serviceFeeCents: number;
     experience: {
       title: string;
       slug: string;
@@ -459,6 +461,7 @@ export async function getBookingByToken(token: string): Promise<
         timeSlot: booking.timeSlot,
         guestCount: booking.guestCount,
         totalPrice: booking.totalPrice,
+        serviceFeeCents: booking.serviceFeeCents,
         experience: booking.experience,
         winery: booking.winery,
       },
@@ -565,13 +568,11 @@ export async function cancelBooking(
       };
     }
 
-    // Refund per the winery's cancellation policy (P-03 / L-043) on the
-    // full paid amount — tickets + service fee (decision D2).
-    const paidCents = booking.totalPrice + booking.serviceFeeCents;
-    const refundDueCents = computeRefundCents(
-      booking.winery.cancellationPolicy,
-      hoursUntilExperience,
-      paidCents
+    // Refund per the policy snapshotted at booking (fallback: winery's
+    // current policy for legacy rows) on the full paid amount (D2).
+    const { paidCents, refundDueCents, stripeAmountArg } = computeBookingRefund(
+      booking,
+      hoursUntilExperience
     );
     let refundAmount: number | null = null;
     let stripeRefundId: string | null = null;
@@ -582,7 +583,7 @@ export async function cancelBooking(
         const refundResult = await processRefund(
           booking.stripePaymentIntentId,
           true,
-          refundDueCents < paidCents ? refundDueCents : undefined
+          stripeAmountArg
         );
         refundAmount = refundResult.amount;
         stripeRefundId = refundResult.refundId;
@@ -618,14 +619,27 @@ export async function cancelBooking(
     const bookingDateTime = new Date(booking.date);
     bookingDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
 
-    // Send cancellation email to client (exact policy-based amount)
+    // Send cancellation email to client. Price row shows the full paid
+    // amount; refund line shows the exact processed amount — or the
+    // generic wording when a refund was due but no payment intent was on
+    // file (never affirm "no refund" to a client the policy entitles).
+    if (refundDueCents > 0 && refundAmount === null) {
+      logError(
+        'Refund due but no Stripe payment intent on booking',
+        undefined,
+        { action: 'cancelBooking', bookingId, refundDueCents }
+      );
+    }
     await sendBookingCancellationEmail(booking.visitorEmail, {
       guestName: booking.visitorName,
       experienceTitle: booking.experience.title,
       wineryName: booking.winery.name,
       date: bookingDateTime,
-      totalPrice: booking.totalPrice,
-      refundAmountCents: refundAmount ?? 0,
+      totalPrice: paidCents,
+      refundAmountCents:
+        refundDueCents > 0 && refundAmount === null
+          ? null
+          : (refundAmount ?? 0),
       bookingRef: booking.reference,
     });
 
@@ -742,11 +756,10 @@ export async function getCancellationInfo(
     }
 
     // Policy-based amount on the full paid total (tickets + service fee).
-    const refundAmount = computeRefundCents(
-      booking.winery.cancellationPolicy,
-      hoursUntilExperience,
-      booking.totalPrice + booking.serviceFeeCents
-    );
+    const refundAmount = computeBookingRefund(
+      booking,
+      hoursUntilExperience
+    ).refundDueCents;
 
     return {
       success: true,

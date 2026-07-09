@@ -235,7 +235,6 @@
     "nearStation": "Proche de la gare de {commune}",
     "pricePerPersonLabel": "Prix par personne",
     "available": "DISPONIBLE",
-    "freeCancellation": "Annulation gratuite jusqu'à 24h avant.",
     "cancellationPolicy": {
       "title": "Politique d'annulation :",
       "labels": {
@@ -483,11 +482,8 @@
     "ageGate": {
       "badge": "Reserve aux 18+"
     },
-    "freeCancellationPolicy": {
-      "FLEXIBLE": "Annulation gratuite jusqu'à 2h avant.",
-      "STANDARD": "Annulation gratuite jusqu'à 24h avant.",
-      "STRICT": "Annulation gratuite jusqu'à 7 jours avant."
-    }
+    "freeCancellationUntilHours": "Annulation gratuite jusqu'à {hours} h avant.",
+    "freeCancellationUntilDays": "Annulation gratuite jusqu'à {days, plural, =1 {# jour} other {# jours}} avant."
   },
   "booking": {
     "selectDate": "Choisissez une date",
@@ -670,8 +666,6 @@
     "viewOnMap": "Voir sur la carte",
     "serviceFee": "Frais de service",
     "totalCHF": "Total (CHF)",
-    "freeCancellation": "Annulation gratuite",
-    "cancellationPolicy": "jusqu'à 24 heures avant l'expérience. Après, des frais de 50% s'appliquent.",
     "orderSummary": "Récapitulatif",
     "sslEncrypted": "CHIFFRÉ SSL",
     "support247": "SUPPORT 24/7",
@@ -858,7 +852,15 @@
     "manageProfile": "Gérez le profil et les photos de votre domaine",
     "lastUpdatedDate": "Dernière mise à jour {date}",
     "viewPublicProfile": "Voir le profil public",
-    "paymentStatusLabel": "Statut du paiement"
+    "paymentStatusLabel": "Statut du paiement",
+    "cancellationPolicy": {
+      "title": "Politique d'annulation",
+      "description": "Choisissez les conditions de remboursement appliquées lorsqu'un client annule une réservation. Elles sont affichées sur vos expériences et au moment du paiement.",
+      "save": "Enregistrer la politique",
+      "saving": "Enregistrement...",
+      "updated": "Politique d'annulation mise à jour",
+      "updateError": "Impossible d'enregistrer la politique d'annulation. Veuillez réessayer."
+    }
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -1776,7 +1778,7 @@
       "title": "Annuler la réservation",
       "confirmMessage": "Êtes-vous sûr de vouloir annuler votre réservation pour \"{title}\" ?",
       "refundPolicy": "Politique d'annulation",
-      "refundPolicyDetail": "Remboursement intégral si annulé plus de 24 heures avant l'expérience. Aucun remboursement dans les 24 heures.",
+      "refundPolicyDetail": "Le remboursement est calculé selon la politique d'annulation de la cave (affichée sur la fiche de l'expérience). Le montant exact vous sera confirmé par email.",
       "keepBooking": "Garder la réservation",
       "confirm": "Confirmer l'annulation",
       "cancelling": "Annulation en cours...",

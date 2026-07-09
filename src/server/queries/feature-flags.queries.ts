@@ -1,7 +1,7 @@
 import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
 import { db } from '@/server/db';
-import { FLAG_KEYS, FLAG_REGISTRY, type FlagKey } from '@/lib/flags';
+import { FLAG_KEYS, FLAG_REGISTRY, isFlagKey, type FlagKey } from '@/lib/flags';
 
 export const FEATURE_FLAGS_CACHE_TAG = 'feature-flags';
 
@@ -14,15 +14,16 @@ export const FEATURE_FLAGS_CACHE_TAG = 'feature-flags';
 export const getFeatureFlags = cache(
   unstable_cache(
     async (): Promise<Record<FlagKey, boolean>> => {
-      const rows = await db.featureFlag.findMany();
+      const rows = await db.featureFlag.findMany({
+        select: { key: true, enabled: true },
+      });
       const state = {} as Record<FlagKey, boolean>;
       for (const key of FLAG_KEYS) {
         state[key] = FLAG_REGISTRY[key].defaultEnabled;
       }
       for (const row of rows) {
-        const key = row.key as FlagKey;
-        if (FLAG_KEYS.includes(key)) {
-          state[key] = row.enabled;
+        if (isFlagKey(row.key)) {
+          state[row.key] = row.enabled;
         }
       }
       return state;

@@ -169,46 +169,68 @@ export const getEarningsSummary = cache(async function getEarningsSummary(
     select: {
       wineryPayout: true,
       totalPrice: true,
+      serviceFeeCents: true,
+      refundAmount: true,
       date: true,
       status: true,
       refundIssued: true,
     },
   });
 
-  // Total earnings (all time, excluding refunded)
+  // Partial refunds (STRICT 50% tier) reverse the Stripe transfer
+  // proportionally: the winery keeps payout × (1 − refunded/paid). A full
+  // refund keeps nothing. refundIssued alone no longer implies "earned 0".
+  function refundedFraction(b: {
+    totalPrice: number;
+    serviceFeeCents: number;
+    refundIssued: boolean;
+    refundAmount: number | null;
+  }): number {
+    if (!b.refundIssued) return 0;
+    const paid = b.totalPrice + b.serviceFeeCents;
+    if (paid <= 0 || b.refundAmount === null) return 1;
+    return Math.min(1, b.refundAmount / paid);
+  }
+
+  // Total earnings (all time, net of full/partial refunds)
   // Only count bookings where experience has passed (date <= now)
   const totalEarnings = bookings
-    .filter((b) => !b.refundIssued && b.date <= now)
-    .reduce((sum, b) => sum + b.wineryPayout, 0);
+    .filter((b) => b.date <= now)
+    .reduce(
+      (sum, b) => sum + Math.round(b.wineryPayout * (1 - refundedFraction(b))),
+      0
+    );
 
   // This month earnings (experiences that happened this month)
   const thisMonth = bookings
     .filter(
-      (b) =>
-        !b.refundIssued &&
-        b.date >= monthStart &&
-        b.date <= monthEnd &&
-        b.date <= now // Only count completed experiences
+      (b) => b.date >= monthStart && b.date <= monthEnd && b.date <= now // Only count completed experiences
     )
-    .reduce((sum, b) => sum + b.wineryPayout, 0);
+    .reduce(
+      (sum, b) => sum + Math.round(b.wineryPayout * (1 - refundedFraction(b))),
+      0
+    );
 
   // Last month earnings (for trend calculation)
   const lastMonth = bookings
-    .filter(
-      (b) =>
-        !b.refundIssued && b.date >= lastMonthStart && b.date <= lastMonthEnd
-    )
-    .reduce((sum, b) => sum + b.wineryPayout, 0);
+    .filter((b) => b.date >= lastMonthStart && b.date <= lastMonthEnd)
+    .reduce(
+      (sum, b) => sum + Math.round(b.wineryPayout * (1 - refundedFraction(b))),
+      0
+    );
 
   // Year to date (gross revenue)
   const yearToDate = bookings
-    .filter((b) => !b.refundIssued && b.date >= yearStart && b.date <= now)
-    .reduce((sum, b) => sum + b.totalPrice, 0);
+    .filter((b) => b.date >= yearStart && b.date <= now)
+    .reduce(
+      (sum, b) => sum + Math.round(b.totalPrice * (1 - refundedFraction(b))),
+      0
+    );
 
   // Pending payout: bookings where experience passed but < 5 business days ago
   // This includes both 'pending' and 'processing' statuses
   const pendingBookings = bookings.filter((b) => {
-    if (b.refundIssued) return false;
+    if (refundedFraction(b) >= 1) return false;
     if (b.date > now) return false; // Future experience
 
     const status = getTransactionStatus(b.status, b.date, b.refundIssued);
@@ -417,7 +439,15 @@ export const getWineryGmv = cache(async function getWineryGmv(
   const aggregate = await db.booking.aggregate({
     where: {
       wineryId,
-      status: { in: [BookingStatus.CONFIRMED, BookingStatus.COMPLETED] },
+      // NO_SHOW kept the money — it belongs in the GMV the platform
+      // brought to the winery.
+      status: {
+        in: [
+          BookingStatus.CONFIRMED,
+          BookingStatus.COMPLETED,
+          BookingStatus.NO_SHOW,
+        ],
+      },
     },
     _sum: { totalPrice: true },
   });

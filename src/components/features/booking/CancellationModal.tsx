@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { AlertTriangle, Clock, CheckCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -25,7 +25,6 @@ interface CancellationModalProps {
   onClose: () => void;
   bookingId: string;
   accessToken: string;
-  totalPrice: number;
 }
 
 export function CancellationModal({
@@ -33,7 +32,6 @@ export function CancellationModal({
   onClose,
   bookingId,
   accessToken,
-  totalPrice,
 }: CancellationModalProps) {
   const t = useTranslations('cancellation');
   const tCommon = useTranslations('common');
@@ -89,11 +87,6 @@ export function CancellationModal({
       setIsCancelling(false);
     }
   };
-
-  const hours = Math.floor(cancellationInfo?.hoursUntilExperience ?? 0);
-  const minutes = Math.round(
-    ((cancellationInfo?.hoursUntilExperience ?? 0) % 1) * 60
-  );
 
   return (
     <Dialog open={isOpen} onOpenChange={(open: boolean) => !open && onClose()}>
@@ -153,20 +146,6 @@ export function CancellationModal({
               </div>
             </div>
 
-            {/* Time remaining for refund */}
-            {cancellationInfo?.isEligibleForRefund && (
-              <div className="flex items-center gap-2 text-sm text-slate-600">
-                <Clock className="h-4 w-4" />
-                <span>{t('timeRemaining')}:</span>
-                <span className="font-medium">
-                  {t('hoursRemaining', {
-                    hours: Math.max(0, hours - 24),
-                    minutes,
-                  })}
-                </span>
-              </div>
-            )}
-
             {/* Refund amount */}
             <div className="flex items-center justify-between border-b border-t border-stone-200 py-3">
               <span className="text-slate-600">{t('refundAmount')}</span>
@@ -179,7 +158,7 @@ export function CancellationModal({
                 )}
               >
                 {cancellationInfo?.isEligibleForRefund
-                  ? formatCHF(totalPrice)
+                  ? formatCHF(cancellationInfo.refundAmount)
                   : t('noRefundAmount')}
               </span>
             </div>

@@ -66,3 +66,39 @@ export function getPolicyTiers(
 ): readonly RefundTier[] {
   return POLICY_TIERS[policy];
 }
+
+/**
+ * Refund derivation for a booking cancellation — the single source used
+ * by every cancellation path (guest token, client account, info screen).
+ * The policy is the SNAPSHOT taken at booking time when available; the
+ * winery's current policy is only a fallback for legacy bookings.
+ */
+export function computeBookingRefund(
+  booking: {
+    totalPrice: number;
+    serviceFeeCents: number;
+    cancellationPolicy: CancellationPolicy | null;
+    winery: { cancellationPolicy: CancellationPolicy };
+  },
+  hoursUntilStart: number
+): {
+  policy: CancellationPolicy;
+  paidCents: number;
+  refundDueCents: number;
+  /** Stripe amount arg: undefined = full refund of the charge. */
+  stripeAmountArg: number | undefined;
+} {
+  const policy =
+    booking.cancellationPolicy ?? booking.winery.cancellationPolicy;
+  const paidCents = booking.totalPrice + booking.serviceFeeCents;
+  const refundDueCents = computeRefundCents(policy, hoursUntilStart, paidCents);
+  return {
+    policy,
+    paidCents,
+    refundDueCents,
+    stripeAmountArg:
+      refundDueCents > 0 && refundDueCents < paidCents
+        ? refundDueCents
+        : undefined,
+  };
+}

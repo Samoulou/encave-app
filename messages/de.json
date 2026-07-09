@@ -235,7 +235,6 @@
     "nearStation": "In der Nähe des Bahnhofs {commune}",
     "pricePerPersonLabel": "Preis pro Person",
     "available": "VERFÜGBAR",
-    "freeCancellation": "Kostenlose Stornierung bis 24h vorher.",
     "cancellationPolicy": {
       "title": "Stornierungsbedingungen:",
       "labels": {
@@ -483,11 +482,8 @@
     "ageGate": {
       "badge": "Nur 18+"
     },
-    "freeCancellationPolicy": {
-      "FLEXIBLE": "Kostenlose Stornierung bis 2 Std. vorher.",
-      "STANDARD": "Kostenlose Stornierung bis 24 Std. vorher.",
-      "STRICT": "Kostenlose Stornierung bis 7 Tage vorher."
-    }
+    "freeCancellationUntilHours": "Kostenlose Stornierung bis {hours} Std. vorher.",
+    "freeCancellationUntilDays": "Kostenlose Stornierung bis {days, plural, =1 {# Tag} other {# Tage}} vorher."
   },
   "booking": {
     "selectDate": "Datum auswahlen",
@@ -670,8 +666,6 @@
     "viewOnMap": "Auf Karte anzeigen",
     "serviceFee": "Servicegebuhr",
     "totalCHF": "Gesamt (CHF)",
-    "freeCancellation": "Kostenlose Stornierung",
-    "cancellationPolicy": "bis 24 Stunden vor dem Erlebnis. Danach fallen 50% Gebuhr an.",
     "orderSummary": "Bestellubersicht",
     "sslEncrypted": "SSL VERSCHLUSSELT",
     "support247": "24/7 SUPPORT",
@@ -858,7 +852,15 @@
     "manageProfile": "Verwalten Sie Ihr Weingut-Profil und Fotos",
     "lastUpdatedDate": "Zuletzt aktualisiert {date}",
     "viewPublicProfile": "Öffentliches Profil anzeigen",
-    "paymentStatusLabel": "Zahlungsstatus"
+    "paymentStatusLabel": "Zahlungsstatus",
+    "cancellationPolicy": {
+      "title": "Stornierungsbedingungen",
+      "description": "Wählen Sie die Erstattungsbedingungen, die gelten, wenn ein Gast eine Buchung storniert. Sie werden bei Ihren Erlebnissen und beim Bezahlen angezeigt.",
+      "save": "Bedingungen speichern",
+      "saving": "Wird gespeichert...",
+      "updated": "Stornierungsbedingungen aktualisiert",
+      "updateError": "Die Stornierungsbedingungen konnten nicht gespeichert werden. Bitte versuchen Sie es erneut."
+    }
   },
   "dashboard": {
     "title": "Dashboard",
@@ -1781,7 +1783,7 @@
       "title": "Buchung stornieren",
       "confirmMessage": "Möchten Sie Ihre Buchung für \"{title}\" wirklich stornieren?",
       "refundPolicy": "Stornierungsrichtlinie",
-      "refundPolicyDetail": "Volle Rückerstattung bei Stornierung mehr als 24 Stunden vor dem Erlebnis. Keine Rückerstattung innerhalb von 24 Stunden.",
+      "refundPolicyDetail": "Ihre Rückerstattung richtet sich nach den Stornierungsbedingungen des Weinguts (siehe Erlebnisseite). Der genaue Betrag wird per E-Mail bestätigt.",
       "keepBooking": "Buchung behalten",
       "confirm": "Stornierung bestätigen",
       "cancelling": "Wird storniert...",
