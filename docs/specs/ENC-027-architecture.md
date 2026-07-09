@@ -64,7 +64,7 @@ export type WineryVisibilityInput = {
   description: string;
   latitude: number | null;
   longitude: number | null;
-  galleryImages: Array<{ id: string }>;        // count >= 1 si non vide
+  galleryImages: Array<{ id: string }>; // count >= 1 si non vide
   experiences: Array<{ status: ExperienceStatus }>; // pour le .some(PUBLISHED)
 };
 
@@ -73,9 +73,9 @@ export type WineryVisibilityInput = {
  * et par les tests pour vérifier exactement quel critère manque.
  */
 export type WineryVisibilityCriteria = {
-  verified: boolean;     // status === 'VERIFIED'
-  kyc: boolean;          // stripeOnboardingComplete === true
-  hasPhotos: boolean;    // galleryImages.length >= 1
+  verified: boolean; // status === 'VERIFIED'
+  kyc: boolean; // stripeOnboardingComplete === true
+  hasPhotos: boolean; // galleryImages.length >= 1
   hasDescription: boolean; // description non vide après strip + trim
   hasGeocoding: boolean; // latitude && longitude non null
   hasPublishedExperience: boolean; // experiences.some(PUBLISHED)
@@ -111,21 +111,21 @@ Toutes ces queries doivent restreindre leurs résultats aux caves visibles. Filt
 
 ### Inventaire des points d'exposition publique
 
-| Query                                  | Fichier                                              | Ligne | Type             |
-| -------------------------------------- | ---------------------------------------------------- | ----- | ---------------- |
-| `getVerifiedWineries(commune?)`        | `src/server/queries/winery.queries.ts`               | 8     | Listing /wineries |
-| `getWineryBySlug(slug)`                | `src/server/queries/winery.queries.ts`               | 34    | Page /wineries/[slug] |
-| `getDistinctCommunes()`                | `src/server/queries/winery.queries.ts`               | 56    | Filtre listing   |
-| `getFeaturedWineries(limit)`           | `src/server/queries/winery.queries.ts`               | 88    | Home / landings  |
-| `getAllVerifiedWinerySlugs()`          | `src/server/queries/winery.queries.ts`               | 109   | Sitemap          |
-| `searchExperiences(params)`            | `src/server/queries/experience.queries.ts`           | 133   | Listing /experiences |
-| `getExperienceCommunes()`              | `src/server/queries/experience.queries.ts`           | 322   | Filtre listing   |
-| `getExperiencePriceRange()`            | `src/server/queries/experience.queries.ts`           | 362   | Filtre listing   |
-| `getExperienceBySlug(slug)`            | `src/server/queries/experience.queries.ts`           | 402   | Page /experiences/[slug] |
-| `getRelatedExperiences(...)`           | `src/server/queries/experience.queries.ts`           | 467   | Bloc "voir aussi" |
-| `getExperiencesByWineryId(wineryId)`   | `src/server/queries/experience.queries.ts`           | 536   | Page cave        |
-| `getFeaturedExperiences(limit)`        | `src/server/queries/experience.queries.ts`           | 576   | Home             |
-| `getAllPublishedExperienceSlugs()`     | `src/server/queries/experience.queries.ts`           | 610   | Sitemap          |
+| Query                                | Fichier                                    | Ligne | Type                     |
+| ------------------------------------ | ------------------------------------------ | ----- | ------------------------ |
+| `getVerifiedWineries(commune?)`      | `src/server/queries/winery.queries.ts`     | 8     | Listing /wineries        |
+| `getWineryBySlug(slug)`              | `src/server/queries/winery.queries.ts`     | 34    | Page /wineries/[slug]    |
+| `getDistinctCommunes()`              | `src/server/queries/winery.queries.ts`     | 56    | Filtre listing           |
+| `getFeaturedWineries(limit)`         | `src/server/queries/winery.queries.ts`     | 88    | Home / landings          |
+| `getAllVerifiedWinerySlugs()`        | `src/server/queries/winery.queries.ts`     | 109   | Sitemap                  |
+| `searchExperiences(params)`          | `src/server/queries/experience.queries.ts` | 133   | Listing /experiences     |
+| `getExperienceCommunes()`            | `src/server/queries/experience.queries.ts` | 322   | Filtre listing           |
+| `getExperiencePriceRange()`          | `src/server/queries/experience.queries.ts` | 362   | Filtre listing           |
+| `getExperienceBySlug(slug)`          | `src/server/queries/experience.queries.ts` | 402   | Page /experiences/[slug] |
+| `getRelatedExperiences(...)`         | `src/server/queries/experience.queries.ts` | 467   | Bloc "voir aussi"        |
+| `getExperiencesByWineryId(wineryId)` | `src/server/queries/experience.queries.ts` | 536   | Page cave                |
+| `getFeaturedExperiences(limit)`      | `src/server/queries/experience.queries.ts` | 576   | Home                     |
+| `getAllPublishedExperienceSlugs()`   | `src/server/queries/experience.queries.ts` | 610   | Sitemap                  |
 
 ### Filtre Prisma à appliquer
 
@@ -246,13 +246,13 @@ export function invalidateWineryCaches(winerySlug?: string) {
 
 ### Actions / endpoints qui doivent appeler les invalidations
 
-| Lieu                                                              | Appel à ajouter                                  | Pourquoi                                                                   |
-| ----------------------------------------------------------------- | ------------------------------------------------ | -------------------------------------------------------------------------- |
-| `src/server/actions/winery.ts` — update profil cave (description, photos, adresse, géocodage) | `invalidateWineryCaches(winery.slug)`            | Peut faire basculer un critère                                            |
-| `src/server/actions/experience-status.ts` — publication/dépublication d'une expérience | déjà `invalidateExperienceCaches(...)`, **ajouter** `invalidateWineryCaches(winery.slug)` | Critère 6 (≥ 1 expérience PUBLISHED) bascule                              |
-| Actions admin (verify / suspend / reject)                          | `invalidateWineryCaches(winery.slug)`            | Critère 1 (status VERIFIED) bascule                                       |
-| `src/app/api/webhooks/stripe/connect/route.ts` — `account.updated` | `invalidateWineryCaches(winery.slug)` après update | Critère 2 (KYC) bascule. Penser à faire un `select { slug: true }` dans le findUnique pour récupérer le slug. |
-| Actions photos cave (add/delete WineryGalleryImage)                | `invalidateWineryCaches(winery.slug)`            | Critère 3 (≥ 1 photo) bascule                                             |
+| Lieu                                                                                          | Appel à ajouter                                                                           | Pourquoi                                                                                                      |
+| --------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `src/server/actions/winery.ts` — update profil cave (description, photos, adresse, géocodage) | `invalidateWineryCaches(winery.slug)`                                                     | Peut faire basculer un critère                                                                                |
+| `src/server/actions/experience-status.ts` — publication/dépublication d'une expérience        | déjà `invalidateExperienceCaches(...)`, **ajouter** `invalidateWineryCaches(winery.slug)` | Critère 6 (≥ 1 expérience PUBLISHED) bascule                                                                  |
+| Actions admin (verify / suspend / reject)                                                     | `invalidateWineryCaches(winery.slug)`                                                     | Critère 1 (status VERIFIED) bascule                                                                           |
+| `src/app/api/webhooks/stripe/connect/route.ts` — `account.updated`                            | `invalidateWineryCaches(winery.slug)` après update                                        | Critère 2 (KYC) bascule. Penser à faire un `select { slug: true }` dans le findUnique pour récupérer le slug. |
+| Actions photos cave (add/delete WineryGalleryImage)                                           | `invalidateWineryCaches(winery.slug)`                                                     | Critère 3 (≥ 1 photo) bascule                                                                                 |
 
 **Pour Nora** : ne pas remplacer `invalidateExperienceCaches` par `invalidateWineryCaches` — les deux coexistent et sont appelés tous les deux dans les actions d'expérience (publication notamment).
 
@@ -266,14 +266,14 @@ Le helper actuel `invalidateExperienceCaches` mélange les deux. CLAUDE.md dit "
 
 Aucune migration nouvelle nécessaire pour ENC-027. Vérification des champs :
 
-| Critère                                         | Champ Prisma                              | Existe ? |
-| ----------------------------------------------- | ----------------------------------------- | -------- |
-| 1. `status === VERIFIED`                        | `Winery.status: WineryStatus`             | Oui      |
-| 2. `charges_enabled === true` (proxy KYC)       | `Winery.stripeOnboardingComplete: Boolean` | Oui (mappé depuis `charges_enabled` par le webhook) |
-| 3. `photos.length >= 1`                         | `Winery.galleryImages: WineryGalleryImage[]` | Oui      |
-| 4. `description` non vide                       | `Winery.description: String` (non null, défaut '') | Oui |
-| 5. `latitude / longitude !== null`              | `Winery.latitude: Float?`, `Winery.longitude: Float?` | Oui |
-| 6. `experiences.some(PUBLISHED)`                | `Winery.experiences: Experience[]` avec `status: ExperienceStatus` | Oui |
+| Critère                                   | Champ Prisma                                                       | Existe ?                                            |
+| ----------------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------- |
+| 1. `status === VERIFIED`                  | `Winery.status: WineryStatus`                                      | Oui                                                 |
+| 2. `charges_enabled === true` (proxy KYC) | `Winery.stripeOnboardingComplete: Boolean`                         | Oui (mappé depuis `charges_enabled` par le webhook) |
+| 3. `photos.length >= 1`                   | `Winery.galleryImages: WineryGalleryImage[]`                       | Oui                                                 |
+| 4. `description` non vide                 | `Winery.description: String` (non null, défaut '')                 | Oui                                                 |
+| 5. `latitude / longitude !== null`        | `Winery.latitude: Float?`, `Winery.longitude: Float?`              | Oui                                                 |
+| 6. `experiences.some(PUBLISHED)`          | `Winery.experiences: Experience[]` avec `status: ExperienceStatus` | Oui                                                 |
 
 > **Note** : la spec parle de `winery.stripeAccount.charges_enabled`. Il n'y a pas de relation `StripeAccount` dans le schéma. Le proxy est `Winery.stripeOnboardingComplete`. ENC-032b renommera ce champ. Documenter clairement ce mapping dans la JSDoc de `isWineryPubliclyVisible`.
 
@@ -329,12 +329,14 @@ Hors scope strict ENC-027 (la spec mentionne le bandeau côté UI ; si Théo a s
 **Décision : pas d'ADR séparée pour ENC-027.**
 
 Justification :
+
 - Aucune nouvelle dépendance lourde.
 - Aucun changement de convention (on reste sur le pattern `unstable_cache` + tags coarse + `revalidateTag` mixé avec `revalidatePath`, comme le reste du code).
 - Le choix "fonction dérivée non stockée" est documenté **dans la spec produit** elle-même (§ Règles métier > Recalcul). Pas besoin d'un ADR pour répéter ça.
 - Le mapping `charges_enabled → stripeOnboardingComplete` est déjà acté par le webhook existant (pas une décision nouvelle).
 
 Une ADR sera nécessaire **plus tard** pour :
+
 - ENC-032b (renommage `stripeOnboardingComplete` → `kycStatus`) — typiquement ADR-0002.
 - Éventuel passage des tags coarse (`'wineries'`) à des tags granulaires (`winery:{slug}`) — ADR séparée.
 

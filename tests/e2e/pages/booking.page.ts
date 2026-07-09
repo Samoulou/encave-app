@@ -102,7 +102,9 @@ export class BookingPage extends BasePage {
     this.priceSection = page.getByTestId('price-section');
     this.pricePerPerson = page.getByTestId('price-per-person');
     this.priceBreakdown = page.getByTestId('price-breakdown');
-    this.totalPrice = page.getByTestId('total-price').or(page.getByTestId('booking-total'));
+    this.totalPrice = page
+      .getByTestId('total-price')
+      .or(page.getByTestId('booking-total'));
 
     // Summary
     this.bookingSummary = page.getByTestId('booking-summary');
@@ -167,11 +169,15 @@ export class BookingPage extends BasePage {
    * Select a date by full date string (YYYY-MM-DD)
    */
   async selectDateByString(dateString: string) {
-    const explicitDateButton = this.page.getByTestId(`booking-date-${dateString}`);
+    const explicitDateButton = this.page.getByTestId(
+      `booking-date-${dateString}`
+    );
     if (await explicitDateButton.isVisible()) {
       await explicitDateButton.click();
     } else {
-      const firstEnabledDate = this.calendar.locator('button:not([disabled])').first();
+      const firstEnabledDate = this.calendar
+        .locator('button:not([disabled])')
+        .first();
       await firstEnabledDate.click();
     }
     await this.waitForTimeSlotsToLoad();

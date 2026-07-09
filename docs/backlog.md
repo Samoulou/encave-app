@@ -53,10 +53,10 @@ Ces choix corrigent les divergences entre le backlog d'origine et le code réel 
 
 ### Onboarding & visibilité
 
-| ID      | Titre                                                                                                 | Taille | Statut | Spec                       |
-| ------- | ----------------------------------------------------------------------------------------------------- | ------ | ------ | -------------------------- |
+| ID      | Titre                                                                                                                     | Taille | Statut | Spec                       |
+| ------- | ------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | -------------------------- |
 | ENC-027 | Logique visibilité cave publique (critères : KYC ok + photos min + infos complètes + status VERIFIED) — livrée 2026-05-13 | S      | ✅     | [spec](./specs/ENC-027.md) |
-| ENC-028 | Brancher l'envoi de `WelcomeEmail` au signup encaveur (template existe déjà)                          | S      | 🔧     | [spec](./specs/ENC-028.md) |
+| ENC-028 | Brancher l'envoi de `WelcomeEmail` au signup encaveur (template existe déjà)                                              | S      | 🔧     | [spec](./specs/ENC-028.md) |
 
 ### Admin SAV
 

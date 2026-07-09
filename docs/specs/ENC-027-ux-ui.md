@@ -387,14 +387,14 @@ Je tranche **(A)** parce que :
 
 Le CTA pointe vers une URL différente selon le 1er critère non validé (dans l'ordre de §4) :
 
-| 1er critère manquant | URL cible |
-| --- | --- |
-| `verified` | `/dashboard/winery/profile` (pas de page dédiée — on montre le profil + l'état) |
-| `kyc` | `/dashboard/winery/profile#payment` (ancre vers la section StripeOnboarding existante) |
-| `address` | `/dashboard/winery/profile#location` |
-| `description` | `/dashboard/winery/profile#description` |
-| `photos` | `/dashboard/winery/profile#media` |
-| `experience` | `/dashboard/experiences/new` |
+| 1er critère manquant | URL cible                                                                              |
+| -------------------- | -------------------------------------------------------------------------------------- |
+| `verified`           | `/dashboard/winery/profile` (pas de page dédiée — on montre le profil + l'état)        |
+| `kyc`                | `/dashboard/winery/profile#payment` (ancre vers la section StripeOnboarding existante) |
+| `address`            | `/dashboard/winery/profile#location`                                                   |
+| `description`        | `/dashboard/winery/profile#description`                                                |
+| `photos`             | `/dashboard/winery/profile#media`                                                      |
+| `experience`         | `/dashboard/experiences/new`                                                           |
 
 ### Justification
 
@@ -416,22 +416,22 @@ Pas besoin de scroll-into-view JS — l'ancre HTML native suffit, et le focus se
 
 ### À CRÉER
 
-| Fichier | Type | Notes |
-| --- | --- | --- |
-| `src/components/features/dashboard/VisibilityBanner.tsx` | Server Component | Récupère `isWineryPubliclyVisible(winery)` + détail critères. Branche sur états (partial/complete). Pas de `'use client'`. |
-| `src/components/features/dashboard/VisibilityBannerCriteria.tsx` | Server Component | Liste `<ul>` des 6 critères avec leur état (validated/pending/inProgress). Reçoit `criteria: Array<{ key, status }>` en props. |
-| `src/components/features/dashboard/VisibilityBannerSkeleton.tsx` | Server Component | Skeleton de hauteur fixe `min-h-[280px]`. Utilise `<Skeleton />` shared. |
-| `src/components/features/dashboard/VisibilityBannerError.tsx` | Client Component (`'use client'`) | Bouton "Réessayer" qui appelle `router.refresh()` via `useNavigateWithTransition` ou `useRouter` de `@/i18n/navigation`. |
-| `src/app/[locale]/(public)/wineries/[slug]/not-found.tsx` | Server Component | Page 404 i18n custom décrite §2. Importe `getTranslations` de `next-intl/server`. |
+| Fichier                                                          | Type                              | Notes                                                                                                                          |
+| ---------------------------------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `src/components/features/dashboard/VisibilityBanner.tsx`         | Server Component                  | Récupère `isWineryPubliclyVisible(winery)` + détail critères. Branche sur états (partial/complete). Pas de `'use client'`.     |
+| `src/components/features/dashboard/VisibilityBannerCriteria.tsx` | Server Component                  | Liste `<ul>` des 6 critères avec leur état (validated/pending/inProgress). Reçoit `criteria: Array<{ key, status }>` en props. |
+| `src/components/features/dashboard/VisibilityBannerSkeleton.tsx` | Server Component                  | Skeleton de hauteur fixe `min-h-[280px]`. Utilise `<Skeleton />` shared.                                                       |
+| `src/components/features/dashboard/VisibilityBannerError.tsx`    | Client Component (`'use client'`) | Bouton "Réessayer" qui appelle `router.refresh()` via `useNavigateWithTransition` ou `useRouter` de `@/i18n/navigation`.       |
+| `src/app/[locale]/(public)/wineries/[slug]/not-found.tsx`        | Server Component                  | Page 404 i18n custom décrite §2. Importe `getTranslations` de `next-intl/server`.                                              |
 
 ### À MODIFIER
 
-| Fichier | Modification |
-| --- | --- |
-| `src/app/[locale]/(protected)/dashboard/bookings/page.tsx` | Injecter `<Suspense fallback={<VisibilityBannerSkeleton />}><VisibilityBanner wineryId={winery.id} /></Suspense>` en tout premier child du wrapper `<WineryAccessGuard>` — au-dessus de `<BookingsPageHeader />`. |
-| `src/components/features/winery/WineryProfileForm.tsx` | Ajouter `id="location"`, `id="description"`, `id="media"` sur les `<section>` correspondantes (pour les deep-links du §5). |
-| `src/app/[locale]/(protected)/dashboard/winery/profile/page.tsx` | Ajouter `id="payment"` sur la `<div>` qui wrap la section Payment Status / StripeOnboarding. |
-| `messages/fr.json`, `messages/de.json`, `messages/en.json` | Insérer les blocs JSON du §3 dans leurs namespaces respectifs (`Dashboard.visibility.*` et `Public.winery.notFound.*`). Lancer `npm run i18n:check` après. |
+| Fichier                                                          | Modification                                                                                                                                                                                                      |
+| ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/app/[locale]/(protected)/dashboard/bookings/page.tsx`       | Injecter `<Suspense fallback={<VisibilityBannerSkeleton />}><VisibilityBanner wineryId={winery.id} /></Suspense>` en tout premier child du wrapper `<WineryAccessGuard>` — au-dessus de `<BookingsPageHeader />`. |
+| `src/components/features/winery/WineryProfileForm.tsx`           | Ajouter `id="location"`, `id="description"`, `id="media"` sur les `<section>` correspondantes (pour les deep-links du §5).                                                                                        |
+| `src/app/[locale]/(protected)/dashboard/winery/profile/page.tsx` | Ajouter `id="payment"` sur la `<div>` qui wrap la section Payment Status / StripeOnboarding.                                                                                                                      |
+| `messages/fr.json`, `messages/de.json`, `messages/en.json`       | Insérer les blocs JSON du §3 dans leurs namespaces respectifs (`Dashboard.visibility.*` et `Public.winery.notFound.*`). Lancer `npm run i18n:check` après.                                                        |
 
 ### À NE PAS TOUCHER
 
@@ -453,9 +453,12 @@ Pas besoin de scroll-into-view JS — l'ancre HTML native suffit, et le focus se
     experience: boolean;
   };
 
-  export function getWineryVisibilityCriteria(winery: Winery): VisibilityCriteria;
+  export function getWineryVisibilityCriteria(
+    winery: Winery
+  ): VisibilityCriteria;
   export function isWineryPubliclyVisible(winery: Winery): boolean; // dérivé du précédent
   ```
+
 - C'est Jonas qui définit l'archi et Nora qui implémente. Côté design je consomme `VisibilityCriteria` dans le bandeau.
 
 ---
