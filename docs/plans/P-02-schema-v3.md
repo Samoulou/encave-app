@@ -14,14 +14,26 @@ Toutes les tables et invariants dont les packages P-03→P-11 ont besoin existen
 
 ## 3. Definition of Done (gate G-R0')
 
-- [ ] Migration(s) 100 % additives, `prisma migrate deploy` vert sur une base vierge rejouant tout l'historique
-- [ ] Invariants DB testés sur base réelle, chaque violation = test dédié : solde gift card < 0 **rejeté par la DB** ; UPDATE/DELETE sur le ledger **rejeté** (append-only, trigger) ; occurrence dupliquée (exp+date+heure) **rejetée** ; `capacityOverride < 1` et `noShowFeeCents` hors 0–5000 **rejetés**
-- [ ] Machine à états Request : garde de transitions en lib pure, transitions interdites = tests rouges
-- [ ] Zéro régression : suite vitest complète verte, build prod OK, `db push` sur la base dev locale sans perte
-- [ ] Seed V3 : 10 caves (plans/politiques variés), 40 expériences (types/langues variés dont collectif), 60 vins, requests, gift cards — `dev:db:setup` vert
-- [ ] Socle transverse vert (lint, format, i18n non concerné — pas de chaîne UI)
+- [x] Migration(s) 100 % additives, `prisma migrate deploy` vert sur une base vierge rejouant tout l'historique (rejoué aussi avec les 3 index de drift pré-existants — scénario staging `db push`)
+- [x] Invariants DB testés sur base réelle, chaque violation = test dédié : solde gift card < 0 **rejeté par la DB** ; UPDATE/DELETE **et TRUNCATE** sur le ledger **rejetés** (triggers row + statement) ; signe incohérent avec le type **rejeté** (CHECK) ; occurrence dupliquée (exp+date+heure) **rejetée** ; `capacityOverride < 1` et `noShowFeeCents` hors 0–5000 **rejetés** — 12 tests, matchers sur les noms de contraintes
+- [x] Machine à états Request : garde de transitions en lib pure, transitions interdites = tests rouges
+- [x] Zéro régression : suite vitest complète verte (805), build prod OK, `db push` sur la base dev locale sans perte
+- [x] Seed V3 : 10 caves (plans/politiques variés), 40 expériences (types/langues variés dont collectif), 60 vins, requests, gift cards — vert 2× d'affilée sur base migrée (triggers actifs)
+- [x] Socle transverse vert (lint, format, i18n non concerné — pas de chaîne UI)
 
 _Écart documenté_ : la « matrice d'isolation rôle×ressource » des nouveaux modèles sera testée dans les packages qui exposent leurs premières actions (P-03/P-07/P-09/P-10) — P-02 ne crée aucune surface d'accès ; il n'y a rien à isoler tant qu'aucune action ne lit ces tables.
+
+## 3bis. Revue de code (verdict initial : NOGO → corrigé)
+
+Findings de la revue et corrections appliquées avant PR :
+
+- **B1** Seed destructif sans garde-fou → `assertSeedTargetIsSafe()` : hosts locaux OK, host distant exige `SEED_ALLOW_DESTRUCTIVE=1`, `VERCEL_ENV=production` refusé inconditionnellement (vérifié : abort exit 1 sur host distant).
+- **M1** Connection string persistée dans les inputs de dispatch → le workflow lit d'abord le secret repo `ADHOC_DATABASE_URL` (à créer dans Settings → Secrets), l'input devient un fallback optionnel pour les one-shots.
+- **M2** TRUNCATE contournait le trigger append-only (prouvé) → trigger `BEFORE TRUNCATE FOR EACH STATEMENT` dans la migration `20260709150000_gift_card_ledger_hardening` ; le seed désactive/réactive les triggers explicitement et bruyamment.
+- **M3** Aucune contrainte de signe sur le ledger (prouvé) → CHECK `gift_card_transactions_amount_sign` (REDEMPTION < 0, PURCHASE/REFUND > 0, ADJUSTMENT ≠ 0) dans la même migration.
+- **M4** Index de rattrapage de drift sans `IF NOT EXISTS` (risque P3018 sur staging) → les 3 statements passent en `CREATE INDEX IF NOT EXISTS` (migration pas encore déployée sur staging ; déjà appliquée à l'identique sur preview, où les index venaient d'être créés par elle).
+- Minors corrigés : assertions `!` du seed → `required()` ; commission par cave dans le seed (Founders à 0 %) ; FK réelle + index sur `GiftCard.experienceId` (SetNull) ; heredoc `GITHUB_ENV` ; matchers de tests sur noms de contraintes ; choix « pas de FK sur `bookingId` du ledger » documenté dans le schéma.
+- Minors assumés (non corrigés, trackés) : les bases `db push` locales n'ont pas les invariants SQL (documenté en tête de test) ; labels EN hardcodés préexistants de `ExperienceHero` (dette L-201/E15) ; le validator accepte MEAL/EVENT avant toute UI de création (mentionné dans la PR).
 
 ## 4. Découpage technique
 

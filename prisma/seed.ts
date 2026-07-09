@@ -1021,10 +1021,54 @@ function required<T>(value: T | null | undefined, label: string): T {
   return value;
 }
 
+// The seed WIPES every table before reseeding. Only ever run it against a
+// disposable database: local hosts pass silently; any remote host requires
+// an explicit SEED_ALLOW_DESTRUCTIVE=1; production is refused outright.
+const LOCAL_DB_HOSTS = new Set([
+  'localhost',
+  '127.0.0.1',
+  '::1',
+  'db',
+  'postgres',
+]);
+
+function assertSeedTargetIsSafe(): void {
+  if (process.env.VERCEL_ENV === 'production') {
+    throw new Error(
+      'Seed aborted: VERCEL_ENV=production — this seed wipes every table.'
+    );
+  }
+  const url = process.env.DATABASE_URL;
+  if (!url) {
+    throw new Error('Seed aborted: DATABASE_URL is not set.');
+  }
+  let host: string;
+  try {
+    host = new URL(url).hostname;
+  } catch {
+    throw new Error('Seed aborted: DATABASE_URL is not a parseable URL.');
+  }
+  if (LOCAL_DB_HOSTS.has(host)) {
+    return;
+  }
+  if (process.env.SEED_ALLOW_DESTRUCTIVE === '1') {
+    console.warn(
+      `⚠️  SEED_ALLOW_DESTRUCTIVE=1 — wiping and reseeding REMOTE database "${host}"`
+    );
+    return;
+  }
+  throw new Error(
+    `Seed aborted: DATABASE_URL points to remote host "${host}" and this seed WIPES every table (including the gift-card ledger). ` +
+      'Set SEED_ALLOW_DESTRUCTIVE=1 only for a disposable dev/preview database — never production.'
+  );
+}
+
 // ============================================================================
 // MAIN SEED
 // ============================================================================
 async function main() {
+  assertSeedTargetIsSafe();
+
   console.log('🌱 Starting database seed...\n');
 
   // -------------------------------------------------------------------
@@ -1033,12 +1077,18 @@ async function main() {
   console.log('🧹 Cleaning existing data...');
   await prisma.scheduledJob.deleteMany();
   await prisma.bookingWine.deleteMany();
-  // gift_card_transactions is APPEND-ONLY on migrated databases: a row-level
-  // trigger forbids UPDATE/DELETE (see 20260709112533_v3_foundations), so
-  // deleteMany() would fail there. TRUNCATE is statement-level, bypasses
-  // row-level triggers and resets both tables atomically — acceptable for a
-  // dev seed, NEVER for application code.
-  await prisma.$executeRaw`TRUNCATE TABLE "gift_card_transactions", "gift_cards" CASCADE`;
+  // gift_card_transactions is APPEND-ONLY on migrated databases: triggers
+  // forbid UPDATE/DELETE and TRUNCATE (see the v3_foundations and
+  // gift_card_ledger_hardening migrations). Wiping the ledger is legitimate
+  // for a dev seed only, so the guards are disabled explicitly and loudly,
+  // then re-enabled — an honest override, NEVER for application code.
+  console.warn('   ⚠️  Disabling gift-card ledger triggers for the wipe');
+  await prisma.$executeRaw`ALTER TABLE "gift_card_transactions" DISABLE TRIGGER USER`;
+  try {
+    await prisma.$executeRaw`TRUNCATE TABLE "gift_card_transactions", "gift_cards" CASCADE`;
+  } finally {
+    await prisma.$executeRaw`ALTER TABLE "gift_card_transactions" ENABLE TRIGGER USER`;
+  }
   await prisma.requestOffer.deleteMany();
   await prisma.request.deleteMany();
   await prisma.eventParticipant.deleteMany();
@@ -1381,7 +1431,11 @@ async function main() {
   // -------------------------------------------------------------------
   console.log('\n📅 Creating sample bookings...');
 
-  const COMMISSION_RATE = 0.12;
+  // Default platform rate (mirrors the PLATFORM_COMMISSION_RATE env var);
+  // FOUNDER wineries carry commissionRate 0 on their record instead.
+  const DEFAULT_COMMISSION_RATE = Number(
+    process.env.PLATFORM_COMMISSION_RATE ?? '0.12'
+  );
   const bookingsData = [
     {
       // Upcoming confirmed booking - Laura at Germanier tasting
@@ -1448,19 +1502,32 @@ async function main() {
   const createdBookingIds: string[] = [];
 
   for (let i = 0; i < bookingsData.length; i++) {
-    const b = bookingsData[i]!;
-    const winery = createdWineries[b.wineryIdx]!;
-    const { wineryId, experienceIds } = winery;
-    const experienceId = experienceIds[b.experienceIdx]!;
+    const b = required(bookingsData[i], `bookingsData[${i}]`);
+    const { wineryId, experienceIds } = required(
+      createdWineries[b.wineryIdx],
+      `createdWineries[${b.wineryIdx}]`
+    );
+    const experienceId = required(
+      experienceIds[b.experienceIdx],
+      `experienceIds[${b.experienceIdx}]`
+    );
 
-    // Look up price from the experienc
+    // Look up price from the experience
     const experience = await prisma.experience.findUnique({
       where: { id: experienceId },
     });
     if (!experience) continue;
 
+    const wineryRecord = await prisma.winery.findUnique({
+      where: { id: wineryId },
+    });
+    if (!wineryRecord) continue;
+
     const totalPrice = experience.price * b.guestCount;
-    const platformFee = Math.round(totalPrice * COMMISSION_RATE);
+    // Use the winery's own rate so FOUNDER (0%) bookings don't show a
+    // 12% fee on the P-03 earnings screens.
+    const rate = wineryRecord.commissionRate ?? DEFAULT_COMMISSION_RATE;
+    const platformFee = Math.round(totalPrice * rate);
     const wineryPayout = totalPrice - platformFee;
 
     const booking = await prisma.booking.create({

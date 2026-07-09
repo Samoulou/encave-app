@@ -259,17 +259,19 @@ CREATE INDEX "scheduled_jobs_status_runAt_idx" ON "scheduled_jobs"("status", "ru
 -- CreateIndex
 CREATE INDEX "scheduled_jobs_type_status_idx" ON "scheduled_jobs"("type", "status");
 
--- CreateIndex
-CREATE INDEX "bookings_experienceId_idx" ON "bookings"("experienceId");
+-- CreateIndex — drift catch-up: these three were declared in schema.prisma
+-- but created by `db push` on some environments, never by a migration.
+-- IF NOT EXISTS keeps the deploy idempotent wherever they already exist.
+CREATE INDEX IF NOT EXISTS "bookings_experienceId_idx" ON "bookings"("experienceId");
 
 -- CreateIndex
-CREATE INDEX "bookings_wineryId_idx" ON "bookings"("wineryId");
+CREATE INDEX IF NOT EXISTS "bookings_wineryId_idx" ON "bookings"("wineryId");
 
 -- CreateIndex
 CREATE INDEX "bookings_occurrenceId_idx" ON "bookings"("occurrenceId");
 
 -- CreateIndex
-CREATE INDEX "experiences_wineryId_idx" ON "experiences"("wineryId");
+CREATE INDEX IF NOT EXISTS "experiences_wineryId_idx" ON "experiences"("wineryId");
 
 -- AddForeignKey
 ALTER TABLE "bookings" ADD CONSTRAINT "bookings_occurrenceId_fkey" FOREIGN KEY ("occurrenceId") REFERENCES "experience_occurrences"("id") ON DELETE SET NULL ON UPDATE CASCADE;

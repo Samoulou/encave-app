@@ -1,17 +1,20 @@
 name: DB Migrate (ad hoc)
 
 # Applies `prisma migrate deploy` to an arbitrary Postgres database.
-# Manual dispatch only. The connection string is provided at dispatch
-# time (never committed) and masked from the logs. Use the direct or
-# pooler Neon URL — the pooler suffix is stripped automatically for
-# DIRECT_URL, which Prisma Migrate uses.
+# Manual dispatch only. Preferred: set the ADHOC_DATABASE_URL repo secret
+# and leave the input empty — dispatch inputs are persisted with the run,
+# secrets are not. The input remains available for one-offs (masked from
+# the logs, never committed). Pooler or direct Neon URL both work — the
+# pooler suffix is stripped automatically for DIRECT_URL, which Prisma
+# Migrate uses.
 
 on:
   workflow_dispatch:
     inputs:
       database_url:
-        description: 'Postgres connection string (Neon pooler or direct)'
-        required: true
+        description: 'Postgres connection string — leave EMPTY to use the ADHOC_DATABASE_URL secret (preferred)'
+        required: false
+        default: ''
         type: string
       confirm:
         description: "Type 'migrate-deploy' to confirm"
@@ -49,8 +52,17 @@ jobs:
 
       - name: Prepare connection strings (masked)
         env:
-          RAW_URL: ${{ inputs.database_url }}
+          INPUT_URL: ${{ inputs.database_url }}
+          SECRET_URL: ${{ secrets.ADHOC_DATABASE_URL }}
         run: |
+          RAW_URL="${INPUT_URL:-$SECRET_URL}"
+          if [ -z "$RAW_URL" ]; then
+            echo "No connection string: set the ADHOC_DATABASE_URL repo secret (preferred) or fill the database_url input."
+            exit 1
+          fi
+          case "$RAW_URL" in *$'\n'*)
+            echo "Connection string must be a single line." ; exit 1 ;;
+          esac
           echo "::add-mask::$RAW_URL"
           # Drop channel_binding (libpq-only param) whatever its position.
           CLEAN=$(printf '%s' "$RAW_URL" | sed -E 's/([?&])channel_binding=[^&]*&/\1/; s/[?&]channel_binding=[^&]*$//')
@@ -59,8 +71,8 @@ jobs:
           echo "::add-mask::$CLEAN"
           echo "::add-mask::$DIRECT"
           {
-            echo "DATABASE_URL=$CLEAN"
-            echo "DIRECT_URL=$DIRECT"
+            printf 'DATABASE_URL<<__ENV_EOF__\n%s\n__ENV_EOF__\n' "$CLEAN"
+            printf 'DIRECT_URL<<__ENV_EOF__\n%s\n__ENV_EOF__\n' "$DIRECT"
           } >> "$GITHUB_ENV"
 
       - name: Apply migrations
@@ -75,4 +87,6 @@ jobs:
 
       - name: Seed database (wipes existing data)
         if: ${{ inputs.seed == 'yes-wipe-and-seed' }}
+        env:
+          SEED_ALLOW_DESTRUCTIVE: '1'
         run: npx prisma db seed

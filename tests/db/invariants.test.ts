@@ -70,6 +70,11 @@ describe.skipIf(!url)('database invariants (P-02 / gate G-R0)', () => {
     await db.$disconnect();
   });
 
+  function expId(): string {
+    if (!ids.experienceId) throw new Error('experienceId fixture missing');
+    return ids.experienceId;
+  }
+
   function makeGiftCard(overrides: Record<string, unknown> = {}) {
     return db.giftCard.create({
       data: {
@@ -84,7 +89,9 @@ describe.skipIf(!url)('database invariants (P-02 / gate G-R0)', () => {
   }
 
   it('rejects a gift card created with a negative balance', async () => {
-    await expect(makeGiftCard({ balance: -1 })).rejects.toThrow();
+    await expect(makeGiftCard({ balance: -1 })).rejects.toThrow(
+      /gift_cards_balance_non_negative/
+    );
   });
 
   it('rejects driving a gift card balance below zero', async () => {
@@ -94,7 +101,7 @@ describe.skipIf(!url)('database invariants (P-02 / gate G-R0)', () => {
         where: { id: card.id },
         data: { balance: { decrement: 5001 } },
       })
-    ).rejects.toThrow();
+    ).rejects.toThrow(/gift_cards_balance_non_negative/);
     const reread = await db.giftCard.findUniqueOrThrow({
       where: { id: card.id },
     });
@@ -104,7 +111,7 @@ describe.skipIf(!url)('database invariants (P-02 / gate G-R0)', () => {
   it('rejects a gift card with a non-positive initial amount', async () => {
     await expect(
       makeGiftCard({ initialAmount: 0, balance: 0 })
-    ).rejects.toThrow();
+    ).rejects.toThrow(/gift_cards_initial_amount_positive/);
   });
 
   it('forbids UPDATE on the gift card ledger (append-only trigger)', async () => {
@@ -130,27 +137,54 @@ describe.skipIf(!url)('database invariants (P-02 / gate G-R0)', () => {
     ).rejects.toThrow(/append-only/);
   });
 
+  it('forbids TRUNCATE on the gift card ledger (statement-level trigger)', async () => {
+    await expect(
+      db.$executeRaw`TRUNCATE TABLE "gift_card_transactions"`
+    ).rejects.toThrow(/append-only/);
+  });
+
+  it('rejects ledger entries whose sign contradicts their type', async () => {
+    const card = await makeGiftCard();
+    await expect(
+      db.giftCardTransaction.create({
+        data: { giftCardId: card.id, type: 'REDEMPTION', amount: 6000 },
+      })
+    ).rejects.toThrow(/gift_card_transactions_amount_sign/);
+    await expect(
+      db.giftCardTransaction.create({
+        data: { giftCardId: card.id, type: 'PURCHASE', amount: -5000 },
+      })
+    ).rejects.toThrow(/gift_card_transactions_amount_sign/);
+    await expect(
+      db.giftCardTransaction.create({
+        data: { giftCardId: card.id, type: 'ADJUSTMENT', amount: 0 },
+      })
+    ).rejects.toThrow(/gift_card_transactions_amount_sign/);
+  });
+
   it('rejects a duplicate occurrence for the same experience/date/time', async () => {
     const data = {
-      experienceId: ids.experienceId as string,
+      experienceId: expId(),
       date: new Date('2026-11-21'),
       startTime: '16:00',
     };
     await db.experienceOccurrence.create({ data });
-    await expect(db.experienceOccurrence.create({ data })).rejects.toThrow(); // P2002 unique (experienceId, date, startTime)
+    await expect(db.experienceOccurrence.create({ data })).rejects.toThrow(
+      /Unique constraint/ // P2002 on (experienceId, date, startTime)
+    );
   });
 
   it('rejects an occurrence capacity override below 1', async () => {
     await expect(
       db.experienceOccurrence.create({
         data: {
-          experienceId: ids.experienceId as string,
+          experienceId: expId(),
           date: new Date('2026-11-22'),
           startTime: '10:00',
           capacityOverride: 0,
         },
       })
-    ).rejects.toThrow();
+    ).rejects.toThrow(/experience_occurrences_capacity_override_positive/);
   });
 
   it('rejects a no-show fee outside the 0–50 CHF product bounds', async () => {
@@ -159,7 +193,7 @@ describe.skipIf(!url)('database invariants (P-02 / gate G-R0)', () => {
         where: { id: ids.wineryId },
         data: { noShowFeeCents: 9999 },
       })
-    ).rejects.toThrow();
+    ).rejects.toThrow(/wineries_no_show_fee_bounds/);
   });
 
   it('rejects a per-winery commission rate outside [0, 1]', async () => {
@@ -168,7 +202,7 @@ describe.skipIf(!url)('database invariants (P-02 / gate G-R0)', () => {
         where: { id: ids.wineryId },
         data: { commissionRate: 1.5 },
       })
-    ).rejects.toThrow();
+    ).rejects.toThrow(/wineries_commission_rate_bounds/);
   });
 
   it('rejects a request offer with a non-positive total price', async () => {
@@ -190,6 +224,6 @@ describe.skipIf(!url)('database invariants (P-02 / gate G-R0)', () => {
           expiresAt: new Date(Date.now() + 48 * 3600 * 1000),
         },
       })
-    ).rejects.toThrow();
+    ).rejects.toThrow(/request_offers_total_price_positive/);
   });
 });

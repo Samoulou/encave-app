@@ -295,6 +295,7 @@ model Experience {
   blockedDates      BlockedDate[]
   occurrences       ExperienceOccurrence[]
   participants      EventParticipant[]
+  giftCards         GiftCard[]
 
   @@unique([wineryId, slug])
   @@index([wineryId])
@@ -536,7 +537,9 @@ model GiftCard {
   recipientEmail        String?
   recipientName         String?
   message               String?        @db.Text
-  experienceId          String? // gift for a specific experience (optional)
+  // Gift for a specific experience (optional); card survives its deletion.
+  experienceId          String?
+  experience            Experience?    @relation(fields: [experienceId], references: [id], onDelete: SetNull)
   deliverAt             DateTime? // scheduled recipient delivery
   deliveredAt           DateTime?
   expiresAt             DateTime // 5-year legal validity
@@ -550,6 +553,7 @@ model GiftCard {
   @@index([status, expiresAt])
   @@index([purchaserEmail])
   @@index([recipientEmail])
+  @@index([experienceId])
   @@map("gift_cards")
 }
 
@@ -558,8 +562,11 @@ model GiftCardTransaction {
   giftCardId String
   giftCard   GiftCard                @relation(fields: [giftCardId], references: [id], onDelete: Restrict)
   type       GiftCardTransactionType
-  // Signed delta in cents: PURCHASE/REFUND/ADJUSTMENT > 0, REDEMPTION < 0.
+  // Signed delta in cents — enforced by a DB CHECK (ledger hardening
+  // migration): PURCHASE/REFUND > 0, REDEMPTION < 0, ADJUSTMENT <> 0.
   amount     Int
+  // Intentionally no FK to bookings: SET NULL is an UPDATE (blocked by
+  // the append-only trigger) and RESTRICT would make bookings undeletable.
   bookingId  String?
   note       String?
   createdAt  DateTime                @default(now())
