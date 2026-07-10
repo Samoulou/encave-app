@@ -3,6 +3,8 @@
 import { ExternalLink } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { DynamicMap } from '@/components/features/map/DynamicMap';
+import { LazyOnVisible } from '@/components/shared/LazyOnVisible';
+import { Skeleton } from '@/components/shared/Skeleton';
 import type { MapWinery } from '@/components/features/map/types';
 
 interface LocationSectionProps {
@@ -55,11 +57,15 @@ export function LocationSection({
       {/* Map */}
       {hasCoordinates ? (
         <div className="overflow-hidden rounded-xl shadow-sm">
-          <DynamicMap
-            wineries={[mapWinery]}
-            singleWinery
-            className="h-80 w-full"
-          />
+          {/* Below the fold on mobile — the maplibre chunk only loads
+              when the visitor scrolls near the map (P-06 / L-201). */}
+          <LazyOnVisible fallback={<Skeleton className="h-80 w-full" />}>
+            <DynamicMap
+              wineries={[mapWinery]}
+              singleWinery
+              className="h-80 w-full"
+            />
+          </LazyOnVisible>
           <div className="flex items-center justify-between bg-white px-4 py-3">
             <span className="text-sm text-muted-foreground">{wineryName}</span>
             <a

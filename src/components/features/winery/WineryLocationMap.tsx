@@ -3,6 +3,8 @@
 import { ExternalLink } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { DynamicMap } from '@/components/features/map/DynamicMap';
+import { LazyOnVisible } from '@/components/shared/LazyOnVisible';
+import { Skeleton } from '@/components/shared/Skeleton';
 import type { MapWinery } from '@/components/features/map/types';
 
 interface WineryLocationMapProps {
@@ -32,11 +34,17 @@ export function WineryLocationMap({
         </h3>
       </div>
       <div className="mt-3 h-48">
-        <DynamicMap
-          wineries={[winery]}
-          singleWinery
-          className="h-full w-full rounded-none"
-        />
+        {/* Sidebar map, below the fold on mobile (P-06 / L-201). */}
+        <LazyOnVisible
+          fallback={<Skeleton className="h-full w-full rounded-none" />}
+          className="h-full w-full"
+        >
+          <DynamicMap
+            wineries={[winery]}
+            singleWinery
+            className="h-full w-full rounded-none"
+          />
+        </LazyOnVisible>
       </div>
       <div className="p-4 pt-3">
         <a
