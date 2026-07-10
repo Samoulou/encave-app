@@ -134,6 +134,22 @@ export async function getNextPayout(
   )();
 }
 
+/**
+ * Destination charges: the connected `py_` payment's only link back to
+ * the platform is `source_transfer`. Single extraction point — the
+ * collect pass and the render pass must never disagree.
+ */
+function getSourceTransferId(txn: Stripe.BalanceTransaction): string | null {
+  if (txn.type !== 'payment') return null;
+  const source = txn.source;
+  return source !== null &&
+    typeof source === 'object' &&
+    'source_transfer' in source &&
+    typeof source.source_transfer === 'string'
+    ? source.source_transfer
+    : null;
+}
+
 export interface PayoutBookingLineDTO {
   bookingId: string;
   reference: string;
@@ -187,48 +203,55 @@ export async function getPayoutDetail(
         throw error;
       }
 
-      const transactions = await stripe.balanceTransactions.list(
-        { payout: payoutId, limit: 100, expand: ['data.source'] },
-        { stripeAccount: stripeAccountId }
-      );
+      // Auto-paginate: a busy payout can carry more than one page of
+      // lines — truncating would silently under-report gross/commission.
+      const transactions = await stripe.balanceTransactions
+        .list(
+          { payout: payoutId, limit: 100, expand: ['data.source'] },
+          { stripeAccount: stripeAccountId }
+        )
+        .autoPagingToArray({ limit: 1000 });
 
       // payment lines → platform transfer → source charge → PaymentIntent.
-      const transferIds: string[] = [];
-      for (const txn of transactions.data) {
-        if (txn.type !== 'payment') continue;
-        const source = txn.source;
-        if (
-          source !== null &&
-          typeof source === 'object' &&
-          'source_transfer' in source &&
-          typeof source.source_transfer === 'string'
-        ) {
-          transferIds.push(source.source_transfer);
-        }
-      }
-
-      const paymentIntentByTransfer = new Map<string, string>();
-      await Promise.all(
-        transferIds.map(async (transferId) => {
-          try {
-            // Platform-account call (no stripeAccount header).
-            const transfer = await stripe.transfers.retrieve(transferId, {
-              expand: ['source_transaction'],
-            });
-            const sourceTxn = transfer.source_transaction;
-            if (
-              sourceTxn !== null &&
-              typeof sourceTxn === 'object' &&
-              'payment_intent' in sourceTxn &&
-              typeof sourceTxn.payment_intent === 'string'
-            ) {
-              paymentIntentByTransfer.set(transferId, sourceTxn.payment_intent);
-            }
-          } catch {
-            // Unresolvable transfer → the line stays unmatched.
-          }
-        })
+      const transferIds = Array.from(
+        new Set(
+          transactions
+            .map(getSourceTransferId)
+            .filter((id): id is string => id !== null)
+        )
       );
+
+      // Bounded concurrency: an unbounded Promise.all over ~100 transfer
+      // retrieves would trip Stripe's read rate limit and silently push
+      // real bookings into "unmatched".
+      const paymentIntentByTransfer = new Map<string, string>();
+      const CHUNK = 10;
+      for (let index = 0; index < transferIds.length; index += CHUNK) {
+        await Promise.all(
+          transferIds.slice(index, index + CHUNK).map(async (transferId) => {
+            try {
+              // Platform-account call (no stripeAccount header).
+              const transfer = await stripe.transfers.retrieve(transferId, {
+                expand: ['source_transaction'],
+              });
+              const sourceTxn = transfer.source_transaction;
+              if (
+                sourceTxn !== null &&
+                typeof sourceTxn === 'object' &&
+                'payment_intent' in sourceTxn &&
+                typeof sourceTxn.payment_intent === 'string'
+              ) {
+                paymentIntentByTransfer.set(
+                  transferId,
+                  sourceTxn.payment_intent
+                );
+              }
+            } catch {
+              // Unresolvable transfer → the line stays unmatched.
+            }
+          })
+        );
+      }
 
       const paymentIntentIds = Array.from(paymentIntentByTransfer.values());
       const bookings = paymentIntentIds.length
@@ -256,17 +279,9 @@ export async function getPayoutDetail(
 
       const bookingLines: PayoutBookingLineDTO[] = [];
       const unmatchedLines: PayoutDetailDTO['unmatchedLines'] = [];
-      for (const txn of transactions.data) {
+      for (const txn of transactions) {
         if (txn.type === 'payout') continue; // the payout line itself
-        const source = txn.source;
-        const transferId =
-          txn.type === 'payment' &&
-          source !== null &&
-          typeof source === 'object' &&
-          'source_transfer' in source &&
-          typeof source.source_transfer === 'string'
-            ? source.source_transfer
-            : null;
+        const transferId = getSourceTransferId(txn);
         const paymentIntentId = transferId
           ? paymentIntentByTransfer.get(transferId)
           : undefined;

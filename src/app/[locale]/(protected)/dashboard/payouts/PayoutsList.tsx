@@ -7,18 +7,18 @@ import {
   type PayoutStatus,
 } from '@/server/queries/payouts.queries';
 import { PayoutsErrorBanner } from '@/components/features/payouts/PayoutsErrorBanner';
+import { Badge, type BadgeProps } from '@/components/ui/badge';
 import { formatCHF } from '@/lib/utils/currency';
 import { formatDateShort } from '@/lib/i18n/formatters';
 import { logError } from '@/lib/logger';
-import { cn } from '@/lib/utils';
 import type { Locale } from '@/i18n/routing';
 
-const STATUS_CLASS: Record<PayoutStatus, string> = {
-  paid: 'bg-emerald-50 text-emerald-800',
-  pending: 'bg-amber-50 text-amber-800',
-  in_transit: 'bg-blue-50 text-blue-800',
-  failed: 'bg-rose-50 text-rose-800',
-  canceled: 'bg-stone-100 text-slate-600',
+const STATUS_VARIANT: Record<PayoutStatus, BadgeProps['variant']> = {
+  paid: 'success',
+  pending: 'warning',
+  in_transit: 'info',
+  failed: 'destructive',
+  canceled: 'neutral',
 };
 
 interface PayoutsListProps {
@@ -78,9 +78,7 @@ export async function PayoutsList({ stripeAccountId }: PayoutsListProps) {
             </p>
           </>
         ) : (
-          <p className="mt-1 text-sm text-muted-foreground">
-            {t('next.none')}
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">{t('next.none')}</p>
         )}
       </div>
 
@@ -113,14 +111,12 @@ export async function PayoutsList({ stripeAccountId }: PayoutsListProps) {
                       locale as Locale
                     )}
                   </p>
-                  <span
-                    className={cn(
-                      'mt-1 inline-flex rounded-full px-2 py-0.5 text-xs font-medium',
-                      STATUS_CLASS[payout.status]
-                    )}
+                  <Badge
+                    variant={STATUS_VARIANT[payout.status]}
+                    className="mt-1"
                   >
                     {t(`status.${payout.status}`)}
-                  </span>
+                  </Badge>
                 </div>
                 <p className="shrink-0 font-display text-lg font-semibold text-foreground">
                   {formatCHF(payout.amountCents)}

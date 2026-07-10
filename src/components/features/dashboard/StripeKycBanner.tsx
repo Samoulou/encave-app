@@ -1,6 +1,7 @@
 import { Fragment } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
+import { Link } from '@/i18n/navigation';
 
 interface StripeKycBannerProps {
   stripeOnboardingComplete: boolean;
@@ -29,9 +30,9 @@ export async function StripeKycBanner({
               i < arr.length - 1 ? (
                 <Fragment key={i}>
                   {part}
-                  <a href="/dashboard/winery/profile" className="underline">
+                  <Link href="/dashboard/winery/profile" className="underline">
                     {t('wineryProfileLink')}
-                  </a>
+                  </Link>
                 </Fragment>
               ) : (
                 part

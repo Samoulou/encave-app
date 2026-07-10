@@ -166,9 +166,22 @@ export async function checkInBooking(
     // (Zurich) tickets are scannable — yesterday's QR must not check in.
     // Placed after the status checks so refusal reasons stay precise
     // (a cancelled booking reports BOOKING_CANCELLED, not WRONG_DAY).
+    // An offline scan replayed after midnight carries scannedAt: the day
+    // is anchored on the physical scan, bounded to the last 48h so a
+    // fabricated timestamp cannot reopen arbitrary days.
     if (!expectedSessionId) {
-      const today = zurichTodayAsUTCDate();
-      if (booking.date.getTime() !== today.getTime()) {
+      const now = new Date();
+      const scannedAt = parsed.data.scannedAt
+        ? new Date(parsed.data.scannedAt)
+        : null;
+      const scanAnchor =
+        scannedAt &&
+        scannedAt.getTime() <= now.getTime() &&
+        now.getTime() - scannedAt.getTime() <= 48 * 60 * 60 * 1000
+          ? scannedAt
+          : now;
+      const scanDay = zurichTodayAsUTCDate(scanAnchor);
+      if (booking.date.getTime() !== scanDay.getTime()) {
         return {
           success: false,
           error: {

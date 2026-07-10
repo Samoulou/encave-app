@@ -8,7 +8,7 @@ import { hashToken } from '@/lib/utils/token';
  * single weekly re-reminder while it stays unresolved.
  */
 
-export const STRIPE_ACTION_EMAIL_COOLDOWN_HOURS = 7 * 24;
+const STRIPE_ACTION_EMAIL_COOLDOWN_HOURS = 7 * 24;
 
 /** Order-insensitive fingerprint of Stripe's currently_due list. */
 export function computeStripeDueHash(currentlyDue: string[]): string {

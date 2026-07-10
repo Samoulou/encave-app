@@ -2347,7 +2347,7 @@
       "gross": "Brutto",
       "commission": "Kommission",
       "totalGross": "Brutto gesamt",
-      "totalCommission": "EnCave-Kommission (12 %)",
+      "totalCommission": "EnCave-Kommission",
       "totalNet": "Netto ausgezahlt",
       "otherLines": "Weitere Bewegungen (Erstattungen, Anpassungen)"
     }

@@ -168,6 +168,50 @@ describe('checkInBooking', () => {
       }
     });
 
+    it('honours scannedAt: an offline scan synced after midnight still checks in', async () => {
+      // Now = 00:30 Zurich on May 21 (22:30 UTC May 20); the physical
+      // scan happened at 23:50 Zurich on May 20.
+      vi.setSystemTime(new Date('2026-05-20T22:30:00Z'));
+      vi.mocked(db.booking.findFirst).mockResolvedValue(booking as never); // date May 20
+      vi.mocked(db.booking.updateMany).mockResolvedValue({
+        count: 1,
+      } as never);
+      vi.mocked(db.booking.findUnique).mockResolvedValue({
+        id: 'booking-1',
+        reference: 'ENC-ABC123',
+        visitorName: 'Alice Test',
+        guestCount: 2,
+        status: BookingStatus.COMPLETED,
+        checkedInAt: new Date('2026-05-20T21:50:00Z'),
+      } as never);
+
+      const result = await checkInBooking({
+        bookingId: 'cjld2cjxh0000qzrmn831i7rn',
+        scannedAt: '2026-05-20T21:50:00.000Z', // 23:50 Zurich, May 20
+        source: 'scan',
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it('ignores a scannedAt older than 48h (no arbitrary-day reopening)', async () => {
+      vi.mocked(db.booking.findFirst).mockResolvedValue({
+        ...booking,
+        date: new Date('2026-05-15T00:00:00Z'),
+      } as never);
+
+      const result = await checkInBooking({
+        bookingId: 'cjld2cjxh0000qzrmn831i7rn',
+        scannedAt: '2026-05-15T10:00:00.000Z', // 5 days before system time
+        source: 'scan',
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe('WRONG_DAY');
+      }
+    });
+
     it('still enforces ownership in day mode', async () => {
       vi.mocked(db.booking.findFirst).mockResolvedValue({
         ...booking,

@@ -1,10 +1,8 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
-import {
-  getMonthlyStatementData,
-  STATEMENT_MONTH_KEY_REGEX,
-} from '@/server/queries/earnings.queries';
+import { isMonthKey } from '@/lib/utils/date-key';
+import { getMonthlyStatementData } from '@/server/queries/earnings.queries';
 import {
   generateMonthlyStatementPDF,
   type StatementLocale,
@@ -22,13 +20,25 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ month: string }> }
 ) {
+  const requestUrl = new URL(request.url);
+  const localeParamRaw = requestUrl.searchParams.get('locale');
+  const locale: StatementLocale = LOCALES.includes(
+    localeParamRaw as StatementLocale
+  )
+    ? (localeParamRaw as StatementLocale)
+    : 'fr';
+
   const session = await auth();
   if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Email #17 links land here from mail clients without a session:
+    // a login page beats a raw 401 JSON dead-end. The login flow brings
+    // the user back to their dashboard, where the statement is one tap
+    // away.
+    return NextResponse.redirect(new URL(`/${locale}/login`, requestUrl));
   }
 
   const { month } = await params;
-  if (!STATEMENT_MONTH_KEY_REGEX.test(month)) {
+  if (!isMonthKey(month)) {
     return NextResponse.json({ error: 'Invalid month' }, { status: 400 });
   }
 
@@ -39,13 +49,6 @@ export async function GET(
   if (!winery) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
-
-  const localeParam = new URL(request.url).searchParams.get('locale');
-  const locale: StatementLocale = LOCALES.includes(
-    localeParam as StatementLocale
-  )
-    ? (localeParam as StatementLocale)
-    : 'fr';
 
   try {
     const data = await getMonthlyStatementData(winery.id, month);

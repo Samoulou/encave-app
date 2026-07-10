@@ -16,6 +16,16 @@ import { zurichTodayAsUTCDate } from '@/lib/business-rules/occurrence-expansion'
 
 const FILL_RATE_WINDOW_DAYS = 30;
 
+/** One key format for occurrence-booking session matching - 6 call
+ * sites must never drift. */
+function sessionKey(experienceId: string, date: Date, time: string): string {
+  return `${experienceId}|${date.toISOString().slice(0, 10)}|${time}`;
+}
+
+function dayKey(experienceId: string, date: Date): string {
+  return `${experienceId}|${date.toISOString().slice(0, 10)}`;
+}
+
 /**
  * Seats that consumed capacity, past or future: terminal attended
  * statuses + the live capacity predicate — the same composition as
@@ -78,7 +88,7 @@ export const getWineryFillRate30d = cache(
 
     const soldByKey = new Map(
       soldGroups.map((group) => [
-        `${group.experienceId}|${group.date.toISOString().slice(0, 10)}|${group.timeSlot}`,
+        sessionKey(group.experienceId, group.date, group.timeSlot),
         group._sum.guestCount ?? 0,
       ])
     );
@@ -90,7 +100,11 @@ export const getWineryFillRate30d = cache(
         occurrence.capacityOverride,
         occurrence.experience.maxCapacity
       );
-      const key = `${occurrence.experienceId}|${occurrence.date.toISOString().slice(0, 10)}|${occurrence.startTime}`;
+      const key = sessionKey(
+        occurrence.experienceId,
+        occurrence.date,
+        occurrence.startTime
+      );
       soldSeats += soldByKey.get(key) ?? 0;
     }
 
@@ -166,14 +180,11 @@ export const getUpcomingWinerySessions = cache(
     ]);
 
     const blockedKeys = new Set(
-      blocked.map(
-        (entry) =>
-          `${entry.experienceId}|${entry.date.toISOString().slice(0, 10)}`
-      )
+      blocked.map((entry) => dayKey(entry.experienceId, entry.date))
     );
     const soldByKey = new Map(
       soldGroups.map((group) => [
-        `${group.experienceId}|${group.date.toISOString().slice(0, 10)}|${group.timeSlot}`,
+        sessionKey(group.experienceId, group.date, group.timeSlot),
         group._sum.guestCount ?? 0,
       ])
     );
@@ -181,9 +192,7 @@ export const getUpcomingWinerySessions = cache(
     return occurrences
       .filter(
         (occurrence) =>
-          !blockedKeys.has(
-            `${occurrence.experienceId}|${occurrence.date.toISOString().slice(0, 10)}`
-          )
+          !blockedKeys.has(dayKey(occurrence.experienceId, occurrence.date))
       )
       .slice(0, limit)
       .map((occurrence) => ({
@@ -194,7 +203,11 @@ export const getUpcomingWinerySessions = cache(
         startTime: occurrence.startTime,
         soldSeats:
           soldByKey.get(
-            `${occurrence.experienceId}|${occurrence.date.toISOString().slice(0, 10)}|${occurrence.startTime}`
+            sessionKey(
+              occurrence.experienceId,
+              occurrence.date,
+              occurrence.startTime
+            )
           ) ?? 0,
         capacity: resolveOccurrenceCapacity(
           occurrence.capacityOverride,

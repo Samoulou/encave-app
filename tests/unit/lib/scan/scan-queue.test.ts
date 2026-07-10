@@ -4,10 +4,12 @@ import {
   saveQueue,
   enqueueScan,
   flushQueue,
-  SCAN_QUEUE_STORAGE_KEY,
+  scanQueueKey,
   type QueuedScan,
   type ScanQueueStorage,
 } from '@/lib/scan/scan-queue';
+
+const KEY = scanQueueKey('user-1');
 
 function memoryStorage(initial?: Record<string, string>): ScanQueueStorage & {
   dump(): Record<string, string>;
@@ -27,30 +29,31 @@ describe('loadQueue / saveQueue', () => {
   it('round-trips a queue through storage', () => {
     const storage = memoryStorage();
     const queue = enqueueScan([], 'bk_1', AT);
-    saveQueue(storage, queue);
+    saveQueue(storage, KEY, queue);
 
-    expect(loadQueue(storage)).toEqual([
+    expect(loadQueue(storage, KEY)).toEqual([
       { bookingId: 'bk_1', scannedAt: AT.toISOString() },
     ]);
   });
 
   it('an empty queue removes the storage key entirely', () => {
-    const storage = memoryStorage({ [SCAN_QUEUE_STORAGE_KEY]: '[]' });
-    saveQueue(storage, []);
+    const storage = memoryStorage({ [KEY]: '[]' });
+    saveQueue(storage, KEY, []);
     expect(storage.dump()).toEqual({});
   });
 
+  it('queues are scoped per user — another scope reads nothing', () => {
+    const storage = memoryStorage();
+    saveQueue(storage, KEY, enqueueScan([], 'bk_1', AT));
+    expect(loadQueue(storage, scanQueueKey('user-2'))).toEqual([]);
+    expect(loadQueue(storage, KEY)).toHaveLength(1);
+  });
+
   it('survives corrupted storage (returns empty, never throws)', () => {
+    expect(loadQueue(memoryStorage({ [KEY]: '{not json' }), KEY)).toEqual([]);
+    expect(loadQueue(memoryStorage({ [KEY]: '{"a":1}' }), KEY)).toEqual([]);
     expect(
-      loadQueue(memoryStorage({ [SCAN_QUEUE_STORAGE_KEY]: '{not json' }))
-    ).toEqual([]);
-    expect(
-      loadQueue(memoryStorage({ [SCAN_QUEUE_STORAGE_KEY]: '{"a":1}' }))
-    ).toEqual([]);
-    expect(
-      loadQueue(
-        memoryStorage({ [SCAN_QUEUE_STORAGE_KEY]: '[{"bookingId":42}]' })
-      )
+      loadQueue(memoryStorage({ [KEY]: '[{"bookingId":42}]' }), KEY)
     ).toEqual([]);
   });
 
@@ -62,7 +65,9 @@ describe('loadQueue / saveQueue', () => {
       },
       removeItem: () => undefined,
     };
-    expect(() => saveQueue(storage, enqueueScan([], 'bk_1', AT))).not.toThrow();
+    expect(() =>
+      saveQueue(storage, KEY, enqueueScan([], 'bk_1', AT))
+    ).not.toThrow();
   });
 });
 

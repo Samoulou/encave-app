@@ -756,7 +756,7 @@ describe('Earnings Queries', () => {
       expect(mockDb.booking.findMany).not.toHaveBeenCalled();
     });
 
-    it('includes NO_SHOW bookings and filters by month window', async () => {
+    it('includes NO_SHOW bookings and filters by a UTC month window', async () => {
       mockDb.booking.findMany.mockResolvedValueOnce([] as never);
 
       await getMonthlyStatementData('winery-123', '2025-12');
@@ -772,7 +772,11 @@ describe('Earnings Queries', () => {
                 BookingStatus.NO_SHOW,
               ],
             },
-            date: { gte: expect.any(Date), lte: expect.any(Date) },
+            // UTC bounds — Booking.date is a UTC-midnight @db.Date.
+            date: {
+              gte: new Date(Date.UTC(2025, 11, 1)),
+              lt: new Date(Date.UTC(2026, 0, 1)),
+            },
           }),
           orderBy: { date: 'asc' },
         })
@@ -803,7 +807,7 @@ describe('Earnings Queries', () => {
       expect(result?.lines).toHaveLength(2);
     });
 
-    it('a full refund zeroes the line net and feeds the refund total', async () => {
+    it('a full refund zeroes the line net; the summary reconciles exactly', async () => {
       mockDb.booking.findMany.mockResolvedValueOnce([
         statementBooking,
         {
@@ -816,13 +820,20 @@ describe('Earnings Queries', () => {
 
       const result = await getMonthlyStatementData('winery-123', '2025-12');
 
-      expect(result?.refundedCents).toBe(10500);
+      // refundedCents = the NET impact (payout share), not the
+      // client-facing refundAmount — so gross − commission − refunds = net.
+      expect(result?.refundedCents).toBe(8800);
       expect(result?.netCents).toBe(8800); // only the non-refunded line
       expect(result?.lines[1]?.netCents).toBe(0);
       expect(result?.lines[1]?.refunded).toBe(true);
+      expect(
+        (result?.grossCents ?? 0) -
+          (result?.commissionCents ?? 0) -
+          (result?.refundedCents ?? 0)
+      ).toBe(result?.netCents);
     });
 
-    it('a partial refund keeps the proportional net', async () => {
+    it('a partial refund keeps the proportional net and reconciles', async () => {
       mockDb.booking.findMany.mockResolvedValueOnce([
         {
           ...statementBooking,
@@ -834,7 +845,13 @@ describe('Earnings Queries', () => {
       const result = await getMonthlyStatementData('winery-123', '2025-12');
 
       expect(result?.lines[0]?.netCents).toBe(4400); // 8800 × 0.5
+      expect(result?.refundedCents).toBe(4400);
       expect(result?.netCents).toBe(4400);
+      expect(
+        (result?.grossCents ?? 0) -
+          (result?.commissionCents ?? 0) -
+          (result?.refundedCents ?? 0)
+      ).toBe(result?.netCents);
     });
   });
 

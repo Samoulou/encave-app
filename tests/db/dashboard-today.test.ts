@@ -84,9 +84,8 @@ describe.skipIf(!url)("dashboard Aujourd'hui (P-13 / L-130)", () => {
   }
 
   beforeAll(async () => {
-    ({ getWineryFillRate30d, getUpcomingWinerySessions } = await import(
-      '@/server/queries/dashboard-today.queries'
-    ));
+    ({ getWineryFillRate30d, getUpcomingWinerySessions } =
+      await import('@/server/queries/dashboard-today.queries'));
     ({ getScanDayList } = await import('@/server/queries/scan.queries'));
     db = new PrismaClient({ datasourceUrl: url });
     const user = await db.user.create({

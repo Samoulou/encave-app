@@ -181,23 +181,27 @@ describe('getPayoutDetail', () => {
     await expect(getPayoutDetail(ACCT, 'po_1')).rejects.toThrow('network');
   });
 
+  function mockTransactions(lines: unknown[]) {
+    stripeMock.balanceTransactions.list.mockReturnValue({
+      autoPagingToArray: vi.fn().mockResolvedValue(lines),
+    });
+  }
+
   it('correlates payment lines to bookings via transfer → payment_intent', async () => {
     stripeMock.payouts.retrieve.mockResolvedValue(stripePayout());
-    stripeMock.balanceTransactions.list.mockResolvedValue({
-      data: [
-        // The payout line itself — must be skipped.
-        { type: 'payout', amount: -8800, created: 1, source: null },
-        // Matched booking payment.
-        {
-          type: 'payment',
-          amount: 8800,
-          created: 2,
-          source: { source_transfer: 'tr_1' },
-        },
-        // Unmatched adjustment.
-        { type: 'adjustment', amount: -200, created: 3, source: null },
-      ],
-    });
+    mockTransactions([
+      // The payout line itself — must be skipped.
+      { type: 'payout', amount: -8800, created: 1, source: null },
+      // Matched booking payment.
+      {
+        type: 'payment',
+        amount: 8800,
+        created: 2,
+        source: { source_transfer: 'tr_1' },
+      },
+      // Unmatched adjustment.
+      { type: 'adjustment', amount: -200, created: 3, source: null },
+    ]);
     stripeMock.transfers.retrieve.mockResolvedValue({
       source_transaction: { payment_intent: 'pi_1' },
     });
@@ -249,16 +253,14 @@ describe('getPayoutDetail', () => {
 
   it('keeps a payment line as unmatched when the transfer cannot be resolved', async () => {
     stripeMock.payouts.retrieve.mockResolvedValue(stripePayout());
-    stripeMock.balanceTransactions.list.mockResolvedValue({
-      data: [
-        {
-          type: 'payment',
-          amount: 4400,
-          created: 5,
-          source: { source_transfer: 'tr_dead' },
-        },
-      ],
-    });
+    mockTransactions([
+      {
+        type: 'payment',
+        amount: 4400,
+        created: 5,
+        source: { source_transfer: 'tr_dead' },
+      },
+    ]);
     stripeMock.transfers.retrieve.mockRejectedValue(new Error('gone'));
 
     const result = await getPayoutDetail(ACCT, 'po_1');

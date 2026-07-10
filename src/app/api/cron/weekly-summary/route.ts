@@ -15,7 +15,9 @@ import { logError, logWarn } from '@/lib/logger';
 import type { Locale as AppLocale } from '@/i18n/routing';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60;
+// Sequential per-winery work (2 booking queries + Stripe payouts.list +
+// Resend send) — 60s would cut the loop mid-way at a few dozen wineries.
+export const maxDuration = 300;
 
 export async function GET() {
   if (!(await verifyCronRequest())) {

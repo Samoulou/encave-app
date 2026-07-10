@@ -5,7 +5,6 @@ import { HOLD_EMAIL_DOMAIN } from '@/lib/constants/booking-hold';
 import { addDays } from 'date-fns';
 import { zurichTodayAsUTCDate } from '@/lib/business-rules/occurrence-expansion';
 
-
 export interface BookingFilters {
   status?: BookingStatus[];
   experienceId?: string;

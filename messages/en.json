@@ -2342,7 +2342,7 @@
       "gross": "Gross",
       "commission": "Commission",
       "totalGross": "Total gross",
-      "totalCommission": "EnCave commission (12%)",
+      "totalCommission": "EnCave commission",
       "totalNet": "Total net paid",
       "otherLines": "Other movements (refunds, adjustments)"
     }

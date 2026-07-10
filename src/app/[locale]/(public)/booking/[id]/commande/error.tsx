@@ -24,7 +24,10 @@ export default function WineOrderError({
     <div className="flex min-h-screen flex-col items-center justify-center bg-cream-50 px-4">
       <div className="w-full max-w-md text-center">
         <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-red-100">
-          <AlertTriangle className="h-10 w-10 text-red-600" aria-hidden="true" />
+          <AlertTriangle
+            className="h-10 w-10 text-red-600"
+            aria-hidden="true"
+          />
         </div>
         <h1 className="font-display text-3xl font-bold text-foreground">
           {t('serverError')}

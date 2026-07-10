@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button';
 import { Link } from '@/i18n/navigation';
 import { checkInBooking } from '@/server/actions/checkInBooking';
 import {
+  scanQueueKey,
   loadQueue,
   saveQueue,
   enqueueScan,
@@ -36,9 +37,12 @@ interface ScanClientProps {
   expectedSessionId?: string;
   /**
    * Today's guest list, preloaded server-side (day mode). null = session
-   * mode or no winery: every scan goes straight to the server.
+   * mode or no winery. The server stays authoritative whenever the
+   * device is ONLINE; the day list is the offline fallback + counter.
    */
   dayList: ScanDayEntryDTO[] | null;
+  /** Storage scope for the offline queue (the authenticated user id). */
+  queueScope: string;
 }
 
 type ScanState =
@@ -46,6 +50,8 @@ type ScanState =
   | { type: 'success'; message: string }
   | { type: 'warning'; message: string }
   | { type: 'error'; message: string };
+
+const FLUSH_RETRY_MS = 30_000;
 
 function extractToken(value: string): string | null {
   const trimmed = value.trim();
@@ -85,11 +91,16 @@ const REJECTED_CODES = new Set([
   'VALIDATION_ERROR',
 ]);
 
-export function ScanClient({ expectedSessionId, dayList }: ScanClientProps) {
+export function ScanClient({
+  expectedSessionId,
+  dayList,
+  queueScope,
+}: ScanClientProps) {
   const t = useTranslations('scan');
   const scannerRef = useRef<{ stop: () => Promise<void> } | null>(null);
   const lastScanRef = useRef<{ value: string; at: number } | null>(null);
   const flushingRef = useRef(false);
+  const storageKey = useMemo(() => scanQueueKey(queueScope), [queueScope]);
   const [isRunning, setIsRunning] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [isOnline, setIsOnline] = useState(true);
@@ -117,12 +128,22 @@ export function ScanClient({ expectedSessionId, dayList }: ScanClientProps) {
     return { checkedIn, total: dayList.length };
   }, [dayList, locallyScanned]);
 
+  const markScanned = useCallback((bookingId: string) => {
+    setLocallyScanned((prev) => {
+      if (prev.has(bookingId)) return prev;
+      const next = new Set(prev);
+      next.add(bookingId);
+      return next;
+    });
+  }, []);
+
   // --- offline queue -----------------------------------------------------
 
   const submitQueuedScan = useCallback(
     async (item: QueuedScan): Promise<ScanSubmitOutcome> => {
       const result = await checkInBooking({
         bookingId: item.bookingId,
+        scannedAt: item.scannedAt,
         source: 'scan',
       });
       if (result.success) return 'synced';
@@ -136,15 +157,22 @@ export function ScanClient({ expectedSessionId, dayList }: ScanClientProps) {
     if (flushingRef.current) return;
     flushingRef.current = true;
     try {
-      const current = loadQueue(window.localStorage);
+      const current = loadQueue(window.localStorage, storageKey);
       if (current.length === 0) {
         setQueue([]);
         return;
       }
       const result = await flushQueue(current, submitQueuedScan);
-      saveQueue(window.localStorage, result.remaining);
+      saveQueue(window.localStorage, storageKey, result.remaining);
       setQueue(result.remaining);
       if (result.rejectedIds.length > 0) {
+        // Definitive server refusal after an offline green: undo the
+        // local check-in mark so the counter stops lying.
+        setLocallyScanned((prev) => {
+          const next = new Set(prev);
+          for (const id of result.rejectedIds) next.delete(id);
+          return next;
+        });
         setState({
           type: 'error',
           message: t('syncRejected', { count: result.rejectedIds.length }),
@@ -153,11 +181,11 @@ export function ScanClient({ expectedSessionId, dayList }: ScanClientProps) {
     } finally {
       flushingRef.current = false;
     }
-  }, [submitQueuedScan, t]);
+  }, [submitQueuedScan, storageKey, t]);
 
   useEffect(() => {
     // Crash recovery: adopt whatever a previous session left behind.
-    const persisted = loadQueue(window.localStorage);
+    const persisted = loadQueue(window.localStorage, storageKey);
     setQueue(persisted);
     setLocallyScanned((prev) => {
       if (persisted.length === 0) return prev;
@@ -175,15 +203,21 @@ export function ScanClient({ expectedSessionId, dayList }: ScanClientProps) {
     window.addEventListener('online', onOnline);
     window.addEventListener('offline', onOffline);
     if (navigator.onLine) void flush();
+    // Transient flush failures (5xx, rate limit) while staying online
+    // would otherwise wait for the next scan — retry on a timer.
+    const retry = window.setInterval(() => {
+      if (navigator.onLine) void flush();
+    }, FLUSH_RETRY_MS);
     return () => {
       window.removeEventListener('online', onOnline);
       window.removeEventListener('offline', onOffline);
+      window.clearInterval(retry);
     };
-  }, [flush]);
+  }, [flush, storageKey]);
 
   // --- scan handling -----------------------------------------------------
 
-  const handleLocalMatch = useCallback(
+  const handleOfflineMatch = useCallback(
     async (token: string) => {
       if (!entryByHash) return;
       const hash = await sha256Hex(token);
@@ -205,26 +239,20 @@ export function ScanClient({ expectedSessionId, dayList }: ScanClientProps) {
         return;
       }
 
-      setLocallyScanned((prev) => {
-        const next = new Set(prev);
-        next.add(entry.bookingId);
-        return next;
-      });
+      markScanned(entry.bookingId);
       const nextQueue = enqueueScan(
-        loadQueue(window.localStorage),
+        loadQueue(window.localStorage, storageKey),
         entry.bookingId,
         new Date()
       );
-      saveQueue(window.localStorage, nextQueue);
+      saveQueue(window.localStorage, storageKey, nextQueue);
       setQueue(nextQueue);
       setState({
         type: 'success',
         message: `${t('resultOk')}, ${entry.visitorName} (${entry.guestCount})`,
       });
-
-      if (navigator.onLine) void flush();
     },
-    [entryByHash, locallyScanned, flush, t]
+    [entryByHash, locallyScanned, markScanned, storageKey, t]
   );
 
   const handleOnlineScan = useCallback(
@@ -246,6 +274,9 @@ export function ScanClient({ expectedSessionId, dayList }: ScanClientProps) {
               result.data.code === 'ALREADY_CHECKED_IN' ? 'warning' : 'success',
             message: `${prefix}, ${result.data.booking.visitorName}`,
           });
+          // Keep the day counter honest even for bookings made after
+          // the page-load snapshot (they're simply not in the total).
+          markScanned(result.data.booking.id);
         } else {
           setState({
             type: 'error',
@@ -254,7 +285,7 @@ export function ScanClient({ expectedSessionId, dayList }: ScanClientProps) {
         }
       });
     },
-    [expectedSessionId, t]
+    [expectedSessionId, markScanned, t]
   );
 
   const handleDecoded = useCallback(
@@ -274,13 +305,15 @@ export function ScanClient({ expectedSessionId, dayList }: ScanClientProps) {
         return;
       }
 
-      if (entryByHash) {
-        void handleLocalMatch(token);
+      // Online → the server is authoritative (sees cancellations and
+      // bookings made after page load). Offline day mode → local match.
+      if (entryByHash && !navigator.onLine) {
+        void handleOfflineMatch(token);
       } else {
         handleOnlineScan(token);
       }
     },
-    [entryByHash, handleLocalMatch, handleOnlineScan, t]
+    [entryByHash, handleOfflineMatch, handleOnlineScan, t]
   );
 
   const stop = useCallback(async () => {

@@ -22,11 +22,21 @@ export interface ScanQueueStorage {
   removeItem(_key: string): void;
 }
 
-export const SCAN_QUEUE_STORAGE_KEY = 'encave.scan-queue.v1';
+/**
+ * Storage key scoped by user id: a shared device (two winemaker
+ * accounts on one tablet) must never replay one account's queue under
+ * the other's session — ownership would reject and silently drop them.
+ */
+export function scanQueueKey(scope: string): string {
+  return `encave.scan-queue.v1.${scope}`;
+}
 
-export function loadQueue(storage: ScanQueueStorage): QueuedScan[] {
+export function loadQueue(
+  storage: ScanQueueStorage,
+  key: string
+): QueuedScan[] {
   try {
-    const raw = storage.getItem(SCAN_QUEUE_STORAGE_KEY);
+    const raw = storage.getItem(key);
     if (!raw) return [];
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
@@ -45,13 +55,14 @@ export function loadQueue(storage: ScanQueueStorage): QueuedScan[] {
 
 export function saveQueue(
   storage: ScanQueueStorage,
+  key: string,
   queue: QueuedScan[]
 ): void {
   try {
     if (queue.length === 0) {
-      storage.removeItem(SCAN_QUEUE_STORAGE_KEY);
+      storage.removeItem(key);
     } else {
-      storage.setItem(SCAN_QUEUE_STORAGE_KEY, JSON.stringify(queue));
+      storage.setItem(key, JSON.stringify(queue));
     }
   } catch {
     // Quota/private-mode failure: the in-memory queue still flushes this

@@ -7,8 +7,8 @@ import {
   StyleSheet,
   renderToBuffer,
 } from '@react-pdf/renderer';
-import { format } from 'date-fns';
-import { fr, de, enGB } from 'date-fns/locale';
+import { formatCHFCompact } from '@/lib/utils/currency';
+import { formatDate } from '@/lib/i18n/formatters';
 import type { MonthlyStatementData } from '@/server/queries/earnings.queries';
 
 /**
@@ -19,8 +19,6 @@ import type { MonthlyStatementData } from '@/server/queries/earnings.queries';
  */
 
 export type StatementLocale = 'fr' | 'de' | 'en';
-
-const DATE_FNS_LOCALE = { fr, de, en: enGB } as const;
 
 const DICT = {
   fr: {
@@ -233,9 +231,7 @@ const styles = StyleSheet.create({
   },
 });
 
-function chf(amountInCents: number): string {
-  return `CHF ${(amountInCents / 100).toFixed(2)}`;
-}
+const chf = formatCHFCompact;
 
 interface MonthlyStatementProps {
   wineryName: string;
@@ -251,10 +247,16 @@ function MonthlyStatement({
   generatedAt,
 }: MonthlyStatementProps) {
   const t = DICT[locale];
-  const dateFnsLocale = DATE_FNS_LOCALE[locale];
   const [yearStr, monthStr] = data.month.split('-');
-  const monthDate = new Date(Number(yearStr), Number(monthStr) - 1, 1);
-  const monthLabel = format(monthDate, 'MMMM yyyy', { locale: dateFnsLocale });
+  // UTC noon: immune to timezone off-by-one when naming the month.
+  const monthDate = new Date(
+    Date.UTC(Number(yearStr), Number(monthStr) - 1, 1, 12)
+  );
+  const monthLabel = formatDate(monthDate, locale, {
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
 
   return (
     <Document>
@@ -333,7 +335,11 @@ function MonthlyStatement({
               {data.lines.map((line) => (
                 <View key={line.reference} style={styles.tableRow}>
                   <Text style={[styles.tableCell, styles.colDate]}>
-                    {format(line.date, 'd MMM', { locale: dateFnsLocale })}
+                    {formatDate(line.date, locale, {
+                      day: 'numeric',
+                      month: 'short',
+                      timeZone: 'UTC',
+                    })}
                   </Text>
                   <Text style={[styles.tableCell, styles.colReference]}>
                     {line.reference}
@@ -373,9 +379,7 @@ function MonthlyStatement({
 
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            {t.generated}{' '}
-            {format(generatedAt, 'd MMMM yyyy', { locale: dateFnsLocale })} —{' '}
-            {t.footer}
+            {t.generated} {formatDate(generatedAt, locale)} — {t.footer}
           </Text>
         </View>
       </Page>

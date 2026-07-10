@@ -28,5 +28,11 @@ export default async function ScanPage({
   // keeps working offline (P-13 / D2). Session mode stays online-only.
   const dayList = sessionId ? null : await getScanDayList(session.user.id);
 
-  return <ScanClient expectedSessionId={sessionId} dayList={dayList} />;
+  return (
+    <ScanClient
+      expectedSessionId={sessionId}
+      dayList={dayList}
+      queueScope={session.user.id}
+    />
+  );
 }

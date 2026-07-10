@@ -14,6 +14,7 @@ import {
 } from '@/server/queries/calendar.queries';
 import { CalendarViewWrapper } from './CalendarViewWrapper';
 import { getTranslations } from 'next-intl/server';
+import { zurichTodayAsUTCDate } from '@/lib/business-rules/occurrence-expansion';
 
 const DEFAULT_BOOKING_DATE_TO = new Date(Date.UTC(9999, 11, 31));
 
@@ -62,7 +63,10 @@ export async function BookingsTableSection({
   }
 
   if (!hasExplicitDateFilter) {
-    filters.dateFrom = localDateToUTC(new Date());
+    // Same Zurich day anchor as getBookingSummary (P-13 / A4): the KPI
+    // header and the default "upcoming" list must agree on what "today"
+    // is — the server runs in UTC, the wineries live in Zurich.
+    filters.dateFrom = zurichTodayAsUTCDate();
     filters.dateTo = DEFAULT_BOOKING_DATE_TO;
   }
 
@@ -124,11 +128,5 @@ export async function BookingsTableSection({
         />
       )}
     </>
-  );
-}
-
-function localDateToUTC(date: Date): Date {
-  return new Date(
-    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
   );
 }

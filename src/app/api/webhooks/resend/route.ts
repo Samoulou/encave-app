@@ -52,7 +52,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true });
     }
 
-    const occurredAt = event.created_at ? new Date(event.created_at) : new Date();
+    const occurredAt = event.created_at
+      ? new Date(event.created_at)
+      : new Date();
     const timestamp = Number.isNaN(occurredAt.getTime())
       ? new Date()
       : occurredAt;

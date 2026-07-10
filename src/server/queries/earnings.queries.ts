@@ -1,5 +1,6 @@
 import { cache } from 'react';
 import { db } from '@/server/db';
+import { isMonthKey } from '@/lib/utils/date-key';
 import { BookingStatus, Prisma } from '@prisma/client';
 import {
   startOfMonth,
@@ -372,13 +373,16 @@ export interface MonthlyStatementData {
   serviceFeesCents: number;
   /** No-show fees: always 0 until P-08 ships. */
   noShowFeesCents: number;
-  /** Σ refundAmount of refunded bookings (positive number). */
+  /**
+   * Refund impact on the winery's NET (payout × refunded fraction) —
+   * NOT the client-facing refundAmount, which also contains the service
+   * fee and commission parts. This keeps the identity
+   * gross − commission − refunds = net exact on the PDF.
+   */
   refundedCents: number;
   /** Σ wineryPayout net of full/partial refunds. */
   netCents: number;
 }
-
-export const STATEMENT_MONTH_KEY_REGEX = /^\d{4}-(0[1-9]|1[0-2])$/;
 
 /**
  * Monthly statement aggregate (P-13 / L-142). One row per booking whose
@@ -391,15 +395,19 @@ export const getMonthlyStatementData = cache(
     wineryId: string,
     month: string
   ): Promise<MonthlyStatementData | null> {
-    if (!STATEMENT_MONTH_KEY_REGEX.test(month)) return null;
+    if (!isMonthKey(month)) return null;
     const [yearStr, monthStr] = month.split('-');
-    const monthStart = new Date(Number(yearStr), Number(monthStr) - 1, 1);
-    const monthEnd = endOfMonth(monthStart);
+    // UTC bounds: Booking.date is a UTC-midnight @db.Date — local-time
+    // bounds would shift edge-of-month bookings on a non-UTC server.
+    const year = Number(yearStr);
+    const monthIndex = Number(monthStr) - 1;
+    const monthStart = new Date(Date.UTC(year, monthIndex, 1));
+    const nextMonthStart = new Date(Date.UTC(year, monthIndex + 1, 1));
 
     const bookings = await db.booking.findMany({
       where: {
         wineryId,
-        date: { gte: monthStart, lte: monthEnd },
+        date: { gte: monthStart, lt: nextMonthStart },
         status: {
           in: [
             BookingStatus.CONFIRMED,
@@ -442,7 +450,7 @@ export const getMonthlyStatementData = cache(
       serviceFeesCents: bookings.reduce((sum, b) => sum + b.serviceFeeCents, 0),
       noShowFeesCents: 0,
       refundedCents: bookings.reduce(
-        (sum, b) => sum + (b.refundIssued ? (b.refundAmount ?? 0) : 0),
+        (sum, b) => sum + Math.round(b.wineryPayout * refundedFraction(b)),
         0
       ),
       netCents: lines.reduce((sum, line) => sum + line.netCents, 0),
