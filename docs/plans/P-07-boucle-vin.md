@@ -1,6 +1,6 @@
 # P-07 — Boucle vin (fiche dégustation → email J+2)
 
-> **Statut** : en cours · **Branche** : `claude/p-07-boucle-vin` (fallback session, cf. P-01/P-05) · **PR** : #
+> **Statut** : livré · **Branche** : `claude/p-07-boucle-vin` (fallback session, cf. P-01/P-05) · **PR** : [#102](https://github.com/Samoulou/encave-app/pull/102)
 > **Sources** : `docs/ENCAVE-V3-DELIVERY-PLAN.md` §P-07 · items L-060→L-064 · spec `docs/v3/ENCAVE-V3-PRD.md` US-230 · `docs/v3/ENCAVE-V3-PAGES-EMAILS.md` §5/§6/§8 (emails #3, #21)
 > **Type** : non-💰 (review `high`, pas de `/security-review`). **Feature-flaggé** : `TASTING_SHEET` (déjà au registre `src/lib/flags.ts`, OFF par défaut). Jalon **G-R1 (13.09)** = fin P-07.
 

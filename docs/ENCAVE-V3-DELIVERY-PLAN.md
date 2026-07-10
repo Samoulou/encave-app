@@ -235,7 +235,7 @@ ISR/header découplé, i18n subset, Mapbox gated, index DB, invalidation propre.
 | P-04 | Checkout V3                    | 💰  | P-03       | 15.5 h | S5         | ✅     | PR [#99](https://github.com/Samoulou/encave-app/pull/99) — DoD G-R2 atteint, review max + sécu passées |
 | P-05 | Créneaux & recherche par date  |     | P-02       | 11 h   | S6         | ✅     | PR [#101](https://github.com/Samoulou/encave-app/pull/101) — ADR-0002, review high 10/10 corrigés      |
 | P-06 | Performance structurelle       |     | —          | 11 h   | S6-S8      | ⬜     |                                                                                                        |
-| P-07 | Boucle vin (fiche dégustation) |     | P-02       | 13 h   | S7-S8      | 🟨     | `claude/p-07-boucle-vin` — plan : [P-07-boucle-vin.md](./plans/P-07-boucle-vin.md)                     |
+| P-07 | Boucle vin (fiche dégustation) |     | P-02       | 13 h   | S7-S8      | ✅     | PR [#102](https://github.com/Samoulou/encave-app/pull/102) — review high 22/22, moteur ScheduledJob    |
 | P-08 | Anti no-show                   | 💰  | P-02, P-04 | 14 h   | S9         | ⬜     |                                                                                                        |
 | P-09 | Bons cadeaux                   | 💰  | P-02, P-04 | 24 h   | S10-S11    | ⬜     |                                                                                                        |
 | P-10 | Request / sur-mesure           | 💰  | P-02, P-03 | 18.5 h | S12-S13    | ⬜     |                                                                                                        |
