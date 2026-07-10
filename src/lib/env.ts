@@ -26,6 +26,9 @@ const envSchema = z.object({
 
   // Email (Resend)
   RESEND_API_KEY: z.string().optional(),
+  // Svix signing secret of the Resend webhook (open/click tracking, P-07).
+  // Unset = webhook route rejects everything; sending is unaffected.
+  RESEND_WEBHOOK_SECRET: z.string().optional(),
 
   // Storage (Vercel Blob)
   BLOB_READ_WRITE_TOKEN: z.string().optional(),

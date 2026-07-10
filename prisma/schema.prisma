@@ -171,6 +171,7 @@ model Winery {
   bookings                Booking[]
   notificationPreferences NotificationPreferences?
   wines                   Wine[]
+  wineOrderRequests       WineOrderRequest[]
   requests                Request[]
   eventParticipations     EventParticipant[]
 
@@ -368,6 +369,13 @@ model Booking {
   reminder24hSentAt       DateTime? // When 24h reminder was sent
   reminder2hSentAt        DateTime? // When 2h reminder was sent
   followUpSentAt          DateTime? // When post-experience follow-up was sent
+  // V3 (P-07): client locale captured at checkout — emails to the CLIENT use
+  // this, never the winemaker's preferredLocale. FR default covers legacy rows.
+  locale                  Locale                @default(FR)
+  // V3 (P-07): hash of the tasting-recap token minted when the J+2 email is
+  // sent (the confirmation accessToken plaintext is unrecoverable by then).
+  recapTokenHash          String?
+  tastingRecapSentAt      DateTime? // When the J+2 "coups de cœur" email was sent
   cancelledAt             DateTime? // When booking was cancelled
   cancellationReason      String?
   refundIssued            Boolean               @default(false)
@@ -384,7 +392,8 @@ model Booking {
   createdAt               DateTime              @default(now())
   updatedAt               DateTime              @updatedAt
 
-  wines BookingWine[]
+  wines            BookingWine[]
+  wineOrderRequest WineOrderRequest?
 
   @@index([experienceId])
   @@index([wineryId])
@@ -394,6 +403,7 @@ model Booking {
   @@index([status])
   @@index([reference])
   @@index([accessTokenHash])
+  @@index([recapTokenHash])
   @@index([stripeCheckoutSessionId])
   @@index([stripePaymentIntentId])
   @@index([occurrenceId])
@@ -454,15 +464,23 @@ model NotificationPreferences {
 
 model EmailLog {
   id           String   @id @default(cuid())
-  type         String // reminder_24h, reminder_2h, daily_digest, follow_up, weekly_summary
+  type         String // reminder_24h, reminder_2h, daily_digest, follow_up, weekly_summary, tasting_recap, tasting_sheet_reminder, wine_order_request
   recipientId  String // User ID, Winery ID, or email address
   bookingId    String? // Optional booking reference
   status       String // sent, failed, skipped
   errorMessage String? // Error details if failed
+  // V3 (P-07): per-winery open/click tracking. resendMessageId is the id
+  // returned by resend.emails.send; the /api/webhooks/resend route matches
+  // email.opened / email.clicked events back to this row (first-wins).
+  resendMessageId String?   @unique
+  wineryId        String?
+  openedAt        DateTime?
+  clickedAt       DateTime?
   createdAt    DateTime @default(now())
 
   @@index([type, createdAt])
   @@index([recipientId])
+  @@index([wineryId, type])
   @@map("email_logs")
 }
 
@@ -510,7 +528,8 @@ model Wine {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  bookingWines BookingWine[]
+  bookingWines      BookingWine[]
+  orderRequestItems WineOrderRequestItem[]
 
   @@index([wineryId, available])
   @@map("wines")
@@ -528,6 +547,60 @@ model BookingWine {
   @@unique([bookingId, wineId])
   @@index([wineId])
   @@map("booking_wines")
+}
+
+// Client-scoped email opt-out (P-07, LCD compliance for the commercial
+// "coups de cœur" recap). Keyed by lower-cased email — guests have no User
+// row. Will back the /compte/profil preference in P-13.
+model ClientEmailPreference {
+  id               String   @id @default(cuid())
+  email            String   @unique // always lower-cased at write time
+  marketingOptOut  Boolean  @default(false)
+  unsubscribeToken String   @unique @default(cuid())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("client_email_preferences")
+}
+
+// Wine order request from the J+2 tasting-recap email (US-230). Delivered to
+// the winery by email at launch; this table is the future Shop 3.1 inbox.
+// One request per booking (@unique) — the "1 tap" CTA is idempotent.
+model WineOrderRequest {
+  id          String   @id @default(cuid())
+  bookingId   String   @unique
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  wineryId    String
+  winery      Winery   @relation(fields: [wineryId], references: [id], onDelete: Cascade)
+  status      String   @default("NEW")
+  // Snapshot of the client's contact details at request time.
+  clientName  String
+  clientEmail String
+  clientPhone String?
+  createdAt   DateTime @default(now())
+
+  items WineOrderRequestItem[]
+
+  @@index([wineryId, createdAt])
+  @@map("wine_order_requests")
+}
+
+model WineOrderRequestItem {
+  id             String           @id @default(cuid())
+  orderRequestId String
+  orderRequest   WineOrderRequest @relation(fields: [orderRequestId], references: [id], onDelete: Cascade)
+  wineId         String
+  wine           Wine             @relation(fields: [wineId], references: [id], onDelete: Restrict)
+  // Snapshot: wine prices change, the request must reflect what was shown.
+  wineName       String
+  grapeVariety   String
+  vintage        Int?
+  priceAtRequest Int // cents
+  quantity       Int
+
+  @@index([orderRequestId])
+  @@index([wineId])
+  @@map("wine_order_request_items")
 }
 
 // Gift card (US-210). balance is materialized and guarded by a DB CHECK
