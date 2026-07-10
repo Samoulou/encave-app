@@ -76,6 +76,20 @@ Créés : `HeaderAuthSlot.tsx`, `HeaderRoleLink.tsx`, `src/lib/i18n/client-messa
    - `auth()` avalait le bailout `DYNAMIC_SERVER_USAGE` de `headers()` → Next croyait les pages PROTÉGÉES statiques et les prérendait en redirect-login anonyme (un utilisateur loggé aurait reçu la redirection cachée). Fix : le bailout est relancé — les routes protégées redeviennent dynamiques, les publiques n'appellent plus jamais auth().
    - `wineries/[slug]/not-found.tsx` (server, `getTranslations` implicite) était prérendu AVEC la route → fallback `headers()` → toute la route silencieusement démotée en dynamique. Fix : boundary converti en client component (`useTranslations`), namespace `Public.winery` ajouté au provider du segment. **Règle à retenir : tout boundary co-localisé d'une route ISR doit être client ou n'utiliser que des APIs statiques.**
 
+## Mesures finales C9 (2026-07-10, même méthode que la baseline — médiane de 3 runs mobile, build prod local)
+
+| Page             | Perf (baseline → final) | LCP                  | HTML             |
+| ---------------- | ----------------------- | -------------------- | ---------------- |
+| Home             | 79 → **73**             | 5.7 → 7.8 s (simulé) | 297 → **198 kB** |
+| Catalogue        | 76 → **79**             | 6.0 → 5.3 s          | 570 → **178 kB** |
+| Fiche expérience | 74 → **75**             | 9.5 → 6.7 s          | —                |
+| Liste caves      | 79 → **79**             | 5.2 → 5.2 s          | — → 134 kB       |
+| Fiche cave       | 72 → **80**             | 6.8 → 5.1 s          | —                |
+
+**Acquis structurels (DoD)** : prerender-manifest complet (home + catalogue + wineries + 40 fiches exp + 10 fiches caves = 173 routes) ✅ · purge tag → Full Route Cache prouvée + kill-switch flag <1 min ✅ · invalidation tags-only (plus d'éviction ×4 locales) ✅ · EXPLAIN trigram + visitorEmail + composites ✅ (6/6 db-gated) · dette P-05 réglée (tri borné, complets exclus D3) ✅ · maplibre gated (spec perf-budget) ✅.
+
+**Gate Lighthouse local partiellement manqué (constat honnête)** : home 73 < 85, catalogue 79 < 85. Diagnostic poussé : les métriques **observées** (non throttlées) s'améliorent toutes — home LCP réel 747→706 ms, TTFB 47→16 ms, load 292→225 ms, HTML −33 %, chunk auth différé, préloads d'images invisibles supprimés. La régression home est un artefact de la **simulation Lantern** (Render Delay simulé 3.8→7.0 s à assets quasi identiques et observé meilleur), qu'aucun des 3 correctifs ciblés (déferral better-auth −70 kB, retrait des priority cachés, chunks) n'a déplacée. Décision (Sam, go merge) : la mesure de vérité pour la NFR est **Lighthouse sur staging/prod derrière le CDN Vercel** — que l'ISR de ce package débloque précisément et que le local ne peut pas simuler — et le gate de non-régression outillé arrive avec **Lighthouse CI (L-182) en P-16**. Pistes restantes consignées : double arbre éditorial home dans le DOM (~vrai L-200 complet, refactor UX), fonts (5 familles), poids hero.
+
 ## Risques & rollback
 
 - **Purge tag→Full Route Cache** (pari central) : vérif bloquante commit 4 ; fallback `revalidatePath(route dynamique, 'page')` prêt. `revalidate = 300` partout = filet.
