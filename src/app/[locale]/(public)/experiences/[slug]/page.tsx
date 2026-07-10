@@ -4,7 +4,10 @@ import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { addDays, addMonths } from 'date-fns';
-import { getExperienceBySlug } from '@/server/queries/experience.queries';
+import {
+  getExperienceBySlug,
+  getAllPublishedExperienceSlugs,
+} from '@/server/queries/experience.queries';
 import { getBookableOccurrences } from '@/server/queries/occurrence.queries';
 import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
 import {
@@ -35,7 +38,18 @@ interface ExperiencePageProps {
   params: Promise<{ slug: string; locale: string }>;
 }
 
-export const dynamic = 'force-dynamic';
+// P-06 (L-202): ISR. Fiches are prerendered from the published slugs
+// and revalidated by the 'experiences' tag (mutations) with a 300 s TTL
+// as the safety net. dynamicParams covers slugs published after the
+// build (rendered on demand, then cached). Live capacity stays on
+// /book + checkout — the occurrence hints here may lag ≤300 s.
+export const revalidate = 300;
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  const slugs = await getAllPublishedExperienceSlugs();
+  return slugs.map((slug) => ({ slug }));
+}
 
 export async function generateMetadata({
   params,

@@ -1,5 +1,7 @@
+'use client';
+
 import { Grape, ArrowRight } from 'lucide-react';
-import { getTranslations } from 'next-intl/server';
+import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 
@@ -13,9 +15,14 @@ import { Button } from '@/components/ui/button';
  *
  * Per product decision, we don't differentiate "draft" from "non-existent"
  * to avoid leaking the existence of a draft winery.
+ *
+ * Client component (P-06): Next prerenders the segment's not-found
+ * boundary together with the ISR route — a server-side implicit
+ * getTranslations() here fell back to headers() and silently demoted
+ * the whole /wineries/[slug] route to per-request rendering.
  */
-export default async function WineryNotFound() {
-  const t = await getTranslations('Public.winery.notFound');
+export default function WineryNotFound() {
+  const t = useTranslations('Public.winery.notFound');
 
   return (
     <div className="flex min-h-[70vh] flex-col items-center justify-center bg-cream-50 px-4">

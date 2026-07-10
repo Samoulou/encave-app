@@ -46,7 +46,7 @@ export const SEGMENT_EXTRA_NAMESPACES = {
     'checkout',
     'winery',
   ],
-  wineries: ['winery', 'experience', 'gallery'],
+  wineries: ['winery', 'experience', 'gallery', 'Public.winery'],
   booking: [
     'booking',
     'confirmation',

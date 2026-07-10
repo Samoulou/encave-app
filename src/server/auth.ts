@@ -56,14 +56,19 @@ export const auth = cache(async function auth(): Promise<Session | null> {
       },
     };
   } catch (error) {
-    // Handle static rendering - headers() throws during SSG/ISR
+    // Static rendering: headers() throws a DYNAMIC_SERVER_USAGE bailout.
+    // RETHROW it (P-06): swallowing it made Next believe protected pages
+    // were static — it prerendered them as anonymous login-redirects and
+    // would have served that cached redirect to logged-in users. Next
+    // catches the rethrown bailout and correctly marks the route dynamic.
+    // Public ISR pages never call auth() anymore (header is decoupled).
     if (
       error instanceof Error &&
       (error.message.includes('DYNAMIC_SERVER_USAGE') ||
         error.message.includes('Dynamic server usage') ||
         (error as { digest?: string }).digest === 'DYNAMIC_SERVER_USAGE')
     ) {
-      return null;
+      throw error;
     }
     logError('Auth error', error, { action: 'auth' });
     return null;

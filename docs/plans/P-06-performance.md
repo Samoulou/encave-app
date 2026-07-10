@@ -10,13 +10,13 @@ NFR PRD V3 : Lighthouse ≥ 95 mobile, LCP ≤ 1.5 s. Mesuré (audit `docs/ENCAV
 
 ## Baseline (mesurée AVANT tout commit — 2026-07-10, build prod local `next start`, Postgres 15 Docker seedé 40 exp/10 caves, Lighthouse 12.8.2 mobile, médiane de 3 runs, machine Sam)
 
-| Page | Perf | FCP | LCP | TBT | HTML |
-|---|---|---|---|---|---|
-| Home `/fr` | **79** | 1.4 s | 5.7 s | 9 ms | **297 kB** (de 296, en 285) |
-| Catalogue `/fr/experiences` | **76** | 2.3 s | 6.0 s | 20 ms | 570 kB |
-| Fiche expérience | **74** | 1.4 s | 9.5 s | 46 ms | — |
-| Liste caves `/fr/wineries` | **79** | 2.1 s | 5.2 s | 10 ms | — |
-| Fiche cave | **72** | 2.7 s | 6.8 s | 76 ms | — |
+| Page                        | Perf   | FCP   | LCP   | TBT   | HTML                        |
+| --------------------------- | ------ | ----- | ----- | ----- | --------------------------- |
+| Home `/fr`                  | **79** | 1.4 s | 5.7 s | 9 ms  | **297 kB** (de 296, en 285) |
+| Catalogue `/fr/experiences` | **76** | 2.3 s | 6.0 s | 20 ms | 570 kB                      |
+| Fiche expérience            | **74** | 1.4 s | 9.5 s | 46 ms | —                           |
+| Liste caves `/fr/wineries`  | **79** | 2.1 s | 5.2 s | 10 ms | —                           |
+| Fiche cave                  | **72** | 2.7 s | 6.8 s | 76 ms | —                           |
 
 Prerender-manifest baseline : seuls les 2 articles SEO (+ coming-soon) — **aucune page découverte statique**. Gates DoD : home ≥ 85, catalogue ≥ 85, HTML home < 120 kB (écart : −177 kB à trouver, l'i18n subset en porte ~110-120). Note : la baseline diffère des chiffres de l'audit du 09.07 (machine/seed/évolution du code depuis P-05/P-07/P-13) — c'est CETTE baseline, même machine même méthode, qui sert de référence avant/après.
 
@@ -65,7 +65,16 @@ Créés : `HeaderAuthSlot.tsx`, `HeaderRoleLink.tsx`, `src/lib/i18n/client-messa
 7. Migration index pg_trgm/composites + tests EXPLAIN
 8. searchExperiences : hoist cache, DTO select, next_availability borné, préfiltre capacité (D3) + tests
 9. Mesures finales avant/après + perf-budget.spec + bilan
-→ ④VERIFY (socle §3 : lint/format/i18n/tests/build, db-gated local, e2e) → ⑤ `/code-review high` + correctifs → ⑥ PR « P-06: Performance structurelle » vers dev, CI verte, merge autonome DoD verte → ⑦ §5 ✅ + PR#, CLAUDE.md (§Caching + Known Debt perf), bilan.
+   → ④VERIFY (socle §3 : lint/format/i18n/tests/build, db-gated local, e2e) → ⑤ `/code-review high` + correctifs → ⑥ PR « P-06: Performance structurelle » vers dev, CI verte, merge autonome DoD verte → ⑦ §5 ✅ + PR#, CLAUDE.md (§Caching + Known Debt perf), bilan.
+
+## Vérification de purge C4 (bloquante — exécutée le 2026-07-10, build prod local)
+
+1. **Prerender-manifest** : 167 routes — home ×3 locales, 40 fiches expérience ×3, 10 fiches caves ×3, articles SEO. Dashboard/admin : 0 (voir fix `auth()` ci-dessous).
+2. **Purge par tag** : page fiche servie `x-nextjs-cache: HIT` avec l'ANCIEN titre alors que la DB portait le marqueur → `revalidateTag('experiences')` (même chemin que `invalidateExperienceCaches`) → hit suivant régénéré avec le nouveau titre. **L'hypothèse A7 (tag → Full Route Cache) est confirmée en Next 14.2** — pas besoin du fallback revalidatePath.
+3. **Kill-switch flag (<1 min)** : `BOOKING_FEE` ON → flight de la fiche ISR porte `serviceFeeCentsPerGuest:250` ; flip OFF en DB + `revalidateTag('feature-flags')` → `:0` au hit suivant. ✅
+4. **Deux pièges découverts et corrigés en route** :
+   - `auth()` avalait le bailout `DYNAMIC_SERVER_USAGE` de `headers()` → Next croyait les pages PROTÉGÉES statiques et les prérendait en redirect-login anonyme (un utilisateur loggé aurait reçu la redirection cachée). Fix : le bailout est relancé — les routes protégées redeviennent dynamiques, les publiques n'appellent plus jamais auth().
+   - `wineries/[slug]/not-found.tsx` (server, `getTranslations` implicite) était prérendu AVEC la route → fallback `headers()` → toute la route silencieusement démotée en dynamique. Fix : boundary converti en client component (`useTranslations`), namespace `Public.winery` ajouté au provider du segment. **Règle à retenir : tout boundary co-localisé d'une route ISR doit être client ou n'utiliser que des APIs statiques.**
 
 ## Risques & rollback
 
@@ -74,6 +83,7 @@ Créés : `HeaderAuthSlot.tsx`, `HeaderRoleLink.tsx`, `src/lib/i18n/client-messa
 - **Flash header / CLS** : skeleton dimensionné, cluster droit en fin de flex (CLS≈0) ; hint-cookie optimiste en réserve (hors P-06).
 - **Kill-switch flags <1 min** : test explicite flip `BOOKING_FEE` → purge fiche ISR (sinon fallback path sur l'action de flip uniquement).
 - **pg_trgm** : additif ; Neon previews + Docker OK ; relecture du SQL généré.
+- **Connexions au build (découvert C4)** : la génération statique (267 pages, workers parallèles) épuise un Postgres sans pooler — local : `?connection_limit=4` sur l'URL ; **prérequis ops Vercel : ajouter `connection_limit=5&pool_timeout=60` à `DATABASE_URL` (URL poolée Neon) avant merge** — c'est le volet connection_limit de L-209, avancé ici par nécessité.
 - **Deep-links filtrés (D2)** : flash défauts→filtrés assumé ; revert PR possible (aucune migration destructive).
 - **Régression carte desktop catalogue** : DTO garde lat/lng + contre-test Playwright.
 

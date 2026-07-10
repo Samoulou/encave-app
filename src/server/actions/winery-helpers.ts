@@ -1,4 +1,4 @@
-import { revalidateTag, revalidatePath } from 'next/cache';
+import { revalidateTag } from 'next/cache';
 
 /**
  * Invalidate winery-related caches after a mutation that can change
@@ -8,30 +8,14 @@ import { revalidateTag, revalidatePath } from 'next/cache';
  * filter is applied to experience queries — a winery flipping from
  * invisible to visible immediately impacts the experience listing.
  *
- * Pass the winery slug when known so the specific public page is
- * revalidated along with the listings.
+ * P-06 (L-212): tags ONLY. The two tags cover every public page (all
+ * public reads are unstable_cache tagged 'wineries'/'experiences'), and
+ * with ISR the tags also invalidate the Full Route Cache of the pages
+ * that consumed them — the old revalidatePath fan-out (12 paths × 4
+ * locales incl. the home) evicted whole page trees on every mutation
+ * and violated the CLAUDE.md rule « never tag+path for the same data ».
  */
-export function invalidateWineryCaches(winerySlug?: string) {
-  // Tag-based invalidation (covers all queries reading these tags)
+export function invalidateWineryCaches(_winerySlug?: string) {
   revalidateTag('wineries');
   revalidateTag('experiences');
-
-  // Listing pages — revalidate per locale (i18n routes are always prefixed)
-  revalidatePath('/wineries');
-  revalidatePath('/fr/wineries');
-  revalidatePath('/de/wineries');
-  revalidatePath('/en/wineries');
-
-  if (winerySlug) {
-    revalidatePath(`/wineries/${winerySlug}`);
-    revalidatePath(`/fr/wineries/${winerySlug}`);
-    revalidatePath(`/de/wineries/${winerySlug}`);
-    revalidatePath(`/en/wineries/${winerySlug}`);
-  }
-
-  // Home page (featured wineries / experiences may include this winery)
-  revalidatePath('/');
-  revalidatePath('/fr');
-  revalidatePath('/de');
-  revalidatePath('/en');
 }
