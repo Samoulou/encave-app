@@ -126,7 +126,8 @@
       "region": "Ganzes Wallis",
       "subject": "Verfügbare Erlebnisse",
       "spots": "2+ Plätze"
-    }
+    },
+    "wines": "Weine"
   },
   "locale": {
     "fr": "Francais",
@@ -987,7 +988,9 @@
       "saving": "Wird gespeichert...",
       "updated": "Stornierungsbedingungen aktualisiert",
       "updateError": "Die Stornierungsbedingungen konnten nicht gespeichert werden. Bitte versuchen Sie es erneut."
-    }
+    },
+    "winesSectionTitle": "Ihre Weine",
+    "winesSectionSubtitle": "Die Weine des Weinguts – vor Ort zu degustieren."
   },
   "dashboard": {
     "title": "Dashboard",
@@ -1495,6 +1498,10 @@
       "wineryProfile": {
         "title": "Weingut-Profil | EnCave",
         "description": "Verwalten Sie Ihr Weingut-Profil"
+      },
+      "wines": {
+        "title": "Meine Weine | EnCave",
+        "description": "Verwalten Sie Ihre Weinkarte"
       }
     },
     "onboarding": {
@@ -1542,6 +1549,10 @@
     "bookingError": {
       "title": "Buchung unterbrochen | EnCave",
       "description": "Setzen Sie Ihre Buchung dort fort, wo Sie aufgehört haben"
+    },
+    "wineOrder": {
+      "title": "Ihre Favoriten bestellen | EnCave",
+      "description": "Fragen Sie Ihre Lieblingsweine direkt beim Weingut an"
     }
   },
   "about": {
@@ -2121,6 +2132,58 @@
         "srToComplete": "Offenes Kriterium:",
         "srInProgress": "Laufendes Kriterium:"
       }
+    },
+    "wines": {
+      "title": "Meine Weine",
+      "subtitle": "Ihre Weinkarte — haken Sie sie nach jedem Besuch auf dem Degustationsblatt ab.",
+      "shopTeaser": "Bald: online verkaufen",
+      "loading": "Weine werden geladen…",
+      "statsTitle": "Lieblingsweine-E-Mails",
+      "statsSent": "Gesendete Zusammenfassungen",
+      "statsOpened": "Geöffnet",
+      "statsClicked": "Geklickt",
+      "addTitle": "Wein hinzufügen",
+      "fieldName": "Name",
+      "fieldNamePlaceholder": "Fendant Les Murettes",
+      "fieldGrape": "Rebsorte",
+      "fieldGrapePlaceholder": "Chasselas",
+      "fieldVintage": "Jahrgang",
+      "fieldPrice": "Preis (CHF)",
+      "addButton": "Hinzufügen",
+      "added": "{name} zu Ihrer Karte hinzugefügt",
+      "updated": "{name} aktualisiert",
+      "deleted": "{name} gelöscht",
+      "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+      "deleteConflict": "Dieser Wein wurde bei einer Degustation serviert — er behält seine Historie. Setzen Sie ihn stattdessen auf nicht verfügbar.",
+      "emptyTitle": "Noch keine Weine",
+      "emptyDescription": "Fügen Sie Ihre Weine hinzu, um sie auf dem Degustationsblatt abzuhaken und auf Ihrer Seite zu zeigen.",
+      "available": "Verfügbar",
+      "unavailable": "Nicht verfügbar",
+      "availabilityToggle": "Verfügbarkeit von {name}",
+      "edit": "{name} bearbeiten",
+      "delete": "{name} löschen",
+      "deleteConfirmTitle": "{name} löschen?",
+      "deleteConfirmDescription": "Der Wein wird von Ihrer Karte entfernt. Dies kann nicht rückgängig gemacht werden.",
+      "deleteConfirmButton": "Löschen",
+      "cancel": "Abbrechen",
+      "saveButton": "Speichern"
+    },
+    "tastingSheet": {
+      "title": "Degustationsblatt",
+      "subtitle": "Haken Sie die servierten Weine ab — Ihre Gäste erhalten ihre Favoriten per E-Mail.",
+      "noWines": "Fügen Sie zuerst Ihre Weine hinzu, um das Degustationsblatt auszufüllen.",
+      "manageWines": "Meine Weine verwalten",
+      "toggleWine": "Serviert: {name}",
+      "checkedCount": "{count, plural, =0 {Kein Wein abgehakt} one {# Wein abgehakt} other {# Weine abgehakt}}",
+      "sendButton": "Zusammenfassung senden",
+      "clearButton": "Blatt leeren",
+      "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+      "cleared": "Blatt geleert — es wird keine Zusammenfassung gesendet.",
+      "armedNote": "{count, plural, one {Die Zusammenfassung erreicht # Gast} other {Die Zusammenfassung erreicht # Gäste}} — Versand am {date}.",
+      "alreadyFilled": "Blatt gespeichert — die Zusammenfassung wird zwei Tage nach dem Besuch automatisch versendet.",
+      "alertTitle": "Degustationsblatt auszufüllen",
+      "alertDescription": "{count, plural, one {# heutige Session wartet auf ihr Blatt} other {# heutige Sessions warten auf ihre Blätter}} — haken Sie die servierten Weine ab, um die Favoriten-E-Mail auszulösen.",
+      "alertCta": "Blatt ausfüllen"
     }
   },
   "Public": {
@@ -2180,5 +2243,21 @@
     },
     "reselectCta": "Verfügbarkeit erneut ansehen",
     "selectionRecap": "{date} · {time} · {guests, plural, one {# Person} other {# Personen}}"
+  },
+  "wineOrder": {
+    "title": "Ihre Favoriten bei {wineryName}",
+    "subtitle": "Passen Sie die Mengen an und senden Sie Ihre Anfrage — das Weingut kontaktiert Sie wegen Lieferung und Zahlung.",
+    "loading": "Ihre Auswahl wird geladen…",
+    "toggleWine": "{name} bestellen",
+    "decreaseQuantity": "Menge von {name} verringern",
+    "increaseQuantity": "Menge von {name} erhöhen",
+    "total": "Unverbindliche Summe",
+    "submit": "Anfrage senden",
+    "note": "Ihre Anfrage geht mit Ihren Reservierungsdaten direkt an {wineryName}.",
+    "errorGeneric": "Anfrage konnte nicht gesendet werden. Bitte versuchen Sie es gleich noch einmal.",
+    "sentTitle": "Anfrage gesendet!",
+    "sentDescription": "{wineryName} hat Ihre Auswahl erhalten und meldet sich bald bei Ihnen.",
+    "alreadyTitle": "Anfrage bereits gesendet",
+    "alreadyDescription": "{wineryName} hat Ihre Anfrage für diese Degustation bereits erhalten."
   }
 }

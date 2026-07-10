@@ -5,6 +5,8 @@ import { Link } from '@/i18n/navigation';
 import { ArrowLeft, MapPin, Phone, Mail, Calendar, Wine } from 'lucide-react';
 import { getWineryBySlug } from '@/server/queries/winery.queries';
 import { getExperiencesByWineryId } from '@/server/queries/experience.queries';
+import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
+import { formatCHF } from '@/lib/utils/currency';
 import { RelatedExperiences } from '@/components/features/experience/RelatedExperiences';
 import { VerifiedBadge } from '@/components/shared/VerifiedBadge';
 import { JsonLd } from '@/components/shared/JsonLd';
@@ -44,14 +46,18 @@ export async function generateMetadata({
 
 export default async function WineryPage({ params }: WineryPageProps) {
   const { slug } = await params;
-  const [winery, t] = await Promise.all([
+  const [winery, t, tastingEnabled] = await Promise.all([
     getWineryBySlug(slug),
     getTranslations('winery'),
+    isFlagEnabled('TASTING_SHEET'),
   ]);
 
   if (!winery) {
     notFound();
   }
+
+  // P-07 / L-064: public wine list, entirely behind the TASTING_SHEET flag.
+  const wines = tastingEnabled ? (winery.wines ?? []) : [];
 
   const experiences = await getExperiencesByWineryId(winery.id);
 
@@ -169,6 +175,43 @@ export default async function WineryPage({ params }: WineryPageProps) {
                   </p>
                 </div>
               </section>
+
+              {/* Wines (P-07 / L-064) */}
+              {wines.length > 0 && (
+                <section className="rounded-xl bg-white p-6 shadow-warm lg:p-8">
+                  <h2 className="font-display text-xl font-semibold text-slate-900">
+                    {t('winesSectionTitle')}
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    {t('winesSectionSubtitle')}
+                  </p>
+                  <ul className="mt-4 divide-y divide-stone-100">
+                    {wines.map((wine) => (
+                      <li
+                        key={wine.id}
+                        className="flex items-baseline justify-between gap-4 py-3"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate font-medium text-slate-900">
+                            {wine.name}
+                            {wine.vintage != null && (
+                              <span className="ml-2 font-normal text-slate-500">
+                                {wine.vintage}
+                              </span>
+                            )}
+                          </p>
+                          <p className="truncate text-sm text-slate-500">
+                            {wine.grapeVariety}
+                          </p>
+                        </div>
+                        <p className="shrink-0 font-display font-semibold text-burgundy-800">
+                          {formatCHF(wine.price)}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
 
               {/* Gallery */}
               {winery.galleryImages.length > 0 && (

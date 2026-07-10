@@ -2,6 +2,26 @@ import type { Locale } from '@prisma/client';
 
 // Email subject lines
 export const subjects = {
+  tastingRecap: {
+    FR: 'Vos coups de cœur chez {wineryName}',
+    DE: 'Ihre Favoriten bei {wineryName}',
+    EN: 'Your favourites at {wineryName}',
+  },
+  tastingSheetReminder: {
+    FR: 'Fiche dégustation à remplir',
+    DE: 'Degustationsblatt auszufüllen',
+    EN: 'Tasting sheet to fill in',
+  },
+  wineOrderRequestWinery: {
+    FR: 'Nouvelle demande de commande — {clientName}',
+    DE: 'Neue Bestellanfrage — {clientName}',
+    EN: 'New order request — {clientName}',
+  },
+  wineOrderRequestClient: {
+    FR: 'Votre demande de commande chez {wineryName}',
+    DE: 'Ihre Bestellanfrage bei {wineryName}',
+    EN: 'Your order request at {wineryName}',
+  },
   bookingConfirmation: {
     FR: 'Confirmation de votre reservation',
     DE: 'Bestatigung Ihrer Reservierung',
@@ -725,6 +745,102 @@ export const accountDeleted = {
     FR: "Conformément au droit suisse, nous conservons l'historique anonymisé de vos réservations pendant 10 ans pour des raisons comptables.",
     DE: 'Gemäss schweizerischem Recht bewahren wir den anonymisierten Verlauf Ihrer Reservierungen aus buchhalterischen Gründen während 10 Jahren auf.',
     EN: 'In accordance with Swiss law, we retain the anonymised history of your bookings for 10 years for accounting purposes.',
+  },
+} as const;
+
+// Tasting recap email strings (P-07 / email #3, US-230)
+export const tastingRecap = {
+  title: {
+    FR: 'Vos coups de cœur chez {wineryName}',
+    DE: 'Ihre Favoriten bei {wineryName}',
+    EN: 'Your favourites at {wineryName}',
+  },
+  intro: {
+    FR: 'Bonjour {guestName}, merci de votre visite ! Voici les vins que vous avez dégustés — de quoi prolonger le moment à la maison.',
+    DE: 'Guten Tag {guestName}, danke für Ihren Besuch! Hier sind die Weine, die Sie degustiert haben — um den Moment zu Hause zu verlängern.',
+    EN: 'Hello {guestName}, thank you for your visit! Here are the wines you tasted — a way to bring the moment home.',
+  },
+  cta: {
+    FR: 'Commander ces vins',
+    DE: 'Diese Weine bestellen',
+    EN: 'Order these wines',
+  },
+  note: {
+    FR: 'Votre demande part directement chez {wineryName}, qui vous recontactera pour la livraison et le paiement.',
+    DE: 'Ihre Anfrage geht direkt an {wineryName}, das Sie für Lieferung und Zahlung kontaktieren wird.',
+    EN: 'Your request goes directly to {wineryName}, who will get back to you about delivery and payment.',
+  },
+} as const;
+
+// Empty tasting sheet reminder, 21h (P-07 / email #21)
+export const tastingSheetReminder = {
+  title: {
+    FR: 'Votre fiche dégustation vous attend',
+    DE: 'Ihr Degustationsblatt wartet auf Sie',
+    EN: 'Your tasting sheet is waiting',
+  },
+  intro: {
+    FR: "Bonjour {firstName}, vos hôtes du jour sont repartis — cochez les vins servis pour qu'ils reçoivent leurs coups de cœur par email.",
+    DE: 'Guten Tag {firstName}, Ihre heutigen Gäste sind abgereist — haken Sie die servierten Weine ab, damit sie ihre Favoriten per E-Mail erhalten.',
+    EN: 'Hello {firstName}, today’s guests have left — tick the wines you served so they receive their favourites by email.',
+  },
+  sessionLine: {
+    FR: '{title} — {timeSlot}, {count} pers.',
+    DE: '{title} — {timeSlot}, {count} Pers.',
+    EN: '{title} — {timeSlot}, {count} guests',
+  },
+  cta: {
+    FR: 'Remplir la fiche',
+    DE: 'Blatt ausfüllen',
+    EN: 'Fill in the sheet',
+  },
+} as const;
+
+// Wine order request from the recap CTA (P-07 / US-230)
+export const wineOrderRequest = {
+  winery: {
+    title: {
+      FR: 'Nouvelle demande de commande',
+      DE: 'Neue Bestellanfrage',
+      EN: 'New order request',
+    },
+    intro: {
+      FR: '{clientName} a dégusté chez vous ({reference}) et souhaite commander :',
+      DE: '{clientName} hat bei Ihnen degustiert ({reference}) und möchte bestellen:',
+      EN: '{clientName} tasted at your winery ({reference}) and would like to order:',
+    },
+    contact: {
+      FR: 'Coordonnées : {email}{phone}',
+      DE: 'Kontakt: {email}{phone}',
+      EN: 'Contact details: {email}{phone}',
+    },
+    total: {
+      FR: 'Total indicatif : {amount}',
+      DE: 'Unverbindliche Summe: {amount}',
+      EN: 'Indicative total: {amount}',
+    },
+    note: {
+      FR: 'Répondez directement au client pour convenir de la livraison et du paiement.',
+      DE: 'Antworten Sie dem Kunden direkt, um Lieferung und Zahlung zu vereinbaren.',
+      EN: 'Reply to the client directly to arrange delivery and payment.',
+    },
+  },
+  client: {
+    title: {
+      FR: 'Votre demande est partie !',
+      DE: 'Ihre Anfrage ist unterwegs!',
+      EN: 'Your request is on its way!',
+    },
+    intro: {
+      FR: 'Nous avons transmis votre demande à {wineryName}, qui vous recontactera très vite pour la livraison et le paiement.',
+      DE: 'Wir haben Ihre Anfrage an {wineryName} weitergeleitet — man wird Sie bald wegen Lieferung und Zahlung kontaktieren.',
+      EN: 'We forwarded your request to {wineryName}, who will get back to you soon about delivery and payment.',
+    },
+    recap: {
+      FR: 'Votre sélection :',
+      DE: 'Ihre Auswahl:',
+      EN: 'Your selection:',
+    },
   },
 } as const;
 

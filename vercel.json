@@ -23,6 +23,46 @@
     {
       "path": "/api/cron/weekly-summary",
       "schedule": "0 6 * * 1"
+    },
+    {
+      "path": "/api/cron/process-scheduled-jobs?slot=0",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/process-scheduled-jobs?slot=3",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/process-scheduled-jobs?slot=6",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/process-scheduled-jobs?slot=9",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/process-scheduled-jobs?slot=12",
+      "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/cron/process-scheduled-jobs?slot=15",
+      "schedule": "0 15 * * *"
+    },
+    {
+      "path": "/api/cron/process-scheduled-jobs?slot=18",
+      "schedule": "0 18 * * *"
+    },
+    {
+      "path": "/api/cron/process-scheduled-jobs?slot=21",
+      "schedule": "0 21 * * *"
+    },
+    {
+      "path": "/api/cron/tasting-sheet-reminder?window=cest",
+      "schedule": "0 19 * * *"
+    },
+    {
+      "path": "/api/cron/tasting-sheet-reminder?window=cet",
+      "schedule": "0 20 * * *"
     }
   ]
 }

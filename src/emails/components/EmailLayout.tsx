@@ -6,6 +6,11 @@ interface EmailLayoutProps {
   children: ReactNode;
   locale: Locale;
   preview?: string;
+  /**
+   * Tokenized opt-out link (P-07, client_email_preferences). Defaults to
+   * the generic page for templates that predate the tokenized route.
+   */
+  unsubscribeUrl?: string;
 }
 
 const footerText: Record<Locale, { tagline: string; unsubscribe: string }> = {
@@ -26,7 +31,12 @@ const footerText: Record<Locale, { tagline: string; unsubscribe: string }> = {
   },
 };
 
-export function EmailLayout({ children, locale, preview }: EmailLayoutProps) {
+export function EmailLayout({
+  children,
+  locale,
+  preview,
+  unsubscribeUrl = 'https://encave.ch/unsubscribe',
+}: EmailLayoutProps) {
   const footer = footerText[locale];
 
   return (
@@ -112,7 +122,7 @@ export function EmailLayout({ children, locale, preview }: EmailLayoutProps) {
               }}
             >
               <a
-                href="https://encave.ch/unsubscribe"
+                href={unsubscribeUrl}
                 style={{ color: '#9ca3af', textDecoration: 'underline' }}
               >
                 {footer.unsubscribe}

@@ -23,6 +23,13 @@ import {
   DailyDigestEmail,
   PostExperienceFollowUpEmail,
   WeeklySummaryEmail,
+  TastingRecapEmail,
+  type TastingRecapWine,
+  WineOrderRequestWineryEmail,
+  WineOrderRequestClientEmail,
+  type WineOrderRequestItemLine,
+  TastingSheetReminderEmail,
+  type ReminderSessionLine,
 } from '@/emails';
 import { subjects, t } from '@/emails/translations';
 import { generateBookingQrPng } from '@/server/services/qr-code.service';
@@ -45,18 +52,32 @@ interface SendEmailOptions {
     contentType?: string;
     cid?: string;
   }[];
+  /**
+   * Resend tags (P-07 tracking): surfaced back by the open/click webhook.
+   * Values must be ASCII letters, numbers, underscores or dashes.
+   */
+  tags?: { name: string; value: string }[];
+}
+
+export interface SendEmailResult {
+  ok: boolean;
+  /** Resend message id — matches webhook events to EmailLog rows. */
+  messageId?: string;
 }
 
 /**
  * BACK-004 FIX: Send email with exponential backoff retry
- * Retries up to 3 times with delays of 1s, 2s, 4s
+ * Retries up to 3 times with delays of 1s, 2s, 4s.
+ * Detailed variant (P-07): also returns the Resend message id so the
+ * open/click webhook can be matched back to the EmailLog row.
  */
-async function sendEmail({
+async function sendEmailDetailed({
   to,
   subject,
   html,
   attachments,
-}: SendEmailOptions): Promise<boolean> {
+  tags,
+}: SendEmailOptions): Promise<SendEmailResult> {
   if (!resend) {
     // In production a missing RESEND_API_KEY is an outage, not a no-op:
     // returning success would set dedup flags (confirmationSentAt, …) and
@@ -70,23 +91,24 @@ async function sendEmail({
           subject,
         }
       );
-      return false;
+      return { ok: false };
     }
     logInfo('Resend not configured, skipping email (non-production)', {
       to,
       subject,
     });
-    return true;
+    return { ok: true };
   }
 
   for (let attempt = 1; attempt <= MAX_RETRY_ATTEMPTS; attempt++) {
     try {
-      const { error } = await resend.emails.send({
+      const { data, error } = await resend.emails.send({
         from: FROM_EMAIL,
         to,
         subject,
         html,
         attachments,
+        tags,
       });
 
       if (error) {
@@ -98,7 +120,7 @@ async function sendEmail({
         });
         if (attempt === MAX_RETRY_ATTEMPTS) {
           logError('Email max retries reached', error, { to, subject });
-          return false;
+          return { ok: false };
         }
         // Wait before retrying (exponential backoff: 1s, 2s, 4s)
         const delay = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt - 1);
@@ -106,7 +128,7 @@ async function sendEmail({
         continue;
       }
 
-      return true;
+      return { ok: true, messageId: data?.id };
     } catch (error) {
       logWarn(`Email attempt ${attempt}/${MAX_RETRY_ATTEMPTS} error`, {
         to,
@@ -115,7 +137,7 @@ async function sendEmail({
       });
       if (attempt === MAX_RETRY_ATTEMPTS) {
         logError('Email max retries reached', error, { to, subject });
-        return false;
+        return { ok: false };
       }
       // Wait before retrying
       const delay = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt - 1);
@@ -123,7 +145,12 @@ async function sendEmail({
     }
   }
 
-  return false;
+  return { ok: false };
+}
+
+async function sendEmail(options: SendEmailOptions): Promise<boolean> {
+  const { ok } = await sendEmailDetailed(options);
+  return ok;
 }
 
 /**
@@ -712,5 +739,166 @@ export async function sendWeeklySummaryEmail(
     to: email,
     subject: t(subjects.weeklySummary, loc),
     html,
+  });
+}
+
+// Tasting loop emails (P-07 / US-230)
+
+export interface TastingRecapEmailData {
+  bookingId: string;
+  wineryId: string;
+  guestName: string;
+  wineryName: string;
+  wines: TastingRecapWine[];
+  /** Tokenized wine-order page URL (D3). */
+  orderUrl: string;
+  /** Tokenized client opt-out URL (LCD). */
+  unsubscribeUrl: string;
+}
+
+/**
+ * Email #3 « Vos coups de cœur », J+2. Returns the detailed result so the
+ * scheduled-job handler can persist the Resend message id (tracking A3).
+ */
+export async function sendTastingRecapEmail(
+  email: string,
+  data: TastingRecapEmailData,
+  locale?: Locale | null
+): Promise<SendEmailResult> {
+  const loc = getLocale(locale);
+  const html = await render(
+    TastingRecapEmail({
+      locale: loc,
+      guestName: data.guestName,
+      wineryName: data.wineryName,
+      wines: data.wines,
+      orderUrl: data.orderUrl,
+      unsubscribeUrl: data.unsubscribeUrl,
+    })
+  );
+
+  return sendEmailDetailed({
+    to: email,
+    subject: t(subjects.tastingRecap, loc).replace(
+      '{wineryName}',
+      data.wineryName
+    ),
+    html,
+    tags: [
+      { name: 'email_type', value: 'tasting_recap' },
+      { name: 'winery_id', value: data.wineryId },
+      { name: 'booking_id', value: data.bookingId },
+    ],
+  });
+}
+
+export interface WineOrderRequestEmailData {
+  bookingId: string;
+  wineryId: string;
+  bookingReference: string;
+  clientName: string;
+  clientEmail: string;
+  clientPhone: string | null;
+  wineryName: string;
+  items: WineOrderRequestItemLine[];
+  totalCents: number;
+}
+
+/**
+ * Order request → winery (winemaker locale) + confirmation copy → client
+ * (Booking.locale). The winery email is the deliverable at launch (A6);
+ * when it fails, the client copy ("we forwarded your request") would be
+ * a lie — it is skipped, and the caller escalates the failure.
+ */
+export async function sendWineOrderRequestEmails(
+  wineryEmail: string,
+  data: WineOrderRequestEmailData,
+  wineryLocale: Locale | null | undefined,
+  clientLocale: Locale | null | undefined
+): Promise<{ winery: boolean; client: boolean }> {
+  const wineryLoc = getLocale(wineryLocale);
+  const clientLoc = getLocale(clientLocale);
+
+  const wineryHtml = await render(
+    WineOrderRequestWineryEmail({
+      locale: wineryLoc,
+      clientName: data.clientName,
+      clientEmail: data.clientEmail,
+      clientPhone: data.clientPhone,
+      bookingReference: data.bookingReference,
+      items: data.items,
+      totalCents: data.totalCents,
+    })
+  );
+  const wineryResult = await sendEmailDetailed({
+    to: wineryEmail,
+    subject: t(subjects.wineOrderRequestWinery, wineryLoc).replace(
+      '{clientName}',
+      data.clientName
+    ),
+    html: wineryHtml,
+    tags: [
+      { name: 'email_type', value: 'wine_order_request' },
+      { name: 'winery_id', value: data.wineryId },
+      { name: 'booking_id', value: data.bookingId },
+    ],
+  });
+
+  if (!wineryResult.ok) {
+    return { winery: false, client: false };
+  }
+
+  const clientHtml = await render(
+    WineOrderRequestClientEmail({
+      locale: clientLoc,
+      wineryName: data.wineryName,
+      items: data.items,
+      totalCents: data.totalCents,
+    })
+  );
+  const clientResult = await sendEmailDetailed({
+    to: data.clientEmail,
+    subject: t(subjects.wineOrderRequestClient, clientLoc).replace(
+      '{wineryName}',
+      data.wineryName
+    ),
+    html: clientHtml,
+  });
+
+  return { winery: true, client: clientResult.ok };
+}
+
+export interface TastingSheetReminderData {
+  wineryId: string;
+  firstName: string;
+  sessions: ReminderSessionLine[];
+  /** Deep link to the sessions calendar of the concerned experience. */
+  sheetUrl: string;
+}
+
+/** Email #21 — 21h empty-sheet reminder to the winemaker (L-063). */
+export async function sendTastingSheetReminderEmail(
+  email: string,
+  data: TastingSheetReminderData,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const html = await render(
+    TastingSheetReminderEmail({
+      locale: loc,
+      firstName: data.firstName,
+      sessions: data.sessions,
+      sheetUrl: data.sheetUrl,
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.tastingSheetReminder, loc),
+    html,
+    tags: [
+      { name: 'email_type', value: 'tasting_sheet_reminder' },
+      { name: 'winery_id', value: data.wineryId },
+    ],
   });
 }

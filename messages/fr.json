@@ -126,7 +126,8 @@
       "region": "Tout le Valais",
       "subject": "Expériences disponibles",
       "spots": "2+ places"
-    }
+    },
+    "wines": "Vins"
   },
   "locale": {
     "fr": "Français",
@@ -987,7 +988,9 @@
       "saving": "Enregistrement...",
       "updated": "Politique d'annulation mise à jour",
       "updateError": "Impossible d'enregistrer la politique d'annulation. Veuillez réessayer."
-    }
+    },
+    "winesSectionTitle": "Ses vins",
+    "winesSectionSubtitle": "Les vins du domaine, à déguster sur place."
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -1495,6 +1498,10 @@
       "wineryProfile": {
         "title": "Profil du domaine | EnCave",
         "description": "Gérez le profil de votre domaine"
+      },
+      "wines": {
+        "title": "Mes vins | EnCave",
+        "description": "Gérez votre carte des vins"
       }
     },
     "onboarding": {
@@ -1542,6 +1549,10 @@
     "bookingError": {
       "title": "Réservation interrompue | EnCave",
       "description": "Reprenez votre réservation là où vous l'avez laissée"
+    },
+    "wineOrder": {
+      "title": "Commander vos coups de cœur | EnCave",
+      "description": "Demandez vos vins préférés directement à la cave"
     }
   },
   "about": {
@@ -2116,6 +2127,58 @@
         "srToComplete": "Critère à compléter :",
         "srInProgress": "Critère en cours :"
       }
+    },
+    "wines": {
+      "title": "Mes vins",
+      "subtitle": "Votre carte des vins — cochez-les sur la fiche dégustation après chaque visite.",
+      "shopTeaser": "Bientôt : vendez en ligne",
+      "loading": "Chargement des vins…",
+      "statsTitle": "Emails coups de cœur",
+      "statsSent": "Récaps envoyés",
+      "statsOpened": "Ouverts",
+      "statsClicked": "Cliqués",
+      "addTitle": "Ajouter un vin",
+      "fieldName": "Nom",
+      "fieldNamePlaceholder": "Fendant Les Murettes",
+      "fieldGrape": "Cépage",
+      "fieldGrapePlaceholder": "Chasselas",
+      "fieldVintage": "Millésime",
+      "fieldPrice": "Prix (CHF)",
+      "addButton": "Ajouter",
+      "added": "{name} ajouté à votre carte",
+      "updated": "{name} mis à jour",
+      "deleted": "{name} supprimé",
+      "saveFailed": "Impossible d'enregistrer. Réessayez.",
+      "deleteConflict": "Ce vin a été servi en dégustation — il garde l'historique. Passez-le en indisponible plutôt.",
+      "emptyTitle": "Aucun vin pour l'instant",
+      "emptyDescription": "Ajoutez vos vins pour les cocher sur la fiche dégustation et les présenter sur votre page.",
+      "available": "Disponible",
+      "unavailable": "Indisponible",
+      "availabilityToggle": "Disponibilité de {name}",
+      "edit": "Modifier {name}",
+      "delete": "Supprimer {name}",
+      "deleteConfirmTitle": "Supprimer {name} ?",
+      "deleteConfirmDescription": "Le vin sera retiré de votre carte. Cette action est définitive.",
+      "deleteConfirmButton": "Supprimer",
+      "cancel": "Annuler",
+      "saveButton": "Enregistrer"
+    },
+    "tastingSheet": {
+      "title": "Fiche dégustation",
+      "subtitle": "Cochez les vins servis — vos hôtes recevront leurs coups de cœur par email.",
+      "noWines": "Ajoutez d'abord vos vins pour remplir la fiche dégustation.",
+      "manageWines": "Gérer mes vins",
+      "toggleWine": "Servi : {name}",
+      "checkedCount": "{count, plural, =0 {Aucun vin coché} one {# vin coché} other {# vins cochés}}",
+      "sendButton": "Envoyer le récap",
+      "clearButton": "Vider la fiche",
+      "saveFailed": "Impossible d'enregistrer la fiche. Réessayez.",
+      "cleared": "Fiche vidée — aucun récap ne partira.",
+      "armedNote": "{count, plural, one {Le récap partira à # hôte} other {Le récap partira à # hôtes}} — envoi prévu {date}.",
+      "alreadyFilled": "Fiche enregistrée — le récap partira automatiquement à J+2.",
+      "alertTitle": "Fiche dégustation à remplir",
+      "alertDescription": "{count, plural, one {# session d'aujourd'hui attend sa fiche} other {# sessions d'aujourd'hui attendent leur fiche}} — cochez les vins servis pour déclencher les coups de cœur.",
+      "alertCta": "Remplir la fiche"
     }
   },
   "Public": {
@@ -2175,5 +2238,21 @@
     },
     "reselectCta": "Revoir les disponibilités",
     "selectionRecap": "{date} · {time} · {guests, plural, one {# personne} other {# personnes}}"
+  },
+  "wineOrder": {
+    "title": "Vos coups de cœur chez {wineryName}",
+    "subtitle": "Ajustez les quantités et envoyez votre demande — la cave vous recontacte pour la livraison et le paiement.",
+    "loading": "Chargement de votre sélection…",
+    "toggleWine": "Commander {name}",
+    "decreaseQuantity": "Réduire la quantité de {name}",
+    "increaseQuantity": "Augmenter la quantité de {name}",
+    "total": "Total indicatif",
+    "submit": "Envoyer la demande",
+    "note": "Votre demande part directement chez {wineryName} avec vos coordonnées de réservation.",
+    "errorGeneric": "Impossible d'envoyer la demande. Réessayez dans un instant.",
+    "sentTitle": "Demande envoyée !",
+    "sentDescription": "{wineryName} a reçu votre sélection et vous recontacte très vite.",
+    "alreadyTitle": "Demande déjà envoyée",
+    "alreadyDescription": "{wineryName} a déjà reçu votre demande pour cette dégustation."
   }
 }

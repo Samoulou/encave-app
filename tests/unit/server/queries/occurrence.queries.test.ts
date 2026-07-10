@@ -7,6 +7,8 @@ vi.mock('@/server/db', () => ({
     experienceOccurrence: { findMany: vi.fn() },
     booking: { findMany: vi.fn(), groupBy: vi.fn() },
     blockedDate: { findMany: vi.fn() },
+    // P-07: the calendar also loads the month's tasting sheets.
+    bookingWine: { findMany: vi.fn() },
   },
 }));
 
@@ -38,6 +40,8 @@ function booking(
     date: D1,
     timeSlot: '10:00',
     expiresAt: null,
+    // P-07: the calendar read piggybacks the tasting sheet on the booking.
+    wines: [],
     ...overrides,
   };
 }
@@ -60,6 +64,7 @@ describe('getOccurrenceCalendar (P-05 / L-132)', () => {
       },
     ] as never);
     vi.mocked(db.blockedDate.findMany).mockResolvedValue([] as never);
+    vi.mocked(db.bookingWine.findMany).mockResolvedValue([] as never);
   });
 
   it('lists cancelled bookings as attendees WITHOUT counting their seats', async () => {

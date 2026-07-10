@@ -7,22 +7,32 @@ import {
   Home,
   PartyPopper,
   Calendar,
+  Grape,
   Settings,
   Menu,
   X,
   Wine,
   Wallet,
 } from 'lucide-react';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
 interface DashboardSidebarProps {
   wineryName: string;
   userName?: string;
+  /** TASTING_SHEET flag (P-07) — server-resolved by the dashboard layout. */
+  showWines?: boolean;
 }
 
-const sidebarLinks = [
+interface SidebarLink {
+  href: string;
+  labelKey: string;
+  icon: typeof Home;
+  exact?: boolean;
+}
+
+const sidebarLinks: SidebarLink[] = [
   { href: '/dashboard', labelKey: 'dashboard', icon: Home, exact: true },
   {
     href: '/dashboard/experiences',
@@ -35,9 +45,16 @@ const sidebarLinks = [
   { href: '/dashboard/settings', labelKey: 'settings', icon: Settings },
 ];
 
+const winesLink: SidebarLink = {
+  href: '/dashboard/wines',
+  labelKey: 'wines',
+  icon: Grape,
+};
+
 export function DashboardSidebar({
   wineryName,
   userName,
+  showWines = false,
 }: DashboardSidebarProps) {
   const pathname = usePathname();
   const currentPathname = pathname ?? '';
@@ -45,14 +62,26 @@ export function DashboardSidebar({
   const router = useRouter();
   const t = useTranslations('nav');
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const links = useMemo(() => {
+    if (!showWines) return sidebarLinks;
+    // « Vins » right after « Réservations » (V3 pages inventory §6).
+    const bookingsIndex = sidebarLinks.findIndex(
+      (link) => link.labelKey === 'bookings'
+    );
+    return [
+      ...sidebarLinks.slice(0, bookingsIndex + 1),
+      winesLink,
+      ...sidebarLinks.slice(bookingsIndex + 1),
+    ];
+  }, [showWines]);
 
   // Prefetch all dashboard routes on mount for instant navigation
   useEffect(() => {
-    sidebarLinks.forEach((link) => {
+    links.forEach((link) => {
       router.prefetch(`/${locale}${link.href}`);
     });
     router.prefetch(`/${locale}`);
-  }, [locale, router]);
+  }, [locale, router, links]);
 
   // Prefetch on hover for immediate response
   const handlePrefetch = useCallback(
@@ -121,7 +150,7 @@ export function DashboardSidebar({
             className="flex flex-col gap-2"
             aria-label={t('dashboardNavigation')}
           >
-            {sidebarLinks.map((link) => {
+            {links.map((link) => {
               const localizedHref = `/${locale}${link.href}`;
               const isActive = link.exact
                 ? currentPathname === localizedHref

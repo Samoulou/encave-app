@@ -58,3 +58,15 @@ export type {
   WeeklySummaryEmailProps,
   WeeklySummaryStats,
 } from './WeeklySummaryEmail';
+
+export { TastingRecapEmail } from './TastingRecapEmail';
+export type { TastingRecapWine } from './TastingRecapEmail';
+
+export {
+  WineOrderRequestWineryEmail,
+  WineOrderRequestClientEmail,
+} from './WineOrderRequestEmail';
+export type { WineOrderRequestItemLine } from './WineOrderRequestEmail';
+
+export { TastingSheetReminderEmail } from './TastingSheetReminderEmail';
+export type { ReminderSessionLine } from './TastingSheetReminderEmail';

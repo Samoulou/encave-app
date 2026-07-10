@@ -88,6 +88,11 @@ export interface OccurrenceCalendarEntryDTO {
   capacityOverride: number | null;
   bookedCount: number;
   isDateBlocked: boolean;
+  /**
+   * Union of the wines served at this session (BookingWine of the listed
+   * attendees) — the tasting sheet's initial toggle state (P-07 / L-061).
+   */
+  servedWineIds: string[];
   attendees: {
     bookingId: string;
     reference: string;
@@ -183,6 +188,9 @@ export const getOccurrenceCalendar = cache(async function getOccurrenceCalendar(
         date: true,
         timeSlot: true,
         expiresAt: true,
+        // Tasting sheet of the month's sessions (P-07) — piggybacked on
+        // the booking read, no extra query.
+        wines: { select: { wineId: true } },
       },
     }),
     db.blockedDate.findMany({
@@ -219,6 +227,7 @@ export const getOccurrenceCalendar = cache(async function getOccurrenceCalendar(
       capacityOverride: o.capacityOverride,
       bookedCount: 0,
       isDateBlocked: blockedKeys.has(o.date.toISOString().slice(0, 10)),
+      servedWineIds: [],
       attendees: [],
     });
   }
@@ -236,9 +245,24 @@ export const getOccurrenceCalendar = cache(async function getOccurrenceCalendar(
         capacityOverride: null,
         bookedCount: 0,
         isDateBlocked: blockedKeys.has(b.date.toISOString().slice(0, 10)),
+        servedWineIds: [],
         attendees: [],
       };
       entries.set(key, entry);
+    }
+    // Sheet toggle state = union over ACTIVE bookings only — the fan-out
+    // (saveTastingSheet) only syncs CONFIRMED/COMPLETED rows, so a stale
+    // sheet on a cancelled/no-show booking must never resurrect unchecked
+    // wines in the UI.
+    if (
+      b.status === BookingStatus.CONFIRMED ||
+      b.status === BookingStatus.COMPLETED
+    ) {
+      for (const { wineId } of b.wines) {
+        if (!entry.servedWineIds.includes(wineId)) {
+          entry.servedWineIds.push(wineId);
+        }
+      }
     }
     if (b.status !== BookingStatus.PENDING_PAYMENT) {
       entry.attendees.push({

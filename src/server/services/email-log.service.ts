@@ -6,14 +6,25 @@ type EmailLogType =
   | 'reminder_2h'
   | 'daily_digest'
   | 'follow_up'
-  | 'weekly_summary';
+  | 'weekly_summary'
+  | 'tasting_recap'
+  | 'tasting_sheet_reminder'
+  | 'wine_order_request';
 
 type EmailLogStatus = 'sent' | 'failed' | 'skipped';
+
+// P-07: optional tracking metadata. resendMessageId links the row to
+// Resend open/click webhook events; wineryId powers per-winery stats.
+interface EmailLogMeta {
+  resendMessageId?: string;
+  wineryId?: string;
+}
 
 export async function logEmailSent(
   type: EmailLogType,
   recipientId: string,
-  bookingId?: string
+  bookingId?: string,
+  meta?: EmailLogMeta
 ): Promise<void> {
   try {
     await db.emailLog.create({
@@ -22,6 +33,8 @@ export async function logEmailSent(
         recipientId,
         bookingId,
         status: 'sent',
+        resendMessageId: meta?.resendMessageId,
+        wineryId: meta?.wineryId,
       },
     });
   } catch (error) {
@@ -33,7 +46,8 @@ export async function logEmailFailed(
   type: EmailLogType,
   recipientId: string,
   errorMessage: string,
-  bookingId?: string
+  bookingId?: string,
+  meta?: EmailLogMeta
 ): Promise<void> {
   try {
     await db.emailLog.create({
@@ -43,6 +57,7 @@ export async function logEmailFailed(
         bookingId,
         status: 'failed',
         errorMessage,
+        wineryId: meta?.wineryId,
       },
     });
   } catch (error) {
@@ -54,7 +69,8 @@ export async function logEmailSkipped(
   type: EmailLogType,
   recipientId: string,
   reason: string,
-  bookingId?: string
+  bookingId?: string,
+  meta?: EmailLogMeta
 ): Promise<void> {
   try {
     await db.emailLog.create({
@@ -64,6 +80,7 @@ export async function logEmailSkipped(
         bookingId,
         status: 'skipped',
         errorMessage: reason,
+        wineryId: meta?.wineryId,
       },
     });
   } catch (error) {

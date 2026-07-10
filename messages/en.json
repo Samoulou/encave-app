@@ -126,7 +126,8 @@
       "region": "All of Valais",
       "subject": "Available experiences",
       "spots": "2+ spots"
-    }
+    },
+    "wines": "Wines"
   },
   "locale": {
     "fr": "Francais",
@@ -987,7 +988,9 @@
       "saving": "Saving...",
       "updated": "Cancellation policy updated",
       "updateError": "Could not save the cancellation policy. Please try again."
-    }
+    },
+    "winesSectionTitle": "Their wines",
+    "winesSectionSubtitle": "The estate's wines, to taste on site."
   },
   "dashboard": {
     "title": "Dashboard",
@@ -1495,6 +1498,10 @@
       "wineryProfile": {
         "title": "Winery Profile | EnCave",
         "description": "Manage your winery profile"
+      },
+      "wines": {
+        "title": "My wines | EnCave",
+        "description": "Manage your wine list"
       }
     },
     "onboarding": {
@@ -1542,6 +1549,10 @@
     "bookingError": {
       "title": "Booking interrupted | EnCave",
       "description": "Pick up your booking where you left off"
+    },
+    "wineOrder": {
+      "title": "Order your favourites | EnCave",
+      "description": "Request your favourite wines directly from the winery"
     }
   },
   "about": {
@@ -2116,6 +2127,58 @@
         "srToComplete": "Pending criterion:",
         "srInProgress": "In-progress criterion:"
       }
+    },
+    "wines": {
+      "title": "My wines",
+      "subtitle": "Your wine list — tick them on the tasting sheet after each visit.",
+      "shopTeaser": "Coming soon: sell online",
+      "loading": "Loading wines…",
+      "statsTitle": "Favourites emails",
+      "statsSent": "Recaps sent",
+      "statsOpened": "Opened",
+      "statsClicked": "Clicked",
+      "addTitle": "Add a wine",
+      "fieldName": "Name",
+      "fieldNamePlaceholder": "Fendant Les Murettes",
+      "fieldGrape": "Grape variety",
+      "fieldGrapePlaceholder": "Chasselas",
+      "fieldVintage": "Vintage",
+      "fieldPrice": "Price (CHF)",
+      "addButton": "Add",
+      "added": "{name} added to your list",
+      "updated": "{name} updated",
+      "deleted": "{name} deleted",
+      "saveFailed": "Could not save. Please try again.",
+      "deleteConflict": "This wine was served during a tasting — it keeps its history. Mark it unavailable instead.",
+      "emptyTitle": "No wines yet",
+      "emptyDescription": "Add your wines to tick them on the tasting sheet and show them on your page.",
+      "available": "Available",
+      "unavailable": "Unavailable",
+      "availabilityToggle": "Availability of {name}",
+      "edit": "Edit {name}",
+      "delete": "Delete {name}",
+      "deleteConfirmTitle": "Delete {name}?",
+      "deleteConfirmDescription": "The wine will be removed from your list. This cannot be undone.",
+      "deleteConfirmButton": "Delete",
+      "cancel": "Cancel",
+      "saveButton": "Save"
+    },
+    "tastingSheet": {
+      "title": "Tasting sheet",
+      "subtitle": "Tick the wines you served — your guests will get their favourites by email.",
+      "noWines": "Add your wines first to fill in the tasting sheet.",
+      "manageWines": "Manage my wines",
+      "toggleWine": "Served: {name}",
+      "checkedCount": "{count, plural, =0 {No wine ticked} one {# wine ticked} other {# wines ticked}}",
+      "sendButton": "Send the recap",
+      "clearButton": "Clear the sheet",
+      "saveFailed": "Could not save the sheet. Please try again.",
+      "cleared": "Sheet cleared — no recap will be sent.",
+      "armedNote": "{count, plural, one {The recap will reach # guest} other {The recap will reach # guests}} — scheduled for {date}.",
+      "alreadyFilled": "Sheet saved — the recap goes out automatically two days after the visit.",
+      "alertTitle": "Tasting sheet to fill in",
+      "alertDescription": "{count, plural, one {# of today's sessions is waiting for its sheet} other {# of today's sessions are waiting for their sheets}} — tick the wines served to trigger the favourites email.",
+      "alertCta": "Fill in the sheet"
     }
   },
   "Public": {
@@ -2175,5 +2238,21 @@
     },
     "reselectCta": "See availability again",
     "selectionRecap": "{date} · {time} · {guests, plural, one {# guest} other {# guests}}"
+  },
+  "wineOrder": {
+    "title": "Your favourites at {wineryName}",
+    "subtitle": "Adjust the quantities and send your request — the winery will contact you about delivery and payment.",
+    "loading": "Loading your selection…",
+    "toggleWine": "Order {name}",
+    "decreaseQuantity": "Decrease quantity of {name}",
+    "increaseQuantity": "Increase quantity of {name}",
+    "total": "Indicative total",
+    "submit": "Send the request",
+    "note": "Your request goes directly to {wineryName} with your booking contact details.",
+    "errorGeneric": "Could not send the request. Please try again in a moment.",
+    "sentTitle": "Request sent!",
+    "sentDescription": "{wineryName} received your selection and will get back to you shortly.",
+    "alreadyTitle": "Request already sent",
+    "alreadyDescription": "{wineryName} already received your request for this tasting."
   }
 }

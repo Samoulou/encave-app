@@ -14,6 +14,7 @@ import { localDateKey, shiftMonthKey } from '@/lib/utils/date-key';
 import { dateKeyOf } from '@/lib/business-rules/occurrence-expansion';
 import { cn } from '@/lib/utils';
 import type { OccurrenceCalendarEntryDTO } from '@/server/queries/occurrence.queries';
+import type { WineDTO } from '@/server/queries/wine.queries';
 import type { Locale } from '@/i18n/routing';
 
 interface OccurrenceCalendarProps {
@@ -28,6 +29,8 @@ interface OccurrenceCalendarProps {
   /** Server-resolved "YYYY-MM" month being displayed. */
   monthKey: string;
   entries: OccurrenceCalendarEntryDTO[];
+  /** Winery wine catalogue (P-07) — null when TASTING_SHEET is OFF. */
+  tastingWines: WineDTO[] | null;
 }
 
 /** Stable key of a calendar entry — occurrence-backed or straggler. */
@@ -63,6 +66,7 @@ export function OccurrenceCalendar({
   canEdit,
   monthKey,
   entries,
+  tastingWines,
 }: OccurrenceCalendarProps) {
   const t = useTranslations('Dashboard.eventDetail.occurrences');
   const tDays = useTranslations('common.days.short');
@@ -273,6 +277,7 @@ export function OccurrenceCalendar({
         wineryName={wineryName}
         durationMinutes={durationMinutes}
         canEdit={canEdit}
+        tastingWines={tastingWines}
         onOpenChange={(open) => {
           if (!open) setSelectedKey(null);
         }}

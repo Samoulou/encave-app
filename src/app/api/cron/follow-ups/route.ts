@@ -5,9 +5,12 @@ import { sendPostExperienceFollowUpEmail } from '@/server/services/email.service
 import {
   logEmailSent,
   logEmailFailed,
+  logEmailSkipped,
 } from '@/server/services/email-log.service';
 import { startOfDay, subHours } from 'date-fns';
-import { BookingStatus } from '@prisma/client';
+import { BookingStatus, ScheduledJobStatus } from '@prisma/client';
+import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
+import { tastingRecapDedupeKey } from '@/lib/constants/wine';
 import { logError } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
@@ -32,7 +35,7 @@ export async function GET() {
   }
 
   const now = new Date();
-  const results = { sent: 0, failed: 0 };
+  const results = { sent: 0, failed: 0, skippedRecapArmed: 0 };
 
   try {
     // Find completed bookings that ended 22-26 hours ago
@@ -56,6 +59,33 @@ export async function GET() {
       },
     });
 
+    // P-07 / D4: when the tasting loop is ON and a booking has a recap
+    // armed (a non-CANCELLED TASTING_RECAP job — the sheet was filled),
+    // the generic J+1 follow-up is SKIPPED: the J+2 « coups de cœur »
+    // replaces it. Flag OFF = this whole block is inert (empty Set).
+    const recapArmed = new Set<string>();
+    if (bookings.length > 0 && (await isFlagEnabled('TASTING_SHEET'))) {
+      const jobs = await db.scheduledJob.findMany({
+        where: {
+          dedupeKey: { in: bookings.map((b) => tastingRecapDedupeKey(b.id)) },
+          // Armed = will be (or was) delivered. FAILED is deliberately
+          // NOT armed: if the recap died permanently, the generic J+1
+          // follow-up must still go out — never zero post-visit emails.
+          status: {
+            in: [
+              ScheduledJobStatus.PENDING,
+              ScheduledJobStatus.PROCESSING,
+              ScheduledJobStatus.DONE,
+            ],
+          },
+        },
+        select: { dedupeKey: true },
+      });
+      for (const job of jobs) {
+        if (job.dedupeKey) recapArmed.add(job.dedupeKey);
+      }
+    }
+
     // Filter by actual experience end time
     for (const booking of bookings) {
       try {
@@ -71,6 +101,19 @@ export async function GET() {
         );
 
         if (experienceEndTime < windowStart || experienceEndTime > windowEnd) {
+          continue;
+        }
+
+        // D4 skip — deliberately WITHOUT setting followUpSentAt: nothing
+        // was sent, and the 22-26h window keeps it from re-matching.
+        if (recapArmed.has(tastingRecapDedupeKey(booking.id))) {
+          await logEmailSkipped(
+            'follow_up',
+            booking.visitorEmail,
+            'tasting_recap_armed',
+            booking.id
+          );
+          results.skippedRecapArmed++;
           continue;
         }
 
