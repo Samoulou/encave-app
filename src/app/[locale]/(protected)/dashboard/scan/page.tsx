@@ -1,4 +1,7 @@
 import { setRequestLocale } from 'next-intl/server';
+import { redirect } from 'next/navigation';
+import { auth } from '@/server/auth';
+import { getScanDayList } from '@/server/queries/scan.queries';
 import { ScanClient } from './ScanClient';
 
 interface ScanPageProps {
@@ -10,9 +13,20 @@ export default async function ScanPage({
   params,
   searchParams,
 }: ScanPageProps) {
-  const { locale } = await params;
-  const { sessionId } = await searchParams;
+  const [{ locale }, { sessionId }, session] = await Promise.all([
+    params,
+    searchParams,
+    auth(),
+  ]);
   setRequestLocale(locale);
 
-  return <ScanClient expectedSessionId={sessionId} />;
+  if (!session?.user) {
+    redirect(`/${locale}/login`);
+  }
+
+  // Day mode (no session anchor): preload today's guest list so scanning
+  // keeps working offline (P-13 / D2). Session mode stays online-only.
+  const dayList = sessionId ? null : await getScanDayList(session.user.id);
+
+  return <ScanClient expectedSessionId={sessionId} dayList={dayList} />;
 }

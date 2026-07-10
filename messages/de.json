@@ -2249,7 +2249,12 @@
     "unknown": "Unbekannter QR-Code",
     "already": "Bereits eingecheckt",
     "counter": "{checkedIn} / {total} Gaeste eingecheckt",
-    "loadError": "Scan konnte nicht geladen werden"
+    "loadError": "Scan konnte nicht geladen werden",
+    "online": "Online",
+    "offline": "Offline — Scans werden später synchronisiert",
+    "pendingSync": "{count} Scan(s) zu synchronisieren",
+    "syncRejected": "{count} Scan(s) vom Server abgelehnt",
+    "notToday": "Ticket für heute unbekannt"
   },
   "imageUpload": {
     "clickToUpload": "Zum Hochladen eines Bildes klicken",

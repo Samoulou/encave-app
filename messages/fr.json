@@ -2244,7 +2244,12 @@
     "unknown": "QR non reconnu",
     "already": "Deja enregistre",
     "counter": "{checkedIn} / {total} clients enregistres",
-    "loadError": "Impossible de charger le scan"
+    "loadError": "Impossible de charger le scan",
+    "online": "En ligne",
+    "offline": "Hors ligne — les scans seront synchronisés",
+    "pendingSync": "{count} scan(s) à synchroniser",
+    "syncRejected": "{count} scan(s) refusé(s) par le serveur",
+    "notToday": "Billet inconnu pour aujourd'hui"
   },
   "imageUpload": {
     "clickToUpload": "Cliquez pour télécharger une image",

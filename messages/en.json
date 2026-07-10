@@ -2244,7 +2244,12 @@
     "unknown": "Unknown QR code",
     "already": "Already checked in",
     "counter": "{checkedIn} / {total} guests checked in",
-    "loadError": "Unable to load the scanner"
+    "loadError": "Unable to load the scanner",
+    "online": "Online",
+    "offline": "Offline — scans will sync later",
+    "pendingSync": "{count} scan(s) waiting to sync",
+    "syncRejected": "{count} scan(s) rejected by the server",
+    "notToday": "Ticket unknown for today"
   },
   "imageUpload": {
     "clickToUpload": "Click to upload image",
