@@ -2002,7 +2002,6 @@
         "contactAllCopy": "Copier la liste d'emails",
         "contactAllCopied": "Emails copiés. Colle-les dans le BCC de ton mail.",
         "cancelSession": "Annuler la session",
-        "cancelSessionPrompt": "Pourquoi annulez-vous cette session ? Le motif sera transmis aux participants (10 caractères minimum).",
         "cancelSessionError": "Impossible d'annuler la session. Vérifiez le motif (10 caractères minimum) et réessayez.",
         "cancelSessionDone": "Session annulée. Les participants ont été prévenus et remboursés.",
         "cancelSessionPartial": "{count, plural, =1 {1 réservation n'a pas pu être annulée} other {# réservations n'ont pas pu être annulées}}. Réessayez ou contactez le support.",
@@ -2011,7 +2010,14 @@
         "markPresent": "Marquer présent",
         "markNoShow": "Marquer no-show",
         "markNoShowDisabled": "Disponible après la fin de la session",
-        "openMenu": "Ouvrir le menu d'actions"
+        "openMenu": "Ouvrir le menu d'actions",
+        "cancelSessionTitle": "Annuler la session ?",
+        "cancelSessionDescription": "Toutes les réservations confirmées seront annulées et intégralement remboursées ; chaque client recevra un email avec votre motif.",
+        "cancelSessionReasonLabel": "Motif de l'annulation",
+        "cancelSessionReasonPlaceholder": "Ex. : vendanges anticipées, impossible d'assurer la session…",
+        "cancelSessionReasonHint": "Minimum {min} caractères — le motif est transmis aux clients.",
+        "cancelSessionBack": "Retour",
+        "cancelSessionConfirm": "Annuler la session"
       },
       "bookingStatus": {
         "confirmed": "Confirmée",
@@ -2083,7 +2089,8 @@
           "capacityHint": "Entre 1 et 50 places. Réinitialiser revient à la capacité de l'expérience.",
           "capacityInvalid": "Saisissez un nombre entre {min} et {max}.",
           "attendees": "{count, plural, =0 {Inscrits} =1 {1 inscrit} other {# inscrits}}",
-          "noAttendees": "Aucun inscrit pour ce créneau pour le moment."
+          "noAttendees": "Aucun inscrit pour ce créneau pour le moment.",
+          "checkedInAt": "Scanné à {time}"
         },
         "toasts": {
           "closed": "Créneau fermé — il n'est plus réservable.",

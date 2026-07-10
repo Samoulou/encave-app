@@ -97,6 +97,9 @@ export interface OccurrenceCalendarEntryDTO {
     bookingId: string;
     reference: string;
     visitorName: string;
+    /** P-13 (P-05 debt): direct contact + check-in visibility. */
+    visitorEmail: string;
+    checkedInAt: Date | null;
     guestCount: number;
     status: BookingStatus;
   }[];
@@ -183,6 +186,8 @@ export const getOccurrenceCalendar = cache(async function getOccurrenceCalendar(
         id: true,
         reference: true,
         visitorName: true,
+        visitorEmail: true,
+        checkedInAt: true,
         guestCount: true,
         status: true,
         date: true,
@@ -269,6 +274,8 @@ export const getOccurrenceCalendar = cache(async function getOccurrenceCalendar(
         bookingId: b.id,
         reference: b.reference,
         visitorName: b.visitorName,
+        visitorEmail: b.visitorEmail,
+        checkedInAt: b.checkedInAt,
         guestCount: b.guestCount,
         status: b.status,
       });

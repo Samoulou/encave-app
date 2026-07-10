@@ -2007,7 +2007,6 @@
         "contactAllCopy": "E-Mail-Liste kopieren",
         "contactAllCopied": "E-Mails kopiert. Füge sie in das BCC-Feld deiner E-Mail ein.",
         "cancelSession": "Session absagen",
-        "cancelSessionPrompt": "Warum sagen Sie diese Session ab? Der Grund wird den Teilnehmenden mitgeteilt (mindestens 10 Zeichen).",
         "cancelSessionError": "Die Session konnte nicht abgesagt werden. Prüfen Sie den Grund (mindestens 10 Zeichen) und versuchen Sie es erneut.",
         "cancelSessionDone": "Session abgesagt. Die Teilnehmenden wurden informiert und erstattet.",
         "cancelSessionPartial": "{count, plural, =1 {1 Buchung konnte nicht storniert werden} other {# Buchungen konnten nicht storniert werden}}. Versuchen Sie es erneut oder kontaktieren Sie den Support.",
@@ -2016,7 +2015,14 @@
         "markPresent": "Als anwesend markieren",
         "markNoShow": "Als No-Show markieren",
         "markNoShowDisabled": "Nach Ende der Session verfügbar",
-        "openMenu": "Aktionsmenü öffnen"
+        "openMenu": "Aktionsmenü öffnen",
+        "cancelSessionTitle": "Session absagen?",
+        "cancelSessionDescription": "Alle bestätigten Reservierungen werden storniert und vollständig erstattet; jeder Gast erhält eine E-Mail mit Ihrem Grund.",
+        "cancelSessionReasonLabel": "Grund der Absage",
+        "cancelSessionReasonPlaceholder": "Z. B. vorgezogene Weinlese, Session nicht durchführbar…",
+        "cancelSessionReasonHint": "Mindestens {min} Zeichen — der Grund wird den Gästen mitgeteilt.",
+        "cancelSessionBack": "Zurück",
+        "cancelSessionConfirm": "Session absagen"
       },
       "bookingStatus": {
         "confirmed": "Bestätigt",
@@ -2088,7 +2094,8 @@
           "capacityHint": "Zwischen 1 und 50 Plätzen. Zurücksetzen kehrt zur Kapazität des Erlebnisses zurück.",
           "capacityInvalid": "Geben Sie eine Zahl zwischen {min} und {max} ein.",
           "attendees": "{count, plural, =0 {Angemeldete} =1 {1 angemeldete Person} other {# angemeldete Personen}}",
-          "noAttendees": "Noch keine Anmeldungen für diesen Termin."
+          "noAttendees": "Noch keine Anmeldungen für diesen Termin.",
+          "checkedInAt": "Gescannt um {time}"
         },
         "toasts": {
           "closed": "Termin geschlossen — er ist nicht mehr buchbar.",

@@ -27,7 +27,7 @@ import {
   reopenOccurrence,
   setOccurrenceCapacity,
 } from '@/server/actions/occurrence';
-import { formatDate } from '@/lib/i18n/formatters';
+import { formatDate, formatTime } from '@/lib/i18n/formatters';
 import { zonedWallClockToUTC } from '@/lib/datetime/zurich';
 import { dateKeyOf } from '@/lib/business-rules/occurrence-expansion';
 import {
@@ -533,6 +533,28 @@ export function OccurrenceDetailSheet({
                               {attendee.reference}
                             </span>
                           </p>
+                          {/* P-13 (P-05 debt): direct contact + check-in
+                              visibility per attendee. */}
+                          {!isCancelledBooking && (
+                            <p className="truncate text-xs text-slate-500">
+                              <a
+                                href={`mailto:${attendee.visitorEmail}`}
+                                className="hover:text-burgundy-700 hover:underline"
+                              >
+                                {attendee.visitorEmail}
+                              </a>
+                              {attendee.checkedInAt !== null && (
+                                <span className="ml-1.5 rounded-full bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-800">
+                                  {t('sheet.checkedInAt', {
+                                    time: formatTime(
+                                      attendee.checkedInAt,
+                                      locale
+                                    ),
+                                  })}
+                                </span>
+                              )}
+                            </p>
+                          )}
                         </div>
                         <div className="flex shrink-0 items-center gap-1">
                           {statusKey !== undefined && (

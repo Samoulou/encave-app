@@ -2002,7 +2002,6 @@
         "contactAllCopy": "Copy email list",
         "contactAllCopied": "Emails copied. Paste them into your email BCC field.",
         "cancelSession": "Cancel the session",
-        "cancelSessionPrompt": "Why are you cancelling this session? The reason will be shared with the participants (10 characters minimum).",
         "cancelSessionError": "Could not cancel the session. Check the reason (10 characters minimum) and try again.",
         "cancelSessionDone": "Session cancelled. Participants have been notified and refunded.",
         "cancelSessionPartial": "{count, plural, =1 {1 booking could not be cancelled} other {# bookings could not be cancelled}}. Try again or contact support.",
@@ -2011,7 +2010,14 @@
         "markPresent": "Mark as present",
         "markNoShow": "Mark as no-show",
         "markNoShowDisabled": "Available after the session ends",
-        "openMenu": "Open actions menu"
+        "openMenu": "Open actions menu",
+        "cancelSessionTitle": "Cancel the session?",
+        "cancelSessionDescription": "All confirmed bookings will be cancelled and fully refunded; every guest receives an email with your reason.",
+        "cancelSessionReasonLabel": "Cancellation reason",
+        "cancelSessionReasonPlaceholder": "E.g. early harvest, unable to host the session…",
+        "cancelSessionReasonHint": "Minimum {min} characters — the reason is sent to your guests.",
+        "cancelSessionBack": "Back",
+        "cancelSessionConfirm": "Cancel the session"
       },
       "bookingStatus": {
         "confirmed": "Confirmed",
@@ -2083,7 +2089,8 @@
           "capacityHint": "Between 1 and 50 seats. Reset returns to the experience capacity.",
           "capacityInvalid": "Enter a number between {min} and {max}.",
           "attendees": "{count, plural, =0 {Attendees} =1 {1 attendee} other {# attendees}}",
-          "noAttendees": "No attendees for this slot yet."
+          "noAttendees": "No attendees for this slot yet.",
+          "checkedInAt": "Scanned at {time}"
         },
         "toasts": {
           "closed": "Slot closed — it can no longer be booked.",
