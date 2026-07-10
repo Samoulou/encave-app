@@ -46,6 +46,7 @@ const baseEntry: OccurrenceCalendarEntryDTO = {
   capacityOverride: null,
   bookedCount: 3,
   isDateBlocked: false,
+  servedWineIds: [],
   attendees: [
     {
       bookingId: 'bkg_1',
@@ -75,6 +76,7 @@ function renderSheet(
       wineryName="Domaine X"
       durationMinutes={overrides.durationMinutes ?? 90}
       canEdit={overrides.canEdit ?? true}
+      tastingWines={null}
       onOpenChange={vi.fn()}
     />
   );

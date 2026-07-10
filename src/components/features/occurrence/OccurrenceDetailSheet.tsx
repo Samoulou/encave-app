@@ -269,8 +269,9 @@ export function OccurrenceDetailSheet({
             attendee.status === BookingStatus.CONFIRMED ||
             attendee.status === BookingStatus.COMPLETED
         ).length;
+  // Loose != null: a JS caller omitting the prop must read as flag OFF.
   const showTastingSheet =
-    tastingWines !== null &&
+    tastingWines != null &&
     entry !== null &&
     canEdit &&
     bounds !== null &&
@@ -473,13 +474,13 @@ export function OccurrenceDetailSheet({
             )}
 
             {/* Tasting sheet (P-07 / L-061) */}
-            {showTastingSheet && tastingWines !== null && (
+            {showTastingSheet && tastingWines != null && (
               <TastingSheetSection
                 experienceId={experienceId}
                 dateKey={dateKeyOf(entry.date)}
                 timeSlot={entry.startTime}
                 wines={tastingWines}
-                servedWineIds={entry.servedWineIds}
+                servedWineIds={entry.servedWineIds ?? []}
                 activeAttendeeCount={activeAttendeeCount}
               />
             )}

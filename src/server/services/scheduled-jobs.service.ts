@@ -25,8 +25,8 @@ export type ScheduledJobHandlerResult =
   | { ok: false; skipReason: string };
 
 export type ScheduledJobHandler = (
-  payload: Prisma.JsonValue,
-  job: { id: string; type: string; attempts: number }
+  _payload: Prisma.JsonValue,
+  _job: { id: string; type: string; attempts: number }
 ) => Promise<ScheduledJobHandlerResult>;
 
 export interface RunDueJobsStats {
