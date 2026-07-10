@@ -155,6 +155,11 @@ model Winery {
   stripeAccountId          String?            @unique
   stripeOnboardingComplete Boolean            @default(false)
   stripeDetailsSubmitted   Boolean            @default(false)
+  // P-13 / email #18 anti-spam: account.updated is chatty — the KYC
+  // "action required" email is resent only when the currently_due set
+  // changed (hash) or after 7 days.
+  stripeActionEmailAt      DateTime?
+  stripeActionDueHash      String?
   // V3 monetization & policies (P-02 foundations — consumed from P-03 on).
   // commissionRate null = platform default (PLATFORM_COMMISSION_RATE env).
   plan                     WineryPlan         @default(STANDARD)
