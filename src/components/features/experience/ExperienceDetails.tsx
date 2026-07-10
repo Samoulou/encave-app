@@ -39,7 +39,7 @@ export function ExperienceDetails({
 
   return (
     <section className="rounded-xl bg-white p-6 shadow-warm lg:p-8">
-      <h2 className="font-display text-xl font-semibold text-slate-900">
+      <h2 className="font-display text-xl font-semibold text-foreground">
         {t('aboutTitle')}
       </h2>
 
@@ -70,7 +70,7 @@ export function ExperienceDetails({
         className="prose prose-slate mt-6 max-w-none"
         data-testid="experience-description"
       >
-        <p className="whitespace-pre-wrap leading-relaxed text-slate-600">
+        <p className="whitespace-pre-wrap leading-relaxed text-muted-foreground">
           {description}
         </p>
       </div>

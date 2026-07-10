@@ -42,10 +42,10 @@ export function StripeOnboarding({ wineryId }: StripeOnboardingProps) {
             <CreditCard className="h-6 w-6 text-gold-700" aria-hidden="true" />
           </div>
           <div>
-            <h3 className="font-display text-lg font-semibold text-slate-900">
+            <h3 className="font-display text-lg font-semibold text-foreground">
               {t('setupPayments')}
             </h3>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm text-muted-foreground">
               {t('setupPaymentsDescription')}
             </p>
           </div>

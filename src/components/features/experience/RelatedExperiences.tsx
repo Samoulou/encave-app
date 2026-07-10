@@ -17,7 +17,7 @@ export function RelatedExperiences({
 
   return (
     <section data-testid="related-experiences">
-      <h2 className="font-display text-2xl font-semibold text-slate-900">
+      <h2 className="font-display text-2xl font-semibold text-foreground">
         {title ?? t('youMightAlsoLike')}
       </h2>
 

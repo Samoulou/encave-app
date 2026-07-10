@@ -96,7 +96,10 @@ export function OrderSummary({
           {/* Date & Time */}
           <div className="flex items-start gap-3">
             <div className="flex w-8 justify-center pt-0.5">
-              <Calendar className="h-5 w-5 text-[#915564]" aria-hidden="true" />
+              <Calendar
+                className="h-5 w-5 text-muted-foreground"
+                aria-hidden="true"
+              />
             </div>
             <div>
               <p
@@ -105,7 +108,10 @@ export function OrderSummary({
               >
                 {formattedDate}
               </p>
-              <p className="text-sm text-[#915564]" data-testid="summary-time">
+              <p
+                className="text-sm text-muted-foreground"
+                data-testid="summary-time"
+              >
                 {formatTimeRange(time, duration)}
               </p>
             </div>
@@ -114,7 +120,10 @@ export function OrderSummary({
           {/* Guests */}
           <div className="flex items-start gap-3">
             <div className="flex w-8 justify-center pt-0.5">
-              <Users className="h-5 w-5 text-[#915564]" aria-hidden="true" />
+              <Users
+                className="h-5 w-5 text-muted-foreground"
+                aria-hidden="true"
+              />
             </div>
             <div>
               <p
@@ -129,7 +138,10 @@ export function OrderSummary({
           {/* Location */}
           <div className="flex items-start gap-3">
             <div className="flex w-8 justify-center pt-0.5">
-              <MapPin className="h-5 w-5 text-[#915564]" aria-hidden="true" />
+              <MapPin
+                className="h-5 w-5 text-muted-foreground"
+                aria-hidden="true"
+              />
             </div>
             <div>
               <p
@@ -140,7 +152,7 @@ export function OrderSummary({
               </p>
               <button
                 type="button"
-                className="cursor-pointer text-sm text-[#915564] hover:underline"
+                className="cursor-pointer text-sm text-muted-foreground hover:underline"
               >
                 {t('viewOnMap')}
               </button>
@@ -178,7 +190,7 @@ export function OrderSummary({
         <div className="mt-6 border-t border-dashed border-border pt-4">
           <div className="flex items-start gap-2">
             <Info
-              className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#915564]"
+              className="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground"
               aria-hidden="true"
             />
             <CancellationPolicyInfo

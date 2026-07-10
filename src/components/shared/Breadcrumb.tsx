@@ -68,7 +68,7 @@ export function Breadcrumb({
                 {/* Separator */}
                 {index > 0 && (
                   <ChevronRight
-                    className="h-4 w-4 text-slate-400"
+                    className="h-4 w-4 text-muted-foreground"
                     aria-hidden="true"
                   />
                 )}
@@ -77,14 +77,14 @@ export function Breadcrumb({
                 {item.href && !isLast ? (
                   <Link
                     href={getLocalizedHref(item.href)}
-                    className="flex items-center gap-1.5 text-slate-600 transition-colors hover:text-burgundy-700"
+                    className="flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-burgundy-700"
                   >
                     {isFirst && <Home className="h-4 w-4" aria-hidden="true" />}
                     <span>{item.label}</span>
                   </Link>
                 ) : (
                   <span
-                    className="flex items-center gap-1.5 font-medium text-slate-900"
+                    className="flex items-center gap-1.5 font-medium text-foreground"
                     aria-current={isLast ? 'page' : undefined}
                   >
                     {isFirst && !item.href && (

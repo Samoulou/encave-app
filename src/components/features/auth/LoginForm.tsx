@@ -77,6 +77,7 @@ export function LoginForm() {
       if (result.error) {
         // Handle Better Auth errors
         setError(result.error.message || t('invalidCredentials'));
+        setIsLoading(false);
         return;
       }
 
@@ -106,7 +107,6 @@ export function LoginForm() {
       router.refresh();
     } catch {
       setError(tCommon('errors.somethingWentWrong'));
-    } finally {
       setIsLoading(false);
     }
   }
@@ -120,10 +120,10 @@ export function LoginForm() {
     >
       {/* Heading */}
       <div className="flex flex-col gap-2">
-        <h1 className="font-display text-3xl font-bold text-slate-900">
+        <h1 className="font-display text-3xl font-bold text-foreground">
           {t('title')}
         </h1>
-        <p className="text-[#915564]">{t('subtitle')}</p>
+        <p className="text-muted-foreground">{t('subtitle')}</p>
       </div>
 
       {/* Form */}
@@ -144,7 +144,7 @@ export function LoginForm() {
             name="email"
             render={({ field }) => (
               <FormItem className="flex flex-col gap-2">
-                <FormLabel className="text-sm font-medium text-slate-900">
+                <FormLabel className="text-sm font-medium text-foreground">
                   {tCommon('labels.email')}
                 </FormLabel>
                 <FormControl>
@@ -153,10 +153,10 @@ export function LoginForm() {
                       type="email"
                       placeholder={tCommon('placeholders.email')}
                       autoComplete="email"
-                      className="h-12 w-full rounded-lg border border-border bg-white px-4 pr-10 text-slate-900 transition-all placeholder:text-slate-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      className="h-12 w-full rounded-lg border border-border bg-white px-4 pr-10 text-foreground transition-all placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                       {...field}
                     />
-                    <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-400 transition-colors group-focus-within:text-primary">
+                    <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-muted-foreground transition-colors group-focus-within:text-primary">
                       <Mail className="h-5 w-5" aria-hidden="true" />
                     </div>
                   </div>
@@ -173,7 +173,7 @@ export function LoginForm() {
             render={({ field }) => (
               <FormItem className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
-                  <FormLabel className="text-sm font-medium text-slate-900">
+                  <FormLabel className="text-sm font-medium text-foreground">
                     {tCommon('labels.password')}
                   </FormLabel>
                   <a
@@ -190,13 +190,13 @@ export function LoginForm() {
                       type={showPassword ? 'text' : 'password'}
                       placeholder="••••••••"
                       autoComplete="current-password"
-                      className="h-12 w-full rounded-lg border border-border bg-white px-4 pr-10 text-slate-900 transition-all placeholder:text-slate-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      className="h-12 w-full rounded-lg border border-border bg-white px-4 pr-10 text-foreground transition-all placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                       {...field}
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-3 flex items-center text-slate-400 transition-colors hover:text-slate-900"
+                      className="absolute inset-y-0 right-3 flex items-center text-muted-foreground transition-colors hover:text-slate-900"
                       aria-label={
                         showPassword ? t('hidePassword') : t('showPassword')
                       }
@@ -220,11 +220,11 @@ export function LoginForm() {
               id="remember"
               checked={rememberMe}
               onCheckedChange={(checked) => setRememberMe(checked === true)}
-              className="border-slate-300 data-[state=checked]:border-primary data-[state=checked]:bg-primary"
+              className="border-input data-[state=checked]:border-primary data-[state=checked]:bg-primary"
             />
             <label
               htmlFor="remember"
-              className="cursor-pointer text-sm font-medium text-slate-900"
+              className="cursor-pointer text-sm font-medium text-foreground"
             >
               {t('rememberMe')}
             </label>
@@ -245,7 +245,7 @@ export function LoginForm() {
 
           {/* Sign Up Link */}
           <div className="mt-4 text-center">
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-muted-foreground">
               {t('noAccount')}{' '}
               <Link
                 href="/register"

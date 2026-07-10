@@ -140,12 +140,12 @@ export default function ComingSoonPage() {
               Lancement bientôt
             </div>
 
-            <h1 className="font-display text-4xl font-bold leading-tight text-slate-900 md:text-5xl lg:text-6xl">
+            <h1 className="font-display text-4xl font-bold leading-tight text-foreground md:text-5xl lg:text-6xl">
               Le <span className="text-burgundy-600">Booking.com</span> des
               expériences viticoles
             </h1>
 
-            <p className="mx-auto max-w-2xl text-xl leading-relaxed text-slate-600">
+            <p className="mx-auto max-w-2xl text-xl leading-relaxed text-muted-foreground">
               Réservez des dégustations, visites de caves et expériences
               œnologiques uniques directement auprès des vignerons du Valais.
             </p>
@@ -218,7 +218,7 @@ export default function ComingSoonPage() {
           <h2 className="mb-4 font-display text-3xl font-bold text-slate-900 md:text-4xl">
             Des expériences pour tous les goûts
           </h2>
-          <p className="mx-auto max-w-2xl text-lg text-slate-600">
+          <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
             Du novice curieux à l&apos;œnophile averti, trouvez
             l&apos;expérience qui vous correspond
           </p>
@@ -228,7 +228,7 @@ export default function ComingSoonPage() {
           {experienceTypes.map((type) => (
             <div
               key={type.title}
-              className="group relative rounded-2xl border border-slate-100 bg-white p-6 shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover"
+              className="group relative rounded-2xl border border-border bg-card p-6 shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover"
             >
               <div
                 className={`inline-flex h-12 w-12 items-center justify-center rounded-xl ${type.color} mb-4`}
@@ -238,7 +238,7 @@ export default function ComingSoonPage() {
               <h3 className="mb-2 font-display text-xl font-semibold text-slate-900">
                 {type.title}
               </h3>
-              <p className="text-slate-600">{type.description}</p>
+              <p className="text-muted-foreground">{type.description}</p>
             </div>
           ))}
         </div>
@@ -251,7 +251,7 @@ export default function ComingSoonPage() {
             <h2 className="mb-4 font-display text-3xl font-bold text-slate-900 md:text-4xl">
               Une plateforme pensée pour tous
             </h2>
-            <p className="mx-auto max-w-2xl text-lg text-slate-600">
+            <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
               EnCave simplifie la découverte et la réservation
               d&apos;expériences viticoles
             </p>
@@ -288,7 +288,7 @@ export default function ComingSoonPage() {
           <h2 className="mb-4 font-display text-3xl font-bold text-slate-900 md:text-4xl">
             Comment ça marche ?
           </h2>
-          <p className="mx-auto max-w-2xl text-lg text-slate-600">
+          <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
             Réservez votre prochaine expérience viticole en 3 étapes simples
           </p>
         </div>
@@ -329,7 +329,7 @@ export default function ComingSoonPage() {
               <h3 className="mb-2 font-display text-xl font-semibold text-slate-900">
                 {item.title}
               </h3>
-              <p className="text-slate-600">{item.description}</p>
+              <p className="text-muted-foreground">{item.description}</p>
             </div>
           ))}
         </div>

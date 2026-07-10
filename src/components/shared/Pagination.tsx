@@ -60,7 +60,7 @@ export function Pagination({
       )}
     >
       {/* Item count info */}
-      <div className="text-sm text-slate-600">
+      <div className="text-sm text-muted-foreground">
         {totalItems > 0
           ? t('showing', { from: startItem, to: endItem, total: totalItems })
           : t('noResults')}
@@ -70,7 +70,7 @@ export function Pagination({
         {/* Page size selector */}
         {onPageSizeChange && (
           <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-600">{t('show')}</span>
+            <span className="text-sm text-muted-foreground">{t('show')}</span>
             <Select
               value={pageSize.toString()}
               onValueChange={(value) => onPageSizeChange(Number(value))}
@@ -117,7 +117,7 @@ export function Pagination({
 
           {/* Page indicator */}
           <div className="flex items-center gap-1 px-2">
-            <span className="text-sm text-slate-600">
+            <span className="text-sm text-muted-foreground">
               {t('page', { current: currentPage, total: totalPages || 1 })}
             </span>
           </div>

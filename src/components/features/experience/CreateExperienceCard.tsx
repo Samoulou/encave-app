@@ -1,7 +1,8 @@
 'use client';
 
-import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { Plus } from 'lucide-react';
+import { Link } from '@/i18n/navigation';
 import { cn } from '@/lib/utils';
 
 interface CreateExperienceCardProps {
@@ -9,6 +10,8 @@ interface CreateExperienceCardProps {
 }
 
 export function CreateExperienceCard({ className }: CreateExperienceCardProps) {
+  const t = useTranslations('experience');
+
   return (
     <Link
       href="/dashboard/experiences/new"
@@ -25,10 +28,10 @@ export function CreateExperienceCard({ className }: CreateExperienceCardProps) {
       </div>
       <div className="text-center">
         <h3 className="text-lg font-bold text-foreground transition-colors group-hover:text-primary">
-          Create New Experience
+          {t('createNewExperience')}
         </h3>
-        <p className="mt-1 max-w-[200px] text-sm text-gray-500">
-          Offer a new tasting, tour or workshop.
+        <p className="mt-1 max-w-[200px] text-sm text-muted-foreground">
+          {t('createCardSubtitle')}
         </p>
       </div>
     </Link>

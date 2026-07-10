@@ -45,14 +45,14 @@ export default async function UnsubscribePage({ searchParams }: PageProps) {
               <CheckCircle2 className="h-8 w-8 text-green-600" />
             </div>
           </div>
-          <h1 className="mb-2 font-display text-2xl font-bold text-slate-900">
+          <h1 className="mb-2 font-display text-2xl font-bold text-foreground">
             Unsubscribed Successfully
           </h1>
-          <p className="mb-6 text-slate-600">
+          <p className="mb-6 text-muted-foreground">
             You have been unsubscribed from{' '}
             {type ? typeLabels[type] || type : 'email notifications'}.
           </p>
-          <p className="mb-8 text-sm text-slate-500">
+          <p className="mb-8 text-sm text-muted-foreground">
             You can manage your notification preferences anytime from your
             dashboard settings.
           </p>
@@ -80,10 +80,10 @@ export default async function UnsubscribePage({ searchParams }: PageProps) {
               <AlertCircle className="h-8 w-8 text-amber-600" />
             </div>
           </div>
-          <h1 className="mb-2 font-display text-2xl font-bold text-slate-900">
+          <h1 className="mb-2 font-display text-2xl font-bold text-foreground">
             Invalid Link
           </h1>
-          <p className="mb-8 text-slate-600">
+          <p className="mb-8 text-muted-foreground">
             This unsubscribe link is invalid or has expired. Please use the link
             from a recent email or manage your preferences from your dashboard.
           </p>
@@ -109,10 +109,10 @@ export default async function UnsubscribePage({ searchParams }: PageProps) {
               <XCircle className="h-8 w-8 text-red-600" />
             </div>
           </div>
-          <h1 className="mb-2 font-display text-2xl font-bold text-slate-900">
+          <h1 className="mb-2 font-display text-2xl font-bold text-foreground">
             Something Went Wrong
           </h1>
-          <p className="mb-8 text-slate-600">
+          <p className="mb-8 text-muted-foreground">
             We couldn&apos;t process your unsubscribe request. Please try again
             or contact support if the problem persists.
           </p>
@@ -128,10 +128,10 @@ export default async function UnsubscribePage({ searchParams }: PageProps) {
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center px-4">
       <div className="mx-auto max-w-md text-center">
-        <h1 className="mb-2 font-display text-2xl font-bold text-slate-900">
+        <h1 className="mb-2 font-display text-2xl font-bold text-foreground">
           Email Preferences
         </h1>
-        <p className="mb-8 text-slate-600">
+        <p className="mb-8 text-muted-foreground">
           To manage your email preferences, please log in to your account and
           visit the notification settings.
         </p>

@@ -206,7 +206,7 @@ export function AddressAutocomplete({
   return (
     <div ref={containerRef} className={cn('relative', className)}>
       <div className="relative">
-        <MapPin className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+        <MapPin className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
         <Input
           ref={inputRef}
           id={id}
@@ -216,17 +216,17 @@ export function AddressAutocomplete({
           onKeyDown={handleKeyDown}
           onFocus={() => suggestions.length > 0 && setIsOpen(true)}
           placeholder={placeholder}
-          className="h-12 border-stone-200 bg-slate-50 pl-10 pr-10"
+          className="h-12 border-stone-200 bg-muted pl-10 pr-10"
           autoComplete="off"
         />
         {isLoading && (
-          <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-slate-400" />
+          <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
         )}
         {!isLoading && query && (
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+            className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground hover:text-foreground"
           >
             <X className="h-4 w-4" />
           </button>
@@ -248,7 +248,7 @@ export function AddressAutocomplete({
               onClick={() => handleSelectSuggestion(result)}
             >
               <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-              <span className="line-clamp-2 text-slate-700">
+              <span className="line-clamp-2 text-foreground">
                 {result.display_name}
               </span>
             </button>
@@ -259,7 +259,7 @@ export function AddressAutocomplete({
       {/* No results message */}
       {noResults && !isLoading && query.length >= 3 && (
         <div className="absolute z-50 mt-1 w-full rounded-lg border border-stone-200 bg-white p-4 shadow-lg">
-          <p className="text-center text-sm text-slate-500">
+          <p className="text-center text-sm text-muted-foreground">
             No addresses found. Try a different search or enter the address
             manually below.
           </p>
@@ -268,7 +268,7 @@ export function AddressAutocomplete({
 
       {/* Error message */}
       {error && (
-        <div className="mt-2 flex items-center gap-2 text-sm text-red-600">
+        <div className="mt-2 flex items-center gap-2 text-sm text-destructive">
           <AlertCircle className="h-4 w-4 shrink-0" />
           <span>{error}</span>
         </div>

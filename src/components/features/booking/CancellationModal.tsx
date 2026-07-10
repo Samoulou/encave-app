@@ -105,7 +105,7 @@ export function CancellationModal({
         </DialogHeader>
 
         {isLoading ? (
-          <div className="py-8 text-center text-slate-500">
+          <div className="py-8 text-center text-muted-foreground">
             {tCommon('loading')}
           </div>
         ) : cancellationInfo && !cancellationInfo.canCancel ? (
@@ -148,13 +148,13 @@ export function CancellationModal({
 
             {/* Refund amount */}
             <div className="flex items-center justify-between border-b border-t border-stone-200 py-3">
-              <span className="text-slate-600">{t('refundAmount')}</span>
+              <span className="text-muted-foreground">{t('refundAmount')}</span>
               <span
                 className={cn(
                   'text-lg font-bold',
                   cancellationInfo?.isEligibleForRefund
                     ? 'text-green-600'
-                    : 'text-slate-400'
+                    : 'text-muted-foreground'
                 )}
               >
                 {cancellationInfo?.isEligibleForRefund
@@ -172,7 +172,7 @@ export function CancellationModal({
               />
               <Label
                 htmlFor="confirm-cancel"
-                className="cursor-pointer text-sm leading-tight text-slate-600"
+                className="cursor-pointer text-sm leading-tight text-muted-foreground"
               >
                 {t('confirmCheckbox')}
               </Label>
@@ -182,7 +182,7 @@ export function CancellationModal({
 
         <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="outline" onClick={onClose} disabled={isCancelling}>
-            {t('title').split(' ')[0] === 'Conditions' ? 'Annuler' : 'Cancel'}
+            {tCommon('buttons.cancel')}
           </Button>
           <Button
             variant="destructive"

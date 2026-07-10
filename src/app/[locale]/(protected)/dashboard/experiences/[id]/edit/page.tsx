@@ -144,10 +144,10 @@ export default async function EditExperiencePage({ params }: PageProps) {
           />
 
           <div className="space-y-3">
-            <h1 className="font-display text-display-md text-slate-900">
+            <h1 className="font-display text-display-md text-foreground">
               {t('editTitle')}
             </h1>
-            <p className="text-slate-600">{t('editSubtitle')}</p>
+            <p className="text-muted-foreground">{t('editSubtitle')}</p>
           </div>
         </div>
 
@@ -160,10 +160,10 @@ export default async function EditExperiencePage({ params }: PageProps) {
               <Calendar className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="font-display text-xl font-semibold text-slate-900">
+              <h2 className="font-display text-xl font-semibold text-foreground">
                 {t('availabilitySchedule')}
               </h2>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="mt-1 text-sm text-muted-foreground">
                 {t('availabilityScheduleSubtitle')}
               </p>
             </div>

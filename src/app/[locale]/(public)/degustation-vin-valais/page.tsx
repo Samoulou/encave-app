@@ -89,7 +89,7 @@ export default async function DegustationVinValaisPage({ params }: PageProps) {
 
         {/* Breadcrumb Navigation */}
         <nav className="mx-auto max-w-6xl px-6 py-4" aria-label="Breadcrumb">
-          <ol className="flex items-center gap-2 text-sm text-slate-600">
+          <ol className="flex items-center gap-2 text-sm text-muted-foreground">
             <li>
               <Link
                 href="/"
@@ -99,7 +99,7 @@ export default async function DegustationVinValaisPage({ params }: PageProps) {
               </Link>
             </li>
             <li aria-hidden="true">/</li>
-            <li className="font-medium text-slate-900">{t('hero.title')}</li>
+            <li className="font-medium text-foreground">{t('hero.title')}</li>
           </ol>
         </nav>
 
@@ -107,10 +107,10 @@ export default async function DegustationVinValaisPage({ params }: PageProps) {
         <section className="mx-auto max-w-4xl px-6 py-12 lg:py-16">
           <Card className="overflow-hidden rounded-xl border-0 shadow-warm-lg">
             <CardContent className="p-8 sm:p-10">
-              <h2 className="mb-6 font-display text-2xl font-semibold text-slate-900 sm:text-3xl">
+              <h2 className="mb-6 font-display text-2xl font-semibold text-foreground sm:text-3xl">
                 {t('intro.title')}
               </h2>
-              <div className="space-y-4 leading-relaxed text-slate-700">
+              <div className="space-y-4 leading-relaxed text-ink-700">
                 <p>{t('intro.paragraph1')}</p>
                 <p>{t('intro.paragraph2')}</p>
                 <p>{t('intro.paragraph3')}</p>
@@ -123,7 +123,7 @@ export default async function DegustationVinValaisPage({ params }: PageProps) {
                     className="h-5 w-5 text-burgundy-600"
                     aria-hidden="true"
                   />
-                  <span className="text-sm font-medium text-slate-900">
+                  <span className="text-sm font-medium text-foreground">
                     {t('intro.highlight1')}
                   </span>
                 </div>
@@ -132,7 +132,7 @@ export default async function DegustationVinValaisPage({ params }: PageProps) {
                     className="h-5 w-5 text-burgundy-600"
                     aria-hidden="true"
                   />
-                  <span className="text-sm font-medium text-slate-900">
+                  <span className="text-sm font-medium text-foreground">
                     {t('intro.highlight2')}
                   </span>
                 </div>
@@ -141,7 +141,7 @@ export default async function DegustationVinValaisPage({ params }: PageProps) {
                     className="h-5 w-5 text-burgundy-600"
                     aria-hidden="true"
                   />
-                  <span className="text-sm font-medium text-slate-900">
+                  <span className="text-sm font-medium text-foreground">
                     {t('intro.highlight3')}
                   </span>
                 </div>
@@ -152,7 +152,7 @@ export default async function DegustationVinValaisPage({ params }: PageProps) {
 
         {/* FAQ Section */}
         <section className="mx-auto max-w-4xl px-6 py-12 lg:py-16">
-          <h2 className="mb-8 text-center font-display text-2xl font-semibold text-slate-900 sm:text-3xl">
+          <h2 className="mb-8 text-center font-display text-2xl font-semibold text-foreground sm:text-3xl">
             {t('faq.title')}
           </h2>
           <Card className="overflow-hidden rounded-xl border-0 shadow-warm-lg">

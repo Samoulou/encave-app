@@ -119,7 +119,7 @@ export default async function BookingPage({
       <div className="mb-8 flex items-center gap-3">
         {getStatusIcon(booking.status)}
         <div>
-          <h1 className="font-display text-2xl font-bold text-slate-900">
+          <h1 className="font-display text-2xl font-bold text-foreground">
             {t('bookingDetails')}
           </h1>
           <span
@@ -136,7 +136,7 @@ export default async function BookingPage({
       {/* Booking Reference */}
       <Card className="mb-6">
         <CardContent className="p-6 text-center">
-          <p className="mb-1 text-sm text-slate-500">
+          <p className="mb-1 text-sm text-muted-foreground">
             {tConfirmation('bookingReference')}
           </p>
           <p className="font-mono text-2xl font-bold text-burgundy-600">
@@ -157,19 +157,19 @@ export default async function BookingPage({
             />
           </div>
           <CardContent className="flex-1 p-6">
-            <h2 className="mb-4 font-display text-xl font-bold text-slate-900">
+            <h2 className="mb-4 font-display text-xl font-bold text-foreground">
               {booking.experience.title}
             </h2>
 
             <div className="space-y-3">
-              <div className="flex items-center gap-3 text-slate-600">
+              <div className="flex items-center gap-3 text-muted-foreground">
                 <Calendar className="h-5 w-5 text-burgundy-600" />
                 <span>
                   {format(new Date(booking.date), 'EEEE, MMMM d, yyyy')}
                 </span>
               </div>
 
-              <div className="flex items-center gap-3 text-slate-600">
+              <div className="flex items-center gap-3 text-muted-foreground">
                 <Clock className="h-5 w-5 text-burgundy-600" />
                 <span>
                   {formatTime(booking.timeSlot)} ({booking.experience.duration}{' '}
@@ -177,7 +177,7 @@ export default async function BookingPage({
                 </span>
               </div>
 
-              <div className="flex items-center gap-3 text-slate-600">
+              <div className="flex items-center gap-3 text-muted-foreground">
                 <Users className="h-5 w-5 text-burgundy-600" />
                 <span>
                   {booking.guestCount}{' '}
@@ -198,7 +198,7 @@ export default async function BookingPage({
                 </div>
               )}
               <div className="flex items-baseline justify-between">
-                <span className="text-slate-600">
+                <span className="text-muted-foreground">
                   {tConfirmation('totalPaid')}
                 </span>
                 <span className="text-xl font-bold text-burgundy-600">
@@ -214,7 +214,7 @@ export default async function BookingPage({
       {isConfirmed && (
         <Card className="mb-6">
           <CardContent className="p-6">
-            <h3 className="mb-4 font-semibold text-slate-900">
+            <h3 className="mb-4 font-semibold text-foreground">
               {tConfirmation('addToCalendar')}
             </h3>
             <AddToCalendar
@@ -237,14 +237,14 @@ export default async function BookingPage({
       {/* Winery Details */}
       <Card className="mb-6">
         <CardContent className="p-6">
-          <h3 className="mb-4 font-semibold text-slate-900">
+          <h3 className="mb-4 font-semibold text-foreground">
             {tConfirmation('wineryDetails')}
           </h3>
 
           <div className="space-y-3">
-            <p className="font-medium text-slate-900">{booking.winery.name}</p>
+            <p className="font-medium text-foreground">{booking.winery.name}</p>
 
-            <div className="flex items-start gap-3 text-slate-600">
+            <div className="flex items-start gap-3 text-muted-foreground">
               <MapPin className="mt-0.5 h-5 w-5 flex-shrink-0 text-burgundy-600" />
               <div>
                 <p>{booking.winery.address}</p>
@@ -261,7 +261,7 @@ export default async function BookingPage({
               </div>
             </div>
 
-            <div className="flex items-center gap-3 text-slate-600">
+            <div className="flex items-center gap-3 text-muted-foreground">
               <Phone className="h-5 w-5 text-burgundy-600" />
               <a
                 href={`tel:${booking.winery.phone}`}
@@ -271,7 +271,7 @@ export default async function BookingPage({
               </a>
             </div>
 
-            <div className="flex items-center gap-3 text-slate-600">
+            <div className="flex items-center gap-3 text-muted-foreground">
               <Mail className="h-5 w-5 text-burgundy-600" />
               <a
                 href={`mailto:${booking.winery.email}`}
@@ -297,10 +297,10 @@ export default async function BookingPage({
       {/* Visitor Details */}
       <Card className="mb-8">
         <CardContent className="p-6">
-          <h3 className="mb-4 font-semibold text-slate-900">
+          <h3 className="mb-4 font-semibold text-foreground">
             {tConfirmation('yourDetails')}
           </h3>
-          <div className="space-y-2 text-slate-600">
+          <div className="space-y-2 text-muted-foreground">
             <p>
               <span className="font-medium">{tConfirmation('name')}:</span>{' '}
               {booking.visitorName}

@@ -78,7 +78,7 @@ export function BookingDatePicker({
 
   const modifiersClassNames = {
     today: 'border-2 border-burgundy-500',
-    unavailable: 'text-slate-300 line-through cursor-not-allowed',
+    unavailable: 'text-muted-foreground line-through cursor-not-allowed',
   };
 
   return (
@@ -99,24 +99,25 @@ export function BookingDatePicker({
             'flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0',
           month: 'space-y-4',
           month_caption: 'flex justify-center pt-1 relative items-center',
-          caption_label: 'text-sm font-medium text-slate-900',
+          caption_label: 'text-sm font-medium text-foreground',
           nav: 'space-x-1 flex items-center',
           button_previous:
-            'h-8 w-8 bg-transparent p-0 opacity-50 hover:opacity-100 hover:bg-slate-100 rounded-md transition-colors absolute left-1 right-auto',
+            'h-8 w-8 bg-transparent p-0 opacity-50 hover:opacity-100 hover:bg-muted rounded-md transition-colors absolute left-1 right-auto',
           button_next:
-            'h-8 w-8 bg-transparent p-0 opacity-50 hover:opacity-100 hover:bg-slate-100 rounded-md transition-colors absolute right-1 left-auto',
+            'h-8 w-8 bg-transparent p-0 opacity-50 hover:opacity-100 hover:bg-muted rounded-md transition-colors absolute right-1 left-auto',
           month_grid: 'w-full border-collapse space-y-1',
           weekdays: 'flex',
-          weekday: 'text-slate-500 rounded-md w-10 font-normal text-[0.8rem]',
+          weekday:
+            'text-muted-foreground rounded-md w-10 font-normal text-[0.8rem]',
           week: 'flex w-full mt-2',
           day: 'h-10 w-10 text-center text-sm p-0 relative focus-within:relative focus-within:z-20',
           day_button:
             'h-10 w-10 p-0 font-normal aria-selected:opacity-100 hover:bg-burgundy-50 rounded-md transition-colors',
           selected:
             'bg-burgundy-600 text-white hover:bg-burgundy-600 hover:text-white focus:bg-burgundy-600 focus:text-white',
-          outside: 'text-slate-400 opacity-50',
+          outside: 'text-muted-foreground opacity-50',
           disabled:
-            'text-slate-300 opacity-50 cursor-not-allowed hover:bg-transparent',
+            'text-muted-foreground opacity-50 cursor-not-allowed hover:bg-transparent',
           range_middle:
             'aria-selected:bg-burgundy-100 aria-selected:text-burgundy-900',
           hidden: 'invisible',

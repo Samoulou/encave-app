@@ -1,7 +1,7 @@
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { redirect } from 'next/navigation';
-import { getLocale } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { ArrowLeft, Wine } from 'lucide-react';
 import { WineryOnboardingForm } from '@/components/features/winery/WineryOnboardingForm';
@@ -45,6 +45,9 @@ export default async function WineryOnboardingPage() {
     }
   }
 
+  const t = await getTranslations('onboarding');
+  const tCommon = await getTranslations('common');
+
   return (
     <div className="min-h-screen bg-cream-50">
       {/* Progress bar */}
@@ -57,13 +60,13 @@ export default async function WineryOnboardingPage() {
         <div className="mb-8 flex items-center justify-between">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-sm text-slate-600 transition-colors hover:text-burgundy-700"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-burgundy-700"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back
+            {tCommon('buttons.back')}
           </Link>
-          <span className="text-sm font-medium text-slate-500">
-            Step 1 of 2
+          <span className="text-sm font-medium text-muted-foreground">
+            {t('step', { current: 1, total: 2 })}
           </span>
         </div>
 
@@ -72,12 +75,11 @@ export default async function WineryOnboardingPage() {
           <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-burgundy-100">
             <Wine className="h-8 w-8 text-burgundy-600" />
           </div>
-          <h1 className="font-display text-display-md text-slate-900">
-            Register Your Winery
+          <h1 className="font-display text-display-md text-foreground">
+            {t('winery.title')}
           </h1>
-          <p className="mt-3 text-lg text-slate-600">
-            Tell us about your winery to get started on EnCave and connect with
-            wine enthusiasts.
+          <p className="mt-3 text-lg text-muted-foreground">
+            {t('winery.subtitle')}
           </p>
         </div>
 

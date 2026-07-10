@@ -113,7 +113,7 @@ export default async function CepagesValaisansPage({ params }: PageProps) {
 
         {/* Breadcrumb Navigation */}
         <nav className="mx-auto max-w-6xl px-6 py-4" aria-label="Breadcrumb">
-          <ol className="flex items-center gap-2 text-sm text-slate-600">
+          <ol className="flex items-center gap-2 text-sm text-muted-foreground">
             <li>
               <Link
                 href="/"
@@ -123,7 +123,7 @@ export default async function CepagesValaisansPage({ params }: PageProps) {
               </Link>
             </li>
             <li aria-hidden="true">/</li>
-            <li className="font-medium text-slate-900">{t('hero.title')}</li>
+            <li className="font-medium text-foreground">{t('hero.title')}</li>
           </ol>
         </nav>
 
@@ -131,10 +131,10 @@ export default async function CepagesValaisansPage({ params }: PageProps) {
         <section className="mx-auto max-w-4xl px-6 py-12 lg:py-16">
           <Card className="overflow-hidden rounded-xl border-0 shadow-warm-lg">
             <CardContent className="p-8 sm:p-10">
-              <h2 className="mb-6 font-display text-2xl font-semibold text-slate-900 sm:text-3xl">
+              <h2 className="mb-6 font-display text-2xl font-semibold text-foreground sm:text-3xl">
                 {t('intro.title')}
               </h2>
-              <div className="space-y-4 leading-relaxed text-slate-700">
+              <div className="space-y-4 leading-relaxed text-ink-700">
                 <p>{t('intro.paragraph1')}</p>
                 <p>{t('intro.paragraph2')}</p>
               </div>
@@ -144,7 +144,7 @@ export default async function CepagesValaisansPage({ params }: PageProps) {
 
         {/* White Grapes Section */}
         <section className="mx-auto max-w-6xl px-6 py-12 lg:py-16">
-          <h2 className="mb-8 text-center font-display text-2xl font-semibold text-slate-900 sm:text-3xl">
+          <h2 className="mb-8 text-center font-display text-2xl font-semibold text-foreground sm:text-3xl">
             {t('whites.title')}
           </h2>
           <div className="grid gap-6 sm:grid-cols-2">
@@ -162,26 +162,26 @@ export default async function CepagesValaisansPage({ params }: PageProps) {
                       />
                     </div>
                     <div>
-                      <h3 className="font-display text-xl font-semibold text-slate-900">
+                      <h3 className="font-display text-xl font-semibold text-foreground">
                         {t(`whites.${grape}.name`)}
                       </h3>
-                      <p className="mt-2 text-sm text-slate-600">
+                      <p className="mt-2 text-sm text-muted-foreground">
                         {t(`whites.${grape}.description`)}
                       </p>
                       <div className="mt-4 space-y-2">
                         <p className="text-sm">
-                          <span className="font-medium text-slate-900">
+                          <span className="font-medium text-foreground">
                             {t('labels.tasting')}:
                           </span>{' '}
-                          <span className="text-slate-600">
+                          <span className="text-muted-foreground">
                             {t(`whites.${grape}.tasting`)}
                           </span>
                         </p>
                         <p className="text-sm">
-                          <span className="font-medium text-slate-900">
+                          <span className="font-medium text-foreground">
                             {t('labels.pairing')}:
                           </span>{' '}
-                          <span className="text-slate-600">
+                          <span className="text-muted-foreground">
                             {t(`whites.${grape}.pairing`)}
                           </span>
                         </p>
@@ -196,7 +196,7 @@ export default async function CepagesValaisansPage({ params }: PageProps) {
 
         {/* Red Grapes Section */}
         <section className="mx-auto max-w-6xl bg-burgundy-50/50 px-6 py-12 lg:py-16">
-          <h2 className="mb-8 text-center font-display text-2xl font-semibold text-slate-900 sm:text-3xl">
+          <h2 className="mb-8 text-center font-display text-2xl font-semibold text-foreground sm:text-3xl">
             {t('reds.title')}
           </h2>
           <div className="mx-auto grid max-w-4xl gap-6 sm:grid-cols-2">
@@ -214,26 +214,26 @@ export default async function CepagesValaisansPage({ params }: PageProps) {
                       />
                     </div>
                     <div>
-                      <h3 className="font-display text-xl font-semibold text-slate-900">
+                      <h3 className="font-display text-xl font-semibold text-foreground">
                         {t(`reds.${grape}.name`)}
                       </h3>
-                      <p className="mt-2 text-sm text-slate-600">
+                      <p className="mt-2 text-sm text-muted-foreground">
                         {t(`reds.${grape}.description`)}
                       </p>
                       <div className="mt-4 space-y-2">
                         <p className="text-sm">
-                          <span className="font-medium text-slate-900">
+                          <span className="font-medium text-foreground">
                             {t('labels.tasting')}:
                           </span>{' '}
-                          <span className="text-slate-600">
+                          <span className="text-muted-foreground">
                             {t(`reds.${grape}.tasting`)}
                           </span>
                         </p>
                         <p className="text-sm">
-                          <span className="font-medium text-slate-900">
+                          <span className="font-medium text-foreground">
                             {t('labels.pairing')}:
                           </span>{' '}
-                          <span className="text-slate-600">
+                          <span className="text-muted-foreground">
                             {t(`reds.${grape}.pairing`)}
                           </span>
                         </p>

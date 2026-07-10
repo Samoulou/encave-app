@@ -64,7 +64,7 @@ export function HomeSearchPanel({ variant = 'desktop' }: HomeSearchPanelProps) {
     <form
       onSubmit={handleSubmit}
       className={cn(
-        'bg-white shadow-[0_18px_50px_-12px_rgba(58,14,31,.25),0_0_0_1px_rgba(154,42,72,.08)]',
+        'relative z-50 bg-white shadow-[0_18px_50px_-12px_rgba(58,14,31,.25),0_0_0_1px_rgba(154,42,72,.08)]',
         variant === 'desktop'
           ? 'flex max-w-[720px] items-center rounded-[18px] p-1.5'
           : 'grid grid-cols-2 overflow-visible rounded-[18px]'
@@ -73,7 +73,7 @@ export function HomeSearchPanel({ variant = 'desktop' }: HomeSearchPanelProps) {
       <div
         className={cn(
           variant === 'desktop'
-            ? 'min-w-0 flex-[1.2] border-r border-stone-200 px-[18px] py-2'
+            ? 'relative z-50 min-w-0 flex-[1.2] border-r border-stone-200 px-[18px] py-2'
             : 'col-span-2 border-b border-[#efe4e6] px-3.5 py-3'
         )}
       >

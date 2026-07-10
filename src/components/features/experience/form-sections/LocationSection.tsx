@@ -1,4 +1,5 @@
 import { MapPin } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { AddressAutocomplete } from '../AddressAutocomplete';
 import { SectionHeader } from './SectionHeader';
 import type { AddressData } from './types';
@@ -14,47 +15,49 @@ export function LocationSection({
   onLocationChange,
   sectionRef,
 }: LocationSectionProps) {
+  const t = useTranslations('experience');
+
   return (
     <section
       ref={sectionRef}
       id="location"
       className="scroll-mt-24 rounded-xl border border-stone-200 bg-white p-6 shadow-sm md:p-8"
     >
-      <SectionHeader icon={MapPin} title="Location" />
+      <SectionHeader icon={MapPin} title={t('location')} />
       <div className="space-y-4">
         {/* Address Autocomplete */}
         <div>
           <label
             htmlFor="location-address"
-            className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500"
+            className="mb-2 block text-xs font-bold uppercase tracking-wider text-muted-foreground"
           >
-            Address
+            {t('address')}
           </label>
           <AddressAutocomplete
             id="location-address"
             value={location}
             onChange={onLocationChange}
-            placeholder="Search for an address..."
+            placeholder={t('addressSearchPlaceholder')}
           />
-          <p className="mt-1 text-xs text-slate-400">
-            Start typing to search for an address
+          <p className="mt-1 text-xs text-muted-foreground">
+            {t('addressHelp')}
           </p>
         </div>
 
         {/* Display selected address details */}
         {location.street && (
-          <div className="rounded-lg border border-stone-200 bg-slate-50 p-4">
-            <h4 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">
-              Selected Address
+          <div className="rounded-lg border border-stone-200 bg-muted p-4">
+            <h4 className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              {t('selectedAddress')}
             </h4>
-            <div className="space-y-1 text-sm text-slate-700">
+            <div className="space-y-1 text-sm text-foreground">
               {location.street && <p>{location.street}</p>}
               <p>
                 {[location.zipCode, location.city].filter(Boolean).join(' ')}
               </p>
               {location.latitude && location.longitude && (
-                <p className="text-xs text-slate-400">
-                  Coordinates: {location.latitude.toFixed(6)},{' '}
+                <p className="text-xs text-muted-foreground">
+                  {t('coordinates')}: {location.latitude.toFixed(6)},{' '}
                   {location.longitude.toFixed(6)}
                 </p>
               )}

@@ -89,7 +89,7 @@ export function AuthPageLayout({
               className="group mb-2 inline-flex items-center gap-2"
             >
               <Wine className="h-8 w-8 text-primary" />
-              <span className="font-display text-2xl font-bold tracking-tight text-slate-900">
+              <span className="font-display text-2xl font-bold tracking-tight text-foreground">
                 EnCave
               </span>
             </Link>
@@ -99,16 +99,16 @@ export function AuthPageLayout({
           </div>
 
           {/* Footer legal links */}
-          <div className="mt-12 flex justify-center gap-6 text-xs text-slate-400">
+          <div className="mt-12 flex justify-center gap-6 text-xs text-muted-foreground">
             <Link
               href="/legal/privacy"
-              className="transition-colors hover:text-slate-600"
+              className="transition-colors hover:text-foreground"
             >
               {t('legal.privacyPolicy')}
             </Link>
             <Link
               href="/legal/terms"
-              className="transition-colors hover:text-slate-600"
+              className="transition-colors hover:text-foreground"
             >
               {t('legal.termsOfService')}
             </Link>

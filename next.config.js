@@ -17,6 +17,8 @@ const connectSrc = [
   'https://*.tiles.mapbox.com',
   // Map fallback style without Mapbox token (InteractiveMap.tsx) — L-217
   'https://tile.openstreetmap.org',
+  'https://*.tile.openstreetmap.org',
+  'https://*.basemaps.cartocdn.com',
   'https://demotiles.maplibre.org',
 ];
 

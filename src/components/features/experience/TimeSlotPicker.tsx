@@ -87,7 +87,7 @@ export function TimeSlotPicker({
   if (slots.length === 0) {
     return (
       <div className="flex flex-col items-center gap-3 py-4">
-        <p className="text-sm text-slate-500">{t('noConfigured')}</p>
+        <p className="text-sm text-muted-foreground">{t('noConfigured')}</p>
         <Button
           type="button"
           variant="outline"
@@ -139,7 +139,7 @@ export function TimeSlotPicker({
             </SelectContent>
           </Select>
 
-          <span className="text-slate-400">{t('to')}</span>
+          <span className="text-muted-foreground">{t('to')}</span>
 
           {/* End Time */}
           <Select
@@ -173,7 +173,7 @@ export function TimeSlotPicker({
             variant="ghost"
             size="icon"
             onClick={() => handleRemoveSlot(slot.id)}
-            className="h-9 w-9 text-slate-400 hover:text-red-600"
+            className="h-9 w-9 text-muted-foreground hover:text-destructive"
             aria-label={t('removeSlot', { index: index + 1 })}
           >
             <Trash2 className="h-4 w-4" />

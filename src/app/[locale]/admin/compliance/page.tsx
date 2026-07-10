@@ -36,7 +36,7 @@ export default function AdminCompliancePage() {
         <h1 className="font-display text-display-md text-burgundy-700">
           Public launch compliance
         </h1>
-        <p className="mt-2 text-slate-600">
+        <p className="mt-2 text-muted-foreground">
           Operational checklist for legal pages, nLPD data export, and analytics
           consent.
         </p>
@@ -58,7 +58,7 @@ export default function AdminCompliancePage() {
               >
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                  <span className="font-medium text-slate-900">
+                  <span className="font-medium text-foreground">
                     {page.label}
                   </span>
                 </div>
@@ -79,16 +79,18 @@ export default function AdminCompliancePage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between rounded-lg border border-stone-200 p-3">
-              <span className="font-medium text-slate-900">PostHog key</span>
+              <span className="font-medium text-foreground">PostHog key</span>
               <Badge variant={postHogConfigured ? 'success' : 'warning'}>
                 {postHogConfigured ? 'Configured' : 'Missing'}
               </Badge>
             </div>
             <div className="flex items-center justify-between rounded-lg border border-stone-200 p-3">
-              <span className="font-medium text-slate-900">PostHog host</span>
-              <span className="text-sm text-slate-600">{postHogHost}</span>
+              <span className="font-medium text-foreground">PostHog host</span>
+              <span className="text-sm text-muted-foreground">
+                {postHogHost}
+              </span>
             </div>
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-muted-foreground">
               PostHog initializes only after the `encave_consent` cookie grants
               analytics consent and matches the current consent version.
             </p>
@@ -100,7 +102,7 @@ export default function AdminCompliancePage() {
             <CardTitle>nLPD data export</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-muted-foreground">
               Authenticated users can download their personal data as JSON from
               the privacy export endpoint.
             </p>

@@ -19,7 +19,7 @@ import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/i18n/formatters';
 import type { Locale } from '@/i18n/routing';
 import { Button } from '@/components/ui/button';
-import { BookingStatusBadge } from '@/components/features/booking/dashboard/BookingStatusBadge';
+import { BookingStatusBadge } from '@/components/features/booking/BookingStatusBadge';
 import { cancelClientBooking } from '@/server/actions/client.actions';
 import type { ClientBookingWithDetails } from '@/server/queries/client-booking.queries';
 import type { BookingStatus } from '@prisma/client';
@@ -103,14 +103,14 @@ export function ClientBookingCard({
             </h3>
             <BookingStatusBadge status={booking.status} />
           </div>
-          <p className="mt-1 text-sm text-[#915564]">
+          <p className="mt-1 text-sm text-muted-foreground">
             {booking.winery.name} &middot; {formattedDate} &middot;{' '}
             {booking.timeSlot}
           </p>
         </div>
 
         {/* Expand Icon */}
-        <div className="flex-shrink-0 text-[#915564]">
+        <div className="flex-shrink-0 text-muted-foreground">
           {isExpanded ? (
             <ChevronUp className="h-5 w-5" aria-hidden="true" />
           ) : (
@@ -126,25 +126,31 @@ export function ClientBookingCard({
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm">
                 <Calendar
-                  className="h-4 w-4 text-[#915564]"
+                  className="h-4 w-4 text-muted-foreground"
                   aria-hidden="true"
                 />
                 <span className="text-foreground">{formattedDate}</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
-                <Clock className="h-4 w-4 text-[#915564]" aria-hidden="true" />
+                <Clock
+                  className="h-4 w-4 text-muted-foreground"
+                  aria-hidden="true"
+                />
                 <span className="text-foreground">
                   {booking.timeSlot} &middot; {booking.experience.duration} min
                 </span>
               </div>
               <div className="flex items-center gap-2 text-sm">
-                <Users className="h-4 w-4 text-[#915564]" aria-hidden="true" />
+                <Users
+                  className="h-4 w-4 text-muted-foreground"
+                  aria-hidden="true"
+                />
                 <span className="text-foreground">
                   {t('bookingCard.guests', { count: booking.guestCount })}
                 </span>
               </div>
               <div className="text-sm">
-                <span className="text-[#915564]">
+                <span className="text-muted-foreground">
                   {t('bookingCard.reference')}:{' '}
                 </span>
                 <span className="font-mono font-bold text-foreground">
@@ -152,7 +158,7 @@ export function ClientBookingCard({
                 </span>
               </div>
               <div className="text-sm">
-                <span className="text-[#915564]">
+                <span className="text-muted-foreground">
                   {t('bookingCard.price')}:{' '}
                 </span>
                 <span className="font-bold text-foreground">
@@ -167,7 +173,7 @@ export function ClientBookingCard({
               </h4>
               <div className="flex items-start gap-2 text-sm">
                 <MapPin
-                  className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#915564]"
+                  className="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground"
                   aria-hidden="true"
                 />
                 <span className="text-foreground">
@@ -176,7 +182,10 @@ export function ClientBookingCard({
                 </span>
               </div>
               <div className="flex items-center gap-2 text-sm">
-                <Phone className="h-4 w-4 text-[#915564]" aria-hidden="true" />
+                <Phone
+                  className="h-4 w-4 text-muted-foreground"
+                  aria-hidden="true"
+                />
                 <a
                   href={`tel:${booking.winery.phone}`}
                   className="text-primary hover:underline"
@@ -185,7 +194,10 @@ export function ClientBookingCard({
                 </a>
               </div>
               <div className="flex items-center gap-2 text-sm">
-                <Mail className="h-4 w-4 text-[#915564]" aria-hidden="true" />
+                <Mail
+                  className="h-4 w-4 text-muted-foreground"
+                  aria-hidden="true"
+                />
                 <a
                   href={`mailto:${booking.winery.email}`}
                   className="text-primary hover:underline"
@@ -250,22 +262,22 @@ export function ClientBookingCard({
               </h3>
               <button
                 onClick={() => setShowCancelDialog(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-muted-foreground hover:text-foreground"
                 aria-label="Close"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <p className="text-sm text-[#915564]">
+            <p className="text-sm text-muted-foreground">
               {t('cancel.confirmMessage', { title: booking.experience.title })}
             </p>
 
-            <div className="rounded-lg border border-border bg-[#fdfcfa] p-3 text-sm">
+            <div className="rounded-lg border border-border bg-background p-3 text-sm">
               <p className="font-bold text-foreground">
                 {t('cancel.refundPolicy')}
               </p>
-              <p className="mt-1 text-[#915564]">
+              <p className="mt-1 text-muted-foreground">
                 {t('cancel.refundPolicyDetail')}
               </p>
             </div>

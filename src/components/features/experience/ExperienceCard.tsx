@@ -66,7 +66,7 @@ export function ExperienceCard({
     >
       <Card className="flex h-full flex-col overflow-hidden">
         {/* Cover Photo */}
-        <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
+        <div className="relative aspect-[4/3] overflow-hidden bg-muted">
           <ImageWithFallback
             src={experience.coverPhoto}
             alt={experience.title}
@@ -80,7 +80,7 @@ export function ExperienceCard({
           <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-transparent transition-opacity duration-300 group-hover:from-black/25" />
           {/* Type Badge */}
           <div className="absolute right-3 top-3 z-10">
-            <span className="rounded-full bg-white/95 px-3 py-1 text-xs font-medium text-slate-700 shadow-sm backdrop-blur-sm">
+            <span className="rounded-full bg-white/95 px-3 py-1 text-xs font-medium text-foreground shadow-sm backdrop-blur-sm">
               {t(`types.${experience.type}`)}
             </span>
           </div>
@@ -98,14 +98,14 @@ export function ExperienceCard({
 
           {/* Title */}
           <h3
-            className="mt-1 line-clamp-2 font-display text-lg font-semibold text-slate-900 transition-colors group-hover:text-burgundy-700"
+            className="mt-1 line-clamp-2 font-display text-lg font-semibold text-foreground transition-colors group-hover:text-burgundy-700"
             data-testid="experience-title"
           >
             {experience.title}
           </h3>
 
           {/* Location with optional distance */}
-          <div className="mt-2 flex items-center justify-between text-sm text-slate-500">
+          <div className="mt-2 flex items-center justify-between text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
               <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
               <span>{experience.winery.commune}</span>
@@ -119,7 +119,7 @@ export function ExperienceCard({
           </div>
 
           {/* Meta Info */}
-          <div className="mt-3 flex items-center gap-4 text-sm text-slate-600">
+          <div className="mt-3 flex items-center gap-4 text-sm text-muted-foreground">
             <span
               className="flex items-center gap-1"
               data-testid="experience-duration"
@@ -158,12 +158,12 @@ export function ExperienceCard({
           {/* Price — pinned to bottom */}
           <div className="mt-auto flex items-center justify-between pt-4">
             <span
-              className="text-lg font-semibold text-slate-900"
+              className="text-lg font-semibold text-foreground"
               data-testid="experience-price"
             >
               {formatCHF(experience.price)}
             </span>
-            <span className="text-sm text-slate-500">
+            <span className="text-sm text-muted-foreground">
               {tCommon('currency.perPerson')}
             </span>
           </div>

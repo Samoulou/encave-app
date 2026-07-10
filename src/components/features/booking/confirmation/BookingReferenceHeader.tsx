@@ -1,5 +1,6 @@
 import { useTranslations } from 'next-intl';
 import { CheckCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 interface BookingReferenceHeaderProps {
   reference: string;
@@ -23,10 +24,13 @@ export function BookingReferenceHeader({
         </p>
       </div>
       {isConfirmed && (
-        <div className="flex shrink-0 items-center gap-2 rounded-full bg-green-100 px-3 py-1.5 text-sm font-semibold text-green-700">
-          <CheckCircle className="size-4 shrink-0" />
+        <Badge
+          variant="success"
+          className="shrink-0 gap-1.5 px-3 py-1.5 text-sm"
+        >
+          <CheckCircle className="size-4 shrink-0" aria-hidden="true" />
           {t('confirmed')}
-        </div>
+        </Badge>
       )}
     </div>
   );

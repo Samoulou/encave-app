@@ -240,12 +240,12 @@ export function BookingWidget({
 
       <div className="border-t border-stone-200 pt-4">
         <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-500">
-          Choisissez un jour
+          {t('chooseDay')}
         </div>
         <div
           className="flex gap-1.5"
           role="application"
-          aria-label="calendar"
+          aria-label={t('calendarLabel')}
           data-testid="booking-date-options"
         >
           {dateOptions.map((option) => {
@@ -278,7 +278,8 @@ export function BookingWidget({
 
       <div className="mt-5 border-t border-stone-200 pt-4">
         <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-500">
-          Horaire{date ? ` · ${formatDateLabel(date)}` : ''}
+          {t('time')}
+          {date ? ` · ${formatDateLabel(date)}` : ''}
         </div>
         <div data-testid="time-slot-section">
           <TimeSlotSelector
@@ -297,12 +298,12 @@ export function BookingWidget({
       >
         <div>
           <div className="text-[13px] font-semibold text-ink-900">
-            Participants
+            {t('participants')}
           </div>
           <div className="text-[11px] text-ink-500">
             {remainingCapacity !== null
-              ? `${remainingCapacity} places encore disponibles`
-              : `${maxCapacity} places maximum`}
+              ? t('placesRemaining', { count: remainingCapacity })
+              : t('placesMax', { count: maxCapacity })}
           </div>
         </div>
         <div className="flex items-center gap-3.5">
@@ -394,7 +395,7 @@ export function BookingWidget({
       {isBookingEnabled && (
         <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[11px] text-ink-500">
           <Lock className="h-3 w-3" />
-          Paiement Stripe · vous ne serez debite qu&apos;a la confirmation
+          {t('securePaymentNotice')}
         </p>
       )}
 

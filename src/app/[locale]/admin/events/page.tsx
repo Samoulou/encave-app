@@ -68,7 +68,7 @@ export default async function AdminEventsPage({
         <h1 className="font-display text-display-md text-burgundy-700">
           Admin events
         </h1>
-        <p className="mt-2 text-slate-600">
+        <p className="mt-2 text-muted-foreground">
           Search and review published, draft, archived, or suspended-offer
           inventory for support.
         </p>
@@ -81,7 +81,7 @@ export default async function AdminEventsPage({
         <CardContent>
           <form className="grid gap-3 md:grid-cols-[1fr_180px_180px_auto]">
             <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 name="q"
                 defaultValue={q}
@@ -121,7 +121,7 @@ export default async function AdminEventsPage({
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-stone-50 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <tr className="bg-stone-50 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   <th className="px-6 py-4">Event</th>
                   <th className="px-6 py-4">Winery</th>
                   <th className="px-6 py-4">Status</th>
@@ -134,10 +134,10 @@ export default async function AdminEventsPage({
                 {experiences.map((experience) => (
                   <tr key={experience.id}>
                     <td className="px-6 py-4">
-                      <p className="font-medium text-slate-900">
+                      <p className="font-medium text-foreground">
                         {experience.title}
                       </p>
-                      <p className="text-sm text-slate-500">
+                      <p className="text-sm text-muted-foreground">
                         {experience.price / 100} CHF · {experience.duration}m
                       </p>
                     </td>
@@ -148,7 +148,7 @@ export default async function AdminEventsPage({
                       >
                         {experience.winery.name}
                       </Link>
-                      <p className="text-sm text-slate-500">
+                      <p className="text-sm text-muted-foreground">
                         {experience.winery.commune} · {experience.winery.status}
                       </p>
                     </td>
@@ -165,10 +165,10 @@ export default async function AdminEventsPage({
                         {experience.status}
                       </Badge>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-600">
+                    <td className="px-6 py-4 text-sm text-muted-foreground">
                       {experience.type}
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-600">
+                    <td className="px-6 py-4 text-sm text-muted-foreground">
                       {experience._count.bookings}
                     </td>
                     <td className="px-6 py-4 text-right">

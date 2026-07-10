@@ -48,7 +48,7 @@ export function LocationSection({
       <h3 className="mb-4 text-2xl font-bold text-foreground">
         {t('whereYoullBe')}
       </h3>
-      <p className="mb-4 text-gray-600" data-testid="winery-address">
+      <p className="mb-4 text-muted-foreground" data-testid="winery-address">
         {fullAddress}
       </p>
 

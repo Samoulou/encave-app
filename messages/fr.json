@@ -44,7 +44,8 @@
       "archived": "Archivé",
       "pending": "En attente",
       "verified": "Vérifié",
-      "rejected": "Rejeté"
+      "rejected": "Rejeté",
+      "suspended": "Suspendu"
     },
     "days": {
       "full": {
@@ -119,7 +120,13 @@
     "myProfile": "Mon profil",
     "roleWinemaker": "Vigneron",
     "roleClient": "Client",
-    "roleAdmin": "Administrateur"
+    "roleAdmin": "Administrateur",
+    "searchPill": {
+      "aria": "Rechercher des expériences dans le Valais pour au moins 2 personnes",
+      "region": "Tout le Valais",
+      "subject": "Expériences disponibles",
+      "spots": "2+ places"
+    }
   },
   "locale": {
     "fr": "Français",
@@ -391,7 +398,9 @@
       "endPlaceholder": "Fin",
       "to": "à",
       "toggleActive": "Activer/désactiver le créneau {index}",
-      "removeSlot": "Supprimer le créneau {index}"
+      "removeSlot": "Supprimer le créneau {index}",
+      "endAfterStart": "L'heure de fin doit être après l'heure de début",
+      "minDuration": "La durée minimale est de 30 minutes"
     },
     "filters": {
       "all": "Tous",
@@ -479,6 +488,8 @@
       "noSlotsPreview": "Aucune disponibilité configurée. Ajoutez des créneaux horaires ci-dessus pour prévisualiser votre planning hebdomadaire.",
       "active": "Actif",
       "disabled": "Désactivé",
+      "addTime": "Ajouter un horaire",
+      "addSchedulePattern": "Ajouter un créneau récurrent",
       "modes": {
         "label": "Mode de disponibilité",
         "recurring": "Récurrent",
@@ -519,6 +530,59 @@
     },
     "ageGate": {
       "badge": "Reserve aux 18+"
+    },
+    "createNewExperience": "Créer une nouvelle expérience",
+    "createFormSubtitle": "Remplissez les détails pour publier votre expérience viticole sur la marketplace.",
+    "createCardSubtitle": "Proposez une nouvelle dégustation, visite ou atelier.",
+    "draftAutoSaved": "Brouillon enregistré automatiquement",
+    "saveDraft": "Enregistrer le brouillon",
+    "publishStatus": "Statut de publication",
+    "visibleOnMarketplace": "Visible sur la marketplace",
+    "draftModeNotice": "Votre expérience est actuellement en mode brouillon. Publiez-la pour commencer à accepter des réservations.",
+    "formSections": "Sections du formulaire",
+    "needHelp": "Besoin d'aide ?",
+    "helpText": "Consultez notre guide pour créer la fiche d'expérience viticole parfaite.",
+    "readGuide": "Lire le guide",
+    "uploadCoverPhoto": "Télécharger une photo de couverture",
+    "coverPhotoRecommended": "Recommandé : 1920 x 1080 pixels (format 16:9). Max 5 Mo, JPEG ou PNG.",
+    "updatedSuccess": "Expérience mise à jour",
+    "updatedDescription": "Vos modifications ont été enregistrées.",
+    "maxCapacityLabel": "Capacité max.",
+    "address": "Adresse",
+    "addressHelp": "Commencez à taper pour rechercher une adresse",
+    "selectedAddress": "Adresse sélectionnée",
+    "coordinates": "Coordonnées",
+    "maxFileSize": "5 Mo max par fichier",
+    "uploadDropzone": "Cliquez pour télécharger ou glissez-déposez",
+    "uploadFormats": "SVG, PNG, JPG ou GIF (max. 800x400px)",
+    "coverBadge": "COUVERTURE",
+    "cancelEditing": "Annuler la modification",
+    "share": "Partager",
+    "linkCopied": "Lien copié",
+    "saveToWishlist": "Enregistrer",
+    "durationOptions": {
+      "60": "1 heure",
+      "90": "1,5 heure",
+      "120": "2 heures",
+      "180": "3 heures",
+      "240": "Demi-journée"
+    },
+    "detail": {
+      "explore": "Explorer",
+      "placesMax": "{count} places max",
+      "group": "Groupe",
+      "format": "Format",
+      "place": "Lieu",
+      "groupValue": "{min}-{max} pers.",
+      "viewProfile": "Voir le profil",
+      "theExperience": "L'expérience",
+      "practicalInfo": "Infos pratiques",
+      "durationIndicated": "{duration} indiqué par le domaine",
+      "groupSize": "Groupe de {min} à {max} personnes",
+      "meetingPoint": "Rendez-vous à {commune}",
+      "proposedBy": "{type} proposé par {winery}",
+      "securePaymentActive": "Paiement sécurisé activé",
+      "bookingToConfirm": "Réservation à confirmer avec le domaine"
     },
     "freeCancellationUntilHours": "Annulation gratuite jusqu'à {hours} h avant.",
     "freeCancellationUntilDays": "Annulation gratuite jusqu'à {days, plural, =1 {# jour} other {# jours}} avant.",
@@ -571,6 +635,16 @@
     "spotsLeft": "{count} {count, plural, =1 {place restante} other {places restantes}}",
     "whenVisit": "Quand souhaitez-vous nous rendre visite ?",
     "back": "Retour",
+    "chooseDay": "Choisissez un jour",
+    "calendarLabel": "Calendrier",
+    "participants": "Participants",
+    "placesRemaining": "{count} places encore disponibles",
+    "placesMax": "{count} places maximum",
+    "serviceFee": "Frais de service",
+    "total": "Total",
+    "securePaymentNotice": "Paiement Stripe · vous ne serez débité qu’à la confirmation",
+    "loadSlotsError": "Échec du chargement des créneaux. Veuillez réessayer.",
+    "sunsetSlot": "coucher",
     "holdSlotTaken": "Ce créneau vient tout juste d'être réservé par quelqu'un d'autre. Choisissez un autre horaire.",
     "holdDateBlocked": "Cette date n'est pas ouverte à la réservation. Choisissez une autre date.",
     "holdSlotUnavailable": "Cet horaire n'est plus proposé pour cette date. Choisissez un autre horaire.",
@@ -715,7 +789,7 @@
     "availabilityCheckFailed": "Échec de la vérification de disponibilité. Veuillez réessayer.",
     "ageGate": {
       "checkboxLabel": "Je certifie avoir 18 ans revolus.",
-      "helper": "Une piece d'identite pourra etre demandee par l'encaveur a votre arrivee.",
+      "helper": "Une pièce d'identité pourra être demandée par l'encaveur à votre arrivée.",
       "errors": {
         "required": "Merci de confirmer votre age avant de poursuivre le paiement."
       }
@@ -957,7 +1031,11 @@
       "savePreferences": "Enregistrer les préférences",
       "updated": "Préférences de notifications mises à jour",
       "updateFailed": "Échec de la mise à jour des préférences",
-      "unexpectedError": "Une erreur inattendue s'est produite"
+      "unexpectedError": "Une erreur inattendue s'est produite",
+      "emailNotifications": "Notifications par email",
+      "emailNotificationsDescription": "Choisissez les emails que vous souhaitez recevoir",
+      "transactionalTitle": "Emails transactionnels",
+      "transactionalDescription": "Les confirmations de réservation, annulations et reçus de paiement ne peuvent pas être désactivés car ils contiennent des informations importantes sur vos réservations."
     }
   },
   "stripe": {
@@ -1329,7 +1407,11 @@
     "locating": "Localisation..."
   },
   "onboarding": {
-    "step": "Étape {current} sur {total}"
+    "step": "Étape {current} sur {total}",
+    "winery": {
+      "title": "Enregistrez votre domaine",
+      "subtitle": "Parlez-nous de votre domaine pour commencer sur EnCave et entrer en contact avec les amateurs de vin."
+    }
   },
   "metadata": {
     "siteName": "EnCave",
@@ -1658,9 +1740,9 @@
     },
     "cookies": {
       "banner": {
-        "title": "Vos preferences cookies",
-        "body": "Nous utilisons des cookies pour faire fonctionner le site et, avec votre accord, pour comprendre comment il est utilise.",
-        "policyLink": "Lire notre politique de confidentialite",
+        "title": "Vos préférences cookies",
+        "body": "Nous utilisons des cookies pour faire fonctionner le site et, avec votre accord, pour comprendre comment il est utilisé.",
+        "policyLink": "Lire notre politique de confidentialité",
         "acceptAll": "Tout accepter",
         "rejectAll": "Continuer sans accepter",
         "customize": "Personnaliser"
@@ -1671,12 +1753,12 @@
       },
       "category": {
         "necessary": {
-          "title": "Strictement necessaires",
-          "description": "Indispensables au fonctionnement du site. Ils ne peuvent pas etre desactives."
+          "title": "Strictement nécessaires",
+          "description": "Indispensables au fonctionnement du site. Ils ne peuvent pas être désactivés."
         },
         "analytics": {
           "title": "Mesure d'audience",
-          "description": "Nous aident a comprendre quelles pages sont utiles. Outil utilise : PostHog."
+          "description": "Nous aident à comprendre quelles pages sont utiles. Outil utilisé : PostHog."
         }
       }
     }
@@ -1925,7 +2007,8 @@
         "completed": "Présent",
         "noShow": "Absent (no-show)",
         "cancelledByClient": "Annulée par le client",
-        "cancelledByWinery": "Annulée par vos soins"
+        "cancelledByWinery": "Annulée par vos soins",
+        "pending": "Paiement en attente"
       },
       "partySize": {
         "inline": "{count, plural, =1 {1 personne} other {# personnes}}"
@@ -2054,7 +2137,25 @@
     "resultError": "Scan refuse",
     "unknown": "QR non reconnu",
     "already": "Deja enregistre",
-    "counter": "{checkedIn} / {total} clients enregistres"
+    "counter": "{checkedIn} / {total} clients enregistres",
+    "loadError": "Impossible de charger le scan"
+  },
+  "imageUpload": {
+    "clickToUpload": "Cliquez pour télécharger une image",
+    "selectImageFile": "Sélectionner un fichier image",
+    "changePhoto": "Changer la photo",
+    "uploading": "Téléchargement...",
+    "formatHint": "JPEG ou PNG, 5 Mo max",
+    "addPhotoToGallery": "Ajouter une photo à la galerie",
+    "addPhoto": "Ajouter une photo",
+    "replace": "Remplacer",
+    "remove": "Supprimer",
+    "replaceImage": "Remplacer l'image",
+    "removeImage": "Supprimer l'image",
+    "uploadedImageAlt": "Image téléchargée",
+    "errorTooLarge": "L'image doit faire moins de 5 Mo",
+    "errorInvalidType": "Seules les images JPEG et PNG sont autorisées",
+    "errorUploadFailed": "Échec du téléchargement de l'image. Veuillez réessayer."
   },
   "bookingError": {
     "payment": {

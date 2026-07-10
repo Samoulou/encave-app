@@ -1,5 +1,10 @@
 import { notFound } from 'next/navigation';
-import { Manrope, JetBrains_Mono, Fraunces } from 'next/font/google';
+import {
+  Nunito,
+  Averia_Serif_Libre,
+  Mukta_Vaani,
+  JetBrains_Mono,
+} from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
@@ -22,31 +27,39 @@ const Analytics = dynamic(
   { ssr: false }
 );
 
-// L-206: reduced font matrix — 9 files instead of 18
-// (Fraunces was 5 weights × 2 styles, Manrope 5 weights, Mono 3 weights).
-const manrope = Manrope({
+// Title font (big headings) — Nunito (sans). Mapped to `font-display`.
+const nunito = Nunito({
   subsets: ['latin'],
-  weight: ['400', '600', '700'],
-  variable: '--font-manrope',
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-display',
   display: 'swap',
 });
 
-const fraunces = Fraunces({
+// Serif accents / sub-headings — Averia Serif Libre. Mapped to `font-serif`.
+const averia = Averia_Serif_Libre({
   subsets: ['latin'],
-  weight: ['400', '600', '700'],
-  style: ['normal'],
-  variable: '--font-fraunces',
+  weight: ['400', '700'],
+  style: ['normal', 'italic'],
+  variable: '--font-serif',
   display: 'swap',
 });
 
-// Fraunces italic is only used at regular weight (hero <em>, about quote) —
+// Body / UI — Mukta Vaani. Mapped to `font-sans`.
+const mukta = Mukta_Vaani({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-sans',
+  display: 'swap',
+});
+
+// Display italic is only used at regular weight (hero <em>, about quote) —
 // load that single face via the `font-display-italic` utility instead of
-// italics for every weight.
-const frauncesItalic = Fraunces({
+// italics for every weight (L-206 pattern, remapped to Averia).
+const averiaItalic = Averia_Serif_Libre({
   subsets: ['latin'],
   weight: ['400'],
   style: ['italic'],
-  variable: '--font-fraunces-italic',
+  variable: '--font-display-italic',
   display: 'swap',
 });
 
@@ -89,7 +102,7 @@ export default async function LocaleLayout({ children, params }: Props) {
         <link rel="dns-prefetch" href="https://eu.posthog.com" />
       </head>
       <body
-        className={`${manrope.variable} ${fraunces.variable} ${frauncesItalic.variable} ${jetbrainsMono.variable} font-sans antialiased`}
+        className={`${nunito.variable} ${averia.variable} ${mukta.variable} ${averiaItalic.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
         <NextIntlClientProvider messages={messages}>
           <PostHogProvider>

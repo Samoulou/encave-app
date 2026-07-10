@@ -69,7 +69,7 @@ export function CalendarNavigation({
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
-      <h2 className="text-lg font-semibold text-slate-900">
+      <h2 className="text-lg font-semibold text-foreground">
         {format(currentDate, displayFormat, { locale: dateLocale })}
       </h2>
     </div>

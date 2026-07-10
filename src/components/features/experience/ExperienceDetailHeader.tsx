@@ -38,14 +38,14 @@ export function ExperienceDetailHeader({
         </Link>
         {rating != null && rating > 0 && (
           <>
-            <span className="text-gray-300">•</span>
+            <span className="text-border">•</span>
             <div className="flex items-center gap-1">
-              <Star className="h-[18px] w-[18px] fill-yellow-500 text-yellow-500" />
+              <Star className="h-[18px] w-[18px] fill-gold-500 text-gold-500" />
               <span className="font-bold text-foreground">
                 {rating.toFixed(1)}
               </span>
               {reviewCount > 0 && (
-                <span className="text-gray-500">
+                <span className="text-muted-foreground">
                   ({t('reviews', { count: reviewCount })})
                 </span>
               )}
@@ -53,7 +53,7 @@ export function ExperienceDetailHeader({
           </>
         )}
         <span className="text-gray-300">•</span>
-        <div className="flex items-center gap-1 text-gray-500">
+        <div className="flex items-center gap-1 text-muted-foreground">
           <MapPin className="h-[18px] w-[18px]" />
           <span data-testid="winery-location">{commune}, Valais</span>
         </div>

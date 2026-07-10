@@ -21,16 +21,16 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        display: ['var(--font-fraunces)', 'Fraunces', 'Georgia', 'serif'],
-        /* Dedicated italic face (Fraunces 400 italic only) — see L-206 */
+        display: ['var(--font-display)', 'Nunito', 'system-ui', 'sans-serif'],
+        /* Dedicated italic face (Averia 400 italic only) — see L-206 */
         'display-italic': [
-          'var(--font-fraunces-italic)',
-          'Fraunces',
+          'var(--font-display-italic)',
+          'Averia Serif Libre',
           'Georgia',
           'serif',
         ],
-        serif: ['var(--font-fraunces)', 'Fraunces', 'Georgia', 'serif'],
-        sans: ['var(--font-manrope)', 'Manrope', 'system-ui', 'sans-serif'],
+        serif: ['var(--font-serif)', 'Averia Serif Libre', 'Georgia', 'serif'],
+        sans: ['var(--font-sans)', 'Mukta Vaani', 'system-ui', 'sans-serif'],
         mono: ['var(--font-mono)', 'JetBrains Mono', 'monospace'],
       },
       fontSize: {
@@ -126,6 +126,10 @@ const config: Config = {
           DEFAULT: 'hsl(var(--destructive))',
           foreground: 'hsl(var(--destructive-foreground))',
         },
+        /* Semantic status tokens (warm, brand-aligned) */
+        success: 'hsl(var(--success))',
+        warning: 'hsl(var(--warning))',
+        error: 'hsl(var(--error))',
         ring: 'hsl(var(--ring))',
         /* Custom brand colors */
         burgundy: {

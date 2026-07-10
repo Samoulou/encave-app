@@ -86,9 +86,9 @@ export function ClientProfileForm({
             type="email"
             value={email}
             disabled
-            className="h-11 w-full cursor-not-allowed rounded-lg border border-border bg-gray-50 px-4 text-sm text-gray-500"
+            className="h-11 w-full cursor-not-allowed rounded-lg border border-border bg-muted px-4 text-sm text-muted-foreground"
           />
-          <p className="text-xs text-[#915564]">{t('emailReadonly')}</p>
+          <p className="text-xs text-muted-foreground">{t('emailReadonly')}</p>
         </div>
 
         {/* Language */}

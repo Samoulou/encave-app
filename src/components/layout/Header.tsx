@@ -14,7 +14,7 @@ export async function Header() {
   const t = await getTranslations('nav');
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-stone-200/50 bg-cream-50/90 backdrop-blur-[14px] md:border-stone-200 md:bg-white md:backdrop-blur-none md:supports-[backdrop-filter]:bg-white">
+    <header className="sticky top-0 z-50 w-full border-b border-stone-200/60 bg-cream-50/90 backdrop-blur-[14px] md:border-stone-200 md:bg-cream-100/80 md:supports-[backdrop-filter]:bg-cream-100/70">
       <div className="mx-auto grid h-[52px] max-w-7xl grid-cols-[40px_1fr_40px] items-center px-[10px] md:flex md:h-16 md:gap-6 md:px-6 lg:px-8 xl:px-10">
         <div className="md:hidden">
           <MobileBackButton />

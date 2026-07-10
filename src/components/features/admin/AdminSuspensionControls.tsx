@@ -68,8 +68,8 @@ export function AdminSuspensionControls({
     <div className="rounded-lg border border-stone-200 bg-white p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="font-medium text-slate-900">{label}</p>
-          <p className="text-sm text-slate-500">
+          <p className="font-medium text-foreground">{label}</p>
+          <p className="text-sm text-muted-foreground">
             {isSuspend
               ? 'Blocks access and records an admin action.'
               : 'Restores access and records an admin action.'}

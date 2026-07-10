@@ -309,8 +309,9 @@ describe('booking.queries', () => {
       expect(todayCall?.[0]?.where?.date?.gte).toBeDefined();
       expect(todayCall?.[0]?.where?.date?.lt).toBeDefined();
 
-      // Week should start on Monday (Jan 6) for Jan 12
+      // Upcoming window starts today and includes the next 7 calendar days.
       expect(weekCall?.[0]?.where?.date?.gte).toBeDefined();
+      expect(weekCall?.[0]?.where?.date?.lt).toBeDefined();
 
       // Month should start on Jan 1
       expect(monthCall?.[0]?.where?.date?.gte).toBeDefined();

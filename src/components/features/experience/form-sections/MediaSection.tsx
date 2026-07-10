@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 import { Upload, ImageIcon, Trash2 } from 'lucide-react';
 import { SectionHeader } from './SectionHeader';
 import type { GalleryImage } from './types';
@@ -20,6 +21,8 @@ export function MediaSection({
   onRemoveGalleryImage,
   sectionRef,
 }: MediaSectionProps) {
+  const t = useTranslations('experience');
+
   return (
     <section
       ref={sectionRef}
@@ -27,9 +30,9 @@ export function MediaSection({
       className="scroll-mt-24 rounded-xl border border-stone-200 bg-white p-6 shadow-sm md:p-8"
     >
       <div className="mb-6 flex items-center justify-between">
-        <SectionHeader icon={ImageIcon} title="Media" />
+        <SectionHeader icon={ImageIcon} title={t('media')} />
         <span className="rounded bg-slate-100 px-2 py-1 text-xs text-slate-500">
-          Max 5MB per file
+          {t('maxFileSize')}
         </span>
       </div>
 
@@ -51,12 +54,8 @@ export function MediaSection({
         <div className="mb-4 rounded-full bg-white p-4 shadow-sm transition-transform group-hover:scale-110">
           <Upload className="h-10 w-10 text-primary" aria-hidden="true" />
         </div>
-        <p className="mb-1 font-bold text-slate-900">
-          Click to upload or drag and drop
-        </p>
-        <p className="text-sm text-slate-500">
-          SVG, PNG, JPG or GIF (max. 800x400px)
-        </p>
+        <p className="mb-1 font-bold text-foreground">{t('uploadDropzone')}</p>
+        <p className="text-sm text-muted-foreground">{t('uploadFormats')}</p>
       </label>
 
       {/* Gallery Preview */}
@@ -69,7 +68,7 @@ export function MediaSection({
             >
               <Image
                 src={image.url}
-                alt={`Gallery image ${index + 1}`}
+                alt={t('galleryImageAlt', { index: index + 1 })}
                 fill
                 className="object-cover"
                 sizes="200px"
@@ -79,14 +78,14 @@ export function MediaSection({
                   type="button"
                   className="rounded-full bg-white p-1.5 text-rose-600 hover:bg-rose-50"
                   onClick={() => onRemoveGalleryImage(image.id, image.url)}
-                  aria-label={`Remove image ${index + 1}`}
+                  aria-label={t('removeGalleryImage', { index: index + 1 })}
                 >
                   <Trash2 className="h-4 w-4" aria-hidden="true" />
                 </button>
               </div>
               {image.isCover && (
                 <div className="absolute left-2 top-2 rounded bg-primary px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">
-                  COVER
+                  {t('coverBadge')}
                 </div>
               )}
             </div>

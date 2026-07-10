@@ -30,7 +30,7 @@ function StatCard({
       />
       <CardContent className="p-6">
         <p className={cn('text-4xl font-bold', textColor)}>{value}</p>
-        <p className="mt-1 text-sm text-slate-600">{label}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{label}</p>
       </CardContent>
     </Card>
   );

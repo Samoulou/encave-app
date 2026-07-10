@@ -47,7 +47,7 @@ export function AvailabilityPreview({ slots }: AvailabilityPreviewProps) {
         className="rounded-xl bg-white p-6 shadow-warm lg:p-8"
         data-testid="availability-preview"
       >
-        <h2 className="font-display text-xl font-semibold text-slate-900">
+        <h2 className="font-display text-xl font-semibold text-foreground">
           {t('title')}
         </h2>
         <div className="mt-4 flex items-center gap-3 rounded-lg bg-amber-50 p-4 text-amber-800">
@@ -66,7 +66,7 @@ export function AvailabilityPreview({ slots }: AvailabilityPreviewProps) {
       className="rounded-xl bg-white p-6 shadow-warm lg:p-8"
       data-testid="availability-preview"
     >
-      <h2 className="font-display text-xl font-semibold text-slate-900">
+      <h2 className="font-display text-xl font-semibold text-foreground">
         {t('title')}
       </h2>
 
@@ -100,7 +100,7 @@ export function AvailabilityPreview({ slots }: AvailabilityPreviewProps) {
               key={day}
               className="flex items-start gap-4 border-b border-stone-100 pb-3 last:border-0"
             >
-              <span className="w-24 shrink-0 text-sm font-medium text-slate-700">
+              <span className="w-24 shrink-0 text-sm font-medium text-muted-foreground">
                 {tDaysFull(String(day))}
               </span>
               <div className="flex flex-wrap gap-2">

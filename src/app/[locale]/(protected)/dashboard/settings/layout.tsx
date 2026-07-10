@@ -12,10 +12,10 @@ export default async function SettingsLayout({
     <WineryAccessGuard>
       <div className="space-y-8">
         <div className="space-y-2">
-          <h1 className="font-display text-display-md text-slate-900">
+          <h1 className="font-display text-display-md text-foreground">
             {t('title')}
           </h1>
-          <p className="text-slate-600">{t('subtitle')}</p>
+          <p className="text-muted-foreground">{t('subtitle')}</p>
         </div>
         {children}
       </div>

@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import {
   searchLocations,
+  getAllLocationsSorted,
   getLocationDisplayName,
   type ValaisLocation,
 } from '@/lib/constants/locations';
@@ -100,6 +101,20 @@ export function LocationAutocomplete({
     inputRef.current?.blur();
   };
 
+  const showDefaultSuggestions = () => {
+    if (inputValue.trim()) {
+      if (suggestions.length > 0) {
+        setIsOpen(true);
+      }
+      return;
+    }
+
+    const defaultSuggestions = getAllLocationsSorted();
+    setSuggestions(defaultSuggestions);
+    setIsOpen(defaultSuggestions.length > 0);
+    setActiveIndex(-1);
+  };
+
   const handleClear = () => {
     setInputValue('');
     onChange(null);
@@ -175,7 +190,7 @@ export function LocationAutocomplete({
     <div ref={containerRef} className={cn('relative', className)}>
       <div className="relative">
         <MapPin
-          className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+          className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
           aria-hidden="true"
         />
         <Input
@@ -185,9 +200,7 @@ export function LocationAutocomplete({
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
           onFocus={() => {
-            if (inputValue.trim() && suggestions.length > 0) {
-              setIsOpen(true);
-            }
+            showDefaultSuggestions();
           }}
           placeholder={placeholder || t('locationPlaceholder')}
           className="pl-10 pr-8"
@@ -203,7 +216,7 @@ export function LocationAutocomplete({
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
             aria-label={t('clearLocation')}
           >
             <X className="h-4 w-4" />
@@ -217,7 +230,7 @@ export function LocationAutocomplete({
           ref={listRef}
           id="location-suggestions"
           role="listbox"
-          className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-stone-200 bg-white py-1 shadow-lg"
+          className="absolute z-[1000] mt-1 max-h-60 w-full overflow-auto rounded-lg border border-stone-200 bg-white py-1 shadow-lg"
         >
           {suggestions.map((location, index) => {
             const distance = getDistanceDisplay(location);
@@ -231,7 +244,7 @@ export function LocationAutocomplete({
                   'flex cursor-pointer items-center justify-between px-3 py-2 text-sm transition-colors',
                   index === activeIndex
                     ? 'bg-burgundy-50 text-burgundy-900'
-                    : 'text-slate-700 hover:bg-slate-50'
+                    : 'text-foreground hover:bg-muted'
                 )}
                 onClick={() => handleSelectLocation(location)}
                 onMouseEnter={() => setActiveIndex(index)}
@@ -242,19 +255,19 @@ export function LocationAutocomplete({
                       'h-4 w-4 flex-shrink-0',
                       index === activeIndex
                         ? 'text-burgundy-600'
-                        : 'text-slate-400'
+                        : 'text-muted-foreground'
                     )}
                     aria-hidden="true"
                   />
                   <span className="font-medium">{location.name}</span>
                   {location.parentCommune && (
-                    <span className="text-slate-500">
+                    <span className="text-muted-foreground">
                       , {location.parentCommune}
                     </span>
                   )}
                 </div>
                 {distance && (
-                  <span className="ml-2 text-xs text-slate-400">
+                  <span className="ml-2 text-xs text-muted-foreground">
                     {distance}
                   </span>
                 )}

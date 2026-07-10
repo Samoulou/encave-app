@@ -33,12 +33,12 @@ export function BookingCTA({ price, stripeConnected }: BookingCTAProps) {
       {/* Price */}
       <div className="text-center">
         <p
-          className="text-3xl font-bold text-slate-900"
+          className="text-3xl font-bold text-foreground"
           data-testid="experience-price"
         >
           {formatCHF(price)}
         </p>
-        <p className="text-sm text-slate-500">{t('perPerson')}</p>
+        <p className="text-sm text-muted-foreground">{t('perPerson')}</p>
       </div>
 
       {/* CTA Button */}

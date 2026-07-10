@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,6 +36,7 @@ export function TimeSlotEditor({
   onSave,
   onCancel,
 }: TimeSlotEditorProps) {
+  const t = useTranslations('experience');
   const [startTime, setStartTime] = useState(start);
   const [endTime, setEndTime] = useState(end);
   const [error, setError] = useState<string | null>(null);
@@ -49,14 +51,14 @@ export function TimeSlotEditor({
       const startMinutes = timeToMinutes(startTime);
       const endMinutes = timeToMinutes(endTime);
       if (endMinutes <= startMinutes) {
-        setError('End time must be after start time');
+        setError(t('timeSlots.endAfterStart'));
       } else {
-        setError('Minimum duration is 30 minutes');
+        setError(t('timeSlots.minDuration'));
       }
     } else {
       setError(null);
     }
-  }, [startTime, endTime]);
+  }, [startTime, endTime, t]);
 
   const handleSave = () => {
     if (!isValidTimeSlot(startTime, endTime)) {
@@ -72,15 +74,15 @@ export function TimeSlotEditor({
         value={startTime}
         onChange={(e) => setStartTime(e.target.value)}
         className="h-8 w-28 text-sm"
-        aria-label="Start time"
+        aria-label={t('startTime')}
       />
-      <span className="text-slate-400">-</span>
+      <span className="text-muted-foreground">-</span>
       <Input
         type="time"
         value={endTime}
         onChange={(e) => setEndTime(e.target.value)}
         className="h-8 w-28 text-sm"
-        aria-label="End time"
+        aria-label={t('endTime')}
       />
       <Button
         type="button"
@@ -89,7 +91,7 @@ export function TimeSlotEditor({
         onClick={handleSave}
         disabled={!!error}
         className="h-8 w-8 p-0 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
-        aria-label="Save time slot"
+        aria-label={t('saveTimeSlot')}
       >
         <Check className="h-4 w-4" />
       </Button>
@@ -98,12 +100,12 @@ export function TimeSlotEditor({
         size="sm"
         variant="ghost"
         onClick={onCancel}
-        className="h-8 w-8 p-0 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
-        aria-label="Cancel editing"
+        className="h-8 w-8 p-0 text-muted-foreground hover:bg-muted hover:text-foreground"
+        aria-label={t('cancelEditing')}
       >
         <X className="h-4 w-4" />
       </Button>
-      {error && <span className="ml-2 text-xs text-red-500">{error}</span>}
+      {error && <span className="ml-2 text-xs text-destructive">{error}</span>}
     </div>
   );
 }

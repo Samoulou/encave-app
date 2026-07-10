@@ -10,7 +10,7 @@ export function VisibilityBannerSkeleton() {
   return (
     <SkeletonContainer
       label="Chargement du statut de visibilité..."
-      className="rounded-xl border border-stone-200 bg-white p-5 sm:p-6"
+      className="rounded-xl border border-stone-200 bg-card p-5 sm:p-6"
     >
       <div className="min-h-[260px] space-y-3">
         <Skeleton className="h-6 w-2/3" />
