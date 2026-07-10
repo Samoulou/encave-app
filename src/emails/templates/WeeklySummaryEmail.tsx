@@ -19,6 +19,10 @@ export interface WeeklySummaryEmailProps {
     bookings: number;
     guests: number;
   };
+  /** Real Stripe payouts received last 7 days (P-13 / email #17). */
+  payouts?: { totalCents: number; count: number } | null;
+  /** Previous-month statement PDF link (P-13 / email #17). */
+  statement?: { url: string; monthLabel: string } | null;
   dashboardUrl: string;
   unsubscribeUrl?: string;
 }
@@ -29,6 +33,8 @@ export function WeeklySummaryEmail({
   wineryName: _wineryName,
   lastWeekStats,
   thisWeekPreview,
+  payouts,
+  statement,
   dashboardUrl,
 }: WeeklySummaryEmailProps) {
   const greeting = t(common.greeting, locale);
@@ -45,6 +51,20 @@ export function WeeklySummaryEmail({
   const upcomingLabel = t(weeklySummary.upcoming, locale);
   const viewDashboard = t(weeklySummary.viewDashboard, locale);
   const noActivity = t(weeklySummary.noActivity, locale);
+
+  const payoutsReceivedLabel = t(weeklySummary.payoutsReceived, locale);
+  const payoutsLine =
+    payouts && payouts.count > 0
+      ? t(weeklySummary.payoutsLine, locale)
+          .replace('{amount}', formatEmailPrice(payouts.totalCents))
+          .replace('{count}', String(payouts.count))
+      : null;
+  const statementLabel = statement
+    ? t(weeklySummary.downloadStatement, locale).replace(
+        '{month}',
+        statement.monthLabel
+      )
+    : null;
 
   const hasLastWeekActivity = lastWeekStats.bookings > 0;
   const hasThisWeekActivity = thisWeekPreview.bookings > 0;
@@ -185,6 +205,39 @@ export function WeeklySummaryEmail({
         )}
       </Section>
 
+      {/* Real Stripe payouts of the week (P-13 / email #17) */}
+      {payoutsLine && (
+        <Section
+          style={{
+            backgroundColor: '#f0fdf4',
+            borderRadius: '8px',
+            padding: '24px',
+            margin: '0 0 16px 0',
+          }}
+        >
+          <Text
+            style={{
+              margin: '0 0 8px 0',
+              fontWeight: 'bold',
+              fontSize: '16px',
+              color: '#166534',
+            }}
+          >
+            {payoutsReceivedLabel}
+          </Text>
+          <Text
+            style={{
+              margin: 0,
+              fontWeight: 'bold',
+              fontSize: '20px',
+              color: '#16a34a',
+            }}
+          >
+            {payoutsLine}
+          </Text>
+        </Section>
+      )}
+
       {/* This Week Preview */}
       <Section
         style={{
@@ -281,6 +334,17 @@ export function WeeklySummaryEmail({
       <div style={{ textAlign: 'center', margin: '0 0 24px 0' }}>
         <EmailButton href={dashboardUrl}>{viewDashboard}</EmailButton>
       </div>
+
+      {statement && statementLabel && (
+        <Text style={{ margin: '0 0 24px 0', textAlign: 'center' }}>
+          <a
+            href={statement.url}
+            style={{ color: '#7c2d12', textDecoration: 'underline' }}
+          >
+            {statementLabel}
+          </a>
+        </Text>
+      )}
 
       <Text style={{ margin: '24px 0 0 0' }}>
         {regards},

@@ -719,6 +719,10 @@ export interface WeeklySummaryData {
     bookings: number;
     guests: number;
   };
+  /** Real Stripe payouts of the last 7 days (P-13 / email #17). */
+  payouts?: { totalCents: number; count: number } | null;
+  /** Previous-month statement (P-13 / email #17). */
+  statement?: { monthKey: string; monthLabel: string } | null;
 }
 
 export async function sendWeeklySummaryEmail(
@@ -727,10 +731,19 @@ export async function sendWeeklySummaryEmail(
   locale?: Locale | null
 ): Promise<boolean> {
   const loc = getLocale(locale);
+  const { statement, ...rest } = data;
   const html = await render(
     WeeklySummaryEmail({
       locale: loc,
-      ...data,
+      ...rest,
+      statement: statement
+        ? {
+            // Session-authenticated route — fine for winemakers, who stay
+            // logged in on their own device.
+            url: `${getBaseUrl()}/api/dashboard/statements/${statement.monthKey}?locale=${loc.toLowerCase()}`,
+            monthLabel: statement.monthLabel,
+          }
+        : null,
       dashboardUrl: `${getBaseUrl()}/dashboard/earnings`,
     })
   );

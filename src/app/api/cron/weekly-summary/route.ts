@@ -7,9 +7,12 @@ import {
   logEmailFailed,
   logEmailSkipped,
 } from '@/server/services/email-log.service';
-import { startOfWeek, endOfWeek, subWeeks } from 'date-fns';
+import { startOfWeek, endOfWeek, subWeeks, subMonths, format } from 'date-fns';
 import { BookingStatus, WineryStatus } from '@prisma/client';
-import { logError } from '@/lib/logger';
+import { listRecentPaidPayouts } from '@/server/queries/payouts.queries';
+import { formatDate } from '@/lib/i18n/formatters';
+import { logError, logWarn } from '@/lib/logger';
+import type { Locale as AppLocale } from '@/i18n/routing';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -92,6 +95,39 @@ export async function GET() {
           continue;
         }
 
+        // Real Stripe payouts of the last 7 days (P-13 / email #17).
+        // Fail-safe: a Stripe hiccup must never block the summary itself.
+        let payouts: { totalCents: number; count: number } | null = null;
+        if (winery.stripeAccountId) {
+          try {
+            const paid = await listRecentPaidPayouts(winery.stripeAccountId, 7);
+            if (paid.length > 0) {
+              payouts = {
+                totalCents: paid.reduce((sum, p) => sum + p.amountCents, 0),
+                count: paid.length,
+              };
+            }
+          } catch (error) {
+            logWarn('Weekly summary: payouts lookup failed, sent without', {
+              action: 'cronWeeklySummary',
+              wineryId: winery.id,
+              error: error instanceof Error ? error.message : 'unknown',
+            });
+          }
+        }
+
+        const appLocale = (
+          winery.user.preferredLocale ?? 'FR'
+        ).toLowerCase() as AppLocale;
+        const previousMonth = subMonths(now, 1);
+        const statement = {
+          monthKey: format(previousMonth, 'yyyy-MM'),
+          monthLabel: formatDate(previousMonth, appLocale, {
+            month: 'long',
+            year: 'numeric',
+          }),
+        };
+
         const success = await sendWeeklySummaryEmail(
           winery.email,
           {
@@ -99,6 +135,8 @@ export async function GET() {
             wineryName: winery.name,
             lastWeekStats,
             thisWeekPreview,
+            payouts,
+            statement,
           },
           winery.user.preferredLocale
         );

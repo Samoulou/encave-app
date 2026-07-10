@@ -626,6 +626,21 @@ export const weeklySummary = {
     DE: 'Dashboard anzeigen',
     EN: 'View dashboard',
   },
+  payoutsReceived: {
+    FR: 'Virements reçus cette semaine',
+    DE: 'Diese Woche erhaltene Auszahlungen',
+    EN: 'Payouts received this week',
+  },
+  payoutsLine: {
+    FR: '{amount} — {count} virement(s)',
+    DE: '{amount} — {count} Auszahlung(en)',
+    EN: '{amount} — {count} payout(s)',
+  },
+  downloadStatement: {
+    FR: 'Télécharger le relevé de {month}',
+    DE: 'Abrechnung {month} herunterladen',
+    EN: 'Download the {month} statement',
+  },
 } as const;
 
 // Booking cancelled by winery email strings
