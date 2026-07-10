@@ -1,6 +1,6 @@
 # P-05 — Créneaux & recherche par date
 
-> **Statut** : en cours · **Branche** : `claude/encave-v3-business-model-8bv7bd` (fallback session, cf. P-01) · **PR** : #
+> **Statut** : livré · **Branche** : `claude/encave-v3-business-model-8bv7bd` (fallback session, cf. P-01) · **PR** : [#101](https://github.com/Samoulou/encave-app/pull/101)
 > **Sources** : `docs/ENCAVE-V3-DELIVERY-PLAN.md` §P-05 · items L-024 (moteur), L-110, L-111, L-131, L-132 · spec `docs/v3/ENCAVE-V3-PRD.md` US-101 · `docs/v3/ENCAVE-V3-PAGES-EMAILS.md` §0.1/§2/§6
 > **Type** : non-💰 (review `high`, pas de `/code-review max`). Mais **touche le cœur capacité durci en P-04** → kill-switch flag `OCCURRENCE_CAPACITY` + rigueur de tests P-04. **ADR : `docs/adr/0002-occurrence-authoritative-capacity.md`.**
 
@@ -42,13 +42,13 @@ Matérialiser les créneaux : l'`ExperienceOccurrence` (posée en P-02, aujourd'
 
 ## 5. Definition of Done (= US-101)
 
-- [ ] Créer « Dégustation 25 CHF, sam 10h/16h, cap. 8 » génère **12 occurrences publiques en < 60 s** ; création ≤ 4 min chrono ; validations bloquantes (prix > 0, cap 1-50, durée 30-480)
-- [ ] Mode ponctuel (dates + heures chips) ET récurrent avec blackouts au tap ; **aperçu live des 8 prochaines occurrences**
-- [ ] Calendrier mensuel : **fermer** une occurrence, **ajuster sa capacité**, **voir les inscrits** — chacun testé (et l'effet réservation prouvé : fermer/baisser capacité bloque bien)
-- [ ] Home « Où + Quand » → catalogue filtré par **date réelle** ; tri par défaut = prochaine dispo ; chips raccourcis fonctionnelles
-- [ ] **Zéro régression / zéro survente** : occurrence OPEN sans override = capacité d'aujourd'hui ; test de concurrence P-04 rejoué occurrence-backed (2 clients/3 places → 1 succès + 1 refus) ; bookings existants rattachés (migration testée)
-- [ ] Kill-switch `OCCURRENCE_CAPACITY_ENABLED=false` → retombe sur le comportement (date,timeSlot) sans casse
-- [ ] Socle transverse vert (lint, format, i18n ×3, suite complète + db-gated, build prod)
+- [x] Créer « Dégustation 25 CHF, sam 10h/16h, cap. 8 » génère **12 occurrences publiques en < 60 s** (génération synchrone à la publication, test db-gated) ; validations bloquantes (prix > 0, cap 1-50, durée 30-480) — _création ≤ 4 min chrono : à confirmer au pass manuel Sam_
+- [x] Mode ponctuel (dates + heures chips) ET récurrent avec blackouts au tap ; **aperçu live des 8 prochaines occurrences**
+- [x] Calendrier mensuel : **fermer** une occurrence, **ajuster sa capacité**, **voir les inscrits** — chacun testé (fermer → hold refusé `OCCURRENCE_CLOSED` ; override 2 sur cap. 8 → 3ᵉ place refusée `NO_CAPACITY`)
+- [x] Home « Où + Quand » → catalogue filtré par **date réelle** ; tri par défaut = prochaine dispo ; chips raccourcis fonctionnelles
+- [x] **Zéro régression / zéro survente** : prédicat de comptage P-04 inchangé (D1) ; test de concurrence rejoué occurrence-backed ; bookings futurs rattachés (migration testée)
+- [x] Kill-switch flag `OCCURRENCE_CAPACITY` OFF → retombe sur le comportement (date,timeSlot) sans casse (test db-gated de parité)
+- [x] Socle transverse vert : lint, format, i18n ×3, 966 unit/integration + 28 db-gated, build prod
 
 ## 6. Découpage technique (contrats détaillés : ADR-0002 + rapport Jonas)
 
@@ -84,5 +84,26 @@ Matérialiser les créneaux : l'`ExperienceOccurrence` (posée en P-02, aujourd'
 ## 9. Décisions (tranchées)
 
 - **D-A — TRANCHÉ (Jonas) : enum `OccurrenceSource { RECURRING PUNCTUAL }`.** Cohérence avec `OccurrenceStatus`, type-safety, cast trivial à 0 ligne — cher plus tard, gratuit maintenant.
-- **D-B — TRANCHÉ : horizon 6 semaines (42 j) par défaut** (`OCCURRENCE_HORIZON_DAYS`, constante ajustable). Aligné sur l'exemple d'acceptation US-101 (12 occurrences pour un motif 2/sem) ; l'horizon EST la fenêtre de réservation client (levier produit, Sam peut réviser). Perf non contraignante (≤ 360 k lignes même à 100 caves × 12 sem — trivial).
+- **D-B — TRANCHÉ : horizon 6 semaines (42 j) par défaut** (`OCCURRENCE_HORIZON_DAYS`, constante ajustable). Aligné sur l'exemple d'acceptation US-101 (12 occurrences pour un motif 2/sem). Perf non contraignante (≤ 360 k lignes même à 100 caves × 12 sem — trivial). **Amendé en review (finding 1)** : l'horizon borne la génération éphémère uniquement — la fenêtre de réservation suit le picker (3 mois), toute date future portée par un créneau hebdo actif se matérialise à la demande au hold ; les dates passées sont refusées.
 - **D-C — TRANCHÉ (Jonas) : bookings passés laissés `occurrenceId` NULL.** Aucun impact capacité ; le calendrier regroupe par COALESCE pour les afficher ; backfill limité aux futurs.
+
+## 10. Bilan (post-review, 2026-07-10)
+
+**Review `/code-review` high** : 8 finders → ~40 candidats → **10 findings consolidés, 10/10 corrigés** (`ce09077` serveur, `88ecf24`→`f5e28ee` UI Nora, `c2336d9` annulation de session, `413f0eb` + suites : 17 tests neufs).
+
+1. **Fenêtre 42 j vs picker 3 mois** (dead-end plein tunnel) → l'horizon ne borne plus que la génération éphémère ; matérialisation à la demande pour toute date future à créneau hebdo actif (amendement D-B).
+2. **Surface opérationnelle orpheline** (régression : check-in/no-show/annulation/contact/scan injoignables après le repointage de la route sessions) → re-domiciliée dans `OccurrenceDetailSheet` (réutilisation `BookingActionsMenu`/`Sheet`, `CancelSessionButton`, `ContactGuestsButton`, lien scanner) ; stack `event-detail` legacy supprimée (0 référence), `getExperienceOperationalContext` slim en remplacement.
+3. **Ponctuelles annoncées mais inachetables** (widgets = jours hebdo uniquement) → `getBookableOccurrences` branché page publique, jour sélectionnable si hebdo OU occurrence.
+4. **Créneau hebdo retiré qui vendait encore 42 j** → `closeOrphanedRecurringOccurrences` (édition + toggle ; ponctuelles intouchées, résas préservées).
+5. **Recherche sans blackout ni clamp** → fenêtre clampée à aujourd'hui (Zurich), corrélation exacte par date, `nextOccurrence` blackout-aware.
+6. **Trou au deploy** (expériences sans booking invisibles jusqu'au cron 02:00) → backfill étendu : matérialisation 42 j pour toutes les expériences publiées (generate_series).
+7. **Poll checkout éjectait un détenteur de hold** → plus de validation périodique avec `holdId` (le hold EST la place ; le claim revalide).
+8. **Dates passées réservables** (occurrence OPEN d'hier) → refus `INVALID_SLOT` avant le court-circuit ligne-existante.
+9. **Annulations invisibles au calendrier owner** → listées (badge, jamais comptées) ; `isActiveCapacityBooking` = jumeau JS du prédicat Prisma.
+10. **Dates impossibles (2026-02-31) → INTERNAL_ERROR** → `isDateKey` en refine Zod.
+
+**Correctif induit** : `cancelEventSession` marque l'occurrence CANCELLED (terminal, ligne synthétisée pour les sessions pré-moteur) — une session annulée/remboursée n'est plus revendable.
+
+**Dette consignée** (hors DoD) : dialog motif d'annulation (encore `window.prompt`, → Léa), `visitorEmail`/`checkedInAt` absents des attendees de la sheet (contact groupé couvre l'essentiel), gating ARCHIVED des actions occurrence (close/capacité restent actives sur une expérience archivée), dédup grilles calendrier (`OccurrenceCalendar` vs `CalendarView`), agrégat capacité restante dans la recherche (L-207/P-06).
+
+**Vérifs finales** : tsc · lint · format · i18n ×3 · 966 unit/integration · 28 db-gated (`encave_p05` reset + migrations rejouées, backfill inclus) · build prod (JS partagé 165 kB inchangé).
