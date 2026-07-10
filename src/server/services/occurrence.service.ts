@@ -131,6 +131,36 @@ export async function createPunctualOccurrences(
 }
 
 /**
+ * Mark the occurrence backing a cancelled session as CANCELLED —
+ * terminal: close/reopen refuse it and the booking gate never sells it
+ * again. Creates the row when the session predates the engine: without
+ * it, an active weekly slot would re-materialize an OPEN occurrence at
+ * the very next hold attempt. Idempotent.
+ */
+export async function cancelOccurrenceForSlot(
+  experienceId: string,
+  date: Date,
+  startTime: string
+): Promise<void> {
+  await db.experienceOccurrence.createMany({
+    data: [
+      {
+        experienceId,
+        date,
+        startTime,
+        status: OccurrenceStatus.CANCELLED,
+        source: OccurrenceSource.RECURRING,
+      },
+    ],
+    skipDuplicates: true,
+  });
+  await db.experienceOccurrence.updateMany({
+    where: { experienceId, date, startTime },
+    data: { status: OccurrenceStatus.CANCELLED },
+  });
+}
+
+/**
  * Close future RECURRING occurrences that no longer match an active
  * weekly slot — a removed slot must stop selling immediately, not after
  * 6 weeks of orphaned OPEN rows. PUNCTUAL rows are never touched;

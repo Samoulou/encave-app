@@ -13,6 +13,7 @@ import {
 } from '@/lib/validators/eventDetail';
 import { parseTimeSlot, timeSlotSchema } from '@/lib/validators/booking';
 import { isHoldPlaceholderEmail } from '@/lib/constants/booking-hold';
+import { cancelOccurrenceForSlot } from '@/server/services/occurrence.service';
 import type { ActionResult } from '@/types/actions';
 import type { BookingDTO } from '@/types/event-detail';
 import { z } from 'zod';
@@ -696,6 +697,20 @@ export async function cancelEventSession(
         bookingId: booking.id,
       });
     }
+  }
+
+  // The cancelled session must stop selling instantly (P-05): mark the
+  // backing occurrence CANCELLED (terminal — an active weekly slot would
+  // otherwise re-materialize an OPEN row at the next hold). Best-effort:
+  // refunds already ran, a failure here must not flip the result.
+  try {
+    await cancelOccurrenceForSlot(experience.id, date, timeSlot);
+  } catch (error) {
+    logError('cancelEventSession: occurrence cancel failed', error, {
+      action: 'cancelEventSession',
+      experienceId: experience.id,
+      sessionId: parsed.data.sessionId,
+    });
   }
 
   logInfo('winery.session.cancelled', {

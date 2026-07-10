@@ -38,6 +38,7 @@ describe.skipIf(!url)('occurrence engine (P-05 / L-024, ADR-0002)', () => {
   let resolveOccurrence: OccurrenceService['resolveOccurrence'];
   let createPunctualOccurrences: OccurrenceService['createPunctualOccurrences'];
   let closeOrphanedRecurringOccurrences: OccurrenceService['closeOrphanedRecurringOccurrences'];
+  let cancelOccurrenceForSlot: OccurrenceService['cancelOccurrenceForSlot'];
   let createBookingHold: CheckoutActions['createBookingHold'];
   let getTimeSlotsForDate: BookingActions['getTimeSlotsForDate'];
   const ids: { userId?: string; wineryId?: string; experienceId?: string } = {};
@@ -58,6 +59,7 @@ describe.skipIf(!url)('occurrence engine (P-05 / L-024, ADR-0002)', () => {
       resolveOccurrence,
       createPunctualOccurrences,
       closeOrphanedRecurringOccurrences,
+      cancelOccurrenceForSlot,
     } = await import('@/server/services/occurrence.service'));
     ({ createBookingHold } = await import('@/server/actions/checkout'));
     ({ getTimeSlotsForDate } = await import('@/server/actions/booking'));
@@ -445,6 +447,73 @@ describe.skipIf(!url)('occurrence engine (P-05 / L-024, ADR-0002)', () => {
         },
       });
     }
+  });
+
+  it('a cancelled session can never be resold (occurrence CANCELLED, both paths)', async () => {
+    // Path 1: existing materialized occurrence.
+    const occ = await db.experienceOccurrence.findFirstOrThrow({
+      where: {
+        experienceId: expId(),
+        startTime: '10:00',
+        status: OccurrenceStatus.OPEN,
+        date: { gt: zurichTodayAsUTCDate() },
+      },
+      orderBy: { date: 'asc' },
+    });
+    await cancelOccurrenceForSlot(expId(), occ.date, '10:00');
+
+    const row = await db.experienceOccurrence.findUniqueOrThrow({
+      where: { id: occ.id },
+      select: { status: true },
+    });
+    expect(row.status).toBe(OccurrenceStatus.CANCELLED);
+    const refused = await createBookingHold({
+      experienceId: expId(),
+      date: occ.date.toISOString().slice(0, 10),
+      timeSlot: '10:00',
+      guestCount: 1,
+    });
+    expect(refused.success).toBe(false);
+    if (!refused.success) {
+      expect(refused.error.code).toBe('OCCURRENCE_CLOSED');
+    }
+
+    // Path 2: straggler session (no row) on a legitimate weekly slot —
+    // without the synthesized CANCELLED row, resolve would re-materialize
+    // an OPEN occurrence at the next hold attempt.
+    const farKey = saturdayKeyAfter(80);
+    const farDate = new Date(`${farKey}T00:00:00.000Z`);
+    await cancelOccurrenceForSlot(expId(), farDate, '10:00');
+    const synthesized = await db.experienceOccurrence.findUniqueOrThrow({
+      where: {
+        experienceId_date_startTime: {
+          experienceId: expId(),
+          date: farDate,
+          startTime: '10:00',
+        },
+      },
+      select: { status: true },
+    });
+    expect(synthesized.status).toBe(OccurrenceStatus.CANCELLED);
+    const refusedFar = await createBookingHold({
+      experienceId: expId(),
+      date: farKey,
+      timeSlot: '10:00',
+      guestCount: 1,
+    });
+    expect(refusedFar.success).toBe(false);
+    if (!refusedFar.success) {
+      expect(refusedFar.error.code).toBe('OCCURRENCE_CLOSED');
+    }
+
+    // Restore fixture state.
+    await db.experienceOccurrence.update({
+      where: { id: occ.id },
+      data: { status: OccurrenceStatus.OPEN },
+    });
+    await db.experienceOccurrence.deleteMany({
+      where: { experienceId: expId(), date: farDate },
+    });
   });
 
   it('kill-switch OFF restores P-04 behavior on a closed occurrence', async () => {
