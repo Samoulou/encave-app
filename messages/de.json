@@ -1932,11 +1932,6 @@
     "securePayment": "Sichere Zahlung",
     "wineExperiences": "Walliser Weinerlebnisse"
   },
-  "healthStatus": {
-    "serviceUnavailable": "Dienst nicht verfügbar",
-    "checkingStatus": "Status wird überprüft...",
-    "allSystemsOperational": "Alle Systeme betriebsbereit"
-  },
   "clientDashboard": {
     "nav": {
       "myBookings": "Meine Buchungen",

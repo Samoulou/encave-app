@@ -1927,11 +1927,6 @@
     "securePayment": "Paiement sécurisé",
     "wineExperiences": "Expériences viticoles valaisannes"
   },
-  "healthStatus": {
-    "serviceUnavailable": "Service indisponible",
-    "checkingStatus": "Vérification en cours...",
-    "allSystemsOperational": "Tous les systèmes opérationnels"
-  },
   "clientDashboard": {
     "nav": {
       "myBookings": "Mes réservations",

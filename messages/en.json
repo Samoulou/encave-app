@@ -1927,11 +1927,6 @@
     "securePayment": "Secure payment",
     "wineExperiences": "Valais wine experiences"
   },
-  "healthStatus": {
-    "serviceUnavailable": "Service unavailable",
-    "checkingStatus": "Checking status...",
-    "allSystemsOperational": "All systems operational"
-  },
   "clientDashboard": {
     "nav": {
       "myBookings": "My Bookings",
