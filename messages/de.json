@@ -2191,6 +2191,30 @@
       "alertTitle": "Degustationsblatt auszufüllen",
       "alertDescription": "{count, plural, one {# heutige Session wartet auf ihr Blatt} other {# heutige Sessions warten auf ihre Blätter}} — haken Sie die servierten Weine ab, um die Favoriten-E-Mail auszulösen.",
       "alertCta": "Blatt ausfüllen"
+    },
+    "today": {
+      "title": "Heute",
+      "loading": "Dashboard wird geladen…",
+      "scanButton": "Tickets scannen",
+      "kpis": {
+        "sectionLabel": "Kennzahlen des Tages",
+        "todayBookings": "Reservierungen heute",
+        "todayGuests": "{count, plural, =0 {keine Gäste} one {# Gast} other {# Gäste}}",
+        "weekGuests": "Gäste 7 Tage",
+        "weekBookings": "{count, plural, one {# Reservierung} other {# Reservierungen}}",
+        "monthGross": "Umsatz des Monats",
+        "monthBookings": "{count, plural, one {# Reservierung} other {# Reservierungen}}",
+        "fillRate": "Auslastung 30 T.",
+        "fillRateHint": "{sold} verkaufte / {offered} angebotene Plätze",
+        "fillRateEmpty": "Keine Sessions in den letzten 30 Tagen"
+      },
+      "upcoming": {
+        "title": "Nächste Sessions",
+        "manageLink": "Verwalten",
+        "empty": "Keine offene Session in den nächsten 7 Tagen.",
+        "emptyCta": "Sessions öffnen",
+        "seats": "{sold}/{capacity}"
+      }
     }
   },
   "Public": {

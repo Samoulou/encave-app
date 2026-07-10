@@ -2186,6 +2186,30 @@
       "alertTitle": "Tasting sheet to fill in",
       "alertDescription": "{count, plural, one {# of today's sessions is waiting for its sheet} other {# of today's sessions are waiting for their sheets}} — tick the wines served to trigger the favourites email.",
       "alertCta": "Fill in the sheet"
+    },
+    "today": {
+      "title": "Today",
+      "loading": "Loading your dashboard…",
+      "scanButton": "Scan tickets",
+      "kpis": {
+        "sectionLabel": "Today's indicators",
+        "todayBookings": "Bookings today",
+        "todayGuests": "{count, plural, =0 {no guests} one {# guest} other {# guests}}",
+        "weekGuests": "Guests next 7 days",
+        "weekBookings": "{count, plural, one {# booking} other {# bookings}}",
+        "monthGross": "Month revenue",
+        "monthBookings": "{count, plural, one {# booking} other {# bookings}}",
+        "fillRate": "30-day fill rate",
+        "fillRateHint": "{sold} seats sold / {offered} offered",
+        "fillRateEmpty": "No sessions in the last 30 days"
+      },
+      "upcoming": {
+        "title": "Next sessions",
+        "manageLink": "Manage",
+        "empty": "No open session in the next 7 days.",
+        "emptyCta": "Open sessions",
+        "seats": "{sold}/{capacity}"
+      }
     }
   },
   "Public": {

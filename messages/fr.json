@@ -2186,6 +2186,30 @@
       "alertTitle": "Fiche dégustation à remplir",
       "alertDescription": "{count, plural, one {# session d'aujourd'hui attend sa fiche} other {# sessions d'aujourd'hui attendent leur fiche}} — cochez les vins servis pour déclencher les coups de cœur.",
       "alertCta": "Remplir la fiche"
+    },
+    "today": {
+      "title": "Aujourd'hui",
+      "loading": "Chargement du tableau de bord…",
+      "scanButton": "Scanner les billets",
+      "kpis": {
+        "sectionLabel": "Indicateurs du jour",
+        "todayBookings": "Résas aujourd'hui",
+        "todayGuests": "{count, plural, =0 {aucun couvert} one {# couvert} other {# couverts}}",
+        "weekGuests": "Couverts 7 jours",
+        "weekBookings": "{count, plural, one {# réservation} other {# réservations}}",
+        "monthGross": "CA du mois",
+        "monthBookings": "{count, plural, one {# réservation} other {# réservations}}",
+        "fillRate": "Remplissage 30 j",
+        "fillRateHint": "{sold} places vendues / {offered} offertes",
+        "fillRateEmpty": "Aucun créneau sur les 30 derniers jours"
+      },
+      "upcoming": {
+        "title": "Prochains créneaux",
+        "manageLink": "Gérer",
+        "empty": "Aucun créneau ouvert ces 7 prochains jours.",
+        "emptyCta": "Ouvrir des créneaux",
+        "seats": "{sold}/{capacity}"
+      }
     }
   },
   "Public": {

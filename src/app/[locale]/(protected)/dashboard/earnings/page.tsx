@@ -1,10 +1,10 @@
-import { Fragment, Suspense } from 'react';
+import { Suspense } from 'react';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { redirect } from 'next/navigation';
-import { getLocale, getTranslations } from 'next-intl/server';
-import { AlertTriangle } from 'lucide-react';
+import { getLocale } from 'next-intl/server';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
+import { StripeKycBanner } from '@/components/features/dashboard/StripeKycBanner';
 import { EarningsPageHeader } from '@/components/features/earnings/EarningsPageHeader';
 import { Skeleton, SkeletonContainer } from '@/components/shared/Skeleton';
 import { EarningsSummary } from './EarningsSummary';
@@ -55,44 +55,16 @@ export default async function EarningsPage({ searchParams }: PageProps) {
     redirect(`/${locale}/onboarding/winery`);
   }
 
-  const t = await getTranslations('stripe.onboarding');
-
   return (
     <WineryAccessGuard>
       <div className="space-y-8">
         {/* Page Header - renders immediately */}
         <EarningsPageHeader />
 
-        {/* Stripe Onboarding Warning - renders immediately */}
-        {!winery.stripeOnboardingComplete && (
-          <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
-            <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-600" />
-            <div className="text-sm text-amber-900">
-              <p className="font-medium">{t('completeSetupTitle')}</p>
-              <p className="mt-1 text-amber-700">
-                {t('completeSetupDescription', {
-                  wineryProfileLink: '__LINK__',
-                })
-                  .split('__LINK__')
-                  .map((part, i, arr) =>
-                    i < arr.length - 1 ? (
-                      <Fragment key={i}>
-                        {part}
-                        <a
-                          href="/dashboard/winery/profile"
-                          className="underline"
-                        >
-                          {t('wineryProfileLink')}
-                        </a>
-                      </Fragment>
-                    ) : (
-                      part
-                    )
-                  )}
-              </p>
-            </div>
-          </div>
-        )}
+        {/* Stripe Onboarding Warning - renders immediately (shared, P-13) */}
+        <StripeKycBanner
+          stripeOnboardingComplete={winery.stripeOnboardingComplete}
+        />
 
         {/* Stream 1: Summary Cards (fast query) - 3 KPI cards matching mockup */}
         <Suspense fallback={<SummarySkeleton />}>
