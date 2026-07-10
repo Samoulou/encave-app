@@ -127,7 +127,8 @@
       "subject": "Expériences disponibles",
       "spots": "2+ places"
     },
-    "wines": "Vins"
+    "wines": "Vins",
+    "payouts": "Reversements"
   },
   "locale": {
     "fr": "Français",
@@ -1102,10 +1103,14 @@
     "summary": {
       "totalEarnings": "Revenus totaux",
       "grossRevenue": "Revenu brut",
-      "pendingPayouts": "Paiements en attente",
       "vsLastMonth": "vs mois dernier",
       "estArrival": "Arrivée prévue:",
-      "yearToDate": "Depuis le début de l'année"
+      "yearToDate": "Depuis le début de l'année",
+      "nextPayout": "Prochain virement",
+      "nextPayoutUnavailable": "Donnée Stripe indisponible",
+      "nextPayoutAccruing": "En préparation chez Stripe",
+      "nextPayoutNone": "Aucun virement en attente",
+      "nextPayoutLink": "Voir tout"
     },
     "transactions": {
       "title": "Transactions",
@@ -1173,10 +1178,13 @@
       "description": "Les paiements sont traités automatiquement 7 jours après la date de l'expérience. Les fonds sont transférés directement sur votre compte bancaire connecté via Stripe."
     },
     "transactionStatus": {
-      "paid": "Payé",
-      "processing": "En cours",
-      "pending": "En attente",
-      "refunded": "Remboursé"
+      "refunded": "Remboursé",
+      "completed": "Réalisée",
+      "upcoming": "À venir"
+    },
+    "statements": {
+      "title": "Relevés mensuels",
+      "subtitle": "Téléchargez le relevé PDF d'un mois : brut, commission, remboursements et net reversé."
     }
   },
   "calendar": {
@@ -1502,6 +1510,10 @@
       "wines": {
         "title": "Mes vins | EnCave",
         "description": "Gérez votre carte des vins"
+      },
+      "payouts": {
+        "title": "Reversements | EnCave",
+        "description": "Vos versements Stripe en clair"
       }
     },
     "onboarding": {
@@ -2002,7 +2014,6 @@
         "contactAllCopy": "Copier la liste d'emails",
         "contactAllCopied": "Emails copiés. Colle-les dans le BCC de ton mail.",
         "cancelSession": "Annuler la session",
-        "cancelSessionPrompt": "Pourquoi annulez-vous cette session ? Le motif sera transmis aux participants (10 caractères minimum).",
         "cancelSessionError": "Impossible d'annuler la session. Vérifiez le motif (10 caractères minimum) et réessayez.",
         "cancelSessionDone": "Session annulée. Les participants ont été prévenus et remboursés.",
         "cancelSessionPartial": "{count, plural, =1 {1 réservation n'a pas pu être annulée} other {# réservations n'ont pas pu être annulées}}. Réessayez ou contactez le support.",
@@ -2011,7 +2022,14 @@
         "markPresent": "Marquer présent",
         "markNoShow": "Marquer no-show",
         "markNoShowDisabled": "Disponible après la fin de la session",
-        "openMenu": "Ouvrir le menu d'actions"
+        "openMenu": "Ouvrir le menu d'actions",
+        "cancelSessionTitle": "Annuler la session ?",
+        "cancelSessionDescription": "Toutes les réservations confirmées seront annulées et intégralement remboursées ; chaque client recevra un email avec votre motif.",
+        "cancelSessionReasonLabel": "Motif de l'annulation",
+        "cancelSessionReasonPlaceholder": "Ex. : vendanges anticipées, impossible d'assurer la session…",
+        "cancelSessionReasonHint": "Minimum {min} caractères — le motif est transmis aux clients.",
+        "cancelSessionBack": "Retour",
+        "cancelSessionConfirm": "Annuler la session"
       },
       "bookingStatus": {
         "confirmed": "Confirmée",
@@ -2083,7 +2101,8 @@
           "capacityHint": "Entre 1 et 50 places. Réinitialiser revient à la capacité de l'expérience.",
           "capacityInvalid": "Saisissez un nombre entre {min} et {max}.",
           "attendees": "{count, plural, =0 {Inscrits} =1 {1 inscrit} other {# inscrits}}",
-          "noAttendees": "Aucun inscrit pour ce créneau pour le moment."
+          "noAttendees": "Aucun inscrit pour ce créneau pour le moment.",
+          "checkedInAt": "Scanné à {time}"
         },
         "toasts": {
           "closed": "Créneau fermé — il n'est plus réservable.",
@@ -2179,6 +2198,30 @@
       "alertTitle": "Fiche dégustation à remplir",
       "alertDescription": "{count, plural, one {# session d'aujourd'hui attend sa fiche} other {# sessions d'aujourd'hui attendent leur fiche}} — cochez les vins servis pour déclencher les coups de cœur.",
       "alertCta": "Remplir la fiche"
+    },
+    "today": {
+      "title": "Aujourd'hui",
+      "loading": "Chargement du tableau de bord…",
+      "scanButton": "Scanner les billets",
+      "kpis": {
+        "sectionLabel": "Indicateurs du jour",
+        "todayBookings": "Résas aujourd'hui",
+        "todayGuests": "{count, plural, =0 {aucun couvert} one {# couvert} other {# couverts}}",
+        "weekGuests": "Couverts 7 jours",
+        "weekBookings": "{count, plural, one {# réservation} other {# réservations}}",
+        "monthGross": "CA du mois",
+        "monthBookings": "{count, plural, one {# réservation} other {# réservations}}",
+        "fillRate": "Remplissage 30 j",
+        "fillRateHint": "{sold} places vendues / {offered} offertes",
+        "fillRateEmpty": "Aucun créneau sur les 30 derniers jours"
+      },
+      "upcoming": {
+        "title": "Prochains créneaux",
+        "manageLink": "Gérer",
+        "empty": "Aucun créneau ouvert ces 7 prochains jours.",
+        "emptyCta": "Ouvrir des créneaux",
+        "seats": "{sold}/{capacity}"
+      }
     }
   },
   "Public": {
@@ -2201,7 +2244,12 @@
     "unknown": "QR non reconnu",
     "already": "Deja enregistre",
     "counter": "{checkedIn} / {total} clients enregistres",
-    "loadError": "Impossible de charger le scan"
+    "loadError": "Impossible de charger le scan",
+    "online": "En ligne",
+    "offline": "Hors ligne — les scans seront synchronisés",
+    "pendingSync": "{count} scan(s) à synchroniser",
+    "syncRejected": "{count} scan(s) refusé(s) par le serveur",
+    "notToday": "Billet inconnu pour aujourd'hui"
   },
   "imageUpload": {
     "clickToUpload": "Cliquez pour télécharger une image",
@@ -2254,5 +2302,49 @@
     "sentDescription": "{wineryName} a reçu votre sélection et vous recontacte très vite.",
     "alreadyTitle": "Demande déjà envoyée",
     "alreadyDescription": "{wineryName} a déjà reçu votre demande pour cette dégustation."
+  },
+  "Payouts": {
+    "title": "Reversements",
+    "subtitle": "Les versements EnCave arrivent automatiquement sur votre compte selon le calendrier Stripe.",
+    "loading": "Chargement des reversements…",
+    "openInStripe": "Ouvrir dans Stripe",
+    "status": {
+      "paid": "Versé",
+      "pending": "En préparation",
+      "in_transit": "En transit",
+      "failed": "Échec",
+      "canceled": "Annulé"
+    },
+    "next": {
+      "title": "Prochain virement",
+      "arrival": "Arrivée prévue le {date}",
+      "accruing": "En préparation chez Stripe — versé selon votre calendrier",
+      "none": "Aucun virement en attente"
+    },
+    "empty": {
+      "title": "Pas encore de versement",
+      "body": "Vos versements arrivent automatiquement selon le calendrier Stripe configuré sur votre compte. Le premier intervient généralement quelques jours après votre première réservation confirmée.",
+      "stripeNotReady": {
+        "title": "Finalisez votre compte Stripe",
+        "body": "Pour recevoir vos versements, complétez la configuration de votre compte Stripe Connect.",
+        "cta": "Finaliser mon compte Stripe"
+      }
+    },
+    "error": {
+      "fetch": "Impossible de récupérer l'historique Stripe. Réessayez dans un instant.",
+      "retry": "Réessayer"
+    },
+    "detail": {
+      "back": "Tous les reversements",
+      "title": "Détail du versement",
+      "bookings": "Réservations incluses",
+      "noBookings": "Aucune réservation corrélée à ce versement.",
+      "gross": "Brut",
+      "commission": "Commission",
+      "totalGross": "Total brut",
+      "totalCommission": "Commission EnCave",
+      "totalNet": "Total net versé",
+      "otherLines": "Autres mouvements (remboursements, ajustements)"
+    }
   }
 }

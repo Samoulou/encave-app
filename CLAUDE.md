@@ -224,6 +224,7 @@ V3 target (see `docs/v3/ENCAVE-V3-BUSINESS.md` — build incrementally, feature-
 - **Requests (sur-mesure)**: client form → winery offer (text, total price, expiry) → payment link → tickets. Visible 48h SLA; single automatic reminder before offer expiry, then closure
 - **Anti no-show**: opt-in per winery, default 15 CHF/person (configurable 0–50). Free/pay-on-site offers take a card imprint via Stripe SetupIntent (no charge at booking). Charge triggered manually by the winemaker — never automatic — with client notification citing the accepted policy
 - **Tasting sheet** — ✅ shipped P-07 (PR #102), flag `TASTING_SHEET`: per-SESSION sheet in `OccurrenceDetailSheet` fans out to `BookingWine`; J+2 email via `ScheduledJob` (`TASTING_RECAP`, one per booking, `runAt = max(session end + 48h, fill time)`); tokenized order page `/booking/[id]/commande` (`recapTokenHash`); 21h empty-sheet reminder (double UTC cron + Zurich-hour guard); the generic J+1 follow-up is skipped when a recap is armed (PENDING/PROCESSING/DONE). Open/click per winery via Resend webhook (`RESEND_WEBHOOK_SECRET`)
+- **Espace encaveur** — ✅ shipped P-13 (PR #103): `/dashboard` is the WINEMAKER landing (« Aujourd'hui » — real 30d fill rate, Zurich-day anchored); `/dashboard/payouts` reads real Stripe payouts (correlation py_ payment → `source_transfer` → platform transfer → `payment_intent` → `Booking.stripePaymentIntentId`); monthly statement PDF via `GET /api/dashboard/statements/[month]`; scan is offline-tolerant in day mode (preloaded hash list + localStorage queue scoped per user, `scannedAt` replay bounded 48h — online scans always hit the server); email #18 anti-spam via `Winery.stripeActionDueHash`/`stripeActionEmailAt`
 - **Collective events**: a Slot experience can have participating wineries (logos, mini-program) + ONE paid organizer. Central ticketing, multi-point scanning. No automatic multi-winery split at launch
 
 ### Experience Rules
@@ -254,11 +255,11 @@ Verified against `dev` — full detail in `docs/ENCAVE-V3-GAP-ANALYSIS.md` §10 
 - The confirmation email is sent WITHOUT `bookingId`/`accessToken` (`checkout-confirmation.service.ts`) → no QR attachment, ticket button links to the homepage, the guest magic link is never delivered. Same bug in `resendConfirmationEmail`
 - ~~Only 2 of 5 cron routes scheduled~~ fixed: all 9 cron routes are in `vercel.json` (P-07 added `process-scheduled-jobs` hourly + `tasting-sheet-reminder` at 19:00/20:00 UTC with a 21h-Zurich guard)
 - The on-screen confirmation QR encodes `/checkin/{bookingId}` — a route that doesn't exist and doesn't match the scanner's token format
-- The Stripe **Connect** webhook has no idempotency guard (the checkout webhook has one via `StripeEvent`)
+- ~~The Stripe **Connect** webhook has no idempotency guard~~ stale: it claims events via `StripeEvent` like the checkout webhook (verified P-13)
 - `requestAccountDeletion` (nLPD) and `refundBookingManually` (admin) exist server-side but no UI calls them
 - `ModifyBookingCard` links to the dead route `/bookings/[id]/manage`; the my-bookings "upcoming/past" tabs are non-functional
 - The OLD `translations.ts` blocks are unaccented French (newer blocks are correct — imitate `manualRefund`); `sendEmail` silently returns success when `RESEND_API_KEY` is unset (non-production only since P-01). Client-facing emails must use `Booking.locale` (persisted at checkout since P-07) — never the winemaker's `preferredLocale`
-- Earnings "next payout" and paid/processing statuses are date heuristics (experience + 5 business days), not real Stripe payout data; the bookings "occupancy rate" KPI is `month/(month+5)` — a placeholder, not a metric
+- ~~Earnings "next payout" heuristics + occupancy placebo~~ fixed P-13: `/dashboard/payouts` reads real Stripe payouts (`payouts.queries.ts`, 5-min `unstable_cache`, errors throw → retry banner, never a heuristic fallback); transaction statuses are booking facts (`upcoming/completed/refunded`); the landing KPI is a real 30-day fill rate over persisted occurrences (`dashboard-today.queries.ts`)
 - The receipt PDF claims "Taxes et frais de service inclus" while no VAT is computed anywhere
 - Dead code: `HowItWorks.tsx`, `PopularExperiences.tsx`, `HeroSearchBar.tsx` (unimported)
 - The middleware hardcodes the Coming Soon gate on `encave.ch` — remove at launch

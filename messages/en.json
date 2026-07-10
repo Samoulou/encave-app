@@ -127,7 +127,8 @@
       "subject": "Available experiences",
       "spots": "2+ spots"
     },
-    "wines": "Wines"
+    "wines": "Wines",
+    "payouts": "Payouts"
   },
   "locale": {
     "fr": "Francais",
@@ -1102,10 +1103,14 @@
     "summary": {
       "totalEarnings": "Total Earnings",
       "grossRevenue": "Gross Revenue",
-      "pendingPayouts": "Pending Payouts",
       "vsLastMonth": "vs last month",
       "estArrival": "Est. arrival:",
-      "yearToDate": "Year to Date"
+      "yearToDate": "Year to Date",
+      "nextPayout": "Next payout",
+      "nextPayoutUnavailable": "Stripe data unavailable",
+      "nextPayoutAccruing": "Accruing at Stripe",
+      "nextPayoutNone": "No pending payout",
+      "nextPayoutLink": "See all"
     },
     "transactions": {
       "title": "Transactions",
@@ -1173,10 +1178,13 @@
       "description": "Payouts are processed automatically 7 days after the experience date. Funds are transferred directly to your connected bank account via Stripe."
     },
     "transactionStatus": {
-      "paid": "Paid",
-      "processing": "Processing",
-      "pending": "Pending",
-      "refunded": "Refunded"
+      "refunded": "Refunded",
+      "completed": "Completed",
+      "upcoming": "Upcoming"
+    },
+    "statements": {
+      "title": "Monthly statements",
+      "subtitle": "Download a month's PDF statement: gross, commission, refunds and net paid out."
     }
   },
   "calendar": {
@@ -1502,6 +1510,10 @@
       "wines": {
         "title": "My wines | EnCave",
         "description": "Manage your wine list"
+      },
+      "payouts": {
+        "title": "Payouts | EnCave",
+        "description": "Your Stripe payouts, in the clear"
       }
     },
     "onboarding": {
@@ -2002,7 +2014,6 @@
         "contactAllCopy": "Copy email list",
         "contactAllCopied": "Emails copied. Paste them into your email BCC field.",
         "cancelSession": "Cancel the session",
-        "cancelSessionPrompt": "Why are you cancelling this session? The reason will be shared with the participants (10 characters minimum).",
         "cancelSessionError": "Could not cancel the session. Check the reason (10 characters minimum) and try again.",
         "cancelSessionDone": "Session cancelled. Participants have been notified and refunded.",
         "cancelSessionPartial": "{count, plural, =1 {1 booking could not be cancelled} other {# bookings could not be cancelled}}. Try again or contact support.",
@@ -2011,7 +2022,14 @@
         "markPresent": "Mark as present",
         "markNoShow": "Mark as no-show",
         "markNoShowDisabled": "Available after the session ends",
-        "openMenu": "Open actions menu"
+        "openMenu": "Open actions menu",
+        "cancelSessionTitle": "Cancel the session?",
+        "cancelSessionDescription": "All confirmed bookings will be cancelled and fully refunded; every guest receives an email with your reason.",
+        "cancelSessionReasonLabel": "Cancellation reason",
+        "cancelSessionReasonPlaceholder": "E.g. early harvest, unable to host the session…",
+        "cancelSessionReasonHint": "Minimum {min} characters — the reason is sent to your guests.",
+        "cancelSessionBack": "Back",
+        "cancelSessionConfirm": "Cancel the session"
       },
       "bookingStatus": {
         "confirmed": "Confirmed",
@@ -2083,7 +2101,8 @@
           "capacityHint": "Between 1 and 50 seats. Reset returns to the experience capacity.",
           "capacityInvalid": "Enter a number between {min} and {max}.",
           "attendees": "{count, plural, =0 {Attendees} =1 {1 attendee} other {# attendees}}",
-          "noAttendees": "No attendees for this slot yet."
+          "noAttendees": "No attendees for this slot yet.",
+          "checkedInAt": "Scanned at {time}"
         },
         "toasts": {
           "closed": "Slot closed — it can no longer be booked.",
@@ -2179,6 +2198,30 @@
       "alertTitle": "Tasting sheet to fill in",
       "alertDescription": "{count, plural, one {# of today's sessions is waiting for its sheet} other {# of today's sessions are waiting for their sheets}} — tick the wines served to trigger the favourites email.",
       "alertCta": "Fill in the sheet"
+    },
+    "today": {
+      "title": "Today",
+      "loading": "Loading your dashboard…",
+      "scanButton": "Scan tickets",
+      "kpis": {
+        "sectionLabel": "Today's indicators",
+        "todayBookings": "Bookings today",
+        "todayGuests": "{count, plural, =0 {no guests} one {# guest} other {# guests}}",
+        "weekGuests": "Guests next 7 days",
+        "weekBookings": "{count, plural, one {# booking} other {# bookings}}",
+        "monthGross": "Month revenue",
+        "monthBookings": "{count, plural, one {# booking} other {# bookings}}",
+        "fillRate": "30-day fill rate",
+        "fillRateHint": "{sold} seats sold / {offered} offered",
+        "fillRateEmpty": "No sessions in the last 30 days"
+      },
+      "upcoming": {
+        "title": "Next sessions",
+        "manageLink": "Manage",
+        "empty": "No open session in the next 7 days.",
+        "emptyCta": "Open sessions",
+        "seats": "{sold}/{capacity}"
+      }
     }
   },
   "Public": {
@@ -2201,7 +2244,12 @@
     "unknown": "Unknown QR code",
     "already": "Already checked in",
     "counter": "{checkedIn} / {total} guests checked in",
-    "loadError": "Unable to load the scanner"
+    "loadError": "Unable to load the scanner",
+    "online": "Online",
+    "offline": "Offline — scans will sync later",
+    "pendingSync": "{count} scan(s) waiting to sync",
+    "syncRejected": "{count} scan(s) rejected by the server",
+    "notToday": "Ticket unknown for today"
   },
   "imageUpload": {
     "clickToUpload": "Click to upload image",
@@ -2254,5 +2302,49 @@
     "sentDescription": "{wineryName} received your selection and will get back to you shortly.",
     "alreadyTitle": "Request already sent",
     "alreadyDescription": "{wineryName} already received your request for this tasting."
+  },
+  "Payouts": {
+    "title": "Payouts",
+    "subtitle": "EnCave payouts arrive automatically on your account following your Stripe schedule.",
+    "loading": "Loading payouts…",
+    "openInStripe": "Open in Stripe",
+    "status": {
+      "paid": "Paid",
+      "pending": "Preparing",
+      "in_transit": "In transit",
+      "failed": "Failed",
+      "canceled": "Canceled"
+    },
+    "next": {
+      "title": "Next payout",
+      "arrival": "Expected arrival {date}",
+      "accruing": "Accruing at Stripe — paid out on your schedule",
+      "none": "No pending payout"
+    },
+    "empty": {
+      "title": "No payout yet",
+      "body": "Your payouts arrive automatically following the Stripe schedule configured on your account. The first one usually lands a few days after your first confirmed booking.",
+      "stripeNotReady": {
+        "title": "Finish your Stripe account",
+        "body": "To receive your payouts, complete your Stripe Connect account setup.",
+        "cta": "Finish my Stripe account"
+      }
+    },
+    "error": {
+      "fetch": "Could not fetch the Stripe history. Please try again in a moment.",
+      "retry": "Retry"
+    },
+    "detail": {
+      "back": "All payouts",
+      "title": "Payout detail",
+      "bookings": "Included bookings",
+      "noBookings": "No booking correlated to this payout.",
+      "gross": "Gross",
+      "commission": "Commission",
+      "totalGross": "Total gross",
+      "totalCommission": "EnCave commission",
+      "totalNet": "Total net paid",
+      "otherLines": "Other movements (refunds, adjustments)"
+    }
   }
 }

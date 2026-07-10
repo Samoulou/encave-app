@@ -2,19 +2,8 @@ import { cache } from 'react';
 import { db } from '@/server/db';
 import { BookingStatus, Prisma } from '@prisma/client';
 import { HOLD_EMAIL_DOMAIN } from '@/lib/constants/booking-hold';
-import { startOfMonth, endOfMonth, addDays } from 'date-fns';
-
-/**
- * Convert a local date to UTC date, preserving the local date components.
- * This ensures that "today" in local time maps to the correct database date.
- * The database stores dates as @db.Date (date-only), so we need to
- * ensure our queries use UTC-normalized dates to avoid timezone issues.
- */
-function localDateToUTC(date: Date): Date {
-  return new Date(
-    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
-  );
-}
+import { addDays } from 'date-fns';
+import { zurichTodayAsUTCDate } from '@/lib/business-rules/occurrence-expansion';
 
 export interface BookingFilters {
   status?: BookingStatus[];
@@ -172,20 +161,22 @@ export const getBookingSummary = cache(async function getBookingSummary(
 ): Promise<BookingSummary> {
   const now = new Date();
 
-  // Use local-to-UTC conversion for database comparison
-  // The database uses @db.Date which stores date-only values
-  // We convert local dates to UTC to match database storage format
-  const todayUTC = localDateToUTC(now);
-  const tomorrowUTC = localDateToUTC(addDays(now, 1));
+  // P-13 (A4): "today" = the Europe/Zurich calendar day (UTC midnight),
+  // the SAME reference as the occurrence engine — the Aujourd'hui KPIs
+  // and the calendar can no longer drift a day apart with the server tz.
+  const todayUTC = zurichTodayAsUTCDate(now);
+  const tomorrowUTC = addDays(todayUTC, 1);
 
   // Rolling upcoming window: today through the next 7 calendar days.
-  const upcomingWindowEndUTC = localDateToUTC(addDays(now, 8));
+  const upcomingWindowEndUTC = addDays(todayUTC, 8);
 
-  // Month boundaries
-  const monthStartLocal = startOfMonth(now);
-  const monthEndLocal = endOfMonth(now);
-  const monthStartUTC = localDateToUTC(monthStartLocal);
-  const monthEndUTC = localDateToUTC(addDays(monthEndLocal, 1)); // Day after to include full end day
+  // Month boundaries (Zurich calendar month, UTC-midnight bounds)
+  const monthStartUTC = new Date(
+    Date.UTC(todayUTC.getUTCFullYear(), todayUTC.getUTCMonth(), 1)
+  );
+  const monthEndUTC = new Date(
+    Date.UTC(todayUTC.getUTCFullYear(), todayUTC.getUTCMonth() + 1, 1)
+  );
 
   // Active statuses for counting (exclude pending payment and cancelled)
   const activeStatuses = [BookingStatus.CONFIRMED, BookingStatus.COMPLETED];

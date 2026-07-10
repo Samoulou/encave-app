@@ -35,6 +35,8 @@ function booking(
     id: 'b-default',
     reference: 'ENC-XXXXXXXX',
     visitorName: 'Client Test',
+    visitorEmail: 'client@test.encave.ch',
+    checkedInAt: null,
     guestCount: 1,
     status: BookingStatus.CONFIRMED,
     date: D1,

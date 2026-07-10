@@ -1,5 +1,6 @@
 import { cache } from 'react';
 import { db } from '@/server/db';
+import { isMonthKey } from '@/lib/utils/date-key';
 import { BookingStatus, Prisma } from '@prisma/client';
 import {
   startOfMonth,
@@ -10,15 +11,18 @@ import {
   format,
 } from 'date-fns';
 
-export type TransactionStatus = 'paid' | 'processing' | 'pending' | 'refunded';
+/**
+ * P-13 (L-141): statuses are booking facts only — the old paid/processing
+ * buckets were a J+5 business-day GUESS about Stripe payouts. Real payout
+ * timing now lives on /dashboard/payouts (Stripe API).
+ */
+export type TransactionStatus = 'upcoming' | 'completed' | 'refunded';
 
 export interface EarningsSummary {
   totalEarnings: number;
   thisMonth: number;
   lastMonth: number;
   yearToDate: number;
-  pendingPayout: number;
-  nextPayoutDate: Date | null;
   currentMonthLabel: string;
 }
 
@@ -46,7 +50,6 @@ export interface Transaction {
   netPayout: number;
   status: TransactionStatus;
   reference: string;
-  estimatedPayoutDate: Date | null;
 }
 
 export interface TransactionFilters {
@@ -63,87 +66,19 @@ export interface YearToDateSummary {
   refundedAmount: number;
 }
 
-/**
- * Calculate number of business days between two dates.
- * Excludes weekends (Saturday and Sunday).
- */
-function getBusinessDaysSince(fromDate: Date): number {
-  const now = new Date();
-  let businessDays = 0;
-  const current = new Date(fromDate);
-
-  while (current < now) {
-    const dayOfWeek = current.getDay();
-    // Count if not Saturday (6) or Sunday (0)
-    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-      businessDays++;
-    }
-    current.setDate(current.getDate() + 1);
-  }
-
-  return businessDays;
-}
-
-/**
- * Calculate estimated payout date (experience date + 5 business days)
- * Skips weekends when counting business days.
- */
-function calculateEstimatedPayoutDate(experienceDate: Date): Date {
-  const result = new Date(experienceDate);
-  let businessDaysAdded = 0;
-
-  while (businessDaysAdded < 5) {
-    result.setDate(result.getDate() + 1);
-    const dayOfWeek = result.getDay();
-    // Only count weekdays
-    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-      businessDaysAdded++;
-    }
-  }
-
-  return result;
-}
-
-/**
- * Determine transaction status based on booking state.
- *
- * Status logic:
- * - 'refunded': Refund has been issued
- * - 'pending': Experience hasn't happened yet (date is in future)
- * - 'processing': Experience completed, within 2-5 business days (funds being processed)
- * - 'paid': Experience completed 5+ business days ago (funds should be available)
- */
-function getTransactionStatus(
-  bookingStatus: BookingStatus,
-  bookingDate: Date,
-  refundIssued: boolean
-): TransactionStatus {
-  if (refundIssued) return 'refunded';
-
-  const now = new Date();
-
-  // If the experience hasn't happened yet, it's pending
-  if (bookingDate > now) {
-    return 'pending';
-  }
-
-  // Experience has passed - calculate business days
-  if (
-    bookingStatus === BookingStatus.COMPLETED ||
-    bookingStatus === BookingStatus.CONFIRMED
-  ) {
-    const businessDaysSince = getBusinessDaysSince(bookingDate);
-
-    if (businessDaysSince >= 5) {
-      return 'paid';
-    } else if (businessDaysSince >= 2) {
-      return 'processing';
-    }
-    // Less than 2 business days after experience
-    return 'pending';
-  }
-
-  return 'pending';
+// Partial refunds (STRICT 50% tier) reverse the Stripe transfer
+// proportionally: the winery keeps payout × (1 − refunded/paid). A full
+// refund keeps nothing. refundIssued alone no longer implies "earned 0".
+function refundedFraction(b: {
+  totalPrice: number;
+  serviceFeeCents: number;
+  refundIssued: boolean;
+  refundAmount: number | null;
+}): number {
+  if (!b.refundIssued) return 0;
+  const paid = b.totalPrice + b.serviceFeeCents;
+  if (paid <= 0 || b.refundAmount === null) return 1;
+  return Math.min(1, b.refundAmount / paid);
 }
 
 /**
@@ -176,21 +111,6 @@ export const getEarningsSummary = cache(async function getEarningsSummary(
       refundIssued: true,
     },
   });
-
-  // Partial refunds (STRICT 50% tier) reverse the Stripe transfer
-  // proportionally: the winery keeps payout × (1 − refunded/paid). A full
-  // refund keeps nothing. refundIssued alone no longer implies "earned 0".
-  function refundedFraction(b: {
-    totalPrice: number;
-    serviceFeeCents: number;
-    refundIssued: boolean;
-    refundAmount: number | null;
-  }): number {
-    if (!b.refundIssued) return 0;
-    const paid = b.totalPrice + b.serviceFeeCents;
-    if (paid <= 0 || b.refundAmount === null) return 1;
-    return Math.min(1, b.refundAmount / paid);
-  }
 
   // Total earnings (all time, net of full/partial refunds)
   // Only count bookings where experience has passed (date <= now)
@@ -227,36 +147,11 @@ export const getEarningsSummary = cache(async function getEarningsSummary(
       0
     );
 
-  // Pending payout: bookings where experience passed but < 5 business days ago
-  // This includes both 'pending' and 'processing' statuses
-  const pendingBookings = bookings.filter((b) => {
-    if (refundedFraction(b) >= 1) return false;
-    if (b.date > now) return false; // Future experience
-
-    const status = getTransactionStatus(b.status, b.date, b.refundIssued);
-    return status === 'pending' || status === 'processing';
-  });
-
-  const pendingPayout = pendingBookings.reduce(
-    (sum, b) => sum + b.wineryPayout,
-    0
-  );
-
-  // Next payout date: earliest pending booking's estimated payout date
-  const sortedPending = pendingBookings.sort(
-    (a, b) => a.date.getTime() - b.date.getTime()
-  );
-  const nextPayoutDate = sortedPending[0]
-    ? calculateEstimatedPayoutDate(sortedPending[0].date)
-    : null;
-
   return {
     totalEarnings,
     thisMonth,
     lastMonth,
     yearToDate,
-    pendingPayout,
-    nextPayoutDate,
     currentMonthLabel: format(now, 'MMM'),
   };
 });
@@ -353,13 +248,15 @@ export const getTransactions = cache(async function getTransactions(
     },
   });
 
-  // Map to Transaction type with status calculation
+  // Booking facts only: refunded > upcoming (experience not held yet) >
+  // completed. Payout timing is Stripe's job (/dashboard/payouts).
+  const now = new Date();
   let transactions: Transaction[] = bookings.map((b) => {
-    const status = getTransactionStatus(b.status, b.date, b.refundIssued);
-    const estimatedPayoutDate =
-      status === 'pending' || status === 'processing'
-        ? calculateEstimatedPayoutDate(b.date)
-        : null;
+    const status: TransactionStatus = b.refundIssued
+      ? 'refunded'
+      : b.date > now
+        ? 'upcoming'
+        : 'completed';
 
     return {
       id: b.id,
@@ -378,7 +275,6 @@ export const getTransactions = cache(async function getTransactions(
       netPayout: b.wineryPayout,
       status,
       reference: b.reference,
-      estimatedPayoutDate,
     };
   });
 
@@ -454,6 +350,113 @@ export const getWineryGmv = cache(async function getWineryGmv(
 
   return aggregate._sum.totalPrice ?? 0;
 });
+
+export interface MonthlyStatementLine {
+  date: Date;
+  reference: string;
+  experienceTitle: string;
+  guestCount: number;
+  grossCents: number;
+  commissionCents: number;
+  netCents: number;
+  refunded: boolean;
+}
+
+export interface MonthlyStatementData {
+  /** 'YYYY-MM' */
+  month: string;
+  lines: MonthlyStatementLine[];
+  /** Σ totalPrice before refunds (money-kept statuses). */
+  grossCents: number;
+  commissionCents: number;
+  /** Client service fees — platform money, informative line only. */
+  serviceFeesCents: number;
+  /** No-show fees: always 0 until P-08 ships. */
+  noShowFeesCents: number;
+  /**
+   * Refund impact on the winery's NET (payout × refunded fraction) —
+   * NOT the client-facing refundAmount, which also contains the service
+   * fee and commission parts. This keeps the identity
+   * gross − commission − refunds = net exact on the PDF.
+   */
+  refundedCents: number;
+  /** Σ wineryPayout net of full/partial refunds. */
+  netCents: number;
+}
+
+/**
+ * Monthly statement aggregate (P-13 / L-142). One row per booking whose
+ * experience DATE falls in the month — the statement reads as "what the
+ * month's activity earned you", matching the earnings screen. NO_SHOW is
+ * included (the winery kept the money).
+ */
+export const getMonthlyStatementData = cache(
+  async function getMonthlyStatementData(
+    wineryId: string,
+    month: string
+  ): Promise<MonthlyStatementData | null> {
+    if (!isMonthKey(month)) return null;
+    const [yearStr, monthStr] = month.split('-');
+    // UTC bounds: Booking.date is a UTC-midnight @db.Date — local-time
+    // bounds would shift edge-of-month bookings on a non-UTC server.
+    const year = Number(yearStr);
+    const monthIndex = Number(monthStr) - 1;
+    const monthStart = new Date(Date.UTC(year, monthIndex, 1));
+    const nextMonthStart = new Date(Date.UTC(year, monthIndex + 1, 1));
+
+    const bookings = await db.booking.findMany({
+      where: {
+        wineryId,
+        date: { gte: monthStart, lt: nextMonthStart },
+        status: {
+          in: [
+            BookingStatus.CONFIRMED,
+            BookingStatus.COMPLETED,
+            BookingStatus.NO_SHOW,
+          ],
+        },
+      },
+      orderBy: { date: 'asc' },
+      select: {
+        reference: true,
+        date: true,
+        guestCount: true,
+        totalPrice: true,
+        serviceFeeCents: true,
+        platformFee: true,
+        wineryPayout: true,
+        refundIssued: true,
+        refundAmount: true,
+        experience: { select: { title: true } },
+      },
+    });
+
+    const lines: MonthlyStatementLine[] = bookings.map((b) => ({
+      date: b.date,
+      reference: b.reference,
+      experienceTitle: b.experience.title,
+      guestCount: b.guestCount,
+      grossCents: b.totalPrice,
+      commissionCents: b.platformFee,
+      netCents: Math.round(b.wineryPayout * (1 - refundedFraction(b))),
+      refunded: b.refundIssued,
+    }));
+
+    return {
+      month,
+      lines,
+      grossCents: bookings.reduce((sum, b) => sum + b.totalPrice, 0),
+      commissionCents: bookings.reduce((sum, b) => sum + b.platformFee, 0),
+      serviceFeesCents: bookings.reduce((sum, b) => sum + b.serviceFeeCents, 0),
+      noShowFeesCents: 0,
+      refundedCents: bookings.reduce(
+        (sum, b) => sum + Math.round(b.wineryPayout * refundedFraction(b)),
+        0
+      ),
+      netCents: lines.reduce((sum, line) => sum + line.netCents, 0),
+    };
+  }
+);
 
 /**
  * Get experiences for filter dropdown.

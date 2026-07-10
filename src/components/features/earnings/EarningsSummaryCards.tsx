@@ -8,14 +8,20 @@ import {
   TrendingDown,
   Info,
 } from 'lucide-react';
-import { format } from 'date-fns';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 import { formatCHF } from '@/lib/utils/currency';
+import { formatDateShort } from '@/lib/i18n/formatters';
 import type { EarningsSummary } from '@/server/queries/earnings.queries';
+import type { NextPayoutDTO } from '@/server/queries/payouts.queries';
 import { cn } from '@/lib/utils';
+import type { Locale } from '@/i18n/routing';
 
 interface EarningsSummaryCardsProps {
   summary: EarningsSummary;
+  /** Real Stripe data (P-13 / L-141) — null when unavailable (API down
+   * or account not connected): the card degrades, never guesses. */
+  nextPayout: NextPayoutDTO | null;
 }
 
 /**
@@ -23,10 +29,14 @@ interface EarningsSummaryCardsProps {
  * Displays 3 cards matching the mockup:
  * 1. Total Earnings (current month with trend)
  * 2. Year to Date (gross revenue)
- * 3. Pending Payouts (with estimated arrival)
+ * 3. Next payout — REAL Stripe data (the J+5 heuristic is gone)
  */
-export function EarningsSummaryCards({ summary }: EarningsSummaryCardsProps) {
+export function EarningsSummaryCards({
+  summary,
+  nextPayout,
+}: EarningsSummaryCardsProps) {
   const t = useTranslations('earnings.summary');
+  const locale = useLocale() as Locale;
 
   // Calculate trend percentage
   const trendPercentage =
@@ -98,11 +108,11 @@ export function EarningsSummaryCards({ summary }: EarningsSummaryCardsProps) {
         </div>
       </div>
 
-      {/* Card 3 - Pending Payouts */}
+      {/* Card 3 - Next payout (real Stripe data, P-13) */}
       <div className="group flex h-40 flex-col justify-between rounded-xl border border-border bg-white p-6 shadow-sm transition-colors hover:border-primary/30">
         <div className="flex items-center justify-between">
           <p className="text-sm font-medium text-muted-foreground">
-            {t('pendingPayouts')}
+            {t('nextPayout')}
           </p>
           <div className="rounded-lg bg-yellow-50 p-2 text-yellow-600">
             <Clock className="h-5 w-5" />
@@ -110,15 +120,31 @@ export function EarningsSummaryCards({ summary }: EarningsSummaryCardsProps) {
         </div>
         <div>
           <h3 className="text-3xl font-extrabold tabular-nums text-foreground">
-            {formatCHF(summary.pendingPayout)}
+            {nextPayout !== null && nextPayout.kind !== 'none'
+              ? formatCHF(nextPayout.amountCents)
+              : '—'}
           </h3>
           <div className="mt-2 flex items-center gap-1 text-sm font-medium text-muted-foreground">
-            <span>{t('estArrival')}</span>
-            <span className="font-bold text-foreground">
-              {summary.nextPayoutDate
-                ? format(summary.nextPayoutDate, 'MMM d')
-                : '—'}
-            </span>
+            {nextPayout === null ? (
+              <span>{t('nextPayoutUnavailable')}</span>
+            ) : nextPayout.kind === 'payout' ? (
+              <>
+                <span>{t('estArrival')}</span>
+                <span className="font-bold text-foreground">
+                  {formatDateShort(new Date(nextPayout.arrivalDateMs), locale)}
+                </span>
+              </>
+            ) : nextPayout.kind === 'balance' ? (
+              <span>{t('nextPayoutAccruing')}</span>
+            ) : (
+              <span>{t('nextPayoutNone')}</span>
+            )}
+            <Link
+              href="/dashboard/payouts"
+              className="ml-auto font-bold text-primary hover:underline"
+            >
+              {t('nextPayoutLink')}
+            </Link>
           </div>
         </div>
       </div>

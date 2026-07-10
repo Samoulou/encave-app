@@ -14,6 +14,7 @@ export type ErrorCode =
   | 'INVALID_SLOT'
   | 'FEE_CHANGED'
   | 'WRONG_SESSION'
+  | 'WRONG_DAY'
   | 'PAYMENT_NOT_CONFIRMED'
   | 'BOOKING_CANCELLED'
   | 'MARKED_NO_SHOW'

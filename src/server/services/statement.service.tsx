@@ -251,9 +251,9 @@ function EarningsStatement({
                   {formatCHF(t.netPayout)}
                 </Text>
                 <Text style={[styles.tableCell, styles.colStatus]}>
-                  {t.status === 'paid'
-                    ? 'P'
-                    : t.status === 'pending'
+                  {t.status === 'completed'
+                    ? 'C'
+                    : t.status === 'upcoming'
                       ? '...'
                       : 'R'}
                 </Text>

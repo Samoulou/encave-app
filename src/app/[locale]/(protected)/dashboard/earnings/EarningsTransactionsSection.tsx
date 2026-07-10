@@ -33,7 +33,18 @@ export async function EarningsTransactionsSection({
     filters.experienceId = params.experience;
   }
 
-  if (params.status) {
+  // Whitelist: pre-P-13 URLs may still carry the retired paid/processing/
+  // pending values — an unknown status must mean "no filter", not a
+  // silently empty table.
+  const VALID_STATUSES: TransactionStatus[] = [
+    'upcoming',
+    'completed',
+    'refunded',
+  ];
+  if (
+    params.status &&
+    VALID_STATUSES.includes(params.status as TransactionStatus)
+  ) {
     filters.status = params.status as TransactionStatus;
   }
 

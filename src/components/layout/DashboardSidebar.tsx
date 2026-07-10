@@ -8,6 +8,7 @@ import {
   PartyPopper,
   Calendar,
   Grape,
+  Landmark,
   Settings,
   Menu,
   X,
@@ -41,6 +42,7 @@ const sidebarLinks: SidebarLink[] = [
   },
   { href: '/dashboard/bookings', labelKey: 'bookings', icon: Calendar },
   { href: '/dashboard/earnings', labelKey: 'earnings', icon: Wallet },
+  { href: '/dashboard/payouts', labelKey: 'payouts', icon: Landmark },
   { href: '/dashboard/winery/profile', labelKey: 'wineryProfile', icon: Wine },
   { href: '/dashboard/settings', labelKey: 'settings', icon: Settings },
 ];

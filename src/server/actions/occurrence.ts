@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidateTag } from 'next/cache';
-import { OccurrenceStatus } from '@prisma/client';
+import { ExperienceStatus, OccurrenceStatus } from '@prisma/client';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import type { ActionResult } from '@/types/actions';
@@ -27,6 +27,7 @@ interface OwnedOccurrence {
   experienceId: string;
   experience: {
     slug: string;
+    status: ExperienceStatus;
     maxCapacity: number;
     winery: { slug: string };
   };
@@ -45,6 +46,7 @@ async function loadOwnedOccurrence(
       experience: {
         select: {
           slug: true,
+          status: true,
           maxCapacity: true,
           winery: { select: { slug: true } },
         },
@@ -52,6 +54,18 @@ async function loadOwnedOccurrence(
     },
   });
 }
+
+/**
+ * P-13 (P-05 debt): occurrence management on an ARCHIVED experience is
+ * refused SERVER-SIDE — the UI's canEdit gate alone was bypassable.
+ */
+const ARCHIVED_CONFLICT = {
+  success: false as const,
+  error: {
+    code: 'CONFLICT' as const,
+    message: 'This experience is archived',
+  },
+};
 
 function invalidateOccurrenceCaches(
   experienceId: string,
@@ -101,6 +115,9 @@ async function setOccurrenceStatus(
         success: false,
         error: { code: 'NOT_FOUND', message: 'Occurrence not found' },
       };
+    }
+    if (occurrence.experience.status === ExperienceStatus.ARCHIVED) {
+      return ARCHIVED_CONFLICT;
     }
     if (occurrence.status === OccurrenceStatus.CANCELLED) {
       return {
@@ -187,6 +204,9 @@ export async function setOccurrenceCapacity(
         error: { code: 'NOT_FOUND', message: 'Occurrence not found' },
       };
     }
+    if (occurrence.experience.status === ExperienceStatus.ARCHIVED) {
+      return ARCHIVED_CONFLICT;
+    }
 
     // Lowering below the already-booked count is allowed (it only blocks
     // NEW bookings — sold tickets are never clawed back), same doctrine
@@ -226,7 +246,12 @@ export async function setOccurrenceCapacity(
 async function loadOwnedExperience(experienceId: string, userId: string) {
   return db.experience.findFirst({
     where: { id: experienceId, winery: { userId } },
-    select: { id: true, slug: true, winery: { select: { slug: true } } },
+    select: {
+      id: true,
+      slug: true,
+      status: true,
+      winery: { select: { slug: true } },
+    },
   });
 }
 
@@ -257,6 +282,9 @@ export async function addPunctualOccurrences(
         success: false,
         error: { code: 'NOT_FOUND', message: 'Experience not found' },
       };
+    }
+    if (experience.status === ExperienceStatus.ARCHIVED) {
+      return ARCHIVED_CONFLICT;
     }
 
     const { created } = await createPunctualOccurrences(

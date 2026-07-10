@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BookingStatus } from '@prisma/client';
 import type { Session } from '@/server/auth';
 
@@ -112,5 +112,125 @@ describe('checkInBooking', () => {
       expect(result.error.code).toBe('BOOKING_CANCELLED');
     }
     expect(db.booking.updateMany).not.toHaveBeenCalled();
+  });
+
+  describe('day mode (no expectedSessionId — P-13 offline scan)', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+      // 10:00 UTC = 12:00 Zurich on 2026-05-20 (CEST)
+      vi.setSystemTime(new Date('2026-05-20T10:00:00Z'));
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("refuses yesterday's ticket with WRONG_DAY", async () => {
+      vi.mocked(db.booking.findFirst).mockResolvedValue({
+        ...booking,
+        date: new Date('2026-05-19T00:00:00Z'),
+      } as never);
+
+      const result = await checkInBooking({
+        bookingId: 'cjld2cjxh0000qzrmn831i7rn',
+        source: 'scan',
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe('WRONG_DAY');
+      }
+      expect(db.booking.updateMany).not.toHaveBeenCalled();
+    });
+
+    it("checks in today's ticket without a session anchor", async () => {
+      vi.mocked(db.booking.findFirst).mockResolvedValue(booking as never);
+      vi.mocked(db.booking.updateMany).mockResolvedValue({
+        count: 1,
+      } as never);
+      vi.mocked(db.booking.findUnique).mockResolvedValue({
+        id: 'booking-1',
+        reference: 'ENC-ABC123',
+        visitorName: 'Alice Test',
+        guestCount: 2,
+        status: BookingStatus.COMPLETED,
+        checkedInAt: new Date('2026-05-20T10:00:00Z'),
+      } as never);
+
+      const result = await checkInBooking({
+        bookingId: 'cjld2cjxh0000qzrmn831i7rn',
+        source: 'scan',
+      });
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.code).toBe('CHECKED_IN');
+      }
+    });
+
+    it('honours scannedAt: an offline scan synced after midnight still checks in', async () => {
+      // Now = 00:30 Zurich on May 21 (22:30 UTC May 20); the physical
+      // scan happened at 23:50 Zurich on May 20.
+      vi.setSystemTime(new Date('2026-05-20T22:30:00Z'));
+      vi.mocked(db.booking.findFirst).mockResolvedValue(booking as never); // date May 20
+      vi.mocked(db.booking.updateMany).mockResolvedValue({
+        count: 1,
+      } as never);
+      vi.mocked(db.booking.findUnique).mockResolvedValue({
+        id: 'booking-1',
+        reference: 'ENC-ABC123',
+        visitorName: 'Alice Test',
+        guestCount: 2,
+        status: BookingStatus.COMPLETED,
+        checkedInAt: new Date('2026-05-20T21:50:00Z'),
+      } as never);
+
+      const result = await checkInBooking({
+        bookingId: 'cjld2cjxh0000qzrmn831i7rn',
+        scannedAt: '2026-05-20T21:50:00.000Z', // 23:50 Zurich, May 20
+        source: 'scan',
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it('ignores a scannedAt older than 48h (no arbitrary-day reopening)', async () => {
+      vi.mocked(db.booking.findFirst).mockResolvedValue({
+        ...booking,
+        date: new Date('2026-05-15T00:00:00Z'),
+      } as never);
+
+      const result = await checkInBooking({
+        bookingId: 'cjld2cjxh0000qzrmn831i7rn',
+        scannedAt: '2026-05-15T10:00:00.000Z', // 5 days before system time
+        source: 'scan',
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe('WRONG_DAY');
+      }
+    });
+
+    it('still enforces ownership in day mode', async () => {
+      vi.mocked(db.booking.findFirst).mockResolvedValue({
+        ...booking,
+        experience: {
+          ...booking.experience,
+          winery: { userId: 'someone-else' },
+        },
+      } as never);
+
+      const result = await checkInBooking({
+        bookingId: 'cjld2cjxh0000qzrmn831i7rn',
+        source: 'scan',
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe('FORBIDDEN');
+      }
+      expect(db.booking.updateMany).not.toHaveBeenCalled();
+    });
   });
 });

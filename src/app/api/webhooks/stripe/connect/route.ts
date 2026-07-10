@@ -11,6 +11,15 @@ import {
   markStripeEventFailed,
   markStripeEventProcessed,
 } from '@/server/services/stripe-event.service';
+import { sendStripeActionRequiredEmail } from '@/server/services/email.service';
+import {
+  logEmailSent,
+  logEmailFailed,
+} from '@/server/services/email-log.service';
+import {
+  computeStripeDueHash,
+  shouldNotifyStripeAction,
+} from '@/lib/business-rules/stripe-action-email';
 
 export async function POST(req: Request) {
   if (!isStripeConfigured()) {
@@ -103,7 +112,14 @@ async function handleAccountUpdated(account: Stripe.Account) {
   // Find the winery with this Stripe account
   const winery = await db.winery.findUnique({
     where: { stripeAccountId },
-    select: { id: true, slug: true },
+    select: {
+      id: true,
+      slug: true,
+      email: true,
+      stripeActionDueHash: true,
+      stripeActionEmailAt: true,
+      user: { select: { name: true, preferredLocale: true } },
+    },
   });
 
   if (!winery) {
@@ -128,6 +144,94 @@ async function handleAccountUpdated(account: Stripe.Account) {
     detailsSubmitted: account.details_submitted,
     chargesEnabled: account.charges_enabled,
   });
+
+  await maybeSendActionRequiredEmail(account, {
+    wineryId: winery.id,
+    email: winery.email,
+    firstName: winery.user.name || 'Winemaker',
+    preferredLocale: winery.user.preferredLocale,
+    storedHash: winery.stripeActionDueHash,
+    lastEmailAt: winery.stripeActionEmailAt,
+  });
+}
+
+/**
+ * Email #18 « Action requise Stripe » (P-13 / L-143). account.updated
+ * fires on every account touch, so the send is gated by
+ * shouldNotifyStripeAction (requirements changed, or 7-day re-reminder).
+ * Fail-safe: any error here is logged and swallowed — the status update
+ * above must never be retried by Stripe because of an email problem.
+ */
+async function maybeSendActionRequiredEmail(
+  account: Stripe.Account,
+  winery: {
+    wineryId: string;
+    email: string;
+    firstName: string;
+    preferredLocale: 'FR' | 'DE' | 'EN' | null;
+    storedHash: string | null;
+    lastEmailAt: Date | null;
+  }
+) {
+  try {
+    const currentlyDue = account.requirements?.currently_due ?? [];
+
+    if (currentlyDue.length === 0) {
+      // Resolved: clear the fingerprint so a future regression notifies
+      // again immediately.
+      if (winery.storedHash !== null) {
+        await db.winery.update({
+          where: { id: winery.wineryId },
+          data: { stripeActionDueHash: null },
+        });
+      }
+      return;
+    }
+
+    if (
+      !shouldNotifyStripeAction({
+        currentlyDue,
+        storedHash: winery.storedHash,
+        lastEmailAt: winery.lastEmailAt,
+        now: new Date(),
+      })
+    ) {
+      return;
+    }
+
+    const success = await sendStripeActionRequiredEmail(
+      winery.email,
+      { firstName: winery.firstName, currentlyDue },
+      winery.preferredLocale
+    );
+
+    if (success) {
+      await db.winery.update({
+        where: { id: winery.wineryId },
+        data: {
+          stripeActionDueHash: computeStripeDueHash(currentlyDue),
+          stripeActionEmailAt: new Date(),
+        },
+      });
+      await logEmailSent('stripe_action_required', winery.wineryId);
+      logInfo('Stripe action-required email sent', {
+        wineryId: winery.wineryId,
+        dueCount: currentlyDue.length,
+      });
+    } else {
+      // Columns NOT updated → the next account.updated retries the send.
+      await logEmailFailed(
+        'stripe_action_required',
+        winery.wineryId,
+        'Failed to send'
+      );
+    }
+  } catch (error) {
+    logError('Stripe action-required email failed', error, {
+      action: 'handleAccountUpdated',
+      wineryId: winery.wineryId,
+    });
+  }
 }
 
 /**

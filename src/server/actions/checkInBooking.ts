@@ -1,11 +1,12 @@
 'use server';
 
-import crypto from 'crypto';
 import { revalidatePath } from 'next/cache';
 import { BookingStatus } from '@prisma/client';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { logError, logInfo, logWarn } from '@/lib/logger';
+import { hashToken } from '@/lib/utils/token';
+import { zurichTodayAsUTCDate } from '@/lib/business-rules/occurrence-expansion';
 import { checkInBookingSchema } from '@/lib/validators/checkIn';
 import {
   API_RATE_LIMIT,
@@ -24,10 +25,6 @@ interface CheckInBookingData {
     checkedInAt: Date | null;
     experienceTitle: string;
   };
-}
-
-function hashToken(token: string): string {
-  return crypto.createHash('sha256').update(token).digest('hex');
 }
 
 export async function checkInBooking(
@@ -163,6 +160,36 @@ export async function checkInBooking(
         success: false,
         error: { code: 'MARKED_NO_SHOW', message: 'Booking marked no-show' },
       };
+    }
+
+    // Day mode (P-13 / L-140): without a session anchor, only TODAY's
+    // (Zurich) tickets are scannable — yesterday's QR must not check in.
+    // Placed after the status checks so refusal reasons stay precise
+    // (a cancelled booking reports BOOKING_CANCELLED, not WRONG_DAY).
+    // An offline scan replayed after midnight carries scannedAt: the day
+    // is anchored on the physical scan, bounded to the last 48h so a
+    // fabricated timestamp cannot reopen arbitrary days.
+    if (!expectedSessionId) {
+      const now = new Date();
+      const scannedAt = parsed.data.scannedAt
+        ? new Date(parsed.data.scannedAt)
+        : null;
+      const scanAnchor =
+        scannedAt &&
+        scannedAt.getTime() <= now.getTime() &&
+        now.getTime() - scannedAt.getTime() <= 48 * 60 * 60 * 1000
+          ? scannedAt
+          : now;
+      const scanDay = zurichTodayAsUTCDate(scanAnchor);
+      if (booking.date.getTime() !== scanDay.getTime()) {
+        return {
+          success: false,
+          error: {
+            code: 'WRONG_DAY',
+            message: booking.experience.title,
+          },
+        };
+      }
     }
 
     const checkedInAt = new Date();
