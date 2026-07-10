@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { headers } from 'next/headers';
 import { auth as betterAuth } from '@/server/better-auth';
 import { db } from '@/server/db';
@@ -24,8 +25,12 @@ export interface Session {
  *
  * Note: role and preferredLocale are defined as additionalFields in Better Auth config,
  * so they are included in the session automatically - no extra DB query needed.
+ *
+ * React.cache: one better-auth resolution per request no matter how many
+ * layers call auth() in the same render tree (P-06 — the admin layout
+ * alone used to resolve the session twice via isCurrentUserSuspended).
  */
-export async function auth(): Promise<Session | null> {
+export const auth = cache(async function auth(): Promise<Session | null> {
   try {
     const session = await betterAuth.api.getSession({
       headers: await headers(),
@@ -63,7 +68,7 @@ export async function auth(): Promise<Session | null> {
     logError('Auth error', error, { action: 'auth' });
     return null;
   }
-}
+});
 
 export async function isCurrentUserSuspended(): Promise<boolean> {
   const session = await auth();

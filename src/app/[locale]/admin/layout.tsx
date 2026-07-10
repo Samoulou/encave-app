@@ -1,5 +1,5 @@
 import { auth, isCurrentUserSuspended } from '@/server/auth';
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { getLocale } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { db } from '@/server/db';
@@ -26,9 +26,15 @@ export default async function AdminLayout({
 }) {
   const session = await auth();
 
-  if (!session?.user || session.user.role !== 'ADMIN') {
+  if (!session?.user) {
     const locale = await getLocale();
-    redirect(`/${locale}`);
+    redirect(`/${locale}/login`);
+  }
+
+  // Sole role gate since P-06 removed the middleware fetch: a logged-in
+  // non-admin gets the same 404 the middleware used to rewrite to.
+  if (session.user.role !== 'ADMIN') {
+    notFound();
   }
 
   if (await isCurrentUserSuspended()) {
