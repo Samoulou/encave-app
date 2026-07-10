@@ -61,3 +61,9 @@ export type {
 
 export { TastingRecapEmail } from './TastingRecapEmail';
 export type { TastingRecapWine } from './TastingRecapEmail';
+
+export {
+  WineOrderRequestWineryEmail,
+  WineOrderRequestClientEmail,
+} from './WineOrderRequestEmail';
+export type { WineOrderRequestItemLine } from './WineOrderRequestEmail';

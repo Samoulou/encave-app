@@ -31,6 +31,10 @@ vi.mock('@/server/services/email.service', () => ({
     ok: true,
     messageId: `msg_${Math.random().toString(36).slice(2)}`,
   })),
+  sendWineOrderRequestEmails: vi.fn(async () => ({
+    winery: true,
+    client: true,
+  })),
 }));
 
 // Owner-scoped action: authenticate as the fixture winemaker.
@@ -474,6 +478,50 @@ describe.skipIf(!url)('tasting loop (P-07 / L-061, L-062)', () => {
       },
     });
     expect(skipped).toBe(1);
+  });
+
+  it('wine order: two concurrent 1-taps → exactly one request row', async () => {
+    const { submitWineOrderRequest } =
+      await import('@/server/actions/tasting-sheet');
+    // Arm a recap token on the confirmed booking (what the email carries).
+    const crypto = await import('crypto');
+    const token = 'b'.repeat(64);
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    await db.booking.update({
+      where: { id: bookingConfirmed },
+      data: { recapTokenHash: tokenHash },
+    });
+
+    const input = {
+      bookingId: bookingConfirmed,
+      token,
+      items: [{ wineId: ids.wineB, quantity: 3 }],
+    };
+    const [first, second] = await Promise.all([
+      submitWineOrderRequest(input),
+      submitWineOrderRequest(input),
+    ]);
+
+    const outcomes = [first, second];
+    expect(outcomes.filter((r) => r.success)).toHaveLength(1);
+    expect(
+      outcomes.filter((r) => !r.success && r.error.code === 'CONFLICT')
+    ).toHaveLength(1);
+
+    const rows = await db.wineOrderRequest.findMany({
+      where: { bookingId: bookingConfirmed },
+      include: { items: true },
+    });
+    expect(rows).toHaveLength(1);
+    const row = rows[0];
+    if (!row) throw new Error('missing request row');
+    expect(row.clientEmail).toBe('alice@test.encave.ch');
+    expect(row.items).toHaveLength(1);
+    expect(row.items[0]).toMatchObject({
+      quantity: 3,
+      priceAtRequest: 3200,
+      wineName: 'Cornalin Test',
+    });
   });
 
   it("rejects another winery's wine on the sheet", async () => {

@@ -25,6 +25,9 @@ import {
   WeeklySummaryEmail,
   TastingRecapEmail,
   type TastingRecapWine,
+  WineOrderRequestWineryEmail,
+  WineOrderRequestClientEmail,
+  type WineOrderRequestItemLine,
 } from '@/emails';
 import { subjects, t } from '@/emails/translations';
 import { generateBookingQrPng } from '@/server/services/qr-code.service';
@@ -785,4 +788,74 @@ export async function sendTastingRecapEmail(
       { name: 'booking_id', value: data.bookingId },
     ],
   });
+}
+
+export interface WineOrderRequestEmailData {
+  bookingId: string;
+  wineryId: string;
+  bookingReference: string;
+  clientName: string;
+  clientEmail: string;
+  clientPhone: string | null;
+  wineryName: string;
+  items: WineOrderRequestItemLine[];
+  totalCents: number;
+}
+
+/**
+ * Order request → winery (winemaker locale) + confirmation copy → client
+ * (Booking.locale). The winery email is the deliverable at launch (A6).
+ */
+export async function sendWineOrderRequestEmails(
+  wineryEmail: string,
+  data: WineOrderRequestEmailData,
+  wineryLocale: Locale | null | undefined,
+  clientLocale: Locale | null | undefined
+): Promise<{ winery: boolean; client: boolean }> {
+  const wineryLoc = getLocale(wineryLocale);
+  const clientLoc = getLocale(clientLocale);
+
+  const wineryHtml = await render(
+    WineOrderRequestWineryEmail({
+      locale: wineryLoc,
+      clientName: data.clientName,
+      clientEmail: data.clientEmail,
+      clientPhone: data.clientPhone,
+      bookingReference: data.bookingReference,
+      items: data.items,
+      totalCents: data.totalCents,
+    })
+  );
+  const wineryResult = await sendEmailDetailed({
+    to: wineryEmail,
+    subject: t(subjects.wineOrderRequestWinery, wineryLoc).replace(
+      '{clientName}',
+      data.clientName
+    ),
+    html: wineryHtml,
+    tags: [
+      { name: 'email_type', value: 'wine_order_request' },
+      { name: 'winery_id', value: data.wineryId },
+      { name: 'booking_id', value: data.bookingId },
+    ],
+  });
+
+  const clientHtml = await render(
+    WineOrderRequestClientEmail({
+      locale: clientLoc,
+      wineryName: data.wineryName,
+      items: data.items,
+      totalCents: data.totalCents,
+    })
+  );
+  const clientResult = await sendEmailDetailed({
+    to: data.clientEmail,
+    subject: t(subjects.wineOrderRequestClient, clientLoc).replace(
+      '{wineryName}',
+      data.wineryName
+    ),
+    html: clientHtml,
+  });
+
+  return { winery: wineryResult.ok, client: clientResult.ok };
 }

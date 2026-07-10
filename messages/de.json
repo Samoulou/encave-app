@@ -1549,6 +1549,10 @@
     "bookingError": {
       "title": "Buchung unterbrochen | EnCave",
       "description": "Setzen Sie Ihre Buchung dort fort, wo Sie aufgehört haben"
+    },
+    "wineOrder": {
+      "title": "Ihre Favoriten bestellen | EnCave",
+      "description": "Fragen Sie Ihre Lieblingsweine direkt beim Weingut an"
     }
   },
   "about": {
@@ -2237,5 +2241,21 @@
     },
     "reselectCta": "Verfügbarkeit erneut ansehen",
     "selectionRecap": "{date} · {time} · {guests, plural, one {# Person} other {# Personen}}"
+  },
+  "wineOrder": {
+    "title": "Ihre Favoriten bei {wineryName}",
+    "subtitle": "Passen Sie die Mengen an und senden Sie Ihre Anfrage — das Weingut kontaktiert Sie wegen Lieferung und Zahlung.",
+    "loading": "Ihre Auswahl wird geladen…",
+    "toggleWine": "{name} bestellen",
+    "decreaseQuantity": "Menge von {name} verringern",
+    "increaseQuantity": "Menge von {name} erhöhen",
+    "total": "Unverbindliche Summe",
+    "submit": "Anfrage senden",
+    "note": "Ihre Anfrage geht mit Ihren Reservierungsdaten direkt an {wineryName}.",
+    "errorGeneric": "Anfrage konnte nicht gesendet werden. Bitte versuchen Sie es gleich noch einmal.",
+    "sentTitle": "Anfrage gesendet!",
+    "sentDescription": "{wineryName} hat Ihre Auswahl erhalten und meldet sich bald bei Ihnen.",
+    "alreadyTitle": "Anfrage bereits gesendet",
+    "alreadyDescription": "{wineryName} hat Ihre Anfrage für diese Degustation bereits erhalten."
   }
 }

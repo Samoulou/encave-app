@@ -1549,6 +1549,10 @@
     "bookingError": {
       "title": "Booking interrupted | EnCave",
       "description": "Pick up your booking where you left off"
+    },
+    "wineOrder": {
+      "title": "Order your favourites | EnCave",
+      "description": "Request your favourite wines directly from the winery"
     }
   },
   "about": {
@@ -2232,5 +2236,21 @@
     },
     "reselectCta": "See availability again",
     "selectionRecap": "{date} · {time} · {guests, plural, one {# guest} other {# guests}}"
+  },
+  "wineOrder": {
+    "title": "Your favourites at {wineryName}",
+    "subtitle": "Adjust the quantities and send your request — the winery will contact you about delivery and payment.",
+    "loading": "Loading your selection…",
+    "toggleWine": "Order {name}",
+    "decreaseQuantity": "Decrease quantity of {name}",
+    "increaseQuantity": "Increase quantity of {name}",
+    "total": "Indicative total",
+    "submit": "Send the request",
+    "note": "Your request goes directly to {wineryName} with your booking contact details.",
+    "errorGeneric": "Could not send the request. Please try again in a moment.",
+    "sentTitle": "Request sent!",
+    "sentDescription": "{wineryName} received your selection and will get back to you shortly.",
+    "alreadyTitle": "Request already sent",
+    "alreadyDescription": "{wineryName} already received your request for this tasting."
   }
 }

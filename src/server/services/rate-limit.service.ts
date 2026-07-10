@@ -252,3 +252,11 @@ export const API_RATE_LIMIT: RateLimitConfig = {
   maxRequests: 60,
   windowMs: 60 * 1000, // per minute
 };
+
+// Wine-order requests from the J+2 recap email (P-07) — public and
+// email-driven; one request per booking is enforced in DB, the limit
+// only bounds enumeration/spam attempts.
+export const WINE_ORDER_RATE_LIMIT: RateLimitConfig = {
+  maxRequests: 5,
+  windowMs: 60 * 60 * 1000, // per hour
+};

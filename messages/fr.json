@@ -1549,6 +1549,10 @@
     "bookingError": {
       "title": "Réservation interrompue | EnCave",
       "description": "Reprenez votre réservation là où vous l'avez laissée"
+    },
+    "wineOrder": {
+      "title": "Commander vos coups de cœur | EnCave",
+      "description": "Demandez vos vins préférés directement à la cave"
     }
   },
   "about": {
@@ -2232,5 +2236,21 @@
     },
     "reselectCta": "Revoir les disponibilités",
     "selectionRecap": "{date} · {time} · {guests, plural, one {# personne} other {# personnes}}"
+  },
+  "wineOrder": {
+    "title": "Vos coups de cœur chez {wineryName}",
+    "subtitle": "Ajustez les quantités et envoyez votre demande — la cave vous recontacte pour la livraison et le paiement.",
+    "loading": "Chargement de votre sélection…",
+    "toggleWine": "Commander {name}",
+    "decreaseQuantity": "Réduire la quantité de {name}",
+    "increaseQuantity": "Augmenter la quantité de {name}",
+    "total": "Total indicatif",
+    "submit": "Envoyer la demande",
+    "note": "Votre demande part directement chez {wineryName} avec vos coordonnées de réservation.",
+    "errorGeneric": "Impossible d'envoyer la demande. Réessayez dans un instant.",
+    "sentTitle": "Demande envoyée !",
+    "sentDescription": "{wineryName} a reçu votre sélection et vous recontacte très vite.",
+    "alreadyTitle": "Demande déjà envoyée",
+    "alreadyDescription": "{wineryName} a déjà reçu votre demande pour cette dégustation."
   }
 }

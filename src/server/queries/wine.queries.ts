@@ -1,4 +1,5 @@
 import { cache } from 'react';
+import crypto from 'crypto';
 import { BookingStatus } from '@prisma/client';
 import { db } from '@/server/db';
 import { zonedWallClockToUTC, zonedDateKey } from '@/lib/datetime/zurich';
@@ -183,3 +184,65 @@ export const getOwnerEmptySheetSessionsToday = cache(
     return findEmptySheetSessions({ wineryId: winery.id, now: new Date() });
   }
 );
+
+export interface WineOrderPageDTO {
+  bookingId: string;
+  guestName: string;
+  wineryName: string;
+  alreadyRequested: boolean;
+  /** Wines served at the tasting (BookingWine), prices as of now. */
+  wines: {
+    id: string;
+    name: string;
+    grapeVariety: string;
+    vintage: number | null;
+    price: number;
+  }[];
+}
+
+/**
+ * Read-only data of the tokenized wine-order page (P-07 / D3). Token =
+ * recap token (from the J+2 email) OR the booking access token (ticket
+ * link). Returns null on any mismatch — the page 404s without leaking
+ * whether the booking exists. NEVER mutates (mail scanners GET this).
+ */
+export async function getWineOrderPageData(
+  bookingId: string,
+  token: string
+): Promise<WineOrderPageDTO | null> {
+  if (token.length < 32 || token.length > 128) return null;
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+  const booking = await db.booking.findFirst({
+    where: {
+      id: bookingId,
+      OR: [{ recapTokenHash: tokenHash }, { accessTokenHash: tokenHash }],
+    },
+    select: {
+      id: true,
+      visitorName: true,
+      winery: { select: { name: true } },
+      wineOrderRequest: { select: { id: true } },
+      wines: {
+        select: {
+          wine: {
+            select: {
+              id: true,
+              name: true,
+              grapeVariety: true,
+              vintage: true,
+              price: true,
+            },
+          },
+        },
+      },
+    },
+  });
+  if (!booking || booking.wines.length === 0) return null;
+  return {
+    bookingId: booking.id,
+    guestName: booking.visitorName,
+    wineryName: booking.winery.name,
+    alreadyRequested: booking.wineOrderRequest !== null,
+    wines: booking.wines.map(({ wine }) => wine),
+  };
+}
