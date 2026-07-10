@@ -88,6 +88,11 @@ export interface OccurrenceCalendarEntryDTO {
   capacityOverride: number | null;
   bookedCount: number;
   isDateBlocked: boolean;
+  /**
+   * Union of the wines served at this session (BookingWine of the listed
+   * attendees) — the tasting sheet's initial toggle state (P-07 / L-061).
+   */
+  servedWineIds: string[];
   attendees: {
     bookingId: string;
     reference: string;
@@ -154,7 +159,7 @@ export const getOccurrenceCalendar = cache(async function getOccurrenceCalendar(
     gte: monthStart,
     lt: monthEnd,
   };
-  const [occurrences, bookings, blocked] = await Promise.all([
+  const [occurrences, bookings, blocked, servedWines] = await Promise.all([
     db.experienceOccurrence.findMany({
       where: { experienceId, date: dateRange },
       orderBy: [{ date: 'asc' }, { startTime: 'asc' }],
@@ -189,6 +194,11 @@ export const getOccurrenceCalendar = cache(async function getOccurrenceCalendar(
       where: { experienceId, date: dateRange },
       select: { date: true },
     }),
+    // Tasting sheets of the month (P-07) — one row per (booking, wine).
+    db.bookingWine.findMany({
+      where: { booking: { experienceId, date: dateRange } },
+      select: { bookingId: true, wineId: true },
+    }),
   ]);
 
   const blockedKeys = new Set(
@@ -196,6 +206,13 @@ export const getOccurrenceCalendar = cache(async function getOccurrenceCalendar(
   );
   const keyOf = (date: Date, startTime: string) =>
     `${date.toISOString().slice(0, 10)}|${startTime}`;
+
+  const wineIdsByBooking = new Map<string, string[]>();
+  for (const served of servedWines) {
+    const list = wineIdsByBooking.get(served.bookingId) ?? [];
+    list.push(served.wineId);
+    wineIdsByBooking.set(served.bookingId, list);
+  }
 
   // Seats consumed at a session = the live capacity predicate (shared
   // with every booking-path aggregate) + terminal attended statuses.
@@ -219,6 +236,7 @@ export const getOccurrenceCalendar = cache(async function getOccurrenceCalendar(
       capacityOverride: o.capacityOverride,
       bookedCount: 0,
       isDateBlocked: blockedKeys.has(o.date.toISOString().slice(0, 10)),
+      servedWineIds: [],
       attendees: [],
     });
   }
@@ -236,9 +254,15 @@ export const getOccurrenceCalendar = cache(async function getOccurrenceCalendar(
         capacityOverride: null,
         bookedCount: 0,
         isDateBlocked: blockedKeys.has(b.date.toISOString().slice(0, 10)),
+        servedWineIds: [],
         attendees: [],
       };
       entries.set(key, entry);
+    }
+    for (const wineId of wineIdsByBooking.get(b.id) ?? []) {
+      if (!entry.servedWineIds.includes(wineId)) {
+        entry.servedWineIds.push(wineId);
+      }
     }
     if (b.status !== BookingStatus.PENDING_PAYMENT) {
       entry.attendees.push({

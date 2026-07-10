@@ -5,6 +5,8 @@ import { Link, redirect } from '@/i18n/navigation';
 import { auth } from '@/server/auth';
 import { getOccurrenceCalendar } from '@/server/queries/occurrence.queries';
 import { getExperienceOperationalContext } from '@/server/queries/event-detail.queries';
+import { getOwnerWines } from '@/server/queries/wine.queries';
+import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
 import { eventDetailIdSchema } from '@/lib/validators/eventDetail';
 import { OccurrenceCalendar } from '@/components/features/occurrence/OccurrenceCalendar';
 import { Button } from '@/components/ui/button';
@@ -59,14 +61,20 @@ export default async function ExperienceSessionsPage({
   // Both reads tenant-gate on (experienceId, userId); the context carries
   // the day-J fields (slug, duration, winery name, status) that the
   // calendar DTO doesn't.
-  const [calendar, context] = await Promise.all([
+  const [calendar, context, tastingEnabled] = await Promise.all([
     getOccurrenceCalendar(experienceId, session.user.id, monthKey),
     getExperienceOperationalContext(experienceId, session.user.id),
+    isFlagEnabled('TASTING_SHEET'),
   ]);
   if (!calendar || !context) {
     redirect({ href: '/dashboard/experiences', locale: localeTyped });
     return null;
   }
+
+  // Tasting sheet (P-07): null = flag OFF, the section never renders.
+  const tastingWines = tastingEnabled
+    ? await getOwnerWines(session.user.id)
+    : null;
 
   const t = await getTranslations('Dashboard.eventDetail');
 
@@ -121,6 +129,7 @@ export default async function ExperienceSessionsPage({
         canEdit={context.status !== ExperienceStatus.ARCHIVED}
         monthKey={calendar.monthKey}
         entries={calendar.entries}
+        tastingWines={tastingWines}
       />
     </div>
   );

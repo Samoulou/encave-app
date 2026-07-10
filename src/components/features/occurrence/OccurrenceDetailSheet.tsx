@@ -21,6 +21,7 @@ import { BookingActionsSheet } from '@/components/features/event-detail/BookingA
 import { CancelSessionButton } from '@/components/features/event-detail/CancelSessionButton';
 import { ContactGuestsButton } from '@/components/features/event-detail/ContactGuestsButton';
 import { ScanQrButton } from '@/components/features/event-detail/ScanQrButton';
+import { TastingSheetSection } from '@/components/features/wine/TastingSheetSection';
 import {
   closeOccurrence,
   reopenOccurrence,
@@ -37,6 +38,7 @@ import { timeSlotSchema } from '@/lib/validators/booking';
 import { cn } from '@/lib/utils';
 import type { ErrorCode } from '@/types/actions';
 import type { OccurrenceCalendarEntryDTO } from '@/server/queries/occurrence.queries';
+import type { WineDTO } from '@/server/queries/wine.queries';
 import type { Locale } from '@/i18n/routing';
 
 /** H-2 → H+2 scan window around the day's sessions (legacy ENC-096 rule). */
@@ -58,6 +60,8 @@ interface OccurrenceDetailSheetProps {
   durationMinutes: number;
   /** False when the experience is archived — operational actions hidden. */
   canEdit: boolean;
+  /** Winery wine catalogue (P-07) — null when TASTING_SHEET is OFF. */
+  tastingWines: WineDTO[] | null;
   onOpenChange: (_open: boolean) => void;
 }
 
@@ -125,6 +129,7 @@ export function OccurrenceDetailSheet({
   wineryName,
   durationMinutes,
   canEdit,
+  tastingWines,
   onOpenChange,
 }: OccurrenceDetailSheetProps) {
   const t = useTranslations('Dashboard.eventDetail.occurrences');
@@ -253,6 +258,24 @@ export function OccurrenceDetailSheet({
         ).length;
   const showSessionTools =
     entry !== null && canEdit && bounds !== null && !isPastSession;
+  // Tasting sheet (P-07 / L-061): once the session started, for sessions
+  // with at least one active (CONFIRMED/COMPLETED) booking. tastingWines
+  // null = flag OFF, the section never exists.
+  const activeAttendeeCount =
+    entry === null
+      ? 0
+      : entry.attendees.filter(
+          (attendee) =>
+            attendee.status === BookingStatus.CONFIRMED ||
+            attendee.status === BookingStatus.COMPLETED
+        ).length;
+  const showTastingSheet =
+    tastingWines !== null &&
+    entry !== null &&
+    canEdit &&
+    bounds !== null &&
+    now >= bounds.startsAt.getTime() &&
+    activeAttendeeCount > 0;
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
@@ -447,6 +470,18 @@ export function OccurrenceDetailSheet({
                   sessionId={sessionId}
                 />
               </div>
+            )}
+
+            {/* Tasting sheet (P-07 / L-061) */}
+            {showTastingSheet && tastingWines !== null && (
+              <TastingSheetSection
+                experienceId={experienceId}
+                dateKey={dateKeyOf(entry.date)}
+                timeSlot={entry.startTime}
+                wines={tastingWines}
+                servedWineIds={entry.servedWineIds}
+                activeAttendeeCount={activeAttendeeCount}
+              />
             )}
 
             {/* Attendees */}

@@ -2158,6 +2158,21 @@
       "deleteConfirmButton": "Supprimer",
       "cancel": "Annuler",
       "saveButton": "Enregistrer"
+    },
+    "tastingSheet": {
+      "title": "Fiche dégustation",
+      "subtitle": "Cochez les vins servis — vos hôtes recevront leurs coups de cœur par email.",
+      "noWines": "Ajoutez d'abord vos vins pour remplir la fiche dégustation.",
+      "manageWines": "Gérer mes vins",
+      "toggleWine": "Servi : {name}",
+      "checkedCount": "{count, plural, =0 {Aucun vin coché} one {# vin coché} other {# vins cochés}}",
+      "sendButton": "Envoyer le récap",
+      "clearButton": "Vider la fiche",
+      "saveFailed": "Impossible d'enregistrer la fiche. Réessayez.",
+      "armed": "{count, plural, one {Récap armé pour # réservation} other {Récap armé pour # réservations}}",
+      "cleared": "Fiche vidée — aucun récap ne partira.",
+      "armedNote": "{count, plural, one {Le récap partira à # hôte} other {Le récap partira à # hôtes}} — envoi prévu {date}.",
+      "alreadyFilled": "Fiche enregistrée — le récap partira automatiquement à J+2."
     }
   },
   "Public": {

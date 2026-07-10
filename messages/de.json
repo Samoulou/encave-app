@@ -2163,6 +2163,21 @@
       "deleteConfirmButton": "Löschen",
       "cancel": "Abbrechen",
       "saveButton": "Speichern"
+    },
+    "tastingSheet": {
+      "title": "Degustationsblatt",
+      "subtitle": "Haken Sie die servierten Weine ab — Ihre Gäste erhalten ihre Favoriten per E-Mail.",
+      "noWines": "Fügen Sie zuerst Ihre Weine hinzu, um das Degustationsblatt auszufüllen.",
+      "manageWines": "Meine Weine verwalten",
+      "toggleWine": "Serviert: {name}",
+      "checkedCount": "{count, plural, =0 {Kein Wein abgehakt} one {# Wein abgehakt} other {# Weine abgehakt}}",
+      "sendButton": "Zusammenfassung senden",
+      "clearButton": "Blatt leeren",
+      "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+      "armed": "{count, plural, one {Zusammenfassung für # Reservierung geplant} other {Zusammenfassung für # Reservierungen geplant}}",
+      "cleared": "Blatt geleert — es wird keine Zusammenfassung gesendet.",
+      "armedNote": "{count, plural, one {Die Zusammenfassung erreicht # Gast} other {Die Zusammenfassung erreicht # Gäste}} — Versand am {date}.",
+      "alreadyFilled": "Blatt gespeichert — die Zusammenfassung wird zwei Tage nach dem Besuch automatisch versendet."
     }
   },
   "Public": {

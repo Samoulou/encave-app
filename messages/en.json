@@ -2158,6 +2158,21 @@
       "deleteConfirmButton": "Delete",
       "cancel": "Cancel",
       "saveButton": "Save"
+    },
+    "tastingSheet": {
+      "title": "Tasting sheet",
+      "subtitle": "Tick the wines you served — your guests will get their favourites by email.",
+      "noWines": "Add your wines first to fill in the tasting sheet.",
+      "manageWines": "Manage my wines",
+      "toggleWine": "Served: {name}",
+      "checkedCount": "{count, plural, =0 {No wine ticked} one {# wine ticked} other {# wines ticked}}",
+      "sendButton": "Send the recap",
+      "clearButton": "Clear the sheet",
+      "saveFailed": "Could not save the sheet. Please try again.",
+      "armed": "{count, plural, one {Recap armed for # booking} other {Recap armed for # bookings}}",
+      "cleared": "Sheet cleared — no recap will be sent.",
+      "armedNote": "{count, plural, one {The recap will reach # guest} other {The recap will reach # guests}} — scheduled for {date}.",
+      "alreadyFilled": "Sheet saved — the recap goes out automatically two days after the visit."
     }
   },
   "Public": {
