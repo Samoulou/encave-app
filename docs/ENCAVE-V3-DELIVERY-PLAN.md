@@ -241,7 +241,7 @@ ISR/header découplé, i18n subset, Mapbox gated, index DB, invalidation propre.
 | P-10 | Request / sur-mesure           | 💰  | P-02, P-03 | 18.5 h | S12-S13    | ⬜     |                                                                                                        |
 | P-11 | Événements collectifs          |     | P-02, P-05 | 10 h   | S13-S14    | ⬜     |                                                                                                        |
 | P-12 | Pages publiques & légal        |     | P-03       | 16 h   | S14        | ⬜     |                                                                                                        |
-| P-13 | Espace encaveur V3             |     | P-05       | 21 h   | S15        | 🟨     | `claude/p-13-espace-encaveur` — plan : [P-13-espace-encaveur.md](./plans/P-13-espace-encaveur.md)      |
+| P-13 | Espace encaveur V3             |     | P-05       | 21 h   | S15        | ✅     | PR [#103](https://github.com/Samoulou/encave-app/pull/103) — review high 47 candidats corrigés, plan : [P-13-espace-encaveur.md](./plans/P-13-espace-encaveur.md) |
 | P-14 | Auth V3                        |     | —          | 9 h    | S15        | ⬜     |                                                                                                        |
 | P-15 | Admin V3 & emails              |     | —          | 8 h    | S15        | ⬜     |                                                                                                        |
 | P-16 | Hardening & launch             |     | tous       | 29.5 h | S16-S17    | ⬜     |                                                                                                        |
