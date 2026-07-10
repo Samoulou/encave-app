@@ -7,6 +7,7 @@ import {
   type CreateExperienceInput,
 } from '@/lib/validators/experience';
 import { generateSlug, ensureUniqueSlug } from '@/lib/utils/slug';
+import { activeCapacityBookingWhere } from '@/lib/business-rules/capacity';
 import type { ActionResult } from '@/types/actions';
 import { logError } from '@/lib/logger';
 import {
@@ -383,7 +384,9 @@ export async function deleteExperience(
         _count: {
           select: {
             bookings: {
-              where: { status: { in: ['PENDING_PAYMENT', 'CONFIRMED'] } },
+              // Same rule as capacity (P-04): an expired hold/pending row
+              // is logically released and must not block deletion.
+              where: activeCapacityBookingWhere(),
             },
           },
         },

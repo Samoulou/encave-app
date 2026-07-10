@@ -179,7 +179,8 @@
       "winemakerDescription": "Check this if you want to register your winery and offer experiences",
       "creatingAccount": "Creating account...",
       "createAccount": "Create account",
-      "haveAccount": "Already have an account?"
+      "haveAccount": "Already have an account?",
+      "emailExists": "An account already exists with this email"
     }
   },
   "home": {
@@ -242,7 +243,17 @@
     "nearStation": "Near {commune} station",
     "pricePerPersonLabel": "Price per person",
     "available": "AVAILABLE",
-    "freeCancellation": "Free cancellation up to 24h before.",
+    "cancellationPolicy": {
+      "title": "Cancellation policy:",
+      "labels": {
+        "FLEXIBLE": "Flexible",
+        "STANDARD": "Standard",
+        "STRICT": "Strict"
+      },
+      "tierHours": "{percent}% refund up to {hours}h before the experience",
+      "tierDays": "{percent}% refund up to {days, plural, =1 {# day} other {# days}} before the experience",
+      "noRefundAfter": "No refund after that."
+    },
     "inclusions": {
       "TASTING": {
         "guidedTasting": "Guided wine tasting",
@@ -273,21 +284,27 @@
         "localPlatter": "Local cheese & meat platter",
         "pairingGuidance": "Expert pairing guidance",
         "tastingNotes": "Tasting notes"
-      }
+      },
+      "MEAL": "Full meal paired with the estate’s wines",
+      "EVENT": "Event access and activities"
     },
     "types": {
       "TASTING": "Tasting",
       "CELLAR_VISIT": "Cellar Visit",
       "WORKSHOP": "Workshop",
       "VINEYARD_TOUR": "Vineyard Tour",
-      "FOOD_PAIRING": "Food Pairing"
+      "FOOD_PAIRING": "Food Pairing",
+      "MEAL": "Meal at the winery",
+      "EVENT": "Event"
     },
     "typesDetailed": {
       "TASTING": "Wine Tasting",
       "CELLAR_VISIT": "Guided Tour",
       "WORKSHOP": "Workshop",
       "VINEYARD_TOUR": "Vineyard Tour",
-      "FOOD_PAIRING": "Food Pairing"
+      "FOOD_PAIRING": "Food Pairing",
+      "MEAL": "Food & wine pairing meal at the winery",
+      "EVENT": "One-off or collective event"
     },
     "duration": "Duration",
     "durationFormat": "{count, plural, =1 {# hour} other {# hours}}",
@@ -472,7 +489,44 @@
       "active": "Active",
       "disabled": "Disabled",
       "addTime": "Add time",
-      "addSchedulePattern": "Add Schedule Pattern"
+      "addSchedulePattern": "Add Schedule Pattern",
+      "modes": {
+        "label": "Availability mode",
+        "recurring": "Recurring",
+        "punctual": "One-off"
+      },
+      "punctual": {
+        "description": "Pick specific dates and their start times — ideal for events and slots outside your weekly schedule.",
+        "selectDates": "Pick the dates",
+        "selectTimes": "Pick the times",
+        "noPicks": "Select at least one date and one time to build your slots.",
+        "picksTitle": "{count, plural, =1 {1 slot to create} other {# slots to create}}",
+        "removePick": "Remove {pick}",
+        "tooMany": "Maximum {max} slots at a time — remove a few.",
+        "submit": "Add these slots",
+        "submitting": "Adding...",
+        "added": "{count, plural, =0 {No new slots — they already existed} =1 {1 slot added} other {# slots added}}",
+        "availableAfterCreation": "One-off slots (specific dates) are configured after creation, from the experience edit page.",
+        "errors": {
+          "notFound": "Experience not found.",
+          "validation": "Invalid slots — check the dates and times.",
+          "generic": "Could not add the slots. Try again in a moment."
+        }
+      },
+      "preview": {
+        "title": "Upcoming slots",
+        "subtitle": "Preview of the next 8 occurrences visible to your clients",
+        "manageLink": "Manage the calendar",
+        "empty": "No upcoming slots — configure the availability above to generate some.",
+        "capacity": "{count, plural, =1 {1 seat} other {# seats}}",
+        "punctualBadge": "One-off",
+        "blockedBadge": "Blocked date",
+        "status": {
+          "open": "Open",
+          "closed": "Closed",
+          "cancelled": "Cancelled"
+        }
+      }
     },
     "ageGate": {
       "badge": "18+ only"
@@ -529,7 +583,10 @@
       "proposedBy": "{type} offered by {winery}",
       "securePaymentActive": "Secure payment enabled",
       "bookingToConfirm": "Booking to be confirmed with the winery"
-    }
+    },
+    "freeCancellationUntilHours": "Free cancellation until {hours}h before.",
+    "freeCancellationUntilDays": "Free cancellation until {days, plural, =1 {# day} other {# days}} before.",
+    "nextAvailability": "Next availability: {date} · {time}"
   },
   "booking": {
     "selectDate": "Select a date",
@@ -587,7 +644,11 @@
     "total": "Total",
     "securePaymentNotice": "Stripe payment · you will only be charged upon confirmation",
     "loadSlotsError": "Failed to load time slots. Please try again.",
-    "sunsetSlot": "sunset"
+    "sunsetSlot": "sunset",
+    "holdSlotTaken": "This time slot was just booked by someone else. Please pick another time.",
+    "holdDateBlocked": "This date isn't open for booking. Please pick another date.",
+    "holdSlotUnavailable": "This time is no longer offered on this date. Please pick another time.",
+    "holdSlotClosed": "This time slot has been closed by the winery. Please pick another time."
   },
   "bookings": {
     "title": "Bookings",
@@ -600,8 +661,7 @@
     "summary": {
       "totalBookings": "Total Bookings",
       "upcoming": "Upcoming (7 Days)",
-      "occupancyRate": "Occupancy Rate",
-      "avgThisMonth": "Avg. this month"
+      "weekGuests": "Guests (7 days)"
     },
     "columns": {
       "bookingInfo": "Booking Info",
@@ -697,8 +757,6 @@
     "backToBooking": "Back to booking",
     "experienceNotFound": "Experience not found",
     "invalidBookingParams": "Invalid booking parameters. Please start again.",
-    "paymentCancelled": "Payment was cancelled. You can try again.",
-    "paymentFailed": "Payment failed. Please try again or use a different payment method.",
     "verifyingAvailability": "Verifying availability...",
     "capacityExceeded": "Capacity Exceeded",
     "capacityExceededMessage": "You requested {requested} guests, but only {available} spots are available for this time slot.",
@@ -723,8 +781,6 @@
     "viewOnMap": "View on map",
     "serviceFee": "Service Fee",
     "totalCHF": "Total (CHF)",
-    "freeCancellation": "Free cancellation",
-    "cancellationPolicy": "until 24 hours before the experience. After that, a 50% fee applies.",
     "orderSummary": "Order Summary",
     "sslEncrypted": "SSL ENCRYPTED",
     "support247": "24/7 SUPPORT",
@@ -737,6 +793,11 @@
       "errors": {
         "required": "Please confirm your age before continuing to payment."
       }
+    },
+    "hold": {
+      "remaining": "Slot held for {time}",
+      "remainingUrgent": "Only {time} left to complete your booking",
+      "expired": "Hold expired, redirecting…"
     }
   },
   "confirmation": {
@@ -746,6 +807,7 @@
     "paymentPendingDescription": "Your payment is being processed. Please wait...",
     "bookingStatus": "Booking Status",
     "bookingReference": "Booking Reference",
+    "serviceFee": "Service fee",
     "totalPaid": "Total Paid",
     "wineryDetails": "Winery Details",
     "yourDetails": "Your Details",
@@ -777,6 +839,7 @@
     "valaisSwitzerland": "Valais, Switzerland",
     "checkInTicket": "Check-in Ticket",
     "presentQRCode": "Present this QR code upon arrival at the winery reception.",
+    "qrCodeInEmail": "Your ticket QR code was sent to your email — present it upon arrival at the winery.",
     "wineryInformation": "Winery Information",
     "address": "Address",
     "downloadReceipt": "Download Receipt",
@@ -784,7 +847,14 @@
     "modifyDescription": "You can cancel or reschedule your booking up to 24 hours before the experience.",
     "manageBooking": "Manage Booking",
     "returnToExperiences": "Return to Experiences",
-    "viewMyBookings": "View My Bookings"
+    "viewMyBookings": "View My Bookings",
+    "oneTap": {
+      "title": "Keep your tickets one click away",
+      "description": "Just pick a password: your account will be created with the booking email and all your tickets will be attached to it automatically.",
+      "createCta": "Create my account",
+      "successTitle": "Account created!",
+      "successDescription": "Your bookings are now attached to your account."
+    }
   },
   "cancellation": {
     "title": "Cancellation Policy",
@@ -909,7 +979,15 @@
     "manageProfile": "Manage your winery profile and photos",
     "lastUpdatedDate": "Last updated {date}",
     "viewPublicProfile": "View Public Profile",
-    "paymentStatusLabel": "Payment Status"
+    "paymentStatusLabel": "Payment Status",
+    "cancellationPolicy": {
+      "title": "Cancellation policy",
+      "description": "Choose the refund terms applied when a client cancels a booking. They are shown on your experiences and at checkout.",
+      "save": "Save policy",
+      "saving": "Saving...",
+      "updated": "Cancellation policy updated",
+      "updateError": "Could not save the cancellation policy. Please try again."
+    }
   },
   "dashboard": {
     "title": "Dashboard",
@@ -1007,6 +1085,10 @@
   },
   "earnings": {
     "title": "Earnings",
+    "gmv": {
+      "title": "EnCave brought you",
+      "description": "Total value of bookings confirmed and completed through EnCave."
+    },
     "period": {
       "selectPeriod": "Select period",
       "thisMonth": "This Month",
@@ -1115,6 +1197,44 @@
   "admin": {
     "title": "Admin Dashboard",
     "subtitle": "Manage winery verifications and platform settings",
+    "featureFlags": {
+      "title": "Feature flags",
+      "description": "Kill-switches for money features — effective immediately, no deploy.",
+      "enabledToast": "{flag}: enabled",
+      "disabledToast": "{flag}: disabled",
+      "flags": {
+        "BOOKING_FEE": "Service fee (2.50 CHF/ticket)",
+        "GIFT_CARDS": "Gift cards",
+        "NO_SHOW_FEES": "No-show fees",
+        "REQUESTS": "Custom requests",
+        "TASTING_SHEET": "Tasting sheet",
+        "COLLECTIVE_EVENTS": "Collective events"
+      }
+    },
+    "monetization": {
+      "title": "Plan & commission",
+      "description": "Pricing plan and commission rate applied to this winery.",
+      "planLabel": "Plan",
+      "plans": {
+        "STANDARD": "Standard",
+        "FOUNDER": "Founder"
+      },
+      "commissionLabel": "Commission (%)",
+      "commissionPlaceholder": "Platform default rate",
+      "commissionHelp": "Leave empty to apply the platform default rate.",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Plan and commission updated.",
+      "invalidRate": "The rate must be between 0 and 100."
+    },
+    "businessKpis": {
+      "title": "Business KPIs",
+      "gmv": "Total GMV",
+      "ticketsThisMonth": "Tickets this month",
+      "takeRate": "Blended take rate",
+      "giftCardRevenue": "Gift card revenue",
+      "giftCardLiability": "Gift card liability"
+    },
     "pendingReview": "Pending Review",
     "verified": "Verified",
     "rejected": "Rejected",
@@ -1203,9 +1323,31 @@
       "relevance": "Relevance",
       "priceLowToHigh": "Price: Low to High",
       "priceHighToLow": "Price: High to Low",
-      "newestFirst": "Newest First"
+      "newestFirst": "Newest First",
+      "nextAvailability": "Next availability"
     },
-    "loadingExperiences": "Loading wine experiences..."
+    "loadingExperiences": "Loading wine experiences...",
+    "date": "Date",
+    "anyDate": "Any date",
+    "dateRange": "From {from} to {to}",
+    "clearDate": "Clear date",
+    "shortcuts": {
+      "thisWeekend": "This weekend",
+      "tastings": "Tastings",
+      "withMeal": "With a meal"
+    },
+    "homePanel": {
+      "where": "Where",
+      "when": "When",
+      "guests": "For",
+      "allValais": "All of Valais",
+      "anyDate": "Any date",
+      "clearDate": "Clear date",
+      "personCount": "{count, plural, =1 {1 person} other {# people}}",
+      "addPerson": "Add a person",
+      "removePerson": "Remove a person",
+      "explore": "Explore"
+    }
   },
   "errors": {
     "somethingWentWrong": "Something went wrong!",
@@ -1233,7 +1375,8 @@
     "invalidPhone": "Invalid phone number",
     "fileTooLarge": "File is too large",
     "invalidFileType": "Invalid file type",
-    "uploadFailed": "Upload failed"
+    "uploadFailed": "Upload failed",
+    "errorId": "Error ID: {id}"
   },
   "empty": {
     "noExperiences": "No experiences found",
@@ -1395,6 +1538,10 @@
     "unsubscribe": {
       "title": "Unsubscribe | EnCave",
       "description": "Manage your email preferences"
+    },
+    "bookingError": {
+      "title": "Booking interrupted | EnCave",
+      "description": "Pick up your booking where you left off"
     }
   },
   "about": {
@@ -1793,7 +1940,7 @@
       "title": "Cancel Booking",
       "confirmMessage": "Are you sure you want to cancel your booking for \"{title}\"?",
       "refundPolicy": "Cancellation Policy",
-      "refundPolicyDetail": "Full refund if cancelled more than 24 hours before the experience. No refund within 24 hours.",
+      "refundPolicyDetail": "Your refund is calculated according to the winery's cancellation policy (shown on the experience page). The exact amount will be confirmed by email.",
       "keepBooking": "Keep Booking",
       "confirm": "Confirm Cancellation",
       "cancelling": "Cancelling...",
@@ -1810,42 +1957,32 @@
       "save": "Save Changes",
       "saving": "Saving...",
       "saved": "Profile updated successfully",
-      "error": "Failed to update profile. Please try again."
+      "error": "Failed to update profile. Please try again.",
+      "deleteAccount": {
+        "title": "Delete my account",
+        "description": "Deletion permanently anonymizes your personal data (Swiss nFADP): identity, contact details and booking history. This action is irreversible.",
+        "cta": "Delete my account",
+        "confirmTitle": "Confirm deletion",
+        "confirmDescription": "Your personal data will be irreversibly anonymized and you will be signed out. Past bookings are kept in anonymized form for accounting purposes.",
+        "confirmLabel": "Type your email ({email}) to confirm:",
+        "cancel": "Cancel",
+        "confirmCta": "Delete permanently",
+        "deleting": "Deleting…",
+        "errorFutureBookings": "Cannot delete the account: upcoming confirmed bookings exist. Cancel them first or contact support.",
+        "errorGeneric": "Deletion failed. Try again or contact support@encave.ch."
+      }
     }
   },
   "Dashboard": {
     "eventDetail": {
-      "title": "Event details",
       "breadcrumb": {
         "dashboard": "Dashboard",
         "events": "Events"
-      },
-      "status": {
-        "draft": "Draft",
-        "published": "Published",
-        "archived": "Archived"
-      },
-      "sections": {
-        "today": "Today",
-        "upcoming": "Upcoming sessions",
-        "past": "Past sessions",
-        "cancelled": "Cancelled sessions"
-      },
-      "summary": {
-        "active": "{confirmed} / {total} seats across {sessions, plural, =1 {1 active session} other {# active sessions}}"
-      },
-      "session": {
-        "capacity": "{confirmed} / {total} seats",
-        "empty": "No booking for this session",
-        "emptyCancelled": "No cancelled session",
-        "live": "Live now",
-        "fullBadge": "Full"
       },
       "actions": {
         "scanQr": "Scan QR codes",
         "scanDisabled": "Available on the event day",
         "contactAll": "Contact guests",
-        "contactAllSoon": "Coming soon",
         "contactAllLoading": "Preparing...",
         "contactAllEmpty": "No guests to contact yet.",
         "contactAllError": "Could not load the guest list. Please try again.",
@@ -1853,20 +1990,17 @@
         "contactAllFallbackBody": "The mail link is too long to open directly. Copy the emails below and paste them into your email BCC field.",
         "contactAllCopy": "Copy email list",
         "contactAllCopied": "Emails copied. Paste them into your email BCC field.",
+        "cancelSession": "Cancel the session",
+        "cancelSessionPrompt": "Why are you cancelling this session? The reason will be shared with the participants (10 characters minimum).",
+        "cancelSessionError": "Could not cancel the session. Check the reason (10 characters minimum) and try again.",
+        "cancelSessionDone": "Session cancelled. Participants have been notified and refunded.",
+        "cancelSessionPartial": "{count, plural, =1 {1 booking could not be cancelled} other {# bookings could not be cancelled}}. Try again or contact support.",
         "revertCheckIn": "Cancel check-in",
         "revertNoShow": "Cancel no-show",
         "markPresent": "Mark as present",
         "markNoShow": "Mark as no-show",
         "markNoShowDisabled": "Available after the session ends",
         "openMenu": "Open actions menu"
-      },
-      "columns": {
-        "client": "Guest",
-        "partySize": "People",
-        "reference": "Reference",
-        "status": "Status",
-        "checkIn": "Check-in",
-        "actions": "Actions"
       },
       "bookingStatus": {
         "confirmed": "Confirmed",
@@ -1876,23 +2010,10 @@
         "cancelledByWinery": "Cancelled by you",
         "pending": "Payment pending"
       },
-      "checkIn": {
-        "at": "Present at {time}",
-        "none": "—"
-      },
       "partySize": {
         "inline": "{count, plural, =1 {1 person} other {# people}}"
       },
-      "banner": {
-        "draft": "This event is not published. Guests cannot see it.",
-        "archived": "Event archived. Read only."
-      },
-      "empty": {
-        "title": "You have not scheduled any session yet",
-        "cta": "Add a session"
-      },
       "errors": {
-        "notOwner": "You do not have access to this event.",
         "loadFailed": "Could not load the event. Try again in a moment.",
         "revertWindowExpired": "Cannot revert after 72h.",
         "sessionNotEnded": "Available after the session ends."
@@ -1913,6 +2034,58 @@
         "revertNoShowDescription": "The status will go back to Confirmed. The action is logged.",
         "confirmCta": "Confirm",
         "cancelCta": "Back"
+      },
+      "occurrences": {
+        "subtitle": "Slot calendar · default capacity: {count, plural, =1 {1 seat} other {# seats}}",
+        "editAvailability": "Edit availability",
+        "loading": "Loading the slot calendar",
+        "previousMonth": "Previous month",
+        "nextMonth": "Next month",
+        "blockedDay": "Blocked date",
+        "empty": {
+          "title": "No slots this month",
+          "description": "Slots generated from your availability will appear here.",
+          "cta": "Configure availability"
+        },
+        "legend": {
+          "open": "Open",
+          "full": "Full",
+          "closed": "Closed",
+          "blocked": "Blocked date"
+        },
+        "status": {
+          "open": "Open",
+          "closed": "Closed",
+          "cancelled": "Cancelled"
+        },
+        "sheet": {
+          "gauge": "{booked} / {capacity} seats",
+          "overrideActive": "Capacity adjusted for this slot ({count} instead of the experience setting).",
+          "legacyNote": "Session from older bookings — per-slot management is not available here.",
+          "cancelledNote": "This slot is cancelled — it can no longer be changed.",
+          "close": "Close this slot",
+          "reopen": "Reopen this slot",
+          "capacityLabel": "Adjust capacity",
+          "capacityPlaceholder": "Seats",
+          "apply": "Apply",
+          "reset": "Reset",
+          "capacityHint": "Between 1 and 50 seats. Reset returns to the experience capacity.",
+          "capacityInvalid": "Enter a number between {min} and {max}.",
+          "attendees": "{count, plural, =0 {Attendees} =1 {1 attendee} other {# attendees}}",
+          "noAttendees": "No attendees for this slot yet."
+        },
+        "toasts": {
+          "closed": "Slot closed — it can no longer be booked.",
+          "reopened": "Slot reopened.",
+          "capacityUpdated": "Capacity adjusted to {count, plural, =1 {1 seat} other {# seats}}.",
+          "capacityReset": "Capacity reset to the experience setting."
+        },
+        "errors": {
+          "notFound": "Slot not found.",
+          "conflict": "This action is not possible on a cancelled slot.",
+          "validation": "Invalid value.",
+          "generic": "Something went wrong. Try again in a moment."
+        }
       }
     },
     "visibility": {
@@ -1983,5 +2156,24 @@
     "errorTooLarge": "Image must be less than 5MB",
     "errorInvalidType": "Only JPEG and PNG images are allowed",
     "errorUploadFailed": "Failed to upload image. Please try again."
+  },
+  "bookingError": {
+    "payment": {
+      "title": "Your payment didn't go through",
+      "description": "Nothing was charged and your slot is still being held. You can pick up the payment right where you left off.",
+      "descriptionHoldGone": "Nothing was charged, but your slot has been released in the meantime. Check the availability — it may still be free.",
+      "retryCta": "Retry payment"
+    },
+    "holdExpired": {
+      "title": "Your slot has been released",
+      "description": "The 10-minute hold has run out, so the slot went back on sale — and nobody was charged. Good news: it may still be free."
+    },
+    "generic": {
+      "title": "A small hiccup with your booking",
+      "description": "We couldn't find your booking details, but rest assured: nothing was charged.",
+      "cta": "Browse experiences"
+    },
+    "reselectCta": "See availability again",
+    "selectionRecap": "{date} · {time} · {guests, plural, one {# guest} other {# guests}}"
   }
 }

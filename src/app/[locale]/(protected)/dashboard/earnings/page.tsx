@@ -8,6 +8,7 @@ import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuar
 import { EarningsPageHeader } from '@/components/features/earnings/EarningsPageHeader';
 import { Skeleton, SkeletonContainer } from '@/components/shared/Skeleton';
 import { EarningsSummary } from './EarningsSummary';
+import { EarningsGmvSection } from './EarningsGmvSection';
 import { EarningsChartsSection } from './EarningsChartsSection';
 import { EarningsTransactionsSection } from './EarningsTransactionsSection';
 import { generatePageMetadata } from '@/lib/seo/metadata';
@@ -98,6 +99,11 @@ export default async function EarningsPage({ searchParams }: PageProps) {
           <EarningsSummary wineryId={winery.id} />
         </Suspense>
 
+        {/* GMV highlight — "EnCave vous a apporté X CHF" (P-03 / L-044) */}
+        <Suspense fallback={<GmvSkeleton />}>
+          <EarningsGmvSection wineryId={winery.id} />
+        </Suspense>
+
         {/* Stream 2: Chart Section (medium query) - Revenue Evolution chart */}
         <Suspense fallback={<ChartsSkeleton />}>
           <EarningsChartsSection wineryId={winery.id} />
@@ -134,6 +140,19 @@ function SummarySkeleton() {
           </div>
         </div>
       ))}
+    </SkeletonContainer>
+  );
+}
+
+/** Skeleton for the GMV highlight card */
+function GmvSkeleton() {
+  return (
+    <SkeletonContainer label="Loading GMV...">
+      <div className="rounded-xl border border-border bg-white p-6 shadow-sm">
+        <Skeleton className="h-4 w-48" />
+        <Skeleton className="mt-2 h-10 w-40" />
+        <Skeleton className="mt-2 h-4 w-64" />
+      </div>
     </SkeletonContainer>
   );
 }

@@ -14,6 +14,7 @@ import {
 import { Link } from '@/i18n/navigation';
 import { ImageWithFallback } from '@/components/shared/ImageWithFallback';
 import { HomeSearchPanel } from '@/components/features/home/HomeSearchPanel';
+import { HomeSearchShortcuts } from '@/components/features/home/HomeSearchShortcuts';
 import { LocaleSwitcher } from '@/components/shared/LocaleSwitcher';
 import { MobileNav } from '@/components/layout/MobileNav';
 import { formatCHF } from '@/lib/utils/currency';
@@ -27,7 +28,7 @@ const categoryLinks = [
   ['Accords', 'FOOD_PAIRING', Utensils, 'bg-[#f5e9d6]'],
 ] as const;
 
-const HERO_BANNER_IMAGE = '/images/herobanner-image-original.jpg';
+const HERO_BANNER_IMAGE = '/images/herobanner-image-v2.jpg';
 
 function formatDuration(minutes: number) {
   if (minutes >= 60) {
@@ -63,7 +64,7 @@ function ExperienceVisual({
         />
       ) : (
         <ImageWithFallback
-          src="/images/herobanner-image.jpg"
+          src="/images/herobanner-image-v2.jpg"
           alt="Vignes valaisannes"
           fill
           priority={priority}
@@ -151,7 +152,7 @@ export function HomeMobileEditorial({
           </span>
           <h1 className="mt-3 font-display text-[38px] font-normal leading-[1.04] tracking-[-0.015em]">
             Le vin,{' '}
-            <em className="font-normal italic text-gold-400">
+            <em className="font-display-italic font-normal italic text-gold-400">
               chez ceux qui le font
             </em>
             .
@@ -162,12 +163,19 @@ export function HomeMobileEditorial({
           </p>
         </div>
 
-        <div className="absolute -bottom-[76px] left-3.5 right-3.5 z-20">
+        {/* Overhang grew by the "Quand" row (P-05 / L-110): keep the
+            panel top anchored where it was, extend it downwards. */}
+        <div className="absolute -bottom-[154px] left-3.5 right-3.5 z-20">
           <HomeSearchPanel variant="mobile" />
         </div>
       </section>
 
-      <section className="pt-24">
+      <section className="pt-[176px]">
+        {/* Shortcut chips under the overhanging search panel (L-111) */}
+        <HomeSearchShortcuts
+          tone="onLight"
+          className="mb-6 justify-center px-3.5"
+        />
         <div className="mb-2.5 flex items-baseline justify-between px-3.5">
           <h2 className="font-display text-xl font-semibold tracking-[-0.01em]">
             Par envie

@@ -11,19 +11,22 @@ import type { ClientBookingWithDetails } from '@/server/queries/client-booking.q
 import { ClientBookingCard } from './ClientBookingCard';
 import { ClientBookingEmptyState } from './ClientBookingEmptyState';
 
+type ActiveTab = 'upcoming' | 'past';
+
 interface ClientBookingsTabsProps {
   upcoming: ClientBookingWithDetails[];
   past: ClientBookingWithDetails[];
+  /** Initial tab, driven by the `?tab=` search param (deep links). */
+  initialTab?: ActiveTab;
 }
-
-type ActiveTab = 'upcoming' | 'past';
 
 export function ClientBookingsTabs({
   upcoming,
   past,
+  initialTab = 'upcoming',
 }: ClientBookingsTabsProps) {
   const t = useTranslations('clientDashboard.bookings');
-  const [activeTab, setActiveTab] = useState<ActiveTab>('upcoming');
+  const [activeTab, setActiveTab] = useState<ActiveTab>(initialTab);
   const featured = upcoming[0];
   const otherUpcoming = upcoming.slice(1);
 

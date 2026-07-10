@@ -9,7 +9,12 @@ vi.mock('@/server/auth', () => ({
 // Mock db
 vi.mock('@/server/db', () => ({
   db: {
-    booking: { findFirst: vi.fn(), update: vi.fn() },
+    booking: {
+      findFirst: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+    },
     user: { update: vi.fn() },
   },
 }));
@@ -60,6 +65,8 @@ describe('Client Actions', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // The atomic cancellation claim succeeds by default.
+    vi.mocked(db.booking.updateMany).mockResolvedValue({ count: 1 } as never);
   });
 
   // ========================================
@@ -77,6 +84,7 @@ describe('Client Actions', () => {
       date: futureDate,
       timeSlot: '14:00',
       totalPrice: 10000,
+      serviceFeeCents: 0,
       guestCount: 4,
       reference: 'REF-123',
       stripePaymentIntentId: 'pi_test123',
@@ -84,6 +92,7 @@ describe('Client Actions', () => {
       winery: {
         name: 'Test Winery',
         email: 'winery@test.com',
+        cancellationPolicy: 'STANDARD',
         user: { name: 'Winemaker', preferredLocale: 'FR' },
       },
     };
@@ -154,7 +163,7 @@ describe('Client Actions', () => {
         refundId: 're_123',
         amount: 10000,
       });
-      mockDb.booking.update.mockResolvedValueOnce({
+      mockDb.booking.findUniqueOrThrow.mockResolvedValueOnce({
         id: 'booking-123',
         status: 'CANCELLED_BY_CLIENT',
       } as never);

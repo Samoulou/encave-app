@@ -1,17 +1,20 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import posthog from 'posthog-js';
+import type { CancellationPolicy } from '@prisma/client';
+import { getPolicyTiers } from '@/lib/business-rules/cancellation-policy';
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
 import { addDays, format, parseISO, startOfDay } from 'date-fns';
 import { de, enUS, fr } from 'date-fns/locale';
 import { Check, ChevronRight, Lock, Loader2, Minus, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { HoldCapacityError } from '@/components/features/booking/HoldCapacityError';
 import { TimeSlotSelector } from '@/components/features/booking/TimeSlotSelector';
+import { useBookingHold } from '@/hooks/useBookingHold';
 import { formatCHF } from '@/lib/utils/currency';
 import { cn } from '@/lib/utils';
+import { capturePostHog } from '@/lib/posthog-client';
 
 interface AvailabilitySlot {
   dayOfWeek: number;
@@ -29,6 +32,15 @@ interface BookingWidgetProps {
   maxCapacity: number;
   duration: number;
   availabilitySlots?: AvailabilitySlot[];
+  /**
+   * "YYYY-MM-DD" keys of bookable occurrences (P-05) — enables punctual
+   * dates that no weekly slot covers. Server-computed with dateKeyOf.
+   */
+  occurrenceDateKeys?: string[];
+  /** Client booking fee per ticket in cents — 0 when BOOKING_FEE is OFF. */
+  serviceFeeCentsPerGuest?: number;
+  /** Winery cancellation policy — drives the free-cancellation badge. */
+  cancellationPolicy?: CancellationPolicy;
 }
 
 const dateLocales = { en: enUS, fr, de } as const;
@@ -42,10 +54,13 @@ export function BookingWidget({
   maxCapacity,
   duration: _duration,
   availabilitySlots = [],
+  occurrenceDateKeys = [],
+  serviceFeeCentsPerGuest = 0,
+  cancellationPolicy = 'STANDARD',
 }: BookingWidgetProps) {
   const t = useTranslations('booking');
   const tExp = useTranslations('experience');
-  const router = useRouter();
+  const tCheckout = useTranslations('checkout');
   const locale = useLocale();
 
   const [queryState, setQueryState] = useQueryStates({
@@ -57,7 +72,8 @@ export function BookingWidget({
   const [remainingCapacity, setRemainingCapacity] = useState<number | null>(
     null
   );
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { continueToCheckout, isSubmitting, holdError, clearHoldError } =
+    useBookingHold(experienceId, experienceSlug);
 
   const { date, time, guests } = queryState;
   const isBookingEnabled = stripeConnected;
@@ -72,6 +88,11 @@ export function BookingWidget({
     [availabilitySlots]
   );
 
+  const occurrenceDays = useMemo(
+    () => new Set(occurrenceDateKeys),
+    [occurrenceDateKeys]
+  );
+
   const dateOptions = useMemo(() => {
     const today = startOfDay(new Date());
     const loc = dateLocales[locale as keyof typeof dateLocales] ?? enUS;
@@ -84,10 +105,14 @@ export function BookingWidget({
 
     for (let offset = 0; options.length < 6 && offset < 30; offset++) {
       const candidate = addDays(today, offset);
-      const disabled = !availableDays.has(candidate.getDay());
+      const value = format(candidate, 'yyyy-MM-dd');
+      // A day is selectable when a weekly slot covers it OR a punctual
+      // occurrence exists on that exact date (P-05).
+      const disabled =
+        !availableDays.has(candidate.getDay()) && !occurrenceDays.has(value);
       if (disabled && options.length >= 5) continue;
       options.push({
-        value: format(candidate, 'yyyy-MM-dd'),
+        value,
         day: format(candidate, 'EEE', { locale: loc }).slice(0, 3),
         date: format(candidate, 'd', { locale: loc }),
         disabled,
@@ -95,7 +120,7 @@ export function BookingWidget({
     }
 
     return options;
-  }, [availableDays, locale]);
+  }, [availableDays, occurrenceDays, locale]);
 
   const isValid =
     date &&
@@ -104,28 +129,43 @@ export function BookingWidget({
     guests <= maxCapacity &&
     (remainingCapacity === null || guests <= remainingCapacity);
 
+  // Badge derived from the policy's top tier — the same source the
+  // refund engine uses, so the promise can never drift from the barème.
+  const topTier = getPolicyTiers(cancellationPolicy)[0];
+  const freeCancellationLabel =
+    topTier === undefined
+      ? null
+      : topTier.minHours % 24 === 0 && topTier.minHours >= 48
+        ? tExp('freeCancellationUntilDays', { days: topTier.minHours / 24 })
+        : tExp('freeCancellationUntilHours', { hours: topTier.minHours });
+
   const totalPrice = price * guests;
+  const serviceFee = serviceFeeCentsPerGuest * guests;
+  const totalWithFees = totalPrice + serviceFee;
 
   const handleDateChange = useCallback(
     (newDate: string | null) => {
       setQueryState({ date: newDate, time: null });
       setRemainingCapacity(null);
+      clearHoldError();
     },
-    [setQueryState]
+    [setQueryState, clearHoldError]
   );
 
   const handleTimeChange = useCallback(
     (newTime: string | null) => {
       setQueryState({ time: newTime });
+      clearHoldError();
     },
-    [setQueryState]
+    [setQueryState, clearHoldError]
   );
 
   const handleGuestsChange = useCallback(
     (newGuests: number) => {
       setQueryState({ guests: newGuests });
+      clearHoldError();
     },
-    [setQueryState]
+    [setQueryState, clearHoldError]
   );
 
   const handleCapacityUpdate = useCallback((capacity: number | null) => {
@@ -133,9 +173,9 @@ export function BookingWidget({
   }, []);
 
   const handleContinue = () => {
-    if (!isValid || !isBookingEnabled) return;
+    if (!isValid || !isBookingEnabled || !date || !time || isSubmitting) return;
 
-    posthog.capture('booking_started', {
+    capturePostHog('booking_started', {
       experience_id: experienceId,
       experience_slug: experienceSlug,
       date,
@@ -144,13 +184,10 @@ export function BookingWidget({
       total_price_chf: totalPrice / 100,
     });
 
-    setIsSubmitting(true);
-    const params = new URLSearchParams({
-      date: date!,
-      time: time!,
-      guests: guests.toString(),
-    });
-    router.push(`/experiences/${experienceSlug}/checkout?${params.toString()}`);
+    // Hold the slot for 10 min BEFORE the checkout form (P-04 / L-050) —
+    // the shared hook owns double-click guarding, previous-hold release
+    // and soft degradation.
+    void continueToCheckout({ date, time, guests });
   };
 
   const formatDateLabel = (dateStr: string) => {
@@ -198,7 +235,7 @@ export function BookingWidget({
 
       <div className="mb-5 flex items-center gap-1.5 text-xs font-semibold text-vine">
         <Check className="h-3.5 w-3.5" />
-        {tExp('freeCancellation')}
+        {freeCancellationLabel}
       </div>
 
       <div className="border-t border-stone-200 pt-4">
@@ -311,16 +348,18 @@ export function BookingWidget({
           <span>{formatCHF(totalPrice)}</span>
         </div>
         <div className="flex items-center justify-between text-ink-500">
-          <span>{t('serviceFee')}</span>
-          <span>{formatCHF(0)}</span>
+          <span>{tCheckout('serviceFee')}</span>
+          <span>{formatCHF(serviceFee)}</span>
         </div>
         <div className="mt-2 flex items-center justify-between border-t border-stone-200 pt-2 text-[15px] font-bold text-ink-900">
-          <span>{t('total')}</span>
+          <span>Total</span>
           <span className="text-burgundy-700" data-testid="total-price">
-            {formatCHF(totalPrice)}
+            {formatCHF(totalWithFees)}
           </span>
         </div>
       </div>
+
+      {holdError && <HoldCapacityError message={holdError} />}
 
       {isBookingEnabled ? (
         <Button

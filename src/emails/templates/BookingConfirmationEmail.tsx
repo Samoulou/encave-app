@@ -18,7 +18,8 @@ export interface BookingConfirmationEmailProps {
   date: Date;
   guestCount: number;
   duration: number; // in minutes
-  totalPrice: number; // in cents
+  totalPrice: number; // in cents (experience only, fee excluded)
+  serviceFeeCents?: number; // client booking fee in cents
   bookingRef: string;
   bookingUrl: string;
   qrCodeCid?: string;
@@ -33,6 +34,7 @@ export function BookingConfirmationEmail({
   guestCount,
   duration,
   totalPrice,
+  serviceFeeCents = 0,
   bookingRef,
   bookingUrl,
   qrCodeCid,
@@ -165,7 +167,7 @@ export function BookingConfirmationEmail({
                   color: '#7c2d12',
                 }}
               >
-                {formatEmailPrice(totalPrice)}
+                {formatEmailPrice(totalPrice + serviceFeeCents)}
               </td>
             </tr>
           </tbody>

@@ -6,8 +6,15 @@ on:
   pull_request:
     branches: [main]
 
+# CI is hermetic: no job talks to a real database (the DB-invariant tests
+# skip without INVARIANTS_DATABASE_URL), so a well-formed placeholder is all
+# the Zod env validation needs. The old secrets.DATABASE_URL resolved to an
+# empty string when unset and failed every test job.
 env:
-  DATABASE_URL: ${{ secrets.DATABASE_URL }}
+  DATABASE_URL: 'postgresql://placeholder:placeholder@localhost:5432/encave'
+  # next build runs with NODE_ENV=production, where env.ts requires this.
+  # A fixed placeholder, not a secret — nothing in CI signs real sessions.
+  BETTER_AUTH_SECRET: 'ci-placeholder-not-a-secret-0123456789abcdef'
 
 jobs:
   lint-and-typecheck:
@@ -67,6 +74,25 @@ jobs:
     runs-on: ubuntu-latest
     needs: [lint-and-typecheck, test]
 
+    # The homepage is statically generated at build time and queries the
+    # database, so the build needs a real (empty) Postgres. The prebuild
+    # applies the full migration history to it — every PR to main thereby
+    # also validates a virgin-database migrate deploy.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: encave
+          POSTGRES_PASSWORD: encave
+          POSTGRES_DB: encave
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U encave"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -86,4 +112,5 @@ jobs:
       - name: Build application
         run: npm run build
         env:
-          DATABASE_URL: 'postgresql://placeholder:placeholder@localhost:5432/encave'
+          DATABASE_URL: 'postgresql://encave:encave@localhost:5432/encave'
+          DIRECT_URL: 'postgresql://encave:encave@localhost:5432/encave'

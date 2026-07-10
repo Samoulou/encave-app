@@ -6,8 +6,10 @@ import type Stripe from 'stripe';
 import { ArrowLeft, CalendarCheck, Clock } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { db } from '@/server/db';
+import { auth } from '@/server/auth';
 import { getStripe, isStripeConfigured } from '@/server/stripe';
 import { confirmBookingFromPaidCheckoutSession } from '@/server/services/checkout-confirmation.service';
+import { userExistsByEmail } from '@/server/queries/user.queries';
 import { BookingStatus } from '@prisma/client';
 import {
   ConfirmationSuccess,
@@ -15,10 +17,11 @@ import {
   BookingDetailsSection,
   ExperienceVisual,
   WineryInfoCard,
-  ModifyBookingCard,
   ConfirmationActions,
 } from '@/components/features/booking/confirmation';
+import { OneTapAccountCard } from '@/components/features/booking/confirmation/OneTapAccountCard';
 import { generatePageMetadata } from '@/lib/seo/metadata';
+import { getBaseUrl } from '@/lib/env';
 import type { Locale } from '@/i18n/routing';
 
 export async function generateMetadata({
@@ -61,8 +64,16 @@ async function getBooking(id: string, sessionId: string | undefined) {
     return null;
   }
 
+  // When this page wins the confirmation race it receives the plaintext
+  // access token (never recoverable later — only the hash is stored) and
+  // can render a scanner-compatible ticket QR on screen.
+  let accessToken: string | undefined;
   if (session.payment_status === 'paid') {
-    await confirmBookingFromPaidCheckoutSession(session, 'confirmation_page');
+    const outcome = await confirmBookingFromPaidCheckoutSession(
+      session,
+      'confirmation_page'
+    );
+    accessToken = outcome.accessToken;
   }
 
   const booking = await db.booking.findUnique({
@@ -105,7 +116,11 @@ async function getBooking(id: string, sessionId: string | undefined) {
     return null;
   }
 
-  return booking;
+  if (!booking) {
+    return null;
+  }
+
+  return { booking, accessToken };
 }
 
 function formatTime(time: string): string {
@@ -132,14 +147,27 @@ export default async function ConfirmationPage({
   const { id, locale } = await params;
   const { session_id: sessionId } = await searchParams;
   const t = await getTranslations('confirmation');
-  const booking = await getBooking(id, sessionId);
+  const bookingResult = await getBooking(id, sessionId);
 
-  if (!booking) {
+  if (!bookingResult) {
     notFound();
   }
 
+  const { booking, accessToken } = bookingResult;
+  const ticketUrl = accessToken
+    ? `${getBaseUrl()}/${locale}/booking/${booking.id}?token=${accessToken}`
+    : undefined;
+
   const isConfirmed = booking.status === BookingStatus.CONFIRMED;
   const isPending = booking.status === BookingStatus.PENDING_PAYMENT;
+
+  // One-tap account (P-04 / L-053): only for guests whose booking email
+  // has no account yet — the check stays server-side, never in the card.
+  const [session, accountExists] = await Promise.all([
+    auth(),
+    userExistsByEmail(booking.visitorEmail),
+  ]);
+  const showOneTapAccount = !session && !accountExists;
 
   const formattedDate = format(new Date(booking.date), 'MMM d, yyyy');
   const formattedTime = `${formatTime(booking.timeSlot)} - ${formatEndTime(booking.timeSlot, booking.experience.duration)}`;
@@ -201,17 +229,26 @@ export default async function ConfirmationPage({
                   formattedTime={formattedTime}
                   guestCount={booking.guestCount}
                   totalPrice={booking.totalPrice}
+                  serviceFeeCents={booking.serviceFeeCents}
                 />
 
                 {/* Visual/QR Side */}
                 <ExperienceVisual
                   coverPhoto={booking.experience.coverPhoto}
                   experienceTitle={booking.experience.title}
-                  bookingId={booking.id}
+                  ticketUrl={ticketUrl}
                 />
               </div>
             </CardContent>
           </Card>
+
+          {/* One-tap account creation (guests only, L-053) */}
+          {showOneTapAccount && (
+            <OneTapAccountCard
+              visitorEmail={booking.visitorEmail}
+              visitorName={booking.visitorName}
+            />
+          )}
 
           {/* Action Buttons */}
           <div className="space-y-8">
@@ -271,9 +308,6 @@ export default async function ConfirmationPage({
             phone={booking.winery.phone}
             email={booking.winery.email}
           />
-
-          {/* Need Help Card */}
-          <ModifyBookingCard bookingId={booking.id} />
         </div>
       </div>
     </div>

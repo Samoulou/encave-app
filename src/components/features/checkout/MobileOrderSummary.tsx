@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import type { CancellationPolicy } from '@prisma/client';
 import { formatCHF } from '@/lib/utils/currency';
 import { OrderSummary } from './OrderSummary';
 
@@ -16,6 +17,8 @@ interface MobileOrderSummaryProps {
   guestCount: number;
   pricePerPerson: number;
   serviceFee?: number;
+  /** Winery cancellation policy — forwarded to the expanded summary. */
+  cancellationPolicy: CancellationPolicy;
 }
 
 export function MobileOrderSummary(props: MobileOrderSummaryProps) {

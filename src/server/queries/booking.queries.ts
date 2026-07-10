@@ -1,11 +1,8 @@
 import { cache } from 'react';
 import { db } from '@/server/db';
 import { BookingStatus, Prisma } from '@prisma/client';
-import {
-  startOfMonth,
-  endOfMonth,
-  addDays,
-} from 'date-fns';
+import { HOLD_EMAIL_DOMAIN } from '@/lib/constants/booking-hold';
+import { startOfMonth, endOfMonth, addDays } from 'date-fns';
 
 /**
  * Convert a local date to UTC date, preserving the local date components.
@@ -81,6 +78,10 @@ export const getWineryBookings = cache(async function getWineryBookings(
 ): Promise<BookingWithExperience[]> {
   const where: Prisma.BookingWhereInput = {
     wineryId,
+    // Unclaimed slot holds (P-04 / L-050) are internal capacity rows with
+    // placeholder visitors — never a booking the winery should see,
+    // approve, or export.
+    NOT: { visitorEmail: { endsWith: `@${HOLD_EMAIL_DOMAIN}` } },
   };
 
   // Apply status filter

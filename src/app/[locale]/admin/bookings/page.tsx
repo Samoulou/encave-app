@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatCHF } from '@/lib/utils/currency';
 import { AdminSuspensionControls } from '@/components/features/admin/AdminSuspensionControls';
+import { AdminRefundControls } from '@/components/features/admin/AdminRefundControls';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
@@ -186,22 +187,37 @@ export default async function AdminBookingsPage({
                         </p>
                       </td>
                       <td className="min-w-[280px] px-6 py-4">
-                        {user ? (
-                          <AdminSuspensionControls
-                            targetId={user.id}
-                            targetType="user"
-                            mode={user.suspendedAt ? 'reinstate' : 'suspend'}
-                            label={
-                              user.suspendedAt
-                                ? 'Reinstate guest account'
-                                : 'Suspend guest account'
-                            }
-                          />
-                        ) : (
-                          <p className="text-sm text-muted-foreground">
-                            Guest booking has no linked user account.
-                          </p>
-                        )}
+                        <div className="space-y-3">
+                          {(booking.status === BookingStatus.CONFIRMED ||
+                            booking.status === BookingStatus.COMPLETED ||
+                            booking.status === BookingStatus.NO_SHOW ||
+                            booking.status ===
+                              BookingStatus.CANCELLED_BY_CLIENT ||
+                            booking.status ===
+                              BookingStatus.CANCELLED_BY_WINERY) && (
+                            <AdminRefundControls
+                              bookingId={booking.id}
+                              totalPrice={booking.totalPrice}
+                              refundedAmount={booking.refundAmount ?? 0}
+                            />
+                          )}
+                          {user ? (
+                            <AdminSuspensionControls
+                              targetId={user.id}
+                              targetType="user"
+                              mode={user.suspendedAt ? 'reinstate' : 'suspend'}
+                              label={
+                                user.suspendedAt
+                                  ? 'Reinstate guest account'
+                                  : 'Suspend guest account'
+                              }
+                            />
+                          ) : (
+                            <p className="text-sm text-muted-foreground">
+                              Guest booking has no linked user account.
+                            </p>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );

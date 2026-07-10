@@ -3,10 +3,19 @@ import type { ReactNode } from 'react';
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
+import { addDays, addMonths } from 'date-fns';
 import { getExperienceBySlug } from '@/server/queries/experience.queries';
+import { getBookableOccurrences } from '@/server/queries/occurrence.queries';
+import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
+import {
+  dateKeyOf,
+  zurichTodayAsUTCDate,
+} from '@/lib/business-rules/occurrence-expansion';
+import { BOOKING_FEE_CENTS } from '@/lib/constants/pricing';
 import { ExperienceDetailGallery } from '@/components/features/experience/ExperienceDetailGallery';
 import { LocationSection } from '@/components/features/experience/LocationSection';
 import { BookingWidget } from '@/components/features/experience/BookingWidget';
+import { CancellationPolicyInfo } from '@/components/features/experience/CancellationPolicyInfo';
 import { MobileBookingBar } from '@/components/features/experience/MobileBookingBar';
 import { ExperienceDetailActions } from '@/components/features/experience/ExperienceDetailActions';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
@@ -52,7 +61,12 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
   const { slug, locale } = await params;
   setRequestLocale(locale);
 
-  const experience = await getExperienceBySlug(slug);
+  // Flag read overlaps the experience fetch — this is the LCP-critical
+  // route; never serialize independent I/O here.
+  const [experience, bookingFeeEnabled] = await Promise.all([
+    getExperienceBySlug(slug),
+    isFlagEnabled('BOOKING_FEE'),
+  ]);
 
   if (!experience) {
     notFound();
@@ -60,6 +74,26 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
 
   const t = await getTranslations('experience');
   const tNav = await getTranslations('nav');
+
+  // Client booking fee (P-03 / L-041) — flag OFF keeps today's display.
+  const serviceFeeCentsPerGuest = bookingFeeEnabled ? BOOKING_FEE_CENTS : 0;
+
+  // Punctual occurrences (P-05): the widgets derive selectable days from
+  // the weekly slots — a PUNCTUAL occurrence on an off-schedule day would
+  // be announced in search yet unselectable. Ship the bookable occurrence
+  // date keys so the widgets can enable those days too. Window = today →
+  // the picker's 3-month bound (+2 days absorbs client-timezone drift on
+  // both edges). Keys are computed server-side with dateKeyOf: occurrence
+  // dates are UTC midnights of Zurich calendar days — localDateKey would
+  // shift them by a day in some client timezones.
+  const occurrenceWindowFrom = zurichTodayAsUTCDate();
+  const bookableOccurrences = await getBookableOccurrences(experience.id, {
+    from: occurrenceWindowFrom,
+    to: addDays(addMonths(occurrenceWindowFrom, 3), 2),
+  });
+  const occurrenceDateKeys = Array.from(
+    new Set(bookableOccurrences.map((occurrence) => dateKeyOf(occurrence.date)))
+  );
 
   const baseUrl = getBaseUrl();
   const nextAvailableDate = getNextAvailableDate(
@@ -304,6 +338,10 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
                     </div>
                   ))}
                 </div>
+                <CancellationPolicyInfo
+                  policy={experience.winery.cancellationPolicy}
+                  className="mt-5 rounded-[14px] border border-stone-200 bg-white p-4 shadow-audit-card"
+                />
               </section>
 
               <div className="mt-10">
@@ -338,6 +376,9 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
                 maxCapacity={experience.maxCapacity}
                 duration={experience.duration}
                 availabilitySlots={experience.availabilitySlots}
+                occurrenceDateKeys={occurrenceDateKeys}
+                serviceFeeCentsPerGuest={serviceFeeCentsPerGuest}
+                cancellationPolicy={experience.winery.cancellationPolicy}
               />
             </div>
           </div>
@@ -345,6 +386,7 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
 
         <MobileBookingBar
           price={experience.price}
+          serviceFeeCentsPerGuest={serviceFeeCentsPerGuest}
           experienceSlug={experience.slug}
           experienceId={experience.id}
           stripeConnected={experience.winery.stripeOnboardingComplete}
@@ -352,6 +394,7 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
           maxCapacity={experience.maxCapacity}
           duration={experience.duration}
           availabilitySlots={experience.availabilitySlots}
+          occurrenceDateKeys={occurrenceDateKeys}
         />
       </main>
       <Footer />

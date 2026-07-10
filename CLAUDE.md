@@ -1,6 +1,18 @@
 # CLAUDE.md — Encave App
 
-Wine-experience booking platform. Next.js 14 App Router, TypeScript strict, Prisma/PostgreSQL (Neon), Stripe Connect, next-intl (fr/de/en), Tailwind + shadcn/ui. Deployed on Vercel. Base URL: https://encave.ch
+Wine-experience booking platform, converging toward **EnCave V3** ("one engine + one shop": Slot, Stay, Request, Shop). Next.js 14 App Router, TypeScript strict, Prisma/PostgreSQL (Neon), Stripe Connect, next-intl (fr/de/en), Tailwind + shadcn/ui. Deployed on Vercel. Base URL: https://encave.ch
+
+## V3 Convergence — read this first
+
+The codebase is the working V2 MVP; the product target is V3. Strategy validated with Sam (2026-07):
+
+1. **Keep what exists and works — extend it, never rewrite it** to cosmetically match V3 docs. New behavior is added on top of the current code.
+2. **Everything missing is built per the V3 docs**, the product/business source of truth: `docs/v3/ENCAVE-V3-PRD.md` (scope, user stories, NFR), `docs/v3/ENCAVE-V3-BUSINESS.md` (pricing, unit economics), `docs/v3/ENCAVE-V3-PAGES-EMAILS.md` (every screen and email), `docs/v3/ENCAVE-V3-PLANNING.md` (phases, gates, fuses). Current state vs target: `docs/ENCAVE-V3-GAP-ANALYSIS.md`. **Execution is driven by `docs/ENCAVE-V3-DELIVERY-PLAN.md`** (package loop P-01→P-16, gate-style DoDs, living status table — supersedes the epic structure of ENCAVE-V3-PLANNING.md for day-to-day work), backed by the item-level `docs/ENCAVE-V3-LAUNCH-BACKLOG.md`.
+3. **Stack decision**: the V3 docs' tech references (Supabase, Drizzle, Trigger.dev, Postgres RLS, magic link, Axiom, monorepo) are **superseded** — we stay on the stack below. This file is authoritative for tech; V3 docs for product/UX/business. "RLS 100%" translates to app-layer tenant filtering + DB invariants + role×resource tests. Deferred jobs (request reminders, scheduled gift-card delivery, J+2 email) use Vercel Cron + scheduling tables, not Trigger.dev.
+4. **Launch pillars (16 Nov 2026), all still to build**: gift cards (bons cadeaux), sur-mesure requests, anti no-show (SetupIntent card imprint + configurable fee), tasting sheet → J+2 wine email loop, collective events (light). Then V3.1 Shop (Jan 2027), V3.2 Stay (Feb 2027), V3.3 reviews/widget.
+5. **Every money-touching feature ships behind a feature flag** (env-based until a flag system exists) — gift cards and no-show fees must be disable-able in under a minute without a deploy.
+6. **Schema changes are additive migrations** — never destructive changes to existing tables as a side effect of a feature.
+7. **Routes**: existing routes keep their current (English) paths. New V3 surfaces follow the French naming of the pages inventory (`/cadeaux`, `/sur-mesure`, `/compte`, `/encaveur/*`…). Renaming an existing route requires a dedicated epic with redirects — never as a side effect.
 
 ## Commands
 
@@ -29,13 +41,13 @@ Test commands use `dotenv -e .env.test --` prefix. Never run tests against produ
 - **next-intl** ^4.7.0 — locales: fr (default), de, en; localePrefix: always
 - **Tailwind** ^3.4.0 + shadcn/ui (Radix + CVA) | **Prettier** with tailwindcss plugin
 - **react-hook-form** ^7.70.0 + **Zod** ^4.3.5 (v4 API, not v3)
-- **framer-motion** ^12.25.0 | **nuqs** ^2.8.6 (URL search params)
+- **nuqs** ^2.8.6 (URL search params). framer-motion was removed in P-01 (CSS animations only) — don't reintroduce it
 - **react-day-picker** ^9.13.0 (v9, not v8)
 - **Pino** ^10.1.1 (structured logging) | **Sentry** ^10.33.0
 - **Resend** ^6.7.0 + React Email | **Vercel Blob** ^2.0.0
 - **Vitest** ^2.0.0 (jsdom) + **Playwright** ^1.57.0 (Chromium only)
 - **date-fns** ^4.1.0 | **@react-pdf/renderer** ^4.3.2
-- **Fonts**: Manrope (`--font-manrope`) + JetBrains Mono (`--font-mono`)
+- **Fonts**: Manrope (`--font-manrope`, sans) + Fraunces (`--font-fraunces`, display/serif — prices, KPIs, headings) + JetBrains Mono (`--font-mono`)
 
 ## Architecture
 
@@ -129,6 +141,7 @@ Component → Server Action → Service/Query → DB
 - Add keys to ALL 3 locale files: `messages/en.json`, `messages/fr.json`, `messages/de.json`
 - Swiss locale codes: `fr-CH`, `de-CH`, `en-CH` via `src/lib/i18n/formatters.ts`
 - Run `npm run i18n:check` after adding/modifying translation keys
+- DE is fully translated and routed — activating German demand (V3 "Levier 0", 2028) is a translation-freshness pass, not a build. IT is out of scope for V3
 
 ## UI Patterns
 
@@ -190,10 +203,28 @@ Component → Server Action → Service/Query → DB
 
 ### Payments
 
-- Platform commission: 12% (`PLATFORM_COMMISSION_RATE` env var — never hardcode)
+Implemented today:
+
+- Platform commission: 12% flat (`PLATFORM_COMMISSION_RATE` env var — never hardcode)
 - Prices in cents (CHF). Display: `price / 100`. Store: `Math.round(price * 100)`
-- Stripe Connect payouts to connected accounts. Webhooks are source of truth for payment status
-- Refund: >24h before start → full refund; <24h → no refund
+- Stripe Connect Express, destination charges (`application_fee_amount` + `transfer_data.destination`). Webhooks are source of truth for payment status
+- Refund: >24h before start → full refund; <24h → no refund (single hardcoded rule)
+
+V3 target (see `docs/v3/ENCAVE-V3-BUSINESS.md` — build incrementally, feature-flagged):
+
+- **Client booking fee 2.50 CHF/ticket**, always a separate visible line at checkout — never blended into the price. The UI line already exists ("Frais de service", currently hardcoded to 0)
+- Commission becomes **per-winery**: Founders 0% (first 20 wineries, until 31.03.2027), 10% launch rate for the rest; from Apr 2027 the grid: Découverte 0 CHF/mo + 12% · Pro 79 CHF/mo + 0% · Domaine 149 CHF/mo + 0% (+ Shop 0%); Shop 8% otherwise. Payment processing re-invoiced at cost — never margin on Stripe fees
+- Per-winery cancellation policies (flexible/standard/strict) replace the fixed >24h rule
+- TWINT first at checkout (currently `card` only), Link enabled, saved cards via `setup_future_usage`
+- VAT: prices displayed TTC; anticipate the 100k CHF threshold (no Stripe Tax yet)
+
+### V3 Domain Rules (target — none of these models exist yet; specs in `docs/v3/`)
+
+- **Gift cards**: 2.50 fee at purchase, commission of the winery's tier at redemption. Append-only ledger, balance never negative (DB invariant), partial redemption, 5-year validity, transactional lock against concurrent redemption. Admin needs a total-liability view
+- **Requests (sur-mesure)**: client form → winery offer (text, total price, expiry) → payment link → tickets. Visible 48h SLA; single automatic reminder before offer expiry, then closure
+- **Anti no-show**: opt-in per winery, default 15 CHF/person (configurable 0–50). Free/pay-on-site offers take a card imprint via Stripe SetupIntent (no charge at booking). Charge triggered manually by the winemaker — never automatic — with client notification citing the accepted policy
+- **Tasting sheet**: winemaker checks wines served per booking (≤30s on mobile) → J+2 client email "vos coups de cœur" with wines + one-click order request. Requires Wine + BookingWine models
+- **Collective events**: a Slot experience can have participating wineries (logos, mini-program) + ONE paid organizer. Central ticketing, multi-point scanning. No automatic multi-winery split at launch
 
 ### Experience Rules
 
@@ -203,7 +234,7 @@ Component → Server Action → Service/Query → DB
 
 ### Booking References
 
-Format: `ENC-XXXXXX` (globally unique). Generated by `generateBookingReference()` — not a cuid.
+Format: `ENC-` + 8 uppercase chars derived from cuid2 (globally unique). Generated by `generateBookingReference()` in `src/server/actions/checkout.ts`.
 
 ## Modifying an existing component
 
@@ -215,6 +246,22 @@ Two components with similar names may coexist (e.g. `ExperiencesList.tsx` and `E
 3. Only then make your change.
 
 If you find unused twins along the way, propose removing them (don't leave them rotting — they will trap the next agent).
+
+## Known Debt & Pitfalls (audited 2026-07-09)
+
+Verified against `dev` — full detail in `docs/ENCAVE-V3-GAP-ANALYSIS.md` §10 and `docs/ENCAVE-V3-PERF-AUDIT.md` (measured: home mobile Lighthouse 48, LCP 9.8s vs NFR 95/1.5s — fixes tracked as backlog epic E15). Don't rediscover these; fix them when touching the area:
+
+- The confirmation email is sent WITHOUT `bookingId`/`accessToken` (`checkout-confirmation.service.ts`) → no QR attachment, ticket button links to the homepage, the guest magic link is never delivered. Same bug in `resendConfirmationEmail`
+- Only 2 of 5 cron routes are scheduled in `vercel.json` — `expire-pending-bookings` (hold release!), `follow-ups` and `weekly-summary` never run in prod
+- The on-screen confirmation QR encodes `/checkin/{bookingId}` — a route that doesn't exist and doesn't match the scanner's token format
+- The Stripe **Connect** webhook has no idempotency guard (the checkout webhook has one via `StripeEvent`)
+- `requestAccountDeletion` (nLPD) and `refundBookingManually` (admin) exist server-side but no UI calls them
+- `ModifyBookingCard` links to the dead route `/bookings/[id]/manage`; the my-bookings "upcoming/past" tabs are non-functional
+- 5 email templates ignore `locale` (hardcoded unaccented French); `sendEmail` silently returns success when `RESEND_API_KEY` is unset
+- Earnings "next payout" and paid/processing statuses are date heuristics (experience + 5 business days), not real Stripe payout data; the bookings "occupancy rate" KPI is `month/(month+5)` — a placeholder, not a metric
+- The receipt PDF claims "Taxes et frais de service inclus" while no VAT is computed anywhere
+- Dead code: `HowItWorks.tsx`, `PopularExperiences.tsx`, `HeroSearchBar.tsx` (unimported)
+- The middleware hardcodes the Coming Soon gate on `encave.ch` — remove at launch
 
 ## NEVER Do These
 

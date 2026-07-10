@@ -371,11 +371,14 @@ describe('Payment Service', () => {
         amount: 20000,
       });
       expect(mockCheckoutSessionsRetrieve).toHaveBeenCalledWith('cs_test123');
-      expect(mockRefundsCreate).toHaveBeenCalledWith({
-        payment_intent: 'pi_test456',
-        reverse_transfer: true,
-        refund_application_fee: true,
-      });
+      expect(mockRefundsCreate).toHaveBeenCalledWith(
+        {
+          payment_intent: 'pi_test456',
+          reverse_transfer: true,
+          refund_application_fee: true,
+        },
+        undefined
+      );
     });
 
     it('processes refund directly from a payment intent ID', async () => {
@@ -392,11 +395,14 @@ describe('Payment Service', () => {
         amount: 20000,
       });
       expect(mockCheckoutSessionsRetrieve).not.toHaveBeenCalled();
-      expect(mockRefundsCreate).toHaveBeenCalledWith({
-        payment_intent: 'pi_test456',
-        reverse_transfer: true,
-        refund_application_fee: true,
-      });
+      expect(mockRefundsCreate).toHaveBeenCalledWith(
+        {
+          payment_intent: 'pi_test456',
+          reverse_transfer: true,
+          refund_application_fee: true,
+        },
+        undefined
+      );
     });
 
     it('processes refund without application fee refund', async () => {
@@ -411,11 +417,14 @@ describe('Payment Service', () => {
 
       await processRefund('cs_test123', false);
 
-      expect(mockRefundsCreate).toHaveBeenCalledWith({
-        payment_intent: 'pi_test456',
-        reverse_transfer: true,
-        refund_application_fee: false,
-      });
+      expect(mockRefundsCreate).toHaveBeenCalledWith(
+        {
+          payment_intent: 'pi_test456',
+          reverse_transfer: true,
+          refund_application_fee: false,
+        },
+        undefined
+      );
     });
 
     it('defaults to refunding application fee', async () => {
@@ -430,11 +439,14 @@ describe('Payment Service', () => {
 
       await processRefund('cs_test123');
 
-      expect(mockRefundsCreate).toHaveBeenCalledWith({
-        payment_intent: 'pi_test456',
-        reverse_transfer: true,
-        refund_application_fee: true,
-      });
+      expect(mockRefundsCreate).toHaveBeenCalledWith(
+        {
+          payment_intent: 'pi_test456',
+          reverse_transfer: true,
+          refund_application_fee: true,
+        },
+        undefined
+      );
     });
 
     it('throws error when session has no payment intent', async () => {

@@ -1,7 +1,9 @@
 'use server';
 
 import { z } from 'zod';
-import { BookingStatus, UserRole, WineryStatus } from '@prisma/client';
+import type Stripe from 'stripe';
+import { createId } from '@paralleldrive/cuid2';
+import { BookingStatus, WineryPlan, WineryStatus } from '@prisma/client';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import {
@@ -12,8 +14,9 @@ import {
 } from '@/server/services/email.service';
 import { getStripe } from '@/server/stripe';
 import type { ActionResult } from '@/types/actions';
-import { logError, logWarn } from '@/lib/logger';
+import { logError, logInfo, logWarn } from '@/lib/logger';
 import { invalidateWineryCaches } from './winery-helpers';
+import { requireAdmin } from '@/server/admin-guard';
 
 const ApproveWinerySchema = z.object({
   wineryId: z.string().min(1, 'Winery ID is required'),
@@ -35,25 +38,12 @@ const SuspensionSchema = z.object({
   reason: z.string().trim().min(10).max(500),
 });
 
-async function requireAdmin(): Promise<
-  | ActionResult<{ adminId: string }>
-  | { success: true; data: { adminId: string } }
-> {
-  const session = await auth();
-  if (!session?.user) {
-    return {
-      success: false,
-      error: { code: 'UNAUTHORIZED', message: 'Please sign in' },
-    };
-  }
-  if (session.user.role !== UserRole.ADMIN) {
-    return {
-      success: false,
-      error: { code: 'FORBIDDEN', message: 'Admin access required' },
-    };
-  }
-  return { success: true, data: { adminId: session.user.id } };
-}
+const SetWineryPlanSchema = z.object({
+  wineryId: z.string().min(1, 'Winery ID is required'),
+  plan: z.nativeEnum(WineryPlan),
+  // UI percentage (0–100); null = platform default (PLATFORM_COMMISSION_RATE)
+  commissionRatePercent: z.number().min(0).max(100).nullable(),
+});
 
 /**
  * Approve a winery registration
@@ -341,7 +331,9 @@ export async function refundBookingManually(
   }
 
   const alreadyRefunded = booking.refundAmount ?? 0;
-  const remaining = booking.totalPrice - alreadyRefunded;
+  // Refundable base = everything the client paid (tickets + service fee).
+  const paidCents = booking.totalPrice + booking.serviceFeeCents;
+  const remaining = paidCents - alreadyRefunded;
   if (remaining <= 0 || amountCents > remaining) {
     return {
       success: false,
@@ -359,8 +351,37 @@ export async function refundBookingManually(
     };
   }
 
+  // Reserve the amount ATOMICALLY before Stripe (résidu Luca B, P-03).
+  // Two concurrent refunds (admin double-click, admin + client
+  // cancellation) would both read the same `refundAmount` and both pass
+  // the cap check within the charge limit. The conditional update lets
+  // exactly one caller through; the loser sees count 0 and backs off.
+  const nextRefunded = alreadyRefunded + amountCents;
+  const reserved = await db.booking.updateMany({
+    where: {
+      id: booking.id,
+      refundAmount: booking.refundAmount,
+      stripeRefundId: booking.stripeRefundId,
+    },
+    data: { refundAmount: nextRefunded },
+  });
+  if (reserved.count === 0) {
+    return {
+      success: false,
+      error: {
+        code: 'CONFLICT',
+        message:
+          'Another refund is already in progress for this booking. Reload and check the refunded amount before retrying.',
+      },
+    };
+  }
+
+  // The Stripe call gets its OWN try/catch: a failure after a successful
+  // refund (bookkeeping, email) must never be reported as a failed
+  // refund — the admin would retry and refund the client twice.
+  let refund: Stripe.Refund;
   try {
-    const refund = await getStripe().refunds.create(
+    refund = await getStripe().refunds.create(
       {
         payment_intent: booking.stripePaymentIntentId,
         amount: amountCents,
@@ -374,12 +395,70 @@ export async function refundBookingManually(
         },
       },
       {
-        idempotencyKey: `admin-refund:${booking.id}:${alreadyRefunded}:${amountCents}`,
+        // Fresh key per attempt: concurrency is already serialized by the
+        // DB reservation above, and a state-derived key would replay
+        // Stripe's cached ERROR for 24h on a legitimate retry after a
+        // released failure. The key's only job left is to make the SDK's
+        // own network-level retries safe.
+        idempotencyKey: `admin-refund:${booking.id}:${createId()}`,
       }
     );
+  } catch (error) {
+    await db.adminAction.create({
+      data: {
+        adminId: session.user.id,
+        action: 'REFUND_BOOKING',
+        targetType: 'Booking',
+        targetId: booking.id,
+        status: 'FAILED',
+        reason,
+        metadata: {
+          amountCents,
+          error: String(error),
+        },
+      },
+    });
+    // Release the reservation only when Stripe PROVABLY processed
+    // nothing: a rejected request (invalid, unauthorized, rate-limited,
+    // idempotency conflict) never created a refund. After an ambiguous
+    // network/API error the refund may exist — keep the reserved amount
+    // + refundError for manual reconciliation (doctrine cancelBooking).
+    const errorType =
+      typeof error === 'object' && error !== null && 'type' in error
+        ? String((error as { type: unknown }).type)
+        : '';
+    const provablyNotProcessed = [
+      'StripeInvalidRequestError',
+      'StripeRateLimitError',
+      'StripeAuthenticationError',
+      'StripePermissionError',
+      'StripeIdempotencyError',
+    ].includes(errorType);
+    if (provablyNotProcessed) {
+      await db.booking.updateMany({
+        where: { id: booking.id, refundAmount: nextRefunded },
+        data: { refundAmount: booking.refundAmount },
+      });
+    } else {
+      await db.booking.update({
+        where: { id: booking.id },
+        data: { refundError: String(error) },
+      });
+    }
+    logError('Manual refund failed', error, {
+      action: 'refundBookingManually',
+      bookingId: booking.id,
+    });
+    return {
+      success: false,
+      error: { code: 'STRIPE_ERROR', message: 'Stripe refund failed' },
+    };
+  }
 
-    const nextRefunded = alreadyRefunded + amountCents;
-    const isFullRefund = nextRefunded >= booking.totalPrice;
+  // Money moved — everything from here on is best-effort bookkeeping and
+  // MUST still report success, with refundError set for reconciliation.
+  const isFullRefund = nextRefunded >= paidCents;
+  try {
     await db.$transaction([
       db.booking.update({
         where: { id: booking.id },
@@ -414,7 +493,28 @@ export async function refundBookingManually(
         },
       }),
     ]);
+  } catch (bookkeepingError) {
+    logError(
+      'Manual refund SUCCEEDED but bookkeeping failed',
+      bookkeepingError,
+      {
+        action: 'refundBookingManually',
+        bookingId: booking.id,
+        refundId: refund.id,
+      }
+    );
+    await db.booking
+      .update({
+        where: { id: booking.id },
+        data: {
+          stripeRefundId: refund.id,
+          refundError: `BOOKKEEPING_FAILED after successful refund ${refund.id} — reconcile with Stripe`,
+        },
+      })
+      .catch(() => {});
+  }
 
+  try {
     await sendManualRefundClientEmail(booking.visitorEmail, {
       firstName: booking.visitorName.split(' ')[0] ?? booking.visitorName,
       reference: booking.reference,
@@ -433,37 +533,106 @@ export async function refundBookingManually(
       },
       booking.winery.user.preferredLocale
     );
+  } catch (emailError) {
+    logError('Manual refund emails failed (refund succeeded)', emailError, {
+      action: 'refundBookingManually',
+      bookingId: booking.id,
+      refundId: refund.id,
+    });
+  }
+
+  return {
+    success: true,
+    data: { refundId: refund.id, refundedAmount: nextRefunded },
+  };
+}
+
+/**
+ * Set a winery's pricing plan and per-winery commission rate (P-03 / L-042).
+ * The rate arrives as a UI percentage (0–100) and is stored as a fraction
+ * (0–1); null falls back to the platform default (PLATFORM_COMMISSION_RATE),
+ * resolved by `getEffectiveCommissionRate` at checkout time.
+ */
+export async function setWineryPlan(
+  wineryId: string,
+  plan: WineryPlan,
+  commissionRatePercent: number | null
+): Promise<ActionResult<{ plan: WineryPlan; commissionRate: number | null }>> {
+  try {
+    const admin = await requireAdmin();
+    if (!admin.success) return admin;
+
+    const validated = SetWineryPlanSchema.safeParse({
+      wineryId,
+      plan,
+      commissionRatePercent,
+    });
+    if (!validated.success) {
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Invalid plan or commission rate',
+        },
+      };
+    }
+
+    const winery = await db.winery.findUnique({
+      where: { id: validated.data.wineryId },
+      select: { id: true, slug: true },
+    });
+    if (!winery) {
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Winery not found' },
+      };
+    }
+
+    const commissionRate =
+      validated.data.commissionRatePercent === null
+        ? null
+        : validated.data.commissionRatePercent / 100;
+
+    const [updated] = await db.$transaction([
+      db.winery.update({
+        where: { id: winery.id },
+        data: { plan: validated.data.plan, commissionRate },
+      }),
+      // Same audit trail as suspensions/refunds (money-touching change).
+      db.adminAction.create({
+        data: {
+          adminId: admin.data.adminId,
+          action: 'WINERY_PLAN_UPDATED',
+          targetType: 'Winery',
+          targetId: winery.id,
+          metadata: { plan: validated.data.plan, commissionRate },
+        },
+      }),
+    ]);
+
+    // Money-touching admin change: always logged (P-03 audit trail).
+    logInfo('winery-plan.updated', {
+      action: 'setWineryPlan',
+      wineryId: winery.id,
+      plan: updated.plan,
+      commissionRate: updated.commissionRate,
+      adminId: admin.data.adminId,
+    });
+
+    invalidateWineryCaches(winery.slug);
 
     return {
       success: true,
-      data: { refundId: refund.id, refundedAmount: nextRefunded },
+      data: { plan: updated.plan, commissionRate: updated.commissionRate },
     };
   } catch (error) {
-    await db.adminAction.create({
-      data: {
-        adminId: session.user.id,
-        action: 'REFUND_BOOKING',
-        targetType: 'Booking',
-        targetId: booking.id,
-        status: 'FAILED',
-        reason,
-        metadata: {
-          amountCents,
-          error: String(error),
-        },
-      },
-    });
-    await db.booking.update({
-      where: { id: booking.id },
-      data: { refundError: String(error) },
-    });
-    logError('Manual refund failed', error, {
-      action: 'refundBookingManually',
-      bookingId: booking.id,
+    logError('setWineryPlan error', error, {
+      action: 'setWineryPlan',
+      wineryId,
     });
     return {
       success: false,
-      error: { code: 'STRIPE_ERROR', message: 'Stripe refund failed' },
+      error: { code: 'INTERNAL_ERROR', message: 'Something went wrong' },
     };
   }
 }

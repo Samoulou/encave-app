@@ -2,6 +2,7 @@ import { Text } from '@react-email/components';
 import type { Locale } from '@prisma/client';
 import { EmailLayout, EmailButton } from '../components';
 import { formatEmailDate, formatEmailPrice } from '../utils';
+import { t, common, bookingCancelledByWinery, subjects } from '../translations';
 
 interface BookingCancelledByWineryEmailProps {
   locale: Locale;
@@ -25,26 +26,39 @@ export function BookingCancelledByWineryEmail({
   experiencesUrl,
 }: BookingCancelledByWineryEmailProps) {
   return (
-    <EmailLayout locale={locale} preview="Votre experience a ete annulee">
+    <EmailLayout
+      locale={locale}
+      preview={t(subjects.bookingCancelledByWinery, locale).replace(
+        '{winemakerName}',
+        winemakerName
+      )}
+    >
       <Text style={{ fontSize: '24px', fontWeight: 'bold', color: '#7c2d12' }}>
-        Votre encaveur a du annuler
+        {t(bookingCancelledByWinery.title, locale)}
       </Text>
-      <Text>Bonjour {guestName},</Text>
       <Text>
-        Nous sommes desoles : {winemakerName} a du annuler la session &quot;
-        {experienceTitle}&quot; prevue le {formatEmailDate(date, locale)}.
+        {t(common.greeting, locale)} {guestName},
       </Text>
-      <Text>Motif communique : &quot;{reason}&quot;</Text>
       <Text>
-        Vous etes integralement rembourse. Le montant de{' '}
-        {formatEmailPrice(amountCents)} sera credite sur votre moyen de paiement
-        sous 5 a 10 jours ouvres selon votre banque.
+        {t(bookingCancelledByWinery.intro, locale)
+          .replace('{winemakerName}', winemakerName)
+          .replace('{experienceTitle}', experienceTitle)
+          .replace('{date}', formatEmailDate(date, locale))}
+      </Text>
+      <Text>
+        {t(bookingCancelledByWinery.reason, locale).replace('{reason}', reason)}
+      </Text>
+      <Text>
+        {t(bookingCancelledByWinery.refund, locale).replace(
+          '{amount}',
+          formatEmailPrice(amountCents)
+        )}
       </Text>
       <EmailButton href={experiencesUrl}>
-        Decouvrir d&apos;autres experiences
+        {t(bookingCancelledByWinery.browseMore, locale)}
       </EmailButton>
-      <Text>Avec nos excuses,</Text>
-      <Text>L&apos;equipe EnCave</Text>
+      <Text>{t(bookingCancelledByWinery.apology, locale)}</Text>
+      <Text>{t(common.team, locale)}</Text>
     </EmailLayout>
   );
 }

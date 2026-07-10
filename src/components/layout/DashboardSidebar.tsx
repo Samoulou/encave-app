@@ -117,7 +117,10 @@ export function DashboardSidebar({
           </div>
 
           {/* Nav Items */}
-          <nav className="flex flex-col gap-2" aria-label={t('dashboardNavigation')}>
+          <nav
+            className="flex flex-col gap-2"
+            aria-label={t('dashboardNavigation')}
+          >
             {sidebarLinks.map((link) => {
               const localizedHref = `/${locale}${link.href}`;
               const isActive = link.exact

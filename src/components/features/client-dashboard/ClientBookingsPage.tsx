@@ -8,7 +8,13 @@ import {
 import { ClientBookingsTabs } from './ClientBookingsTabs';
 import { Link } from '@/i18n/navigation';
 
-export async function ClientBookingsPage() {
+interface ClientBookingsPageProps {
+  tab?: 'upcoming' | 'past';
+}
+
+export async function ClientBookingsPage({
+  tab = 'upcoming',
+}: ClientBookingsPageProps) {
   const [session, locale, t] = await Promise.all([
     auth(),
     getLocale(),
@@ -47,7 +53,7 @@ export async function ClientBookingsPage() {
         </Link>
       </div>
 
-      <ClientBookingsTabs upcoming={upcoming} past={past} />
+      <ClientBookingsTabs upcoming={upcoming} past={past} initialTab={tab} />
     </div>
   );
 }

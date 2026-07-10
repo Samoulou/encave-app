@@ -7,6 +7,7 @@ vi.mock('@/server/db', () => ({
       findMany: vi.fn(),
       findUnique: vi.fn(),
       update: vi.fn(),
+      deleteMany: vi.fn(),
     },
     $transaction: vi.fn(
       async (
@@ -30,9 +31,10 @@ vi.mock('@/server/db', () => ({
 }));
 
 const expireMock = vi.fn();
+const retrieveMock = vi.fn();
 vi.mock('@/server/stripe', () => ({
   getStripe: () => ({
-    checkout: { sessions: { expire: expireMock } },
+    checkout: { sessions: { expire: expireMock, retrieve: retrieveMock } },
   }),
 }));
 
@@ -56,6 +58,7 @@ describe('expirePendingPaymentBookings', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     expireMock.mockResolvedValue({});
+    retrieveMock.mockResolvedValue({ payment_status: 'unpaid' });
   });
 
   it('cancels expired pending bookings and sends an email', async () => {
@@ -96,6 +99,83 @@ describe('expirePendingPaymentBookings', () => {
     );
   });
 
+  it('selects on the booking own expiry — never createdAt for held rows', async () => {
+    const now = new Date('2026-05-19T12:00:00Z');
+    vi.mocked(db.booking.findMany).mockResolvedValue([] as never);
+
+    await expirePendingPaymentBookings(now);
+
+    // A hold claimed at submit lives until its Stripe session expiry
+    // (up to createdAt + 40 min) — a createdAt cutoff would cancel
+    // bookings MID-PAYMENT (P-04 review finding).
+    expect(db.booking.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          OR: [
+            { expiresAt: { lt: now } },
+            expect.objectContaining({ expiresAt: null }),
+          ],
+        }),
+      })
+    );
+  });
+
+  it('does not reap a claimed hold whose payment window is still open', async () => {
+    const now = new Date('2026-05-19T12:00:00Z');
+    vi.mocked(db.booking.findMany).mockResolvedValue([
+      {
+        id: 'booking-1',
+        reference: 'ENC-ABC123',
+        visitorEmail: 'client@test.ch',
+        visitorName: 'Alice',
+        createdAt: new Date('2026-05-19T11:20:00Z'), // 40 min ago
+        expiresAt: new Date('2026-05-19T12:05:00Z'), // session still live
+        stripeCheckoutSessionId: 'cs_test_123',
+        date: new Date('2026-05-20T00:00:00Z'),
+        experience: { title: 'Atelier pinot', slug: 'atelier-pinot' },
+      },
+    ] as never);
+
+    const result = await expirePendingPaymentBookings(now);
+
+    expect(result.expired).toBe(0);
+    expect(db.booking.update).not.toHaveBeenCalled();
+    expect(expireMock).not.toHaveBeenCalled();
+  });
+
+  it('deletes an unclaimed hold silently — no cancellation, no email', async () => {
+    const now = new Date('2026-05-19T12:00:00Z');
+    vi.mocked(db.booking.findMany).mockResolvedValue([
+      {
+        id: 'hold-1',
+        reference: 'ENC-HOLD1234',
+        visitorEmail: 'hold-enc-hold1234@hold.encave.ch',
+        visitorName: '',
+        createdAt: new Date('2026-05-19T11:40:00Z'),
+        expiresAt: new Date('2026-05-19T11:50:00Z'),
+        stripeCheckoutSessionId: null,
+        date: new Date('2026-05-20T00:00:00Z'),
+        experience: { title: 'Atelier pinot', slug: 'atelier-pinot' },
+      },
+    ] as never);
+    vi.mocked(db.booking.deleteMany).mockResolvedValue({ count: 1 } as never);
+
+    const result = await expirePendingPaymentBookings(now);
+
+    expect(result.deletedHolds).toBe(1);
+    expect(result.expired).toBe(0);
+    // No CANCELLED ghost row, no bounce to the sentinel domain.
+    expect(db.booking.update).not.toHaveBeenCalled();
+    expect(sendBookingExpiredEmail).not.toHaveBeenCalled();
+    expect(db.booking.deleteMany).toHaveBeenCalledWith({
+      where: {
+        id: 'hold-1',
+        status: BookingStatus.PENDING_PAYMENT,
+        stripeCheckoutSessionId: null,
+      },
+    });
+  });
+
   it('does not touch bookings confirmed by a racing webhook', async () => {
     vi.mocked(db.booking.findMany).mockResolvedValue([
       {
@@ -112,6 +192,55 @@ describe('expirePendingPaymentBookings', () => {
     vi.mocked(db.booking.findUnique).mockResolvedValue({
       status: BookingStatus.CONFIRMED,
     } as never);
+
+    const result = await expirePendingPaymentBookings(
+      new Date('2026-05-19T12:00:00Z')
+    );
+
+    expect(result.expired).toBe(0);
+    expect(db.booking.update).not.toHaveBeenCalled();
+    expect(sendBookingExpiredEmail).not.toHaveBeenCalled();
+  });
+
+  it('leaves a PAID session to the late webhook instead of cancelling', async () => {
+    retrieveMock.mockResolvedValue({ payment_status: 'paid' });
+    vi.mocked(db.booking.findMany).mockResolvedValue([
+      {
+        id: 'booking-1',
+        reference: 'ENC-ABC123',
+        visitorEmail: 'client@test.ch',
+        visitorName: 'Alice',
+        createdAt: new Date('2026-05-19T11:20:00Z'),
+        stripeCheckoutSessionId: 'cs_test_123',
+        date: new Date('2026-05-20T00:00:00Z'),
+        experience: { title: 'Atelier pinot', slug: 'atelier-pinot' },
+      },
+    ] as never);
+
+    const result = await expirePendingPaymentBookings(
+      new Date('2026-05-19T12:00:00Z')
+    );
+
+    expect(result.expired).toBe(0);
+    expect(db.booking.update).not.toHaveBeenCalled();
+    expect(expireMock).not.toHaveBeenCalled();
+    expect(sendBookingExpiredEmail).not.toHaveBeenCalled();
+  });
+
+  it('skips the candidate this run when Stripe cannot be reached', async () => {
+    retrieveMock.mockRejectedValue(new Error('network'));
+    vi.mocked(db.booking.findMany).mockResolvedValue([
+      {
+        id: 'booking-1',
+        reference: 'ENC-ABC123',
+        visitorEmail: 'client@test.ch',
+        visitorName: 'Alice',
+        createdAt: new Date('2026-05-19T11:20:00Z'),
+        stripeCheckoutSessionId: 'cs_test_123',
+        date: new Date('2026-05-20T00:00:00Z'),
+        experience: { title: 'Atelier pinot', slug: 'atelier-pinot' },
+      },
+    ] as never);
 
     const result = await expirePendingPaymentBookings(
       new Date('2026-05-19T12:00:00Z')

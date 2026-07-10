@@ -73,6 +73,7 @@ export async function exportBookingReceiptPDF(
       durationMinutes: booking.experience.duration,
       guestCount: booking.guestCount,
       totalPrice: booking.totalPrice,
+      serviceFeeCents: booking.serviceFeeCents,
       generatedAt: new Date(),
     });
 

@@ -1,12 +1,15 @@
 import dynamic from 'next/dynamic';
+import { Suspense } from 'react';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { redirect, notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
+import { UpcomingOccurrencesPreview } from '@/components/features/experience/UpcomingOccurrencesPreview';
 import { Skeleton } from '@/components/shared/Skeleton';
-import { Calendar } from 'lucide-react';
+import { Calendar, CalendarDays, ArrowRight } from 'lucide-react';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
+import { Link } from '@/i18n/navigation';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
@@ -171,6 +174,41 @@ export default async function EditExperiencePage({ params }: PageProps) {
             experienceDuration={experience.duration}
             experienceStatus={experience.status}
           />
+
+          {/* Live preview of the next occurrences (P-05 / L-131) */}
+          <div className="space-y-4 border-t border-stone-200 pt-6">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-3">
+                <CalendarDays className="h-5 w-5 text-burgundy-600" />
+                <div>
+                  <h3 className="font-medium text-slate-900">
+                    {t('availability.preview.title')}
+                  </h3>
+                  <p className="text-sm text-slate-600">
+                    {t('availability.preview.subtitle')}
+                  </p>
+                </div>
+              </div>
+              <Link
+                href={`/dashboard/experiences/${experience.id}/sessions`}
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-burgundy-700 hover:text-burgundy-800"
+              >
+                {t('availability.preview.manageLink')}
+                <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+              </Link>
+            </div>
+            <Suspense
+              fallback={
+                <div className="space-y-2">
+                  {Array.from({ length: 4 }).map((_, index) => (
+                    <Skeleton key={index} className="h-12 w-full" />
+                  ))}
+                </div>
+              }
+            >
+              <UpcomingOccurrencesPreview experienceId={experience.id} />
+            </Suspense>
+          </div>
         </section>
       </div>
     </WineryAccessGuard>

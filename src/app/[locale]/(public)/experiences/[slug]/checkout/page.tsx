@@ -1,10 +1,12 @@
 import { notFound } from 'next/navigation';
 import { AlertCircle } from 'lucide-react';
-import Link from 'next/link';
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { Link } from '@/i18n/navigation';
 import { getExperienceForBooking } from '@/server/actions/booking';
+import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
+import { BOOKING_FEE_CENTS } from '@/lib/constants/pricing';
 import { CheckoutClient } from './CheckoutClient';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
@@ -28,9 +30,19 @@ interface PageProps {
     date?: string;
     time?: string;
     guests?: string;
-    error?: string;
+    holdId?: string;
+    holdToken?: string;
+    holdExpiresAt?: string;
   }>;
 }
+
+/**
+ * Loose cuid shape check. A malformed holdId (truncated URL, tampering)
+ * must degrade to the no-hold flow here — never reach the submit, where
+ * the schema's `.cuid()` would fail the whole checkout with an opaque
+ * "Invalid input data".
+ */
+const CUID_PATTERN = /^c[a-z0-9]{20,}$/i;
 
 /**
  * Server component for checkout page.
@@ -42,19 +54,39 @@ export default async function CheckoutPage({
   searchParams,
 }: PageProps) {
   const [{ slug, locale }, search] = await Promise.all([params, searchParams]);
+  setRequestLocale(locale);
   const t = await getTranslations('checkout');
 
   // Validate required booking params
   const date = search.date;
   const time = search.time;
   const guests = search.guests;
-  const paymentError = search.error || null;
 
   const guestCount = guests ? parseInt(guests, 10) : null;
   const hasValidParams = date && time && guestCount && guestCount > 0;
 
-  // Fetch experience data on the server (eliminates client waterfall)
-  const result = await getExperienceForBooking(slug);
+  // Hold created at « Continuer » (P-04 / L-050). The full trio
+  // holdId/holdToken/holdExpiresAt must be present and well-formed —
+  // otherwise the checkout degrades to the hold-at-submit flow (no
+  // countdown, no claimed hold).
+  const holdId =
+    search.holdId && CUID_PATTERN.test(search.holdId) ? search.holdId : null;
+  const holdToken = search.holdToken || null;
+  const holdExpiresAt =
+    search.holdExpiresAt && !Number.isNaN(Date.parse(search.holdExpiresAt))
+      ? search.holdExpiresAt
+      : null;
+  const hasHold =
+    holdId !== null && holdToken !== null && holdExpiresAt !== null;
+
+  // Fetch experience data on the server (eliminates client waterfall).
+  // Booking fee (P-03 / L-041): the flag is read server-side so the client
+  // only ever renders the amount — flag OFF means 0, same display as before.
+  const [result, bookingFeeEnabled] = await Promise.all([
+    getExperienceForBooking(slug),
+    isFlagEnabled('BOOKING_FEE'),
+  ]);
+  const serviceFeeCentsPerGuest = bookingFeeEnabled ? BOOKING_FEE_CENTS : 0;
 
   if (!result.success) {
     // Experience not found
@@ -74,9 +106,7 @@ export default async function CheckoutPage({
           </Alert>
           <div className="mt-4">
             <Button asChild variant="outline">
-              <Link href={`/${locale}/experiences/${slug}`}>
-                {t('backToBooking')}
-              </Link>
+              <Link href={`/experiences/${slug}`}>{t('backToBooking')}</Link>
             </Button>
           </div>
         </div>
@@ -84,7 +114,9 @@ export default async function CheckoutPage({
     );
   }
 
-  // Pass pre-fetched data to client component
+  // Pass pre-fetched data to client component. `serverNowMs` anchors the
+  // hold countdown on the server clock — a wrong client clock would
+  // otherwise show a bogus timer.
   return (
     <CheckoutClient
       experience={experience}
@@ -92,7 +124,11 @@ export default async function CheckoutPage({
       date={date}
       time={time}
       guestCount={guestCount}
-      paymentError={paymentError}
+      serviceFeeCentsPerGuest={serviceFeeCentsPerGuest}
+      holdId={hasHold ? holdId : null}
+      holdToken={hasHold ? holdToken : null}
+      holdExpiresAt={hasHold ? holdExpiresAt : null}
+      serverNowMs={Date.now()}
     />
   );
 }

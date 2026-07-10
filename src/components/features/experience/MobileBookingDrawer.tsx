@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import {
   ArrowLeft,
@@ -22,9 +21,11 @@ import {
 } from '@/components/ui/sheet';
 import { formatCHF } from '@/lib/utils/currency';
 import { BookingDatePicker } from '@/components/features/booking/BookingDatePicker';
+import { HoldCapacityError } from '@/components/features/booking/HoldCapacityError';
 import { TimeSlotSelector } from '@/components/features/booking/TimeSlotSelector';
 import { GuestCountInput } from '@/components/features/booking/GuestCountInput';
 import { BookingStepIndicator } from '@/components/features/booking/BookingStepIndicator';
+import { useBookingHold } from '@/hooks/useBookingHold';
 
 interface AvailabilitySlot {
   dayOfWeek: number;
@@ -37,12 +38,19 @@ interface MobileBookingDrawerProps {
   isOpen: boolean;
   onOpenChange: (_open: boolean) => void;
   price: number;
+  /** Client booking fee per ticket in cents — 0 when BOOKING_FEE is OFF. */
+  serviceFeeCentsPerGuest?: number;
   experienceSlug: string;
   experienceId: string;
   minCapacity: number;
   maxCapacity: number;
   duration: number;
   availabilitySlots: AvailabilitySlot[];
+  /**
+   * "YYYY-MM-DD" keys of bookable occurrences (P-05) — enables punctual
+   * dates that no weekly slot covers. Server-computed with dateKeyOf.
+   */
+  occurrenceDateKeys?: string[];
 }
 
 const dateLocales = { en: enUS, fr, de } as const;
@@ -51,15 +59,17 @@ export function MobileBookingDrawer({
   isOpen,
   onOpenChange,
   price,
+  serviceFeeCentsPerGuest = 0,
   experienceSlug,
   experienceId,
   minCapacity,
   maxCapacity,
   duration,
   availabilitySlots,
+  occurrenceDateKeys = [],
 }: MobileBookingDrawerProps) {
   const t = useTranslations('booking');
-  const router = useRouter();
+  const tCheckout = useTranslations('checkout');
   const locale = useLocale();
 
   const [date, setDate] = useState<string | null>(null);
@@ -68,7 +78,8 @@ export function MobileBookingDrawer({
   const [remainingCapacity, setRemainingCapacity] = useState<number | null>(
     null
   );
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { continueToCheckout, isSubmitting, holdError, clearHoldError } =
+    useBookingHold(experienceId, experienceSlug);
   const [mobileStep, setMobileStep] = useState<1 | 2 | 3>(1);
 
   // Available days based on availability slots
@@ -82,6 +93,12 @@ export function MobileBookingDrawer({
     [availabilitySlots]
   );
 
+  // Punctual occurrence dates selectable on top of the weekly days (P-05).
+  const occurrenceDays = useMemo(
+    () => new Set(occurrenceDateKeys),
+    [occurrenceDateKeys]
+  );
+
   // Check if form is valid
   const isValid =
     date &&
@@ -90,27 +107,40 @@ export function MobileBookingDrawer({
     guests <= maxCapacity &&
     (remainingCapacity === null || guests <= remainingCapacity);
 
-  const totalPrice = price * guests;
+  const serviceFee = serviceFeeCentsPerGuest * guests;
+  const totalPrice = price * guests + serviceFee;
 
-  const handleDateChange = useCallback((newDate: string | null) => {
-    setDate(newDate);
-    setTime(null);
-    setRemainingCapacity(null);
-    if (newDate) {
-      setMobileStep(2);
-    }
-  }, []);
+  const handleDateChange = useCallback(
+    (newDate: string | null) => {
+      setDate(newDate);
+      setTime(null);
+      setRemainingCapacity(null);
+      clearHoldError();
+      if (newDate) {
+        setMobileStep(2);
+      }
+    },
+    [clearHoldError]
+  );
 
-  const handleTimeChange = useCallback((newTime: string | null) => {
-    setTime(newTime);
-    if (newTime) {
-      setMobileStep(3);
-    }
-  }, []);
+  const handleTimeChange = useCallback(
+    (newTime: string | null) => {
+      setTime(newTime);
+      clearHoldError();
+      if (newTime) {
+        setMobileStep(3);
+      }
+    },
+    [clearHoldError]
+  );
 
-  const handleGuestsChange = useCallback((newGuests: number) => {
-    setGuests(newGuests);
-  }, []);
+  const handleGuestsChange = useCallback(
+    (newGuests: number) => {
+      setGuests(newGuests);
+      clearHoldError();
+    },
+    [clearHoldError]
+  );
 
   const handleCapacityUpdate = useCallback((capacity: number | null) => {
     setRemainingCapacity(capacity);
@@ -125,15 +155,12 @@ export function MobileBookingDrawer({
   };
 
   const handleContinue = () => {
-    if (!isValid) return;
+    if (!isValid || !date || !time || isSubmitting) return;
 
-    setIsSubmitting(true);
-    const params = new URLSearchParams({
-      date: date!,
-      time: time!,
-      guests: guests.toString(),
-    });
-    router.push(`/experiences/${experienceSlug}/checkout?${params.toString()}`);
+    // Hold the slot for 10 min BEFORE the checkout form (P-04 / L-050) —
+    // the shared hook owns double-click guarding, previous-hold release
+    // and soft degradation.
+    void continueToCheckout({ date, time, guests });
   };
 
   const formatTime = (t: string) => {
@@ -159,7 +186,7 @@ export function MobileBookingDrawer({
       setTime(null);
       setGuests(Math.max(2, minCapacity));
       setRemainingCapacity(null);
-      setIsSubmitting(false);
+      clearHoldError();
     }
     onOpenChange(open);
   };
@@ -210,6 +237,7 @@ export function MobileBookingDrawer({
                 selectedDate={date}
                 onDateChange={handleDateChange}
                 availableDays={availableDays}
+                occurrenceDateKeys={occurrenceDays}
               />
             </div>
           )}
@@ -276,9 +304,25 @@ export function MobileBookingDrawer({
               {isValid && (
                 <>
                   <hr className="border-dashed border-stone-200" />
+                  {serviceFee > 0 && (
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <span>
+                        {guests} × {formatCHF(price)}
+                      </span>
+                      <span>{formatCHF(price * guests)}</span>
+                    </div>
+                  )}
+                  {serviceFee > 0 && (
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <span>{tCheckout('serviceFee')}</span>
+                      <span>{formatCHF(serviceFee)}</span>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">
-                      {guests} × {formatCHF(price)}
+                      {serviceFee > 0
+                        ? tCheckout('totalCHF')
+                        : `${guests} × ${formatCHF(price)}`}
                     </span>
                     <span className="text-xl font-bold text-foreground">
                       {formatCHF(totalPrice)}
@@ -292,6 +336,9 @@ export function MobileBookingDrawer({
 
         {/* Fixed bottom button */}
         <div className="fixed bottom-0 left-0 right-0 border-t border-stone-200 bg-white p-4">
+          {holdError && mobileStep === 3 && (
+            <HoldCapacityError message={holdError} />
+          )}
           {mobileStep === 1 && (
             <Button
               size="lg"

@@ -7,21 +7,21 @@ import { Link } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { logError } from '@/lib/logger';
 
-interface EventDetailErrorProps {
+interface ExperienceSessionsErrorProps {
   error: Error & { digest?: string };
   reset: () => void;
 }
 
-export default function EventDetailError({
+export default function ExperienceSessionsError({
   error,
   reset,
-}: EventDetailErrorProps) {
+}: ExperienceSessionsErrorProps) {
   const t = useTranslations('Dashboard.eventDetail.errors');
   const tCommon = useTranslations('common');
 
   useEffect(() => {
-    logError('Event detail page error', error, {
-      action: 'EventDetailPage.render',
+    logError('Experience sessions page error', error, {
+      action: 'ExperienceSessionsPage.render',
     });
   }, [error]);
 

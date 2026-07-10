@@ -179,7 +179,8 @@
       "winemakerDescription": "Cochez cette case si vous souhaitez enregistrer votre domaine et proposer des expériences",
       "creatingAccount": "Création du compte...",
       "createAccount": "Créer le compte",
-      "haveAccount": "Vous avez déjà un compte?"
+      "haveAccount": "Vous avez déjà un compte?",
+      "emailExists": "Un compte existe déjà avec cet email"
     }
   },
   "home": {
@@ -242,7 +243,17 @@
     "nearStation": "Proche de la gare de {commune}",
     "pricePerPersonLabel": "Prix par personne",
     "available": "DISPONIBLE",
-    "freeCancellation": "Annulation gratuite jusqu'à 24h avant.",
+    "cancellationPolicy": {
+      "title": "Politique d'annulation :",
+      "labels": {
+        "FLEXIBLE": "Flexible",
+        "STANDARD": "Standard",
+        "STRICT": "Stricte"
+      },
+      "tierHours": "Remboursement à {percent} % jusqu'à {hours} h avant l'expérience",
+      "tierDays": "Remboursement à {percent} % jusqu'à {days, plural, =1 {# jour} other {# jours}} avant l'expérience",
+      "noRefundAfter": "Passé ce délai, aucun remboursement."
+    },
     "inclusions": {
       "TASTING": {
         "guidedTasting": "Dégustation guidée",
@@ -273,21 +284,27 @@
         "localPlatter": "Plateau de fromages et charcuteries locales",
         "pairingGuidance": "Conseils d'accord expert",
         "tastingNotes": "Notes de dégustation"
-      }
+      },
+      "MEAL": "Repas complet accompagné des vins du domaine",
+      "EVENT": "Accès à l’événement et animations"
     },
     "types": {
       "TASTING": "Dégustation",
       "CELLAR_VISIT": "Visite de cave",
       "WORKSHOP": "Atelier",
       "VINEYARD_TOUR": "Visite du vignoble",
-      "FOOD_PAIRING": "Accord mets-vins"
+      "FOOD_PAIRING": "Accord mets-vins",
+      "MEAL": "Repas au domaine",
+      "EVENT": "Événement"
     },
     "typesDetailed": {
       "TASTING": "Dégustation de vin",
       "CELLAR_VISIT": "Visite guidée",
       "WORKSHOP": "Atelier",
       "VINEYARD_TOUR": "Visite du vignoble",
-      "FOOD_PAIRING": "Accord mets-vins"
+      "FOOD_PAIRING": "Accord mets-vins",
+      "MEAL": "Repas accord mets-vins au domaine",
+      "EVENT": "Événement ponctuel ou collectif"
     },
     "duration": "Durée",
     "durationFormat": "{count, plural, =1 {# heure} other {# heures}}",
@@ -472,7 +489,44 @@
       "active": "Actif",
       "disabled": "Désactivé",
       "addTime": "Ajouter un horaire",
-      "addSchedulePattern": "Ajouter un créneau récurrent"
+      "addSchedulePattern": "Ajouter un créneau récurrent",
+      "modes": {
+        "label": "Mode de disponibilité",
+        "recurring": "Récurrent",
+        "punctual": "Ponctuel"
+      },
+      "punctual": {
+        "description": "Choisissez des dates précises et leurs heures de début — idéal pour les événements et les créneaux hors horaire hebdomadaire.",
+        "selectDates": "Choisissez les dates",
+        "selectTimes": "Choisissez les heures",
+        "noPicks": "Sélectionnez au moins une date et une heure pour composer vos créneaux.",
+        "picksTitle": "{count, plural, =1 {1 créneau à créer} other {# créneaux à créer}}",
+        "removePick": "Retirer {pick}",
+        "tooMany": "Maximum {max} créneaux à la fois — retirez-en quelques-uns.",
+        "submit": "Ajouter ces créneaux",
+        "submitting": "Ajout en cours...",
+        "added": "{count, plural, =0 {Aucun nouveau créneau — ils existaient déjà} =1 {1 créneau ajouté} other {# créneaux ajoutés}}",
+        "availableAfterCreation": "Les créneaux ponctuels (dates précises) se configurent après la création, depuis la page de modification de l'expérience.",
+        "errors": {
+          "notFound": "Expérience introuvable.",
+          "validation": "Créneaux invalides — vérifiez les dates et les heures.",
+          "generic": "Impossible d'ajouter les créneaux. Réessayez dans un instant."
+        }
+      },
+      "preview": {
+        "title": "Prochains créneaux",
+        "subtitle": "Aperçu des 8 prochaines occurrences visibles par vos clients",
+        "manageLink": "Gérer le calendrier",
+        "empty": "Aucun créneau à venir — configurez la disponibilité ci-dessus pour en générer.",
+        "capacity": "{count, plural, =1 {1 place} other {# places}}",
+        "punctualBadge": "Ponctuel",
+        "blockedBadge": "Date bloquée",
+        "status": {
+          "open": "Ouvert",
+          "closed": "Fermé",
+          "cancelled": "Annulé"
+        }
+      }
     },
     "ageGate": {
       "badge": "Reserve aux 18+"
@@ -529,7 +583,10 @@
       "proposedBy": "{type} proposé par {winery}",
       "securePaymentActive": "Paiement sécurisé activé",
       "bookingToConfirm": "Réservation à confirmer avec le domaine"
-    }
+    },
+    "freeCancellationUntilHours": "Annulation gratuite jusqu'à {hours} h avant.",
+    "freeCancellationUntilDays": "Annulation gratuite jusqu'à {days, plural, =1 {# jour} other {# jours}} avant.",
+    "nextAvailability": "Prochaine dispo : {date} · {time}"
   },
   "booking": {
     "selectDate": "Choisissez une date",
@@ -587,7 +644,11 @@
     "total": "Total",
     "securePaymentNotice": "Paiement Stripe · vous ne serez débité qu’à la confirmation",
     "loadSlotsError": "Échec du chargement des créneaux. Veuillez réessayer.",
-    "sunsetSlot": "coucher"
+    "sunsetSlot": "coucher",
+    "holdSlotTaken": "Ce créneau vient tout juste d'être réservé par quelqu'un d'autre. Choisissez un autre horaire.",
+    "holdDateBlocked": "Cette date n'est pas ouverte à la réservation. Choisissez une autre date.",
+    "holdSlotUnavailable": "Cet horaire n'est plus proposé pour cette date. Choisissez un autre horaire.",
+    "holdSlotClosed": "Ce créneau a été fermé par l'encaveur. Choisissez un autre horaire."
   },
   "bookings": {
     "title": "Réservations",
@@ -600,8 +661,7 @@
     "summary": {
       "totalBookings": "Total des réservations",
       "upcoming": "À venir (7 jours)",
-      "occupancyRate": "Taux d'occupation",
-      "avgThisMonth": "Moy. ce mois"
+      "weekGuests": "Couverts (7 jours)"
     },
     "columns": {
       "bookingInfo": "Info réservation",
@@ -697,8 +757,6 @@
     "backToBooking": "Retour à la réservation",
     "experienceNotFound": "Expérience non trouvée",
     "invalidBookingParams": "Paramètres de réservation invalides. Veuillez recommencer.",
-    "paymentCancelled": "Paiement annulé. Vous pouvez réessayer.",
-    "paymentFailed": "Échec du paiement. Veuillez réessayer ou utiliser un autre moyen de paiement.",
     "verifyingAvailability": "Vérification de la disponibilité...",
     "capacityExceeded": "Capacité dépassée",
     "capacityExceededMessage": "Vous avez demandé {requested} personnes, mais seulement {available} places sont disponibles pour ce créneau.",
@@ -723,8 +781,6 @@
     "viewOnMap": "Voir sur la carte",
     "serviceFee": "Frais de service",
     "totalCHF": "Total (CHF)",
-    "freeCancellation": "Annulation gratuite",
-    "cancellationPolicy": "jusqu'à 24 heures avant l'expérience. Après, des frais de 50% s'appliquent.",
     "orderSummary": "Récapitulatif",
     "sslEncrypted": "CHIFFRÉ SSL",
     "support247": "SUPPORT 24/7",
@@ -737,6 +793,11 @@
       "errors": {
         "required": "Merci de confirmer votre age avant de poursuivre le paiement."
       }
+    },
+    "hold": {
+      "remaining": "Créneau réservé pendant {time}",
+      "remainingUrgent": "Plus que {time} pour finaliser votre réservation",
+      "expired": "Créneau expiré, redirection…"
     }
   },
   "confirmation": {
@@ -746,6 +807,7 @@
     "paymentPendingDescription": "Votre paiement est en cours de traitement. Veuillez patienter...",
     "bookingStatus": "Statut de la réservation",
     "bookingReference": "Référence de réservation",
+    "serviceFee": "Frais de service",
     "totalPaid": "Total payé",
     "wineryDetails": "Informations du domaine",
     "yourDetails": "Vos informations",
@@ -777,6 +839,7 @@
     "valaisSwitzerland": "Valais, Suisse",
     "checkInTicket": "Billet d'enregistrement",
     "presentQRCode": "Présentez ce code QR à votre arrivée à la réception du domaine.",
+    "qrCodeInEmail": "Votre code QR de billet vous a été envoyé par email — présentez-le à votre arrivée au domaine.",
     "wineryInformation": "Informations du domaine",
     "address": "Adresse",
     "downloadReceipt": "Télécharger le reçu",
@@ -784,7 +847,14 @@
     "modifyDescription": "Vous pouvez annuler ou reporter votre réservation jusqu'à 24 heures avant l'expérience.",
     "manageBooking": "Gérer la réservation",
     "returnToExperiences": "Retour aux expériences",
-    "viewMyBookings": "Voir mes réservations"
+    "viewMyBookings": "Voir mes réservations",
+    "oneTap": {
+      "title": "Retrouvez vos billets en un clic",
+      "description": "Choisissez simplement un mot de passe : votre compte sera créé avec l'email de la réservation et tous vos billets y seront rattachés automatiquement.",
+      "createCta": "Créer mon compte",
+      "successTitle": "Compte créé !",
+      "successDescription": "Vos réservations sont désormais rattachées à votre compte."
+    }
   },
   "cancellation": {
     "title": "Conditions d'annulation",
@@ -909,7 +979,15 @@
     "manageProfile": "Gérez le profil et les photos de votre domaine",
     "lastUpdatedDate": "Dernière mise à jour {date}",
     "viewPublicProfile": "Voir le profil public",
-    "paymentStatusLabel": "Statut du paiement"
+    "paymentStatusLabel": "Statut du paiement",
+    "cancellationPolicy": {
+      "title": "Politique d'annulation",
+      "description": "Choisissez les conditions de remboursement appliquées lorsqu'un client annule une réservation. Elles sont affichées sur vos expériences et au moment du paiement.",
+      "save": "Enregistrer la politique",
+      "saving": "Enregistrement...",
+      "updated": "Politique d'annulation mise à jour",
+      "updateError": "Impossible d'enregistrer la politique d'annulation. Veuillez réessayer."
+    }
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -1007,6 +1085,10 @@
   },
   "earnings": {
     "title": "Revenus",
+    "gmv": {
+      "title": "EnCave vous a apporté",
+      "description": "Valeur totale des réservations confirmées et réalisées via EnCave."
+    },
     "period": {
       "selectPeriod": "Sélectionner la période",
       "thisMonth": "Ce mois-ci",
@@ -1115,6 +1197,44 @@
   "admin": {
     "title": "Tableau de bord Admin",
     "subtitle": "Gérez les vérifications des domaines et les paramètres de la plateforme",
+    "featureFlags": {
+      "title": "Feature flags",
+      "description": "Interrupteurs des fonctionnalités monétaires — effet immédiat, sans déploiement.",
+      "enabledToast": "{flag} : activé",
+      "disabledToast": "{flag} : désactivé",
+      "flags": {
+        "BOOKING_FEE": "Frais de service (2.50 CHF/billet)",
+        "GIFT_CARDS": "Bons cadeaux",
+        "NO_SHOW_FEES": "Frais de no-show",
+        "REQUESTS": "Demandes sur-mesure",
+        "TASTING_SHEET": "Fiche de dégustation",
+        "COLLECTIVE_EVENTS": "Événements collectifs"
+      }
+    },
+    "monetization": {
+      "title": "Plan et commission",
+      "description": "Plan tarifaire et taux de commission appliqués à cette cave.",
+      "planLabel": "Plan",
+      "plans": {
+        "STANDARD": "Standard",
+        "FOUNDER": "Fondateur"
+      },
+      "commissionLabel": "Commission (%)",
+      "commissionPlaceholder": "Taux plateforme par défaut",
+      "commissionHelp": "Laisser vide pour appliquer le taux plateforme par défaut.",
+      "save": "Enregistrer",
+      "saving": "Enregistrement…",
+      "saved": "Plan et commission mis à jour.",
+      "invalidRate": "Le taux doit être compris entre 0 et 100."
+    },
+    "businessKpis": {
+      "title": "KPIs business",
+      "gmv": "GMV totale",
+      "ticketsThisMonth": "Billets ce mois-ci",
+      "takeRate": "Take rate blended",
+      "giftCardRevenue": "CA bons cadeaux",
+      "giftCardLiability": "Passif bons cadeaux"
+    },
     "pendingReview": "En attente de validation",
     "verified": "Vérifié",
     "rejected": "Rejeté",
@@ -1203,9 +1323,31 @@
       "relevance": "Pertinence",
       "priceLowToHigh": "Prix : croissant",
       "priceHighToLow": "Prix : décroissant",
-      "newestFirst": "Plus récents"
+      "newestFirst": "Plus récents",
+      "nextAvailability": "Prochaine disponibilité"
     },
-    "loadingExperiences": "Chargement des expériences viticoles..."
+    "loadingExperiences": "Chargement des expériences viticoles...",
+    "date": "Date",
+    "anyDate": "N'importe quand",
+    "dateRange": "Du {from} au {to}",
+    "clearDate": "Effacer la date",
+    "shortcuts": {
+      "thisWeekend": "Ce week-end",
+      "tastings": "Dégustations",
+      "withMeal": "Avec repas"
+    },
+    "homePanel": {
+      "where": "Où",
+      "when": "Quand",
+      "guests": "Pour",
+      "allValais": "Tout le Valais",
+      "anyDate": "N'importe quand",
+      "clearDate": "Effacer la date",
+      "personCount": "{count, plural, =1 {1 personne} other {# personnes}}",
+      "addPerson": "Ajouter une personne",
+      "removePerson": "Retirer une personne",
+      "explore": "Explorer"
+    }
   },
   "errors": {
     "somethingWentWrong": "Une erreur s'est produite!",
@@ -1233,7 +1375,8 @@
     "invalidPhone": "Numéro de téléphone invalide",
     "fileTooLarge": "Le fichier est trop volumineux",
     "invalidFileType": "Type de fichier non valide",
-    "uploadFailed": "Échec du téléchargement"
+    "uploadFailed": "Échec du téléchargement",
+    "errorId": "Identifiant d'erreur : {id}"
   },
   "empty": {
     "noExperiences": "Aucune expérience trouvée",
@@ -1395,6 +1538,10 @@
     "unsubscribe": {
       "title": "Désabonnement | EnCave",
       "description": "Gérez vos préférences de messagerie"
+    },
+    "bookingError": {
+      "title": "Réservation interrompue | EnCave",
+      "description": "Reprenez votre réservation là où vous l'avez laissée"
     }
   },
   "about": {
@@ -1793,7 +1940,7 @@
       "title": "Annuler la réservation",
       "confirmMessage": "Êtes-vous sûr de vouloir annuler votre réservation pour \"{title}\" ?",
       "refundPolicy": "Politique d'annulation",
-      "refundPolicyDetail": "Remboursement intégral si annulé plus de 24 heures avant l'expérience. Aucun remboursement dans les 24 heures.",
+      "refundPolicyDetail": "Le remboursement est calculé selon la politique d'annulation de la cave (affichée sur la fiche de l'expérience). Le montant exact vous sera confirmé par email.",
       "keepBooking": "Garder la réservation",
       "confirm": "Confirmer l'annulation",
       "cancelling": "Annulation en cours...",
@@ -1810,42 +1957,32 @@
       "save": "Enregistrer les modifications",
       "saving": "Enregistrement...",
       "saved": "Profil mis à jour avec succès",
-      "error": "Échec de la mise à jour du profil. Veuillez réessayer."
+      "error": "Échec de la mise à jour du profil. Veuillez réessayer.",
+      "deleteAccount": {
+        "title": "Supprimer mon compte",
+        "description": "La suppression anonymise définitivement vos données personnelles (nLPD) : identité, coordonnées et historique de réservations. Cette action est irréversible.",
+        "cta": "Supprimer mon compte",
+        "confirmTitle": "Confirmer la suppression",
+        "confirmDescription": "Vos données personnelles seront anonymisées de façon irréversible et vous serez déconnecté. Les réservations passées sont conservées sous forme anonyme à des fins comptables.",
+        "confirmLabel": "Saisissez votre email ({email}) pour confirmer :",
+        "cancel": "Annuler",
+        "confirmCta": "Supprimer définitivement",
+        "deleting": "Suppression…",
+        "errorFutureBookings": "Impossible de supprimer le compte : des réservations confirmées à venir existent. Annulez-les d'abord ou contactez le support.",
+        "errorGeneric": "La suppression a échoué. Réessayez ou contactez support@encave.ch."
+      }
     }
   },
   "Dashboard": {
     "eventDetail": {
-      "title": "Détail de l'événement",
       "breadcrumb": {
         "dashboard": "Tableau de bord",
         "events": "Événements"
-      },
-      "status": {
-        "draft": "Brouillon",
-        "published": "Publié",
-        "archived": "Archivé"
-      },
-      "sections": {
-        "today": "Aujourd'hui",
-        "upcoming": "Sessions à venir",
-        "past": "Sessions passées",
-        "cancelled": "Sessions annulées"
-      },
-      "summary": {
-        "active": "{confirmed} / {total} places sur {sessions, plural, =1 {1 session active} other {# sessions actives}}"
-      },
-      "session": {
-        "capacity": "{confirmed} / {total} places",
-        "empty": "Aucune réservation pour cette session",
-        "emptyCancelled": "Aucune session annulée",
-        "live": "En cours",
-        "fullBadge": "Complet"
       },
       "actions": {
         "scanQr": "Scanner les QR codes",
         "scanDisabled": "Disponible le jour de l'événement",
         "contactAll": "Contacter les inscrits",
-        "contactAllSoon": "Bientôt disponible",
         "contactAllLoading": "Préparation...",
         "contactAllEmpty": "Aucun inscrit à contacter pour le moment.",
         "contactAllError": "Impossible de récupérer la liste. Réessaie.",
@@ -1853,20 +1990,17 @@
         "contactAllFallbackBody": "Le lien mail est trop long pour s'ouvrir directement. Copie la liste d'emails ci-dessous et colle-la dans le champ BCC de ton mail.",
         "contactAllCopy": "Copier la liste d'emails",
         "contactAllCopied": "Emails copiés. Colle-les dans le BCC de ton mail.",
+        "cancelSession": "Annuler la session",
+        "cancelSessionPrompt": "Pourquoi annulez-vous cette session ? Le motif sera transmis aux participants (10 caractères minimum).",
+        "cancelSessionError": "Impossible d'annuler la session. Vérifiez le motif (10 caractères minimum) et réessayez.",
+        "cancelSessionDone": "Session annulée. Les participants ont été prévenus et remboursés.",
+        "cancelSessionPartial": "{count, plural, =1 {1 réservation n'a pas pu être annulée} other {# réservations n'ont pas pu être annulées}}. Réessayez ou contactez le support.",
         "revertCheckIn": "Annuler le check-in",
         "revertNoShow": "Annuler le no-show",
         "markPresent": "Marquer présent",
         "markNoShow": "Marquer no-show",
         "markNoShowDisabled": "Disponible après la fin de la session",
         "openMenu": "Ouvrir le menu d'actions"
-      },
-      "columns": {
-        "client": "Client",
-        "partySize": "Personnes",
-        "reference": "Référence",
-        "status": "Statut",
-        "checkIn": "Check-in",
-        "actions": "Actions"
       },
       "bookingStatus": {
         "confirmed": "Confirmée",
@@ -1876,23 +2010,10 @@
         "cancelledByWinery": "Annulée par vos soins",
         "pending": "Paiement en attente"
       },
-      "checkIn": {
-        "at": "Présent à {time}",
-        "none": "—"
-      },
       "partySize": {
         "inline": "{count, plural, =1 {1 personne} other {# personnes}}"
       },
-      "banner": {
-        "draft": "Cet événement n'est pas publié. Aucun client ne peut le voir.",
-        "archived": "Événement archivé. Lecture seule."
-      },
-      "empty": {
-        "title": "Vous n'avez pas encore programmé de sessions",
-        "cta": "Ajouter une session"
-      },
       "errors": {
-        "notOwner": "Vous n'avez pas accès à cet événement.",
         "loadFailed": "Impossible de charger l'événement. Réessayez dans un instant.",
         "revertWindowExpired": "Impossible d'annuler après 72h.",
         "sessionNotEnded": "Disponible après la fin de la session."
@@ -1913,6 +2034,58 @@
         "revertNoShowDescription": "Le statut repassera à Confirmée. L'action est tracée.",
         "confirmCta": "Confirmer",
         "cancelCta": "Retour"
+      },
+      "occurrences": {
+        "subtitle": "Calendrier des créneaux · capacité par défaut : {count, plural, =1 {1 place} other {# places}}",
+        "editAvailability": "Modifier les disponibilités",
+        "loading": "Chargement du calendrier des créneaux",
+        "previousMonth": "Mois précédent",
+        "nextMonth": "Mois suivant",
+        "blockedDay": "Date bloquée",
+        "empty": {
+          "title": "Aucun créneau ce mois-ci",
+          "description": "Les créneaux générés par vos disponibilités apparaîtront ici.",
+          "cta": "Configurer les disponibilités"
+        },
+        "legend": {
+          "open": "Ouvert",
+          "full": "Complet",
+          "closed": "Fermé",
+          "blocked": "Date bloquée"
+        },
+        "status": {
+          "open": "Ouvert",
+          "closed": "Fermé",
+          "cancelled": "Annulé"
+        },
+        "sheet": {
+          "gauge": "{booked} / {capacity} places",
+          "overrideActive": "Capacité ajustée pour ce créneau ({count} au lieu du réglage de l'expérience).",
+          "legacyNote": "Session issue d'anciennes réservations — la gestion à l'occurrence n'est pas disponible pour ce créneau.",
+          "cancelledNote": "Ce créneau est annulé — il ne peut plus être modifié.",
+          "close": "Fermer le créneau",
+          "reopen": "Rouvrir le créneau",
+          "capacityLabel": "Ajuster la capacité",
+          "capacityPlaceholder": "Places",
+          "apply": "Appliquer",
+          "reset": "Réinitialiser",
+          "capacityHint": "Entre 1 et 50 places. Réinitialiser revient à la capacité de l'expérience.",
+          "capacityInvalid": "Saisissez un nombre entre {min} et {max}.",
+          "attendees": "{count, plural, =0 {Inscrits} =1 {1 inscrit} other {# inscrits}}",
+          "noAttendees": "Aucun inscrit pour ce créneau pour le moment."
+        },
+        "toasts": {
+          "closed": "Créneau fermé — il n'est plus réservable.",
+          "reopened": "Créneau rouvert.",
+          "capacityUpdated": "Capacité ajustée à {count, plural, =1 {1 place} other {# places}}.",
+          "capacityReset": "Capacité réinitialisée sur celle de l'expérience."
+        },
+        "errors": {
+          "notFound": "Créneau introuvable.",
+          "conflict": "Action impossible sur un créneau annulé.",
+          "validation": "Valeur invalide.",
+          "generic": "Une erreur est survenue. Réessayez dans un instant."
+        }
       }
     },
     "visibility": {
@@ -1983,5 +2156,24 @@
     "errorTooLarge": "L'image doit faire moins de 5 Mo",
     "errorInvalidType": "Seules les images JPEG et PNG sont autorisées",
     "errorUploadFailed": "Échec du téléchargement de l'image. Veuillez réessayer."
+  },
+  "bookingError": {
+    "payment": {
+      "title": "Le paiement n'a pas abouti",
+      "description": "Aucun montant n'a été débité et votre créneau est toujours réservé. Vous pouvez reprendre le paiement là où vous l'avez laissé.",
+      "descriptionHoldGone": "Aucun montant n'a été débité, mais votre créneau a été remis en vente entre-temps. Vérifiez les disponibilités — il est peut-être encore libre.",
+      "retryCta": "Réessayer le paiement"
+    },
+    "holdExpired": {
+      "title": "Votre créneau a été libéré",
+      "description": "Les 10 minutes de réservation sont écoulées, le créneau a donc été remis en vente — et personne n'a été débité. Bonne nouvelle : il est peut-être encore libre."
+    },
+    "generic": {
+      "title": "Petit couac dans la réservation",
+      "description": "Nous n'avons pas retrouvé les détails de votre réservation, mais rassurez-vous : aucun montant n'a été débité.",
+      "cta": "Découvrir les expériences"
+    },
+    "reselectCta": "Revoir les disponibilités",
+    "selectionRecap": "{date} · {time} · {guests, plural, one {# personne} other {# personnes}}"
   }
 }

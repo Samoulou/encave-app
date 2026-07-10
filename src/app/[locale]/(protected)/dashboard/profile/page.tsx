@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { auth } from '@/server/auth';
 import { ClientProfileForm } from '@/components/features/client-dashboard/ClientProfileForm';
+import { DeleteAccountSection } from '@/components/features/client-dashboard/DeleteAccountSection';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
@@ -39,6 +40,7 @@ export default async function ProfilePage() {
         email={session.user.email}
         initialLocale={session.user.preferredLocale}
       />
+      <DeleteAccountSection email={session.user.email} />
     </div>
   );
 }

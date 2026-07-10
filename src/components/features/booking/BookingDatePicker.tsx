@@ -8,12 +8,21 @@ interface BookingDatePickerProps {
   selectedDate: string | null;
   onDateChange: (_date: string | null) => void;
   availableDays: Set<number>;
+  /**
+   * "YYYY-MM-DD" keys of bookable occurrences (P-05) — a date is
+   * selectable when its weekday has a slot OR its key is in this set
+   * (punctual occurrences on off-schedule days).
+   */
+  occurrenceDateKeys?: Set<string>;
 }
+
+const NO_OCCURRENCE_DATES: Set<string> = new Set();
 
 export function BookingDatePicker({
   selectedDate,
   onDateChange,
   availableDays,
+  occurrenceDateKeys = NO_OCCURRENCE_DATES,
 }: BookingDatePickerProps) {
   const today = useMemo(() => startOfDay(new Date()), []);
   const maxDate = useMemo(() => addMonths(today, 3), [today]); // Allow booking up to 3 months ahead
@@ -33,15 +42,19 @@ export function BookingDatePicker({
         return true;
       }
 
-      // Disable days without availability slots
+      // Disable days without a weekly slot UNLESS a punctual occurrence
+      // exists on that exact date (P-05).
       const dayOfWeek = date.getDay();
-      if (!availableDays.has(dayOfWeek)) {
+      if (
+        !availableDays.has(dayOfWeek) &&
+        !occurrenceDateKeys.has(format(date, 'yyyy-MM-dd'))
+      ) {
         return true;
       }
 
       return false;
     },
-    [today, maxDate, availableDays]
+    [today, maxDate, availableDays, occurrenceDateKeys]
   );
 
   const handleSelect = (date: Date | undefined) => {

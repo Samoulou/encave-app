@@ -41,6 +41,12 @@ async function canMarkCheckedInMigrationApplied() {
 }
 
 async function main() {
+  // CI has no reachable database; Vercel deployments never set this.
+  if (process.env.SKIP_DB_MIGRATIONS === '1') {
+    console.log('SKIP_DB_MIGRATIONS=1 — skipping prisma migrate deploy.');
+    return;
+  }
+
   const deploy = runPrisma(['migrate', 'deploy']);
   printResult(deploy);
 

@@ -58,7 +58,10 @@ export class ExperienceDetailPage extends BasePage {
 
     // Content
     this.description = page.getByTestId('experience-description');
-    this.duration = page.locator('main').getByTestId('experience-duration').first();
+    this.duration = page
+      .locator('main')
+      .getByTestId('experience-duration')
+      .first();
     this.capacity = page.getByTestId('experience-capacity');
     this.availabilityPreview = page.getByTestId('availability-preview');
     this.gallery = page.getByTestId('experience-gallery');

@@ -179,7 +179,8 @@
       "winemakerDescription": "Aktivieren Sie dieses Feld, wenn Sie Ihr Weingut registrieren und Erlebnisse anbieten mochten",
       "creatingAccount": "Konto wird erstellt...",
       "createAccount": "Konto erstellen",
-      "haveAccount": "Bereits ein Konto?"
+      "haveAccount": "Bereits ein Konto?",
+      "emailExists": "Mit dieser E-Mail-Adresse existiert bereits ein Konto"
     }
   },
   "home": {
@@ -242,7 +243,17 @@
     "nearStation": "In der Nähe des Bahnhofs {commune}",
     "pricePerPersonLabel": "Preis pro Person",
     "available": "VERFÜGBAR",
-    "freeCancellation": "Kostenlose Stornierung bis 24h vorher.",
+    "cancellationPolicy": {
+      "title": "Stornierungsbedingungen:",
+      "labels": {
+        "FLEXIBLE": "Flexibel",
+        "STANDARD": "Standard",
+        "STRICT": "Streng"
+      },
+      "tierHours": "{percent} % Erstattung bis {hours} Std. vor dem Erlebnis",
+      "tierDays": "{percent} % Erstattung bis {days, plural, =1 {# Tag} other {# Tage}} vor dem Erlebnis",
+      "noRefundAfter": "Danach keine Erstattung."
+    },
     "inclusions": {
       "TASTING": {
         "guidedTasting": "Geführte Weinverkostung",
@@ -273,21 +284,27 @@
         "localPlatter": "Lokale Käse- und Fleischplatte",
         "pairingGuidance": "Experten-Paarungsberatung",
         "tastingNotes": "Verkostungsnotizen"
-      }
+      },
+      "MEAL": "Komplettes Essen mit Weinen des Weinguts",
+      "EVENT": "Zugang zur Veranstaltung und Programm"
     },
     "types": {
       "TASTING": "Verkostung",
       "CELLAR_VISIT": "Kellerbesuch",
       "WORKSHOP": "Workshop",
       "VINEYARD_TOUR": "Weinbergtour",
-      "FOOD_PAIRING": "Wein-Speisen-Pairing"
+      "FOOD_PAIRING": "Wein-Speisen-Pairing",
+      "MEAL": "Essen auf dem Weingut",
+      "EVENT": "Veranstaltung"
     },
     "typesDetailed": {
       "TASTING": "Weinverkostung",
       "CELLAR_VISIT": "Geführte Tour",
       "WORKSHOP": "Workshop",
       "VINEYARD_TOUR": "Weinbergtour",
-      "FOOD_PAIRING": "Wein-Speisen-Pairing"
+      "FOOD_PAIRING": "Wein-Speisen-Pairing",
+      "MEAL": "Essen mit Weinbegleitung auf dem Weingut",
+      "EVENT": "Einmalige oder kollektive Veranstaltung"
     },
     "duration": "Dauer",
     "durationFormat": "{count, plural, =1 {# Stunde} other {# Stunden}}",
@@ -472,7 +489,44 @@
       "active": "Aktiv",
       "disabled": "Deaktiviert",
       "addTime": "Zeit hinzufügen",
-      "addSchedulePattern": "Wiederkehrenden Zeitplan hinzufügen"
+      "addSchedulePattern": "Wiederkehrenden Zeitplan hinzufügen",
+      "modes": {
+        "label": "Verfügbarkeitsmodus",
+        "recurring": "Wiederkehrend",
+        "punctual": "Einmalig"
+      },
+      "punctual": {
+        "description": "Wählen Sie konkrete Daten und deren Startzeiten — ideal für Veranstaltungen und Termine ausserhalb Ihres Wochenplans.",
+        "selectDates": "Daten wählen",
+        "selectTimes": "Uhrzeiten wählen",
+        "noPicks": "Wählen Sie mindestens ein Datum und eine Uhrzeit, um Termine zu erstellen.",
+        "picksTitle": "{count, plural, =1 {1 Termin zu erstellen} other {# Termine zu erstellen}}",
+        "removePick": "{pick} entfernen",
+        "tooMany": "Maximal {max} Termine auf einmal — entfernen Sie einige.",
+        "submit": "Diese Termine hinzufügen",
+        "submitting": "Wird hinzugefügt...",
+        "added": "{count, plural, =0 {Keine neuen Termine — sie existierten bereits} =1 {1 Termin hinzugefügt} other {# Termine hinzugefügt}}",
+        "availableAfterCreation": "Einmalige Termine (konkrete Daten) werden nach der Erstellung auf der Bearbeitungsseite des Erlebnisses konfiguriert.",
+        "errors": {
+          "notFound": "Erlebnis nicht gefunden.",
+          "validation": "Ungültige Termine — prüfen Sie Daten und Uhrzeiten.",
+          "generic": "Termine konnten nicht hinzugefügt werden. Versuchen Sie es gleich noch einmal."
+        }
+      },
+      "preview": {
+        "title": "Nächste Termine",
+        "subtitle": "Vorschau der nächsten 8 Termine, die Ihre Kundschaft sieht",
+        "manageLink": "Kalender verwalten",
+        "empty": "Keine bevorstehenden Termine — konfigurieren Sie oben die Verfügbarkeit, um welche zu erzeugen.",
+        "capacity": "{count, plural, =1 {1 Platz} other {# Plätze}}",
+        "punctualBadge": "Einmalig",
+        "blockedBadge": "Gesperrtes Datum",
+        "status": {
+          "open": "Offen",
+          "closed": "Geschlossen",
+          "cancelled": "Abgesagt"
+        }
+      }
     },
     "ageGate": {
       "badge": "Nur 18+"
@@ -529,7 +583,10 @@
       "proposedBy": "{type} angeboten von {winery}",
       "securePaymentActive": "Sichere Zahlung aktiviert",
       "bookingToConfirm": "Buchung mit dem Weingut zu bestätigen"
-    }
+    },
+    "freeCancellationUntilHours": "Kostenlose Stornierung bis {hours} Std. vorher.",
+    "freeCancellationUntilDays": "Kostenlose Stornierung bis {days, plural, =1 {# Tag} other {# Tage}} vorher.",
+    "nextAvailability": "Nächster Termin: {date} · {time}"
   },
   "booking": {
     "selectDate": "Datum auswahlen",
@@ -587,7 +644,11 @@
     "total": "Gesamt",
     "securePaymentNotice": "Stripe-Zahlung · Sie werden erst bei Bestätigung belastet",
     "loadSlotsError": "Zeitfenster konnten nicht geladen werden. Bitte versuchen Sie es erneut.",
-    "sunsetSlot": "Sonnenuntergang"
+    "sunsetSlot": "Sonnenuntergang",
+    "holdSlotTaken": "Dieses Zeitfenster wurde soeben von jemand anderem gebucht. Bitte wählen Sie eine andere Zeit.",
+    "holdDateBlocked": "Dieses Datum ist nicht buchbar. Bitte wählen Sie ein anderes Datum.",
+    "holdSlotUnavailable": "Diese Uhrzeit wird an diesem Datum nicht mehr angeboten. Bitte wählen Sie eine andere Zeit.",
+    "holdSlotClosed": "Dieses Zeitfenster wurde vom Weingut geschlossen. Bitte wählen Sie eine andere Zeit."
   },
   "bookings": {
     "title": "Buchungen",
@@ -600,8 +661,7 @@
     "summary": {
       "totalBookings": "Gesamtbuchungen",
       "upcoming": "Kommend (7 Tage)",
-      "occupancyRate": "Auslastungsrate",
-      "avgThisMonth": "Durchschn. diesen Monat"
+      "weekGuests": "Gäste (7 Tage)"
     },
     "columns": {
       "bookingInfo": "Buchungsinfo",
@@ -697,8 +757,6 @@
     "backToBooking": "Zuruck zur Buchung",
     "experienceNotFound": "Erlebnis nicht gefunden",
     "invalidBookingParams": "Ungultige Buchungsparameter. Bitte versuchen Sie es erneut.",
-    "paymentCancelled": "Zahlung wurde abgebrochen. Sie konnen es erneut versuchen.",
-    "paymentFailed": "Zahlung fehlgeschlagen. Bitte versuchen Sie es erneut oder verwenden Sie eine andere Zahlungsmethode.",
     "verifyingAvailability": "Verfugbarkeit wird uberpruft...",
     "capacityExceeded": "Kapazitat uberschritten",
     "capacityExceededMessage": "Sie haben {requested} Gaste angefragt, aber nur {available} Platze sind fur diesen Zeitraum verfugbar.",
@@ -723,8 +781,6 @@
     "viewOnMap": "Auf Karte anzeigen",
     "serviceFee": "Servicegebuhr",
     "totalCHF": "Gesamt (CHF)",
-    "freeCancellation": "Kostenlose Stornierung",
-    "cancellationPolicy": "bis 24 Stunden vor dem Erlebnis. Danach fallen 50% Gebuhr an.",
     "orderSummary": "Bestellubersicht",
     "sslEncrypted": "SSL VERSCHLUSSELT",
     "support247": "24/7 SUPPORT",
@@ -737,6 +793,11 @@
       "errors": {
         "required": "Bitte bestaetigen Sie Ihr Alter, bevor Sie zur Zahlung fortfahren."
       }
+    },
+    "hold": {
+      "remaining": "Zeitfenster reserviert für {time}",
+      "remainingUrgent": "Nur noch {time}, um Ihre Buchung abzuschliessen",
+      "expired": "Zeitfenster abgelaufen, Weiterleitung…"
     }
   },
   "confirmation": {
@@ -746,6 +807,7 @@
     "paymentPendingDescription": "Ihre Zahlung wird verarbeitet. Bitte warten Sie...",
     "bookingStatus": "Buchungsstatus",
     "bookingReference": "Buchungsreferenz",
+    "serviceFee": "Servicegebühr",
     "totalPaid": "Gesamtbetrag bezahlt",
     "wineryDetails": "Weingut-Details",
     "yourDetails": "Ihre Daten",
@@ -777,6 +839,7 @@
     "valaisSwitzerland": "Wallis, Schweiz",
     "checkInTicket": "Check-in-Ticket",
     "presentQRCode": "Zeigen Sie diesen QR-Code bei Ihrer Ankunft am Empfang des Weinguts vor.",
+    "qrCodeInEmail": "Ihr Ticket-QR-Code wurde Ihnen per E-Mail zugesandt — zeigen Sie ihn bei Ihrer Ankunft im Weingut vor.",
     "wineryInformation": "Weingut-Informationen",
     "address": "Adresse",
     "downloadReceipt": "Quittung herunterladen",
@@ -784,7 +847,14 @@
     "modifyDescription": "Sie können Ihre Buchung bis zu 24 Stunden vor dem Erlebnis stornieren oder verschieben.",
     "manageBooking": "Buchung verwalten",
     "returnToExperiences": "Zurück zu Erlebnissen",
-    "viewMyBookings": "Meine Buchungen ansehen"
+    "viewMyBookings": "Meine Buchungen ansehen",
+    "oneTap": {
+      "title": "Ihre Tickets mit einem Klick",
+      "description": "Wählen Sie einfach ein Passwort: Ihr Konto wird mit der Buchungs-E-Mail erstellt und alle Ihre Tickets werden ihm automatisch zugeordnet.",
+      "createCta": "Mein Konto erstellen",
+      "successTitle": "Konto erstellt!",
+      "successDescription": "Ihre Buchungen sind jetzt mit Ihrem Konto verknüpft."
+    }
   },
   "cancellation": {
     "title": "Stornierungsbedingungen",
@@ -909,7 +979,15 @@
     "manageProfile": "Verwalten Sie Ihr Weingut-Profil und Fotos",
     "lastUpdatedDate": "Zuletzt aktualisiert {date}",
     "viewPublicProfile": "Öffentliches Profil anzeigen",
-    "paymentStatusLabel": "Zahlungsstatus"
+    "paymentStatusLabel": "Zahlungsstatus",
+    "cancellationPolicy": {
+      "title": "Stornierungsbedingungen",
+      "description": "Wählen Sie die Erstattungsbedingungen, die gelten, wenn ein Gast eine Buchung storniert. Sie werden bei Ihren Erlebnissen und beim Bezahlen angezeigt.",
+      "save": "Bedingungen speichern",
+      "saving": "Wird gespeichert...",
+      "updated": "Stornierungsbedingungen aktualisiert",
+      "updateError": "Die Stornierungsbedingungen konnten nicht gespeichert werden. Bitte versuchen Sie es erneut."
+    }
   },
   "dashboard": {
     "title": "Dashboard",
@@ -1007,6 +1085,10 @@
   },
   "earnings": {
     "title": "Einnahmen",
+    "gmv": {
+      "title": "EnCave hat Ihnen eingebracht",
+      "description": "Gesamtwert der über EnCave bestätigten und durchgeführten Buchungen."
+    },
     "period": {
       "selectPeriod": "Zeitraum wählen",
       "thisMonth": "Dieser Monat",
@@ -1115,6 +1197,44 @@
   "admin": {
     "title": "Admin-Dashboard",
     "subtitle": "Weingut-Verifizierungen und Plattformeinstellungen verwalten",
+    "featureFlags": {
+      "title": "Feature Flags",
+      "description": "Schalter für Geldfunktionen — sofort wirksam, ohne Deployment.",
+      "enabledToast": "{flag}: aktiviert",
+      "disabledToast": "{flag}: deaktiviert",
+      "flags": {
+        "BOOKING_FEE": "Servicegebühr (2.50 CHF/Ticket)",
+        "GIFT_CARDS": "Geschenkgutscheine",
+        "NO_SHOW_FEES": "No-Show-Gebühren",
+        "REQUESTS": "Massgeschneiderte Anfragen",
+        "TASTING_SHEET": "Degustationsblatt",
+        "COLLECTIVE_EVENTS": "Kollektive Events"
+      }
+    },
+    "monetization": {
+      "title": "Plan und Kommission",
+      "description": "Preisplan und Kommissionssatz für dieses Weingut.",
+      "planLabel": "Plan",
+      "plans": {
+        "STANDARD": "Standard",
+        "FOUNDER": "Gründer"
+      },
+      "commissionLabel": "Kommission (%)",
+      "commissionPlaceholder": "Plattform-Standardsatz",
+      "commissionHelp": "Leer lassen, um den Plattform-Standardsatz anzuwenden.",
+      "save": "Speichern",
+      "saving": "Wird gespeichert…",
+      "saved": "Plan und Kommission aktualisiert.",
+      "invalidRate": "Der Satz muss zwischen 0 und 100 liegen."
+    },
+    "businessKpis": {
+      "title": "Business-KPIs",
+      "gmv": "Gesamt-GMV",
+      "ticketsThisMonth": "Tickets diesen Monat",
+      "takeRate": "Blended Take Rate",
+      "giftCardRevenue": "Umsatz Geschenkgutscheine",
+      "giftCardLiability": "Verbindlichkeit Geschenkgutscheine"
+    },
     "pendingReview": "Ausstehende Überprüfung",
     "verified": "Verifiziert",
     "rejected": "Abgelehnt",
@@ -1203,9 +1323,31 @@
       "relevance": "Relevanz",
       "priceLowToHigh": "Preis: aufsteigend",
       "priceHighToLow": "Preis: absteigend",
-      "newestFirst": "Neueste zuerst"
+      "newestFirst": "Neueste zuerst",
+      "nextAvailability": "Nächste Verfügbarkeit"
     },
-    "loadingExperiences": "Weinerlebnisse werden geladen..."
+    "loadingExperiences": "Weinerlebnisse werden geladen...",
+    "date": "Datum",
+    "anyDate": "Beliebiges Datum",
+    "dateRange": "Vom {from} bis {to}",
+    "clearDate": "Datum löschen",
+    "shortcuts": {
+      "thisWeekend": "Dieses Wochenende",
+      "tastings": "Degustationen",
+      "withMeal": "Mit Essen"
+    },
+    "homePanel": {
+      "where": "Wo",
+      "when": "Wann",
+      "guests": "Für",
+      "allValais": "Ganzes Wallis",
+      "anyDate": "Beliebiges Datum",
+      "clearDate": "Datum löschen",
+      "personCount": "{count, plural, =1 {1 Person} other {# Personen}}",
+      "addPerson": "Person hinzufügen",
+      "removePerson": "Person entfernen",
+      "explore": "Entdecken"
+    }
   },
   "errors": {
     "somethingWentWrong": "Etwas ist schiefgelaufen!",
@@ -1233,7 +1375,8 @@
     "invalidPhone": "Ungultige Telefonnummer",
     "fileTooLarge": "Datei ist zu gross",
     "invalidFileType": "Ungultiger Dateityp",
-    "uploadFailed": "Upload fehlgeschlagen"
+    "uploadFailed": "Upload fehlgeschlagen",
+    "errorId": "Fehler-ID: {id}"
   },
   "empty": {
     "noExperiences": "Keine Erlebnisse gefunden",
@@ -1395,6 +1538,10 @@
     "unsubscribe": {
       "title": "Abmelden | EnCave",
       "description": "Verwalten Sie Ihre E-Mail-Einstellungen"
+    },
+    "bookingError": {
+      "title": "Buchung unterbrochen | EnCave",
+      "description": "Setzen Sie Ihre Buchung dort fort, wo Sie aufgehört haben"
     }
   },
   "about": {
@@ -1798,7 +1945,7 @@
       "title": "Buchung stornieren",
       "confirmMessage": "Möchten Sie Ihre Buchung für \"{title}\" wirklich stornieren?",
       "refundPolicy": "Stornierungsrichtlinie",
-      "refundPolicyDetail": "Volle Rückerstattung bei Stornierung mehr als 24 Stunden vor dem Erlebnis. Keine Rückerstattung innerhalb von 24 Stunden.",
+      "refundPolicyDetail": "Ihre Rückerstattung richtet sich nach den Stornierungsbedingungen des Weinguts (siehe Erlebnisseite). Der genaue Betrag wird per E-Mail bestätigt.",
       "keepBooking": "Buchung behalten",
       "confirm": "Stornierung bestätigen",
       "cancelling": "Wird storniert...",
@@ -1815,42 +1962,32 @@
       "save": "Änderungen speichern",
       "saving": "Wird gespeichert...",
       "saved": "Profil erfolgreich aktualisiert",
-      "error": "Profil konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut."
+      "error": "Profil konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut.",
+      "deleteAccount": {
+        "title": "Mein Konto löschen",
+        "description": "Die Löschung anonymisiert Ihre persönlichen Daten endgültig (nDSG): Identität, Kontaktdaten und Buchungsverlauf. Diese Aktion ist unwiderruflich.",
+        "cta": "Mein Konto löschen",
+        "confirmTitle": "Löschung bestätigen",
+        "confirmDescription": "Ihre persönlichen Daten werden unwiderruflich anonymisiert und Sie werden abgemeldet. Vergangene Buchungen bleiben in anonymisierter Form zu Buchhaltungszwecken erhalten.",
+        "confirmLabel": "Geben Sie Ihre E-Mail ({email}) zur Bestätigung ein:",
+        "cancel": "Abbrechen",
+        "confirmCta": "Endgültig löschen",
+        "deleting": "Wird gelöscht…",
+        "errorFutureBookings": "Konto kann nicht gelöscht werden: Es bestehen bestätigte zukünftige Buchungen. Stornieren Sie diese zuerst oder kontaktieren Sie den Support.",
+        "errorGeneric": "Löschung fehlgeschlagen. Versuchen Sie es erneut oder kontaktieren Sie support@encave.ch."
+      }
     }
   },
   "Dashboard": {
     "eventDetail": {
-      "title": "Veranstaltungsdetails",
       "breadcrumb": {
         "dashboard": "Dashboard",
         "events": "Veranstaltungen"
-      },
-      "status": {
-        "draft": "Entwurf",
-        "published": "Veröffentlicht",
-        "archived": "Archiviert"
-      },
-      "sections": {
-        "today": "Heute",
-        "upcoming": "Kommende Sessions",
-        "past": "Vergangene Sessions",
-        "cancelled": "Abgesagte Sessions"
-      },
-      "summary": {
-        "active": "{confirmed} / {total} Plätze auf {sessions, plural, one {1 aktive Session} other {# aktive Sessions}}"
-      },
-      "session": {
-        "capacity": "{confirmed} / {total} Plätze",
-        "empty": "Keine Buchung für diese Session",
-        "emptyCancelled": "Keine abgesagte Session",
-        "live": "Läuft jetzt",
-        "fullBadge": "Ausgebucht"
       },
       "actions": {
         "scanQr": "QR-Codes scannen",
         "scanDisabled": "Am Veranstaltungstag verfügbar",
         "contactAll": "Gäste kontaktieren",
-        "contactAllSoon": "Bald verfügbar",
         "contactAllLoading": "Wird vorbereitet...",
         "contactAllEmpty": "Noch keine Gäste zum Kontaktieren.",
         "contactAllError": "Die Gästeliste konnte nicht geladen werden. Bitte erneut versuchen.",
@@ -1858,20 +1995,17 @@
         "contactAllFallbackBody": "Der Mail-Link ist zu lang, um direkt geöffnet zu werden. Kopiere die Liste unten und füge sie in das BCC-Feld deiner E-Mail ein.",
         "contactAllCopy": "E-Mail-Liste kopieren",
         "contactAllCopied": "E-Mails kopiert. Füge sie in das BCC-Feld deiner E-Mail ein.",
+        "cancelSession": "Session absagen",
+        "cancelSessionPrompt": "Warum sagen Sie diese Session ab? Der Grund wird den Teilnehmenden mitgeteilt (mindestens 10 Zeichen).",
+        "cancelSessionError": "Die Session konnte nicht abgesagt werden. Prüfen Sie den Grund (mindestens 10 Zeichen) und versuchen Sie es erneut.",
+        "cancelSessionDone": "Session abgesagt. Die Teilnehmenden wurden informiert und erstattet.",
+        "cancelSessionPartial": "{count, plural, =1 {1 Buchung konnte nicht storniert werden} other {# Buchungen konnten nicht storniert werden}}. Versuchen Sie es erneut oder kontaktieren Sie den Support.",
         "revertCheckIn": "Check-in rückgängig machen",
         "revertNoShow": "No-Show rückgängig machen",
         "markPresent": "Als anwesend markieren",
         "markNoShow": "Als No-Show markieren",
         "markNoShowDisabled": "Nach Ende der Session verfügbar",
         "openMenu": "Aktionsmenü öffnen"
-      },
-      "columns": {
-        "client": "Gast",
-        "partySize": "Personen",
-        "reference": "Referenz",
-        "status": "Status",
-        "checkIn": "Check-in",
-        "actions": "Aktionen"
       },
       "bookingStatus": {
         "confirmed": "Bestätigt",
@@ -1881,23 +2015,10 @@
         "cancelledByWinery": "Von Ihnen storniert",
         "pending": "Zahlung ausstehend"
       },
-      "checkIn": {
-        "at": "Anwesend um {time}",
-        "none": "—"
-      },
       "partySize": {
         "inline": "{count, plural, one {1 Person} other {# Personen}}"
       },
-      "banner": {
-        "draft": "Diese Veranstaltung ist nicht veröffentlicht. Sie ist für Gäste nicht sichtbar.",
-        "archived": "Veranstaltung archiviert. Nur Lesezugriff."
-      },
-      "empty": {
-        "title": "Sie haben noch keine Sessions geplant",
-        "cta": "Session hinzufügen"
-      },
       "errors": {
-        "notOwner": "Sie haben keinen Zugriff auf diese Veranstaltung.",
         "loadFailed": "Veranstaltung konnte nicht geladen werden. Bitte erneut versuchen.",
         "revertWindowExpired": "Nach 72 Stunden nicht mehr rückgängig zu machen.",
         "sessionNotEnded": "Nach Ende der Session verfügbar."
@@ -1918,6 +2039,58 @@
         "revertNoShowDescription": "Der Status wird wieder auf Bestätigt gesetzt. Die Aktion wird protokolliert.",
         "confirmCta": "Bestätigen",
         "cancelCta": "Zurück"
+      },
+      "occurrences": {
+        "subtitle": "Terminkalender · Standardkapazität: {count, plural, =1 {1 Platz} other {# Plätze}}",
+        "editAvailability": "Verfügbarkeit bearbeiten",
+        "loading": "Terminkalender wird geladen",
+        "previousMonth": "Vorheriger Monat",
+        "nextMonth": "Nächster Monat",
+        "blockedDay": "Gesperrtes Datum",
+        "empty": {
+          "title": "Keine Termine in diesem Monat",
+          "description": "Aus Ihrer Verfügbarkeit erzeugte Termine erscheinen hier.",
+          "cta": "Verfügbarkeit konfigurieren"
+        },
+        "legend": {
+          "open": "Offen",
+          "full": "Ausgebucht",
+          "closed": "Geschlossen",
+          "blocked": "Gesperrtes Datum"
+        },
+        "status": {
+          "open": "Offen",
+          "closed": "Geschlossen",
+          "cancelled": "Abgesagt"
+        },
+        "sheet": {
+          "gauge": "{booked} / {capacity} Plätze",
+          "overrideActive": "Kapazität für diesen Termin angepasst ({count} statt der Erlebnis-Einstellung).",
+          "legacyNote": "Session aus älteren Buchungen — die Verwaltung pro Termin ist hier nicht verfügbar.",
+          "cancelledNote": "Dieser Termin ist abgesagt — er kann nicht mehr geändert werden.",
+          "close": "Termin schliessen",
+          "reopen": "Termin wieder öffnen",
+          "capacityLabel": "Kapazität anpassen",
+          "capacityPlaceholder": "Plätze",
+          "apply": "Übernehmen",
+          "reset": "Zurücksetzen",
+          "capacityHint": "Zwischen 1 und 50 Plätzen. Zurücksetzen kehrt zur Kapazität des Erlebnisses zurück.",
+          "capacityInvalid": "Geben Sie eine Zahl zwischen {min} und {max} ein.",
+          "attendees": "{count, plural, =0 {Angemeldete} =1 {1 angemeldete Person} other {# angemeldete Personen}}",
+          "noAttendees": "Noch keine Anmeldungen für diesen Termin."
+        },
+        "toasts": {
+          "closed": "Termin geschlossen — er ist nicht mehr buchbar.",
+          "reopened": "Termin wieder geöffnet.",
+          "capacityUpdated": "Kapazität angepasst auf {count, plural, =1 {1 Platz} other {# Plätze}}.",
+          "capacityReset": "Kapazität auf die Erlebnis-Einstellung zurückgesetzt."
+        },
+        "errors": {
+          "notFound": "Termin nicht gefunden.",
+          "conflict": "Diese Aktion ist bei einem abgesagten Termin nicht möglich.",
+          "validation": "Ungültiger Wert.",
+          "generic": "Etwas ist schiefgelaufen. Versuchen Sie es gleich noch einmal."
+        }
       }
     },
     "visibility": {
@@ -1988,5 +2161,24 @@
     "errorTooLarge": "Das Bild muss kleiner als 5 MB sein",
     "errorInvalidType": "Nur JPEG- und PNG-Bilder sind erlaubt",
     "errorUploadFailed": "Bild konnte nicht hochgeladen werden. Bitte versuchen Sie es erneut."
+  },
+  "bookingError": {
+    "payment": {
+      "title": "Ihre Zahlung wurde nicht abgeschlossen",
+      "description": "Es wurde nichts abgebucht und Ihr Zeitfenster ist weiterhin reserviert. Sie können die Zahlung genau dort fortsetzen, wo Sie aufgehört haben.",
+      "descriptionHoldGone": "Es wurde nichts abgebucht, aber Ihr Zeitfenster wurde inzwischen wieder freigegeben. Prüfen Sie die Verfügbarkeit — es ist vielleicht noch frei.",
+      "retryCta": "Zahlung erneut versuchen"
+    },
+    "holdExpired": {
+      "title": "Ihr Zeitfenster wurde freigegeben",
+      "description": "Die 10-minütige Reservierung ist abgelaufen, das Zeitfenster wurde daher wieder freigegeben — und niemandem wurde etwas abgebucht. Die gute Nachricht: Es ist vielleicht noch frei."
+    },
+    "generic": {
+      "title": "Ein kleines Missgeschick bei Ihrer Buchung",
+      "description": "Wir konnten die Details Ihrer Buchung nicht finden, aber keine Sorge: Es wurde nichts abgebucht.",
+      "cta": "Erlebnisse entdecken"
+    },
+    "reselectCta": "Verfügbarkeit erneut ansehen",
+    "selectionRecap": "{date} · {time} · {guests, plural, one {# Person} other {# Personen}}"
   }
 }

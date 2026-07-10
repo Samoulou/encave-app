@@ -60,16 +60,20 @@ describe('Earnings Queries', () => {
         {
           wineryPayout: 5000,
           totalPrice: 6000,
+          serviceFeeCents: 0,
           date: new Date('2026-01-04T10:00:00Z'),
           status: BookingStatus.COMPLETED,
           refundIssued: false,
+          refundAmount: null,
         },
         {
           wineryPayout: 3000,
           totalPrice: 3600,
+          serviceFeeCents: 0,
           date: new Date('2025-12-20T10:00:00Z'),
           status: BookingStatus.CONFIRMED,
           refundIssued: false,
+          refundAmount: null,
         },
       ] as never);
 
@@ -83,16 +87,20 @@ describe('Earnings Queries', () => {
         {
           wineryPayout: 5000,
           totalPrice: 6000,
+          serviceFeeCents: 0,
           date: new Date('2026-01-04T10:00:00Z'),
           status: BookingStatus.COMPLETED,
           refundIssued: false,
+          refundAmount: null,
         },
         {
           wineryPayout: 3000,
           totalPrice: 3600,
+          serviceFeeCents: 0,
           date: new Date('2026-01-04T10:00:00Z'),
           status: BookingStatus.COMPLETED,
           refundIssued: true,
+          refundAmount: 3600,
         },
       ] as never);
 
@@ -106,16 +114,20 @@ describe('Earnings Queries', () => {
         {
           wineryPayout: 5000,
           totalPrice: 6000,
+          serviceFeeCents: 0,
           date: new Date('2026-01-04T10:00:00Z'), // Past
           status: BookingStatus.COMPLETED,
           refundIssued: false,
+          refundAmount: null,
         },
         {
           wineryPayout: 3000,
           totalPrice: 3600,
+          serviceFeeCents: 0,
           date: new Date('2026-02-15T10:00:00Z'), // Future
           status: BookingStatus.CONFIRMED,
           refundIssued: false,
+          refundAmount: null,
         },
       ] as never);
 
@@ -130,23 +142,29 @@ describe('Earnings Queries', () => {
         {
           wineryPayout: 5000,
           totalPrice: 6000,
+          serviceFeeCents: 0,
           date: new Date('2026-01-10T10:00:00Z'), // This month, past
           status: BookingStatus.COMPLETED,
           refundIssued: false,
+          refundAmount: null,
         },
         {
           wineryPayout: 3000,
           totalPrice: 3500,
+          serviceFeeCents: 0,
           date: new Date('2026-01-20T10:00:00Z'), // This month, future
           status: BookingStatus.CONFIRMED,
           refundIssued: false,
+          refundAmount: null,
         },
         {
           wineryPayout: 2000,
           totalPrice: 2500,
+          serviceFeeCents: 0,
           date: new Date('2025-12-15T10:00:00Z'), // Last month
           status: BookingStatus.COMPLETED,
           refundIssued: false,
+          refundAmount: null,
         },
       ] as never);
 
@@ -162,23 +180,29 @@ describe('Earnings Queries', () => {
         {
           wineryPayout: 2000,
           totalPrice: 2500,
+          serviceFeeCents: 0,
           date: new Date('2025-12-10T10:00:00Z'), // Last month
           status: BookingStatus.COMPLETED,
           refundIssued: false,
+          refundAmount: null,
         },
         {
           wineryPayout: 3000,
           totalPrice: 3500,
+          serviceFeeCents: 0,
           date: new Date('2025-12-20T10:00:00Z'), // Last month
           status: BookingStatus.CONFIRMED,
           refundIssued: false,
+          refundAmount: null,
         },
         {
           wineryPayout: 1000,
           totalPrice: 1200,
+          serviceFeeCents: 0,
           date: new Date('2025-12-25T10:00:00Z'), // Last month but refunded
           status: BookingStatus.COMPLETED,
           refundIssued: true,
+          refundAmount: 3600,
         },
       ] as never);
 
@@ -194,23 +218,29 @@ describe('Earnings Queries', () => {
         {
           wineryPayout: 8500,
           totalPrice: 10000,
+          serviceFeeCents: 0,
           date: new Date('2026-01-05T10:00:00Z'), // This year, past
           status: BookingStatus.COMPLETED,
           refundIssued: false,
+          refundAmount: null,
         },
         {
           wineryPayout: 4200,
           totalPrice: 5000,
+          serviceFeeCents: 0,
           date: new Date('2026-01-10T10:00:00Z'), // This year, past
           status: BookingStatus.CONFIRMED,
           refundIssued: false,
+          refundAmount: null,
         },
         {
           wineryPayout: 6000,
           totalPrice: 7000,
+          serviceFeeCents: 0,
           date: new Date('2025-11-10T10:00:00Z'), // Last year
           status: BookingStatus.COMPLETED,
           refundIssued: false,
+          refundAmount: null,
         },
       ] as never);
 
@@ -227,16 +257,20 @@ describe('Earnings Queries', () => {
         {
           wineryPayout: 4000,
           totalPrice: 5000,
+          serviceFeeCents: 0,
           date: new Date('2026-01-12T10:00:00Z'), // Monday, ~2 biz days ago
           status: BookingStatus.COMPLETED,
           refundIssued: false,
+          refundAmount: null,
         },
         {
           wineryPayout: 8500,
           totalPrice: 10000,
+          serviceFeeCents: 0,
           date: new Date('2025-12-01T10:00:00Z'), // Long ago, >5 biz days => paid
           status: BookingStatus.COMPLETED,
           refundIssued: false,
+          refundAmount: null,
         },
       ] as never);
 
@@ -252,9 +286,11 @@ describe('Earnings Queries', () => {
         {
           wineryPayout: 4000,
           totalPrice: 5000,
+          serviceFeeCents: 0,
           date: new Date('2026-01-13T10:00:00Z'), // Tuesday Jan 13 (~1 biz day ago)
           status: BookingStatus.COMPLETED,
           refundIssued: false,
+          refundAmount: null,
         },
       ] as never);
 
@@ -269,9 +305,11 @@ describe('Earnings Queries', () => {
         {
           wineryPayout: 8500,
           totalPrice: 10000,
+          serviceFeeCents: 0,
           date: new Date('2025-11-01T10:00:00Z'), // Long ago => paid
           status: BookingStatus.COMPLETED,
           refundIssued: false,
+          refundAmount: null,
         },
       ] as never);
 
@@ -301,6 +339,8 @@ describe('Earnings Queries', () => {
         select: {
           wineryPayout: true,
           totalPrice: true,
+          serviceFeeCents: true,
+          refundAmount: true,
           date: true,
           status: true,
           refundIssued: true,
@@ -313,9 +353,11 @@ describe('Earnings Queries', () => {
         {
           wineryPayout: 4000,
           totalPrice: 5000,
+          serviceFeeCents: 0,
           date: new Date('2026-01-13T10:00:00Z'), // Recent but refunded
           status: BookingStatus.COMPLETED,
           refundIssued: true,
+          refundAmount: 3600,
         },
       ] as never);
 
@@ -329,9 +371,11 @@ describe('Earnings Queries', () => {
         {
           wineryPayout: 4000,
           totalPrice: 5000,
+          serviceFeeCents: 0,
           date: new Date('2026-02-01T10:00:00Z'), // Future
           status: BookingStatus.CONFIRMED,
           refundIssued: false,
+          refundAmount: null,
         },
       ] as never);
 
@@ -448,10 +492,12 @@ describe('Earnings Queries', () => {
       date: new Date('2025-11-01T10:00:00Z'), // Long ago => paid
       guestCount: 4,
       totalPrice: 20000,
+      serviceFeeCents: 0,
       platformFee: 2400,
       wineryPayout: 17600,
       status: BookingStatus.COMPLETED,
       refundIssued: false,
+      refundAmount: null,
       visitorName: 'John',
       experience: { id: 'exp-1', title: 'Wine Tasting' },
     };
@@ -536,6 +582,7 @@ describe('Earnings Queries', () => {
           date: new Date('2026-01-13T10:00:00Z'), // Yesterday (Tuesday) - ~1 biz day
           status: BookingStatus.COMPLETED,
           refundIssued: false,
+          refundAmount: null,
         },
       ] as never);
 
@@ -589,6 +636,7 @@ describe('Earnings Queries', () => {
           id: 'b-2',
           reference: 'REF-002',
           refundIssued: true,
+          refundAmount: 3600,
           visitorName: 'Jane',
         }, // refunded
       ] as never);
@@ -693,16 +741,20 @@ describe('Earnings Queries', () => {
       mockDb.booking.findMany.mockResolvedValueOnce([
         {
           totalPrice: 20000,
+          serviceFeeCents: 0,
           platformFee: 2400,
           wineryPayout: 17600,
           refundIssued: false,
           refundAmount: null,
+          refundAmount: null,
         },
         {
           totalPrice: 10000,
+          serviceFeeCents: 0,
           platformFee: 1200,
           wineryPayout: 8800,
           refundIssued: false,
+          refundAmount: null,
           refundAmount: null,
         },
       ] as never);
@@ -719,23 +771,29 @@ describe('Earnings Queries', () => {
       mockDb.booking.findMany.mockResolvedValueOnce([
         {
           totalPrice: 20000,
+          serviceFeeCents: 0,
           platformFee: 2400,
           wineryPayout: 17600,
           refundIssued: false,
           refundAmount: null,
+          refundAmount: null,
         },
         {
           totalPrice: 15000,
+          serviceFeeCents: 0,
           platformFee: 1800,
           wineryPayout: 13200,
           refundIssued: true,
+          refundAmount: 3600,
           refundAmount: 15000,
         },
         {
           totalPrice: 5000,
+          serviceFeeCents: 0,
           platformFee: 600,
           wineryPayout: 4400,
           refundIssued: true,
+          refundAmount: 3600,
           refundAmount: 5000,
         },
       ] as never);
@@ -756,6 +814,7 @@ describe('Earnings Queries', () => {
       mockDb.booking.findMany.mockResolvedValueOnce([
         {
           totalPrice: 5000,
+          serviceFeeCents: 0,
           platformFee: 600,
           wineryPayout: 4400,
           refundIssued: true,

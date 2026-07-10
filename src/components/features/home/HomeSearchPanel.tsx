@@ -1,33 +1,46 @@
 'use client';
 
-import { FormEvent, useMemo, useState } from 'react';
-import { Minus, Plus, Search, Users } from 'lucide-react';
+import { FormEvent, useState } from 'react';
+import { CalendarDays, Minus, Plus, Search, Users, X } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { LocationAutocomplete } from '@/components/features/search/LocationAutocomplete';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { formatDate } from '@/lib/i18n/formatters';
+import { localDateKey } from '@/lib/utils/date-key';
 import { cn } from '@/lib/utils';
 import type { ValaisLocation } from '@/lib/constants/locations';
+import type { Locale } from '@/i18n/routing';
 
 interface HomeSearchPanelProps {
   variant?: 'desktop' | 'mobile';
 }
 
 export function HomeSearchPanel({ variant = 'desktop' }: HomeSearchPanelProps) {
+  const t = useTranslations('search.homePanel');
+  const locale = useLocale() as Locale;
   const router = useRouter();
   const [selectedLocation, setSelectedLocation] =
     useState<ValaisLocation | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [isDateOpen, setIsDateOpen] = useState(false);
   const [capacity, setCapacity] = useState(2);
-
-  const capacityLabel = useMemo(
-    () => `${capacity} ${capacity > 1 ? 'personnes' : 'personne'}`,
-    [capacity]
-  );
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const params = new URLSearchParams();
     params.set('capacity', String(capacity));
+
+    if (selectedDate) {
+      params.set('quand', localDateKey(selectedDate));
+    }
 
     if (selectedLocation) {
       params.set('location', selectedLocation.id);
@@ -38,6 +51,14 @@ export function HomeSearchPanel({ variant = 'desktop' }: HomeSearchPanelProps) {
 
     router.push(`/experiences?${params.toString()}`);
   };
+
+  const dateLabel = selectedDate
+    ? formatDate(selectedDate, locale, {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+      })
+    : t('anyDate');
 
   return (
     <form
@@ -52,42 +73,96 @@ export function HomeSearchPanel({ variant = 'desktop' }: HomeSearchPanelProps) {
       <div
         className={cn(
           variant === 'desktop'
-            ? 'relative z-50 min-w-0 flex-[1.25] border-r border-stone-200 px-[18px] py-2'
+            ? 'relative z-50 min-w-0 flex-[1.2] border-r border-stone-200 px-[18px] py-2'
             : 'col-span-2 border-b border-[#efe4e6] px-3.5 py-3'
         )}
       >
         <div className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-burgundy-700">
-          Où
+          {t('where')}
         </div>
         <LocationAutocomplete
           value={selectedLocation}
           onChange={setSelectedLocation}
-          placeholder="Tout le Valais"
+          placeholder={t('allValais')}
           className="mt-1 [&_input]:h-9 [&_input]:border-0 [&_input]:bg-transparent [&_input]:px-8 [&_input]:text-sm [&_input]:font-semibold [&_input]:text-ink-900 [&_input]:shadow-none [&_input]:placeholder:text-ink-900 [&_input]:focus-visible:ring-0"
         />
+      </div>
+
+      {/* "Quand" date field (P-05 / L-110) */}
+      <div
+        className={cn(
+          variant === 'desktop'
+            ? 'min-w-[150px] border-r border-stone-200 px-[18px] py-2'
+            : 'col-span-2 border-b border-[#efe4e6] px-3.5 py-3'
+        )}
+      >
+        <div className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-burgundy-700">
+          {t('when')}
+        </div>
+        <div className="mt-1 flex h-9 items-center gap-2">
+          <DropdownMenu open={isDateOpen} onOpenChange={setIsDateOpen}>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="flex min-w-0 flex-1 items-center gap-2 text-left text-sm font-semibold text-ink-900"
+              >
+                <CalendarDays
+                  className="h-4 w-4 shrink-0 text-ink-500"
+                  aria-hidden="true"
+                />
+                <span className="min-w-0 flex-1 truncate">{dateLabel}</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="start"
+              side={variant === 'desktop' ? 'top' : 'bottom'}
+              className="w-auto p-0"
+            >
+              <Calendar
+                mode="single"
+                selected={selectedDate ?? undefined}
+                onSelect={(date) => {
+                  setSelectedDate(date ?? null);
+                  setIsDateOpen(false);
+                }}
+                disabled={{ before: new Date() }}
+              />
+            </DropdownMenuContent>
+          </DropdownMenu>
+          {selectedDate && (
+            <button
+              type="button"
+              onClick={() => setSelectedDate(null)}
+              className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-ink-500 transition-colors hover:bg-cream-100 hover:text-ink-900"
+              aria-label={t('clearDate')}
+            >
+              <X className="h-3.5 w-3.5" aria-hidden="true" />
+            </button>
+          )}
+        </div>
       </div>
 
       <div
         className={cn(
           variant === 'desktop'
-            ? 'min-w-[178px] px-[18px] py-2'
+            ? 'min-w-[168px] px-[18px] py-2'
             : 'col-span-2 border-b border-[#efe4e6] px-3.5 py-3'
         )}
       >
         <div className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-burgundy-700">
-          Pour
+          {t('guests')}
         </div>
         <div className="mt-1 flex h-9 items-center gap-2">
           <Users className="h-4 w-4 text-ink-500" aria-hidden="true" />
           <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink-900">
-            {capacityLabel}
+            {t('personCount', { count: capacity })}
           </span>
           <div className="flex shrink-0 items-center gap-1">
             <button
               type="button"
               onClick={() => setCapacity((value) => Math.max(1, value - 1))}
               className="grid h-7 w-7 place-items-center rounded-full border border-stone-200 text-ink-700 transition-colors hover:border-burgundy-200 hover:bg-cream-100"
-              aria-label="Retirer une personne"
+              aria-label={t('removePerson')}
             >
               <Minus className="h-3.5 w-3.5" aria-hidden="true" />
             </button>
@@ -95,7 +170,7 @@ export function HomeSearchPanel({ variant = 'desktop' }: HomeSearchPanelProps) {
               type="button"
               onClick={() => setCapacity((value) => Math.min(20, value + 1))}
               className="grid h-7 w-7 place-items-center rounded-full border border-stone-200 text-ink-700 transition-colors hover:border-burgundy-200 hover:bg-cream-100"
-              aria-label="Ajouter une personne"
+              aria-label={t('addPerson')}
             >
               <Plus className="h-3.5 w-3.5" aria-hidden="true" />
             </button>
@@ -113,7 +188,7 @@ export function HomeSearchPanel({ variant = 'desktop' }: HomeSearchPanelProps) {
         )}
       >
         <Search className="h-[15px] w-[15px]" aria-hidden="true" />
-        Explorer
+        {t('explore')}
       </Button>
     </form>
   );

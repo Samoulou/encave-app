@@ -17,7 +17,9 @@ function renderBar() {
       minCapacity={1}
       maxCapacity={8}
       duration={90}
-      availabilitySlots={[{ dayOfWeek: 5, startTime: '14:00', endTime: '15:30', isActive: true }]}
+      availabilitySlots={[
+        { dayOfWeek: 5, startTime: '14:00', endTime: '15:30', isActive: true },
+      ]}
     />
   );
 }
@@ -41,7 +43,10 @@ describe('MobileBookingBar', () => {
   });
 
   it('becomes visible after scrolling down the page', () => {
-    Object.defineProperty(window, 'scrollY', { value: 600, configurable: true });
+    Object.defineProperty(window, 'scrollY', {
+      value: 600,
+      configurable: true,
+    });
 
     renderBar();
     fireEvent.scroll(window);
@@ -52,7 +57,10 @@ describe('MobileBookingBar', () => {
   });
 
   it('hides while a form field has focus', () => {
-    Object.defineProperty(window, 'scrollY', { value: 600, configurable: true });
+    Object.defineProperty(window, 'scrollY', {
+      value: 600,
+      configurable: true,
+    });
     const input = document.createElement('input');
     document.body.appendChild(input);
 
@@ -65,10 +73,15 @@ describe('MobileBookingBar', () => {
   });
 
   it('opens the booking drawer from the mobile CTA', () => {
-    Object.defineProperty(window, 'scrollY', { value: 600, configurable: true });
+    Object.defineProperty(window, 'scrollY', {
+      value: 600,
+      configurable: true,
+    });
 
     renderBar();
-    fireEvent.click(screen.getByRole('button', { name: 'Book This Experience' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Book This Experience' })
+    );
 
     expect(screen.getByTestId('mobile-booking-drawer')).toBeInTheDocument();
   });

@@ -59,8 +59,6 @@ export class CheckoutPage extends BasePage {
   // Error states
   readonly errorAlert: Locator;
   readonly missingParamsError: Locator;
-  readonly paymentCancelledAlert: Locator;
-  readonly paymentFailedAlert: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -112,12 +110,6 @@ export class CheckoutPage extends BasePage {
     // Errors
     this.errorAlert = page.getByRole('alert').filter({ hasText: /error/i });
     this.missingParamsError = page.getByTestId('missing-params-error');
-    this.paymentCancelledAlert = page
-      .getByRole('alert')
-      .filter({ hasText: /cancel/i });
-    this.paymentFailedAlert = page
-      .getByRole('alert')
-      .filter({ hasText: /fail/i });
   }
 
   /**
@@ -423,20 +415,6 @@ export class CheckoutPage extends BasePage {
    */
   async hasMissingParamsError(): Promise<boolean> {
     return this.missingParamsError.isVisible();
-  }
-
-  /**
-   * Check if payment cancelled alert is shown
-   */
-  async hasPaymentCancelledAlert(): Promise<boolean> {
-    return this.paymentCancelledAlert.isVisible();
-  }
-
-  /**
-   * Check if payment failed alert is shown
-   */
-  async hasPaymentFailedAlert(): Promise<boolean> {
-    return this.paymentFailedAlert.isVisible();
   }
 
   // === COMPLETE CHECKOUT FLOW ===

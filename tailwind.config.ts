@@ -22,6 +22,13 @@ const config: Config = {
     extend: {
       fontFamily: {
         display: ['var(--font-display)', 'Nunito', 'system-ui', 'sans-serif'],
+        /* Dedicated italic face (Averia 400 italic only) — see L-206 */
+        'display-italic': [
+          'var(--font-display-italic)',
+          'Averia Serif Libre',
+          'Georgia',
+          'serif',
+        ],
         serif: ['var(--font-serif)', 'Averia Serif Libre', 'Georgia', 'serif'],
         sans: ['var(--font-sans)', 'Mukta Vaani', 'system-ui', 'sans-serif'],
         mono: ['var(--font-mono)', 'JetBrains Mono', 'monospace'],
@@ -253,12 +260,36 @@ const config: Config = {
           '0%': { backgroundPosition: '-200% 0' },
           '100%': { backgroundPosition: '200% 0' },
         },
+        /* CSS replacements for framer-motion (L-206) */
+        'checkmark-pop': {
+          from: { transform: 'scale(0)', opacity: '0' },
+          to: { transform: 'scale(1)', opacity: '1' },
+        },
+        'checkmark-draw': {
+          from: { 'stroke-dashoffset': '1', opacity: '0' },
+          '1%': { opacity: '1' },
+          to: { 'stroke-dashoffset': '0', opacity: '1' },
+        },
+        'checkmark-glow': {
+          '0%, 100%': { transform: 'scale(1)', opacity: '0.3' },
+          '50%': { transform: 'scale(1.2)', opacity: '0.5' },
+        },
+        'progress-grow': {
+          from: { width: '0%' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         'shimmer-gold': 'shimmer-gold 3s ease-in-out infinite',
         'skeleton-shimmer': 'skeleton-shimmer 1.5s ease-in-out infinite',
+        'checkmark-pop':
+          'checkmark-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both',
+        'checkmark-draw':
+          'checkmark-draw 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both',
+        'checkmark-glow': 'checkmark-glow 2s ease-in-out infinite',
+        'progress-grow':
+          'progress-grow 0.5s cubic-bezier(0.16, 1, 0.3, 1) both',
       },
     },
   },

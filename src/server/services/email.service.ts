@@ -58,7 +58,24 @@ async function sendEmail({
   attachments,
 }: SendEmailOptions): Promise<boolean> {
   if (!resend) {
-    logInfo('Resend not configured, skipping email', { to, subject });
+    // In production a missing RESEND_API_KEY is an outage, not a no-op:
+    // returning success would set dedup flags (confirmationSentAt, …) and
+    // mark EmailLog entries "sent" while nothing was delivered.
+    if (process.env.NODE_ENV === 'production') {
+      logError(
+        'RESEND_API_KEY missing in production — email NOT sent',
+        undefined,
+        {
+          to,
+          subject,
+        }
+      );
+      return false;
+    }
+    logInfo('Resend not configured, skipping email (non-production)', {
+      to,
+      subject,
+    });
     return true;
   }
 
@@ -138,6 +155,8 @@ export interface BookingConfirmationData {
   guestCount: number;
   duration: number;
   totalPrice: number;
+  /** Client booking fee in cents (0 when BOOKING_FEE is OFF). */
+  serviceFeeCents?: number;
   bookingRef: string;
 }
 
@@ -147,10 +166,11 @@ export async function sendBookingConfirmationEmail(
   locale?: Locale | null
 ): Promise<boolean> {
   const loc = getLocale(locale);
+  const localePath = loc.toLowerCase();
   const bookingUrl =
     data.bookingId && data.accessToken
-      ? `${getBaseUrl()}/fr/booking/${data.bookingId}?token=${data.accessToken}`
-      : `${getBaseUrl()}/fr`;
+      ? `${getBaseUrl()}/${localePath}/booking/${data.bookingId}?token=${data.accessToken}`
+      : `${getBaseUrl()}/${localePath}`;
   const html = await render(
     BookingConfirmationEmail({
       locale: loc,
@@ -203,13 +223,13 @@ export async function sendBookingExpiredEmail(
     BookingExpiredEmail({
       locale: loc,
       ...data,
-      experienceUrl: `${getBaseUrl()}/fr/experiences/${data.experienceSlug}`,
+      experienceUrl: `${getBaseUrl()}/${loc.toLowerCase()}/experiences/${data.experienceSlug}`,
     })
   );
 
   return sendEmail({
     to: email,
-    subject: 'Votre reservation EnCave a expire',
+    subject: t(subjects.bookingExpired, loc),
     html,
   });
 }
@@ -233,13 +253,16 @@ export async function sendBookingCancelledByWineryEmail(
     BookingCancelledByWineryEmail({
       locale: loc,
       ...data,
-      experiencesUrl: `${getBaseUrl()}/fr/experiences`,
+      experiencesUrl: `${getBaseUrl()}/${loc.toLowerCase()}/experiences`,
     })
   );
 
   return sendEmail({
     to: email,
-    subject: `${data.winemakerName} a du annuler votre experience`,
+    subject: t(subjects.bookingCancelledByWinery, loc).replace(
+      '{winemakerName}',
+      data.winemakerName
+    ),
     html,
   });
 }
@@ -282,6 +305,8 @@ export interface BookingCancellationData {
   wineryName: string;
   date: Date;
   totalPrice: number;
+  /** Exact refunded cents (policy-based); 0 = no refund; null = unknown. */
+  refundAmountCents?: number | null;
   bookingRef: string;
 }
 
@@ -387,7 +412,7 @@ export async function sendAccountDeletedEmail(
 
   return sendEmail({
     to: email,
-    subject: 'Votre compte EnCave a ete supprime',
+    subject: t(subjects.accountDeleted, loc),
     html,
   });
 }
@@ -476,7 +501,7 @@ export async function sendManualRefundClientEmail(
 
   return sendEmail({
     to: email,
-    subject: 'Votre reservation EnCave a ete remboursee',
+    subject: t(subjects.manualRefundClient, loc),
     html,
   });
 }
@@ -503,7 +528,7 @@ export async function sendManualRefundWinemakerEmail(
 
   return sendEmail({
     to: email,
-    subject: 'Une reservation a ete remboursee par EnCave',
+    subject: t(subjects.manualRefundWinemaker, loc),
     html,
   });
 }

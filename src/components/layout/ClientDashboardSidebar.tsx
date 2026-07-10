@@ -99,7 +99,10 @@ export function ClientDashboardSidebar({
           </div>
 
           {/* Nav Items */}
-          <nav className="flex flex-col gap-2" aria-label={tNav('dashboardNavigation')}>
+          <nav
+            className="flex flex-col gap-2"
+            aria-label={tNav('dashboardNavigation')}
+          >
             {sidebarLinks.map((link) => {
               const localizedHref = `/${locale}${link.href}`;
               const isActive =

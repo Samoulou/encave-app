@@ -1,14 +1,16 @@
 'use client';
 
 import { Link } from '@/i18n/navigation';
-import { Clock, Users, MapPin, Navigation } from 'lucide-react';
+import { Clock, Users, MapPin, Navigation, CalendarDays } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { formatCHF } from '@/lib/utils/currency';
 import { ImageWithFallback } from '@/components/shared/ImageWithFallback';
 import { formatDistance } from '@/lib/geo-utils';
-import { useTranslations } from 'next-intl';
+import { formatDate } from '@/lib/i18n/formatters';
+import { useLocale, useTranslations } from 'next-intl';
 import type { ExperienceType } from '@prisma/client';
+import type { Locale } from '@/i18n/routing';
 
 export interface ExperienceCardData {
   id: string;
@@ -25,6 +27,8 @@ export interface ExperienceCardData {
     commune: string;
   };
   distance?: number | null;
+  /** Soonest OPEN occurrence (P-05 / L-110, next_availability sort). */
+  nextOccurrence?: { date: Date; startTime: string } | null;
 }
 
 interface ExperienceCardProps {
@@ -40,6 +44,7 @@ export function ExperienceCard({
 }: ExperienceCardProps) {
   const t = useTranslations('experience');
   const tCommon = useTranslations('common');
+  const locale = useLocale() as Locale;
 
   const formatDuration = (minutes: number): string => {
     if (minutes >= 60) {
@@ -129,6 +134,26 @@ export function ExperienceCard({
               </span>
             )}
           </div>
+
+          {/* Next availability (P-05 / L-110) */}
+          {experience.nextOccurrence != null && (
+            <p
+              className="mt-2 flex items-center gap-1.5 text-sm font-medium text-emerald-700"
+              data-testid="experience-next-availability"
+            >
+              <CalendarDays className="h-4 w-4" aria-hidden="true" />
+              {t('nextAvailability', {
+                // Date-only value (UTC midnight) — format in UTC.
+                date: formatDate(experience.nextOccurrence.date, locale, {
+                  weekday: 'short',
+                  day: 'numeric',
+                  month: 'short',
+                  timeZone: 'UTC',
+                }),
+                time: experience.nextOccurrence.startTime,
+              })}
+            </p>
+          )}
 
           {/* Price — pinned to bottom */}
           <div className="mt-auto flex items-center justify-between pt-4">

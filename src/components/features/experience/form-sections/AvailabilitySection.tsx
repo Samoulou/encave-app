@@ -1,5 +1,5 @@
 import { useTranslations } from 'next-intl';
-import { CalendarClock, Clock, Plus, Trash2, X } from 'lucide-react';
+import { CalendarClock, Clock, Info, Plus, Trash2, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TimeSlotEditor } from '../TimeSlotEditor';
 import { SectionHeader } from './SectionHeader';
@@ -177,6 +177,13 @@ export function AvailabilitySection({
           <Plus className="h-4 w-4" aria-hidden="true" />
           {t('availability.addSchedulePattern')}
         </button>
+
+        {/* Punctual mode note (L-131): occurrences need a persisted
+            experience — the punctual builder lives on the edit page. */}
+        <p className="flex items-start gap-2 rounded-lg bg-stone-50 p-3 text-xs text-slate-500">
+          <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          {t('availability.punctual.availableAfterCreation')}
+        </p>
       </div>
     </section>
   );

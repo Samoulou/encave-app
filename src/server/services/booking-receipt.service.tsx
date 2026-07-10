@@ -95,6 +95,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  feeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  feeValue: {
+    fontSize: 11,
+    fontFamily: 'Helvetica-Bold',
+  },
   totalLabel: {
     fontSize: 11,
     color: '#7c5a65',
@@ -158,6 +168,8 @@ export interface BookingReceiptData {
   durationMinutes: number;
   guestCount: number;
   totalPrice: number;
+  /** Client booking fee in cents — 0 for bookings made with the flag OFF. */
+  serviceFeeCents: number;
   generatedAt: Date;
 }
 
@@ -242,13 +254,31 @@ function BookingReceipt({ receipt }: { receipt: BookingReceiptData }) {
         </View>
 
         <View style={styles.totalBox}>
+          {receipt.serviceFeeCents > 0 && (
+            <>
+              <View style={styles.feeRow}>
+                <Text style={styles.totalLabel}>Expérience</Text>
+                <Text style={styles.feeValue}>
+                  {formatCHF(receipt.totalPrice)}
+                </Text>
+              </View>
+              <View style={styles.feeRow}>
+                <Text style={styles.totalLabel}>Frais de service</Text>
+                <Text style={styles.feeValue}>
+                  {formatCHF(receipt.serviceFeeCents)}
+                </Text>
+              </View>
+            </>
+          )}
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Total payé</Text>
             <Text style={styles.totalValue}>
-              {formatCHF(receipt.totalPrice)}
+              {formatCHF(receipt.totalPrice + receipt.serviceFeeCents)}
             </Text>
           </View>
-          <Text style={styles.note}>Taxes et frais de service inclus</Text>
+          <Text style={styles.note}>
+            Prix TTC. EnCave n&apos;est pas assujettie à la TVA à ce jour.
+          </Text>
         </View>
 
         <View style={styles.footer}>

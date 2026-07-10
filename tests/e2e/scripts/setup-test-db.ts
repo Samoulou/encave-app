@@ -29,7 +29,10 @@ function toDateOnly(daysFromNow: number): Date {
   return date;
 }
 
-const WINERY_COORDINATES: Record<string, { latitude: number; longitude: number }> = {
+const WINERY_COORDINATES: Record<
+  string,
+  { latitude: number; longitude: number }
+> = {
   'domaine-du-test': { latitude: 46.5197, longitude: 6.6323 },
   'domaine-sans-stripe': { latitude: 46.2044, longitude: 6.1432 },
   'cave-des-tests': { latitude: 46.4312, longitude: 6.9107 },

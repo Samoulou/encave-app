@@ -187,12 +187,22 @@ export default async function BookingPage({
             </div>
 
             <div className="mt-4 border-t border-stone-200 pt-4">
+              {booking.serviceFeeCents > 0 && (
+                <div className="mb-2 flex items-baseline justify-between text-sm">
+                  <span className="text-slate-600">
+                    {tConfirmation('serviceFee')}
+                  </span>
+                  <span className="text-slate-600">
+                    {formatCHF(booking.serviceFeeCents)}
+                  </span>
+                </div>
+              )}
               <div className="flex items-baseline justify-between">
                 <span className="text-muted-foreground">
                   {tConfirmation('totalPaid')}
                 </span>
                 <span className="text-xl font-bold text-burgundy-600">
-                  {formatCHF(booking.totalPrice)}
+                  {formatCHF(booking.totalPrice + booking.serviceFeeCents)}
                 </span>
               </div>
             </div>
@@ -279,11 +289,7 @@ export default async function BookingPage({
         <div className="mb-8 space-y-4">
           <CancellationPolicy />
           <div className="flex justify-center">
-            <CancelBookingButton
-              bookingId={booking.id}
-              accessToken={token}
-              totalPrice={booking.totalPrice}
-            />
+            <CancelBookingButton bookingId={booking.id} accessToken={token} />
           </div>
         </div>
       )}

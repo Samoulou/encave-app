@@ -660,9 +660,7 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
                       />
                     </div>
                   </FormControl>
-                  <FormDescription>
-                    {t('priceMustBePositive')}
-                  </FormDescription>
+                  <FormDescription>{t('priceMustBePositive')}</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

@@ -17,6 +17,7 @@ const VISIBILITY_SELECT = {
   description: true,
   latitude: true,
   longitude: true,
+  coverPhoto: true,
   galleryImages: { select: { id: true } },
   experiences: {
     where: { status: 'PUBLISHED' as const },

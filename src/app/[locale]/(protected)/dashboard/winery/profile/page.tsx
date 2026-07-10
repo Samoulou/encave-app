@@ -5,6 +5,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
 import { WineryProfileForm } from '@/components/features/winery/WineryProfileForm';
+import { CancellationPolicySection } from '@/components/features/winery/CancellationPolicySection';
 import { StripeOnboarding } from '@/components/features/winery/StripeOnboarding';
 import { PaymentStatus } from '@/components/features/winery/PaymentStatus';
 import { getPaymentStatusType } from '@/lib/utils/payment-status';
@@ -178,6 +179,14 @@ export default async function WineryProfilePage({
             galleryImages: winery.galleryImages,
           }}
         />
+
+        {/* Cancellation Policy Section (P-03 / L-043) */}
+        <div id="cancellation-policy" className="mt-8 scroll-mt-24">
+          <CancellationPolicySection
+            wineryId={winery.id}
+            currentPolicy={winery.cancellationPolicy}
+          />
+        </div>
       </div>
     </WineryAccessGuard>
   );

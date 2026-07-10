@@ -348,9 +348,7 @@ export function ImageUpload({
                 <p className="text-sm font-medium text-slate-700">
                   {placeholderText}
                 </p>
-                <p className="mt-1 text-xs text-slate-500">
-                  {t('formatHint')}
-                </p>
+                <p className="mt-1 text-xs text-slate-500">{t('formatHint')}</p>
               </>
             )}
           </div>

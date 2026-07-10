@@ -20,43 +20,43 @@ Five systemic patterns dominate and account for the overwhelming majority of fin
 
 Rounding out the debt: **`bg-white` + raw `shadow-sm`/`shadow-lg` instead of `bg-card`/`bg-popover` + warm shadow tokens** on virtually every card/table/tooltip surface; **canonical-component bypasses** (hand-rolled cards, empty states, breadcrumbs, spinners, raw `<button>` re-styling `<Button>`); **arbitrary px typography/radii** in the home editorial layer instead of the display scale; and **missing per-segment `error.tsx`** across more than a dozen protected route segments.
 
-**Coverage caveat:** the `layout-seo` zone audited only layout components — no SEO/metadata surfaces (`generateMetadata`, og/sitemap/robots) were examined. The `routes-protected` zone centered on route files (`page/loading/error/layout`) and did not deeply assess the heavy delegated client forms (`CreateExperienceForm`, `AvailabilityScheduleBuilder`, etc.), though `experience-forms` and `experience-core` later covered most of those. A handful of CLAUDE.md convention checks (`setRequestLocale`, console.* logging) were retained as report-only but flagged as a loose fit for the visual-coherence rubric.
+**Coverage caveat:** the `layout-seo` zone audited only layout components — no SEO/metadata surfaces (`generateMetadata`, og/sitemap/robots) were examined. The `routes-protected` zone centered on route files (`page/loading/error/layout`) and did not deeply assess the heavy delegated client forms (`CreateExperienceForm`, `AvailabilityScheduleBuilder`, etc.), though `experience-forms` and `experience-core` later covered most of those. A handful of CLAUDE.md convention checks (`setRequestLocale`, console.\* logging) were retained as report-only but flagged as a loose fit for the visual-coherence rubric.
 
 ---
 
 ## 2. Per-zone coherence scorecard
 
-| Zone | Files | Findings | Blocker | Major | Minor | Cosmetic | Auto-fixed | Grade |
-|---|---|---|---:|---:|---:|---:|---:|:--:|
-| `earnings` | 7 | 29 | 0 | 16 | 13 | 0 | 11 | **D** |
-| `misc` (dashboard visibility banners) | 4 | 10 | 0 | 0 | 9 | 1 | 1 | **C** |
-| `routes-protected` | ~30 | 46 | 3 | 24 | 19 | 0 | 16 | **D** |
-| `admin` | 7 | 25 | 0 | 17 | 8 | 0 | 6 | **D** |
-| `auth-settings` | 6 | 29 | 0 | 14 | 15 | 0 | 14 | **D** |
-| `booking-calendar` | 7 | 24 | 0 | 14 | 10 | 0 | 9 | **D** |
-| `experience-core` | ~30 | 58 | 9 | 35 | 14 | 0 | 19 | **D** |
-| `booking-dashboard` | 8 | 30 | 0 | 17 | 13 | 0 | 8 | **D** |
-| `checkout-client` | 9 | 33 | 1 | 17 | 15 | 0 | 8 | **D** |
-| `discovery` | 12 | 41 | 0 | 22 | 19 | 0 | 18 | **D** |
-| `routes-public` | ~30 | 40 | 2 | 16 | 22 | 0 | 6 | **C** |
-| `event-detail` | 14 | 28 | 1 | 18 | 9 | 0 | 12 | **D** |
-| `experience-forms` | 6 | 28 | 2 | 20 | 6 | 0 | 15 | **D** |
-| `layout-seo` | 9 | 17 | 4 | 13 | 0 | 0 | 7 | **D** |
-| `shared` | 24 | 32 | 1 | 26 | 5 | 0 | 15 | **D** |
-| `routes-rest` | 26 | 44 | 2 | 19 | 23 | 0 | 14 | **C** |
-| `booking-core` | 17 | 16 | 2 | 9 | 4 | 1 | 4 | **C** |
-| `winery` | 15 | 28 | 0 | 19 | 9 | 0 | 11 | **D** |
-| **Total (18 of 18 zones)** | **~268** | **558** | **27** | **316** | **213** | **2** | **193** | — |
+| Zone                                  | Files    | Findings | Blocker |   Major |   Minor | Cosmetic | Auto-fixed | Grade |
+| ------------------------------------- | -------- | -------- | ------: | ------: | ------: | -------: | ---------: | :---: |
+| `earnings`                            | 7        | 29       |       0 |      16 |      13 |        0 |         11 | **D** |
+| `misc` (dashboard visibility banners) | 4        | 10       |       0 |       0 |       9 |        1 |          1 | **C** |
+| `routes-protected`                    | ~30      | 46       |       3 |      24 |      19 |        0 |         16 | **D** |
+| `admin`                               | 7        | 25       |       0 |      17 |       8 |        0 |          6 | **D** |
+| `auth-settings`                       | 6        | 29       |       0 |      14 |      15 |        0 |         14 | **D** |
+| `booking-calendar`                    | 7        | 24       |       0 |      14 |      10 |        0 |          9 | **D** |
+| `experience-core`                     | ~30      | 58       |       9 |      35 |      14 |        0 |         19 | **D** |
+| `booking-dashboard`                   | 8        | 30       |       0 |      17 |      13 |        0 |          8 | **D** |
+| `checkout-client`                     | 9        | 33       |       1 |      17 |      15 |        0 |          8 | **D** |
+| `discovery`                           | 12       | 41       |       0 |      22 |      19 |        0 |         18 | **D** |
+| `routes-public`                       | ~30      | 40       |       2 |      16 |      22 |        0 |          6 | **C** |
+| `event-detail`                        | 14       | 28       |       1 |      18 |       9 |        0 |         12 | **D** |
+| `experience-forms`                    | 6        | 28       |       2 |      20 |       6 |        0 |         15 | **D** |
+| `layout-seo`                          | 9        | 17       |       4 |      13 |       0 |        0 |          7 | **D** |
+| `shared`                              | 24       | 32       |       1 |      26 |       5 |        0 |         15 | **D** |
+| `routes-rest`                         | 26       | 44       |       2 |      19 |      23 |        0 |         14 | **C** |
+| `booking-core`                        | 17       | 16       |       2 |       9 |       4 |        1 |          4 | **C** |
+| `winery`                              | 15       | 28       |       0 |      19 |       9 |        0 |         11 | **D** |
+| **Total (18 of 18 zones)**            | **~268** | **558**  |  **27** | **316** | **213** |    **2** |    **193** |   —   |
 
 **Grading basis** (finding density × severity):
 
-- **Grade D (13 zones)** — high density (≥2.5 findings/file *or* a large absolute count) **and** a heavy major/blocker load. The warm brand is broken on essentially every surface, with cold-gray text, ad-hoc status palettes, bespoke badges, hand-rolled components, and (in the experience/forms zones) blocking i18n gaps. `experience-core` (58 findings, 9 blockers) and `routes-protected` (46 findings, 3 blockers) are the worst offenders by absolute volume; `layout-seo` and `shared` earn D on severity (proportionally heavy majors/blockers in app-wide components that propagate everywhere).
+- **Grade D (13 zones)** — high density (≥2.5 findings/file _or_ a large absolute count) **and** a heavy major/blocker load. The warm brand is broken on essentially every surface, with cold-gray text, ad-hoc status palettes, bespoke badges, hand-rolled components, and (in the experience/forms zones) blocking i18n gaps. `experience-core` (58 findings, 9 blockers) and `routes-protected` (46 findings, 3 blockers) are the worst offenders by absolute volume; `layout-seo` and `shared` earn D on severity (proportionally heavy majors/blockers in app-wide components that propagate everywhere).
 - **Grade C (4 zones)** — real but narrower debt. `routes-public` and `routes-rest` are dominated by minors (route-state/convention checks, localized skeleton labels) with a manageable major count. `booking-core` has the lowest absolute count (16) and is mostly clean token-swaps plus a few badge dedups. `misc` is a single coherent pattern (the `VisibilityBanner` family) with zero majors.
 - **No zone earned A or B.** Every zone shipped the cold-gray pattern; the best-tokenized references found were `CookieConsentBanner` (shared) and the checkout components (vs. the newer `ClientBookingsTabs`), which point to what "good" looks like.
 
 ### Findings dropped during verification (not counted above)
 
-Across the 16 new zones, **20 findings were rejected** during re-verification (self-contradictory, misclassified, false-positive, or out-of-rubric): notably the `border-stone-200` "violations" (stone is a *sanctioned* warm scale, byte-identical to `--border`), several native-`<button>` `cursor-pointer` flags (the rubric exempts native buttons), `setRequestLocale`-only findings filed under the wrong dimension, and `console.error` findings (a logging-contract, not a visual-coherence, concern). One `misc`-zone finding (`ExportEarningsButton.tsx:34` `useSearchParams`) was likewise tracked separately. Confirmed totals above exclude all rejections.
+Across the 16 new zones, **20 findings were rejected** during re-verification (self-contradictory, misclassified, false-positive, or out-of-rubric): notably the `border-stone-200` "violations" (stone is a _sanctioned_ warm scale, byte-identical to `--border`), several native-`<button>` `cursor-pointer` flags (the rubric exempts native buttons), `setRequestLocale`-only findings filed under the wrong dimension, and `console.error` findings (a logging-contract, not a visual-coherence, concern). One `misc`-zone finding (`ExportEarningsButton.tsx:34` `useSearchParams`) was likewise tracked separately. Confirmed totals above exclude all rejections.
 
 ---
 
@@ -70,38 +70,38 @@ git --no-pager diff
 
 ### Representative auto-fixes by zone (full list in source data)
 
-| Zone | File | Change |
-|---|---|---|
-| earnings | `EarningsChart.tsx:44,90,97,101` | `text-[#915564]` → `text-muted-foreground` |
-| earnings | `EarningsSummaryCards.tsx` (6×) | `text-[#915564]` → `text-muted-foreground` (replace_all) |
-| earnings | `TransactionTable.tsx:63,97,109` | `bg-gray-50`/`text-[#915564]`/`bg-gray-200` → `bg-muted`/`text-muted-foreground`/`bg-muted` |
-| misc | `VisibilityBannerSkeleton.tsx:13` | `bg-white` → `bg-card` |
-| routes-protected | 6 identical `error.tsx` files | `text-slate-900/600/400` → `text-foreground`/`text-muted-foreground` |
-| routes-protected | `settings/page.tsx` | icon/badge surfaces `bg-slate-100`→`bg-muted`; all card text → warm |
-| routes-protected | `onboarding/winery/confirmation/page.tsx` | all slate heading/step text → warm tokens |
-| admin | `PendingWineriesTable.tsx` | table head/name/commune/email/icon slate-* → warm |
-| admin | `WineryInfoPanel.tsx:105` | applicant chip `bg-slate-100`/`text-slate-600` → `bg-stone-100`/`text-stone-600` |
-| auth-settings | `LoginForm.tsx` / `RegisterForm.tsx` | heading/labels/placeholders/icons slate-* + `text-[#915564]` → warm |
-| auth-settings | `NotificationPreferencesForm.tsx` (3×) | card `border-slate-200` → `border-border` |
-| booking-calendar | `CalendarView.tsx` / `WeekView.tsx` / `DayDetailPanel.tsx` | grid/header/cell/meta slate-* → `bg-muted`/`text-muted-foreground`/`text-foreground` |
-| booking-calendar | `ViewToggle.tsx:20,27,39` | track `bg-[#f8f6f6]`→`bg-muted`; labels `text-[#915564]`→`text-muted-foreground` |
-| experience-core | `AddressAutocomplete.tsx` | `bg-slate-50`→`bg-muted`, slate text → warm, `text-red-600`→`text-destructive` |
-| experience-core | `ExperienceDetailHeader.tsx:43` | star `fill-yellow-500 text-yellow-500` → `fill-gold-500 text-gold-500` |
-| experience-core | `ExperienceCard.tsx` / `EditExperienceForm.tsx` / `CreateExperienceForm.tsx` | enumerated slate-*/gray-* → warm tokens |
-| booking-dashboard | `BookingsTable.tsx` / `BookingSummaryCards.tsx` | `text-[#915564]` (19×) → `text-muted-foreground` (replace_all) |
-| booking-dashboard | `BookingFilters.tsx:107` | badge `text-white` → `text-primary-foreground` (on `bg-primary`) |
-| checkout-client | `OrderSummary.tsx` / `ClientBookingCard.tsx` | `text-[#915564]` (19×) → `text-muted-foreground` |
-| checkout-client | `ClientBookingCard.tsx:264` | refund box `bg-[#fdfcfa]` → `bg-background` (exact match) |
-| discovery | `search/*` (Location/SearchBar/Filters/Results) | every meta/icon `slate-*` → warm (16 swaps) |
-| discovery | `InteractiveMap.tsx:202` | control button `text-slate-700` → `text-foreground` |
-| routes-public | `about` / `booking/[id]` / `cepages` / `degustation` / `error.tsx` | slate text → `text-foreground`/`text-ink-700`/`text-muted-foreground` |
-| event-detail | `BookingRow*` / `SessionCard` / `EventDetailHeader` | card/border/text slate-* → warm; NO_SHOW pill → `bg-muted` |
-| experience-forms | 5 `form-sections/*` | labels/inputs/surfaces slate-* → warm; selected `text-white`→`text-primary-foreground` |
-| layout-seo | `ClientDashboardSidebar` / `DashboardSidebar` / `NavLink` | inactive nav `gray-*`/`slate-600` → `text-muted-foreground`/`bg-muted` |
-| shared | `Breadcrumb` / `EmptyState` / `FaqAccordion` / `ImageUpload` / `LoadingSpinner` / `Pagination` | slate text/surface → warm (app-wide impact) |
-| routes-rest | admin pages + `error.tsx` + `not-found` + `unsubscribe` + `coming-soon` | slate-* text/bg → warm tokens |
-| booking-core | `BookingDatePicker` / `CancellationModal` / `GuestCountInput` | slate meta/disabled text → `text-muted-foreground`; separator → `text-border` |
-| winery | `PaymentStatus` / `StripeOnboarding` / `ViewToggle` / `WineryCard` / `WineryMediaSection` | slate text/surface → warm tokens |
+| Zone              | File                                                                                           | Change                                                                                      |
+| ----------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| earnings          | `EarningsChart.tsx:44,90,97,101`                                                               | `text-[#915564]` → `text-muted-foreground`                                                  |
+| earnings          | `EarningsSummaryCards.tsx` (6×)                                                                | `text-[#915564]` → `text-muted-foreground` (replace_all)                                    |
+| earnings          | `TransactionTable.tsx:63,97,109`                                                               | `bg-gray-50`/`text-[#915564]`/`bg-gray-200` → `bg-muted`/`text-muted-foreground`/`bg-muted` |
+| misc              | `VisibilityBannerSkeleton.tsx:13`                                                              | `bg-white` → `bg-card`                                                                      |
+| routes-protected  | 6 identical `error.tsx` files                                                                  | `text-slate-900/600/400` → `text-foreground`/`text-muted-foreground`                        |
+| routes-protected  | `settings/page.tsx`                                                                            | icon/badge surfaces `bg-slate-100`→`bg-muted`; all card text → warm                         |
+| routes-protected  | `onboarding/winery/confirmation/page.tsx`                                                      | all slate heading/step text → warm tokens                                                   |
+| admin             | `PendingWineriesTable.tsx`                                                                     | table head/name/commune/email/icon slate-\* → warm                                          |
+| admin             | `WineryInfoPanel.tsx:105`                                                                      | applicant chip `bg-slate-100`/`text-slate-600` → `bg-stone-100`/`text-stone-600`            |
+| auth-settings     | `LoginForm.tsx` / `RegisterForm.tsx`                                                           | heading/labels/placeholders/icons slate-\* + `text-[#915564]` → warm                        |
+| auth-settings     | `NotificationPreferencesForm.tsx` (3×)                                                         | card `border-slate-200` → `border-border`                                                   |
+| booking-calendar  | `CalendarView.tsx` / `WeekView.tsx` / `DayDetailPanel.tsx`                                     | grid/header/cell/meta slate-\* → `bg-muted`/`text-muted-foreground`/`text-foreground`       |
+| booking-calendar  | `ViewToggle.tsx:20,27,39`                                                                      | track `bg-[#f8f6f6]`→`bg-muted`; labels `text-[#915564]`→`text-muted-foreground`            |
+| experience-core   | `AddressAutocomplete.tsx`                                                                      | `bg-slate-50`→`bg-muted`, slate text → warm, `text-red-600`→`text-destructive`              |
+| experience-core   | `ExperienceDetailHeader.tsx:43`                                                                | star `fill-yellow-500 text-yellow-500` → `fill-gold-500 text-gold-500`                      |
+| experience-core   | `ExperienceCard.tsx` / `EditExperienceForm.tsx` / `CreateExperienceForm.tsx`                   | enumerated slate-_/gray-_ → warm tokens                                                     |
+| booking-dashboard | `BookingsTable.tsx` / `BookingSummaryCards.tsx`                                                | `text-[#915564]` (19×) → `text-muted-foreground` (replace_all)                              |
+| booking-dashboard | `BookingFilters.tsx:107`                                                                       | badge `text-white` → `text-primary-foreground` (on `bg-primary`)                            |
+| checkout-client   | `OrderSummary.tsx` / `ClientBookingCard.tsx`                                                   | `text-[#915564]` (19×) → `text-muted-foreground`                                            |
+| checkout-client   | `ClientBookingCard.tsx:264`                                                                    | refund box `bg-[#fdfcfa]` → `bg-background` (exact match)                                   |
+| discovery         | `search/*` (Location/SearchBar/Filters/Results)                                                | every meta/icon `slate-*` → warm (16 swaps)                                                 |
+| discovery         | `InteractiveMap.tsx:202`                                                                       | control button `text-slate-700` → `text-foreground`                                         |
+| routes-public     | `about` / `booking/[id]` / `cepages` / `degustation` / `error.tsx`                             | slate text → `text-foreground`/`text-ink-700`/`text-muted-foreground`                       |
+| event-detail      | `BookingRow*` / `SessionCard` / `EventDetailHeader`                                            | card/border/text slate-\* → warm; NO_SHOW pill → `bg-muted`                                 |
+| experience-forms  | 5 `form-sections/*`                                                                            | labels/inputs/surfaces slate-\* → warm; selected `text-white`→`text-primary-foreground`     |
+| layout-seo        | `ClientDashboardSidebar` / `DashboardSidebar` / `NavLink`                                      | inactive nav `gray-*`/`slate-600` → `text-muted-foreground`/`bg-muted`                      |
+| shared            | `Breadcrumb` / `EmptyState` / `FaqAccordion` / `ImageUpload` / `LoadingSpinner` / `Pagination` | slate text/surface → warm (app-wide impact)                                                 |
+| routes-rest       | admin pages + `error.tsx` + `not-found` + `unsubscribe` + `coming-soon`                        | slate-\* text/bg → warm tokens                                                              |
+| booking-core      | `BookingDatePicker` / `CancellationModal` / `GuestCountInput`                                  | slate meta/disabled text → `text-muted-foreground`; separator → `text-border`               |
+| winery            | `PaymentStatus` / `StripeOnboarding` / `ViewToggle` / `WineryCard` / `WineryMediaSection`      | slate text/surface → warm tokens                                                            |
 
 ---
 
@@ -114,6 +114,7 @@ git --no-pager diff
 > Never auto-fixed — accessible names/alt need translation keys; structure changes are non-trivial. All 27 blockers live here.
 
 **Blockers — controls with no accessible name / fully untranslated user-facing routes:**
+
 - `src/app/[locale]/admin/bookings/page.tsx:100` — **blocker** — native `select` (status) + search `Input` have no label/aria-label (no accessible name). → add `<Label htmlFor>` or translated `aria-label`.
 - `src/app/[locale]/admin/events/page.tsx:92,102` — **blocker** — two native selects + search input have no accessible name. → translated labels/aria-labels.
 - `src/components/features/experience/AddressAutocomplete.tsx:263` — **blocker** — hardcoded English no-results/error/placeholder bypass `useTranslations`; breaks fr/de. → route through translations.
@@ -138,6 +139,7 @@ git --no-pager diff
 - `src/components/features/booking/TimeSlotSelector.tsx:139` — **blocker** — 'Retry' + error fallback hardcoded English (`common.retry` absent in all locales). → add key.
 
 **Major — untranslated strings/aria/alt and color-only signals (selected):**
+
 - `src/components/features/admin/AdminStats.tsx:49` & `AdminSuspensionControls.tsx:41,94` — **major** — components have zero `useTranslations`; every label/toast/placeholder hardcoded English; suspension `Textarea` also has no associated `<Label>`. → translate + add label.
 - `src/components/features/booking/calendar/ExperienceTypeDot.tsx:36` & `WeekView.tsx:203,218` — **major** — hardcoded English type labels + `aria-label` (and 'g' suffix). → `useTranslations`.
 - `src/components/features/home/HomeDesktopEditorial.tsx:116` & `HomeMobileEditorial.tsx:210` & `HomeSearchPanel.tsx:65` — **major** — entire home editorial layer hardcoded French copy + alt + aria-labels. → `getTranslations`/`useTranslations`.
@@ -248,4 +250,4 @@ git --no-pager diff
 
 - **SEO half of `layout-seo` is unaudited** — no `generateMetadata`/og/sitemap/robots/structured-data review. Schedule a metadata-coherence pass.
 - **`routes-protected` delegated forms** — re-confirm the heavy client forms are fully covered by the later `experience-forms`/`experience-core` passes; spot-check `AvailabilityScheduleBuilder` and `ClientBookingsPage` wiring.
-- **`ClientBookingsTabs.tsx`** (new/untracked) introduced a *second* visual language (`ink-*`/`burgundy-*` raw scales + arbitrary px radii vs. checkout's warm semantic tokens) — needs a human design-direction decision before it spreads.
+- **`ClientBookingsTabs.tsx`** (new/untracked) introduced a _second_ visual language (`ink-*`/`burgundy-*` raw scales + arbitrary px radii vs. checkout's warm semantic tokens) — needs a human design-direction decision before it spreads.
