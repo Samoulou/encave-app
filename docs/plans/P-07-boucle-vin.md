@@ -81,3 +81,15 @@ L'encaveur gère son catalogue de vins (`/dashboard/wines`, visible sur sa fiche
 ## 10. Décisions (tranchées)
 
 Toutes tranchées avant BUILD : D1–D4 (Sam, AskUserQuestion 2026-07-10) + A1–A8 (revue d'architecture, ce plan). Aucune décision ouverte. Point à valider en review de PR : A7 (`recapTokenHash`, déviation de la lettre de D3).
+
+## 11. Bilan (post-review, 2026-07-10)
+
+**Review `/code-review high`** : 8 finders (3 correctness + reuse/simplif/efficience/altitude/conventions) → 39 candidats → 25 uniques → **22 retenus (3 REFUTED), 10 sévères + 12 cleanups, 22/22 corrigés** (`df3e652`).
+
+Sévères corrigés : (1) `servedWineIds` unionnait les fiches des bookings inactifs → édition qui « ressuscite » ; (2) jobs `PROCESSING` orphelins à vie après crash → **reclaim 30 min** dans le runner ; (3) job `FAILED` comptait comme « récap armé » → client sans AUCUN email post-visite → armé = PENDING/PROCESSING/DONE ; (4) `deleteWine` aveugle au FK RESTRICT des items de commande ; (5) clé de cache `winery-by-slug` non versionnée → TypeError post-deploy ; (6) retry après échec de bookkeeping post-envoi → double email + lien invalidé ; (7) échec email cave = commande silencieusement perdue → logError Sentry + copie client conditionnelle ; (8) transaction fan-out batchée (4 requêtes constantes) ; (9) note « récap armé » auto-effacée → date dans le toast + remount par key ; (10) rate limit sur l'unsubscribe client.
+
+Cleanups : `hashToken()` (`src/lib/utils/token.ts`) et `sessionEndUTC()` (`zurich.ts`) partagés, `zurichTodayAsUTCDate` réutilisé, `JOB_REGISTRY` unique (flag+handler inséparables — protège P-09/P-10), `WineItemsTable` email partagé, `WineFormFields` extrait, `getOwnerWines` dans le Promise.all, redirect i18n, plafond prix client=serveur, deep-link du rappel dans la locale encaveur, PostHog hors chemin de réponse + identité email.
+
+**Dette consignée** (hors DoD) : batching N+1 du cron rappel (3 requêtes/cave — OK à l'échelle pilote) ; EmailLog comme dédup du rappel (best-effort, double-send possible sur hoquet DB rare) ; `wines` dans le cache winery même flag OFF ; booking confirmé APRÈS le remplissage de la fiche exclu du récap (couvert partiellement par le rappel 21 h) ; token unsubscribe client en clair (précédent `NotificationPreferences` — à unifier/hasher en P-13) ; fiche non ancrée sur `ExperienceOccurrence` (clé session (expId,date,timeSlot) re-dérivée — à revisiter si P-05 fait évoluer l'identité de session).
+
+**Vérifs finales** : tsc · lint · i18n ×3 · 1013 unit/integration (3 échecs préexistants sur dev, flagués) · 38 db-gated (base locale re-migrée from scratch) · build prod (JS partagé 165 kB inchangé) · scénario runtime réel (cron → Resend, page commande tokenisée, garde 21 h).
