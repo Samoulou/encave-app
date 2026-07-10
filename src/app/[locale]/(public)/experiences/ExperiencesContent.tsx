@@ -42,7 +42,9 @@ export async function ExperiencesContent({
         '@type': 'Event',
         '@id': `${baseUrl}/experiences/${exp.slug}`,
         name: exp.title,
-        description: exp.description,
+        // description dropped from the card DTO (P-06 / L-208): it was
+        // shipping the full @db.Text to the client for this optional
+        // schema.org field only.
         image: exp.coverPhoto,
         url: `${baseUrl}/experiences/${exp.slug}`,
         offers: {

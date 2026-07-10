@@ -183,6 +183,7 @@ vi.mock('@/server/db', () => ({
     experience: { findMany: vi.fn(), count: vi.fn() },
     experienceOccurrence: { findMany: vi.fn() },
     blockedDate: { findMany: vi.fn() },
+    booking: { groupBy: vi.fn() },
   },
 }));
 
@@ -201,28 +202,71 @@ const WINERY = {
   longitude: null,
 };
 
-describe('searchExperiences date window (P-05 / L-110)', () => {
+describe('searchExperiences date window (P-05 / L-110, refonte P-06 / D3)', () => {
+  /**
+   * db.experience.findMany serves three call shapes in the new flow:
+   * capacity lookup (select id+maxCapacity), sort candidates (select
+   * id+createdAt) and card rows (full select). Route by select shape.
+   */
+  function routeExperienceFindMany(fixtures: {
+    capacities?: Array<{ id: string; maxCapacity: number }>;
+    candidates?: Array<{ id: string; createdAt: Date }>;
+    rows?: unknown[];
+  }) {
+    vi.mocked(db.experience.findMany).mockImplementation((async (args: {
+      select?: Record<string, unknown>;
+    }) => {
+      const select = args?.select ?? {};
+      if ('maxCapacity' in select && !('title' in select)) {
+        return fixtures.capacities ?? [];
+      }
+      if ('createdAt' in select && !('title' in select)) {
+        return fixtures.candidates ?? [];
+      }
+      return fixtures.rows ?? [];
+    }) as never);
+  }
+
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(db.experience.findMany).mockResolvedValue([] as never);
     vi.mocked(db.experience.count).mockResolvedValue(0 as never);
     vi.mocked(db.experienceOccurrence.findMany).mockResolvedValue([] as never);
     vi.mocked(db.blockedDate.findMany).mockResolvedValue([] as never);
+    vi.mocked(db.booking.groupBy).mockResolvedValue([] as never);
   });
 
   it('excludes an experience whose only OPEN occurrence sits on a blocked date', async () => {
     const day = new Date('2099-06-05T00:00:00.000Z');
     vi.mocked(db.experienceOccurrence.findMany).mockResolvedValue([
-      { experienceId: 'exp-blocked', date: day },
-      { experienceId: 'exp-free', date: day },
+      {
+        experienceId: 'exp-blocked',
+        date: day,
+        startTime: '10:00',
+        capacityOverride: null,
+      },
+      {
+        experienceId: 'exp-free',
+        date: day,
+        startTime: '10:00',
+        capacityOverride: null,
+      },
     ] as never);
     vi.mocked(db.blockedDate.findMany).mockResolvedValue([
       { experienceId: 'exp-blocked', date: day },
     ] as never);
+    routeExperienceFindMany({
+      capacities: [
+        { id: 'exp-blocked', maxCapacity: 8 },
+        { id: 'exp-free', maxCapacity: 8 },
+      ],
+      candidates: [],
+      rows: [],
+    });
 
     await searchExperiences({
       availableFrom: '2099-06-05',
-      sort: 'next_availability',
+      sort: 'newest',
     });
 
     expect(db.experience.findMany).toHaveBeenCalledWith(
@@ -232,11 +276,60 @@ describe('searchExperiences date window (P-05 / L-110)', () => {
     );
   });
 
+  it('excludes a FULL slot from the date window (P-06 / D3)', async () => {
+    const day = new Date('2099-06-05T00:00:00.000Z');
+    vi.mocked(db.experienceOccurrence.findMany).mockResolvedValue([
+      {
+        experienceId: 'exp-full',
+        date: day,
+        startTime: '10:00',
+        capacityOverride: 4,
+      },
+      {
+        experienceId: 'exp-open',
+        date: day,
+        startTime: '10:00',
+        capacityOverride: null,
+      },
+    ] as never);
+    vi.mocked(db.booking.groupBy).mockResolvedValue([
+      {
+        experienceId: 'exp-full',
+        date: day,
+        timeSlot: '10:00',
+        _sum: { guestCount: 4 }, // override 4 -> 0 remaining
+      },
+      {
+        experienceId: 'exp-open',
+        date: day,
+        timeSlot: '10:00',
+        _sum: { guestCount: 7 }, // maxCapacity 8 -> 1 remaining
+      },
+    ] as never);
+    routeExperienceFindMany({
+      capacities: [
+        { id: 'exp-full', maxCapacity: 8 },
+        { id: 'exp-open', maxCapacity: 8 },
+      ],
+    });
+
+    await searchExperiences({
+      availableFrom: '2099-06-05',
+      sort: 'newest',
+    });
+
+    expect(db.experience.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ id: { in: ['exp-open'] } }),
+      })
+    );
+  });
+
   it('clamps a past availableFrom to today (Zurich)', async () => {
     await searchExperiences({
       availableFrom: '2020-01-01',
       availableTo: '2099-12-31',
-      sort: 'next_availability',
+      sort: 'newest',
     });
 
     const args = vi.mocked(db.experienceOccurrence.findMany).mock.calls[0]?.[0];
@@ -248,7 +341,7 @@ describe('searchExperiences date window (P-05 / L-110)', () => {
     const result = await searchExperiences({
       availableFrom: '2020-01-01',
       availableTo: '2020-01-02',
-      sort: 'next_availability',
+      sort: 'newest',
     });
 
     expect(db.experienceOccurrence.findMany).not.toHaveBeenCalled();
@@ -260,33 +353,64 @@ describe('searchExperiences date window (P-05 / L-110)', () => {
     expect(result.experiences).toEqual([]);
   });
 
-  it('nextOccurrence skips blacked-out dates (D3 derived at read)', async () => {
+  it('next_availability orders ids by soonest bookable occurrence and fetches only the page (P-06)', async () => {
     const blockedDay = new Date('2099-07-04T00:00:00.000Z');
     const freeDay = new Date('2099-07-11T00:00:00.000Z');
-    vi.mocked(db.experience.findMany).mockResolvedValue([
+    const soonerDay = new Date('2099-07-05T00:00:00.000Z');
+    const cardRow = (id: string) => ({
+      id,
+      title: `Exp ${id}`,
+      slug: id,
+      type: 'TASTING',
+      duration: 60,
+      price: 2500,
+      maxCapacity: 8,
+      coverPhoto: 'https://example.com/c.jpg',
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+      winery: WINERY,
+    });
+
+    vi.mocked(db.experienceOccurrence.findMany).mockResolvedValue([
+      // exp-1: first occurrence blacked out -> bookable date is freeDay
       {
-        id: 'exp-1',
-        title: 'Dégustation',
-        slug: 'degustation',
-        description: 'x',
-        type: 'TASTING',
-        duration: 60,
-        price: 2500,
-        maxCapacity: 8,
-        coverPhoto: 'https://example.com/c.jpg',
-        createdAt: new Date('2026-01-01T00:00:00.000Z'),
-        winery: WINERY,
-        occurrences: [
-          { date: blockedDay, startTime: '10:00' },
-          { date: freeDay, startTime: '10:00' },
-        ],
-        blockedDates: [{ date: blockedDay }],
+        experienceId: 'exp-1',
+        date: blockedDay,
+        startTime: '10:00',
+        capacityOverride: null,
+      },
+      {
+        experienceId: 'exp-2',
+        date: soonerDay,
+        startTime: '10:00',
+        capacityOverride: null,
+      },
+      {
+        experienceId: 'exp-1',
+        date: freeDay,
+        startTime: '10:00',
+        capacityOverride: null,
       },
     ] as never);
+    vi.mocked(db.blockedDate.findMany).mockResolvedValue([
+      { experienceId: 'exp-1', date: blockedDay },
+    ] as never);
+    routeExperienceFindMany({
+      capacities: [
+        { id: 'exp-1', maxCapacity: 8 },
+        { id: 'exp-2', maxCapacity: 8 },
+      ],
+      candidates: [
+        { id: 'exp-1', createdAt: new Date('2026-01-01T00:00:00.000Z') },
+        { id: 'exp-2', createdAt: new Date('2026-01-02T00:00:00.000Z') },
+      ],
+      rows: [cardRow('exp-1'), cardRow('exp-2')],
+    });
 
     const result = await searchExperiences({ sort: 'next_availability' });
 
-    expect(result.experiences[0]?.nextOccurrence?.date.getTime()).toBe(
+    // exp-2 (July 5) sorts before exp-1 (July 11 - July 4 is blacked out)
+    expect(result.experiences.map((e) => e.id)).toEqual(['exp-2', 'exp-1']);
+    expect(result.experiences[1]?.nextOccurrence?.date.getTime()).toBe(
       freeDay.getTime()
     );
   });
