@@ -14,6 +14,7 @@ import type { ActionResult } from '@/types/actions';
 import {
   BookingStatus,
   ExperienceStatus,
+  Locale,
   OccurrenceStatus,
   WineryStatus,
   type Prisma,
@@ -55,6 +56,13 @@ import { logError, logWarn } from '@/lib/logger';
 /** sha256 hex — same scheme as the booking access tokens (SEC-002). */
 function hashHoldToken(token: string): string {
   return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+/** UI locale ('fr' | 'de' | 'en') → persisted Booking.locale (P-07). */
+function toBookingLocale(locale: 'fr' | 'de' | 'en' | undefined): Locale {
+  if (locale === 'de') return Locale.DE;
+  if (locale === 'en') return Locale.EN;
+  return Locale.FR;
 }
 
 /**
@@ -573,6 +581,8 @@ export async function createBookingAndCheckout(
           visitorName,
           visitorEmail,
           visitorPhone,
+          // Client locale — emails to the client are sent in this language.
+          locale: toBookingLocale(validated.data.locale),
           totalPrice,
           platformFee,
           serviceFeeCents,
@@ -681,6 +691,7 @@ export async function createBookingAndCheckout(
                     visitorName,
                     visitorEmail,
                     visitorPhone,
+                    locale: toBookingLocale(validated.data.locale),
                     status: BookingStatus.PENDING_PAYMENT,
                     // Contractual snapshot: refunds use the policy the client
                     // accepted here, never the winery's later edits.
