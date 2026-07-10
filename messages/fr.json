@@ -126,7 +126,8 @@
       "region": "Tout le Valais",
       "subject": "Expériences disponibles",
       "spots": "2+ places"
-    }
+    },
+    "wines": "Vins"
   },
   "locale": {
     "fr": "Français",
@@ -987,7 +988,9 @@
       "saving": "Enregistrement...",
       "updated": "Politique d'annulation mise à jour",
       "updateError": "Impossible d'enregistrer la politique d'annulation. Veuillez réessayer."
-    }
+    },
+    "winesSectionTitle": "Ses vins",
+    "winesSectionSubtitle": "Les vins du domaine, à déguster sur place."
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -1495,6 +1498,10 @@
       "wineryProfile": {
         "title": "Profil du domaine | EnCave",
         "description": "Gérez le profil de votre domaine"
+      },
+      "wines": {
+        "title": "Mes vins | EnCave",
+        "description": "Gérez votre carte des vins"
       }
     },
     "onboarding": {
@@ -2116,6 +2123,41 @@
         "srToComplete": "Critère à compléter :",
         "srInProgress": "Critère en cours :"
       }
+    },
+    "wines": {
+      "title": "Mes vins",
+      "subtitle": "Votre carte des vins — cochez-les sur la fiche dégustation après chaque visite.",
+      "shopTeaser": "Bientôt : vendez en ligne",
+      "loading": "Chargement des vins…",
+      "statsTitle": "Emails coups de cœur",
+      "statsSent": "Récaps envoyés",
+      "statsOpened": "Ouverts",
+      "statsClicked": "Cliqués",
+      "addTitle": "Ajouter un vin",
+      "fieldName": "Nom",
+      "fieldNamePlaceholder": "Fendant Les Murettes",
+      "fieldGrape": "Cépage",
+      "fieldGrapePlaceholder": "Chasselas",
+      "fieldVintage": "Millésime",
+      "fieldPrice": "Prix (CHF)",
+      "addButton": "Ajouter",
+      "added": "{name} ajouté à votre carte",
+      "updated": "{name} mis à jour",
+      "deleted": "{name} supprimé",
+      "saveFailed": "Impossible d'enregistrer. Réessayez.",
+      "deleteConflict": "Ce vin a été servi en dégustation — il garde l'historique. Passez-le en indisponible plutôt.",
+      "emptyTitle": "Aucun vin pour l'instant",
+      "emptyDescription": "Ajoutez vos vins pour les cocher sur la fiche dégustation et les présenter sur votre page.",
+      "available": "Disponible",
+      "unavailable": "Indisponible",
+      "availabilityToggle": "Disponibilité de {name}",
+      "edit": "Modifier {name}",
+      "delete": "Supprimer {name}",
+      "deleteConfirmTitle": "Supprimer {name} ?",
+      "deleteConfirmDescription": "Le vin sera retiré de votre carte. Cette action est définitive.",
+      "deleteConfirmButton": "Supprimer",
+      "cancel": "Annuler",
+      "saveButton": "Enregistrer"
     }
   },
   "Public": {

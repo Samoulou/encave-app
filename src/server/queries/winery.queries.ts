@@ -87,6 +87,19 @@ export const getWineryBySlug = unstable_cache(
         galleryImages: {
           orderBy: { order: 'asc' },
         },
+        // Public wine list (P-07 / L-064) — rendered only when the
+        // TASTING_SHEET flag is ON (checked by the page, not here).
+        wines: {
+          where: { available: true },
+          orderBy: { name: 'asc' },
+          select: {
+            id: true,
+            name: true,
+            grapeVariety: true,
+            vintage: true,
+            price: true,
+          },
+        },
         // Needed by isWineryPubliclyVisible (the include above gives us
         // the full gallery, we only need ids — but reusing it avoids an
         // extra query).

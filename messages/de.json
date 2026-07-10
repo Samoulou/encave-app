@@ -126,7 +126,8 @@
       "region": "Ganzes Wallis",
       "subject": "Verfügbare Erlebnisse",
       "spots": "2+ Plätze"
-    }
+    },
+    "wines": "Weine"
   },
   "locale": {
     "fr": "Francais",
@@ -987,7 +988,9 @@
       "saving": "Wird gespeichert...",
       "updated": "Stornierungsbedingungen aktualisiert",
       "updateError": "Die Stornierungsbedingungen konnten nicht gespeichert werden. Bitte versuchen Sie es erneut."
-    }
+    },
+    "winesSectionTitle": "Ihre Weine",
+    "winesSectionSubtitle": "Die Weine des Weinguts – vor Ort zu degustieren."
   },
   "dashboard": {
     "title": "Dashboard",
@@ -1495,6 +1498,10 @@
       "wineryProfile": {
         "title": "Weingut-Profil | EnCave",
         "description": "Verwalten Sie Ihr Weingut-Profil"
+      },
+      "wines": {
+        "title": "Meine Weine | EnCave",
+        "description": "Verwalten Sie Ihre Weinkarte"
       }
     },
     "onboarding": {
@@ -2121,6 +2128,41 @@
         "srToComplete": "Offenes Kriterium:",
         "srInProgress": "Laufendes Kriterium:"
       }
+    },
+    "wines": {
+      "title": "Meine Weine",
+      "subtitle": "Ihre Weinkarte — haken Sie sie nach jedem Besuch auf dem Degustationsblatt ab.",
+      "shopTeaser": "Bald: online verkaufen",
+      "loading": "Weine werden geladen…",
+      "statsTitle": "Lieblingsweine-E-Mails",
+      "statsSent": "Gesendete Zusammenfassungen",
+      "statsOpened": "Geöffnet",
+      "statsClicked": "Geklickt",
+      "addTitle": "Wein hinzufügen",
+      "fieldName": "Name",
+      "fieldNamePlaceholder": "Fendant Les Murettes",
+      "fieldGrape": "Rebsorte",
+      "fieldGrapePlaceholder": "Chasselas",
+      "fieldVintage": "Jahrgang",
+      "fieldPrice": "Preis (CHF)",
+      "addButton": "Hinzufügen",
+      "added": "{name} zu Ihrer Karte hinzugefügt",
+      "updated": "{name} aktualisiert",
+      "deleted": "{name} gelöscht",
+      "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
+      "deleteConflict": "Dieser Wein wurde bei einer Degustation serviert — er behält seine Historie. Setzen Sie ihn stattdessen auf nicht verfügbar.",
+      "emptyTitle": "Noch keine Weine",
+      "emptyDescription": "Fügen Sie Ihre Weine hinzu, um sie auf dem Degustationsblatt abzuhaken und auf Ihrer Seite zu zeigen.",
+      "available": "Verfügbar",
+      "unavailable": "Nicht verfügbar",
+      "availabilityToggle": "Verfügbarkeit von {name}",
+      "edit": "{name} bearbeiten",
+      "delete": "{name} löschen",
+      "deleteConfirmTitle": "{name} löschen?",
+      "deleteConfirmDescription": "Der Wein wird von Ihrer Karte entfernt. Dies kann nicht rückgängig gemacht werden.",
+      "deleteConfirmButton": "Löschen",
+      "cancel": "Abbrechen",
+      "saveButton": "Speichern"
     }
   },
   "Public": {

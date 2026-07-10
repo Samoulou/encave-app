@@ -4,6 +4,7 @@ import { getLocale } from 'next-intl/server';
 import { DashboardSidebar } from '@/components/layout/DashboardSidebar';
 import { ClientDashboardSidebar } from '@/components/layout/ClientDashboardSidebar';
 import { getWineryByUserId } from '@/server/queries/winery.queries';
+import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
 
 export default async function DashboardLayout({
   children,
@@ -18,7 +19,10 @@ export default async function DashboardLayout({
 
   // WINEMAKER: show winery dashboard sidebar
   if (session.user.role === 'WINEMAKER') {
-    const winery = await getWineryByUserId(session.user.id);
+    const [winery, tastingEnabled] = await Promise.all([
+      getWineryByUserId(session.user.id),
+      isFlagEnabled('TASTING_SHEET'),
+    ]);
     const wineryName = winery?.name ?? 'My Winery';
 
     return (
@@ -26,6 +30,7 @@ export default async function DashboardLayout({
         <DashboardSidebar
           wineryName={wineryName}
           userName={session.user.name ?? undefined}
+          showWines={tastingEnabled}
         />
         <main className="relative flex h-full flex-1 flex-col overflow-hidden md:ml-64">
           <div className="h-14 flex-shrink-0 md:hidden" />

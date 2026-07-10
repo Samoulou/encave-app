@@ -126,7 +126,8 @@
       "region": "All of Valais",
       "subject": "Available experiences",
       "spots": "2+ spots"
-    }
+    },
+    "wines": "Wines"
   },
   "locale": {
     "fr": "Francais",
@@ -987,7 +988,9 @@
       "saving": "Saving...",
       "updated": "Cancellation policy updated",
       "updateError": "Could not save the cancellation policy. Please try again."
-    }
+    },
+    "winesSectionTitle": "Their wines",
+    "winesSectionSubtitle": "The estate's wines, to taste on site."
   },
   "dashboard": {
     "title": "Dashboard",
@@ -1495,6 +1498,10 @@
       "wineryProfile": {
         "title": "Winery Profile | EnCave",
         "description": "Manage your winery profile"
+      },
+      "wines": {
+        "title": "My wines | EnCave",
+        "description": "Manage your wine list"
       }
     },
     "onboarding": {
@@ -2116,6 +2123,41 @@
         "srToComplete": "Pending criterion:",
         "srInProgress": "In-progress criterion:"
       }
+    },
+    "wines": {
+      "title": "My wines",
+      "subtitle": "Your wine list — tick them on the tasting sheet after each visit.",
+      "shopTeaser": "Coming soon: sell online",
+      "loading": "Loading wines…",
+      "statsTitle": "Favourites emails",
+      "statsSent": "Recaps sent",
+      "statsOpened": "Opened",
+      "statsClicked": "Clicked",
+      "addTitle": "Add a wine",
+      "fieldName": "Name",
+      "fieldNamePlaceholder": "Fendant Les Murettes",
+      "fieldGrape": "Grape variety",
+      "fieldGrapePlaceholder": "Chasselas",
+      "fieldVintage": "Vintage",
+      "fieldPrice": "Price (CHF)",
+      "addButton": "Add",
+      "added": "{name} added to your list",
+      "updated": "{name} updated",
+      "deleted": "{name} deleted",
+      "saveFailed": "Could not save. Please try again.",
+      "deleteConflict": "This wine was served during a tasting — it keeps its history. Mark it unavailable instead.",
+      "emptyTitle": "No wines yet",
+      "emptyDescription": "Add your wines to tick them on the tasting sheet and show them on your page.",
+      "available": "Available",
+      "unavailable": "Unavailable",
+      "availabilityToggle": "Availability of {name}",
+      "edit": "Edit {name}",
+      "delete": "Delete {name}",
+      "deleteConfirmTitle": "Delete {name}?",
+      "deleteConfirmDescription": "The wine will be removed from your list. This cannot be undone.",
+      "deleteConfirmButton": "Delete",
+      "cancel": "Cancel",
+      "saveButton": "Save"
     }
   },
   "Public": {
