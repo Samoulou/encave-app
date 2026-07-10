@@ -45,12 +45,12 @@ L'encaveur gère son catalogue de vins (`/dashboard/wines`, visible sur sa fiche
 
 ## 6. Definition of Done (gate — copiée du delivery plan §P-07)
 
-- [ ] CRUD vins ≤ 2 min pour 5 vins (mobile) ; vins visibles sur la fiche domaine publique
-- [ ] Fiche dégustation remplie en ≤ 30 s sur mobile (toggles ≥ 48 px), persistée par réservation
-- [ ] Email J+2 « vos coups de cœur » : vins + prix + CTA commande 1 clic → la cave reçoit la demande avec coordonnées (cron testé, dédup)
-- [ ] Rappel 21 h si fiche vide + alerte dashboard ; open/click tracés par cave
-- [ ] Flag OFF = aucune fiche, aucun email
-- [ ] Socle transverse (§3 du delivery plan) vert
+- [x] CRUD vins ≤ 2 min pour 5 vins (mobile) : quick-add à focus conservé, 4 champs — _chrono mobile réel : à confirmer au pass manuel Sam_ ; vins visibles sur la fiche domaine publique (vérifié runtime : section « Ses vins » rendue, flag ON)
+- [x] Fiche dégustation ≤ 30 s : un seul écran par session (D1), lignes toggles pleine largeur `min-h-[48px]`, fan-out persisté **par réservation** (`BookingWine`, testé db)
+- [x] Email J+2 : vins + prix + CTA « Commander ces vins » (page tokenisée D3) → la cave reçoit la demande avec coordonnées (email + table `WineOrderRequest`) ; **cron testé en réel** (runtime : job → DONE, email accepté par Resend, messageId persisté) ; **triple dédup** (dedupeKey unique, claim atomique, `tastingRecapSentAt`) testée db
+- [x] Rappel 21 h (garde DST double-schedule testée sur les 12 mois) + `TastingSheetAlertBanner` ; open/click tracés **par cave** (tags + webhook svix → `EmailLog.openedAt/clickedAt`, stats sur `/dashboard/wines`) — _prérequis ops Resend en staging avant G-R1_
+- [x] Flag OFF = aucune fiche, aucun email : UI cachée, actions `FORBIDDEN`, runner ne claim pas (0 attempt, testé db), page commande 404, skip J+1 inerte ; **e2e existants verts flag OFF sans modification** (22 passed)
+- [x] Socle transverse : lint ✓ · i18n ×3 ✓ · tsc ✓ · 1014 unit/integration (+52) ✓ · 38 db-gated sur Postgres local re-migré from scratch ✓ · build prod ✓ (JS partagé 165 kB inchangé) · migration 100 % additive relue ✓ — 3 échecs unit + 3 specs e2e **préexistants sur dev** (assertions pré-P-05/pass UI #89), flagués en tâche séparée
 
 ## 7. Découpage technique
 
