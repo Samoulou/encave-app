@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
 import { Header } from '@/components/layout/Header';
-import { HeaderAuthSlot } from '@/components/layout/HeaderAuthSlot';
-import { HeaderRoleLink } from '@/components/layout/HeaderRoleLink';
+import { HeaderAuthSkeleton } from '@/components/layout/HeaderAuthSlot';
+import HeaderAuthCluster from '@/components/layout/HeaderAuthCluster';
+import HeaderRoleLinkInner from '@/components/layout/HeaderRoleLinkInner';
 
 // Mock next-intl (client islands) and next-intl/server (Header)
 const NAV_TRANSLATIONS: Record<string, string> = {
@@ -113,14 +114,14 @@ describe('Header (static server component — P-06)', () => {
   });
 });
 
-describe('HeaderAuthSlot (client island)', () => {
+describe('HeaderAuthCluster (client island, chargé après idle)', () => {
   afterEach(() => {
     cleanup();
   });
 
   it('shows a neutral skeleton while the session is pending — never the sign-in buttons', () => {
     mockSession({ kind: 'pending' });
-    render(<HeaderAuthSlot />);
+    render(<HeaderAuthCluster />);
 
     expect(screen.getByTestId('header-auth-skeleton')).toBeInTheDocument();
     expect(
@@ -128,9 +129,14 @@ describe('HeaderAuthSlot (client island)', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('the skeleton itself renders the two neutral pills (pre-idle fallback)', () => {
+    render(<HeaderAuthSkeleton />);
+    expect(screen.getByTestId('header-auth-skeleton')).toBeInTheDocument();
+  });
+
   it('shows sign in / get started for anonymous visitors', () => {
     mockSession({ kind: 'anonymous' });
-    render(<HeaderAuthSlot />);
+    render(<HeaderAuthCluster />);
 
     expect(screen.getByRole('link', { name: /sign in/i })).toBeInTheDocument();
     expect(
@@ -140,7 +146,7 @@ describe('HeaderAuthSlot (client island)', () => {
 
   it('shows the user menu once the session resolves', () => {
     mockSession({ kind: 'user', name: 'Test User', role: 'CLIENT' });
-    render(<HeaderAuthSlot />);
+    render(<HeaderAuthCluster />);
 
     expect(screen.getByTestId('user-menu')).toHaveTextContent('Test User');
     expect(
@@ -149,7 +155,7 @@ describe('HeaderAuthSlot (client island)', () => {
   });
 });
 
-describe('HeaderRoleLink (client island)', () => {
+describe('HeaderRoleLinkInner (client island, chargé après idle)', () => {
   afterEach(() => {
     cleanup();
   });
@@ -160,19 +166,19 @@ describe('HeaderRoleLink (client island)', () => {
     ['CLIENT', '-dashboard-my-bookings', 'My bookings'],
   ])('renders the %s link', (role, testId, label) => {
     mockSession({ kind: 'user', name: 'U', role });
-    render(<HeaderRoleLink />);
+    render(<HeaderRoleLinkInner />);
 
     expect(screen.getByTestId(`navlink-${testId}`)).toHaveTextContent(label);
   });
 
   it('renders nothing while pending or anonymous', () => {
     mockSession({ kind: 'pending' });
-    const { container } = render(<HeaderRoleLink />);
+    const { container } = render(<HeaderRoleLinkInner />);
     expect(container).toBeEmptyDOMElement();
 
     cleanup();
     mockSession({ kind: 'anonymous' });
-    const { container: anon } = render(<HeaderRoleLink />);
+    const { container: anon } = render(<HeaderRoleLinkInner />);
     expect(anon).toBeEmptyDOMElement();
   });
 });
