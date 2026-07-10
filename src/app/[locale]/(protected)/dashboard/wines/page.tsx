@@ -1,5 +1,6 @@
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
+import { redirect } from '@/i18n/navigation';
 import { Mail, MousePointerClick, Send } from 'lucide-react';
 import { auth } from '@/server/auth';
 import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
@@ -28,7 +29,8 @@ export default async function WinesPage() {
   const session = await auth();
   if (!session?.user) {
     const locale = await getLocale();
-    redirect(`/${locale}/login`);
+    redirect({ href: '/login', locale });
+    return null;
   }
 
   // Whole surface is flag-gated (P-07): OFF = the page does not exist.

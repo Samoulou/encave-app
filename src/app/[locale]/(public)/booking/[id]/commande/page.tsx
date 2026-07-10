@@ -35,10 +35,7 @@ export default async function WineOrderPage({
   params,
   searchParams,
 }: WineOrderPageProps) {
-  const [{ id, locale }, { token }] = await Promise.all([
-    params,
-    searchParams,
-  ]);
+  const [{ id, locale }, { token }] = await Promise.all([params, searchParams]);
   setRequestLocale(locale as Locale);
 
   if (!token) notFound();
@@ -56,11 +53,14 @@ export default async function WineOrderPage({
   const posthog = getPostHogServer();
   if (posthog) {
     posthog.capture({
-      distinctId: data.guestName,
+      // Same identity as wine_order_requested — the view→order funnel
+      // must land on one distinctId.
+      distinctId: data.guestEmail,
       event: 'wine_order_page_viewed',
       properties: { bookingId: data.bookingId },
     });
-    await posthog.flush();
+    // Best-effort analytics — never on the page's TTFB path.
+    void posthog.flush().catch(() => {});
   }
 
   return (

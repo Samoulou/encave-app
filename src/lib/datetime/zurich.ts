@@ -8,9 +8,24 @@
  * turn that pair into a real instant.
  */
 
+import { addMinutes } from 'date-fns';
 import { parseTimeSlot } from '@/lib/validators/booking';
 
 export const SESSION_TIMEZONE = 'Europe/Zurich';
+
+/**
+ * UTC instant at which a session ENDS: wall-clock start (date-only UTC
+ * midnight + "HH:mm" Zurich) plus the experience duration. The single
+ * definition of "session over" for the tasting loop (recap timer, empty
+ * sheet detection) — keep event-detail/follow-ups aligned when touched.
+ */
+export function sessionEndUTC(
+  date: Date,
+  timeSlot: string,
+  durationMinutes: number
+): Date {
+  return addMinutes(zonedWallClockToUTC(date, timeSlot), durationMinutes);
+}
 
 /**
  * Compute the UTC instant for a given local (Europe/Zurich) wall-clock

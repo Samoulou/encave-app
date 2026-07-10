@@ -159,7 +159,7 @@ export const getOccurrenceCalendar = cache(async function getOccurrenceCalendar(
     gte: monthStart,
     lt: monthEnd,
   };
-  const [occurrences, bookings, blocked, servedWines] = await Promise.all([
+  const [occurrences, bookings, blocked] = await Promise.all([
     db.experienceOccurrence.findMany({
       where: { experienceId, date: dateRange },
       orderBy: [{ date: 'asc' }, { startTime: 'asc' }],
@@ -188,16 +188,14 @@ export const getOccurrenceCalendar = cache(async function getOccurrenceCalendar(
         date: true,
         timeSlot: true,
         expiresAt: true,
+        // Tasting sheet of the month's sessions (P-07) — piggybacked on
+        // the booking read, no extra query.
+        wines: { select: { wineId: true } },
       },
     }),
     db.blockedDate.findMany({
       where: { experienceId, date: dateRange },
       select: { date: true },
-    }),
-    // Tasting sheets of the month (P-07) — one row per (booking, wine).
-    db.bookingWine.findMany({
-      where: { booking: { experienceId, date: dateRange } },
-      select: { bookingId: true, wineId: true },
     }),
   ]);
 
@@ -206,13 +204,6 @@ export const getOccurrenceCalendar = cache(async function getOccurrenceCalendar(
   );
   const keyOf = (date: Date, startTime: string) =>
     `${date.toISOString().slice(0, 10)}|${startTime}`;
-
-  const wineIdsByBooking = new Map<string, string[]>();
-  for (const served of servedWines) {
-    const list = wineIdsByBooking.get(served.bookingId) ?? [];
-    list.push(served.wineId);
-    wineIdsByBooking.set(served.bookingId, list);
-  }
 
   // Seats consumed at a session = the live capacity predicate (shared
   // with every booking-path aggregate) + terminal attended statuses.
@@ -259,9 +250,18 @@ export const getOccurrenceCalendar = cache(async function getOccurrenceCalendar(
       };
       entries.set(key, entry);
     }
-    for (const wineId of wineIdsByBooking.get(b.id) ?? []) {
-      if (!entry.servedWineIds.includes(wineId)) {
-        entry.servedWineIds.push(wineId);
+    // Sheet toggle state = union over ACTIVE bookings only — the fan-out
+    // (saveTastingSheet) only syncs CONFIRMED/COMPLETED rows, so a stale
+    // sheet on a cancelled/no-show booking must never resurrect unchecked
+    // wines in the UI.
+    if (
+      b.status === BookingStatus.CONFIRMED ||
+      b.status === BookingStatus.COMPLETED
+    ) {
+      for (const { wineId } of b.wines) {
+        if (!entry.servedWineIds.includes(wineId)) {
+          entry.servedWineIds.push(wineId);
+        }
       }
     }
     if (b.status !== BookingStatus.PENDING_PAYMENT) {

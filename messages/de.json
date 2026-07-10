@@ -2178,7 +2178,6 @@
       "sendButton": "Zusammenfassung senden",
       "clearButton": "Blatt leeren",
       "saveFailed": "Speichern fehlgeschlagen. Bitte erneut versuchen.",
-      "armed": "{count, plural, one {Zusammenfassung für # Reservierung geplant} other {Zusammenfassung für # Reservierungen geplant}}",
       "cleared": "Blatt geleert — es wird keine Zusammenfassung gesendet.",
       "armedNote": "{count, plural, one {Die Zusammenfassung erreicht # Gast} other {Die Zusammenfassung erreicht # Gäste}} — Versand am {date}.",
       "alreadyFilled": "Blatt gespeichert — die Zusammenfassung wird zwei Tage nach dem Besuch automatisch versendet.",

@@ -166,7 +166,10 @@ export async function deleteWine(
 
     const wine = await db.wine.findFirst({
       where: { id: parsed.data.wineId, wineryId: gate.winery.id },
-      select: { id: true, _count: { select: { bookingWines: true } } },
+      select: {
+        id: true,
+        _count: { select: { bookingWines: true, orderRequestItems: true } },
+      },
     });
     if (!wine) {
       return {
@@ -174,10 +177,11 @@ export async function deleteWine(
         error: { code: 'NOT_FOUND', message: 'Wine not found' },
       };
     }
-    // Tasting history must survive: a served wine is never deleted (its
-    // BookingWine rows feed pending J+2 recaps). Mark it unavailable
-    // instead — the UI offers exactly that on CONFLICT.
-    if (wine._count.bookingWines > 0) {
+    // Tasting/order history must survive: a served or ordered wine is
+    // never deleted (BookingWine feeds pending recaps; order-request
+    // items carry a RESTRICT FK). Mark it unavailable instead — the UI
+    // offers exactly that on CONFLICT.
+    if (wine._count.bookingWines > 0 || wine._count.orderRequestItems > 0) {
       return {
         success: false,
         error: {

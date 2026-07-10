@@ -2173,7 +2173,6 @@
       "sendButton": "Envoyer le récap",
       "clearButton": "Vider la fiche",
       "saveFailed": "Impossible d'enregistrer la fiche. Réessayez.",
-      "armed": "{count, plural, one {Récap armé pour # réservation} other {Récap armé pour # réservations}}",
       "cleared": "Fiche vidée — aucun récap ne partira.",
       "armedNote": "{count, plural, one {Le récap partira à # hôte} other {Le récap partira à # hôtes}} — envoi prévu {date}.",
       "alreadyFilled": "Fiche enregistrée — le récap partira automatiquement à J+2.",

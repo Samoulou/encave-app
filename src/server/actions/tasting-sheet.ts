@@ -1,6 +1,5 @@
 'use server';
 
-import crypto from 'crypto';
 import { headers } from 'next/headers';
 import { BookingStatus, Prisma, ScheduledJobStatus } from '@prisma/client';
 import { auth } from '@/server/auth';
@@ -16,8 +15,10 @@ import {
   TASTING_RECAP_JOB_TYPE,
   tastingRecapDedupeKey,
 } from '@/lib/constants/wine';
+import { addHours } from 'date-fns';
 import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
-import { zonedWallClockToUTC } from '@/lib/datetime/zurich';
+import { sessionEndUTC } from '@/lib/datetime/zurich';
+import { hashToken } from '@/lib/utils/token';
 import { HOLD_EMAIL_DOMAIN } from '@/lib/constants/booking-hold';
 import {
   checkRateLimit,
@@ -100,47 +101,44 @@ export async function saveTastingSheet(
 
     const sessionDate = new Date(`${date}T00:00:00.000Z`);
     // Active bookings of the session (A5): CONFIRMED + COMPLETED, never
-    // holds (sentinel email), never cancelled/no-show.
+    // holds (sentinel email), never cancelled/no-show. Bookings whose
+    // recap already went out are FROZEN: their sheet fed a delivered
+    // email whose order link depends on those rows — editing them would
+    // break it, and their loop is closed anyway.
     const bookings = await db.booking.findMany({
       where: {
         experienceId,
         date: sessionDate,
         timeSlot,
         status: { in: [BookingStatus.CONFIRMED, BookingStatus.COMPLETED] },
+        tastingRecapSentAt: null,
         NOT: { visitorEmail: { endsWith: `@${HOLD_EMAIL_DOMAIN}` } },
       },
       select: { id: true },
     });
+    const bookingIds = bookings.map((b) => b.id);
+    const dedupeKeys = bookings.map((b) => tastingRecapDedupeKey(b.id));
 
     // D2: the recap runs at max(session end + 48h, now) — a sheet filled
     // after J+2 goes out on the next cron pass.
     const now = new Date();
-    const sessionEnd = new Date(
-      zonedWallClockToUTC(sessionDate, timeSlot).getTime() +
-        experience.duration * 60 * 1000
-    );
     const recapRunAt = new Date(
       Math.max(
-        sessionEnd.getTime() + TASTING_RECAP_DELAY_HOURS * 60 * 60 * 1000,
+        addHours(
+          sessionEndUTC(sessionDate, timeSlot, experience.duration),
+          TASTING_RECAP_DELAY_HOURS
+        ).getTime(),
         now.getTime()
       )
     );
 
+    // Set-based sync — a constant 4 statements whatever the session size
+    // (a 25-booking session must not hold the transaction open for dozens
+    // of round-trips).
     await db.$transaction(async (tx) => {
-      for (const booking of bookings) {
-        // Sync the sheet: drop unchecked wines, add checked ones.
-        await tx.bookingWine.deleteMany({
-          where: { bookingId: booking.id, wineId: { notIn: wineIds } },
-        });
-        if (wineIds.length > 0) {
-          await tx.bookingWine.createMany({
-            data: wineIds.map((wineId) => ({ bookingId: booking.id, wineId })),
-            skipDuplicates: true,
-          });
-        }
-      }
-
-      const dedupeKeys = bookings.map((b) => tastingRecapDedupeKey(b.id));
+      await tx.bookingWine.deleteMany({
+        where: { bookingId: { in: bookingIds }, wineId: { notIn: wineIds } },
+      });
       if (wineIds.length === 0) {
         // Sheet cleared: disarm the pending recaps (A1). PROCESSING/DONE/
         // FAILED are never touched — an email already in flight stays.
@@ -157,39 +155,38 @@ export async function saveTastingSheet(
         return;
       }
 
-      const existingJobs = await tx.scheduledJob.findMany({
-        where: { dedupeKey: { in: dedupeKeys } },
-        select: { id: true, dedupeKey: true, status: true },
+      await tx.bookingWine.createMany({
+        data: bookingIds.flatMap((bookingId) =>
+          wineIds.map((wineId) => ({ bookingId, wineId }))
+        ),
+        skipDuplicates: true,
       });
-      const jobByKey = new Map(existingJobs.map((j) => [j.dedupeKey, j]));
-      for (const booking of bookings) {
-        const dedupeKey = tastingRecapDedupeKey(booking.id);
-        const existing = jobByKey.get(dedupeKey);
-        if (!existing) {
-          await tx.scheduledJob.create({
-            data: {
-              type: TASTING_RECAP_JOB_TYPE,
-              runAt: recapRunAt,
-              status: ScheduledJobStatus.PENDING,
-              payload: { bookingId: booking.id },
-              dedupeKey,
-            },
-          });
-        } else if (existing.status === ScheduledJobStatus.CANCELLED) {
-          // Cleared then re-filled: re-arm.
-          await tx.scheduledJob.update({
-            where: { id: existing.id },
-            data: {
-              status: ScheduledJobStatus.PENDING,
-              runAt: recapRunAt,
-              attempts: 0,
-              lastError: null,
-            },
-          });
-        }
-        // PENDING keeps its runAt (already max(end+48h, first-fill time));
-        // PROCESSING/DONE/FAILED are never re-armed.
-      }
+      // Arm: create missing jobs (dedupeKey unique + skipDuplicates =
+      // existing ones untouched), then re-arm ONLY the CANCELLED ones.
+      // PENDING keeps its runAt (already max(end+48h, first-fill time));
+      // PROCESSING/DONE/FAILED are never re-armed.
+      await tx.scheduledJob.createMany({
+        data: bookings.map((booking) => ({
+          type: TASTING_RECAP_JOB_TYPE,
+          runAt: recapRunAt,
+          status: ScheduledJobStatus.PENDING,
+          payload: { bookingId: booking.id },
+          dedupeKey: tastingRecapDedupeKey(booking.id),
+        })),
+        skipDuplicates: true,
+      });
+      await tx.scheduledJob.updateMany({
+        where: {
+          dedupeKey: { in: dedupeKeys },
+          status: ScheduledJobStatus.CANCELLED,
+        },
+        data: {
+          status: ScheduledJobStatus.PENDING,
+          runAt: recapRunAt,
+          attempts: 0,
+          lastError: null,
+        },
+      });
     });
 
     logInfo('tasting_sheet.saved', {
@@ -262,7 +259,7 @@ export async function submitWineOrderRequest(
       };
     }
 
-    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const tokenHash = hashToken(token);
     const booking = await db.booking.findFirst({
       where: {
         id: bookingId,
@@ -393,8 +390,19 @@ export async function submitWineOrderRequest(
         { wineryId: booking.winery.id }
       );
     } else {
-      // The request row exists (future Shop inbox) — surface the email
-      // failure in the logs without failing the client.
+      // The request row exists (future Shop inbox), but the deliverable
+      // at launch IS this email (A6): a swallowed failure means a lost
+      // order — logError reaches Sentry, EmailLog keeps the audit trail.
+      logError(
+        'wine order request email to the winery failed — order needs manual replay',
+        undefined,
+        {
+          action: 'submitWineOrderRequest',
+          bookingId: booking.id,
+          wineryId: booking.winery.id,
+          orderRequestId,
+        }
+      );
       await logEmailFailed(
         'wine_order_request',
         booking.winery.email,
@@ -416,7 +424,8 @@ export async function submitWineOrderRequest(
           totalCents,
         },
       });
-      await posthog.flush();
+      // Best-effort analytics — never on the 1-tap response path.
+      void posthog.flush().catch(() => {});
     }
 
     logInfo('wine_order.requested', {

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { verifyCronRequest } from '@/lib/cron-auth';
 import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
+import type { FlagKey } from '@/lib/flags';
 import {
   runDueJobs,
   type ScheduledJobHandler,
@@ -13,15 +14,25 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 
 /**
- * Generic ScheduledJob drain (P-07 / decision A2), hourly. Each job type
- * is gated by its feature flag HERE: a disabled type is never claimed, so
- * flag OFF = its jobs stay PENDING with 0 extra attempts (reversible).
- * P-09 (GIFT_CARD_DELIVERY) and P-10 (REQUEST_OFFER_REMINDER) plug into
- * the same registry.
+ * Generic ScheduledJob drain (P-07 / decision A2), hourly. ONE registry
+ * entry per job type — its kill-switch flag and its handler live side by
+ * side, so a type can never be enabled without a handler (the split that
+ * would park jobs FAILED on a config mistake). A disabled type is never
+ * claimed: flag OFF = its jobs stay PENDING with 0 extra attempts
+ * (reversible). P-09 (GIFT_CARD_DELIVERY) and P-10
+ * (REQUEST_OFFER_REMINDER) plug in as new entries.
  */
-const HANDLERS: Record<string, ScheduledJobHandler> = {
-  [TASTING_RECAP_JOB_TYPE]: processTastingRecapJob,
-};
+const JOB_REGISTRY: {
+  type: string;
+  flag: FlagKey;
+  handler: ScheduledJobHandler;
+}[] = [
+  {
+    type: TASTING_RECAP_JOB_TYPE,
+    flag: 'TASTING_SHEET',
+    handler: processTastingRecapJob,
+  },
+];
 
 export async function GET() {
   if (!(await verifyCronRequest())) {
@@ -30,12 +41,16 @@ export async function GET() {
   const startedAt = Date.now();
 
   try {
-    const enabledTypes: string[] = [];
-    if (await isFlagEnabled('TASTING_SHEET')) {
-      enabledTypes.push(TASTING_RECAP_JOB_TYPE);
-    }
+    const flags = await Promise.all(
+      JOB_REGISTRY.map((entry) => isFlagEnabled(entry.flag))
+    );
+    const enabled = JOB_REGISTRY.filter((_, index) => flags[index] === true);
+    const enabledTypes = enabled.map((entry) => entry.type);
+    const handlers = Object.fromEntries(
+      enabled.map((entry) => [entry.type, entry.handler])
+    );
 
-    const stats = await runDueJobs({ enabledTypes, handlers: HANDLERS });
+    const stats = await runDueJobs({ enabledTypes, handlers });
 
     logInfo('scheduled_jobs.cron_drain', {
       action: 'cronProcessScheduledJobs',

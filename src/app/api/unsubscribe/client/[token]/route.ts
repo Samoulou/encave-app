@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/server/db';
 import { logError, logInfo } from '@/lib/logger';
+import {
+  checkRateLimit,
+  getClientIp,
+  GEOCODE_RATE_LIMIT,
+} from '@/server/services/rate-limit.service';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,6 +22,17 @@ export async function GET(
 ) {
   try {
     const { token } = await params;
+
+    // Public endpoint rule: rate-limited (token enumeration / DB load).
+    // 30/min per IP — same budget as the other public GET (geocode).
+    const ip = getClientIp(request.headers);
+    const rate = await checkRateLimit(
+      `unsubscribe-client:${ip}`,
+      GEOCODE_RATE_LIMIT
+    );
+    if (!rate.success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
 
     const preference = await db.clientEmailPreference.findUnique({
       where: { unsubscribeToken: token },

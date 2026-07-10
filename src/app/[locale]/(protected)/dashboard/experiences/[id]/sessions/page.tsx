@@ -61,10 +61,13 @@ export default async function ExperienceSessionsPage({
   // Both reads tenant-gate on (experienceId, userId); the context carries
   // the day-J fields (slug, duration, winery name, status) that the
   // calendar DTO doesn't.
-  const [calendar, context, tastingEnabled] = await Promise.all([
+  // getOwnerWines is fetched unconditionally in the same round — cheap
+  // owner read, and gating it on the flag would serialize the requests.
+  const [calendar, context, tastingEnabled, ownerWines] = await Promise.all([
     getOccurrenceCalendar(experienceId, session.user.id, monthKey),
     getExperienceOperationalContext(experienceId, session.user.id),
     isFlagEnabled('TASTING_SHEET'),
+    getOwnerWines(session.user.id),
   ]);
   if (!calendar || !context) {
     redirect({ href: '/dashboard/experiences', locale: localeTyped });
@@ -72,9 +75,7 @@ export default async function ExperienceSessionsPage({
   }
 
   // Tasting sheet (P-07): null = flag OFF, the section never renders.
-  const tastingWines = tastingEnabled
-    ? await getOwnerWines(session.user.id)
-    : null;
+  const tastingWines = tastingEnabled ? ownerWines : null;
 
   const t = await getTranslations('Dashboard.eventDetail');
 

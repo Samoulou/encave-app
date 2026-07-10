@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { GlassWater, Loader2, Send } from 'lucide-react';
@@ -21,8 +21,6 @@ interface TastingSheetSectionProps {
   wines: WineDTO[];
   /** Wines already persisted on the session's bookings. */
   servedWineIds: string[];
-  /** Active (CONFIRMED/COMPLETED) bookings of the session. */
-  activeAttendeeCount: number;
 }
 
 /**
@@ -30,6 +28,10 @@ interface TastingSheetSectionProps {
  * ≥48px toggle rows — fillable in under 30s on a phone — and one
  * « Envoyer le récap » button that persists the fan-out and arms the
  * J+2 recap for every active booking.
+ *
+ * The parent MUST key this component on the session identity
+ * (`${dateKey}|${timeSlot}`) — switching sessions remounts it with fresh
+ * toggle state instead of a resync effect.
  */
 export function TastingSheetSection({
   experienceId,
@@ -37,7 +39,6 @@ export function TastingSheetSection({
   timeSlot,
   wines,
   servedWineIds,
-  activeAttendeeCount,
 }: TastingSheetSectionProps) {
   const t = useTranslations('Dashboard.tastingSheet');
   const locale = useLocale() as Locale;
@@ -46,14 +47,6 @@ export function TastingSheetSection({
   const [checked, setChecked] = useState<Set<string>>(
     () => new Set(servedWineIds)
   );
-  const [armedRunAt, setArmedRunAt] = useState<Date | null>(null);
-
-  // Re-sync when the sheet is reopened on another session.
-  useEffect(() => {
-    setChecked(new Set(servedWineIds));
-    setArmedRunAt(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [experienceId, dateKey, timeSlot, servedWineIds.join(',')]);
 
   const hasSheet = servedWineIds.length > 0;
   const isDirty =
@@ -87,10 +80,19 @@ export function TastingSheetSection({
         return;
       }
       if (result.data.recapRunAt !== null) {
-        setArmedRunAt(new Date(result.data.recapRunAt));
-        toast.success(t('armed', { count: result.data.bookingCount }));
+        // The armed date lives in the toast: any in-component note would
+        // be wiped by the router.refresh() prop resync.
+        toast.success(
+          t('armedNote', {
+            count: result.data.bookingCount,
+            date: formatDate(new Date(result.data.recapRunAt), locale, {
+              weekday: 'long',
+              day: 'numeric',
+              month: 'long',
+            }),
+          })
+        );
       } else {
-        setArmedRunAt(null);
         toast.success(t('cleared'));
       }
       router.refresh();
@@ -174,20 +176,8 @@ export function TastingSheetSection({
         </Button>
       </div>
 
-      {armedRunAt !== null && (
+      {hasSheet && !isDirty && (
         <p className="rounded-lg bg-emerald-50 p-3 text-xs text-emerald-800">
-          {t('armedNote', {
-            count: activeAttendeeCount,
-            date: formatDate(armedRunAt, locale, {
-              weekday: 'long',
-              day: 'numeric',
-              month: 'long',
-            }),
-          })}
-        </p>
-      )}
-      {armedRunAt === null && hasSheet && !isDirty && (
-        <p className="rounded-lg bg-stone-50 p-3 text-xs text-slate-600">
           {t('alreadyFilled')}
         </p>
       )}

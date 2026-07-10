@@ -9,7 +9,8 @@ import {
   logEmailSent,
   logEmailFailed,
 } from '@/server/services/email-log.service';
-import { zonedDateKey, zonedHourOf } from '@/lib/datetime/zurich';
+import { zonedHourOf } from '@/lib/datetime/zurich';
+import { zurichTodayAsUTCDate } from '@/lib/business-rules/occurrence-expansion';
 import { getBaseUrl } from '@/lib/env';
 import { logError, logInfo } from '@/lib/logger';
 
@@ -42,8 +43,7 @@ export async function GET() {
       return NextResponse.json({ skipped: 'not_local_reminder_hour' });
     }
 
-    const todayKey = zonedDateKey(now);
-    const todayUTC = new Date(`${todayKey}T00:00:00.000Z`);
+    const todayUTC = zurichTodayAsUTCDate(now);
     // Wineries with at least one active booking today.
     const wineryIds = await db.booking.groupBy({
       by: ['wineryId'],
@@ -67,7 +67,7 @@ export async function GET() {
             type: 'tasting_sheet_reminder',
             wineryId,
             status: 'sent',
-            createdAt: { gte: new Date(`${todayKey}T00:00:00.000Z`) },
+            createdAt: { gte: todayUTC },
           },
         });
         if (alreadySent > 0) {
@@ -96,14 +96,20 @@ export async function GET() {
               timeSlot: session.timeSlot,
               attendeeCount: session.attendeeCount,
             })),
-            sheetUrl: `${getBaseUrl()}/fr/dashboard/experiences/${firstSession.experienceId}/sessions`,
+            // Deep-link in the winemaker's own locale, like the email body.
+            sheetUrl: `${getBaseUrl()}/${winery.user.preferredLocale.toLowerCase()}/dashboard/experiences/${firstSession.experienceId}/sessions`,
           },
           winery.user.preferredLocale
         );
         if (success) {
-          await logEmailSent('tasting_sheet_reminder', winery.email, undefined, {
-            wineryId,
-          });
+          await logEmailSent(
+            'tasting_sheet_reminder',
+            winery.email,
+            undefined,
+            {
+              wineryId,
+            }
+          );
           results.sent++;
         } else {
           await logEmailFailed(

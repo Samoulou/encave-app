@@ -100,7 +100,13 @@ export const wineFormSchema = z.object({
   priceChf: z
     .string()
     .trim()
-    .regex(/^\d{1,4}([.,]\d{1,2})?$/),
+    .regex(/^\d{1,4}([.,]\d{1,2})?$/)
+    .refine(
+      (value) =>
+        Math.round(Number(value.replace(',', '.')) * 100) <=
+        WINE_PRICE_MAX_CENTS,
+      { message: 'Price above the ceiling' }
+    ),
 });
 
 export type WineFormInput = z.infer<typeof wineFormSchema>;

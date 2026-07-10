@@ -12,9 +12,7 @@ const txMock = {
   },
   scheduledJob: {
     updateMany: vi.fn(),
-    findMany: vi.fn().mockResolvedValue([]),
-    create: vi.fn(),
-    update: vi.fn(),
+    createMany: vi.fn(),
   },
 };
 
@@ -80,7 +78,6 @@ describe('saveTastingSheet', () => {
     vi.mocked(isFlagEnabled).mockResolvedValue(true);
     vi.mocked(db.experience.findFirst).mockResolvedValue(experience as never);
     vi.mocked(db.wine.count).mockResolvedValue(1);
-    txMock.scheduledJob.findMany.mockResolvedValue([]);
   });
 
   it('rejects unauthenticated callers', async () => {
@@ -146,22 +143,36 @@ describe('saveTastingSheet', () => {
     if (!result.success) throw new Error('unreachable');
     expect(result.data.recapRunAt).toBeInstanceOf(Date);
 
-    // Fan-out: one sync per booking.
-    expect(txMock.bookingWine.deleteMany).toHaveBeenCalledTimes(2);
-    expect(txMock.bookingWine.createMany).toHaveBeenCalledTimes(2);
+    // Set-based fan-out: ONE delete + ONE create for the whole session.
+    expect(txMock.bookingWine.deleteMany).toHaveBeenCalledTimes(1);
+    expect(txMock.bookingWine.deleteMany).toHaveBeenCalledWith({
+      where: {
+        bookingId: { in: ['booking-1', 'booking-2'] },
+        wineId: { notIn: [CUID_B] },
+      },
+    });
+    expect(txMock.bookingWine.createMany).toHaveBeenCalledTimes(1);
     expect(txMock.bookingWine.createMany).toHaveBeenCalledWith({
-      data: [{ bookingId: 'booking-1', wineId: CUID_B }],
+      data: [
+        { bookingId: 'booking-1', wineId: CUID_B },
+        { bookingId: 'booking-2', wineId: CUID_B },
+      ],
       skipDuplicates: true,
     });
 
-    // One TASTING_RECAP job per booking, dedupeKey'd.
-    expect(txMock.scheduledJob.create).toHaveBeenCalledTimes(2);
-    expect(txMock.scheduledJob.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({
-        type: 'TASTING_RECAP',
-        dedupeKey: 'TASTING_RECAP:booking-1',
-        payload: { bookingId: 'booking-1' },
-      }),
+    // One TASTING_RECAP job per booking, dedupeKey'd, in one createMany.
+    expect(txMock.scheduledJob.createMany).toHaveBeenCalledWith({
+      data: [
+        expect.objectContaining({
+          type: 'TASTING_RECAP',
+          dedupeKey: 'TASTING_RECAP:booking-1',
+          payload: { bookingId: 'booking-1' },
+        }),
+        expect.objectContaining({
+          dedupeKey: 'TASTING_RECAP:booking-2',
+        }),
+      ],
+      skipDuplicates: true,
     });
   });
 
@@ -193,7 +204,7 @@ describe('saveTastingSheet', () => {
       data: { bookingCount: 1, wineCount: 0, recapRunAt: null },
     });
     expect(txMock.bookingWine.deleteMany).toHaveBeenCalledWith({
-      where: { bookingId: 'booking-1', wineId: { notIn: [] } },
+      where: { bookingId: { in: ['booking-1'] }, wineId: { notIn: [] } },
     });
     expect(txMock.bookingWine.createMany).not.toHaveBeenCalled();
     expect(txMock.scheduledJob.updateMany).toHaveBeenCalledWith({
@@ -205,42 +216,29 @@ describe('saveTastingSheet', () => {
     });
   });
 
-  it('re-arms a CANCELLED job when the sheet is re-filled', async () => {
+  it('re-arms ONLY CANCELLED jobs (DONE/PENDING/PROCESSING untouched)', async () => {
     vi.mocked(db.booking.findMany).mockResolvedValue([
       { id: 'booking-1' },
-    ] as never);
-    txMock.scheduledJob.findMany.mockResolvedValue([
-      {
-        id: 'job-1',
-        dedupeKey: 'TASTING_RECAP:booking-1',
-        status: 'CANCELLED',
-      },
     ] as never);
 
     const result = await saveTastingSheet(validInput);
     expect(result).toMatchObject({ success: true });
-    expect(txMock.scheduledJob.create).not.toHaveBeenCalled();
-    expect(txMock.scheduledJob.update).toHaveBeenCalledWith({
-      where: { id: 'job-1' },
+    // Existing jobs survive via skipDuplicates on the unique dedupeKey…
+    expect(txMock.scheduledJob.createMany).toHaveBeenCalledWith(
+      expect.objectContaining({ skipDuplicates: true })
+    );
+    // …and the re-arm is scoped to CANCELLED — a DONE job (recap already
+    // sent) or a live PENDING one can never be reset by a re-save.
+    expect(txMock.scheduledJob.updateMany).toHaveBeenCalledWith({
+      where: {
+        dedupeKey: { in: ['TASTING_RECAP:booking-1'] },
+        status: 'CANCELLED',
+      },
       data: expect.objectContaining({
         status: 'PENDING',
         attempts: 0,
         lastError: null,
       }),
     });
-  });
-
-  it('never touches a DONE job (recap already sent)', async () => {
-    vi.mocked(db.booking.findMany).mockResolvedValue([
-      { id: 'booking-1' },
-    ] as never);
-    txMock.scheduledJob.findMany.mockResolvedValue([
-      { id: 'job-1', dedupeKey: 'TASTING_RECAP:booking-1', status: 'DONE' },
-    ] as never);
-
-    const result = await saveTastingSheet(validInput);
-    expect(result).toMatchObject({ success: true });
-    expect(txMock.scheduledJob.create).not.toHaveBeenCalled();
-    expect(txMock.scheduledJob.update).not.toHaveBeenCalled();
   });
 });

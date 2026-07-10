@@ -57,7 +57,7 @@ export default async function WineryPage({ params }: WineryPageProps) {
   }
 
   // P-07 / L-064: public wine list, entirely behind the TASTING_SHEET flag.
-  const wines = tastingEnabled ? winery.wines : [];
+  const wines = tastingEnabled ? (winery.wines ?? []) : [];
 
   const experiences = await getExperiencesByWineryId(winery.id);
 

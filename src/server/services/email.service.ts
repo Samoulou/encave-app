@@ -806,7 +806,9 @@ export interface WineOrderRequestEmailData {
 
 /**
  * Order request → winery (winemaker locale) + confirmation copy → client
- * (Booking.locale). The winery email is the deliverable at launch (A6).
+ * (Booking.locale). The winery email is the deliverable at launch (A6);
+ * when it fails, the client copy ("we forwarded your request") would be
+ * a lie — it is skipped, and the caller escalates the failure.
  */
 export async function sendWineOrderRequestEmails(
   wineryEmail: string,
@@ -842,6 +844,10 @@ export async function sendWineOrderRequestEmails(
     ],
   });
 
+  if (!wineryResult.ok) {
+    return { winery: false, client: false };
+  }
+
   const clientHtml = await render(
     WineOrderRequestClientEmail({
       locale: clientLoc,
@@ -859,7 +865,7 @@ export async function sendWineOrderRequestEmails(
     html: clientHtml,
   });
 
-  return { winery: wineryResult.ok, client: clientResult.ok };
+  return { winery: true, client: clientResult.ok };
 }
 
 export interface TastingSheetReminderData {

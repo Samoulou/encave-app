@@ -1,8 +1,9 @@
 import { cache } from 'react';
-import crypto from 'crypto';
 import { BookingStatus } from '@prisma/client';
 import { db } from '@/server/db';
-import { zonedWallClockToUTC, zonedDateKey } from '@/lib/datetime/zurich';
+import { sessionEndUTC } from '@/lib/datetime/zurich';
+import { zurichTodayAsUTCDate } from '@/lib/business-rules/occurrence-expansion';
+import { hashToken } from '@/lib/utils/token';
 
 /**
  * Wine catalogue + tasting loop reads (P-07).
@@ -112,8 +113,7 @@ export async function findEmptySheetSessions(options: {
   now: Date;
 }): Promise<EmptySheetSessionDTO[]> {
   const { wineryId, now } = options;
-  const todayKey = zonedDateKey(now);
-  const todayUTC = new Date(`${todayKey}T00:00:00.000Z`);
+  const todayUTC = zurichTodayAsUTCDate(now);
 
   const bookings = await db.booking.findMany({
     where: {
@@ -157,11 +157,9 @@ export async function findEmptySheetSessions(options: {
   return Array.from(sessions.values())
     .filter((session) => {
       if (session.hasWines) return false;
-      const endsAt = new Date(
-        zonedWallClockToUTC(session.date, session.timeSlot).getTime() +
-          session.duration * 60 * 1000
+      return (
+        sessionEndUTC(session.date, session.timeSlot, session.duration) <= now
       );
-      return endsAt <= now;
     })
     .map((session) => ({
       experienceId: session.experienceId,
@@ -188,6 +186,8 @@ export const getOwnerEmptySheetSessionsToday = cache(
 export interface WineOrderPageDTO {
   bookingId: string;
   guestName: string;
+  /** Server-side only (PostHog identity) — never passed to the client. */
+  guestEmail: string;
   wineryName: string;
   alreadyRequested: boolean;
   /** Wines served at the tasting (BookingWine), prices as of now. */
@@ -211,7 +211,7 @@ export async function getWineOrderPageData(
   token: string
 ): Promise<WineOrderPageDTO | null> {
   if (token.length < 32 || token.length > 128) return null;
-  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+  const tokenHash = hashToken(token);
   const booking = await db.booking.findFirst({
     where: {
       id: bookingId,
@@ -220,6 +220,7 @@ export async function getWineOrderPageData(
     select: {
       id: true,
       visitorName: true,
+      visitorEmail: true,
       winery: { select: { name: true } },
       wineOrderRequest: { select: { id: true } },
       wines: {
@@ -241,6 +242,7 @@ export async function getWineOrderPageData(
   return {
     bookingId: booking.id,
     guestName: booking.visitorName,
+    guestEmail: booking.visitorEmail,
     wineryName: booking.winery.name,
     alreadyRequested: booking.wineOrderRequest !== null,
     wines: booking.wines.map(({ wine }) => wine),

@@ -121,7 +121,10 @@ export const getWineryBySlug = unstable_cache(
 
     return winery;
   },
-  ['winery-by-slug'],
+  // v2: payload shape changed in P-07 (wines include) — the version bump
+  // prevents pre-deploy cache entries (no `wines` key) from being served
+  // to code that reads it.
+  ['winery-by-slug-v2'],
   {
     revalidate: 300,
     tags: ['wineries'],

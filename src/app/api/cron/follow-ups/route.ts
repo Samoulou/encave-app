@@ -68,7 +68,16 @@ export async function GET() {
       const jobs = await db.scheduledJob.findMany({
         where: {
           dedupeKey: { in: bookings.map((b) => tastingRecapDedupeKey(b.id)) },
-          status: { not: ScheduledJobStatus.CANCELLED },
+          // Armed = will be (or was) delivered. FAILED is deliberately
+          // NOT armed: if the recap died permanently, the generic J+1
+          // follow-up must still go out — never zero post-visit emails.
+          status: {
+            in: [
+              ScheduledJobStatus.PENDING,
+              ScheduledJobStatus.PROCESSING,
+              ScheduledJobStatus.DONE,
+            ],
+          },
         },
         select: { dedupeKey: true },
       });

@@ -1,6 +1,8 @@
 'use client';
 
 import { useRef, useState, useTransition } from 'react';
+import type { MutableRefObject } from 'react';
+import type { Control } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -40,6 +42,105 @@ import type { WineDTO } from '@/server/queries/wine.queries';
 
 interface WinesManagerProps {
   wines: WineDTO[];
+}
+
+interface WineFormFieldsProps {
+  control: Control<WineFormInput>;
+  /** Quick-add shows placeholders and keeps focus on the name input. */
+  withPlaceholders?: boolean;
+  nameRef?: MutableRefObject<HTMLInputElement | null>;
+}
+
+/** The four wine fields — one definition for the quick-add AND the row
+ * editor, so add/edit can never drift apart. */
+function WineFormFields({
+  control,
+  withPlaceholders = false,
+  nameRef,
+}: WineFormFieldsProps) {
+  const t = useTranslations('Dashboard.wines');
+  return (
+    <>
+      <FormField
+        control={control}
+        name="name"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{t('fieldName')}</FormLabel>
+            <FormControl>
+              <Input
+                {...field}
+                ref={(element) => {
+                  field.ref(element);
+                  if (nameRef) nameRef.current = element;
+                }}
+                placeholder={
+                  withPlaceholders ? t('fieldNamePlaceholder') : undefined
+                }
+                autoComplete="off"
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={control}
+        name="grapeVariety"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{t('fieldGrape')}</FormLabel>
+            <FormControl>
+              <Input
+                {...field}
+                placeholder={
+                  withPlaceholders ? t('fieldGrapePlaceholder') : undefined
+                }
+                autoComplete="off"
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={control}
+        name="vintage"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{t('fieldVintage')}</FormLabel>
+            <FormControl>
+              <Input
+                {...field}
+                inputMode="numeric"
+                placeholder={withPlaceholders ? '2024' : undefined}
+                autoComplete="off"
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={control}
+        name="priceChf"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{t('fieldPrice')}</FormLabel>
+            <FormControl>
+              <Input
+                {...field}
+                inputMode="decimal"
+                placeholder={withPlaceholders ? '24.50' : undefined}
+                autoComplete="off"
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </>
+  );
 }
 
 function toFormValues(wine?: WineDTO): WineFormInput {
@@ -120,79 +221,10 @@ export function WinesManager({ wines }: WinesManagerProps) {
             onSubmit={addForm.handleSubmit(onAdd)}
             className="mt-4 grid gap-3 sm:grid-cols-[2fr,2fr,1fr,1fr,auto] sm:items-end"
           >
-            <FormField
+            <WineFormFields
               control={addForm.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('fieldName')}</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      ref={(element) => {
-                        field.ref(element);
-                        nameInputRef.current = element;
-                      }}
-                      placeholder={t('fieldNamePlaceholder')}
-                      autoComplete="off"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={addForm.control}
-              name="grapeVariety"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('fieldGrape')}</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      placeholder={t('fieldGrapePlaceholder')}
-                      autoComplete="off"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={addForm.control}
-              name="vintage"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('fieldVintage')}</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      inputMode="numeric"
-                      placeholder="2024"
-                      autoComplete="off"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={addForm.control}
-              name="priceChf"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('fieldPrice')}</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      inputMode="decimal"
-                      placeholder="24.50"
-                      autoComplete="off"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              withPlaceholders
+              nameRef={nameInputRef}
             />
             <Button
               type="submit"
@@ -361,58 +393,7 @@ function WineRowEditor({
           onSubmit={form.handleSubmit(onSubmit)}
           className="grid gap-3 sm:grid-cols-[2fr,2fr,1fr,1fr] sm:items-end"
         >
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t('fieldName')}</FormLabel>
-                <FormControl>
-                  <Input {...field} autoComplete="off" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="grapeVariety"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t('fieldGrape')}</FormLabel>
-                <FormControl>
-                  <Input {...field} autoComplete="off" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="vintage"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t('fieldVintage')}</FormLabel>
-                <FormControl>
-                  <Input {...field} inputMode="numeric" autoComplete="off" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="priceChf"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t('fieldPrice')}</FormLabel>
-                <FormControl>
-                  <Input {...field} inputMode="decimal" autoComplete="off" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <WineFormFields control={form.control} />
           <div className="flex gap-2 sm:col-span-4 sm:justify-end">
             <Button type="button" variant="outline" onClick={onCancel}>
               {t('cancel')}

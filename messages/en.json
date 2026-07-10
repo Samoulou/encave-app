@@ -2173,7 +2173,6 @@
       "sendButton": "Send the recap",
       "clearButton": "Clear the sheet",
       "saveFailed": "Could not save the sheet. Please try again.",
-      "armed": "{count, plural, one {Recap armed for # booking} other {Recap armed for # bookings}}",
       "cleared": "Sheet cleared — no recap will be sent.",
       "armedNote": "{count, plural, one {The recap will reach # guest} other {The recap will reach # guests}} — scheduled for {date}.",
       "alreadyFilled": "Sheet saved — the recap goes out automatically two days after the visit.",

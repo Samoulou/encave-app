@@ -1,8 +1,9 @@
 import crypto from 'crypto';
 import { BookingStatus, type Prisma } from '@prisma/client';
+import { hashToken } from '@/lib/utils/token';
 import { db } from '@/server/db';
 import { getBaseUrl } from '@/lib/env';
-import { logInfo } from '@/lib/logger';
+import { logError, logInfo } from '@/lib/logger';
 import { sendTastingRecapEmail } from '@/server/services/email.service';
 import {
   logEmailSent,
@@ -96,10 +97,7 @@ export async function processTastingRecapJob(
   // Mint the order-page token (A7): the confirmation accessToken plaintext
   // is unrecoverable by J+2, so the recap carries its own.
   const recapToken = crypto.randomBytes(32).toString('hex');
-  const recapTokenHash = crypto
-    .createHash('sha256')
-    .update(recapToken)
-    .digest('hex');
+  const recapTokenHash = hashToken(recapToken);
   await db.booking.update({
     where: { id: booking.id },
     data: { recapTokenHash },
@@ -123,14 +121,24 @@ export async function processTastingRecapJob(
     throw new Error('tasting_recap_send_failed');
   }
 
-  await db.booking.update({
-    where: { id: booking.id },
-    data: { tastingRecapSentAt: new Date() },
-  });
-  await logEmailSent('tasting_recap', booking.visitorEmail, booking.id, {
-    resendMessageId: result.messageId,
-    wineryId: booking.winery.id,
-  });
+  // The email is OUT — post-send bookkeeping must never throw, or the
+  // runner would retry and resend (and re-mint the token, invalidating
+  // the link the client already received).
+  try {
+    await db.booking.update({
+      where: { id: booking.id },
+      data: { tastingRecapSentAt: new Date() },
+    });
+    await logEmailSent('tasting_recap', booking.visitorEmail, booking.id, {
+      resendMessageId: result.messageId,
+      wineryId: booking.winery.id,
+    });
+  } catch (error) {
+    logError('tasting recap post-send bookkeeping failed', error, {
+      action: 'processTastingRecapJob',
+      bookingId: booking.id,
+    });
+  }
   logInfo('tasting_recap.sent', {
     action: 'processTastingRecapJob',
     bookingId: booking.id,

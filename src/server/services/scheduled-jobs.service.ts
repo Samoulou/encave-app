@@ -39,6 +39,13 @@ export interface RunDueJobsStats {
 
 const RUN_BATCH_SIZE = 5;
 
+/**
+ * A job stuck in PROCESSING longer than this was orphaned by a crashed
+ * or timed-out run (maxDuration cutoff, deploy, OOM) — normal events on
+ * serverless. Reclaimed on the next pass instead of being lost forever.
+ */
+const STALE_PROCESSING_MINUTES = 30;
+
 export async function runDueJobs(options: {
   enabledTypes: string[];
   handlers: Record<string, ScheduledJobHandler>;
@@ -54,6 +61,40 @@ export async function runDueJobs(options: {
     failed: 0,
   };
   if (enabledTypes.length === 0) return stats;
+
+  // Crash-safety sweep: requeue jobs orphaned mid-claim by a dead run.
+  // The claim already incremented attempts, so exhausted ones go FAILED.
+  const staleBefore = new Date(
+    now.getTime() - STALE_PROCESSING_MINUTES * 60 * 1000
+  );
+  const staleWhere = {
+    status: ScheduledJobStatus.PROCESSING,
+    type: { in: enabledTypes },
+    updatedAt: { lt: staleBefore },
+  };
+  const [requeued, exhausted] = await Promise.all([
+    db.scheduledJob.updateMany({
+      where: { ...staleWhere, attempts: { lt: SCHEDULED_JOB_MAX_ATTEMPTS } },
+      data: {
+        status: ScheduledJobStatus.PENDING,
+        lastError: 'reclaimed_stale_processing',
+      },
+    }),
+    db.scheduledJob.updateMany({
+      where: { ...staleWhere, attempts: { gte: SCHEDULED_JOB_MAX_ATTEMPTS } },
+      data: {
+        status: ScheduledJobStatus.FAILED,
+        lastError: 'stale_processing_exhausted',
+      },
+    }),
+  ]);
+  if (requeued.count > 0 || exhausted.count > 0) {
+    logInfo('scheduled jobs reclaimed from stale PROCESSING', {
+      action: 'runDueJobs',
+      requeued: requeued.count,
+      failed: exhausted.count,
+    });
+  }
 
   const due = await db.scheduledJob.findMany({
     where: {

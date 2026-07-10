@@ -40,6 +40,8 @@ function booking(
     date: D1,
     timeSlot: '10:00',
     expiresAt: null,
+    // P-07: the calendar read piggybacks the tasting sheet on the booking.
+    wines: [],
     ...overrides,
   };
 }

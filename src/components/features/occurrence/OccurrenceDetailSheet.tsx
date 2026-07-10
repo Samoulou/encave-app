@@ -476,12 +476,12 @@ export function OccurrenceDetailSheet({
             {/* Tasting sheet (P-07 / L-061) */}
             {showTastingSheet && tastingWines != null && (
               <TastingSheetSection
+                key={`${dateKeyOf(entry.date)}|${entry.startTime}`}
                 experienceId={experienceId}
                 dateKey={dateKeyOf(entry.date)}
                 timeSlot={entry.startTime}
                 wines={tastingWines}
                 servedWineIds={entry.servedWineIds ?? []}
-                activeAttendeeCount={activeAttendeeCount}
               />
             )}
 

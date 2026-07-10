@@ -1,7 +1,6 @@
 import { Section, Text } from '@react-email/components';
 import type { Locale } from '@prisma/client';
-import { EmailLayout, EmailButton } from '../components';
-import { formatEmailPrice } from '../utils';
+import { EmailLayout, EmailButton, WineItemsTable } from '../components';
 import { t, tastingRecap, subjects } from '../translations';
 
 export interface TastingRecapWine {
@@ -50,45 +49,14 @@ export function TastingRecapEmail({
         {t(tastingRecap.intro, locale).replace('{guestName}', guestName)}
       </Text>
 
-      <Section
-        style={{
-          border: '1px solid #e5e7eb',
-          borderRadius: '8px',
-          padding: '8px 16px',
-          margin: '16px 0',
-        }}
-      >
-        {wines.map((wine, index) => (
-          <table
-            key={`${wine.name}-${index}`}
-            width="100%"
-            style={{
-              borderBottom:
-                index < wines.length - 1 ? '1px solid #f3f4f6' : 'none',
-            }}
-          >
-            <tr>
-              <td style={{ padding: '10px 0' }}>
-                <Text style={{ margin: 0, fontWeight: 600, fontSize: '14px' }}>
-                  {wine.name}
-                  {wine.vintage != null ? ` ${wine.vintage}` : ''}
-                </Text>
-                <Text style={{ margin: 0, fontSize: '12px', color: '#6b7280' }}>
-                  {wine.grapeVariety}
-                </Text>
-              </td>
-              <td
-                align="right"
-                style={{ verticalAlign: 'top', padding: '10px 0' }}
-              >
-                <Text style={{ margin: 0, fontWeight: 600, fontSize: '14px' }}>
-                  {formatEmailPrice(wine.price)}
-                </Text>
-              </td>
-            </tr>
-          </table>
-        ))}
-      </Section>
+      <WineItemsTable
+        items={wines.map((wine) => ({
+          name: wine.name,
+          vintage: wine.vintage,
+          price: wine.price,
+          subtitle: wine.grapeVariety,
+        }))}
+      />
 
       <Section style={{ textAlign: 'center', margin: '24px 0' }}>
         <EmailButton href={orderUrl}>{t(tastingRecap.cta, locale)}</EmailButton>

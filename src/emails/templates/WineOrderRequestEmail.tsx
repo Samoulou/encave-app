@@ -1,6 +1,6 @@
-import { Section, Text } from '@react-email/components';
+import { Text } from '@react-email/components';
 import type { Locale } from '@prisma/client';
-import { EmailLayout } from '../components';
+import { EmailLayout, WineItemsTable } from '../components';
 import { formatEmailPrice } from '../utils';
 import { t, wineOrderRequest, subjects } from '../translations';
 
@@ -11,45 +11,13 @@ export interface WineOrderRequestItemLine {
   priceAtRequest: number; // cents
 }
 
-function ItemsTable({ items }: { items: WineOrderRequestItemLine[] }) {
-  return (
-    <Section
-      style={{
-        border: '1px solid #e5e7eb',
-        borderRadius: '8px',
-        padding: '8px 16px',
-        margin: '16px 0',
-      }}
-    >
-      {items.map((item, index) => (
-        <table
-          key={`${item.wineName}-${index}`}
-          width="100%"
-          style={{
-            borderBottom:
-              index < items.length - 1 ? '1px solid #f3f4f6' : 'none',
-          }}
-        >
-          <tr>
-            <td style={{ padding: '10px 0' }}>
-              <Text style={{ margin: 0, fontWeight: 600, fontSize: '14px' }}>
-                {item.quantity} × {item.wineName}
-                {item.vintage != null ? ` ${item.vintage}` : ''}
-              </Text>
-            </td>
-            <td
-              align="right"
-              style={{ verticalAlign: 'top', padding: '10px 0' }}
-            >
-              <Text style={{ margin: 0, fontSize: '14px' }}>
-                {formatEmailPrice(item.priceAtRequest * item.quantity)}
-              </Text>
-            </td>
-          </tr>
-        </table>
-      ))}
-    </Section>
-  );
+function toTableItems(items: WineOrderRequestItemLine[]) {
+  return items.map((item) => ({
+    name: item.wineName,
+    vintage: item.vintage,
+    price: item.priceAtRequest,
+    quantity: item.quantity,
+  }));
 }
 
 interface WineOrderRequestWineryEmailProps {
@@ -93,7 +61,7 @@ export function WineOrderRequestWineryEmail({
           .replace('{reference}', bookingReference)}
       </Text>
 
-      <ItemsTable items={items} />
+      <WineItemsTable items={toTableItems(items)} />
 
       <Text style={{ fontWeight: 600 }}>
         {t(wineOrderRequest.winery.total, locale).replace(
@@ -147,7 +115,7 @@ export function WineOrderRequestClientEmail({
       <Text style={{ fontWeight: 600, marginBottom: 0 }}>
         {t(wineOrderRequest.client.recap, locale)}
       </Text>
-      <ItemsTable items={items} />
+      <WineItemsTable items={toTableItems(items)} />
       <Text style={{ fontWeight: 600 }}>
         {t(wineOrderRequest.winery.total, locale).replace(
           '{amount}',
