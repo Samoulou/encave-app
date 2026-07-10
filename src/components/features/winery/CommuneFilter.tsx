@@ -17,8 +17,10 @@ interface CommuneFilterProps {
 
 export function CommuneFilter({ communes }: CommuneFilterProps) {
   const t = useTranslations('wineries');
+  // P-06 (D2): shallow — the wineries page is ISR, the commune filter
+  // is applied client-side by WineriesExplorer, no server navigation.
   const [commune, setCommune] = useQueryState('commune', {
-    shallow: false,
+    shallow: true,
   });
 
   return (

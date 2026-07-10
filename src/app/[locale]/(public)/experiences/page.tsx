@@ -1,13 +1,6 @@
 import { Suspense } from 'react';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
-import { type SearchParams } from '@/server/queries/experience.queries';
 import { ExperiencesContent } from './ExperiencesContent';
-import {
-  DEFAULT_CATALOG_SORT,
-  parseCatalogSort,
-  parseDateKeyParam,
-  parseExperienceTypes,
-} from '@/lib/utils/search-params';
 import {
   SkeletonExperienceGrid,
   Skeleton,
@@ -29,75 +22,21 @@ export const metadata: Metadata = {
 
 interface PageProps {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{
-    q?: string;
-    type?: string | string[];
-    commune?: string;
-    minPrice?: string;
-    maxPrice?: string;
-    capacity?: string;
-    sort?: string;
-    page?: string;
-    // Date search (P-05 / L-110): YYYY-MM-DD, quand_fin optional range end
-    quand?: string;
-    quand_fin?: string;
-    // Location-based search params
-    location?: string;
-    lat?: string;
-    lng?: string;
-  }>;
 }
 
-export default async function ExperiencesPage({
-  params,
-  searchParams,
-}: PageProps) {
+// P-06 (D2): the catalogue no longer reads searchParams — the page is
+// ISR (default dataset served from the CDN, invalidated by the
+// 'experiences' tag). Filters are 100% client-side: the URL stays the
+// source of truth via nuqs (shallow) and filtered results come from
+// searchExperiencesAction. Deep links show the default grid for the
+// time of one fetch, then the filtered results.
+export const revalidate = 300;
+
+export default async function ExperiencesPage({ params }: PageProps) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const searchParamsData = await searchParams;
   const t = await getTranslations('search');
   const tNav = await getTranslations('nav');
-  const hasLocationSearch = Boolean(
-    searchParamsData.location && searchParamsData.lat && searchParamsData.lng
-  );
-
-  // Parse search parameters (fast - no DB calls, no async)
-  const page = searchParamsData.page ? parseInt(searchParamsData.page, 10) : 1;
-  const types = parseExperienceTypes(searchParamsData.type);
-  const sort = parseCatalogSort(searchParamsData.sort);
-  // Date window (P-05 / L-110): quand anchors the window, quand_fin is an
-  // optional inclusive end (weekend chip). A backwards range is dropped.
-  const availableFrom = parseDateKeyParam(searchParamsData.quand);
-  const rawAvailableTo = parseDateKeyParam(searchParamsData.quand_fin);
-  const availableTo =
-    availableFrom !== undefined &&
-    rawAvailableTo !== undefined &&
-    rawAvailableTo >= availableFrom
-      ? rawAvailableTo
-      : undefined;
-  const parsedParams: SearchParams = {
-    search: searchParamsData.q || undefined,
-    type: types.length > 0 ? types : undefined,
-    commune: searchParamsData.commune || undefined,
-    minPrice: searchParamsData.minPrice
-      ? parseInt(searchParamsData.minPrice, 10)
-      : undefined,
-    maxPrice: searchParamsData.maxPrice
-      ? parseInt(searchParamsData.maxPrice, 10)
-      : undefined,
-    capacity: searchParamsData.capacity
-      ? parseInt(searchParamsData.capacity, 10)
-      : undefined,
-    sort:
-      sort === 'distance' && !hasLocationSearch ? DEFAULT_CATALOG_SORT : sort,
-    page: page > 0 ? page : 1,
-    availableFrom,
-    availableTo,
-    // Location-based search params
-    location: searchParamsData.location || undefined,
-    lat: searchParamsData.lat ? parseFloat(searchParamsData.lat) : undefined,
-    lng: searchParamsData.lng ? parseFloat(searchParamsData.lng) : undefined,
-  };
 
   return (
     <div className="min-h-screen bg-cream-50">
@@ -137,9 +76,9 @@ export default async function ExperiencesPage({
 
       {/* Main Content */}
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        {/* Content with data - streams in when ready */}
+        {/* Default dataset — prerendered, client refines via action */}
         <Suspense fallback={<ContentLoadingState />}>
-          <ExperiencesContent searchParams={parsedParams} />
+          <ExperiencesContent searchParams={{}} />
         </Suspense>
       </div>
       <Footer />

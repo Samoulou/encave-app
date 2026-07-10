@@ -1,8 +1,13 @@
 'use client';
 
 import * as React from 'react';
-import { useCallback, useMemo, useTransition, useOptimistic } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useCallback, useEffect, useMemo, useRef, useTransition } from 'react';
+import {
+  useQueryStates,
+  parseAsString,
+  parseAsInteger,
+  parseAsFloat,
+} from 'nuqs';
 import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { ExperienceType } from '@prisma/client';
@@ -22,6 +27,11 @@ import {
   parseExperienceTypes,
   type CatalogSort,
 } from '@/lib/utils/search-params';
+import {
+  searchExperiencesAction,
+  type ExperienceSearchData,
+} from '@/server/actions/experience-search';
+import type { ExperienceSearchInput } from '@/lib/validators/experienceSearch';
 import type { ExperienceSearchResult } from '@/server/queries/experience.queries';
 import type { MapWinery } from '@/components/features/map/types';
 
@@ -60,6 +70,14 @@ interface FilterState {
   quandFin: string | null;
 }
 
+/**
+ * P-06 (D2): the /experiences page is STATIC — it always serves the
+ * default dataset from the CDN. This client is the single owner of
+ * filtering: the URL stays the source of truth (nuqs, shallow — no
+ * server navigation), and any non-default state fetches results through
+ * `searchExperiencesAction` in a transition. Resetting to defaults
+ * restores the server-rendered dataset without a network call.
+ */
 export function ExperiencesPageClient({
   initialExperiences,
   communes,
@@ -67,143 +85,184 @@ export function ExperiencesPageClient({
   locationSearch,
 }: ExperiencesPageClientProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const tSearch = useTranslations('search');
-  const currentSearchParams = useMemo(
-    () => searchParams ?? new URLSearchParams(),
-    [searchParams]
-  );
   const [isPending, startTransition] = useTransition();
 
-  // Parse current URL params (server-confirmed state)
-  const serverParams: FilterState = {
-    search: currentSearchParams.get('q') || '',
-    types: parseExperienceTypes(currentSearchParams.get('type')),
-    commune: currentSearchParams.get('commune'),
-    minPrice: parseNumber(currentSearchParams.get('minPrice')),
-    maxPrice: parseNumber(currentSearchParams.get('maxPrice')),
-    capacity: parseNumber(currentSearchParams.get('capacity')),
-    sort: parseCatalogSort(currentSearchParams.get('sort')),
-    quand: parseDateKeyParam(currentSearchParams.get('quand')) ?? null,
-    quandFin: parseDateKeyParam(currentSearchParams.get('quand_fin')) ?? null,
-  };
+  const [urlState, setUrlState] = useQueryStates(
+    {
+      q: parseAsString,
+      type: parseAsString,
+      commune: parseAsString,
+      minPrice: parseAsInteger,
+      maxPrice: parseAsInteger,
+      capacity: parseAsInteger,
+      sort: parseAsString,
+      page: parseAsInteger,
+      quand: parseAsString,
+      quand_fin: parseAsString,
+      location: parseAsString,
+      lat: parseAsFloat,
+      lng: parseAsFloat,
+    },
+    { history: 'push' }
+  );
 
-  // Optimistic state for instant UI updates
-  const [optimisticFilters, setOptimisticFilters] = useOptimistic(serverParams);
+  const hasLocationSearch = Boolean(
+    urlState.location && urlState.lat !== null && urlState.lng !== null
+  );
 
-  // Use optimistic values for display
-  const currentParams = optimisticFilters;
+  // Canonical filter state derived from the URL.
+  const currentParams: FilterState = useMemo(() => {
+    const quand = parseDateKeyParam(urlState.quand ?? undefined) ?? null;
+    const rawQuandFin =
+      parseDateKeyParam(urlState.quand_fin ?? undefined) ?? null;
+    return {
+      search: urlState.q ?? '',
+      types: parseExperienceTypes(urlState.type),
+      commune: urlState.commune,
+      minPrice: urlState.minPrice,
+      maxPrice: urlState.maxPrice,
+      capacity: urlState.capacity,
+      sort: parseCatalogSort(urlState.sort),
+      quand,
+      quandFin:
+        quand !== null && rawQuandFin !== null && rawQuandFin >= quand
+          ? rawQuandFin
+          : null,
+    };
+  }, [urlState]);
+
+  const isDefaultState =
+    !currentParams.search &&
+    currentParams.types.length === 0 &&
+    currentParams.commune === null &&
+    currentParams.minPrice === null &&
+    currentParams.maxPrice === null &&
+    currentParams.capacity === null &&
+    currentParams.sort === DEFAULT_CATALOG_SORT &&
+    currentParams.quand === null &&
+    (urlState.page ?? 1) <= 1 &&
+    !hasLocationSearch;
+
+  const initialData: ExperienceSearchData = useMemo(
+    () => ({
+      experiences: initialExperiences,
+      pagination,
+      locationSearch,
+    }),
+    [initialExperiences, pagination, locationSearch]
+  );
+
+  const [results, setResults] =
+    React.useState<ExperienceSearchData>(initialData);
+
+  // One fetch per URL-state change: covers deep links on mount, every
+  // filter interaction, and pagination. The URL is the request.
+  const requestKey = JSON.stringify(urlState);
+  const lastRequestRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (lastRequestRef.current === requestKey) return;
+    lastRequestRef.current = requestKey;
+
+    if (isDefaultState) {
+      setResults(initialData);
+      return;
+    }
+
+    const input: ExperienceSearchInput = {
+      search: currentParams.search || undefined,
+      type: currentParams.types.length > 0 ? currentParams.types : undefined,
+      commune: currentParams.commune ?? undefined,
+      minPrice: currentParams.minPrice ?? undefined,
+      maxPrice: currentParams.maxPrice ?? undefined,
+      capacity: currentParams.capacity ?? undefined,
+      sort:
+        currentParams.sort === 'distance' && !hasLocationSearch
+          ? DEFAULT_CATALOG_SORT
+          : currentParams.sort,
+      page: Math.max(urlState.page ?? 1, 1),
+      availableFrom: currentParams.quand ?? undefined,
+      availableTo: currentParams.quandFin ?? undefined,
+      location: urlState.location ?? undefined,
+      lat: urlState.lat ?? undefined,
+      lng: urlState.lng ?? undefined,
+    };
+
+    startTransition(async () => {
+      const result = await searchExperiencesAction(input);
+      // Stale response guard: only apply the answer of the LAST request.
+      if (lastRequestRef.current !== requestKey) return;
+      if (result.success) {
+        setResults(result.data);
+      }
+      // On failure the previous results stay visible — the URL still
+      // reflects the intent and a later interaction retries.
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requestKey]);
 
   // Mobile filter state
   const [showMobileFilters, setShowMobileFilters] = React.useState(false);
 
-  // Update URL with new params - optimistic updates happen immediately
-  const updateParams = useCallback(
-    (
-      updates: Record<string, string | string[] | null>,
-      optimisticUpdate?: Partial<FilterState>
-    ) => {
-      // Step 1: Update UI IMMEDIATELY (optimistic)
-      if (optimisticUpdate) {
-        setOptimisticFilters((prev) => ({ ...prev, ...optimisticUpdate }));
-      }
-
-      // Step 2: Sync with server in background (non-blocking)
-      startTransition(() => {
-        const params = new URLSearchParams(currentSearchParams.toString());
-
-        Object.entries(updates).forEach(([key, value]) => {
-          if (
-            value === null ||
-            value === '' ||
-            (Array.isArray(value) && value.length === 0)
-          ) {
-            params.delete(key);
-          } else if (Array.isArray(value)) {
-            params.set(key, value.join(','));
-          } else {
-            params.set(key, value);
-          }
-        });
-
-        router.push(`/experiences?${params.toString()}`, { scroll: false });
-      });
-    },
-    [router, currentSearchParams, setOptimisticFilters]
-  );
-
-  // Handler functions - reset page on filter changes
-  // Each handler updates UI optimistically before syncing with server
+  // Handler functions — every filter change resets the page.
   const handleSearchChange = (value: string) => {
-    updateParams({ q: value || null, page: null }, { search: value });
+    void setUrlState({ q: value || null, page: null });
   };
 
   const handleTypesChange = (types: ExperienceType[]) => {
-    updateParams(
-      { type: types.length > 0 ? types : null, page: null },
-      { types }
-    );
+    void setUrlState({
+      type: types.length > 0 ? types.join(',') : null,
+      page: null,
+    });
   };
 
   const handleCommuneChange = (commune: string | null) => {
-    updateParams({ commune, page: null }, { commune });
+    void setUrlState({ commune, page: null });
   };
 
   const handleMinPriceChange = (price: number | null) => {
-    updateParams(
-      { minPrice: price !== null ? String(price) : null, page: null },
-      { minPrice: price }
-    );
+    void setUrlState({ minPrice: price, page: null });
   };
 
   const handleMaxPriceChange = (price: number | null) => {
-    updateParams(
-      { maxPrice: price !== null ? String(price) : null, page: null },
-      { maxPrice: price }
-    );
+    void setUrlState({ maxPrice: price, page: null });
   };
 
   const handleCapacityChange = (capacity: number | null) => {
-    updateParams(
-      { capacity: capacity !== null ? String(capacity) : null, page: null },
-      { capacity }
-    );
+    void setUrlState({ capacity, page: null });
   };
 
   const handleSortChange = (sort: SortOption) => {
-    updateParams(
-      { sort: sort !== DEFAULT_CATALOG_SORT ? sort : null, page: null },
-      { sort }
-    );
+    void setUrlState({
+      sort: sort !== DEFAULT_CATALOG_SORT ? sort : null,
+      page: null,
+    });
   };
 
   const handleDateChange = (quand: string | null) => {
     // Picking a single date replaces any weekend range (quand_fin).
-    updateParams(
-      { quand, quand_fin: null, page: null },
-      { quand, quandFin: null }
-    );
+    void setUrlState({ quand, quand_fin: null, page: null });
   };
 
   const handlePageChange = (page: number) => {
-    updateParams({ page: page > 1 ? String(page) : null });
+    void setUrlState({ page: page > 1 ? page : null });
   };
 
   const handleClearFilters = () => {
-    // Reset optimistic state to defaults
-    setOptimisticFilters({
-      search: '',
-      types: [],
+    void setUrlState({
+      q: null,
+      type: null,
       commune: null,
       minPrice: null,
       maxPrice: null,
       capacity: null,
-      sort: DEFAULT_CATALOG_SORT,
+      sort: null,
+      page: null,
       quand: null,
-      quandFin: null,
-    });
-    startTransition(() => {
-      router.push('/experiences', { scroll: false });
+      quand_fin: null,
+      location: null,
+      lat: null,
+      lng: null,
     });
   };
 
@@ -232,9 +291,10 @@ export function ExperiencesPageClient({
     distance: tSearch('sort.distance'),
   };
   const visibleSortOptions = (Object.keys(sortLabels) as SortOption[]).filter(
-    (option) => option !== 'distance' || locationSearch.hasLocationSearch
+    (option) =>
+      option !== 'distance' || results.locationSearch.hasLocationSearch
   );
-  const mapWineries = buildMapWineries(initialExperiences);
+  const mapWineries = buildMapWineries(results.experiences);
 
   return (
     <>
@@ -299,7 +359,7 @@ export function ExperiencesPageClient({
           <div className="mb-5 flex items-center justify-between">
             <div>
               <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-burgundy-700">
-                Valais · {pagination.total} expériences
+                Valais · {results.pagination.total} expériences
               </p>
               <h2 className="mt-1 font-display text-[30px] font-semibold text-ink-900">
                 Expériences disponibles
@@ -330,8 +390,8 @@ export function ExperiencesPageClient({
               isPending && 'pointer-events-none opacity-70'
             )}
           >
-            {initialExperiences.length > 0 ? (
-              initialExperiences.map((experience, index) => (
+            {results.experiences.length > 0 ? (
+              results.experiences.map((experience, index) => (
                 <ExperienceCard
                   key={experience.id}
                   experience={experience}
@@ -370,9 +430,9 @@ export function ExperiencesPageClient({
           handleSortChange={handleSortChange}
           handlePageChange={handlePageChange}
           communes={communes}
-          initialExperiences={initialExperiences}
-          pagination={pagination}
-          locationSearch={locationSearch}
+          experiences={results.experiences}
+          pagination={results.pagination}
+          locationSearch={results.locationSearch}
           isPending={isPending}
         />
       </div>
@@ -396,7 +456,7 @@ function MobileListing({
   handleSortChange,
   handlePageChange,
   communes,
-  initialExperiences,
+  experiences,
   pagination,
   locationSearch,
   isPending,
@@ -416,7 +476,7 @@ function MobileListing({
   handleSortChange: (_sort: SortOption) => void;
   handlePageChange: (_page: number) => void;
   communes: string[];
-  initialExperiences: ExperienceSearchResult[];
+  experiences: ExperienceSearchResult[];
   pagination: PaginationInfo;
   locationSearch: LocationSearchInfo;
   isPending: boolean;
@@ -528,7 +588,7 @@ function MobileListing({
 
           {/* Results */}
           <SearchResults
-            experiences={initialExperiences}
+            experiences={experiences}
             sort={currentParams.sort}
             onSortChange={handleSortChange}
             pagination={pagination}
@@ -539,12 +599,6 @@ function MobileListing({
       </main>
     </div>
   );
-}
-
-function parseNumber(value: string | null): number | null {
-  if (!value) return null;
-  const num = parseInt(value, 10);
-  return isNaN(num) ? null : num;
 }
 
 function buildMapWineries(experiences: ExperienceSearchResult[]): MapWinery[] {

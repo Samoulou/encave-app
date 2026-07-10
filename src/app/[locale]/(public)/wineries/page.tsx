@@ -4,14 +4,17 @@ import { WineriesContent } from './WineriesContent';
 import { Skeleton } from '@/components/shared/Skeleton';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { generateWineriesMetadata } from '@/lib/seo/metadata';
 import type { Metadata } from 'next';
 
 interface WineriesPageProps {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ commune?: string }>;
 }
+
+// P-06 (D2): ISR — the page ships the full visible list; the commune
+// filter and grid/map toggle are client-side (WineriesExplorer).
+export const revalidate = 300;
 
 export async function generateMetadata({
   params,
@@ -20,13 +23,10 @@ export async function generateMetadata({
   return generateWineriesMetadata(locale as 'fr' | 'de' | 'en');
 }
 
-export default async function WineriesPage({
-  searchParams,
-}: WineriesPageProps) {
-  const [{ commune }, t] = await Promise.all([
-    searchParams,
-    getTranslations('wineries'),
-  ]);
+export default async function WineriesPage({ params }: WineriesPageProps) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations('wineries');
 
   return (
     <div className="min-h-screen bg-cream-50">
@@ -62,7 +62,7 @@ export default async function WineriesPage({
 
         {/* Content streams in when data is ready */}
         <Suspense fallback={<WineriesLoadingState />}>
-          <WineriesContent commune={commune} />
+          <WineriesContent />
         </Suspense>
       </main>
       <Footer />
