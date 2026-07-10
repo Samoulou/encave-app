@@ -35,6 +35,12 @@ vi.mock('@/server/services/email.service', () => ({
     winery: true,
     client: true,
   })),
+  sendPostExperienceFollowUpEmail: vi.fn(async () => true),
+}));
+
+// The D4 test drives the follow-ups cron route directly.
+vi.mock('@/lib/cron-auth', () => ({
+  verifyCronRequest: vi.fn(async () => true),
 }));
 
 // Owner-scoped action: authenticate as the fixture winemaker.
@@ -522,6 +528,107 @@ describe.skipIf(!url)('tasting loop (P-07 / L-061, L-062)', () => {
       priceAtRequest: 3200,
       wineName: 'Cornalin Test',
     });
+  });
+
+  it('D4: the J+1 follow-up is skipped when a recap is armed, sent otherwise, and sent again under flag OFF', async () => {
+    const { GET: runFollowUps } =
+      await import('@/app/api/cron/follow-ups/route');
+    const { sendPostExperienceFollowUpEmail } =
+      await import('@/server/services/email.service');
+    const followUpMock = vi.mocked(sendPostExperienceFollowUpEmail);
+    followUpMock.mockClear();
+
+    // Two sessions that ended ~22.5h/23h ago (inside the follow-up
+    // 22-26h window, duration 90min): A gets its sheet filled (recap
+    // armed), B does not.
+    const startA = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const startB = new Date(Date.now() - 24.5 * 60 * 60 * 1000);
+    const localSlot = (d: Date) =>
+      `${String(d.getHours()).padStart(2, '0')}:${String(
+        d.getMinutes()
+      ).padStart(2, '0')}`;
+    const localDateUTC = (d: Date) =>
+      new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const makeWindowBooking = (start: Date, email: string) => {
+      if (!ids.experienceId || !ids.wineryId) throw new Error('fixture');
+      return db.booking.create({
+        data: {
+          reference: `ENC-D4${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
+          visitorEmail: email,
+          visitorName: 'Client D4',
+          visitorPhone: '+41790000001',
+          experienceId: ids.experienceId,
+          wineryId: ids.wineryId,
+          date: localDateUTC(start),
+          timeSlot: localSlot(start),
+          guestCount: 2,
+          totalPrice: 5000,
+          platformFee: 600,
+          wineryPayout: 4400,
+          status: BookingStatus.COMPLETED,
+        },
+        select: { id: true, date: true, timeSlot: true },
+      });
+    };
+    const bookingArmed = await makeWindowBooking(startA, 'erin@test.encave.ch');
+    const bookingPlain = await makeWindowBooking(
+      startB,
+      'frank@test.encave.ch'
+    );
+
+    // Fill the sheet on session A only → recap armed for bookingArmed.
+    const saved = await saveTastingSheet({
+      experienceId: ids.experienceId,
+      date: bookingArmed.date.toISOString().slice(0, 10),
+      timeSlot: bookingArmed.timeSlot,
+      wineIds: [ids.wineA],
+    });
+    expect(saved).toMatchObject({ success: true });
+
+    // Flag ON: A skipped (no followUpSentAt), B sent.
+    await runFollowUps();
+    let [armed, plain] = await Promise.all([
+      db.booking.findUniqueOrThrow({
+        where: { id: bookingArmed.id },
+        select: { followUpSentAt: true },
+      }),
+      db.booking.findUniqueOrThrow({
+        where: { id: bookingPlain.id },
+        select: { followUpSentAt: true },
+      }),
+    ]);
+    expect(armed.followUpSentAt).toBeNull();
+    expect(plain.followUpSentAt).not.toBeNull();
+    expect(followUpMock).toHaveBeenCalledTimes(1);
+    const skipLog = await db.emailLog.count({
+      where: {
+        type: 'follow_up',
+        status: 'skipped',
+        bookingId: bookingArmed.id,
+      },
+    });
+    expect(skipLog).toBe(1);
+
+    // Flag OFF (D4 strict): the armed booking now receives the generic
+    // follow-up — current behavior restored.
+    await setFlag(false);
+    try {
+      await runFollowUps();
+    } finally {
+      await setFlag(true);
+    }
+    [armed, plain] = await Promise.all([
+      db.booking.findUniqueOrThrow({
+        where: { id: bookingArmed.id },
+        select: { followUpSentAt: true },
+      }),
+      db.booking.findUniqueOrThrow({
+        where: { id: bookingPlain.id },
+        select: { followUpSentAt: true },
+      }),
+    ]);
+    expect(armed.followUpSentAt).not.toBeNull();
+    expect(followUpMock).toHaveBeenCalledTimes(2);
   });
 
   it("rejects another winery's wine on the sheet", async () => {
