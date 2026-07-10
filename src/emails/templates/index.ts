@@ -70,3 +70,5 @@ export type { WineOrderRequestItemLine } from './WineOrderRequestEmail';
 
 export { TastingSheetReminderEmail } from './TastingSheetReminderEmail';
 export type { ReminderSessionLine } from './TastingSheetReminderEmail';
+
+export { StripeActionRequiredEmail } from './StripeActionRequiredEmail';

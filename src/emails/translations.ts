@@ -117,6 +117,11 @@ export const subjects = {
     DE: 'Ihre wochentliche Zusammenfassung',
     EN: 'Your weekly summary',
   },
+  stripeActionRequired: {
+    FR: 'Action requise : votre compte Stripe a besoin de vous',
+    DE: 'Handlungsbedarf: Ihr Stripe-Konto braucht Sie',
+    EN: 'Action required: your Stripe account needs you',
+  },
 } as const;
 
 // Common email strings
@@ -858,6 +863,82 @@ export const wineOrderRequest = {
     },
   },
 } as const;
+
+// Email #18 — Stripe action required (P-13 / L-143)
+export const stripeActionRequired = {
+  title: {
+    FR: 'Action requise sur votre compte Stripe',
+    DE: 'Handlungsbedarf bei Ihrem Stripe-Konto',
+    EN: 'Action required on your Stripe account',
+  },
+  intro: {
+    FR: 'Bonjour {firstName}, Stripe a besoin d’informations supplémentaires pour continuer à verser vos revenus. Sans action de votre part, vos versements peuvent être suspendus.',
+    DE: 'Guten Tag {firstName}, Stripe benötigt zusätzliche Angaben, um Ihre Einnahmen weiterhin auszuzahlen. Ohne Ihr Zutun können Ihre Auszahlungen ausgesetzt werden.',
+    EN: 'Hello {firstName}, Stripe needs additional information to keep paying out your earnings. Without action, your payouts may be paused.',
+  },
+  listTitle: {
+    FR: 'Éléments demandés :',
+    DE: 'Angeforderte Angaben:',
+    EN: 'Requested items:',
+  },
+  cta: {
+    FR: 'Compléter mon compte Stripe',
+    DE: 'Mein Stripe-Konto vervollständigen',
+    EN: 'Complete my Stripe account',
+  },
+  note: {
+    FR: 'Le lien vous emmène sur votre profil EnCave, d’où vous pouvez reprendre la configuration Stripe en quelques minutes.',
+    DE: 'Der Link führt zu Ihrem EnCave-Profil, von dem aus Sie die Stripe-Einrichtung in wenigen Minuten abschliessen können.',
+    EN: 'The link takes you to your EnCave profile, from which you can resume the Stripe setup in a few minutes.',
+  },
+} as const;
+
+/**
+ * Human labels for the most common Stripe `currently_due` codes.
+ * Anything unknown falls back to the raw code — never hidden.
+ */
+export const stripeRequirementLabels: Record<string, Record<Locale, string>> = {
+  external_account: {
+    FR: 'Compte bancaire pour les versements',
+    DE: 'Bankkonto für Auszahlungen',
+    EN: 'Bank account for payouts',
+  },
+  'individual.verification.document': {
+    FR: 'Document d’identité',
+    DE: 'Identitätsnachweis',
+    EN: 'Identity document',
+  },
+  'individual.verification.additional_document': {
+    FR: 'Justificatif de domicile',
+    DE: 'Wohnsitznachweis',
+    EN: 'Proof of address',
+  },
+  'business_profile.url': {
+    FR: 'Site web ou description de l’activité',
+    DE: 'Website oder Beschreibung der Tätigkeit',
+    EN: 'Website or business description',
+  },
+  'business_profile.mcc': {
+    FR: 'Catégorie d’activité',
+    DE: 'Tätigkeitskategorie',
+    EN: 'Business category',
+  },
+  'tos_acceptance.date': {
+    FR: 'Acceptation des conditions Stripe',
+    DE: 'Zustimmung zu den Stripe-Bedingungen',
+    EN: 'Acceptance of the Stripe terms',
+  },
+  'individual.dob.day': {
+    FR: 'Date de naissance',
+    DE: 'Geburtsdatum',
+    EN: 'Date of birth',
+  },
+  'individual.address.line1': {
+    FR: 'Adresse personnelle',
+    DE: 'Privatadresse',
+    EN: 'Personal address',
+  },
+};
 
 // Helper function to get translation
 export function t<T extends Record<Locale, unknown>>(

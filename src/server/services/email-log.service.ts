@@ -9,7 +9,8 @@ type EmailLogType =
   | 'weekly_summary'
   | 'tasting_recap'
   | 'tasting_sheet_reminder'
-  | 'wine_order_request';
+  | 'wine_order_request'
+  | 'stripe_action_required';
 
 type EmailLogStatus = 'sent' | 'failed' | 'skipped';
 

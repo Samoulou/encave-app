@@ -30,6 +30,7 @@ import {
   type WineOrderRequestItemLine,
   TastingSheetReminderEmail,
   type ReminderSessionLine,
+  StripeActionRequiredEmail,
 } from '@/emails';
 import { subjects, t } from '@/emails/translations';
 import { generateBookingQrPng } from '@/server/services/qr-code.service';
@@ -751,6 +752,32 @@ export async function sendWeeklySummaryEmail(
   return sendEmail({
     to: email,
     subject: t(subjects.weeklySummary, loc),
+    html,
+  });
+}
+
+/**
+ * Email #18 « Action requise Stripe » (P-13 / L-143). Caller (Connect
+ * webhook) owns the anti-spam decision — this only renders and sends.
+ */
+export async function sendStripeActionRequiredEmail(
+  email: string,
+  data: { firstName: string; currentlyDue: string[] },
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const html = await render(
+    StripeActionRequiredEmail({
+      locale: loc,
+      firstName: data.firstName,
+      currentlyDue: data.currentlyDue,
+      profileUrl: `${getBaseUrl()}/dashboard/winery/profile`,
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.stripeActionRequired, loc),
     html,
   });
 }
