@@ -5,6 +5,11 @@ import { db } from '@/server/db';
 import { hasOverlappingSlots } from '@/lib/constants/time-slots';
 import type { ActionResult } from '@/types/actions';
 import { logError } from '@/lib/logger';
+import { revalidateTag } from 'next/cache';
+import {
+  closeOrphanedRecurringOccurrences,
+  generateOccurrences,
+} from '@/server/services/occurrence.service';
 
 export interface AvailabilitySlotInput {
   id?: string;
@@ -219,6 +224,22 @@ export async function updateAvailabilitySlots(
       }
     });
 
+    // Sync occurrences with the new pattern (P-05 / L-024): materialize
+    // added slots, then close future RECURRING occurrences of removed
+    // slots (a removed slot must stop selling immediately). Failures
+    // don't fail the update — the booking path's defensive resolve and
+    // the daily cron are the backstop.
+    try {
+      await generateOccurrences(experienceId);
+      await closeOrphanedRecurringOccurrences(experienceId);
+    } catch (generationError) {
+      logError('Occurrence sync failed after slots update', generationError, {
+        action: 'updateAvailabilitySlots',
+        experienceId,
+      });
+    }
+    revalidateTag(`occurrences:${experienceId}`);
+
     return {
       success: true,
       data: { count: slots.length },
@@ -287,6 +308,19 @@ export async function toggleSlotActive(
       where: { id: slotId },
       data: { isActive },
     });
+
+    // Same occurrence sync as updateAvailabilitySlots: an activated slot
+    // materializes, a deactivated one stops selling immediately.
+    try {
+      await generateOccurrences(slot.experienceId);
+      await closeOrphanedRecurringOccurrences(slot.experienceId);
+    } catch (generationError) {
+      logError('Occurrence sync failed after slot toggle', generationError, {
+        action: 'toggleSlotActive',
+        experienceId: slot.experienceId,
+      });
+    }
+    revalidateTag(`occurrences:${slot.experienceId}`);
 
     return {
       success: true,

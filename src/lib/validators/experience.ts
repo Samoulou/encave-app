@@ -26,6 +26,9 @@ export const EXPERIENCE_TYPE_OPTIONS = [
   { value: 'WORKSHOP', label: 'Workshop' },
   { value: 'VINEYARD_TOUR', label: 'Vineyard Tour' },
   { value: 'FOOD_PAIRING', label: 'Food Pairing' },
+  // V3 types (P-02 enum, wired to search in P-05 / L-111)
+  { value: 'MEAL', label: 'Meal' },
+  { value: 'EVENT', label: 'Event' },
 ] as const;
 
 export const experienceTypeValues = EXPERIENCE_TYPE_OPTIONS.map(

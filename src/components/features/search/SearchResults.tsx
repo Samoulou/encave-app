@@ -12,13 +12,9 @@ import { Button } from '@/components/ui/button';
 import { Wine, ChevronLeft, ChevronRight, MapPin } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { ExperienceSearchResult } from '@/server/queries/experience.queries';
+import type { CatalogSort } from '@/lib/utils/search-params';
 
-type SortOption =
-  | 'relevance'
-  | 'price_asc'
-  | 'price_desc'
-  | 'newest'
-  | 'distance';
+type SortOption = CatalogSort;
 
 const SORT_OPTIONS: {
   value: SortOption;
@@ -26,6 +22,7 @@ const SORT_OPTIONS: {
   locationOnly?: boolean;
 }[] = [
   { value: 'distance', labelKey: 'sort.distance', locationOnly: true },
+  { value: 'next_availability', labelKey: 'sort.nextAvailability' },
   { value: 'relevance', labelKey: 'sort.relevance' },
   { value: 'price_asc', labelKey: 'sort.priceLowToHigh' },
   { value: 'price_desc', labelKey: 'sort.priceHighToLow' },

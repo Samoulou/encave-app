@@ -2,8 +2,14 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
+import { addDays, addMonths } from 'date-fns';
 import { getExperienceBySlug } from '@/server/queries/experience.queries';
+import { getBookableOccurrences } from '@/server/queries/occurrence.queries';
 import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
+import {
+  dateKeyOf,
+  zurichTodayAsUTCDate,
+} from '@/lib/business-rules/occurrence-expansion';
 import { BOOKING_FEE_CENTS } from '@/lib/constants/pricing';
 import { ExperienceDetailGallery } from '@/components/features/experience/ExperienceDetailGallery';
 import { LocationSection } from '@/components/features/experience/LocationSection';
@@ -64,6 +70,23 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
 
   // Client booking fee (P-03 / L-041) — flag OFF keeps today's display.
   const serviceFeeCentsPerGuest = bookingFeeEnabled ? BOOKING_FEE_CENTS : 0;
+
+  // Punctual occurrences (P-05): the widgets derive selectable days from
+  // the weekly slots — a PUNCTUAL occurrence on an off-schedule day would
+  // be announced in search yet unselectable. Ship the bookable occurrence
+  // date keys so the widgets can enable those days too. Window = today →
+  // the picker's 3-month bound (+2 days absorbs client-timezone drift on
+  // both edges). Keys are computed server-side with dateKeyOf: occurrence
+  // dates are UTC midnights of Zurich calendar days — localDateKey would
+  // shift them by a day in some client timezones.
+  const occurrenceWindowFrom = zurichTodayAsUTCDate();
+  const bookableOccurrences = await getBookableOccurrences(experience.id, {
+    from: occurrenceWindowFrom,
+    to: addDays(addMonths(occurrenceWindowFrom, 3), 2),
+  });
+  const occurrenceDateKeys = Array.from(
+    new Set(bookableOccurrences.map((occurrence) => dateKeyOf(occurrence.date)))
+  );
 
   const baseUrl = getBaseUrl();
   const nextAvailableDate = getNextAvailableDate(
@@ -337,6 +360,7 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
                 maxCapacity={experience.maxCapacity}
                 duration={experience.duration}
                 availabilitySlots={experience.availabilitySlots}
+                occurrenceDateKeys={occurrenceDateKeys}
                 serviceFeeCentsPerGuest={serviceFeeCentsPerGuest}
                 cancellationPolicy={experience.winery.cancellationPolicy}
               />
@@ -354,6 +378,7 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
           maxCapacity={experience.maxCapacity}
           duration={experience.duration}
           availabilitySlots={experience.availabilitySlots}
+          occurrenceDateKeys={occurrenceDateKeys}
         />
       </main>
       <Footer />

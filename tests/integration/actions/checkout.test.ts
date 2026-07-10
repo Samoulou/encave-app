@@ -38,6 +38,18 @@ vi.mock('@/server/db', () => ({
     featureFlag: {
       findMany: vi.fn(),
     },
+    experienceOccurrence: {
+      findUnique: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
+      findMany: vi.fn(),
+      createMany: vi.fn(),
+    },
+    blockedDate: {
+      findUnique: vi.fn(),
+    },
+    availabilitySlot: {
+      findFirst: vi.fn(),
+    },
     // $transaction executes the callback with the same db object (simplified mock)
     $transaction: vi.fn(async (callback: (tx: unknown) => Promise<unknown>) => {
       // Create a transaction-like object that delegates to the mocked methods
@@ -45,6 +57,7 @@ vi.mock('@/server/db', () => ({
       return callback({
         booking: db.booking,
         experience: db.experience,
+        experienceOccurrence: db.experienceOccurrence,
       });
     }),
   },
@@ -109,8 +122,28 @@ describe('Checkout Server Actions', () => {
       url: 'https://checkout.stripe.com/pay/cs_test_123',
       payment_intent: 'pi_test_123',
     });
-    // Flags default OFF (empty table) — the BOOKING_FEE tests override this.
+    // Flags default OFF (empty table) — the BOOKING_FEE tests override
+    // this. OCCURRENCE_CAPACITY is the registry's only default-ON flag,
+    // so the occurrence world needs defaults too: no blackout, an OPEN
+    // occurrence backing the slot (P-05 / ADR-0002).
     vi.mocked(db.featureFlag.findMany).mockResolvedValue([] as never);
+    vi.mocked(db.blockedDate.findUnique).mockResolvedValue(null);
+    vi.mocked(db.experienceOccurrence.findUnique).mockResolvedValue({
+      id: 'occ-1',
+      status: 'OPEN',
+      capacityOverride: null,
+    } as never);
+    vi.mocked(db.experienceOccurrence.findUniqueOrThrow).mockResolvedValue({
+      id: 'occ-1',
+      status: 'OPEN',
+      capacityOverride: null,
+    } as never);
+    vi.mocked(db.experienceOccurrence.createMany).mockResolvedValue({
+      count: 1,
+    } as never);
+    vi.mocked(db.availabilitySlot.findFirst).mockResolvedValue({
+      id: 'slot-1',
+    } as never);
   });
 
   const mockExperience = {
@@ -134,7 +167,7 @@ describe('Checkout Server Actions', () => {
   const validInput = {
     experienceId: 'exp-1',
     wineryId: 'winery-1',
-    date: '2026-02-15',
+    date: '2026-12-15',
     timeSlot: '10:00',
     guestCount: 4,
     visitorName: 'John Doe',
@@ -507,7 +540,7 @@ describe('Checkout Server Actions', () => {
       const { createBookingHold } = await import('@/server/actions/checkout');
       const result = await createBookingHold({
         experienceId: 'exp-1',
-        date: '2026-02-15',
+        date: '2026-12-15',
         timeSlot: '10:00',
         guestCount: 4,
       });
@@ -550,7 +583,7 @@ describe('Checkout Server Actions', () => {
       const { createBookingHold } = await import('@/server/actions/checkout');
       const result = await createBookingHold({
         experienceId: 'exp-1',
-        date: '2026-02-15',
+        date: '2026-12-15',
         timeSlot: '10:00',
         guestCount: 4,
         previousHoldId: 'ckvhold00000000000000000w',
@@ -594,7 +627,7 @@ describe('Checkout Server Actions', () => {
       const { createBookingHold } = await import('@/server/actions/checkout');
       const result = await createBookingHold({
         experienceId: 'exp-1',
-        date: '2026-02-15',
+        date: '2026-12-15',
         timeSlot: '10:00',
         guestCount: 2,
       });
@@ -839,7 +872,7 @@ describe('Checkout Server Actions', () => {
         visitorName: 'John Doe',
         visitorEmail: 'john@example.com',
         accessTokenHash: validAccessTokenHash,
-        date: new Date('2026-02-15'),
+        date: new Date('2026-12-15'),
         timeSlot: '10:00',
         guestCount: 4,
         totalPrice: 20000,
@@ -893,7 +926,7 @@ describe('Checkout Server Actions', () => {
         visitorName: 'Jane Doe',
         visitorEmail: 'jane@example.com',
         accessTokenHash: validAccessTokenHash,
-        date: new Date('2026-03-01'),
+        date: new Date('2026-12-01'),
         timeSlot: '14:00',
         guestCount: 2,
         totalPrice: 10000,

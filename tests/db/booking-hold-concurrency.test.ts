@@ -73,6 +73,19 @@ describe.skipIf(!url)('booking hold concurrency (P-04 / L-050)', () => {
       },
     });
     ids.experienceId = experience.id;
+    // Legitimacy backing (P-05): active weekly slots for every weekday at
+    // the times the tests use, so any in-horizon date resolves.
+    await db.availabilitySlot.createMany({
+      data: [0, 1, 2, 3, 4, 5, 6].flatMap((dayOfWeek) =>
+        ['10:00', '11:00', '14:00'].map((startTime) => ({
+          experienceId: experience.id,
+          dayOfWeek,
+          startTime,
+          endTime: `${String(Number(startTime.slice(0, 2)) + 1).padStart(2, '0')}:00`,
+          isActive: true,
+        }))
+      ),
+    });
   });
 
   afterAll(async () => {
@@ -94,10 +107,24 @@ describe.skipIf(!url)('booking hold concurrency (P-04 / L-050)', () => {
     return ids.experienceId;
   }
 
+  /**
+   * P-05: holds now require a LEGITIMATE slot (active AvailabilitySlot
+   * within the generation horizon) — arbitrary (date, time) pairs are
+   * refused with INVALID_SLOT. Dates are computed inside the horizon;
+   * matching weekly slots are created in beforeAll for every weekday.
+   * The occurrences themselves are NOT pre-generated: the holds below
+   * exercise the defensive resolveOccurrence path, including its
+   * concurrent-materialization race (createMany skipDuplicates).
+   */
+  function inHorizonDateKey(daysFromNow: number): string {
+    const d = new Date(Date.now() + daysFromNow * 24 * 60 * 60 * 1000);
+    return d.toISOString().slice(0, 10);
+  }
+
   it('two concurrent holds on 3 remaining seats → exactly 1 success, 1 clean NO_CAPACITY', async () => {
     const input = (timeSlot: string) => ({
       experienceId: expId(),
-      date: '2026-11-25',
+      date: inHorizonDateKey(7),
       timeSlot,
       guestCount: 2,
     });
@@ -121,7 +148,7 @@ describe.skipIf(!url)('booking hold concurrency (P-04 / L-050)', () => {
     const sum = await db.booking.aggregate({
       where: {
         experienceId: expId(),
-        date: new Date('2026-11-25'),
+        date: new Date(`${inHorizonDateKey(7)}T00:00:00.000Z`),
         timeSlot: '10:00',
         status: 'PENDING_PAYMENT',
         expiresAt: { gt: new Date() },
@@ -134,7 +161,7 @@ describe.skipIf(!url)('booking hold concurrency (P-04 / L-050)', () => {
   it('a second « Continuer » replaces the caller own hold instead of self-blocking', async () => {
     const input = {
       experienceId: expId(),
-      date: '2026-11-27',
+      date: inHorizonDateKey(9),
       timeSlot: '11:00',
       guestCount: 2,
     };
@@ -168,7 +195,7 @@ describe.skipIf(!url)('booking hold concurrency (P-04 / L-050)', () => {
   it('an expired hold releases its seats logically (no cron needed)', async () => {
     const input = {
       experienceId: expId(),
-      date: '2026-11-26',
+      date: inHorizonDateKey(8),
       timeSlot: '14:00',
       guestCount: 2,
     };

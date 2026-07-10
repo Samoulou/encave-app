@@ -6,7 +6,7 @@
  * read through a 60s cache (`src/server/queries/feature-flags.queries.ts`)
  * and toggled from the admin (`setFeatureFlag` action — revalidates the
  * cache tag, so the switch is effective immediately). A missing row means
- * the default below (always OFF).
+ * the default below (always OFF — with ONE documented exception).
  *
  * This module is PURE (importable from client and server components) —
  * no db, no env.
@@ -25,6 +25,14 @@ export const FLAG_REGISTRY = {
   TASTING_SHEET: { defaultEnabled: false },
   /** Collective events (P-11). */
   COLLECTIVE_EVENTS: { defaultEnabled: false },
+  /**
+   * ⚠️ INVERTED semantics — the registry's only default-ON flag.
+   * Occurrence-authoritative capacity (P-05 / ADR-0002): capacityOverride
+   * + OPEN/blackout gate on the booking path. OFF = emergency fallback to
+   * the P-04 behavior (maxCapacity, no status gate); seat COUNTING is
+   * identical in both states, so flipping can never oversell.
+   */
+  OCCURRENCE_CAPACITY: { defaultEnabled: true },
 } as const;
 
 export type FlagKey = keyof typeof FLAG_REGISTRY;

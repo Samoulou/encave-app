@@ -11,7 +11,13 @@ import { db } from '@/server/db';
 import { getBaseUrl } from '@/lib/env';
 import { getTranslations } from 'next-intl/server';
 import type { ActionResult } from '@/types/actions';
-import { BookingStatus, ExperienceStatus, WineryStatus } from '@prisma/client';
+import {
+  BookingStatus,
+  ExperienceStatus,
+  OccurrenceStatus,
+  WineryStatus,
+  type Prisma,
+} from '@prisma/client';
 import { timeSlotSchema, createHoldSchema } from '@/lib/validators/booking';
 import { AGE_GATE_VERSION } from '@/lib/constants/consent';
 import {
@@ -22,7 +28,15 @@ import {
   isHoldPlaceholderEmail,
 } from '@/lib/constants/booking-hold';
 import { BOOKING_FEE_CENTS } from '@/lib/constants/pricing';
-import { activeCapacityBookingWhere } from '@/lib/business-rules/capacity';
+import {
+  activeCapacityBookingWhere,
+  resolveOccurrenceCapacity,
+} from '@/lib/business-rules/capacity';
+import {
+  resolveOccurrence,
+  OccurrenceResolutionError,
+  type ResolvedOccurrence,
+} from '@/server/services/occurrence.service';
 import {
   computeCommissionCents,
   getEffectiveCommissionRate,
@@ -41,6 +55,85 @@ import { logError, logWarn } from '@/lib/logger';
 /** sha256 hex — same scheme as the booking access tokens (SEC-002). */
 function hashHoldToken(token: string): string {
   return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+/**
+ * Resolve the occurrence backing a slot BEFORE the Serializable
+ * transaction (ADR-0002 §3). Flag ON: a refusal (blocked date, illegal
+ * slot, closed occurrence) blocks the booking. Flag OFF: best-effort —
+ * the occurrenceId is stamped when resolvable, but nothing ever blocks
+ * (pure P-04 behavior).
+ */
+async function resolveOccurrenceForBooking(input: {
+  experienceId: string;
+  bookingDate: Date;
+  timeSlot: string;
+  occurrenceCapacityOn: boolean;
+}): Promise<
+  | { ok: true; occurrence: ResolvedOccurrence | null }
+  | { ok: false; code: 'DATE_BLOCKED' | 'INVALID_SLOT' | 'OCCURRENCE_CLOSED' }
+> {
+  const { experienceId, bookingDate, timeSlot, occurrenceCapacityOn } = input;
+  let occurrence: ResolvedOccurrence | null = null;
+  try {
+    occurrence = await resolveOccurrence(experienceId, bookingDate, timeSlot);
+  } catch (error) {
+    if (error instanceof OccurrenceResolutionError) {
+      if (occurrenceCapacityOn) return { ok: false, code: error.code };
+      return { ok: true, occurrence: null };
+    }
+    if (occurrenceCapacityOn) throw error;
+    logWarn('Occurrence resolution failed (flag OFF, best-effort)', {
+      action: 'resolveOccurrenceForBooking',
+      experienceId,
+      error: String(error),
+    });
+    return { ok: true, occurrence: null };
+  }
+  if (occurrenceCapacityOn && occurrence.status !== OccurrenceStatus.OPEN) {
+    return { ok: false, code: 'OCCURRENCE_CLOSED' };
+  }
+  return { ok: true, occurrence };
+}
+
+/**
+ * Effective slot capacity INSIDE the Serializable transaction: re-read
+ * the occurrence by PK (a pure read — holds don't conflict with each
+ * other, but close-vs-create does, deliberately: closing is
+ * authoritative at creation time). Throws the same string errors the
+ * transaction bodies already translate.
+ */
+async function effectiveCapacityInTx(
+  tx: Prisma.TransactionClient,
+  input: {
+    occurrence: ResolvedOccurrence | null;
+    occurrenceCapacityOn: boolean;
+    maxCapacity: number;
+  }
+): Promise<number> {
+  const { occurrence, occurrenceCapacityOn, maxCapacity } = input;
+  if (!occurrenceCapacityOn || occurrence === null) return maxCapacity;
+  const current = await tx.experienceOccurrence.findUnique({
+    where: { id: occurrence.id },
+    select: { status: true, capacityOverride: true },
+  });
+  if (!current) throw new Error('NO_CAPACITY');
+  if (current.status !== OccurrenceStatus.OPEN) {
+    throw new Error('OCCURRENCE_CLOSED');
+  }
+  return resolveOccurrenceCapacity(current.capacityOverride, maxCapacity);
+}
+
+/** ActionResult error for a refused slot resolution. */
+function occurrenceRefusalError(
+  code: 'DATE_BLOCKED' | 'INVALID_SLOT' | 'OCCURRENCE_CLOSED'
+): { success: false; error: { code: typeof code; message: string } } {
+  const messages = {
+    DATE_BLOCKED: 'This date is not open for booking',
+    INVALID_SLOT: 'This time slot is not available for booking',
+    OCCURRENCE_CLOSED: 'This time slot has been closed by the winery',
+  } as const;
+  return { success: false, error: { code, message: messages[code] } };
 }
 
 /**
@@ -179,6 +272,19 @@ export async function createBookingHold(
     );
     const platformFee = computeCommissionCents(totalPrice, commissionRate);
     const bookingDate = new Date(date);
+
+    // Occurrence gate (P-05 / ADR-0002): resolve OUTSIDE the Serializable
+    // transaction. Refusals block only when the flag is ON.
+    const occurrenceCapacityOn = await isFlagEnabled('OCCURRENCE_CAPACITY');
+    const resolved = await resolveOccurrenceForBooking({
+      experienceId,
+      bookingDate,
+      timeSlot,
+      occurrenceCapacityOn,
+    });
+    if (!resolved.ok) return occurrenceRefusalError(resolved.code);
+    const occurrence = resolved.occurrence;
+
     const expiresAt = addMinutes(new Date(), HOLD_DURATION_MINUTES);
     const reference = generateBookingReference();
     // Ownership secret: only its holder can claim or replace this hold.
@@ -211,6 +317,14 @@ export async function createBookingHold(
                   },
                 });
               }
+              // Capacity NUMBER and OPEN gate come from the occurrence;
+              // seat COUNTING stays on (date, timeSlot) — unchanged P-04
+              // predicate (ADR-0002 D1).
+              const capacity = await effectiveCapacityInTx(tx, {
+                occurrence,
+                occurrenceCapacityOn,
+                maxCapacity: experience.maxCapacity,
+              });
               const existingBookings = await tx.booking.aggregate({
                 where: {
                   experienceId,
@@ -221,7 +335,7 @@ export async function createBookingHold(
                 _sum: { guestCount: true },
               });
               const bookedCount = existingBookings._sum.guestCount ?? 0;
-              if (guestCount > experience.maxCapacity - bookedCount) {
+              if (guestCount > capacity - bookedCount) {
                 throw new Error('NO_CAPACITY');
               }
               return tx.booking.create({
@@ -229,6 +343,7 @@ export async function createBookingHold(
                   reference,
                   experienceId,
                   wineryId: experience.winery.id,
+                  occurrenceId: occurrence?.id ?? null,
                   date: bookingDate,
                   timeSlot,
                   guestCount,
@@ -260,6 +375,9 @@ export async function createBookingHold(
             message: 'Not enough availability for this time slot',
           },
         };
+      }
+      if (txError instanceof Error && txError.message === 'OCCURRENCE_CLOSED') {
+        return occurrenceRefusalError('OCCURRENCE_CLOSED');
       }
       throw txError;
     }
@@ -495,67 +613,92 @@ export async function createBookingAndCheckout(
     // BACK-001 FIX: Use serializable transaction to prevent race condition double bookings
     // This ensures capacity check and booking creation are atomic
     try {
-      booking ??= await withSerializableRetry(
-        () =>
-          db.$transaction(
-            async (tx) => {
-              // Check availability within transaction (atomic with create)
-              const existingBookings = await tx.booking.aggregate({
-                where: {
-                  experienceId,
-                  date: bookingDate,
-                  timeSlot,
-                  // Logical hold release (L-050): an expired PENDING_PAYMENT
-                  // hold no longer blocks capacity, whatever the cron does.
-                  ...activeCapacityBookingWhere(),
-                },
-                _sum: { guestCount: true },
-              });
+      if (booking === undefined) {
+        // Fallback create (no hold / lost claim). Occurrence resolved
+        // OUTSIDE the Serializable tx (ADR-0002 §3); the successful-claim
+        // path above deliberately does NOT re-validate the occurrence —
+        // closing is forward-only and spares live holds mid-payment.
+        const occurrenceCapacityOn = await isFlagEnabled('OCCURRENCE_CAPACITY');
+        const resolved = await resolveOccurrenceForBooking({
+          experienceId,
+          bookingDate,
+          timeSlot,
+          occurrenceCapacityOn,
+        });
+        if (!resolved.ok) return occurrenceRefusalError(resolved.code);
+        const occurrence = resolved.occurrence;
 
-              const bookedCount = existingBookings._sum.guestCount ?? 0;
-              const remainingCapacity = experience.maxCapacity - bookedCount;
+        booking = await withSerializableRetry(
+          () =>
+            db.$transaction(
+              async (tx) => {
+                // Capacity NUMBER + OPEN gate from the occurrence; seat
+                // COUNTING stays on (date, timeSlot) — P-04 predicate
+                // unchanged (ADR-0002 D1).
+                const capacity = await effectiveCapacityInTx(tx, {
+                  occurrence,
+                  occurrenceCapacityOn,
+                  maxCapacity: experience.maxCapacity,
+                });
+                // Check availability within transaction (atomic with create)
+                const existingBookings = await tx.booking.aggregate({
+                  where: {
+                    experienceId,
+                    date: bookingDate,
+                    timeSlot,
+                    // Logical hold release (L-050): an expired PENDING_PAYMENT
+                    // hold no longer blocks capacity, whatever the cron does.
+                    ...activeCapacityBookingWhere(),
+                  },
+                  _sum: { guestCount: true },
+                });
 
-              if (guestCount > remainingCapacity) {
-                throw new Error('NO_CAPACITY');
+                const bookedCount = existingBookings._sum.guestCount ?? 0;
+                const remainingCapacity = capacity - bookedCount;
+
+                if (guestCount > remainingCapacity) {
+                  throw new Error('NO_CAPACITY');
+                }
+
+                // PERF-002 FIX: Generate unique reference synchronously using cuid2
+                // cuid2 guarantees uniqueness without database lookups
+                const reference = generateBookingReference();
+
+                // Create booking within same transaction
+                return tx.booking.create({
+                  data: {
+                    reference,
+                    experienceId,
+                    wineryId: experience.winery.id,
+                    occurrenceId: occurrence?.id ?? null,
+                    date: bookingDate,
+                    timeSlot,
+                    guestCount,
+                    totalPrice,
+                    platformFee,
+                    serviceFeeCents,
+                    wineryPayout,
+                    visitorName,
+                    visitorEmail,
+                    visitorPhone,
+                    status: BookingStatus.PENDING_PAYMENT,
+                    // Contractual snapshot: refunds use the policy the client
+                    // accepted here, never the winery's later edits.
+                    cancellationPolicy: experience.winery.cancellationPolicy,
+                    expiresAt,
+                    ageConfirmedAt: new Date(),
+                    ageConfirmedVersion: AGE_GATE_VERSION,
+                  },
+                });
+              },
+              {
+                isolationLevel: 'Serializable', // Prevents double bookings
+                timeout: 10000, // 10 second timeout
               }
-
-              // PERF-002 FIX: Generate unique reference synchronously using cuid2
-              // cuid2 guarantees uniqueness without database lookups
-              const reference = generateBookingReference();
-
-              // Create booking within same transaction
-              return tx.booking.create({
-                data: {
-                  reference,
-                  experienceId,
-                  wineryId: experience.winery.id,
-                  date: bookingDate,
-                  timeSlot,
-                  guestCount,
-                  totalPrice,
-                  platformFee,
-                  serviceFeeCents,
-                  wineryPayout,
-                  visitorName,
-                  visitorEmail,
-                  visitorPhone,
-                  status: BookingStatus.PENDING_PAYMENT,
-                  // Contractual snapshot: refunds use the policy the client
-                  // accepted here, never the winery's later edits.
-                  cancellationPolicy: experience.winery.cancellationPolicy,
-                  expiresAt,
-                  ageConfirmedAt: new Date(),
-                  ageConfirmedVersion: AGE_GATE_VERSION,
-                },
-              });
-            },
-            {
-              isolationLevel: 'Serializable', // Prevents double bookings
-              timeout: 10000, // 10 second timeout
-            }
-          ),
-        'createBookingAndCheckout'
-      );
+            ),
+          'createBookingAndCheckout'
+        );
+      }
     } catch (txError) {
       if (txError instanceof Error && txError.message === 'NO_CAPACITY') {
         return {
@@ -565,6 +708,9 @@ export async function createBookingAndCheckout(
             message: 'Not enough availability for this time slot',
           },
         };
+      }
+      if (txError instanceof Error && txError.message === 'OCCURRENCE_CLOSED') {
+        return occurrenceRefusalError('OCCURRENCE_CLOSED');
       }
       throw txError; // Re-throw other errors to be caught by outer catch
     }

@@ -22,3 +22,32 @@ export function activeCapacityBookingWhere(
     ],
   };
 }
+
+/**
+ * JS twin of {@link activeCapacityBookingWhere} for rows already in
+ * memory — keep the two in lockstep. Used where a fetched set mixes
+ * capacity-blocking and non-blocking bookings (owner calendar).
+ */
+export function isActiveCapacityBooking(
+  booking: { status: BookingStatus; expiresAt: Date | null },
+  now: Date = new Date()
+): boolean {
+  return (
+    booking.status === BookingStatus.CONFIRMED ||
+    (booking.status === BookingStatus.PENDING_PAYMENT &&
+      booking.expiresAt !== null &&
+      booking.expiresAt > now)
+  );
+}
+
+/**
+ * Effective seat count of a slot (P-05 / ADR-0002): the occurrence's
+ * override when set, the experience default otherwise. The DB CHECK
+ * guarantees override >= 1.
+ */
+export function resolveOccurrenceCapacity(
+  capacityOverride: number | null,
+  maxCapacity: number
+): number {
+  return capacityOverride ?? maxCapacity;
+}

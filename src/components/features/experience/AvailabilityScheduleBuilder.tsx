@@ -15,8 +15,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { useRouter } from '@/i18n/navigation';
 import { TimeSlotPicker, type TimeSlot } from './TimeSlotPicker';
 import { WeeklyCalendarPreview } from './WeeklyCalendarPreview';
+import { PunctualOccurrencePicker } from './PunctualOccurrencePicker';
 import {
   DAYS_OF_WEEK_ORDERED,
   hasOverlappingSlots,
@@ -39,6 +41,8 @@ interface DaySlots {
   [dayOfWeek: number]: TimeSlot[];
 }
 
+type ScheduleMode = 'recurring' | 'punctual';
+
 export function AvailabilityScheduleBuilder({
   experienceId,
   experienceDuration,
@@ -48,6 +52,8 @@ export function AvailabilityScheduleBuilder({
   const tCommon = useTranslations('common');
   const tDaysFull = useTranslations('common.days.full');
   const tDaysShort = useTranslations('common.days.short');
+  const router = useRouter();
+  const [mode, setMode] = useState<ScheduleMode>('recurring');
   const [slotsByDay, setSlotsByDay] = useState<DaySlots>({});
   const [selectedDay, setSelectedDay] = useState<number>(1); // Monday
   const [isLoading, setIsLoading] = useState(true);
@@ -159,6 +165,9 @@ export function AvailabilityScheduleBuilder({
     if (result.success) {
       toast.success(t('savedSuccessfully'));
       setHasChanges(false);
+      // Saving regenerates occurrences server-side — refresh the
+      // server-rendered "next occurrences" preview (L-131).
+      router.refresh();
       // Reload to get server-generated IDs
       const reloaded = await getAvailabilitySlots(experienceId);
       if (reloaded.success) {
@@ -198,176 +207,213 @@ export function AvailabilityScheduleBuilder({
 
   return (
     <div className="space-y-8">
-      {/* Published Warning */}
-      {showPublishedWarning && (
-        <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
-          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+      {/* Mode Switch: recurring weekly schedule vs punctual dates (L-131) */}
+      <div
+        role="tablist"
+        aria-label={t('modes.label')}
+        className="inline-flex rounded-lg border border-stone-200 bg-stone-100 p-1"
+      >
+        {(['recurring', 'punctual'] as const).map((value) => (
+          <button
+            key={value}
+            type="button"
+            role="tab"
+            aria-selected={mode === value}
+            onClick={() => setMode(value)}
+            className={cn(
+              'rounded-md px-4 py-1.5 text-sm font-medium transition-colors',
+              mode === value
+                ? 'bg-white text-burgundy-700 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900'
+            )}
+          >
+            {t(`modes.${value}`)}
+          </button>
+        ))}
+      </div>
+
+      {mode === 'punctual' && (
+        <PunctualOccurrencePicker experienceId={experienceId} />
+      )}
+
+      {mode === 'recurring' && (
+        <div className="space-y-8">
+          {/* Published Warning */}
+          {showPublishedWarning && (
+            <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+              <div>
+                <p className="font-medium text-amber-800">
+                  {t('noConfigured')}
+                </p>
+                <p className="mt-1 text-sm text-amber-700">
+                  {t('publishedNoSlots')}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!hasAnySlots && !showPublishedWarning && (
+            <div className="rounded-xl border-2 border-dashed border-stone-300 bg-stone-50 p-8 text-center">
+              <Calendar className="mx-auto mb-4 h-12 w-12 text-stone-400" />
+              <h3 className="mb-2 font-semibold text-slate-900">
+                {t('noConfigured')}
+              </h3>
+              <p className="mx-auto max-w-md text-sm text-slate-600">
+                {t('noConfiguredDescription')}
+              </p>
+            </div>
+          )}
+
+          {/* Day Selector */}
           <div>
-            <p className="font-medium text-amber-800">{t('noConfigured')}</p>
-            <p className="mt-1 text-sm text-amber-700">
-              {t('publishedNoSlots')}
-            </p>
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="font-medium text-slate-900">{t('selectDay')}</h3>
+              {hasAnySlots && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="gap-2"
+                      onClick={() => setCopyFromDay(selectedDay)}
+                    >
+                      <Copy className="h-4 w-4" />
+                      {t('copyToAllDays')}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>
+                        {t('copyDialog.title')}
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        {t('copyDialog.description', {
+                          day: tDaysFull(String(selectedDay)),
+                        })}
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>
+                        {tCommon('buttons.cancel')}
+                      </AlertDialogCancel>
+                      <AlertDialogAction onClick={handleCopyToAllDays}>
+                        {t('copyToAllDays')}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {DAYS_OF_WEEK_ORDERED.map((day) => {
+                const daySlots = slotsByDay[day.value] ?? [];
+                const hasSlots = daySlots.length > 0;
+                const hasOverlap = getDayOverlapStatus(day.value);
+
+                return (
+                  <button
+                    key={day.value}
+                    type="button"
+                    onClick={() => setSelectedDay(day.value)}
+                    className={cn(
+                      'relative rounded-lg border px-4 py-2 text-sm font-medium transition-all',
+                      selectedDay === day.value
+                        ? 'border-burgundy-600 bg-burgundy-50 text-burgundy-700'
+                        : hasOverlap
+                          ? 'border-red-300 bg-red-50 text-red-700'
+                          : hasSlots
+                            ? 'border-stone-300 bg-white text-slate-700 hover:border-burgundy-300'
+                            : 'border-stone-200 bg-stone-50 text-slate-500 hover:border-stone-300'
+                    )}
+                  >
+                    {tDaysShort(String(day.value))}
+                    {hasSlots && (
+                      <span
+                        className={cn(
+                          'absolute -right-1.5 -top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[10px] font-bold',
+                          hasOverlap
+                            ? 'bg-red-500 text-white'
+                            : 'bg-burgundy-600 text-white'
+                        )}
+                      >
+                        {daySlots.length}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Time Slot Picker for Selected Day */}
+          <div className="rounded-xl border border-stone-200 bg-white p-6">
+            <h4 className="mb-4 font-medium text-slate-900">
+              {t('dayTimeSlots', { day: tDaysFull(String(selectedDay)) })}
+            </h4>
+            <TimeSlotPicker
+              slots={slotsByDay[selectedDay] ?? []}
+              experienceDuration={experienceDuration}
+              onChange={(slots) => handleSlotsChange(selectedDay, slots)}
+              hasOverlap={getDayOverlapStatus(selectedDay)}
+            />
+            {getDayOverlapStatus(selectedDay) && (
+              <p className="mt-3 flex items-center gap-2 text-sm text-red-600">
+                <AlertTriangle className="h-4 w-4" />
+                {t('slotsOverlap')}
+              </p>
+            )}
+          </div>
+
+          {/* Weekly Preview */}
+          <div>
+            <h3 className="mb-4 font-medium text-slate-900">
+              {t('weeklyPreview')}
+            </h3>
+            <WeeklyCalendarPreview
+              slots={allSlots.map((s) => ({
+                dayOfWeek: s.dayOfWeek,
+                startTime: s.startTime,
+                endTime: s.endTime,
+                isActive: s.isActive,
+              }))}
+            />
+          </div>
+
+          {/* Save Button */}
+          <div className="flex items-center justify-between border-t border-stone-200 pt-6">
+            <div className="text-sm text-slate-500">
+              {hasChanges && (
+                <span className="flex items-center gap-2 text-amber-600">
+                  <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500" />
+                  {tCommon('unsavedChanges')}
+                </span>
+              )}
+            </div>
+            <Button
+              type="button"
+              onClick={handleSave}
+              disabled={isSaving || !hasChanges}
+              className="gap-2"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {t('saving')}
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4" />
+                  {t('saveAvailability')}
+                </>
+              )}
+            </Button>
           </div>
         </div>
       )}
-
-      {/* Empty State */}
-      {!hasAnySlots && !showPublishedWarning && (
-        <div className="rounded-xl border-2 border-dashed border-stone-300 bg-stone-50 p-8 text-center">
-          <Calendar className="mx-auto mb-4 h-12 w-12 text-stone-400" />
-          <h3 className="mb-2 font-semibold text-slate-900">
-            {t('noConfigured')}
-          </h3>
-          <p className="mx-auto max-w-md text-sm text-slate-600">
-            {t('noConfiguredDescription')}
-          </p>
-        </div>
-      )}
-
-      {/* Day Selector */}
-      <div>
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="font-medium text-slate-900">{t('selectDay')}</h3>
-          {hasAnySlots && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                  onClick={() => setCopyFromDay(selectedDay)}
-                >
-                  <Copy className="h-4 w-4" />
-                  {t('copyToAllDays')}
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>{t('copyDialog.title')}</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    {t('copyDialog.description', {
-                      day: tDaysFull(String(selectedDay)),
-                    })}
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>
-                    {tCommon('buttons.cancel')}
-                  </AlertDialogCancel>
-                  <AlertDialogAction onClick={handleCopyToAllDays}>
-                    {t('copyToAllDays')}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {DAYS_OF_WEEK_ORDERED.map((day) => {
-            const daySlots = slotsByDay[day.value] ?? [];
-            const hasSlots = daySlots.length > 0;
-            const hasOverlap = getDayOverlapStatus(day.value);
-
-            return (
-              <button
-                key={day.value}
-                type="button"
-                onClick={() => setSelectedDay(day.value)}
-                className={cn(
-                  'relative rounded-lg border px-4 py-2 text-sm font-medium transition-all',
-                  selectedDay === day.value
-                    ? 'border-burgundy-600 bg-burgundy-50 text-burgundy-700'
-                    : hasOverlap
-                      ? 'border-red-300 bg-red-50 text-red-700'
-                      : hasSlots
-                        ? 'border-stone-300 bg-white text-slate-700 hover:border-burgundy-300'
-                        : 'border-stone-200 bg-stone-50 text-slate-500 hover:border-stone-300'
-                )}
-              >
-                {tDaysShort(String(day.value))}
-                {hasSlots && (
-                  <span
-                    className={cn(
-                      'absolute -right-1.5 -top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[10px] font-bold',
-                      hasOverlap
-                        ? 'bg-red-500 text-white'
-                        : 'bg-burgundy-600 text-white'
-                    )}
-                  >
-                    {daySlots.length}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Time Slot Picker for Selected Day */}
-      <div className="rounded-xl border border-stone-200 bg-white p-6">
-        <h4 className="mb-4 font-medium text-slate-900">
-          {t('dayTimeSlots', { day: tDaysFull(String(selectedDay)) })}
-        </h4>
-        <TimeSlotPicker
-          slots={slotsByDay[selectedDay] ?? []}
-          experienceDuration={experienceDuration}
-          onChange={(slots) => handleSlotsChange(selectedDay, slots)}
-          hasOverlap={getDayOverlapStatus(selectedDay)}
-        />
-        {getDayOverlapStatus(selectedDay) && (
-          <p className="mt-3 flex items-center gap-2 text-sm text-red-600">
-            <AlertTriangle className="h-4 w-4" />
-            {t('slotsOverlap')}
-          </p>
-        )}
-      </div>
-
-      {/* Weekly Preview */}
-      <div>
-        <h3 className="mb-4 font-medium text-slate-900">
-          {t('weeklyPreview')}
-        </h3>
-        <WeeklyCalendarPreview
-          slots={allSlots.map((s) => ({
-            dayOfWeek: s.dayOfWeek,
-            startTime: s.startTime,
-            endTime: s.endTime,
-            isActive: s.isActive,
-          }))}
-        />
-      </div>
-
-      {/* Save Button */}
-      <div className="flex items-center justify-between border-t border-stone-200 pt-6">
-        <div className="text-sm text-slate-500">
-          {hasChanges && (
-            <span className="flex items-center gap-2 text-amber-600">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500" />
-              {tCommon('unsavedChanges')}
-            </span>
-          )}
-        </div>
-        <Button
-          type="button"
-          onClick={handleSave}
-          disabled={isSaving || !hasChanges}
-          className="gap-2"
-        >
-          {isSaving ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              {t('saving')}
-            </>
-          ) : (
-            <>
-              <Save className="h-4 w-4" />
-              {t('saveAvailability')}
-            </>
-          )}
-        </Button>
-      </div>
     </div>
   );
 }

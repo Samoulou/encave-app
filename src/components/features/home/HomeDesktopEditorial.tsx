@@ -17,6 +17,7 @@ import { ImageWithFallback } from '@/components/shared/ImageWithFallback';
 import { DynamicMap } from '@/components/features/map/DynamicMap';
 import { DesktopOnly } from '@/components/shared/DesktopOnly';
 import { HomeSearchPanel } from '@/components/features/home/HomeSearchPanel';
+import { HomeSearchShortcuts } from '@/components/features/home/HomeSearchShortcuts';
 import { formatCHF } from '@/lib/utils/currency';
 import type { ExperienceCardData } from '@/components/features/experience/ExperienceCard';
 import type { MapWinery } from '@/components/features/map/types';
@@ -135,7 +136,10 @@ export function HomeDesktopEditorial({
             </p>
           </div>
 
-          <HomeSearchPanel />
+          <div className="space-y-3.5">
+            <HomeSearchPanel />
+            <HomeSearchShortcuts tone="onDark" />
+          </div>
         </div>
       </section>
 

@@ -23,6 +23,11 @@ interface MobileBookingBarProps {
   maxCapacity: number;
   duration: number;
   availabilitySlots?: AvailabilitySlot[];
+  /**
+   * "YYYY-MM-DD" keys of bookable occurrences (P-05) — enables punctual
+   * dates that no weekly slot covers. Server-computed with dateKeyOf.
+   */
+  occurrenceDateKeys?: string[];
   /** Client booking fee per ticket in cents — 0 when BOOKING_FEE is OFF. */
   serviceFeeCentsPerGuest?: number;
 }
@@ -36,6 +41,7 @@ export function MobileBookingBar({
   maxCapacity,
   duration,
   availabilitySlots = [],
+  occurrenceDateKeys = [],
   serviceFeeCentsPerGuest = 0,
 }: MobileBookingBarProps) {
   const t = useTranslations('booking');
@@ -117,6 +123,7 @@ export function MobileBookingBar({
           maxCapacity={maxCapacity}
           duration={duration}
           availabilitySlots={availabilitySlots}
+          occurrenceDateKeys={occurrenceDateKeys}
         />
       )}
     </>

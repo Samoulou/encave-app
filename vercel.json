@@ -13,6 +13,10 @@
       "schedule": "0 3 * * *"
     },
     {
+      "path": "/api/cron/generate-occurrences",
+      "schedule": "0 2 * * *"
+    },
+    {
       "path": "/api/cron/follow-ups",
       "schedule": "0 8 * * *"
     },

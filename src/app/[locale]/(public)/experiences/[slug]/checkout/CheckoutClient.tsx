@@ -194,13 +194,19 @@ export function CheckoutClient({
     [date, time, guestCount, slug, navigate, experience.id, holdId]
   );
 
-  // BUG-003: Validate availability on mount
+  // BUG-003: Validate availability on mount — SKIPPED when the client
+  // holds a seat hold (P-05 review): the hold IS their guaranteed place,
+  // so an occurrence closing or the remaining capacity being consumed by
+  // others must neither eject them nor disable the form. The claim
+  // re-validates server-side at submit anyway.
   useEffect(() => {
+    if (holdId) return;
     validateAvailability();
-  }, [validateAvailability]);
+  }, [validateAvailability, holdId]);
 
-  // BUG-013: Periodic availability recheck
+  // BUG-013: Periodic availability recheck — no-hold fallback path only.
   useEffect(() => {
+    if (holdId) return;
     recheckIntervalRef.current = setInterval(() => {
       validateAvailability(false);
     }, AVAILABILITY_RECHECK_INTERVAL_MS);
@@ -210,7 +216,7 @@ export function CheckoutClient({
         clearInterval(recheckIntervalRef.current);
       }
     };
-  }, [validateAvailability]);
+  }, [validateAvailability, holdId]);
 
   // Retry handler for availability errors
   const handleRetryAvailability = useCallback(() => {
@@ -278,8 +284,12 @@ export function CheckoutClient({
     }
   };
 
-  // BUG-003: Form is disabled if capacity is exceeded or still checking
-  const isFormDisabled = capacityExceeded || isCheckingAvailability;
+  // BUG-003: Form is disabled if capacity is exceeded or still checking.
+  // Never with a hold — the held seats are the client's, whatever the
+  // availability of the remainder (defense in depth: with a hold the
+  // checks above don't even run).
+  const isFormDisabled =
+    !holdId && (capacityExceeded || isCheckingAvailability);
   const totalPrice = experience.price * guestCount;
   const serviceFee = serviceFeeCentsPerGuest * guestCount;
   const totalWithFees = totalPrice + serviceFee;

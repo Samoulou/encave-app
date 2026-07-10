@@ -11,6 +11,16 @@ vi.mock('@/server/db', () => ({
       aggregate: vi.fn(),
       groupBy: vi.fn(),
     },
+    featureFlag: {
+      findMany: vi.fn(),
+    },
+    experienceOccurrence: {
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+    },
+    blockedDate: {
+      findUnique: vi.fn(),
+    },
   },
 }));
 
@@ -24,6 +34,14 @@ const { checkAvailability, getTimeSlotsForDate, getExperienceForBooking } =
 describe('Booking Server Actions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // OCCURRENCE_CAPACITY defaults ON (P-05): the occurrence world's
+    // defaults are "nothing materialized yet" — no blackout, no
+    // occurrence rows — which must behave exactly like the legacy path
+    // (defensive union, ADR-0002).
+    vi.mocked(db.featureFlag.findMany).mockResolvedValue([] as never);
+    vi.mocked(db.blockedDate.findUnique).mockResolvedValue(null);
+    vi.mocked(db.experienceOccurrence.findUnique).mockResolvedValue(null);
+    vi.mocked(db.experienceOccurrence.findMany).mockResolvedValue([] as never);
   });
 
   describe('checkAvailability', () => {

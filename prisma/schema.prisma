@@ -632,6 +632,13 @@ model RequestOffer {
 // Persisted occurrence of a Slot experience (US-101). Uniqueness matches
 // the legacy (experienceId, date, timeSlot) capacity key so existing
 // bookings can be attached without rewriting the checkout (P-05).
+// Provenance metadata ONLY — never a bookability discriminant (ADR-0002):
+// the booking path treats RECURRING and PUNCTUAL identically.
+enum OccurrenceSource {
+  RECURRING
+  PUNCTUAL
+}
+
 model ExperienceOccurrence {
   id               String           @id @default(cuid())
   experienceId     String
@@ -640,7 +647,7 @@ model ExperienceOccurrence {
   startTime        String // "HH:mm" — same format as Booking.timeSlot
   status           OccurrenceStatus @default(OPEN)
   capacityOverride Int? // null = experience.maxCapacity — CHECK (>= 1) in migration
-  source           String           @default("RECURRING") // RECURRING | PUNCTUAL
+  source           OccurrenceSource @default(RECURRING)
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
 

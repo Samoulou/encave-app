@@ -5,6 +5,8 @@ import { db } from '@/server/db';
 import { generateSlug, ensureUniqueSlug } from '@/lib/utils/slug';
 import type { ActionResult } from '@/types/actions';
 import { logError } from '@/lib/logger';
+import { revalidateTag } from 'next/cache';
+import { generateOccurrences } from '@/server/services/occurrence.service';
 import {
   invalidateExperienceCaches,
   createExperienceSlugChecker,
@@ -98,8 +100,21 @@ export async function publishExperience(
       data: { status: 'PUBLISHED' },
     });
 
+    // Materialize the booking window (P-05 / L-024): occurrences over the
+    // rolling horizon, idempotent. Never blocks the publish on failure —
+    // the booking path's defensive resolve is the backstop.
+    try {
+      await generateOccurrences(experienceId);
+    } catch (generationError) {
+      logError('Occurrence generation failed at publish', generationError, {
+        action: 'publishExperience',
+        experienceId,
+      });
+    }
+
     // Invalidate caches after publishing
     invalidateExperienceCaches(wineryData?.slug, experience.slug);
+    revalidateTag(`occurrences:${experienceId}`);
     // Publishing the first experience can flip the winery's public
     // visibility (criterion 6 of ENC-027).
     invalidateWineryCaches(wineryData?.slug);
