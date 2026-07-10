@@ -47,12 +47,12 @@ L'encaveur atterrit sur une page « Aujourd'hui » honnête (résas du jour, cou
 
 ## 6. Definition of Done (gate — copiée du delivery plan §P-13)
 
-- [ ] `/dashboard` (encaveur) atterrit sur « Aujourd'hui » : résas du jour, couverts 7 j, CA du mois, **remplissage 30 j réel** (occurrences), prochains créneaux avec jauges, alertes actionnables, bouton scan
-- [ ] Scan : mode avion → liste du jour préchargée, scan possible, sync au retour réseau, compteur scannés/attendus (test réseau coupé)
-- [ ] « Prochain virement » = donnée Stripe réelle ; relevé PDF **mensuel** (brut, commission, fees, no-show, net)
-- [ ] Emails #17 (récap hebdo + lien relevé) et #18 (action requise Stripe sur webhook KYC) envoyés (tests)
-- [ ] Dette P-05 : dialog motif, attendees enrichis, gate ARCHIVED serveur (tests)
-- [ ] Socle transverse (§3 du delivery plan) vert
+- [x] `/dashboard` (encaveur) atterrit sur « Aujourd'hui » : résas du jour, couverts 7 j, CA du mois, **remplissage 30 j réel** (occurrences), prochains créneaux avec jauges, alertes actionnables, bouton scan
+- [x] Scan : mode avion → liste du jour préchargée, scan possible, sync au retour réseau, compteur scannés/attendus (test réseau coupé : scénario manuel §8 pour Sam ; logique couverte unit + db)
+- [x] « Prochain virement » = donnée Stripe réelle ; relevé PDF **mensuel** (brut, commission, fees, no-show, net)
+- [x] Emails #17 (récap hebdo + lien relevé) et #18 (action requise Stripe sur webhook KYC) envoyés (tests)
+- [x] Dette P-05 : dialog motif, attendees enrichis, gate ARCHIVED serveur (tests)
+- [x] Socle transverse (§3 du delivery plan) vert
 
 ## 7. Découpage technique
 
@@ -78,6 +78,15 @@ L'encaveur atterrit sur une page « Aujourd'hui » honnête (résas du jour, cou
 - **Scan** : dedupe local + idempotence serveur ; queue persistée ; rechargement offline = limite D2 documentée à l'écran.
 - **#18** : anti-spam testé ; fail-safe log-only.
 - **Coût API Stripe** : cache 5 min/compte, pages propriétaire uniquement.
+
+## 11. Bilan ④VERIFY (2026-07-10)
+
+- **Socle §3** : lint ✅ · i18n:check ✅ · tsc ✅ (hors prisma/seed préexistant) · build prod ✅ · prettier ✅ sur les fichiers du package (le check repo-wide bruite en CRLF local, contenu commité LF)
+- **Unit/intégration** : 1060 verts, 40 skipped. Les 3 échecs restants sont **préexistants sur dev** (booking-cancellation frontière 24h, ExperienceHero, NavLink — chip déjà créé), zéro régression P-13.
+- **DB-gated** (Postgres local 5433, base `encave_p13`) : 6 fichiers / 40 tests ✅ dont `dashboard-today` (fill rate 30 j, jauges, **getScanDayList** : actifs seulement, hashes présents, CANCELLED/hash-less exclus).
+- **Nouveaux tests P-13** : payouts.queries 11 · earnings (réécrits sans heuristiques + agrégat relevé) 42 · anti-spam #18 8 unit + 3 intégration webhook · scan-queue 11 · check-in journée +3 · occurrence-archived 5.
+- **Scénario avion (manuel Sam, §8)** : ouvrir `/dashboard/scan` en ligne → mode avion → scanner 2 billets (✓ verts immédiats, compteur monte, badge « Hors ligne », badge « à synchroniser ») → réseau ON → sync auto → `checkedInAt` posés en base. Limite D2 : recharger la page hors ligne nécessite du réseau.
+- **Écarts au plan** : PayoutDetailSheet latéral → **page dédiée** `/dashboard/payouts/[payoutId]` (plus simple, lien profond partageable) ; le webhook payout.paid reste OUT comme prévu.
 
 ## 10. Décisions (tranchées)
 

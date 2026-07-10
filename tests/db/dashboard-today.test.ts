@@ -23,11 +23,13 @@ vi.mock('next/headers', () => ({
 }));
 
 type TodayQueries = typeof import('@/server/queries/dashboard-today.queries');
+type ScanQueries = typeof import('@/server/queries/scan.queries');
 
 describe.skipIf(!url)("dashboard Aujourd'hui (P-13 / L-130)", () => {
   let db: PrismaClient;
   let getWineryFillRate30d: TodayQueries['getWineryFillRate30d'];
   let getUpcomingWinerySessions: TodayQueries['getUpcomingWinerySessions'];
+  let getScanDayList: ScanQueries['getScanDayList'];
   const ids: { userId?: string; wineryId?: string; experienceId?: string } = {};
 
   const today = zurichTodayAsUTCDate(new Date());
@@ -82,8 +84,10 @@ describe.skipIf(!url)("dashboard Aujourd'hui (P-13 / L-130)", () => {
   }
 
   beforeAll(async () => {
-    ({ getWineryFillRate30d, getUpcomingWinerySessions } =
-      await import('@/server/queries/dashboard-today.queries'));
+    ({ getWineryFillRate30d, getUpcomingWinerySessions } = await import(
+      '@/server/queries/dashboard-today.queries'
+    ));
+    ({ getScanDayList } = await import('@/server/queries/scan.queries'));
     db = new PrismaClient({ datasourceUrl: url });
     const user = await db.user.create({
       data: {
@@ -138,6 +142,32 @@ describe.skipIf(!url)("dashboard Aujourd'hui (P-13 / L-130)", () => {
     // Future: one OPEN occurrence with 3 CONFIRMED seats.
     await makeOccurrence(future, '10:00');
     await makeBooking(BookingStatus.CONFIRMED, 3, future, '10:00');
+
+    // TODAY (scan day list): one CONFIRMED with a token hash, one
+    // COMPLETED (already scanned), one CANCELLED and one hash-less
+    // CONFIRMED — the last two must never reach the scan list.
+    const scannable = await makeBooking(
+      BookingStatus.CONFIRMED,
+      2,
+      today,
+      '11:00'
+    );
+    await db.booking.update({
+      where: { id: scannable.id },
+      data: { accessTokenHash: 'a'.repeat(64) },
+    });
+    const scanned = await makeBooking(
+      BookingStatus.COMPLETED,
+      3,
+      today,
+      '11:00'
+    );
+    await db.booking.update({
+      where: { id: scanned.id },
+      data: { accessTokenHash: 'b'.repeat(64), checkedInAt: new Date() },
+    });
+    await makeBooking(BookingStatus.CANCELLED_BY_CLIENT, 2, today, '11:00');
+    await makeBooking(BookingStatus.CONFIRMED, 1, today, '11:00'); // no hash
   });
 
   afterAll(async () => {
@@ -173,5 +203,25 @@ describe.skipIf(!url)("dashboard Aujourd'hui (P-13 / L-130)", () => {
       soldSeats: 3,
       capacity: 8,
     });
+  });
+
+  it("scan day list: only today's active bookings, hashes present (P-13 / L-140)", async () => {
+    if (!ids.userId) throw new Error('fixture');
+    const list = await getScanDayList(ids.userId);
+    expect(list).not.toBeNull();
+    const todays = (list ?? []).filter((entry) => entry.timeSlot === '11:00');
+
+    // CANCELLED and hash-less bookings are out; both actives are in.
+    expect(todays).toHaveLength(2);
+    const confirmed = todays.find((entry) => entry.status === 'CONFIRMED');
+    const completed = todays.find((entry) => entry.status === 'COMPLETED');
+    expect(confirmed).toMatchObject({
+      accessTokenHash: 'a'.repeat(64),
+      guestCount: 2,
+      experienceTitle: 'Today Experience',
+      checkedInAtMs: null,
+    });
+    expect(completed?.accessTokenHash).toBe('b'.repeat(64));
+    expect(completed?.checkedInAtMs).toBeTypeOf('number');
   });
 });
