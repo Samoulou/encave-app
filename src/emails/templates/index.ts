@@ -58,3 +58,6 @@ export type {
   WeeklySummaryEmailProps,
   WeeklySummaryStats,
 } from './WeeklySummaryEmail';
+
+export { TastingRecapEmail } from './TastingRecapEmail';
+export type { TastingRecapWine } from './TastingRecapEmail';
