@@ -24,12 +24,10 @@ import {
 } from '@/components/ui/sheet';
 import { LocaleSwitcher } from '@/components/shared/LocaleSwitcher';
 import { useLogout } from '@/hooks/useLogout';
+import { useSession } from '@/lib/auth-client';
 import { cn } from '@/lib/utils';
 
 interface MobileNavProps {
-  isAuthenticated: boolean;
-  userName?: string | null;
-  userRole?: string | null;
   triggerClassName?: string;
 }
 
@@ -89,16 +87,21 @@ function getRoleNavItems(
   }
 }
 
-export function MobileNav({
-  isAuthenticated,
-  userName,
-  userRole,
-  triggerClassName,
-}: MobileNavProps) {
+export function MobileNav({ triggerClassName }: MobileNavProps) {
   const [open, setOpen] = useState(false);
   const t = useTranslations('nav');
   const pathname = usePathname();
   const logout = useLogout();
+  // Session resolved client-side (P-06 / L-202): the header renders
+  // statically; the shared better-auth store means one session fetch
+  // for all header islands. While pending we render the anonymous menu
+  // — the sheet is user-opened, so the session has resolved by then in
+  // practice.
+  const { data: session } = useSession();
+  const isAuthenticated = !!session?.user;
+  const userName = session?.user?.name ?? null;
+  const userRole = (session?.user as { role?: string | null } | undefined)
+    ?.role;
 
   const closeMenu = () => setOpen(false);
 

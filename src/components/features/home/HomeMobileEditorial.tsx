@@ -138,10 +138,7 @@ export function HomeMobileEditorial({
             <div className="rounded-full border border-white/25 bg-white/20 text-white backdrop-blur-md">
               <LocaleSwitcher triggerClassName="text-gold-100 hover:text-white" />
             </div>
-            <MobileNav
-              isAuthenticated={false}
-              triggerClassName="h-9 w-9 rounded-full border border-white/25 bg-white/20 text-white backdrop-blur-md"
-            />
+            <MobileNav triggerClassName="h-9 w-9 rounded-full border border-white/25 bg-white/20 text-white backdrop-blur-md" />
           </div>
         </div>
 
