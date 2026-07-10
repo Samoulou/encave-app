@@ -20,6 +20,7 @@ import {
   getMonthlyEarnings,
   getTransactions,
   getYearToDateSummary,
+  getMonthlyStatementData,
   getWineryExperiencesForEarnings,
 } from '@/server/queries/earnings.queries';
 
@@ -729,6 +730,111 @@ describe('Earnings Queries', () => {
           refundAmount: true,
         },
       });
+    });
+  });
+
+  // ========================================
+  // getMonthlyStatementData
+  // ========================================
+  describe('getMonthlyStatementData', () => {
+    const statementBooking = {
+      reference: 'ENC-AAAA0001',
+      date: new Date('2025-12-10T10:00:00Z'),
+      guestCount: 4,
+      totalPrice: 10000,
+      serviceFeeCents: 500,
+      platformFee: 1200,
+      wineryPayout: 8800,
+      refundIssued: false,
+      refundAmount: null,
+      experience: { title: 'Dégustation' },
+    };
+
+    it('rejects an invalid month key without querying', async () => {
+      const result = await getMonthlyStatementData('winery-123', '2025-13');
+      expect(result).toBeNull();
+      expect(mockDb.booking.findMany).not.toHaveBeenCalled();
+    });
+
+    it('includes NO_SHOW bookings and filters by month window', async () => {
+      mockDb.booking.findMany.mockResolvedValueOnce([] as never);
+
+      await getMonthlyStatementData('winery-123', '2025-12');
+
+      expect(mockDb.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            wineryId: 'winery-123',
+            status: {
+              in: [
+                BookingStatus.CONFIRMED,
+                BookingStatus.COMPLETED,
+                BookingStatus.NO_SHOW,
+              ],
+            },
+            date: { gte: expect.any(Date), lte: expect.any(Date) },
+          }),
+          orderBy: { date: 'asc' },
+        })
+      );
+    });
+
+    it('aggregates gross, commission, service fees and net', async () => {
+      mockDb.booking.findMany.mockResolvedValueOnce([
+        statementBooking,
+        {
+          ...statementBooking,
+          reference: 'ENC-AAAA0002',
+          totalPrice: 5000,
+          serviceFeeCents: 250,
+          platformFee: 600,
+          wineryPayout: 4400,
+        },
+      ] as never);
+
+      const result = await getMonthlyStatementData('winery-123', '2025-12');
+
+      expect(result?.grossCents).toBe(15000);
+      expect(result?.commissionCents).toBe(1800);
+      expect(result?.serviceFeesCents).toBe(750);
+      expect(result?.noShowFeesCents).toBe(0);
+      expect(result?.refundedCents).toBe(0);
+      expect(result?.netCents).toBe(13200);
+      expect(result?.lines).toHaveLength(2);
+    });
+
+    it('a full refund zeroes the line net and feeds the refund total', async () => {
+      mockDb.booking.findMany.mockResolvedValueOnce([
+        statementBooking,
+        {
+          ...statementBooking,
+          reference: 'ENC-AAAA0003',
+          refundIssued: true,
+          refundAmount: 10500, // totalPrice + serviceFee => full refund
+        },
+      ] as never);
+
+      const result = await getMonthlyStatementData('winery-123', '2025-12');
+
+      expect(result?.refundedCents).toBe(10500);
+      expect(result?.netCents).toBe(8800); // only the non-refunded line
+      expect(result?.lines[1]?.netCents).toBe(0);
+      expect(result?.lines[1]?.refunded).toBe(true);
+    });
+
+    it('a partial refund keeps the proportional net', async () => {
+      mockDb.booking.findMany.mockResolvedValueOnce([
+        {
+          ...statementBooking,
+          refundIssued: true,
+          refundAmount: 5250, // half of paid (10500)
+        },
+      ] as never);
+
+      const result = await getMonthlyStatementData('winery-123', '2025-12');
+
+      expect(result?.lines[0]?.netCents).toBe(4400); // 8800 × 0.5
+      expect(result?.netCents).toBe(4400);
     });
   });
 

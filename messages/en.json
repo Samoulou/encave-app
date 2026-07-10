@@ -1181,6 +1181,10 @@
       "refunded": "Refunded",
       "completed": "Completed",
       "upcoming": "Upcoming"
+    },
+    "statements": {
+      "title": "Monthly statements",
+      "subtitle": "Download a month's PDF statement: gross, commission, refunds and net paid out."
     }
   },
   "calendar": {

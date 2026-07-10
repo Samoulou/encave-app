@@ -1181,6 +1181,10 @@
       "refunded": "Remboursé",
       "completed": "Réalisée",
       "upcoming": "À venir"
+    },
+    "statements": {
+      "title": "Relevés mensuels",
+      "subtitle": "Téléchargez le relevé PDF d'un mois : brut, commission, remboursements et net reversé."
     }
   },
   "calendar": {

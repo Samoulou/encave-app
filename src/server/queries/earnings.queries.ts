@@ -65,6 +65,21 @@ export interface YearToDateSummary {
   refundedAmount: number;
 }
 
+// Partial refunds (STRICT 50% tier) reverse the Stripe transfer
+// proportionally: the winery keeps payout × (1 − refunded/paid). A full
+// refund keeps nothing. refundIssued alone no longer implies "earned 0".
+function refundedFraction(b: {
+  totalPrice: number;
+  serviceFeeCents: number;
+  refundIssued: boolean;
+  refundAmount: number | null;
+}): number {
+  if (!b.refundIssued) return 0;
+  const paid = b.totalPrice + b.serviceFeeCents;
+  if (paid <= 0 || b.refundAmount === null) return 1;
+  return Math.min(1, b.refundAmount / paid);
+}
+
 /**
  * Get earnings summary for dashboard cards.
  * Wrapped with React.cache for request-level deduplication.
@@ -95,21 +110,6 @@ export const getEarningsSummary = cache(async function getEarningsSummary(
       refundIssued: true,
     },
   });
-
-  // Partial refunds (STRICT 50% tier) reverse the Stripe transfer
-  // proportionally: the winery keeps payout × (1 − refunded/paid). A full
-  // refund keeps nothing. refundIssued alone no longer implies "earned 0".
-  function refundedFraction(b: {
-    totalPrice: number;
-    serviceFeeCents: number;
-    refundIssued: boolean;
-    refundAmount: number | null;
-  }): number {
-    if (!b.refundIssued) return 0;
-    const paid = b.totalPrice + b.serviceFeeCents;
-    if (paid <= 0 || b.refundAmount === null) return 1;
-    return Math.min(1, b.refundAmount / paid);
-  }
 
   // Total earnings (all time, net of full/partial refunds)
   // Only count bookings where experience has passed (date <= now)
@@ -349,6 +349,106 @@ export const getWineryGmv = cache(async function getWineryGmv(
 
   return aggregate._sum.totalPrice ?? 0;
 });
+
+export interface MonthlyStatementLine {
+  date: Date;
+  reference: string;
+  experienceTitle: string;
+  guestCount: number;
+  grossCents: number;
+  commissionCents: number;
+  netCents: number;
+  refunded: boolean;
+}
+
+export interface MonthlyStatementData {
+  /** 'YYYY-MM' */
+  month: string;
+  lines: MonthlyStatementLine[];
+  /** Σ totalPrice before refunds (money-kept statuses). */
+  grossCents: number;
+  commissionCents: number;
+  /** Client service fees — platform money, informative line only. */
+  serviceFeesCents: number;
+  /** No-show fees: always 0 until P-08 ships. */
+  noShowFeesCents: number;
+  /** Σ refundAmount of refunded bookings (positive number). */
+  refundedCents: number;
+  /** Σ wineryPayout net of full/partial refunds. */
+  netCents: number;
+}
+
+export const STATEMENT_MONTH_KEY_REGEX = /^\d{4}-(0[1-9]|1[0-2])$/;
+
+/**
+ * Monthly statement aggregate (P-13 / L-142). One row per booking whose
+ * experience DATE falls in the month — the statement reads as "what the
+ * month's activity earned you", matching the earnings screen. NO_SHOW is
+ * included (the winery kept the money).
+ */
+export const getMonthlyStatementData = cache(
+  async function getMonthlyStatementData(
+    wineryId: string,
+    month: string
+  ): Promise<MonthlyStatementData | null> {
+    if (!STATEMENT_MONTH_KEY_REGEX.test(month)) return null;
+    const [yearStr, monthStr] = month.split('-');
+    const monthStart = new Date(Number(yearStr), Number(monthStr) - 1, 1);
+    const monthEnd = endOfMonth(monthStart);
+
+    const bookings = await db.booking.findMany({
+      where: {
+        wineryId,
+        date: { gte: monthStart, lte: monthEnd },
+        status: {
+          in: [
+            BookingStatus.CONFIRMED,
+            BookingStatus.COMPLETED,
+            BookingStatus.NO_SHOW,
+          ],
+        },
+      },
+      orderBy: { date: 'asc' },
+      select: {
+        reference: true,
+        date: true,
+        guestCount: true,
+        totalPrice: true,
+        serviceFeeCents: true,
+        platformFee: true,
+        wineryPayout: true,
+        refundIssued: true,
+        refundAmount: true,
+        experience: { select: { title: true } },
+      },
+    });
+
+    const lines: MonthlyStatementLine[] = bookings.map((b) => ({
+      date: b.date,
+      reference: b.reference,
+      experienceTitle: b.experience.title,
+      guestCount: b.guestCount,
+      grossCents: b.totalPrice,
+      commissionCents: b.platformFee,
+      netCents: Math.round(b.wineryPayout * (1 - refundedFraction(b))),
+      refunded: b.refundIssued,
+    }));
+
+    return {
+      month,
+      lines,
+      grossCents: bookings.reduce((sum, b) => sum + b.totalPrice, 0),
+      commissionCents: bookings.reduce((sum, b) => sum + b.platformFee, 0),
+      serviceFeesCents: bookings.reduce((sum, b) => sum + b.serviceFeeCents, 0),
+      noShowFeesCents: 0,
+      refundedCents: bookings.reduce(
+        (sum, b) => sum + (b.refundIssued ? (b.refundAmount ?? 0) : 0),
+        0
+      ),
+      netCents: lines.reduce((sum, line) => sum + line.netCents, 0),
+    };
+  }
+);
 
 /**
  * Get experiences for filter dropdown.

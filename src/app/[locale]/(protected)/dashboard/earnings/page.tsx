@@ -6,6 +6,7 @@ import { getLocale } from 'next-intl/server';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
 import { StripeKycBanner } from '@/components/features/dashboard/StripeKycBanner';
 import { EarningsPageHeader } from '@/components/features/earnings/EarningsPageHeader';
+import { MonthlyStatementsCard } from '@/components/features/earnings/MonthlyStatementsCard';
 import { Skeleton, SkeletonContainer } from '@/components/shared/Skeleton';
 import { EarningsSummary } from './EarningsSummary';
 import { EarningsGmvSection } from './EarningsGmvSection';
@@ -85,6 +86,9 @@ export default async function EarningsPage({ searchParams }: PageProps) {
         <Suspense fallback={<TransactionsSkeleton />}>
           <EarningsTransactionsSection wineryId={winery.id} params={params} />
         </Suspense>
+
+        {/* Monthly statement PDFs (P-13 / L-142) — static month list */}
+        <MonthlyStatementsCard />
       </div>
     </WineryAccessGuard>
   );

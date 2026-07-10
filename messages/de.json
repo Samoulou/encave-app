@@ -1181,6 +1181,10 @@
       "refunded": "Erstattet",
       "completed": "Durchgeführt",
       "upcoming": "Bevorstehend"
+    },
+    "statements": {
+      "title": "Monatsabrechnungen",
+      "subtitle": "Laden Sie die PDF-Abrechnung eines Monats herunter: Brutto, Kommission, Erstattungen und Netto."
     }
   },
   "calendar": {
