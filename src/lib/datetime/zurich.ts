@@ -79,3 +79,19 @@ export function zonedDateKey(date: Date): string {
   });
   return fmt.format(date);
 }
+
+/**
+ * Local (Europe/Zurich) hour of day (0-23) for an instant. Used by the
+ * 21h tasting-sheet reminder guard: the cron fires at two UTC hours
+ * (19 & 20) and only the run matching 21h local acts — DST-proof.
+ */
+export function zonedHourOf(date: Date): number {
+  const fmt = new Intl.DateTimeFormat('en-CA', {
+    timeZone: SESSION_TIMEZONE,
+    hour: '2-digit',
+    hour12: false,
+    hourCycle: 'h23',
+  });
+  const hour = fmt.formatToParts(date).find((p) => p.type === 'hour')?.value;
+  return hour === undefined || hour === '24' ? 0 : Number(hour);
+}

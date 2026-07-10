@@ -2176,7 +2176,10 @@
       "armed": "{count, plural, one {Récap armé pour # réservation} other {Récap armé pour # réservations}}",
       "cleared": "Fiche vidée — aucun récap ne partira.",
       "armedNote": "{count, plural, one {Le récap partira à # hôte} other {Le récap partira à # hôtes}} — envoi prévu {date}.",
-      "alreadyFilled": "Fiche enregistrée — le récap partira automatiquement à J+2."
+      "alreadyFilled": "Fiche enregistrée — le récap partira automatiquement à J+2.",
+      "alertTitle": "Fiche dégustation à remplir",
+      "alertDescription": "{count, plural, one {# session d'aujourd'hui attend sa fiche} other {# sessions d'aujourd'hui attendent leur fiche}} — cochez les vins servis pour déclencher les coups de cœur.",
+      "alertCta": "Remplir la fiche"
     }
   },
   "Public": {

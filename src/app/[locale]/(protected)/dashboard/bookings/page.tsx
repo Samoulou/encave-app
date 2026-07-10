@@ -11,6 +11,7 @@ import { BookingsTableSection } from './BookingsTableSection';
 import { BookingsPageHeader } from './BookingsPageHeader';
 import { VisibilityBanner } from '@/components/features/dashboard/VisibilityBanner';
 import { VisibilityBannerSkeleton } from '@/components/features/dashboard/VisibilityBannerSkeleton';
+import { TastingSheetAlertBanner } from '@/components/features/wine/TastingSheetAlertBanner';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
@@ -70,6 +71,11 @@ export default async function BookingsDashboardPage({
         {/* ENC-027: Public visibility status banner (first item) */}
         <Suspense fallback={<VisibilityBannerSkeleton />}>
           <VisibilityBanner wineryId={winery.id} />
+        </Suspense>
+
+        {/* P-07 / L-063: empty tasting sheet alert (flag-gated, often null) */}
+        <Suspense fallback={null}>
+          <TastingSheetAlertBanner userId={session.user.id} />
         </Suspense>
 
         {/* Page Header with Actions */}

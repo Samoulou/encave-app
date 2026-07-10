@@ -28,6 +28,8 @@ import {
   WineOrderRequestWineryEmail,
   WineOrderRequestClientEmail,
   type WineOrderRequestItemLine,
+  TastingSheetReminderEmail,
+  type ReminderSessionLine,
 } from '@/emails';
 import { subjects, t } from '@/emails/translations';
 import { generateBookingQrPng } from '@/server/services/qr-code.service';
@@ -858,4 +860,39 @@ export async function sendWineOrderRequestEmails(
   });
 
   return { winery: wineryResult.ok, client: clientResult.ok };
+}
+
+export interface TastingSheetReminderData {
+  wineryId: string;
+  firstName: string;
+  sessions: ReminderSessionLine[];
+  /** Deep link to the sessions calendar of the concerned experience. */
+  sheetUrl: string;
+}
+
+/** Email #21 — 21h empty-sheet reminder to the winemaker (L-063). */
+export async function sendTastingSheetReminderEmail(
+  email: string,
+  data: TastingSheetReminderData,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const html = await render(
+    TastingSheetReminderEmail({
+      locale: loc,
+      firstName: data.firstName,
+      sessions: data.sessions,
+      sheetUrl: data.sheetUrl,
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.tastingSheetReminder, loc),
+    html,
+    tags: [
+      { name: 'email_type', value: 'tasting_sheet_reminder' },
+      { name: 'winery_id', value: data.wineryId },
+    ],
+  });
 }

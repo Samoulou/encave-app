@@ -2176,7 +2176,10 @@
       "armed": "{count, plural, one {Recap armed for # booking} other {Recap armed for # bookings}}",
       "cleared": "Sheet cleared — no recap will be sent.",
       "armedNote": "{count, plural, one {The recap will reach # guest} other {The recap will reach # guests}} — scheduled for {date}.",
-      "alreadyFilled": "Sheet saved — the recap goes out automatically two days after the visit."
+      "alreadyFilled": "Sheet saved — the recap goes out automatically two days after the visit.",
+      "alertTitle": "Tasting sheet to fill in",
+      "alertDescription": "{count, plural, one {# of today's sessions is waiting for its sheet} other {# of today's sessions are waiting for their sheets}} — tick the wines served to trigger the favourites email.",
+      "alertCta": "Fill in the sheet"
     }
   },
   "Public": {

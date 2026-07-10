@@ -67,3 +67,6 @@ export {
   WineOrderRequestClientEmail,
 } from './WineOrderRequestEmail';
 export type { WineOrderRequestItemLine } from './WineOrderRequestEmail';
+
+export { TastingSheetReminderEmail } from './TastingSheetReminderEmail';
+export type { ReminderSessionLine } from './TastingSheetReminderEmail';
