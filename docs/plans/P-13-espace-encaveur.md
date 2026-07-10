@@ -88,6 +88,25 @@ L'encaveur atterrit sur une page « Aujourd'hui » honnête (résas du jour, cou
 - **Scénario avion (manuel Sam, §8)** : ouvrir `/dashboard/scan` en ligne → mode avion → scanner 2 billets (✓ verts immédiats, compteur monte, badge « Hors ligne », badge « à synchroniser ») → réseau ON → sync auto → `checkedInAt` posés en base. Limite D2 : recharger la page hors ligne nécessite du réseau.
 - **Écarts au plan** : PayoutDetailSheet latéral → **page dédiée** `/dashboard/payouts/[payoutId]` (plus simple, lien profond partageable) ; le webhook payout.paid reste OUT comme prévu.
 
+## 12. Bilan ⑤REVIEW — /code-review high (2026-07-10)
+
+8 angles (3 correctness + 3 cleanup + altitude + conventions), 47 candidats, dédupliqués puis corrigés en un commit (`fix(p-13): code-review high — correctifs`). Trouvailles majeures, toutes corrigées :
+
+1. **Scan — perte de check-ins après minuit** : la queue offline rejouée après minuit Zurich prenait `WRONG_DAY` (définitif) → scans supprimés. Fix : `scannedAt` transmis au serveur (borné 48 h), le garde-fou jour s'ancre sur le scan physique.
+2. **Scan — instantané périmé** : billet réservé après chargement refusé même en ligne ; annulé après chargement passait vert. Fix : en ligne = serveur autoritaire, local seulement hors ligne ; rejets définitifs dé-marquent le compteur.
+3. **Scan — queue partagée entre comptes** : clé localStorage globale → changement de compte sur tablette partagée rejouait/perdait les scans de l'autre cave. Fix : clé scopée par userId + retry 30 s.
+4. **Payouts — troncature silencieuse** : `balanceTransactions.list` limité à 100 lignes sans `has_more` → totaux sous-évalués sur un gros virement. Fix : auto-pagination (cap 1000) + résolution des transfers par lots de 10 (rate limit Stripe).
+5. **Relevé — bornes de mois en heure locale** vs colonne `@db.Date` UTC → décalage bord de mois sur serveur non-UTC. Fix : bornes `Date.UTC`.
+6. **Relevé — non-réconciliable** : Remboursements = `refundAmount` client (fee+commission incluses) → Brut − Commission − Remb ≠ Net. Fix : impact net (`payout × fraction`), identité exacte, testée.
+7. **Earnings — URLs héritées** `?status=paid|pending` → table vide silencieuse. Fix : whitelist des statuts.
+8. **Cron #17 — budget 60 s** : boucle séquentielle (DB + Stripe + Resend par cave) coupée à ~40 caves. Fix : `maxDuration 300` (parallélisation → dette si >150 caves).
+9. **Lien relevé email #17** : sans session → 401 JSON brut. Fix : redirect login.
+10. **Réutilisation/conventions** : `formatCHFCompact`, `isMonthKey`, `formatDate` (fr-CH) remplacent les copies locales ; libellé « (12 %) » retiré (commission par cave à venir) ; `Badge` remplace les pills raw-Tailwind ; ancre Zurich alignée entre KPIs et liste bookings ; `sessionKey/dayKey` dédupliquent 6 template literals ; `StripeKycBanner` passe au Link i18n.
+
+Non retenus (assumés) : latence Stripe dans le stream EarningsSummary (mitigée par cache 5 min + catch) ; triple `winery.findUnique` sur la landing (dette perf, non bloquant) ; pattern `error.tsx`/`console.error` (boilerplate repo-wide préexistant) ; corrélation payout au read-time vs webhook-time (choix documenté A6).
+
+Après correctifs : tsc ✅, lint ✅, i18n ✅, 1063 tests verts (3 échecs préexistants dev), build ✅.
+
 ## 10. Décisions (tranchées)
 
 D1–D4 (Sam, AskUserQuestion 2026-07-10) + A1–A10 (ce plan). ENC-114 questions ouvertes tranchées : commission affichée montant + « (12 %) », bouton « Ouvrir dans Stripe » inclus (login link existant), export CSV → dette. Aucune décision ouverte.
