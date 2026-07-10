@@ -10,15 +10,18 @@ import {
   format,
 } from 'date-fns';
 
-export type TransactionStatus = 'paid' | 'processing' | 'pending' | 'refunded';
+/**
+ * P-13 (L-141): statuses are booking facts only — the old paid/processing
+ * buckets were a J+5 business-day GUESS about Stripe payouts. Real payout
+ * timing now lives on /dashboard/payouts (Stripe API).
+ */
+export type TransactionStatus = 'upcoming' | 'completed' | 'refunded';
 
 export interface EarningsSummary {
   totalEarnings: number;
   thisMonth: number;
   lastMonth: number;
   yearToDate: number;
-  pendingPayout: number;
-  nextPayoutDate: Date | null;
   currentMonthLabel: string;
 }
 
@@ -46,7 +49,6 @@ export interface Transaction {
   netPayout: number;
   status: TransactionStatus;
   reference: string;
-  estimatedPayoutDate: Date | null;
 }
 
 export interface TransactionFilters {
@@ -61,89 +63,6 @@ export interface YearToDateSummary {
   netEarnings: number;
   totalBookings: number;
   refundedAmount: number;
-}
-
-/**
- * Calculate number of business days between two dates.
- * Excludes weekends (Saturday and Sunday).
- */
-function getBusinessDaysSince(fromDate: Date): number {
-  const now = new Date();
-  let businessDays = 0;
-  const current = new Date(fromDate);
-
-  while (current < now) {
-    const dayOfWeek = current.getDay();
-    // Count if not Saturday (6) or Sunday (0)
-    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-      businessDays++;
-    }
-    current.setDate(current.getDate() + 1);
-  }
-
-  return businessDays;
-}
-
-/**
- * Calculate estimated payout date (experience date + 5 business days)
- * Skips weekends when counting business days.
- */
-function calculateEstimatedPayoutDate(experienceDate: Date): Date {
-  const result = new Date(experienceDate);
-  let businessDaysAdded = 0;
-
-  while (businessDaysAdded < 5) {
-    result.setDate(result.getDate() + 1);
-    const dayOfWeek = result.getDay();
-    // Only count weekdays
-    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-      businessDaysAdded++;
-    }
-  }
-
-  return result;
-}
-
-/**
- * Determine transaction status based on booking state.
- *
- * Status logic:
- * - 'refunded': Refund has been issued
- * - 'pending': Experience hasn't happened yet (date is in future)
- * - 'processing': Experience completed, within 2-5 business days (funds being processed)
- * - 'paid': Experience completed 5+ business days ago (funds should be available)
- */
-function getTransactionStatus(
-  bookingStatus: BookingStatus,
-  bookingDate: Date,
-  refundIssued: boolean
-): TransactionStatus {
-  if (refundIssued) return 'refunded';
-
-  const now = new Date();
-
-  // If the experience hasn't happened yet, it's pending
-  if (bookingDate > now) {
-    return 'pending';
-  }
-
-  // Experience has passed - calculate business days
-  if (
-    bookingStatus === BookingStatus.COMPLETED ||
-    bookingStatus === BookingStatus.CONFIRMED
-  ) {
-    const businessDaysSince = getBusinessDaysSince(bookingDate);
-
-    if (businessDaysSince >= 5) {
-      return 'paid';
-    } else if (businessDaysSince >= 2) {
-      return 'processing';
-    }
-    // Less than 2 business days after experience
-    return 'pending';
-  }
-
-  return 'pending';
 }
 
 /**
@@ -227,36 +146,11 @@ export const getEarningsSummary = cache(async function getEarningsSummary(
       0
     );
 
-  // Pending payout: bookings where experience passed but < 5 business days ago
-  // This includes both 'pending' and 'processing' statuses
-  const pendingBookings = bookings.filter((b) => {
-    if (refundedFraction(b) >= 1) return false;
-    if (b.date > now) return false; // Future experience
-
-    const status = getTransactionStatus(b.status, b.date, b.refundIssued);
-    return status === 'pending' || status === 'processing';
-  });
-
-  const pendingPayout = pendingBookings.reduce(
-    (sum, b) => sum + b.wineryPayout,
-    0
-  );
-
-  // Next payout date: earliest pending booking's estimated payout date
-  const sortedPending = pendingBookings.sort(
-    (a, b) => a.date.getTime() - b.date.getTime()
-  );
-  const nextPayoutDate = sortedPending[0]
-    ? calculateEstimatedPayoutDate(sortedPending[0].date)
-    : null;
-
   return {
     totalEarnings,
     thisMonth,
     lastMonth,
     yearToDate,
-    pendingPayout,
-    nextPayoutDate,
     currentMonthLabel: format(now, 'MMM'),
   };
 });
@@ -353,13 +247,15 @@ export const getTransactions = cache(async function getTransactions(
     },
   });
 
-  // Map to Transaction type with status calculation
+  // Booking facts only: refunded > upcoming (experience not held yet) >
+  // completed. Payout timing is Stripe's job (/dashboard/payouts).
+  const now = new Date();
   let transactions: Transaction[] = bookings.map((b) => {
-    const status = getTransactionStatus(b.status, b.date, b.refundIssued);
-    const estimatedPayoutDate =
-      status === 'pending' || status === 'processing'
-        ? calculateEstimatedPayoutDate(b.date)
-        : null;
+    const status: TransactionStatus = b.refundIssued
+      ? 'refunded'
+      : b.date > now
+        ? 'upcoming'
+        : 'completed';
 
     return {
       id: b.id,
@@ -378,7 +274,6 @@ export const getTransactions = cache(async function getTransactions(
       netPayout: b.wineryPayout,
       status,
       reference: b.reference,
-      estimatedPayoutDate,
     };
   });
 

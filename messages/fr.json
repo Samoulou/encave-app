@@ -127,7 +127,8 @@
       "subject": "Expériences disponibles",
       "spots": "2+ places"
     },
-    "wines": "Vins"
+    "wines": "Vins",
+    "payouts": "Reversements"
   },
   "locale": {
     "fr": "Français",
@@ -1102,10 +1103,14 @@
     "summary": {
       "totalEarnings": "Revenus totaux",
       "grossRevenue": "Revenu brut",
-      "pendingPayouts": "Paiements en attente",
       "vsLastMonth": "vs mois dernier",
       "estArrival": "Arrivée prévue:",
-      "yearToDate": "Depuis le début de l'année"
+      "yearToDate": "Depuis le début de l'année",
+      "nextPayout": "Prochain virement",
+      "nextPayoutUnavailable": "Donnée Stripe indisponible",
+      "nextPayoutAccruing": "En préparation chez Stripe",
+      "nextPayoutNone": "Aucun virement en attente",
+      "nextPayoutLink": "Voir tout"
     },
     "transactions": {
       "title": "Transactions",
@@ -1173,10 +1178,9 @@
       "description": "Les paiements sont traités automatiquement 7 jours après la date de l'expérience. Les fonds sont transférés directement sur votre compte bancaire connecté via Stripe."
     },
     "transactionStatus": {
-      "paid": "Payé",
-      "processing": "En cours",
-      "pending": "En attente",
-      "refunded": "Remboursé"
+      "refunded": "Remboursé",
+      "completed": "Réalisée",
+      "upcoming": "À venir"
     }
   },
   "calendar": {
@@ -1502,6 +1506,10 @@
       "wines": {
         "title": "Mes vins | EnCave",
         "description": "Gérez votre carte des vins"
+      },
+      "payouts": {
+        "title": "Reversements | EnCave",
+        "description": "Vos versements Stripe en clair"
       }
     },
     "onboarding": {
@@ -2285,5 +2293,49 @@
     "sentDescription": "{wineryName} a reçu votre sélection et vous recontacte très vite.",
     "alreadyTitle": "Demande déjà envoyée",
     "alreadyDescription": "{wineryName} a déjà reçu votre demande pour cette dégustation."
+  },
+  "Payouts": {
+    "title": "Reversements",
+    "subtitle": "Les versements EnCave arrivent automatiquement sur votre compte selon le calendrier Stripe.",
+    "loading": "Chargement des reversements…",
+    "openInStripe": "Ouvrir dans Stripe",
+    "status": {
+      "paid": "Versé",
+      "pending": "En préparation",
+      "in_transit": "En transit",
+      "failed": "Échec",
+      "canceled": "Annulé"
+    },
+    "next": {
+      "title": "Prochain virement",
+      "arrival": "Arrivée prévue le {date}",
+      "accruing": "En préparation chez Stripe — versé selon votre calendrier",
+      "none": "Aucun virement en attente"
+    },
+    "empty": {
+      "title": "Pas encore de versement",
+      "body": "Vos versements arrivent automatiquement selon le calendrier Stripe configuré sur votre compte. Le premier intervient généralement quelques jours après votre première réservation confirmée.",
+      "stripeNotReady": {
+        "title": "Finalisez votre compte Stripe",
+        "body": "Pour recevoir vos versements, complétez la configuration de votre compte Stripe Connect.",
+        "cta": "Finaliser mon compte Stripe"
+      }
+    },
+    "error": {
+      "fetch": "Impossible de récupérer l'historique Stripe. Réessayez dans un instant.",
+      "retry": "Réessayer"
+    },
+    "detail": {
+      "back": "Tous les reversements",
+      "title": "Détail du versement",
+      "bookings": "Réservations incluses",
+      "noBookings": "Aucune réservation corrélée à ce versement.",
+      "gross": "Brut",
+      "commission": "Commission",
+      "totalGross": "Total brut",
+      "totalCommission": "Commission EnCave (12 %)",
+      "totalNet": "Total net versé",
+      "otherLines": "Autres mouvements (remboursements, ajustements)"
+    }
   }
 }

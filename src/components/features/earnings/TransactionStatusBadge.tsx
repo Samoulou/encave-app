@@ -12,19 +12,17 @@ interface TransactionStatusBadgeProps {
 }
 
 /**
- * Transaction status badge. Maps each status to a canonical `<Badge variant>`:
- * - paid → success
- * - processing → info (warm primary tint; the old cold "blue" had no warm slot)
- * - pending → warning
+ * Transaction status badge (P-13: booking facts, no payout guessing):
+ * - completed → success (experience held)
+ * - upcoming → warning (experience not held yet)
  * - refunded → secondary (muted)
  */
 const STATUS_CONFIG: Record<
   TransactionStatus,
   { variant: BadgeVariant; labelKey: string }
 > = {
-  paid: { variant: 'success', labelKey: 'paid' },
-  processing: { variant: 'info', labelKey: 'processing' },
-  pending: { variant: 'warning', labelKey: 'pending' },
+  completed: { variant: 'success', labelKey: 'completed' },
+  upcoming: { variant: 'warning', labelKey: 'upcoming' },
   refunded: { variant: 'secondary', labelKey: 'refunded' },
 };
 

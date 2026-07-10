@@ -127,7 +127,8 @@
       "subject": "Verfügbare Erlebnisse",
       "spots": "2+ Plätze"
     },
-    "wines": "Weine"
+    "wines": "Weine",
+    "payouts": "Auszahlungen"
   },
   "locale": {
     "fr": "Francais",
@@ -1102,10 +1103,14 @@
     "summary": {
       "totalEarnings": "Gesamteinnahmen",
       "grossRevenue": "Bruttoumsatz",
-      "pendingPayouts": "Ausstehende Auszahlungen",
       "vsLastMonth": "vs. letzter Monat",
       "estArrival": "Geschätzte Ankunft:",
-      "yearToDate": "Jahr bis heute"
+      "yearToDate": "Jahr bis heute",
+      "nextPayout": "Nächste Auszahlung",
+      "nextPayoutUnavailable": "Stripe-Daten nicht verfügbar",
+      "nextPayoutAccruing": "Bei Stripe in Vorbereitung",
+      "nextPayoutNone": "Keine ausstehende Auszahlung",
+      "nextPayoutLink": "Alle ansehen"
     },
     "transactions": {
       "title": "Transaktionen",
@@ -1173,10 +1178,9 @@
       "description": "Auszahlungen werden automatisch 7 Tage nach dem Erlebnisdatum verarbeitet. Die Gelder werden direkt auf Ihr verbundenes Bankkonto über Stripe überwiesen."
     },
     "transactionStatus": {
-      "paid": "Bezahlt",
-      "processing": "In Bearbeitung",
-      "pending": "Ausstehend",
-      "refunded": "Erstattet"
+      "refunded": "Erstattet",
+      "completed": "Durchgeführt",
+      "upcoming": "Bevorstehend"
     }
   },
   "calendar": {
@@ -1502,6 +1506,10 @@
       "wines": {
         "title": "Meine Weine | EnCave",
         "description": "Verwalten Sie Ihre Weinkarte"
+      },
+      "payouts": {
+        "title": "Auszahlungen | EnCave",
+        "description": "Ihre Stripe-Auszahlungen im Klartext"
       }
     },
     "onboarding": {
@@ -2290,5 +2298,49 @@
     "sentDescription": "{wineryName} hat Ihre Auswahl erhalten und meldet sich bald bei Ihnen.",
     "alreadyTitle": "Anfrage bereits gesendet",
     "alreadyDescription": "{wineryName} hat Ihre Anfrage für diese Degustation bereits erhalten."
+  },
+  "Payouts": {
+    "title": "Auszahlungen",
+    "subtitle": "EnCave-Auszahlungen erfolgen automatisch gemäss Ihrem Stripe-Zeitplan.",
+    "loading": "Auszahlungen werden geladen…",
+    "openInStripe": "In Stripe öffnen",
+    "status": {
+      "paid": "Ausgezahlt",
+      "pending": "In Vorbereitung",
+      "in_transit": "Unterwegs",
+      "failed": "Fehlgeschlagen",
+      "canceled": "Storniert"
+    },
+    "next": {
+      "title": "Nächste Auszahlung",
+      "arrival": "Voraussichtliche Ankunft am {date}",
+      "accruing": "Bei Stripe in Vorbereitung — Auszahlung nach Ihrem Zeitplan",
+      "none": "Keine ausstehende Auszahlung"
+    },
+    "empty": {
+      "title": "Noch keine Auszahlung",
+      "body": "Ihre Auszahlungen erfolgen automatisch gemäss dem in Ihrem Konto konfigurierten Stripe-Zeitplan. Die erste erfolgt in der Regel wenige Tage nach Ihrer ersten bestätigten Reservierung.",
+      "stripeNotReady": {
+        "title": "Stripe-Konto abschliessen",
+        "body": "Um Ihre Auszahlungen zu erhalten, schliessen Sie die Einrichtung Ihres Stripe-Connect-Kontos ab.",
+        "cta": "Mein Stripe-Konto abschliessen"
+      }
+    },
+    "error": {
+      "fetch": "Stripe-Verlauf konnte nicht geladen werden. Bitte versuchen Sie es gleich noch einmal.",
+      "retry": "Erneut versuchen"
+    },
+    "detail": {
+      "back": "Alle Auszahlungen",
+      "title": "Details der Auszahlung",
+      "bookings": "Enthaltene Reservierungen",
+      "noBookings": "Keine Reservierung mit dieser Auszahlung verknüpft.",
+      "gross": "Brutto",
+      "commission": "Kommission",
+      "totalGross": "Brutto gesamt",
+      "totalCommission": "EnCave-Kommission (12 %)",
+      "totalNet": "Netto ausgezahlt",
+      "otherLines": "Weitere Bewegungen (Erstattungen, Anpassungen)"
+    }
   }
 }
