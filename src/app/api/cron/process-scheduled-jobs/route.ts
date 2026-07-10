@@ -14,7 +14,10 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 
 /**
- * Generic ScheduledJob drain (P-07 / decision A2), hourly. ONE registry
+ * Generic ScheduledJob drain (P-07 / decision A2), every 3h — eight
+ * once-daily vercel.json entries (?slot=N): the Vercel Hobby plan
+ * rejects sub-daily cron expressions at deploy time; a Pro upgrade can
+ * collapse them back to one hourly `0 * * * *` entry. ONE registry
  * entry per job type — its kill-switch flag and its handler live side by
  * side, so a type can never be enabled without a handler (the split that
  * would park jobs FAILED on a config mistake). A disabled type is never
