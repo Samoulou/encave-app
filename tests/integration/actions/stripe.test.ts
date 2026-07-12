@@ -36,9 +36,8 @@ import {
 } from '@/server/services/payment.service';
 
 // Import actions after mocks
-const { startStripeOnboarding, getStripeDashboardLink } = await import(
-  '@/server/actions/stripe'
-);
+const { startStripeOnboarding, getStripeDashboardLink } =
+  await import('@/server/actions/stripe');
 
 const mockAuth = vi.mocked(auth);
 const mockDb = vi.mocked(db);
@@ -218,5 +217,4 @@ describe('Stripe Server Actions', () => {
       }
     });
   });
-
 });
