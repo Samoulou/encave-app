@@ -9,7 +9,7 @@ Ces documents définissent la **cible V3** d'EnCave. Chaque epic (`/ultraplan`, 
 | [ENCAVE-V3-PAGES-EMAILS.md](./ENCAVE-V3-PAGES-EMAILS.md) | Inventaire complet des écrans et emails      |
 | [ENCAVE-V3-PLANNING.md](./ENCAVE-V3-PLANNING.md)         | Phases, gates, chemin critique, fusibles     |
 
-État actuel vs cible : [../ENCAVE-V3-GAP-ANALYSIS.md](../ENCAVE-V3-GAP-ANALYSIS.md).
+État actuel vs cible : [../archive/ENCAVE-V3-GAP-ANALYSIS.md](../archive/ENCAVE-V3-GAP-ANALYSIS.md).
 
 ## Décisions d'adaptation (09.07.2026)
 

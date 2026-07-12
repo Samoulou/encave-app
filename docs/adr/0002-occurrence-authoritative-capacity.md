@@ -149,9 +149,9 @@ CONFLICT DO UPDATE` sous SERIALIZABLE lève 40001 ; un upsert Prisma sur clé
 
 ## Références
 
-- Plan : `docs/plans/P-05-creneaux-recherche-date.md`
+- Plan : `docs/archive/plans/P-05-creneaux-recherche-date.md`
 - ADR lié : `docs/adr/0001-booking-backward-status-transitions.md`
-- Cœur durci : `docs/plans/P-04-checkout-v3.md`,
+- Cœur durci : `docs/archive/plans/P-04-checkout-v3.md`,
   `src/server/actions/checkout.ts`, `src/lib/business-rules/capacity.ts`,
   `src/server/services/serializable-retry.service.ts`
 - Source unique de vérité produit : `docs/v3/ENCAVE-V3-PRD.md` US-101 ;
