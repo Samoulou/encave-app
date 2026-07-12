@@ -4,12 +4,10 @@ import { z } from 'zod';
 import crypto from 'crypto';
 import { differenceInHours } from 'date-fns';
 import { db } from '@/server/db';
-import { auth } from '@/server/auth';
 import type { ActionResult } from '@/types/actions';
-import { BookingStatus, UserRole } from '@prisma/client';
+import { BookingStatus } from '@prisma/client';
 import type { CancellationPolicy } from '@prisma/client';
 import {
-  sendBookingConfirmationEmail,
   sendBookingCancellationEmail,
   sendWinemakerCancellationEmail,
 } from '@/server/services/email.service';
@@ -367,117 +365,6 @@ export async function getExperienceForBooking(
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to get experience' },
-    };
-  }
-}
-
-/**
- * Resend booking confirmation email
- */
-export async function resendConfirmationEmail(
-  bookingId: string
-): Promise<ActionResult<{ sent: boolean }>> {
-  try {
-    const session = await auth();
-    if (!session?.user) {
-      return {
-        success: false,
-        error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
-      };
-    }
-
-    const booking = await db.booking.findUnique({
-      where: { id: bookingId },
-      include: {
-        experience: {
-          select: {
-            title: true,
-            duration: true,
-          },
-        },
-        winery: {
-          select: {
-            name: true,
-            userId: true,
-          },
-        },
-      },
-    });
-
-    if (!booking) {
-      return {
-        success: false,
-        error: { code: 'NOT_FOUND', message: 'Booking not found' },
-      };
-    }
-
-    const isClientOwner =
-      booking.visitorEmail.toLowerCase() === session.user.email.toLowerCase();
-    const isWineryOwner = booking.winery.userId === session.user.id;
-    const isAdmin = session.user.role === UserRole.ADMIN;
-
-    if (!isClientOwner && !isWineryOwner && !isAdmin) {
-      return {
-        success: false,
-        error: { code: 'FORBIDDEN', message: 'Not allowed for this booking' },
-      };
-    }
-
-    if (booking.status !== BookingStatus.CONFIRMED) {
-      return {
-        success: false,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Booking is not confirmed',
-        },
-      };
-    }
-
-    // Combine date and timeSlot for email formatting
-    const [hours, minutes] = booking.timeSlot.split(':').map(Number);
-    const bookingDateTime = new Date(booking.date);
-    bookingDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
-
-    // Rotate the access token so the resent email carries a working magic
-    // link (only the hash is stored — the original plaintext is gone).
-    // The new hash is persisted ONLY after the provider accepted the email:
-    // a failed send must leave the customer's existing link valid.
-    const accessToken = crypto.randomBytes(32).toString('hex');
-    const accessTokenHash = crypto
-      .createHash('sha256')
-      .update(accessToken)
-      .digest('hex');
-
-    const sent = await sendBookingConfirmationEmail(booking.visitorEmail, {
-      bookingId: booking.id,
-      accessToken,
-      guestName: booking.visitorName,
-      experienceTitle: booking.experience.title,
-      wineryName: booking.winery.name,
-      date: bookingDateTime,
-      guestCount: booking.guestCount,
-      duration: booking.experience.duration,
-      totalPrice: booking.totalPrice,
-      serviceFeeCents: booking.serviceFeeCents,
-      bookingRef: booking.reference,
-    });
-
-    if (sent) {
-      await db.booking.update({
-        where: { id: bookingId },
-        data: { accessTokenHash, confirmationSentAt: new Date() },
-      });
-    }
-
-    return { success: true, data: { sent } };
-  } catch (error) {
-    logError('resendConfirmationEmail error', error, {
-      action: 'resendConfirmationEmail',
-      bookingId,
-    });
-    return {
-      success: false,
-      error: { code: 'INTERNAL_ERROR', message: 'Failed to resend email' },
     };
   }
 }

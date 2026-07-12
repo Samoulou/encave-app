@@ -22,7 +22,6 @@ import {
   getMonthCalendarData,
   getWeekCalendarData,
   getBlockedDates,
-  getWineryExperienceTypes,
   getWineryExperiencesForBlocking,
 } from '@/server/queries/calendar.queries';
 
@@ -410,46 +409,6 @@ describe('calendar.queries', () => {
           orderBy: { date: 'asc' },
         })
       );
-    });
-  });
-
-  describe('getWineryExperienceTypes', () => {
-    it('returns experience types with counts', async () => {
-      vi.mocked(db.experience.groupBy).mockResolvedValue([
-        { type: ExperienceType.TASTING, _count: 3 },
-        { type: ExperienceType.CELLAR_VISIT, _count: 2 },
-        { type: ExperienceType.WORKSHOP, _count: 1 },
-      ] as never);
-
-      const result = await getWineryExperienceTypes('winery-123');
-
-      expect(result).toHaveLength(3);
-      expect(result[0]).toEqual({ type: ExperienceType.TASTING, count: 3 });
-      expect(result[1]).toEqual({
-        type: ExperienceType.CELLAR_VISIT,
-        count: 2,
-      });
-      expect(result[2]).toEqual({ type: ExperienceType.WORKSHOP, count: 1 });
-    });
-
-    it('groups by experience type for the winery', async () => {
-      vi.mocked(db.experience.groupBy).mockResolvedValue([]);
-
-      await getWineryExperienceTypes('winery-123');
-
-      expect(db.experience.groupBy).toHaveBeenCalledWith({
-        by: ['type'],
-        where: { wineryId: 'winery-123' },
-        _count: true,
-      });
-    });
-
-    it('returns empty array when no experiences', async () => {
-      vi.mocked(db.experience.groupBy).mockResolvedValue([]);
-
-      const result = await getWineryExperienceTypes('winery-123');
-
-      expect(result).toEqual([]);
     });
   });
 

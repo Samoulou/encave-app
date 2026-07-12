@@ -181,7 +181,6 @@ describe('Notification Actions', () => {
         expect(result.data.dailyDigest).toBe(false);
         expect(result.data.weeklySummary).toBe(true);
         expect(result.data.instantBookingAlerts).toBe(true);
-        expect(result.data.unsubscribeToken).toBe('token-abc');
       }
     });
 

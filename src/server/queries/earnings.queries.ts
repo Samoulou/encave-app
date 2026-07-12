@@ -457,19 +457,3 @@ export const getMonthlyStatementData = cache(
     };
   }
 );
-
-/**
- * Get experiences for filter dropdown.
- * Wrapped with React.cache for request-level deduplication.
- */
-export const getWineryExperiencesForEarnings = cache(
-  async function getWineryExperiencesForEarnings(
-    wineryId: string
-  ): Promise<{ id: string; title: string }[]> {
-    return db.experience.findMany({
-      where: { wineryId },
-      select: { id: true, title: true },
-      orderBy: { title: 'asc' },
-    });
-  }
-);

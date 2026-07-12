@@ -48,7 +48,7 @@ Contraintes :
 
 ## Références
 
-- Spec : [`docs/specs/ENC-096.md`](../specs/ENC-096.md)
+- Spec : [`docs/archive/specs-v2/ENC-096.md`](../archive/specs-v2/ENC-096.md)
 - Implémentation : `src/server/actions/event-detail.ts` (`revertBookingCheckIn`, `revertBookingNoShow`)
 - Règle métier amendée : `CLAUDE.md` § Business Rules → Booking State Machine
 - US liées : ENC-101 (check-in via scan), ENC-103b (UI no-show)

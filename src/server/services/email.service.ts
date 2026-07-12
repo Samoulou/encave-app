@@ -154,19 +154,6 @@ async function sendEmail(options: SendEmailOptions): Promise<boolean> {
   return ok;
 }
 
-/**
- * BACK-004 FIX: Non-blocking email sending
- * Fire and forget - logs errors but doesn't block caller
- */
-export function sendEmailNonBlocking(options: SendEmailOptions): void {
-  sendEmail(options).catch((error) => {
-    logError('Non-blocking email send failed', error, {
-      to: options.to,
-      subject: options.subject,
-    });
-  });
-}
-
 function getLocale(locale?: Locale | null): Locale {
   return locale ?? DEFAULT_LOCALE;
 }

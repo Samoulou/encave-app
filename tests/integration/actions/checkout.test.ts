@@ -111,10 +111,6 @@ function requireCaptured(
 }
 
 describe('Checkout Server Actions', () => {
-  const validAccessToken = 'valid-token';
-  const validAccessTokenHash =
-    '397a2a9c5bf5e2ccec38c2596b682bb1bd05fe6e4ecea6c10cf42755ff225403';
-
   beforeEach(() => {
     vi.clearAllMocks();
     sessionCreateMock.mockResolvedValue({
@@ -860,119 +856,6 @@ describe('Checkout Server Actions', () => {
       // One attempt only — the real error is surfaced, not masked by a
       // doomed card-only retry.
       expect(sessionCreateMock).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe('getBookingById', () => {
-    it('returns booking details when found', async () => {
-      const mockBooking = {
-        id: 'booking-1',
-        reference: 'ENC-ABC123',
-        status: BookingStatus.CONFIRMED,
-        visitorName: 'John Doe',
-        visitorEmail: 'john@example.com',
-        accessTokenHash: validAccessTokenHash,
-        date: new Date('2026-12-15'),
-        timeSlot: '10:00',
-        guestCount: 4,
-        totalPrice: 20000,
-        experience: {
-          title: 'Wine Tasting',
-          slug: 'wine-tasting',
-          duration: 90,
-          coverPhoto: 'https://example.com/photo.jpg',
-        },
-        winery: {
-          name: 'Test Winery',
-          address: '123 Wine St',
-          commune: 'Sion',
-          phone: '+41271234567',
-          email: 'winery@example.com',
-        },
-      };
-
-      vi.mocked(db.booking.findUnique).mockResolvedValue(mockBooking as never);
-
-      const { getBookingById } = await import('@/server/actions/checkout');
-      const result = await getBookingById('booking-1', validAccessToken);
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.reference).toBe('ENC-ABC123');
-        expect(result.data.status).toBe(BookingStatus.CONFIRMED);
-        expect(result.data.guestCount).toBe(4);
-      }
-    });
-
-    it('returns NOT_FOUND when booking does not exist', async () => {
-      vi.mocked(db.booking.findUnique).mockResolvedValue(null);
-
-      const { getBookingById } = await import('@/server/actions/checkout');
-      const result = await getBookingById('nonexistent', validAccessToken);
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.code).toBe('NOT_FOUND');
-      }
-    });
-  });
-
-  describe('getBookingByReference', () => {
-    it('returns booking details when found by reference', async () => {
-      const mockBooking = {
-        id: 'booking-1',
-        reference: 'ENC-XYZ789',
-        status: BookingStatus.CONFIRMED,
-        visitorName: 'Jane Doe',
-        visitorEmail: 'jane@example.com',
-        accessTokenHash: validAccessTokenHash,
-        date: new Date('2026-12-01'),
-        timeSlot: '14:00',
-        guestCount: 2,
-        totalPrice: 10000,
-        experience: {
-          title: 'Cellar Visit',
-          slug: 'cellar-visit',
-          duration: 60,
-          coverPhoto: 'https://example.com/cellar.jpg',
-        },
-        winery: {
-          name: 'Another Winery',
-          address: '456 Grape Ave',
-          commune: 'Sierre',
-        },
-      };
-
-      vi.mocked(db.booking.findUnique).mockResolvedValue(mockBooking as never);
-
-      const { getBookingByReference } =
-        await import('@/server/actions/checkout');
-      const result = await getBookingByReference(
-        'ENC-XYZ789',
-        validAccessToken
-      );
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.id).toBe('booking-1');
-        expect(result.data.experience.title).toBe('Cellar Visit');
-      }
-    });
-
-    it('returns NOT_FOUND when reference does not exist', async () => {
-      vi.mocked(db.booking.findUnique).mockResolvedValue(null);
-
-      const { getBookingByReference } =
-        await import('@/server/actions/checkout');
-      const result = await getBookingByReference(
-        'ENC-NOTFOUND',
-        validAccessToken
-      );
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.code).toBe('NOT_FOUND');
-      }
     });
   });
 });

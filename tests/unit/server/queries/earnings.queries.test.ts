@@ -21,7 +21,6 @@ import {
   getTransactions,
   getYearToDateSummary,
   getMonthlyStatementData,
-  getWineryExperiencesForEarnings,
 } from '@/server/queries/earnings.queries';
 
 const mockDb = vi.mocked(db);
@@ -852,50 +851,6 @@ describe('Earnings Queries', () => {
           (result?.commissionCents ?? 0) -
           (result?.refundedCents ?? 0)
       ).toBe(result?.netCents);
-    });
-  });
-
-  // ========================================
-  // getWineryExperiencesForEarnings
-  // ========================================
-  describe('getWineryExperiencesForEarnings', () => {
-    it('returns experiences sorted by title', async () => {
-      const mockExperiences = [
-        { id: 'exp-1', title: 'Cellar Tour' },
-        { id: 'exp-2', title: 'Wine Tasting' },
-      ];
-      mockDb.experience.findMany.mockResolvedValueOnce(
-        mockExperiences as never
-      );
-
-      const result = await getWineryExperiencesForEarnings('winery-123');
-
-      expect(result).toEqual(mockExperiences);
-      expect(mockDb.experience.findMany).toHaveBeenCalledWith({
-        where: { wineryId: 'winery-123' },
-        select: { id: true, title: true },
-        orderBy: { title: 'asc' },
-      });
-    });
-
-    it('filters by winery ID', async () => {
-      mockDb.experience.findMany.mockResolvedValueOnce([] as never);
-
-      await getWineryExperiencesForEarnings('winery-456');
-
-      expect(mockDb.experience.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { wineryId: 'winery-456' },
-        })
-      );
-    });
-
-    it('returns empty array when no experiences', async () => {
-      mockDb.experience.findMany.mockResolvedValueOnce([] as never);
-
-      const result = await getWineryExperiencesForEarnings('winery-123');
-
-      expect(result).toEqual([]);
     });
   });
 });

@@ -84,7 +84,6 @@ export interface NotificationPreferencesData {
   dailyDigest: boolean;
   weeklySummary: boolean;
   instantBookingAlerts: boolean;
-  unsubscribeToken: string;
 }
 
 export async function getNotificationPreferences(): Promise<
@@ -121,7 +120,6 @@ export async function getNotificationPreferences(): Promise<
           weeklySummary: winery.notificationPreferences.weeklySummary,
           instantBookingAlerts:
             winery.notificationPreferences.instantBookingAlerts,
-          unsubscribeToken: winery.notificationPreferences.unsubscribeToken,
         },
       };
     }
@@ -142,7 +140,6 @@ export async function getNotificationPreferences(): Promise<
         dailyDigest: preferences.dailyDigest,
         weeklySummary: preferences.weeklySummary,
         instantBookingAlerts: preferences.instantBookingAlerts,
-        unsubscribeToken: preferences.unsubscribeToken,
       },
     };
   } catch (error) {

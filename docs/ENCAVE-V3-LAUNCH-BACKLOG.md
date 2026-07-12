@@ -1,7 +1,7 @@
 # EnCave V3 — Plan & backlog launch (16 novembre 2026)
 
 > **Version** : 1.0 — 9 juillet 2026 · **Owner** : Sam · **Base** : `dev` @ `8368daf`
-> **Sources** : `docs/v3/` (PRD 3.1, BUSINESS 1.0, PAGES-EMAILS 1.0, PLANNING 3.1) + `docs/ENCAVE-V3-GAP-ANALYSIS.md`
+> **Sources** : `docs/v3/` (PRD 3.1, BUSINESS 1.0, PAGES-EMAILS 1.0, PLANNING 3.1) + `docs/archive/ENCAVE-V3-GAP-ANALYSIS.md`
 > **Stratégie** : convergence incrémentale depuis la base V2 (voir `docs/v3/README.md`). Ce document remplace la lecture « from scratch » des phases A-D du planning : il repart de l'acquis réel.
 > **IDs** : `L-xxx` (backlog launch). À importer dans Linear (les `ENC-XXX` existants référencés quand un item recoupe une spec V2). `[FLAG]` = derrière feature flag. Estimations en heures de pilotage Sam (Claude Code exécute) — ordres de grandeur à recaler après les 2 premières semaines.
 
@@ -195,7 +195,7 @@ Migrations **additives** uniquement. Tout modèle d'argent a ses invariants test
 | L-188 | `/security-review` complet avant launch (CSP, secrets, webhooks, rate limits, tokens)                                                                            | 0 blocker                                         | PLANNING §8    | 1 h   |
 | L-189 | Bascule launch : retirer le gate Coming Soon du middleware, vérifier Stripe live (TWINT activé, webhooks prod, Connect), sitemap/robots, redirections            | encave.ch ouvert le 16.11 au matin                | GAP §8         | 1 h   |
 
-### E15 — Performance & Web Vitals — **20.5 h Must, 5.5 h Should** _(issu de l'audit `docs/ENCAVE-V3-PERF-AUDIT.md` — mesuré : home mobile Lighthouse 48, LCP 9.8 s vs cible 95 / 1.5 s)_
+### E15 — Performance & Web Vitals — **20.5 h Must, 5.5 h Should** _(issu de l'audit `docs/archive/ENCAVE-V3-PERF-AUDIT.md` — mesuré : home mobile Lighthouse 48, LCP 9.8 s vs cible 95 / 1.5 s)_
 
 | ID    | Item                                                                                                                                                                                                      | DoD                                                          | Réf          | Prio   | Est.  |
 | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | ------------ | ------ | ----- |

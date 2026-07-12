@@ -12,8 +12,6 @@ type EmailLogType =
   | 'wine_order_request'
   | 'stripe_action_required';
 
-type EmailLogStatus = 'sent' | 'failed' | 'skipped';
-
 // P-07: optional tracking metadata. resendMessageId links the row to
 // Resend open/click webhook events; wineryId powers per-winery stats.
 interface EmailLogMeta {
@@ -89,19 +87,4 @@ export async function logEmailSkipped(
       action: 'logEmailSkipped',
     });
   }
-}
-
-export async function getRecentEmailLogs(
-  type?: EmailLogType,
-  status?: EmailLogStatus,
-  limit = 100
-) {
-  return db.emailLog.findMany({
-    where: {
-      ...(type && { type }),
-      ...(status && { status }),
-    },
-    orderBy: { createdAt: 'desc' },
-    take: limit,
-  });
 }

@@ -582,39 +582,6 @@ export const getExperienceCommunes = cache(
 );
 
 /**
- * Get min/max price range for experiences.
- * Cached for 10 minutes. Wrapped with React.cache for request deduplication.
- */
-export const getExperiencePriceRange = cache(
-  unstable_cache(
-    async (): Promise<{ min: number; max: number }> => {
-      const result = await db.experience.aggregate({
-        where: {
-          status: ExperienceStatus.PUBLISHED,
-          winery: publiclyVisibleWineryWhere,
-        },
-        _min: {
-          price: true,
-        },
-        _max: {
-          price: true,
-        },
-      });
-
-      return {
-        min: result._min.price ?? 0,
-        max: result._max.price ?? 50000, // Default to 500 CHF
-      };
-    },
-    ['experience-price-range'],
-    {
-      revalidate: 600, // 10 minutes
-      tags: ['experiences'],
-    }
-  )
-);
-
-/**
  * Get a single experience by slug.
  * Cached for 5 minutes. Wrapped with React.cache for request deduplication.
  */
@@ -781,40 +748,6 @@ export const getExperiencesByWineryId = cache(
       });
     },
     ['experiences-by-winery'],
-    {
-      revalidate: 300, // 5 minutes
-      tags: ['experiences'],
-    }
-  )
-);
-
-/**
- * Get featured experiences for landing pages.
- * Cached for 5 minutes. Wrapped with React.cache for request deduplication.
- */
-export const getFeaturedExperiences = cache(
-  unstable_cache(
-    async (limit: number = 6) => {
-      return db.experience.findMany({
-        where: {
-          status: ExperienceStatus.PUBLISHED,
-          winery: publiclyVisibleWineryWhere,
-        },
-        include: {
-          winery: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-              commune: true,
-            },
-          },
-        },
-        orderBy: { createdAt: 'desc' },
-        take: limit,
-      });
-    },
-    ['featured-experiences'],
     {
       revalidate: 300, // 5 minutes
       tags: ['experiences'],
