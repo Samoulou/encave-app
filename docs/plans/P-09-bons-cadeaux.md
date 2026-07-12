@@ -12,12 +12,13 @@ Un client achète un bon cadeau (montant libre 20–500 CHF **ou** expérience),
 **IN** — items `L-080→L-087`, découpés en **2 PRs** :
 
 - **PR 1 — Achat / envoi / PDF** (`L-080`, `L-081`, `L-082`, `L-083`) :
-  - Page publique `/cadeaux` : vitrine + configurateur (montant libre 20–500 **ou** expérience, message perso, destinataire, date d'envoi, aperçu live, FAQ 5 ans) — parcours ≤ 2 min
+  - Page publique `/cadeaux` : vitrine + configurateur (**montant libre 20–500 CHF pas de 10** `AMOUNT` **ou** bon nominatif sur une expérience `EXPERIENCE`, message perso, destinataire, date d'envoi, aperçu live, FAQ 5 ans) — parcours ≤ 2 min
   - Checkout cadeau Stripe : **fee 2.50 à l'achat** (fonds plateforme, **pas de commission à l'achat**) + webhook → création `GiftCard` **via ledger** (mouvement `PURCHASE`)
-  - PDF cadeau personnalisé (react-pdf, décliné de la charte, 2–3 variantes)
-  - Envoi programmé : **email #6** acheteur immédiat + **email #7** bénéficiaire à la date choisie (`ScheduledJob` type `GIFT_CARD_DELIVERY` + cron), renvoyable
+  - PDF cadeau personnalisé (react-pdf, décliné de la charte, **3 variantes : Noël / anniversaire / neutre**)
+  - Envoi programmé : **email #6** acheteur immédiat + **email #7** bénéficiaire à la date choisie (`ScheduledJob` type `GIFT_CARD_DELIVERY` + cron), renvoyable ; email #7 pointe vers **`/bon/[code]`**
+  - Page publique **`/bon/[code]`** : solde, validité, CTA « utiliser » (→ catalogue, ou fiche X si nominatif)
 - **PR 2 — Rédemption / compte / admin** (`L-084`, `L-085`, `L-086`, `L-087`) :
-  - Rédemption au checkout : champ code (déplie/applique/solde restant affiché et exact), rédemption **partielle**, **verrou transactionnel**, **commission du palier de la cave à la rédemption**
+  - Rédemption au checkout **en invité possible** : champ code (déplie/applique/solde restant affiché et exact), rédemption **partielle**, **verrou transactionnel**, **commission du palier de la cave à la rédemption**, **transfert Stripe plateforme→cave** de la part couverte par le bon (net de commission). Bon `EXPERIENCE` : rédimable **uniquement** sur son `experienceId`. **Un seul code par checkout**. La **fee 2.50 est absorbable par le bon** (mais reste une ligne visible)
   - `/compte/bons-cadeaux` : mes bons (achetés/reçus), code, solde, expiration, renvoyer
   - `/admin/bons-cadeaux` : liste, **passif total = somme du ledger**, désactiver un code (fraude), historique ledger par code
   - Test de charge/concurrence gift codes (vitest + script k6) — **zéro double-rédemption** (G-R2)
@@ -63,7 +64,7 @@ Socle transverse (§3 du delivery plan) vert :
 
 ### PR 1 — Achat / envoi / PDF
 
-1. **Validators** (`src/lib/validators/giftCard.ts`) — Zod v4 : montant libre `int` 2000–50000 cents **xor** `experienceId`, message (long borné), destinataire, `deliverAt` (aujourd'hui→+1 an), locale. `safeParse` uniquement.
+1. **Validators** (`src/lib/validators/giftCard.ts`) — Zod v4 : nature `AMOUNT` (montant libre `int` **2000–50000 cents, multiple de 1000** = pas de 10 CHF) **xor** `EXPERIENCE` (`experienceId` requis), variante PDF (`NOEL`/`ANNIVERSAIRE`/`NEUTRE`), message (long borné), destinataire, `deliverAt` (aujourd'hui→+1 an), locale. `safeParse` uniquement.
 2. **Service** `giftCard.service.ts` : `generateGiftCode()` (préfixe lisible, unique — cf. `ensureUniqueSlug`/`generateBookingReference` comme modèles), `createGiftCardFromPayment()` (idempotent sur `stripePaymentIntentId`, crée `GiftCard` + mouvement `PURCHASE` en une transaction, arme `ScheduledJob` `GIFT_CARD_DELIVERY` `runAt = deliverAt`), `sendPurchaserEmail` (#6, immédiat).
 3. **Server action** `giftCard.ts` : `createGiftCardCheckoutAction` — pas d'auth requise (achat invité possible, comme le checkout) mais **rate-limit par IP** + `safeParse`. Crée une Stripe Checkout Session (via `getStripe()`), montant = valeur du bon + **2.50 fee** ; **pas** de `transfer_data`/`application_fee` (fonds 100% plateforme, aucune cave impliquée à l'achat). Retour `ActionResult`.
 4. **Webhook Stripe** : brancher l'événement `checkout.session.completed` de type cadeau sur `createGiftCardFromPayment` — idempotence via `StripeEvent` (même garde que checkout/connect, cf. Known Debt « stale »).
@@ -73,8 +74,9 @@ Socle transverse (§3 du delivery plan) vert :
 
 ### PR 2 — Rédemption / compte / admin
 
-8. **Service rédemption** `giftCard.service.ts::redeemGiftCard()` : dans `prisma.$transaction` avec **`SELECT … FOR UPDATE`** sur la ligne `GiftCard` (verrou pessimiste, cf. §6) → relit `balance`, calcule le montant appliqué (`min(balance, dûRestant)`), écrit le mouvement `REDEMPTION` (négatif) + décrémente `balance` dans la **même** transaction. Le `CHECK balance >= 0` est le dernier rempart.
-9. **Point d'injection checkout** (`src/server/actions/checkout.ts::createBookingAndCheckout`, ~l.525-815) : champ code appliqué → `redeemGiftCard` réduit le **montant payé par carte** ; la **commission reste calculée sur le subtotal expérience** via `getEffectiveCommissionRate(winery, PLATFORM_COMMISSION_RATE)` + `computeCommissionCents` (palier de la cave), **pas** sur le net après bon. Solde restant affiché. (Voir §7 décision paiement : comment la part couverte par le bon atteint la cave.)
+8. **Service rédemption** `giftCard.service.ts::redeemGiftCard()` : dans `prisma.$transaction` avec **`SELECT … FOR UPDATE`** sur la ligne `GiftCard` (verrou pessimiste, cf. §6) → relit `balance`, **vérifie éligibilité** (ACTIVE, non DISABLED ; si nature `EXPERIENCE` → `experienceId` == expérience du checkout), calcule le montant appliqué (`min(balance, dûRestant)`), écrit le mouvement `REDEMPTION` (négatif) + décrémente `balance` dans la **même** transaction. Le `CHECK balance >= 0` est le dernier rempart. Le solde résiduel **reste exigible** même après `expiresAt` (décision §7).
+9. **Point d'injection checkout** (`src/server/actions/checkout.ts::createBookingAndCheckout`, ~l.525-815) : **un** code appliqué → `redeemGiftCard` réduit le **montant payé par carte** (la fee 2.50 est absorbable par le bon mais reste une ligne visible) ; la **commission reste calculée sur le subtotal expérience** via `getEffectiveCommissionRate(winery, PLATFORM_COMMISSION_RATE)` + `computeCommissionCents` (palier de la cave), **pas** sur le net après bon. Solde restant affiché.
+9b. **Transfert Stripe de la part bon → cave** : à la **confirmation** de la résa (webhook `payment_intent`/checkout, pas à la création), déclencher un `transfer` plateforme→compte connecté de la cave = `(part réglée par le bon − commission du palier)`, via `getStripe()`, idempotent (clé = `bookingId`). Fonds déjà en balance plateforme depuis l'achat du bon. **À faire relire par Luca (payments-expert).**
 10. **UI checkout** : champ « code cadeau » repliable (le placeholder existe dans la spec §4) — visible **seulement si flag ON** ; solde restant + total recalculé.
 11. **`/compte/bons-cadeaux`** (protected) : query cachée `giftCard.queries.ts` (mes bons achetés/reçus par email du compte), code/solde/expiration, action « renvoyer » (relance email #7). États loading/empty/error.
 12. **`/admin/bons-cadeaux`** (admin) : liste + **passif total = `SUM(balance)` sur ACTIVE non expirés** (le chiffre comptable — jamais un heuristique), détail ledger par code, action `disableGiftCardAction` (status → DISABLED, log Pino, **ne touche pas au ledger**).
@@ -84,7 +86,8 @@ Socle transverse (§3 du delivery plan) vert :
 
 - **Tests automatisés ajoutés** :
   - Unit invariants argent (test de violation) : mouvement de mauvais signe rejeté, `balance` négative rejetée (CHECK), somme ledger == `balance` (propriété).
-  - `redeemGiftCard` : partielle (solde reporté exact), code EXPIRED refusé, code DISABLED refusé, rédemption > solde plafonnée.
+  - `redeemGiftCard` : partielle (solde reporté exact), code DISABLED refusé, rédemption > solde plafonnée, **solde résiduel encore rédimable après `expiresAt`** (décision §7), bon `EXPERIENCE` refusé sur une autre expérience / accepté sur la sienne.
+  - **Transfert Stripe part-bon → cave** : montant = `part bon − commission palier`, idempotence sur `bookingId` (pas de double-transfert au rejeu du webhook).
   - **Test de concurrence dédié (`L-087`)** : 2 `redeemGiftCard` **simultanés** du même code (Promise.all sur 2 connexions) → exactement **une** passe, l'autre échoue proprement, `balance` finale correcte, jamais négative. Doublé d'un **script k6** de charge sur le endpoint.
   - Server actions (`createGiftCardCheckoutAction`, `disableGiftCardAction`, redemption) : unauthorized / validation / happy path.
   - Commission à la rédemption : cas **Fondateur (0%)** vs **standard (12%)** — assert commission en cents integer.
@@ -103,17 +106,21 @@ Socle transverse (§3 du delivery plan) vert :
 ## 6. Risques & rollback
 
 - **Risque principal — double-rédemption / solde négatif sous concurrence.** Mitigation : verrou pessimiste `SELECT … FOR UPDATE` sur la `GiftCard` dans la transaction de rédemption **+** `CHECK (balance >= 0)` comme dernier rempart **+** ledger append-only (trigger). Test de concurrence dédié bloquant (`L-087`, gate G-R2).
-- **Risque — la part payée par le bon n'atteint pas la cave.** Le bon = fonds plateforme prépayés ; à la rédemption la cave doit toucher son net même si le client paie 0 par carte. Voir §7 (décision paiement) — à trancher AVANT ③.
+- **Risque — la part payée par le bon n'atteint pas la cave.** Résolu : **transfert Stripe séparé** plateforme→cave à la confirmation (§7, étape 9b), idempotent sur `bookingId`. Relecture Luca requise (double-transfert, remboursement, KYC cave incomplet).
+- **Risque — bon nominatif `EXPERIENCE` sur une expérience archivée/complète/supprimée.** Le bon devient inutilisable sans faute du bénéficiaire. Mitigation : à définir au ③ (proposer un repli « valeur équivalente sur une autre expérience de la même cave » ou remboursement du bon) ; à défaut, message clair + contact support. `experienceId` en `onDelete: SetNull` (déjà au schéma) → gérer le cas `null`.
+- **Risque — passif comptable non purgé (solde exigible à vie).** Le passif admin gonfle indéfiniment (décision §7). Mitigation : reporting clair (âge des bons), confirmation compta/nLPD avant launch.
 - **Risque — fee 2.50 mal imputée** (comptée en commission, ou commission prise à l'achat). Mitigation : commission **0** à l'achat (aucune cave), palier **uniquement** à la rédemption, tests dédiés.
 - **Risque — job d'envoi #7 rejoué** (double email / `deliveredAt` écrasé). Mitigation : handler idempotent gardé par `deliveredAt`, idempotence `StripeEvent` sur le webhook d'achat.
 - **Rollback** : flag `GIFT_CARDS` OFF en < 1 min (toggle admin, cache 60 s) → `/cadeaux` 404, champ code masqué, type de job non drainé (jobs restent PENDING, réversible). **Les données déjà créées survivent** : bons achetés restent valides, aucun ledger détruit ; réactiver le flag les rend de nouveau utilisables. Revert PR possible sans migration destructive (schéma déjà en place depuis P-02).
 
-## 7. Décisions ouvertes (à trancher AVANT ③ BUILD)
+## 7. Décisions (tranchées avec Sam — 2026-07-12)
 
-- [ ] **Flux paiement de la part couverte par le bon → cave.** À la rédemption, comment la cave touche son net sur la portion réglée par le bon (fonds plateforme) ? Options : (a) transfert Stripe séparé plateforme→compte connecté au moment de la confirmation, (b) top-up du `application_fee` inversé, (c) règlement différé hors Stripe. **Impact archi paiements — à valider avec Luca/Sam avant de coder la rédemption.**
-- [ ] **Variantes de PDF** : combien (2 ou 3) et quels visuels/occasions (Noël, anniversaire, neutre) ? Copy FR à valider avec Théo.
-- [ ] **Bornes montant libre** : confirmer **20–500 CHF** (2000–50000 cents) et le pas (1 CHF ? 10 CHF ?).
-- [ ] **Bénéficiaire sans compte** : le lien du bon dans l'email #7 mène-t-il à `/cadeaux` (info), directement au checkout avec code prérempli, ou à une page dédiée `/bon/[code]` ? Et la rédemption exige-t-elle un compte, ou reste-t-elle possible en invité (comme la résa) ?
-- [ ] **Code partiellement utilisé puis expiré** : à `expiresAt`, le solde résiduel est-il perdu (statut EXPIRED, exclu du passif) ou reste-t-il exigible ? (Impact comptable sur le passif admin.)
-- [ ] **Achat cadeau d'une expérience** : bon = valeur en cents du prix figé à l'achat (rédimable partout), ou bon nominatif « 1 place sur l'expérience X » ? La spec dit « ou expérience » — préciser si c'est juste un préréglage de montant.
-- [ ] **Cumul** : un bon cadeau est-il cumulable avec la booking fee 2.50 (la fee reste-t-elle due, payée par carte) et avec un second code ? (Défaut proposé : fee toujours due par carte, un seul code par checkout.)
+- [x] **Flux paiement bon → cave = transfert Stripe séparé.** À la confirmation de la résa, la plateforme déclenche un `transfer` Stripe plateforme→compte connecté de la cave pour `(part réglée par le bon − commission du palier)`. Le client ne paie par carte que le reliquat. Impact archi paiements → **faire relire par Luca (payments-expert) au ③ BUILD** avant de coder la rédemption.
+- [x] **Solde résiduel à 5 ans = reste exigible.** Pas de déchéance automatique du solde à `expiresAt` : un bon partiellement utilisé reste rédimable. ⚠️ **Conséquence** : le passif comptable ne se purge jamais tout seul → à confirmer côté compta/nLPD, et **à réconcilier avec la ligne DoD « Validité 5 ans »** (l'expiration ne force pas EXPIRED sur le résiduel ; option : n'expirer que les bons à solde plein jamais utilisés). Le passif admin inclut donc tous les soldes > 0, expirés ou non.
+- [x] **Cadeau d'une expérience = bon nominatif « 1 place sur X ».** Le bon acheté pour l'expérience X n'est rédimable **que** sur X (pas une valeur libre). → Deux natures de bon : `AMOUNT` (montant libre, rédimable partout) et `EXPERIENCE` (nominatif, verrouillé sur `experienceId`). La rédemption vérifie `experienceId` du bon == expérience du checkout. Voir risque nouveau en §6 (X archivée/complète).
+- [x] **Fee 2.50 absorbable par le bon.** La fee reste une **ligne visible** au checkout (règle CLAUDE.md), mais peut être réglée par le bon. ⚠️ **Conséquence éco** : sur ces transactions la fee ne couvre plus les coûts Stripe (la plateforme se paie sur ses propres fonds prépayés) — assumé par Sam. **Un seul code cadeau par checkout** (défaut retenu, non contredit) : évite le verrou concurrent multi-lignes.
+- [x] **Bénéficiaire = page `/bon/[code]` + rédemption invitée.** L'email #7 mène à une page publique `/bon/[code]` (solde, validité, « utiliser »). La rédemption au checkout reste possible **en invité**, comme la résa actuelle — pas de compte obligatoire.
+- [x] **PDF = 3 variantes : Noël, anniversaire, neutre.** Le configurateur propose le choix. Copy FR ×3 locales à caler avec Théo au ③.
+- [x] **Montant libre = 20–500 CHF, pas de 10** (2000–50000 cents, incréments de 1000 cents). Validator borné en conséquence.
+
+**Aucune décision produit ouverte restante** → feu vert pour ③ BUILD (après relecture paiements par Luca sur le transfert de rédemption).
