@@ -3,7 +3,6 @@ export {
   updateExperience,
   deleteExperience,
   getExperienceForEdit,
-  getExperienceForPreview,
 } from './experience-crud';
 
 export { uploadExperienceImage, deleteUploadedImage } from './experience-media';
