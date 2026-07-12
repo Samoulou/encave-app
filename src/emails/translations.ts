@@ -22,6 +22,16 @@ export const subjects = {
     DE: 'Ihre Bestellanfrage bei {wineryName}',
     EN: 'Your order request at {wineryName}',
   },
+  giftCardPurchase: {
+    FR: 'Votre bon cadeau EnCave est prêt',
+    DE: 'Ihr EnCave Geschenkgutschein ist bereit',
+    EN: 'Your EnCave gift card is ready',
+  },
+  giftCardDelivery: {
+    FR: '{purchaserName} vous offre un bon cadeau EnCave',
+    DE: '{purchaserName} schenkt Ihnen einen EnCave Geschenkgutschein',
+    EN: '{purchaserName} sent you an EnCave gift card',
+  },
   bookingConfirmation: {
     FR: 'Confirmation de votre reservation',
     DE: 'Bestatigung Ihrer Reservierung',
@@ -789,6 +799,64 @@ export const tastingRecap = {
     FR: 'Votre demande part directement chez {wineryName}, qui vous recontactera pour la livraison et le paiement.',
     DE: 'Ihre Anfrage geht direkt an {wineryName}, das Sie für Lieferung und Zahlung kontaktieren wird.',
     EN: 'Your request goes directly to {wineryName}, who will get back to you about delivery and payment.',
+  },
+} as const;
+
+// Gift card purchaser confirmation, immediate (P-09 / email #6)
+export const giftCardPurchase = {
+  title: {
+    FR: 'Votre bon cadeau est prêt 🎁',
+    DE: 'Ihr Geschenkgutschein ist bereit 🎁',
+    EN: 'Your gift card is ready 🎁',
+  },
+  intro: {
+    FR: 'Bonjour {purchaserName}, merci ! Votre bon cadeau d’une valeur de {amount} est confirmé.',
+    DE: 'Guten Tag {purchaserName}, vielen Dank! Ihr Geschenkgutschein im Wert von {amount} ist bestätigt.',
+    EN: 'Hello {purchaserName}, thank you! Your gift card worth {amount} is confirmed.',
+  },
+  scheduled: {
+    FR: 'Il sera envoyé à {recipientName} le {deliverDate}. Vous en trouverez aussi une copie (PDF) en pièce jointe.',
+    DE: 'Er wird {recipientName} am {deliverDate} zugesandt. Eine Kopie (PDF) finden Sie im Anhang.',
+    EN: 'It will be sent to {recipientName} on {deliverDate}. A copy (PDF) is also attached.',
+  },
+  codeLabel: {
+    FR: 'Code',
+    DE: 'Code',
+    EN: 'Code',
+  },
+  validity: {
+    FR: 'Valable jusqu’au {expiryDate}, en une ou plusieurs fois.',
+    DE: 'Gültig bis {expiryDate}, ganz oder in Teilen.',
+    EN: 'Valid until {expiryDate}, in one or several visits.',
+  },
+} as const;
+
+// Gift card recipient delivery, on the chosen date (P-09 / email #7)
+export const giftCardDelivery = {
+  title: {
+    FR: 'Vous avez reçu un bon cadeau 🎁',
+    DE: 'Sie haben einen Geschenkgutschein erhalten 🎁',
+    EN: 'You received a gift card 🎁',
+  },
+  intro: {
+    FR: 'Bonjour {recipientName}, {purchaserName} vous offre un bon cadeau EnCave d’une valeur de {amount}.',
+    DE: 'Guten Tag {recipientName}, {purchaserName} schenkt Ihnen einen EnCave Geschenkgutschein im Wert von {amount}.',
+    EN: 'Hello {recipientName}, {purchaserName} is giving you an EnCave gift card worth {amount}.',
+  },
+  message: {
+    FR: 'Son message : « {message} »',
+    DE: 'Die Nachricht: „{message}“',
+    EN: 'Their message: “{message}”',
+  },
+  cta: {
+    FR: 'Voir mon bon cadeau',
+    DE: 'Meinen Gutschein ansehen',
+    EN: 'View my gift card',
+  },
+  validity: {
+    FR: 'Valable jusqu’au {expiryDate}, en une ou plusieurs fois, sur encave.ch.',
+    DE: 'Gültig bis {expiryDate}, ganz oder in Teilen, auf encave.ch.',
+    EN: 'Valid until {expiryDate}, in one or several visits, on encave.ch.',
   },
 } as const;
 

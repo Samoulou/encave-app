@@ -31,6 +31,8 @@ import {
   TastingSheetReminderEmail,
   type ReminderSessionLine,
   StripeActionRequiredEmail,
+  GiftCardPurchaseEmail,
+  GiftCardDeliveryEmail,
 } from '@/emails';
 import { subjects, t } from '@/emails/translations';
 import { generateBookingQrPng } from '@/server/services/qr-code.service';
@@ -926,6 +928,114 @@ export async function sendTastingSheetReminderEmail(
     tags: [
       { name: 'email_type', value: 'tasting_sheet_reminder' },
       { name: 'winery_id', value: data.wineryId },
+    ],
+  });
+}
+
+export interface GiftCardPurchaseEmailData {
+  giftCardId: string;
+  purchaserName: string;
+  recipientName: string;
+  /** Pre-formatted card value, e.g. "CHF 100.00". */
+  amount: string;
+  /** Display code (grouped, e.g. "ABCD EFGH JKMN"). */
+  code: string;
+  deliverDate: string;
+  expiryDate: string;
+  /** Personalised PDF, attached to the email. */
+  pdf: Buffer;
+}
+
+/** Email #6 — purchaser confirmation, immediate (P-09 / L-083). */
+export async function sendGiftCardPurchaseEmail(
+  email: string,
+  data: GiftCardPurchaseEmailData,
+  locale?: Locale | null
+): Promise<SendEmailResult> {
+  const loc = getLocale(locale);
+  const html = await render(
+    GiftCardPurchaseEmail({
+      locale: loc,
+      purchaserName: data.purchaserName,
+      recipientName: data.recipientName,
+      amount: data.amount,
+      code: data.code,
+      deliverDate: data.deliverDate,
+      expiryDate: data.expiryDate,
+    })
+  );
+
+  return sendEmailDetailed({
+    to: email,
+    subject: t(subjects.giftCardPurchase, loc),
+    html,
+    attachments: [
+      {
+        filename: 'bon-cadeau-encave.pdf',
+        content: data.pdf.toString('base64'),
+        contentType: 'application/pdf',
+      },
+    ],
+    tags: [
+      { name: 'email_type', value: 'gift_card_purchase' },
+      { name: 'gift_card_id', value: data.giftCardId },
+    ],
+  });
+}
+
+export interface GiftCardDeliveryEmailData {
+  giftCardId: string;
+  recipientName: string;
+  purchaserName: string;
+  /** Pre-formatted card value, e.g. "CHF 100.00". */
+  amount: string;
+  message?: string | null;
+  /** Display code (grouped). */
+  code: string;
+  /** Public gift page /bon/[code]. */
+  giftUrl: string;
+  expiryDate: string;
+  /** Personalised PDF, attached to the email. */
+  pdf: Buffer;
+}
+
+/** Email #7 — recipient delivery, on the chosen date (P-09 / L-083). */
+export async function sendGiftCardDeliveryEmail(
+  email: string,
+  data: GiftCardDeliveryEmailData,
+  locale?: Locale | null
+): Promise<SendEmailResult> {
+  const loc = getLocale(locale);
+  const html = await render(
+    GiftCardDeliveryEmail({
+      locale: loc,
+      recipientName: data.recipientName,
+      purchaserName: data.purchaserName,
+      amount: data.amount,
+      message: data.message,
+      code: data.code,
+      giftUrl: data.giftUrl,
+      expiryDate: data.expiryDate,
+    })
+  );
+
+  return sendEmailDetailed({
+    to: email,
+    subject: t(subjects.giftCardDelivery, loc).replace(
+      '{purchaserName}',
+      data.purchaserName
+    ),
+    html,
+    attachments: [
+      {
+        filename: 'bon-cadeau-encave.pdf',
+        content: data.pdf.toString('base64'),
+        contentType: 'application/pdf',
+      },
+    ],
+    tags: [
+      { name: 'email_type', value: 'gift_card_delivery' },
+      { name: 'gift_card_id', value: data.giftCardId },
     ],
   });
 }

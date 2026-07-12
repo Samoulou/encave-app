@@ -72,3 +72,9 @@ export { TastingSheetReminderEmail } from './TastingSheetReminderEmail';
 export type { ReminderSessionLine } from './TastingSheetReminderEmail';
 
 export { StripeActionRequiredEmail } from './StripeActionRequiredEmail';
+
+export { GiftCardPurchaseEmail } from './GiftCardPurchaseEmail';
+export type { GiftCardPurchaseEmailProps } from './GiftCardPurchaseEmail';
+
+export { GiftCardDeliveryEmail } from './GiftCardDeliveryEmail';
+export type { GiftCardDeliveryEmailProps } from './GiftCardDeliveryEmail';

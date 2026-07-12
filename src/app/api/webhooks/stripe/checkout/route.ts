@@ -6,6 +6,7 @@ import { db } from '@/server/db';
 import { env } from '@/lib/env';
 import { BookingStatus } from '@prisma/client';
 import { confirmBookingFromPaidCheckoutSession } from '@/server/services/checkout-confirmation.service';
+import { createGiftCardFromPayment } from '@/server/services/giftCard.service';
 import { logError, logInfo } from '@/lib/logger';
 import {
   claimStripeEvent,
@@ -96,6 +97,14 @@ export async function POST(req: Request) {
  * Updates booking status to CONFIRMED and sends confirmation emails
  */
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
+  // Gift-card purchases (P-09) ride the same completed event but are not
+  // bookings — the metadata discriminates. Creates the card via the
+  // ledger, sends email #6, schedules #7.
+  if (session.metadata?.kind === 'gift_card') {
+    await createGiftCardFromPayment(session);
+    return;
+  }
+
   const { result } = await confirmBookingFromPaidCheckoutSession(
     session,
     'webhook'
@@ -111,6 +120,11 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
  * Cancels the pending booking
  */
 async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
+  // Gift-card sessions create no pre-payment row — nothing to clean up.
+  if (session.metadata?.kind === 'gift_card') {
+    return;
+  }
+
   const bookingId = session.metadata?.bookingId;
 
   if (!bookingId) {
