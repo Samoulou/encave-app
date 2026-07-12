@@ -48,7 +48,7 @@ describe('NavLink', () => {
     render(<NavLink href="/experiences">Experiences</NavLink>);
 
     const link = screen.getByRole('link', { name: 'Experiences' });
-    expect(link).toHaveClass('text-slate-600');
+    expect(link).toHaveClass('text-muted-foreground');
     expect(link).not.toHaveClass('text-burgundy-700');
   });
 

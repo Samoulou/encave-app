@@ -3,6 +3,12 @@ import { createElement } from 'react';
 import type { ReactNode } from 'react';
 import { vi } from 'vitest';
 
+// Pin the timezone to UTC so date-boundary tests are deterministic and
+// match production (Vercel functions run in UTC) and CI. Without this,
+// code that builds a Date via setHours() (local) drifts by the machine's
+// offset — e.g. the 24h cancellation boundary reads 23h on a UTC+1 host.
+process.env.TZ = 'UTC';
+
 // ||= (not ??=): an env var wired to an unset CI secret arrives as an
 // EMPTY string, which must be replaced too — Zod requires a valid URL.
 process.env.DATABASE_URL ||=

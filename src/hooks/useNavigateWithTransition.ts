@@ -15,7 +15,7 @@ interface NavigateOptions {
  * const { navigate, prefetch, isPending } = useNavigateWithTransition();
  *
  * <button
- *   onClick={() => navigate('/bookings/123')}
+ *   onClick={() => navigate('/booking/abc123')}
  *   disabled={isPending}
  *   className={isPending ? 'opacity-50' : ''}
  * >
