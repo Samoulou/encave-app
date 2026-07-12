@@ -1566,6 +1566,14 @@
     "wineOrder": {
       "title": "Ihre Favoriten bestellen | EnCave",
       "description": "Fragen Sie Ihre Lieblingsweine direkt beim Weingut an"
+    },
+    "giftCards": {
+      "title": "Geschenkgutschein | EnCave",
+      "description": "Verschenken Sie ein Degustationserlebnis bei einem Schweizer Winzer — 5 Jahre gültig."
+    },
+    "bon": {
+      "title": "Ihr Geschenkgutschein | EnCave",
+      "description": "Sehen Sie Guthaben und Gültigkeit Ihres EnCave Geschenkgutscheins."
     }
   },
   "about": {

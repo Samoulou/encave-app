@@ -1566,6 +1566,14 @@
     "wineOrder": {
       "title": "Commander vos coups de cœur | EnCave",
       "description": "Demandez vos vins préférés directement à la cave"
+    },
+    "giftCards": {
+      "title": "Bon cadeau | EnCave",
+      "description": "Offrez une expérience de dégustation chez un vigneron suisse — bon cadeau valable 5 ans."
+    },
+    "bon": {
+      "title": "Votre bon cadeau | EnCave",
+      "description": "Consultez le solde et la validité de votre bon cadeau EnCave."
     }
   },
   "about": {

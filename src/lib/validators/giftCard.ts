@@ -53,6 +53,51 @@ export const createGiftCardSchema = z.discriminatedUnion('nature', [
 
 export type CreateGiftCardInput = z.infer<typeof createGiftCardSchema>;
 
+/**
+ * Client form shape for the /cadeaux configurator (react-hook-form). The
+ * server action re-validates authoritatively with createGiftCardSchema;
+ * this only drives the UI (amount is a number of cents from a preset
+ * select, delivery is a plain date string converted at submit).
+ */
+export const giftCardFormSchema = z
+  .object({
+    nature: z.enum(['AMOUNT', 'EXPERIENCE']),
+    amountCents: z
+      .number()
+      .int()
+      .min(GIFT_CARD_MIN_AMOUNT_CENTS)
+      .max(GIFT_CARD_MAX_AMOUNT_CENTS),
+    experienceId: z.string().optional(),
+    variant: z.enum(GIFT_CARD_VARIANTS),
+    purchaserName: z.string().trim().min(1).max(GIFT_CARD_NAME_MAX_LENGTH),
+    purchaserEmail: z.string().trim().email(),
+    recipientName: z
+      .string()
+      .trim()
+      .max(GIFT_CARD_NAME_MAX_LENGTH)
+      .optional()
+      .or(z.literal('')),
+    recipientEmail: z.string().trim().email(),
+    message: z
+      .string()
+      .trim()
+      .max(GIFT_CARD_MESSAGE_MAX_LENGTH)
+      .optional()
+      .or(z.literal('')),
+    deliverDate: z.string().min(1),
+  })
+  .superRefine((data, ctx) => {
+    if (data.nature === 'EXPERIENCE' && !data.experienceId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['experienceId'],
+        message: 'Please choose an experience',
+      });
+    }
+  });
+
+export type GiftCardFormValues = z.infer<typeof giftCardFormSchema>;
+
 /** Redemption code lookup (checkout + /bon/[code]) — PR2 uses this too. */
 export const giftCodeSchema = z
   .string()

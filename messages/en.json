@@ -1566,6 +1566,14 @@
     "wineOrder": {
       "title": "Order your favourites | EnCave",
       "description": "Request your favourite wines directly from the winery"
+    },
+    "giftCards": {
+      "title": "Gift card | EnCave",
+      "description": "Give a tasting experience with a Swiss winemaker — gift card valid for 5 years."
+    },
+    "bon": {
+      "title": "Your gift card | EnCave",
+      "description": "Check the balance and validity of your EnCave gift card."
     }
   },
   "about": {
