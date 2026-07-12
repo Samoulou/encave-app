@@ -126,3 +126,61 @@ export async function processGiftCardDeliveryJob(
   });
   return { ok: true };
 }
+
+/**
+ * Manual resend of email #7 (P-09 / L-085, « renvoyer »), triggered by the
+ * purchaser or recipient from /compte/bons-cadeaux. Unlike the scheduled
+ * job it ignores `deliveredAt` (an explicit re-send) and never mutates the
+ * card. Returns whether the email went out. Theme falls back to NEUTRE.
+ */
+export async function resendGiftCardEmail(
+  giftCardId: string
+): Promise<boolean> {
+  const giftCard = await db.giftCard.findUnique({
+    where: { id: giftCardId },
+    select: {
+      id: true,
+      code: true,
+      status: true,
+      initialAmount: true,
+      recipientEmail: true,
+      recipientName: true,
+      purchaserName: true,
+      message: true,
+      expiresAt: true,
+      locale: true,
+      experience: { select: { title: true } },
+    },
+  });
+  if (!giftCard || !giftCard.recipientEmail) return false;
+  if (giftCard.status === GiftCardStatus.DISABLED) return false;
+
+  const routingLocale = giftCard.locale.toLowerCase() as RoutingLocale;
+  const pdf = await generateGiftCardPDF({
+    code: giftCard.code,
+    amountCents: giftCard.initialAmount,
+    variant: 'NEUTRE',
+    locale: giftCard.locale,
+    purchaserName: giftCard.purchaserName ?? '',
+    recipientName: giftCard.recipientName,
+    message: giftCard.message,
+    expiresAt: giftCard.expiresAt,
+    experienceTitle: giftCard.experience?.title ?? null,
+  });
+  const result = await sendGiftCardDeliveryEmail(
+    giftCard.recipientEmail,
+    {
+      giftCardId: giftCard.id,
+      recipientName: giftCard.recipientName ?? giftCard.recipientEmail,
+      purchaserName: giftCard.purchaserName ?? 'EnCave',
+      amount: formatCHF(giftCard.initialAmount),
+      message: giftCard.message,
+      code: formatGiftCodeForDisplay(giftCard.code),
+      giftUrl: `${getBaseUrl()}/${routingLocale}/bon/${giftCard.code}`,
+      expiryDate: formatDate(giftCard.expiresAt, routingLocale),
+      pdf,
+    },
+    giftCard.locale
+  );
+  return result.ok;
+}

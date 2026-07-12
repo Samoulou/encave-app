@@ -1,6 +1,6 @@
 import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
-import { ExperienceStatus } from '@prisma/client';
+import { ExperienceStatus, GiftCardStatus } from '@prisma/client';
 import { db } from '@/server/db';
 import { publiclyVisibleWineryWhere } from '@/lib/business-rules/winery-visibility';
 
@@ -91,5 +91,114 @@ export const getGiftCardByCode = cache(
       ...giftCard,
       isExpired: giftCard.expiresAt.getTime() < Date.now(),
     };
+  }
+);
+
+export interface AdminGiftCardRow {
+  id: string;
+  code: string;
+  status: 'ACTIVE' | 'DISABLED' | 'EXPIRED';
+  initialAmount: number;
+  balance: number;
+  purchaserEmail: string;
+  recipientEmail: string | null;
+  createdAt: Date;
+  expiresAt: Date;
+  transactions: {
+    id: string;
+    type: 'PURCHASE' | 'REDEMPTION' | 'REFUND' | 'ADJUSTMENT';
+    amount: number;
+    createdAt: Date;
+    note: string | null;
+  }[];
+}
+
+/**
+ * Total outstanding liability (P-09 / L-086, admin): the accounting
+ * figure = sum of live balances. DISABLED cards (fraud) are removed
+ * liabilities and excluded; the residual of past-expiry cards stays
+ * (decision 2026-07-12 « le solde reste exigible »). Never cached — this
+ * must be exact at read time.
+ */
+export const getGiftCardLiabilityCents = cache(async (): Promise<number> => {
+  const aggregate = await db.giftCard.aggregate({
+    where: { status: { not: GiftCardStatus.DISABLED } },
+    _sum: { balance: true },
+  });
+  return aggregate._sum.balance ?? 0;
+});
+
+/** Recent gift cards with their ledger, for the admin table. */
+export const getAdminGiftCards = cache(
+  async (take = 100): Promise<AdminGiftCardRow[]> => {
+    return db.giftCard.findMany({
+      orderBy: { createdAt: 'desc' },
+      take,
+      select: {
+        id: true,
+        code: true,
+        status: true,
+        initialAmount: true,
+        balance: true,
+        purchaserEmail: true,
+        recipientEmail: true,
+        createdAt: true,
+        expiresAt: true,
+        transactions: {
+          orderBy: { createdAt: 'asc' },
+          select: {
+            id: true,
+            type: true,
+            amount: true,
+            createdAt: true,
+            note: true,
+          },
+        },
+      },
+    });
+  }
+);
+
+export interface MyGiftCard {
+  id: string;
+  code: string;
+  status: 'ACTIVE' | 'DISABLED' | 'EXPIRED';
+  balance: number;
+  initialAmount: number;
+  expiresAt: Date;
+  role: 'purchased' | 'received';
+}
+
+/**
+ * A client's gift cards (P-09 / L-085): the ones they bought and the ones
+ * they received (matched on email). Never cached — balances are live.
+ */
+export const getMyGiftCards = cache(
+  async (email: string): Promise<MyGiftCard[]> => {
+    const normalized = email.toLowerCase();
+    const cards = await db.giftCard.findMany({
+      where: {
+        OR: [{ purchaserEmail: normalized }, { recipientEmail: normalized }],
+      },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        code: true,
+        status: true,
+        balance: true,
+        initialAmount: true,
+        expiresAt: true,
+        purchaserEmail: true,
+      },
+    });
+    return cards.map((c) => ({
+      id: c.id,
+      code: c.code,
+      status: c.status,
+      balance: c.balance,
+      initialAmount: c.initialAmount,
+      expiresAt: c.expiresAt,
+      role: c.purchaserEmail === normalized ? 'purchased' : 'received',
+    }));
   }
 );

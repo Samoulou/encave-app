@@ -98,6 +98,11 @@ export const giftCardFormSchema = z
 
 export type GiftCardFormValues = z.infer<typeof giftCardFormSchema>;
 
+/** Gift card id input (admin disable, client resend). */
+export const giftCardIdSchema = z.object({
+  giftCardId: z.string().cuid(),
+});
+
 /** Redemption code lookup (checkout + /bon/[code]) — PR2 uses this too. */
 export const giftCodeSchema = z
   .string()

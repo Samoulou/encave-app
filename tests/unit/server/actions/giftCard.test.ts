@@ -27,6 +27,14 @@ vi.mock('@/server/db', () => ({
   db: { experience: { findUnique: vi.fn() } },
 }));
 
+// The action module also exports admin/client actions that import these;
+// mock them so importing the module doesn't pull the whole chain.
+vi.mock('@/server/auth', () => ({ auth: vi.fn() }));
+vi.mock('@/server/admin-guard', () => ({ requireAdmin: vi.fn() }));
+vi.mock('@/server/services/giftCard-delivery.service', () => ({
+  resendGiftCardEmail: vi.fn(),
+}));
+
 vi.mock('@/lib/logger', () => ({
   logError: vi.fn(),
   logInfo: vi.fn(),

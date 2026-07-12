@@ -3,9 +3,11 @@
 import { headers } from 'next/headers';
 import type Stripe from 'stripe';
 import { getTranslations } from 'next-intl/server';
-import { ExperienceStatus, WineryStatus } from '@prisma/client';
+import { ExperienceStatus, GiftCardStatus, WineryStatus } from '@prisma/client';
 import { getStripe } from '@/server/stripe';
 import { db } from '@/server/db';
+import { auth } from '@/server/auth';
+import { requireAdmin } from '@/server/admin-guard';
 import { getBaseUrl } from '@/lib/env';
 import type { ActionResult } from '@/types/actions';
 import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
@@ -14,9 +16,11 @@ import {
   getClientIp,
   BOOKING_RATE_LIMIT,
 } from '@/server/services/rate-limit.service';
-import { logError } from '@/lib/logger';
+import { resendGiftCardEmail } from '@/server/services/giftCard-delivery.service';
+import { logError, logInfo } from '@/lib/logger';
 import {
   createGiftCardSchema,
+  giftCardIdSchema,
   type CreateGiftCardInput,
 } from '@/lib/validators/giftCard';
 import { GIFT_CARD_PURCHASE_FEE_CENTS } from '@/lib/constants/gift-card';
@@ -203,6 +207,117 @@ export async function createGiftCardCheckoutAction(
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to start checkout' },
+    };
+  }
+}
+
+/**
+ * Disable a gift card for fraud (P-09 / L-086, admin). Flips the status to
+ * DISABLED only — the append-only ledger is NEVER touched, and the balance
+ * is preserved (a re-enable would restore it). Refused redemption is
+ * enforced by the redemption service.
+ */
+export async function disableGiftCardAction(
+  input: unknown
+): Promise<ActionResult<{ id: string }>> {
+  try {
+    const admin = await requireAdmin();
+    if (!admin.success) return admin;
+
+    const validated = giftCardIdSchema.safeParse(input);
+    if (!validated.success) {
+      return {
+        success: false,
+        error: { code: 'VALIDATION_ERROR', message: 'Invalid gift card id' },
+      };
+    }
+
+    const updated = await db.giftCard.updateMany({
+      where: {
+        id: validated.data.giftCardId,
+        status: { not: GiftCardStatus.DISABLED },
+      },
+      data: { status: GiftCardStatus.DISABLED },
+    });
+    if (updated.count === 0) {
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Gift card not found' },
+      };
+    }
+
+    logInfo('gift_card.disabled', {
+      action: 'disableGiftCardAction',
+      giftCardId: validated.data.giftCardId,
+      adminId: admin.data.adminId,
+    });
+    return { success: true, data: { id: validated.data.giftCardId } };
+  } catch (error) {
+    logError('disableGiftCardAction error', error, {
+      action: 'disableGiftCardAction',
+    });
+    return {
+      success: false,
+      error: { code: 'INTERNAL_ERROR', message: 'Failed to disable gift card' },
+    };
+  }
+}
+
+/**
+ * Resend the gift email #7 to the recipient (P-09 / L-085, « renvoyer »).
+ * Auth required; only the purchaser or the recipient of the card may
+ * trigger it (ownership matched on email).
+ */
+export async function resendGiftCardAction(
+  input: unknown
+): Promise<ActionResult<{ sent: true }>> {
+  try {
+    const session = await auth();
+    if (!session?.user?.email) {
+      return {
+        success: false,
+        error: { code: 'UNAUTHORIZED', message: 'Please sign in' },
+      };
+    }
+
+    const validated = giftCardIdSchema.safeParse(input);
+    if (!validated.success) {
+      return {
+        success: false,
+        error: { code: 'VALIDATION_ERROR', message: 'Invalid gift card id' },
+      };
+    }
+
+    const email = session.user.email.toLowerCase();
+    const card = await db.giftCard.findFirst({
+      where: {
+        id: validated.data.giftCardId,
+        OR: [{ purchaserEmail: email }, { recipientEmail: email }],
+      },
+      select: { id: true },
+    });
+    if (!card) {
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Gift card not found' },
+      };
+    }
+
+    const ok = await resendGiftCardEmail(card.id);
+    if (!ok) {
+      return {
+        success: false,
+        error: { code: 'INTERNAL_ERROR', message: 'Failed to resend the gift' },
+      };
+    }
+    return { success: true, data: { sent: true } };
+  } catch (error) {
+    logError('resendGiftCardAction error', error, {
+      action: 'resendGiftCardAction',
+    });
+    return {
+      success: false,
+      error: { code: 'INTERNAL_ERROR', message: 'Failed to resend the gift' },
     };
   }
 }
