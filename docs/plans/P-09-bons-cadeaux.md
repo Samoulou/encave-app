@@ -88,6 +88,26 @@ Socle transverse (§3 du delivery plan) vert :
 12. **`/admin/bons-cadeaux`** (admin) : liste + **passif total = `SUM(balance)` sur ACTIVE non expirés** (le chiffre comptable — jamais un heuristique), détail ledger par code, action `disableGiftCardAction` (status → DISABLED, log Pino, **ne touche pas au ledger**).
 13. **Flag OFF** : champ code masqué au checkout, `/cadeaux` renvoie 404/`notFound()`, aucune session cadeau créable. Prouvé par e2e checkout existant inchangé.
 
+### PR 2 — câblage checkout : design paiements **validé par Luca** (2026-07-12), reste à implémenter en env Stripe-test
+
+> **Livré + testé** (commits sur la branche) : moteur `redeemGiftCardInTx` (verrou `FOR UPDATE`), `previewGiftRedemption`, `releaseGiftForBooking` (REFUND idempotent sur abandon), `previewGiftRedemptionAction`, migration additive `Booking.giftCardId/giftAppliedCents/giftTransferId` (+ index réconciliation). **À implémenter** : le montage Stripe + confirmation, ci-dessous.
+
+**Invariant qui pilote tout** — `P = wineryPayout = E − C` est **déterministe et indépendant de la couverture bon**. Avec `E` = prix×pers, `F` = fee, `C` = commission palier, `due = E + F`, `G = min(balance, due)`, `card = due − G` : la cave touche **toujours** `P`, la plateforme garde **toujours** `C + F`. C'est ce qui interdit de sous-payer la cave (test d'intégrité : `P` et reste plateforme constants quelle que soit la part du bon).
+
+1. **Structure = separate charges & transfers** (PAS destination charge sur le montant réduit — casse quand `card→0`). Le chemin **sans bon reste le destination charge actuel inchangé** ; la branche bon n'est active que si un code est appliqué (blast radius minimal).
+2. **Timing** : **réserver le bon à la création de session** (dans la transaction booking via `redeemGiftCardInTx`, écrit le `REDEMPTION` `−G`, stampe `booking.giftCardId/giftAppliedCents`) ; **transférer `P` à la confirmation** (webhook). Réserver-à-la-création (pas à la confirmation) ferme le trou de sous-financement concurrent : le `FOR UPDATE` sérialise deux sessions in-flight sur le même code.
+3. **Session (`card > 0`)** : charge plateforme, `payment_intent_data.transfer_group = booking_{id}`, **pas** de `transfer_data`/`application_fee` ; appliquer `G` en remise (coupon éphémère `amount_off=G` — copy Théo — ou line-item consolidé à `card`). metadata `{kind:'booking', giftCardId, giftAppliedCents}`.
+4. **Cas `card == 0`** (bon couvre tout) : **pas de session Stripe** (Checkout refuse un total 0) → confirmer le booking **server-side** + `transfers.create(P)` inline. ⚠️ nécessite d'extraire un cœur de confirmation session-agnostique de `confirmBookingFromPaidCheckoutSession` (refacto du chemin critique — à tester).
+5. **Transfert cave (webhook `checkout.session.completed`)** : `transfers.create({amount: P, destination, transfer_group, idempotencyKey: gift_payout_{bookingId}})` ; garde durable `if (giftAppliedCents>0 && giftTransferId==null)` puis persiste `giftTransferId`. **Découplé** du claim de statut (rejoué à chaque traitement tant que `giftTransferId==null`).
+6. **Garde `GIFT_CHANGED`** (miroir de `FEE_CHANGED`) : passer `displayedGiftAppliedCents` depuis l'UI, échouer fermé si `applied !== displayed` (bon vidé entre-temps).
+7. **Abandon** : `releaseGiftForBooking(bookingId)` (déjà écrit) appelé depuis `handleCheckoutExpired` **et le cron holds** AVANT le `delete`.
+8. **Cron de réconciliation** (nouveau type `JOB_REGISTRY`, kill-switch) : rejoue `transfers.create` pour les `CONFIRMED` avec `giftAppliedCents>0 && giftTransferId==null` (couvre `balance_insufficient` transitoire + KYC).
+9. **Fee absorbable** : `dueCents = E + F` ; pas d'`application_fee` sur la branche bon (revenue plateforme = encaissé − `P`).
+
+**Escalades Luca (à traiter, hors ce câblage)** : (a) **corrélation payout dashboard P-13 cassée** — le transfert bon n'est pas lié au `payment_intent` du booking ; la query `payouts.queries.ts` doit corréler via `transfer.metadata.bookingId`, sinon la cave voit un payout sans réservation. (b) **Annulation d'un booking financé par bon** — refund carte + REFUND bon + `transfers.createReversal(giftTransferId)` ; ADR avec Jonas. (c) **Buffer de trésorerie** plateforme pour couvrir `P` au transfert (part carte settle T+2) — Marco.
+
+**Gate avant merge** : `/security-review` (package 💰) + `/code-review max` + tests de concurrence (2 rédemptions simultanées → une passe) + k6 (L-087) + smoke staging.
+
 ## 5. Tests & mesures
 
 - **Tests automatisés ajoutés** :
