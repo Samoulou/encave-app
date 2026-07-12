@@ -17,13 +17,16 @@ import {
   BOOKING_RATE_LIMIT,
 } from '@/server/services/rate-limit.service';
 import { resendGiftCardEmail } from '@/server/services/giftCard-delivery.service';
+import { previewGiftRedemption } from '@/server/services/giftCard-redemption.service';
 import { logError, logInfo } from '@/lib/logger';
 import {
   createGiftCardSchema,
   giftCardIdSchema,
+  previewGiftSchema,
   type CreateGiftCardInput,
 } from '@/lib/validators/giftCard';
 import { GIFT_CARD_PURCHASE_FEE_CENTS } from '@/lib/constants/gift-card';
+import { BOOKING_FEE_CENTS } from '@/lib/constants/pricing';
 
 export interface GiftCheckoutResult {
   checkoutUrl: string;
@@ -318,6 +321,93 @@ export async function resendGiftCardAction(
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to resend the gift' },
+    };
+  }
+}
+
+/**
+ * Preview how much a gift code would cover of a booking (P-09 / L-084, the
+ * checkout gift-code field). Read-only, flag-gated, rate-limited per IP
+ * (a code-enumeration surface). The due amount is computed SERVER-SIDE
+ * from the experience price × guests + booking fee — never trusted from
+ * the client. The authoritative redemption re-locks at submit.
+ */
+export async function previewGiftRedemptionAction(input: unknown): Promise<
+  ActionResult<{
+    code: string;
+    balance: number;
+    applicableCents: number;
+    remainingDueCents: number;
+    dueCents: number;
+  }>
+> {
+  try {
+    if (!(await isFlagEnabled('GIFT_CARDS'))) {
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Gift cards are not available' },
+      };
+    }
+    const ip = getClientIp(await headers());
+    const rateLimit = await checkRateLimit(
+      `giftpreview:${ip}`,
+      BOOKING_RATE_LIMIT
+    );
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: { code: 'RATE_LIMITED', message: 'Too many attempts.' },
+      };
+    }
+
+    const validated = previewGiftSchema.safeParse(input);
+    if (!validated.success) {
+      return {
+        success: false,
+        error: { code: 'VALIDATION_ERROR', message: 'Invalid input' },
+      };
+    }
+    const { code, experienceId, guestCount } = validated.data;
+
+    const experience = await db.experience.findUnique({
+      where: { id: experienceId },
+      select: { price: true, status: true },
+    });
+    if (!experience || experience.status !== ExperienceStatus.PUBLISHED) {
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Experience not found' },
+      };
+    }
+
+    const bookingFeeOn = await isFlagEnabled('BOOKING_FEE');
+    const dueCents =
+      experience.price * guestCount +
+      (bookingFeeOn ? BOOKING_FEE_CENTS * guestCount : 0);
+
+    const preview = await previewGiftRedemption({
+      code,
+      dueCents,
+      experienceId,
+    });
+    if (!preview.ok) {
+      return {
+        success: false,
+        error: { code: 'VALIDATION_ERROR', message: `GIFT_${preview.error}` },
+      };
+    }
+
+    return {
+      success: true,
+      data: { ...preview.preview, dueCents },
+    };
+  } catch (error) {
+    logError('previewGiftRedemptionAction error', error, {
+      action: 'previewGiftRedemptionAction',
+    });
+    return {
+      success: false,
+      error: { code: 'INTERNAL_ERROR', message: 'Failed to preview gift code' },
     };
   }
 }

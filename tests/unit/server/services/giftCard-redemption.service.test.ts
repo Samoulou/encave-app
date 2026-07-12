@@ -1,12 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const findUnique = vi.fn();
+const transaction = vi.fn();
 vi.mock('@/server/db', () => ({
-  db: { giftCard: { findUnique }, $transaction: vi.fn() },
+  db: { giftCard: { findUnique }, $transaction: transaction },
 }));
 
-const { redeemGiftCardInTx, previewGiftRedemption, normalizeGiftCode } =
-  await import('@/server/services/giftCard-redemption.service');
+const {
+  redeemGiftCardInTx,
+  previewGiftRedemption,
+  releaseGiftForBooking,
+  normalizeGiftCode,
+} = await import('@/server/services/giftCard-redemption.service');
 
 function makeTx(row: Record<string, unknown> | null) {
   return {
@@ -207,5 +212,68 @@ describe('previewGiftRedemption', () => {
       experienceId: EXPERIENCE_ID,
     });
     expect(r).toEqual({ ok: false, error: 'NOT_FOUND' });
+  });
+});
+
+describe('releaseGiftForBooking', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  function makeReleaseTx(opts: {
+    redemption: { giftCardId: string; amount: number } | null;
+    refundExists: boolean;
+  }) {
+    const findFirst = vi
+      .fn()
+      // first call: the REDEMPTION lookup
+      .mockResolvedValueOnce(opts.redemption)
+      // second call (only reached if redemption found): the REFUND lookup
+      .mockResolvedValueOnce(opts.refundExists ? { id: 'r1' } : null);
+    return {
+      giftCardTransaction: { findFirst, create: vi.fn(async () => ({})) },
+      $queryRaw: vi.fn(async () => [{ id: 'gc-1' }]),
+      giftCard: { update: vi.fn(async () => ({})) },
+    };
+  }
+
+  it('noops when the booking has no redemption', async () => {
+    const tx = makeReleaseTx({ redemption: null, refundExists: false });
+    transaction.mockImplementation((cb: (t: unknown) => unknown) => cb(tx));
+    const r = await releaseGiftForBooking('bk-1');
+    expect(r).toBe('noop');
+    expect(tx.giftCard.update).not.toHaveBeenCalled();
+  });
+
+  it('noops when a refund already exists (idempotent)', async () => {
+    const tx = makeReleaseTx({
+      redemption: { giftCardId: 'gc-1', amount: -5000 },
+      refundExists: true,
+    });
+    transaction.mockImplementation((cb: (t: unknown) => unknown) => cb(tx));
+    const r = await releaseGiftForBooking('bk-1');
+    expect(r).toBe('noop');
+    expect(tx.giftCard.update).not.toHaveBeenCalled();
+  });
+
+  it('restores the balance and writes a positive REFUND', async () => {
+    const tx = makeReleaseTx({
+      redemption: { giftCardId: 'gc-1', amount: -5000 },
+      refundExists: false,
+    });
+    transaction.mockImplementation((cb: (t: unknown) => unknown) => cb(tx));
+    const r = await releaseGiftForBooking('bk-1');
+    expect(r).toBe('refunded');
+    expect(tx.giftCard.update).toHaveBeenCalledWith({
+      where: { id: 'gc-1' },
+      data: { balance: { increment: 5000 } },
+    });
+    expect(tx.giftCardTransaction.create).toHaveBeenCalledWith({
+      data: {
+        giftCardId: 'gc-1',
+        type: 'REFUND',
+        amount: 5000,
+        bookingId: 'bk-1',
+        note: 'checkout_abandon',
+      },
+    });
   });
 });

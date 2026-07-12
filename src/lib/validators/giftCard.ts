@@ -103,6 +103,13 @@ export const giftCardIdSchema = z.object({
   giftCardId: z.string().cuid(),
 });
 
+/** Checkout gift-code preview input — the due amount is computed server-side. */
+export const previewGiftSchema = z.object({
+  code: z.string().trim().min(4).max(24),
+  experienceId: z.string().cuid(),
+  guestCount: z.number().int().positive(),
+});
+
 /** Redemption code lookup (checkout + /bon/[code]) — PR2 uses this too. */
 export const giftCodeSchema = z
   .string()

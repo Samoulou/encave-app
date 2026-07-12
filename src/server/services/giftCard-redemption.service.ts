@@ -128,6 +128,58 @@ export async function redeemGiftCard(input: {
   return db.$transaction((tx) => redeemGiftCardInTx(tx, input));
 }
 
+/**
+ * Compensating REFUND when a gift-reserved booking is abandoned (Luca
+ * design §4): the gift is debited at session creation, so an expired /
+ * deleted PENDING_PAYMENT booking must return the reserved amount. Called
+ * from the checkout-expiry webhook AND the hold-cleanup cron, BEFORE the
+ * booking row is deleted. Idempotent: the card is locked FOR UPDATE, then
+ * a REFUND is written only if none exists yet for this booking. The ledger
+ * rows survive the booking deletion (no FK, intentional).
+ */
+export async function releaseGiftForBooking(
+  bookingId: string
+): Promise<'refunded' | 'noop'> {
+  return db.$transaction(async (tx) => {
+    const redemption = await tx.giftCardTransaction.findFirst({
+      where: {
+        bookingId,
+        type: GiftCardTransactionType.REDEMPTION,
+      },
+      select: { giftCardId: true, amount: true },
+    });
+    if (!redemption) return 'noop';
+
+    // Lock the card BEFORE the duplicate check so two concurrent releases
+    // serialize: the loser sees the REFUND the winner just wrote.
+    await tx.$queryRaw`SELECT id FROM gift_cards WHERE id = ${redemption.giftCardId} FOR UPDATE`;
+
+    const alreadyRefunded = await tx.giftCardTransaction.findFirst({
+      where: { bookingId, type: GiftCardTransactionType.REFUND },
+      select: { id: true },
+    });
+    if (alreadyRefunded) return 'noop';
+
+    const applied = -redemption.amount; // REDEMPTION is negative → positive
+    if (applied <= 0) return 'noop';
+
+    await tx.giftCard.update({
+      where: { id: redemption.giftCardId },
+      data: { balance: { increment: applied } },
+    });
+    await tx.giftCardTransaction.create({
+      data: {
+        giftCardId: redemption.giftCardId,
+        type: GiftCardTransactionType.REFUND,
+        amount: applied,
+        bookingId,
+        note: 'checkout_abandon',
+      },
+    });
+    return 'refunded';
+  });
+}
+
 export interface GiftPreview {
   code: string;
   balance: number;
