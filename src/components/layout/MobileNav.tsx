@@ -17,21 +17,31 @@ interface MobileNavProps {
 // better-auth client resolves while the sheet animates in.
 const MobileNavSheetBody = dynamic(
   () => import('@/components/layout/MobileNavSheetBody'),
-  { ssr: false, loading: () => null }
+  {
+    ssr: false,
+    // Visible while the chunk downloads on a slow connection — never an
+    // empty sheet (P-06 review).
+    loading: () => (
+      <div className="mt-8 space-y-3" aria-hidden="true">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div
+            key={index}
+            className="h-11 animate-pulse rounded-lg bg-stone-200/70"
+          />
+        ))}
+      </div>
+    ),
+  }
 );
 
 export function MobileNav({ triggerClassName }: MobileNavProps) {
+  // Radix unmounts SheetContent's subtree while closed: rendering the
+  // body unconditionally still only loads the chunk on first open.
   const [open, setOpen] = useState(false);
-  const [hasOpened, setHasOpened] = useState(false);
   const t = useTranslations('nav');
 
-  const handleOpenChange = (next: boolean) => {
-    setOpen(next);
-    if (next) setHasOpened(true);
-  };
-
   return (
-    <Sheet open={open} onOpenChange={handleOpenChange}>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button
           variant="ghost"
@@ -46,7 +56,7 @@ export function MobileNav({ triggerClassName }: MobileNavProps) {
         </Button>
       </SheetTrigger>
       <SheetContent side="right" className="w-full bg-cream-50 sm:w-[350px]">
-        {hasOpened && <MobileNavSheetBody closeMenu={() => setOpen(false)} />}
+        <MobileNavSheetBody closeMenu={() => setOpen(false)} />
       </SheetContent>
     </Sheet>
   );

@@ -28,8 +28,11 @@ export default async function AdminLayout({
   const session = await auth();
 
   if (!session?.user) {
+    // Expired-cookie case (the middleware only covers absent cookies):
+    // keep the pre-P-06 behavior of returning the admin to their
+    // section after re-login.
     const locale = await getLocale();
-    redirect(`/${locale}/login`);
+    redirect(`/${locale}/login?callbackUrl=/${locale}/admin`);
   }
 
   // Sole role gate since P-06 removed the middleware fetch: a logged-in

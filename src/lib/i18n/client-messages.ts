@@ -29,15 +29,15 @@ export const PUBLIC_BASE_NAMESPACES: readonly string[] = [
   'common',
   'errors',
   'locale',
-  'search',
+  'search', // home search panel/shortcuts (the home has no segment layout)
   'wineries', // InteractiveMap — mounted on the home desktop editorial
-  'auth',
-  'bookingError',
   'legal.cookies',
 ];
 
 /** Extra client namespaces per public route segment. */
 export const SEGMENT_EXTRA_NAMESPACES = {
+  auth: ['auth'],
+  reservation: ['bookingError'],
   experiences: [
     'experience',
     'gallery',
@@ -53,6 +53,7 @@ export const SEGMENT_EXTRA_NAMESPACES = {
     'cancellation',
     'wineOrder',
     'experience',
+    'auth.register', // OneTapAccountCard on the public confirmation page
   ],
 } as const;
 
@@ -70,7 +71,15 @@ function pickPath(
     return;
   }
   if (typeof value !== 'object' || value === null) return;
-  const nested = (target[head] ?? {}) as Record<string, unknown>;
+  // Never mutate an object shared with the cached getMessages() result:
+  // if a full-key pick already assigned the SOURCE reference here,
+  // replace it with a copy before descending.
+  const existing = target[head];
+  const nested = (
+    existing === value
+      ? { ...(value as Record<string, unknown>) }
+      : ((existing ?? {}) as Record<string, unknown>)
+  ) as Record<string, unknown>;
   target[head] = nested;
   pickPath(value as AbstractIntlMessages, nested, rest.join('.'));
 }

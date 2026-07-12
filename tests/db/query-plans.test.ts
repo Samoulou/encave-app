@@ -79,7 +79,12 @@ describe.skipIf(!url)('query plans (P-06 / L-207)', () => {
   }
 
   beforeAll(async () => {
-    db = new PrismaClient({ datasourceUrl: url });
+    // Single connection: SET enable_seqscan is per-session — with a
+    // pool, EXPLAIN could land on a connection that never saw the SET.
+    const separator = url?.includes('?') ? '&' : '?';
+    db = new PrismaClient({
+      datasourceUrl: `${url}${separator}connection_limit=1`,
+    });
     // Force the planner to prove index USABILITY on tiny test tables.
     await db.$executeRawUnsafe('SET enable_seqscan = off');
     await db.$executeRawUnsafe(

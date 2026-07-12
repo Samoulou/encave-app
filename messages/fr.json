@@ -1358,7 +1358,8 @@
       "addPerson": "Ajouter une personne",
       "removePerson": "Retirer une personne",
       "explore": "Explorer"
-    }
+    },
+    "resultsCount": "Valais · {count, plural, =0 {aucune expérience} one {# expérience} other {# expériences}}"
   },
   "errors": {
     "somethingWentWrong": "Une erreur s'est produite!",

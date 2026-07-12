@@ -14,23 +14,12 @@ import { test, expect, type Page } from '@playwright/test';
 const MOBILE = { width: 375, height: 812 };
 const DESKTOP = { width: 1280, height: 800 };
 
-async function collectJsResponses(page: Page): Promise<string[]> {
-  const urls: string[] = [];
-  page.on('response', (response) => {
-    const url = response.url();
-    if (url.endsWith('.js') || url.includes('/_next/static/chunks/')) {
-      urls.push(url);
-    }
-  });
-  return urls;
-}
-
-async function hasMaplibreChunk(page: Page, urls: string[]): Promise<boolean> {
-  // The chunk filename is content-hashed: identify it by probing the
-  // loaded scripts for the maplibre signature global exposed in the
-  // bundle source (fetch bodies of candidate chunks is slow — instead
-  // check whether the maplibregl runtime reached the page).
-  void urls;
+async function hasMaplibreChunk(page: Page): Promise<boolean> {
+  // Detection is RUNTIME-level, not network-level: the chunk filename is
+  // content-hashed, so we probe for the maplibregl global / DOM nodes
+  // that only exist once the library executed. Limitation (accepted): a
+  // chunk that downloads without instantiating a map would pass — the
+  // Lighthouse-trace check in the C9 measurement protocol covers bytes.
   return page.evaluate(() => {
     interface MaplibreProbe {
       maplibregl?: unknown;
@@ -56,11 +45,10 @@ for (const { name, path } of MOBILE_PAGES) {
     page,
   }) => {
     await page.setViewportSize(MOBILE);
-    const urls = await collectJsResponses(page);
     await page.goto(path);
     await page.waitForLoadState('networkidle');
 
-    expect(await hasMaplibreChunk(page, urls)).toBe(false);
+    expect(await hasMaplibreChunk(page)).toBe(false);
   });
 }
 
@@ -79,12 +67,11 @@ test('mobile fiche expérience: pas de maplibre avant scroll vers la carte', asy
     .catch(() => null);
   test.skip(!href, 'no seeded experience card');
 
-  const urls = await collectJsResponses(page);
   await page.goto(href as string);
   await page.waitForLoadState('networkidle');
 
   // Above the fold only — the map is below.
-  expect(await hasMaplibreChunk(page, urls)).toBe(false);
+  expect(await hasMaplibreChunk(page)).toBe(false);
 });
 
 test('desktop fiche expérience: la carte se charge après scroll (garde anti-sur-gating)', async ({
@@ -111,6 +98,6 @@ test('desktop fiche expérience: la carte se charge après scroll (garde anti-su
   );
   await locationSection.scrollIntoViewIfNeeded();
   await expect
-    .poll(async () => hasMaplibreChunk(page, []), { timeout: 15_000 })
+    .poll(async () => hasMaplibreChunk(page), { timeout: 15_000 })
     .toBe(true);
 });

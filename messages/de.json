@@ -1358,7 +1358,8 @@
       "addPerson": "Person hinzufügen",
       "removePerson": "Person entfernen",
       "explore": "Entdecken"
-    }
+    },
+    "resultsCount": "Wallis · {count, plural, =0 {keine Erlebnisse} one {# Erlebnis} other {# Erlebnisse}}"
   },
   "errors": {
     "somethingWentWrong": "Etwas ist schiefgelaufen!",

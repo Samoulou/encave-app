@@ -1,5 +1,6 @@
 import { getRequestConfig } from 'next-intl/server';
 import { IntlErrorCode } from 'next-intl';
+import { logError } from '@/lib/logger';
 import { routing } from './routing';
 
 export default getRequestConfig(async ({ requestLocale }) => {
@@ -27,9 +28,9 @@ export default getRequestConfig(async ({ requestLocale }) => {
       ) {
         throw error;
       }
-      if (process.env.NODE_ENV !== 'production') {
-        console.error(error);
-      }
+      // Production included: a missed namespace must reach Pino/Sentry,
+      // not vanish (the dev/CI guards don't cover prod-only locales).
+      logError('next-intl error', error, { action: 'i18nOnError' });
     },
   };
 });

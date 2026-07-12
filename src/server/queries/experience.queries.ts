@@ -1,5 +1,3 @@
-'use server';
-
 import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
 import { db } from '@/server/db';
@@ -9,6 +7,7 @@ import {
   OccurrenceStatus,
   Prisma,
 } from '@prisma/client';
+import { addDays } from 'date-fns';
 import { zurichTodayAsUTCDate } from '@/lib/business-rules/occurrence-expansion';
 import { isDateKey } from '@/lib/utils/date-key';
 import type { CancellationPolicy } from '@prisma/client';
@@ -353,6 +352,10 @@ const cachedSearch = unstable_cache(
     // remaining capacity. Clamped to today (Zurich); full slots are no
     // longer listed only to disappoint on the fiche.
     let dateWindowIds: string[] | null = null;
+    let prefilterBookable: Map<
+      string,
+      { date: Date; startTime: string }
+    > | null = null;
     if (
       params.availableFrom &&
       isDateKey(params.availableFrom) &&
@@ -367,8 +370,12 @@ const cachedSearch = unstable_cache(
       if (to.getTime() < from.getTime()) {
         dateWindowIds = [];
       } else {
-        const bookable = await mapNextBookableOccurrences(from, to, baseWhere);
-        dateWindowIds = Array.from(bookable.keys());
+        prefilterBookable = await mapNextBookableOccurrences(
+          from,
+          to,
+          baseWhere
+        );
+        dateWindowIds = Array.from(prefilterBookable.keys());
       }
     }
 
@@ -439,16 +446,20 @@ const cachedSearch = unstable_cache(
     // sliced — the full rows of the page are fetched afterwards. No
     // more loading every matching row to sort in JS.
     if (params.sort === 'next_availability') {
+      // With an active date filter, sort INSIDE the user's window using
+      // the prefilter's map — no second occurrence scan, and no sorting
+      // by a slot outside the window the user asked for. Otherwise the
+      // horizon is the 3-month materialization window.
       const today = zurichTodayAsUTCDate();
-      const horizon = new Date(today);
-      horizon.setUTCDate(horizon.getUTCDate() + 92);
-
+      const candidatesPromise = db.experience.findMany({
+        where,
+        select: { id: true, createdAt: true },
+      });
       const [candidates, bookable] = await Promise.all([
-        db.experience.findMany({
-          where,
-          select: { id: true, createdAt: true },
-        }),
-        mapNextBookableOccurrences(today, horizon, where),
+        candidatesPromise,
+        prefilterBookable !== null
+          ? Promise.resolve(prefilterBookable)
+          : mapNextBookableOccurrences(today, addDays(today, 92), where),
       ]);
 
       const ordered = [...candidates].sort((a, b) => {

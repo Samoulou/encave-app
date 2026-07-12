@@ -9,6 +9,7 @@ import { experienceSearchSchema } from '@/lib/validators/experienceSearch';
 import {
   API_RATE_LIMIT,
   checkRateLimit,
+  getClientIp,
 } from '@/server/services/rate-limit.service';
 import { logError } from '@/lib/logger';
 import type { ActionResult } from '@/types/actions';
@@ -46,9 +47,7 @@ export async function searchExperiencesAction(
     };
   }
 
-  const ip =
-    (await headers()).get('x-forwarded-for')?.split(',')[0]?.trim() ??
-    'unknown';
+  const ip = getClientIp(await headers());
   const rateLimit = await checkRateLimit(`search:${ip}`, API_RATE_LIMIT);
   if (!rateLimit.success) {
     return {

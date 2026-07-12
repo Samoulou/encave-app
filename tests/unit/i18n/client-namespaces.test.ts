@@ -63,15 +63,19 @@ const PUBLIC_SURFACES: Record<
   string,
   { provided: readonly string[]; componentDirs: string[]; appDirs: string[] }
 > = {
-  'root (home, auth, legal, about)': {
+  'root (home, legal, about)': {
     provided: PUBLIC_BASE_NAMESPACES,
     componentDirs: [
       'components/layout',
       'components/shared',
       'components/features/home',
-      'components/features/auth',
       'components/features/map',
     ],
+    appDirs: [],
+  },
+  'auth segment (login/register)': {
+    provided: [...PUBLIC_BASE_NAMESPACES, ...SEGMENT_EXTRA_NAMESPACES.auth],
+    componentDirs: ['components/features/auth'],
     appDirs: ['app/[locale]/(auth)'],
   },
   'experiences segment': {
@@ -98,7 +102,10 @@ const PUBLIC_SURFACES: Record<
     appDirs: ['app/[locale]/(public)/booking'],
   },
   'reservation segment (error page)': {
-    provided: PUBLIC_BASE_NAMESPACES,
+    provided: [
+      ...PUBLIC_BASE_NAMESPACES,
+      ...SEGMENT_EXTRA_NAMESPACES.reservation,
+    ],
     componentDirs: [],
     appDirs: ['app/[locale]/(public)/reservation'],
   },

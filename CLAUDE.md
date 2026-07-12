@@ -109,7 +109,7 @@ Component → Server Action → Service/Query → DB
 
 ## Server Actions Pattern
 
-1. `await auth()` → return UNAUTHORIZED if no session
+1. `await auth()` → return UNAUTHORIZED if no session — EXCEPTION: read-only actions over PUBLIC data (e.g. `searchExperiencesAction`) skip auth but MUST be rate-limited per IP and validate input with safeParse
 2. `safeParse()` input with schema from `src/lib/validators/`
 3. DB ops
 4. Cache invalidation with `revalidateTag()`

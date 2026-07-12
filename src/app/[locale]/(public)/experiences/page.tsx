@@ -1,5 +1,8 @@
 import { Suspense } from 'react';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
+import { DEFAULT_CATALOG_SORT } from '@/lib/utils/search-params';
+import { generateExperiencesMetadata } from '@/lib/seo';
+import type { Locale } from '@/i18n/routing';
 import { ExperiencesContent } from './ExperiencesContent';
 import {
   SkeletonExperienceGrid,
@@ -13,12 +16,15 @@ import { ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
 import type { Metadata } from 'next';
 
-// Static metadata - no async, instant navigation!
-export const metadata: Metadata = {
-  title: 'Wine Experiences in Valais | EnCave',
-  description:
-    'Discover unique wine tasting experiences, cellar visits, and vineyard tours in the Swiss Alps.',
-};
+// Localized metadata WITH canonical (P-06 review): the page ignores
+// searchParams (D2) so every ?quand=…&type=… permutation serves the same
+// HTML — the canonical collapses that unbounded URL space for crawlers.
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const { locale } = await params;
+  return generateExperiencesMetadata(locale as Locale);
+}
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -78,7 +84,10 @@ export default async function ExperiencesPage({ params }: PageProps) {
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         {/* Default dataset — prerendered, client refines via action */}
         <Suspense fallback={<ContentLoadingState />}>
-          <ExperiencesContent searchParams={{}} />
+          {/* Explicit default sort: searchExperiences({}) would fall back
+              to createdAt while the client marks next_availability active
+              — page 1 and fetched page 2 must share one ordering. */}
+          <ExperiencesContent searchParams={{ sort: DEFAULT_CATALOG_SORT }} />
         </Suspense>
       </div>
       <Footer />

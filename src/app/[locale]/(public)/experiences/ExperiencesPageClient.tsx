@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useCallback, useEffect, useMemo, useRef, useTransition } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import {
   useQueryStates,
   parseAsString,
@@ -86,7 +86,13 @@ export function ExperiencesPageClient({
 }: ExperiencesPageClientProps) {
   const router = useRouter();
   const tSearch = useTranslations('search');
-  const [isPending, startTransition] = useTransition();
+  // Explicit fetch state: React 18 useTransition stops tracking an async
+  // callback at its first await — isFetching would drop before the
+  // network answer and the grid would never dim (P-06 review).
+  const [isFetching, setIsFetching] = React.useState(false);
+  // A failed search (rate limit, network, server) must be visible: the
+  // grid keeps the PREVIOUS dataset while the URL claims new filters.
+  const [fetchFailed, setFetchFailed] = React.useState(false);
 
   const [urlState, setUrlState] = useQueryStates(
     {
@@ -104,7 +110,10 @@ export function ExperiencesPageClient({
       lat: parseAsFloat,
       lng: parseAsFloat,
     },
-    { history: 'push' }
+    // 'replace': the debounced free-text commits would otherwise stack
+    // one history entry per keystroke batch — Back must leave the page,
+    // not unwind filter states (each of which re-fires the search).
+    { history: 'replace' }
   );
 
   const hasLocationSearch = Boolean(
@@ -155,19 +164,16 @@ export function ExperiencesPageClient({
 
   const [results, setResults] =
     React.useState<ExperienceSearchData>(initialData);
+  // Displayed data derives from state: the DEFAULT view always reads the
+  // (possibly re-rendered, fresher) server props directly — no copy of
+  // props into state to go stale (P-06 review).
+  const displayData = isDefaultState ? initialData : results;
 
   // One fetch per URL-state change: covers deep links on mount, every
   // filter interaction, and pagination. The URL is the request.
   const requestKey = JSON.stringify(urlState);
-  const lastRequestRef = useRef<string | null>(null);
   useEffect(() => {
-    if (lastRequestRef.current === requestKey) return;
-    lastRequestRef.current = requestKey;
-
-    if (isDefaultState) {
-      setResults(initialData);
-      return;
-    }
+    if (isDefaultState) return;
 
     const input: ExperienceSearchInput = {
       search: currentParams.search || undefined,
@@ -188,16 +194,29 @@ export function ExperiencesPageClient({
       lng: urlState.lng ?? undefined,
     };
 
-    startTransition(async () => {
+    // Structural stale-response guard: each effect run cancels the
+    // previous one — no key comparison, no A→B→A hole.
+    let stale = false;
+    setIsFetching(true);
+    void (async () => {
       const result = await searchExperiencesAction(input);
-      // Stale response guard: only apply the answer of the LAST request.
-      if (lastRequestRef.current !== requestKey) return;
+      if (stale) return;
+      setIsFetching(false);
       if (result.success) {
         setResults(result.data);
+        setFetchFailed(false);
+      } else {
+        // Previous results stay visible; the notice tells the user the
+        // filters were NOT applied. Next URL change retries.
+        setFetchFailed(true);
       }
-      // On failure the previous results stay visible — the URL still
-      // reflects the intent and a later interaction retries.
-    });
+    })();
+    return () => {
+      stale = true;
+      setIsFetching(false);
+    };
+    // isDefaultState/currentParams/hasLocationSearch all derive from
+    // urlState, which requestKey serializes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requestKey]);
 
@@ -292,9 +311,9 @@ export function ExperiencesPageClient({
   };
   const visibleSortOptions = (Object.keys(sortLabels) as SortOption[]).filter(
     (option) =>
-      option !== 'distance' || results.locationSearch.hasLocationSearch
+      option !== 'distance' || displayData.locationSearch.hasLocationSearch
   );
-  const mapWineries = buildMapWineries(results.experiences);
+  const mapWineries = buildMapWineries(displayData.experiences);
 
   return (
     <>
@@ -351,15 +370,19 @@ export function ExperiencesPageClient({
             <SearchBar
               value={currentParams.search}
               onChange={handleSearchChange}
-              isPending={isPending}
+              isPending={isFetching}
               className="[&_input]:border-0 [&_input]:bg-cream-50 [&_input]:shadow-none"
             />
           </div>
 
+          {fetchFailed && !isFetching && <SearchErrorNotice />}
+
           <div className="mb-5 flex items-center justify-between">
             <div>
               <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-burgundy-700">
-                Valais · {results.pagination.total} expériences
+                {tSearch('resultsCount', {
+                  count: displayData.pagination.total,
+                })}
               </p>
               <h2 className="mt-1 font-display text-[30px] font-semibold text-ink-900">
                 Expériences disponibles
@@ -387,11 +410,11 @@ export function ExperiencesPageClient({
           <div
             className={cn(
               'grid gap-6 transition-opacity duration-150 xl:grid-cols-2',
-              isPending && 'pointer-events-none opacity-70'
+              isFetching && 'pointer-events-none opacity-70'
             )}
           >
-            {results.experiences.length > 0 ? (
-              results.experiences.map((experience, index) => (
+            {displayData.experiences.length > 0 ? (
+              displayData.experiences.map((experience, index) => (
                 <ExperienceCard
                   key={experience.id}
                   experience={experience}
@@ -430,10 +453,11 @@ export function ExperiencesPageClient({
           handleSortChange={handleSortChange}
           handlePageChange={handlePageChange}
           communes={communes}
-          experiences={results.experiences}
-          pagination={results.pagination}
-          locationSearch={results.locationSearch}
-          isPending={isPending}
+          experiences={displayData.experiences}
+          pagination={displayData.pagination}
+          locationSearch={displayData.locationSearch}
+          isFetching={isFetching}
+          fetchFailed={fetchFailed}
         />
       </div>
     </>
@@ -459,7 +483,8 @@ function MobileListing({
   experiences,
   pagination,
   locationSearch,
-  isPending,
+  isFetching,
+  fetchFailed,
 }: {
   currentParams: FilterState;
   showMobileFilters: boolean;
@@ -479,7 +504,8 @@ function MobileListing({
   experiences: ExperienceSearchResult[];
   pagination: PaginationInfo;
   locationSearch: LocationSearchInfo;
-  isPending: boolean;
+  isFetching: boolean;
+  fetchFailed: boolean;
 }) {
   const t = useTranslations('search');
 
@@ -569,18 +595,20 @@ function MobileListing({
         <SearchBar
           value={currentParams.search}
           onChange={handleSearchChange}
-          isPending={isPending}
+          isPending={isFetching}
           className="mb-6"
         />
+
+        {fetchFailed && !isFetching && <SearchErrorNotice />}
 
         {/* Loading Overlay - smooth transition for pending state */}
         <div
           className={cn(
             'relative transition-opacity duration-150',
-            isPending && 'pointer-events-none opacity-70'
+            isFetching && 'pointer-events-none opacity-70'
           )}
         >
-          {isPending && (
+          {isFetching && (
             <div className="absolute inset-0 z-10 flex items-center justify-center">
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-burgundy-200 border-t-burgundy-600" />
             </div>
@@ -597,6 +625,18 @@ function MobileListing({
           />
         </div>
       </main>
+    </div>
+  );
+}
+
+function SearchErrorNotice() {
+  const tErrors = useTranslations('errors');
+  return (
+    <div
+      role="alert"
+      className="mb-5 rounded-[18px] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+    >
+      {tErrors('genericError')}
     </div>
   );
 }
