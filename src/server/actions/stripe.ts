@@ -5,8 +5,6 @@ import { db } from '@/server/db';
 import {
   createConnectAccount,
   getStripeLoginLink,
-  syncStripeAccountStatus,
-  canPublishExperiences,
 } from '@/server/services/payment.service';
 import { env } from '@/lib/env';
 import type { ActionResult } from '@/types/actions';
@@ -90,67 +88,6 @@ export async function startStripeOnboarding(
 }
 
 /**
- * Handles the callback from Stripe onboarding
- */
-export async function handleStripeCallback(): Promise<
-  ActionResult<{ status: 'complete' | 'incomplete' | 'refresh' }>
-> {
-  try {
-    // 1. Auth check
-    const session = await auth();
-    if (!session?.user) {
-      return {
-        success: false,
-        error: { code: 'UNAUTHORIZED', message: 'Please sign in to continue' },
-      };
-    }
-
-    // 2. Get winery
-    const winery = await db.winery.findUnique({
-      where: { userId: session.user.id },
-      select: { stripeAccountId: true },
-    });
-
-    if (!winery?.stripeAccountId) {
-      return {
-        success: false,
-        error: { code: 'NOT_FOUND', message: 'Stripe account not found' },
-      };
-    }
-
-    // 3. Sync status from Stripe
-    await syncStripeAccountStatus(winery.stripeAccountId);
-
-    // 4. Check updated status
-    const updatedWinery = await db.winery.findUnique({
-      where: { userId: session.user.id },
-      select: { stripeOnboardingComplete: true, stripeDetailsSubmitted: true },
-    });
-
-    if (updatedWinery?.stripeOnboardingComplete) {
-      return { success: true, data: { status: 'complete' } };
-    }
-
-    if (updatedWinery?.stripeDetailsSubmitted) {
-      return { success: true, data: { status: 'incomplete' } };
-    }
-
-    return { success: true, data: { status: 'refresh' } };
-  } catch (error) {
-    logError('handleStripeCallback error', error, {
-      action: 'handleStripeCallback',
-    });
-    return {
-      success: false,
-      error: {
-        code: 'STRIPE_ERROR',
-        message: 'Failed to verify payment setup',
-      },
-    };
-  }
-}
-
-/**
  * Gets the Stripe Express dashboard login link
  */
 export async function getStripeDashboardLink(): Promise<
@@ -193,51 +130,6 @@ export async function getStripeDashboardLink(): Promise<
         code: 'STRIPE_ERROR',
         message: 'Failed to access payment dashboard',
       },
-    };
-  }
-}
-
-/**
- * Checks if the winery can publish experiences
- */
-export async function checkCanPublish(
-  wineryId: string
-): Promise<ActionResult<{ canPublish: boolean; reason?: string }>> {
-  try {
-    // 1. Auth check
-    const session = await auth();
-    if (!session?.user) {
-      return {
-        success: false,
-        error: { code: 'UNAUTHORIZED', message: 'Please sign in to continue' },
-      };
-    }
-
-    // 2. Verify ownership
-    const winery = await db.winery.findUnique({
-      where: { id: wineryId },
-      select: { userId: true },
-    });
-
-    if (!winery || winery.userId !== session.user.id) {
-      return {
-        success: false,
-        error: { code: 'FORBIDDEN', message: 'Not authorized' },
-      };
-    }
-
-    // 3. Check publishing eligibility
-    const result = await canPublishExperiences(wineryId);
-
-    return { success: true, data: result };
-  } catch (error) {
-    logError('checkCanPublish error', error, {
-      action: 'checkCanPublish',
-      wineryId,
-    });
-    return {
-      success: false,
-      error: { code: 'INTERNAL_ERROR', message: 'Failed to check status' },
     };
   }
 }

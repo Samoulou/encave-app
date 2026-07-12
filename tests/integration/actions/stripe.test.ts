@@ -19,8 +19,6 @@ vi.mock('@/server/db', () => ({
 vi.mock('@/server/services/payment.service', () => ({
   createConnectAccount: vi.fn(),
   getStripeLoginLink: vi.fn(),
-  syncStripeAccountStatus: vi.fn(),
-  canPublishExperiences: vi.fn(),
 }));
 
 // Mock env
@@ -35,24 +33,17 @@ import { db } from '@/server/db';
 import {
   createConnectAccount,
   getStripeLoginLink,
-  syncStripeAccountStatus,
-  canPublishExperiences,
 } from '@/server/services/payment.service';
 
 // Import actions after mocks
-const {
-  startStripeOnboarding,
-  handleStripeCallback,
-  getStripeDashboardLink,
-  checkCanPublish,
-} = await import('@/server/actions/stripe');
+const { startStripeOnboarding, getStripeDashboardLink } = await import(
+  '@/server/actions/stripe'
+);
 
 const mockAuth = vi.mocked(auth);
 const mockDb = vi.mocked(db);
 const mockCreateConnectAccount = vi.mocked(createConnectAccount);
 const mockGetStripeLoginLink = vi.mocked(getStripeLoginLink);
-const mockSyncStripeAccountStatus = vi.mocked(syncStripeAccountStatus);
-const mockCanPublishExperiences = vi.mocked(canPublishExperiences);
 
 describe('Stripe Server Actions', () => {
   const mockSession: Session = {
@@ -169,88 +160,6 @@ describe('Stripe Server Actions', () => {
     });
   });
 
-  describe('handleStripeCallback', () => {
-    it('returns UNAUTHORIZED when user is not logged in', async () => {
-      mockAuth.mockResolvedValue(null);
-
-      const result = await handleStripeCallback();
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.code).toBe('UNAUTHORIZED');
-      }
-    });
-
-    it('returns NOT_FOUND when winery has no Stripe account', async () => {
-      mockAuth.mockResolvedValue(mockSession);
-      mockDb.winery.findUnique.mockResolvedValue({
-        stripeAccountId: null,
-      } as never);
-
-      const result = await handleStripeCallback();
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.code).toBe('NOT_FOUND');
-      }
-    });
-
-    it('returns complete status when onboarding is finished', async () => {
-      mockAuth.mockResolvedValue(mockSession);
-      mockDb.winery.findUnique
-        .mockResolvedValueOnce({ stripeAccountId: 'acct_123' } as never)
-        .mockResolvedValueOnce({
-          stripeOnboardingComplete: true,
-          stripeDetailsSubmitted: true,
-        } as never);
-      mockSyncStripeAccountStatus.mockResolvedValue(undefined);
-
-      const result = await handleStripeCallback();
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.status).toBe('complete');
-      }
-      expect(mockSyncStripeAccountStatus).toHaveBeenCalledWith('acct_123');
-    });
-
-    it('returns incomplete status when details submitted but not complete', async () => {
-      mockAuth.mockResolvedValue(mockSession);
-      mockDb.winery.findUnique
-        .mockResolvedValueOnce({ stripeAccountId: 'acct_123' } as never)
-        .mockResolvedValueOnce({
-          stripeOnboardingComplete: false,
-          stripeDetailsSubmitted: true,
-        } as never);
-      mockSyncStripeAccountStatus.mockResolvedValue(undefined);
-
-      const result = await handleStripeCallback();
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.status).toBe('incomplete');
-      }
-    });
-
-    it('returns refresh status when onboarding not started', async () => {
-      mockAuth.mockResolvedValue(mockSession);
-      mockDb.winery.findUnique
-        .mockResolvedValueOnce({ stripeAccountId: 'acct_123' } as never)
-        .mockResolvedValueOnce({
-          stripeOnboardingComplete: false,
-          stripeDetailsSubmitted: false,
-        } as never);
-      mockSyncStripeAccountStatus.mockResolvedValue(undefined);
-
-      const result = await handleStripeCallback();
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.status).toBe('refresh');
-      }
-    });
-  });
-
   describe('getStripeDashboardLink', () => {
     it('returns UNAUTHORIZED when user is not logged in', async () => {
       mockAuth.mockResolvedValue(null);
@@ -310,64 +219,4 @@ describe('Stripe Server Actions', () => {
     });
   });
 
-  describe('checkCanPublish', () => {
-    it('returns UNAUTHORIZED when user is not logged in', async () => {
-      mockAuth.mockResolvedValue(null);
-
-      const result = await checkCanPublish('winery-123');
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.code).toBe('UNAUTHORIZED');
-      }
-    });
-
-    it('returns FORBIDDEN when user does not own the winery', async () => {
-      mockAuth.mockResolvedValue(mockSession);
-      mockDb.winery.findUnique.mockResolvedValue({
-        userId: 'other-user',
-      } as never);
-
-      const result = await checkCanPublish('winery-123');
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.code).toBe('FORBIDDEN');
-      }
-    });
-
-    it('returns canPublish true when winery is ready', async () => {
-      mockAuth.mockResolvedValue(mockSession);
-      mockDb.winery.findUnique.mockResolvedValue({
-        userId: 'user-123',
-      } as never);
-      mockCanPublishExperiences.mockResolvedValue({ canPublish: true });
-
-      const result = await checkCanPublish('winery-123');
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.canPublish).toBe(true);
-      }
-    });
-
-    it('returns canPublish false with reason when not ready', async () => {
-      mockAuth.mockResolvedValue(mockSession);
-      mockDb.winery.findUnique.mockResolvedValue({
-        userId: 'user-123',
-      } as never);
-      mockCanPublishExperiences.mockResolvedValue({
-        canPublish: false,
-        reason: 'Payment setup required',
-      });
-
-      const result = await checkCanPublish('winery-123');
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.canPublish).toBe(false);
-        expect(result.data.reason).toBe('Payment setup required');
-      }
-    });
-  });
 });

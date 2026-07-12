@@ -171,34 +171,6 @@ export async function getWineryByUserId(userId: string) {
 }
 
 /**
- * Get featured wineries for landing pages.
- * Same filter as `getPubliclyVisibleWineries`. Cached for 5 minutes.
- */
-export const getFeaturedWineries = unstable_cache(
-  async (limit: number = 6) => {
-    const wineries = await db.winery.findMany({
-      where: publiclyVisibleWineryWhere,
-      include: {
-        galleryImages: { select: { id: true } },
-        experiences: {
-          where: { status: 'PUBLISHED' },
-          select: { status: true },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-    });
-
-    return wineries.filter((w) => isWineryPubliclyVisible(w));
-  },
-  ['featured-wineries'],
-  {
-    revalidate: 300,
-    tags: ['wineries'],
-  }
-);
-
-/**
  * Get all publicly visible winery slugs (for sitemap / static generation).
  *
  * SQL-only filter: same trade-off as `getDistinctCommunes`.

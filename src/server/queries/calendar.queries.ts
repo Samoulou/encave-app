@@ -250,24 +250,6 @@ export async function getBlockedDates(
 }
 
 /**
- * Get experience types available for a winery (for legend/filter)
- */
-export async function getWineryExperienceTypes(
-  wineryId: string
-): Promise<{ type: ExperienceType; count: number }[]> {
-  const experiences = await db.experience.groupBy({
-    by: ['type'],
-    where: { wineryId },
-    _count: true,
-  });
-
-  return experiences.map((e) => ({
-    type: e.type,
-    count: e._count,
-  }));
-}
-
-/**
  * Get experiences for a winery (for blocking dates)
  */
 export async function getWineryExperiencesForBlocking(
