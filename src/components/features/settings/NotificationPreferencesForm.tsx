@@ -27,7 +27,6 @@ interface NotificationPreferencesFormProps {
     dailyDigest: boolean;
     weeklySummary: boolean;
     instantBookingAlerts: boolean;
-    unsubscribeToken: string;
   };
 }
 
