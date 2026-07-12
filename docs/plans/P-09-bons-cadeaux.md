@@ -2,7 +2,11 @@
 
 > **Statut** : en cours — **PR 1 (achat/envoi/PDF) implémentée** sur `claude/p-09-plan-prompt-doj30b` ; PR 2 (rédemption/compte/admin) à faire · **Branche** : `claude/p-09-plan-prompt-doj30b` (branche de travail imposée) · **PR** : # (2 PRs autorisées)
 >
-> **Avancement PR 1** (achat/envoi/PDF) : constants + validators, action `createGiftCardCheckoutAction` (Stripe, fee 2.50 en ligne à part, fonds plateforme), service `createGiftCardFromPayment` (ledger, idempotent), handler `GIFT_CARD_DELIVERY` au `JOB_REGISTRY`, webhook branché, PDF react-pdf 3 variantes, emails #6/#7, pages `/cadeaux` (flag OFF → 404) + `/bon/[code]`, i18n ×3, 27 tests unit verts (suite complète 1008 verts). **Reste PR 1** : build+e2e DB-backed en CI, smoke test staging. **PR 2** : rédemption au checkout (verrou + transfert Stripe), `/compte/bons-cadeaux`, `/admin/bons-cadeaux`, test concurrence/k6.
+> **Avancement PR 1** (achat/envoi/PDF) : constants + validators, action `createGiftCardCheckoutAction` (Stripe, fee 2.50 en ligne à part, fonds plateforme), service `createGiftCardFromPayment` (ledger, idempotent), handler `GIFT_CARD_DELIVERY` au `JOB_REGISTRY`, webhook branché, PDF react-pdf 3 variantes, emails #6/#7, pages `/cadeaux` (flag OFF → 404) + `/bon/[code]`, i18n ×3. ✅
+>
+> **Avancement PR 2** (rédemption/compte/admin) : moteur de rédemption `redeemGiftCardInTx` (verrou `SELECT … FOR UPDATE`, partielle plafonnée, refus DISABLED/EXPIRED-statut/nominatif-hors-X/épuisé, mouvement REDEMPTION négatif, `CHECK balance>=0`), `previewGiftRedemption`, `/admin/bons-cadeaux` (passif = SUM(balance) hors DISABLED, ledger, `disableGiftCardAction`), `/compte/bons-cadeaux` (mes bons + renvoyer), i18n ×3. ✅ 46 tests unit verts (suite complète 1021 verts).
+>
+> **Reste (gated)** : le **câblage checkout** — champ code + commit rédemption dans la transaction booking + réduction du montant Stripe + **transfert plateforme→cave** — est bloqué sur la **relecture paiements de Luca** (décision 1 : « à faire relire par Luca AVANT de coder la rédemption »). Puis build+e2e DB-backed en CI, test concurrence/k6, smoke staging, `/code-review max` + `/security-review`.
 > **Sources** : `docs/ENCAVE-V3-DELIVERY-PLAN.md` §P-09 + §3 socle · items `L-080→L-087` du backlog (E6, US-210) · specs `docs/v3/ENCAVE-V3-PAGES-EMAILS.md` (§2 `/cadeaux`, §5 `/compte/bons-cadeaux`, §7 `/admin/bons-cadeaux`, §8 emails #6/#7), `docs/v3/ENCAVE-V3-BUSINESS.md` §4, `docs/v3/ENCAVE-V3-PRD.md` US-210 + §13.2
 
 ## 1. Objectif (2 lignes max)
