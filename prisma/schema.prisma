@@ -2,13 +2,17 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  directUrl  = env("DIRECT_URL")
+  // P-06 (L-207): pg_trgm feeds the GIN indexes behind the ILIKE search
+  // (catalogue) and the case-insensitive visitorEmail lookups.
+  extensions = [pg_trgm]
 }
 
 enum UserRole {
@@ -182,6 +186,9 @@ model Winery {
 
   @@index([commune])
   @@index([status])
+  // P-06 (L-207): trigram GIN for the ILIKE '%…%' catalogue search.
+  @@index([name(ops: raw("gin_trgm_ops"))], type: Gin, map: "wineries_name_trgm_idx")
+  @@index([commune(ops: raw("gin_trgm_ops"))], type: Gin, map: "wineries_commune_trgm_idx")
   @@map("wineries")
 }
 
@@ -309,6 +316,9 @@ model Experience {
   @@index([type])
   @@index([price])
   @@index([status, type])
+  // P-06 (L-207): trigram GIN for the ILIKE '%…%' catalogue search.
+  @@index([title(ops: raw("gin_trgm_ops"))], type: Gin, map: "experiences_title_trgm_idx")
+  @@index([description(ops: raw("gin_trgm_ops"))], type: Gin, map: "experiences_description_trgm_idx")
   @@index([status, price])
   @@index([createdAt])
   @@map("experiences")
@@ -406,6 +416,13 @@ model Booking {
   @@index([experienceId, date, timeSlot, status])
   @@index([wineryId, date])
   @@index([status])
+  // P-06 (L-207): dashboard/cron scans filter by status within a winery
+  // or globally, always with a date bound.
+  @@index([wineryId, status, date])
+  @@index([status, date])
+  // P-06 (L-207): my-bookings / nLPD export / anonymization query
+  // visitorEmail with mode:'insensitive' (ILIKE) — only trigram serves it.
+  @@index([visitorEmail(ops: raw("gin_trgm_ops"))], type: Gin, map: "bookings_visitor_email_trgm_idx")
   @@index([reference])
   @@index([accessTokenHash])
   @@index([recapTokenHash])

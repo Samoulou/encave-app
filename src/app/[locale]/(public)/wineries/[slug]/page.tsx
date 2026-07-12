@@ -3,7 +3,10 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { Link } from '@/i18n/navigation';
 import { ArrowLeft, MapPin, Phone, Mail, Calendar, Wine } from 'lucide-react';
-import { getWineryBySlug } from '@/server/queries/winery.queries';
+import {
+  getWineryBySlug,
+  getPubliclyVisibleWinerySlugs,
+} from '@/server/queries/winery.queries';
 import { getExperiencesByWineryId } from '@/server/queries/experience.queries';
 import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
 import { formatCHF } from '@/lib/utils/currency';
@@ -16,12 +19,24 @@ import { IMAGE_PLACEHOLDERS } from '@/lib/image-placeholder';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { WineryLocationMap } from '@/components/features/winery/WineryLocationMap';
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import type { Locale } from '@/i18n/routing';
 import type { MapWinery } from '@/components/features/map/types';
 
 interface WineryPageProps {
   params: Promise<{ slug: string; locale: string }>;
+}
+
+// P-06 (L-202): ISR — prerendered from the visible winery slugs,
+// invalidated by BOTH tags this page consumes ('wineries' via
+// getWineryBySlug, 'experiences' via getExperiencesByWineryId), 300 s
+// TTL as safety net. dynamicParams covers wineries verified post-build.
+export const revalidate = 300;
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  const slugs = await getPubliclyVisibleWinerySlugs();
+  return slugs.map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({
@@ -31,7 +46,10 @@ export async function generateMetadata({
   const winery = await getWineryBySlug(slug);
 
   if (!winery) {
-    const t = await getTranslations('winery');
+    // Explicit locale: generateMetadata runs in its own pass, without
+    // the page's setRequestLocale — an implicit call falls back to
+    // headers() and kills static generation.
+    const t = await getTranslations({ locale, namespace: 'winery' });
     return { title: `${t('notFoundTitle')} | EnCave` };
   }
 
@@ -45,7 +63,9 @@ export async function generateMetadata({
 }
 
 export default async function WineryPage({ params }: WineryPageProps) {
-  const { slug } = await params;
+  const { slug, locale } = await params;
+  // Required for static rendering (ISR) with next-intl.
+  setRequestLocale(locale);
   const [winery, t, tastingEnabled] = await Promise.all([
     getWineryBySlug(slug),
     getTranslations('winery'),

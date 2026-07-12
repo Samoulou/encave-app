@@ -18,6 +18,11 @@ export async function generateMetadata({ params }: Props) {
   return generateHomeMetadata(locale as Locale);
 }
 
+// P-06 (L-202): with the header decoupled from auth(), nothing forces
+// per-request rendering — the home is ISR, invalidated by the
+// 'experiences' tag (searchExperiences) with a 300 s TTL safety net.
+export const revalidate = 300;
+
 export default async function Home({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);

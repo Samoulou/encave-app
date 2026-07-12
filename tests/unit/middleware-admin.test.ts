@@ -24,6 +24,11 @@ async function run(path: string, cookie?: string): Promise<NextResponse> {
   return (await middleware(request(path, cookie))) as NextResponse;
 }
 
+/**
+ * P-06 (L-212): the middleware no longer resolves the session role (the
+ * Edge→Node fetch is gone). It only short-circuits anonymous visitors;
+ * role enforcement lives in admin/layout.tsx (auth() + notFound()).
+ */
 describe('admin middleware', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
@@ -38,10 +43,8 @@ describe('admin middleware', () => {
     );
   });
 
-  it('allows ADMIN sessions through', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      Response.json({ user: { role: 'ADMIN' } })
-    );
+  it('lets cookie-bearing admin requests through without any session fetch', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
 
     const response = await run(
       '/fr/admin',
@@ -50,49 +53,26 @@ describe('admin middleware', () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get('x-middleware-rewrite')).toBeNull();
+    // The role gate is the admin layout, not an Edge fetch.
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 
-  it('rewrites authenticated non-admin users to not-found', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      Response.json({ user: { role: 'WINEMAKER' } })
-    );
-
-    const response = await run(
-      '/fr/admin/wineries',
-      'better-auth.session_token=session-token'
-    );
-
-    expect(response.status).toBe(404);
-    expect(response.headers.get('x-middleware-rewrite')).toContain(
-      '/fr/not-found'
-    );
-  });
-
-  it('fails closed to login when the session is unreadable', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(null, { status: 401 })
-    );
-
-    const response = await run(
-      '/fr/admin',
-      'better-auth.session_token=session-token'
-    );
+  it('redirects anonymous users on protected routes to login', async () => {
+    const response = await run('/fr/dashboard');
 
     expect(response.status).toBe(307);
     expect(response.headers.get('location')).toBe(
-      'http://localhost:3000/fr/login?callbackUrl=%2Ffr%2Fadmin'
+      'http://localhost:3000/fr/login?callbackUrl=%2Ffr%2Fdashboard'
     );
   });
 
-  it('does not call the session endpoint for non-admin protected routes', async () => {
+  it('never calls the session endpoint, whatever the route', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch');
 
-    const response = await run(
-      '/fr/dashboard',
-      'better-auth.session_token=session-token'
-    );
+    await run('/fr/dashboard', 'better-auth.session_token=session-token');
+    await run('/fr/admin', 'better-auth.session_token=session-token');
+    await run('/fr/experiences');
 
-    expect(response.status).toBe(200);
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 });

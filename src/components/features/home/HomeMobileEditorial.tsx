@@ -138,10 +138,7 @@ export function HomeMobileEditorial({
             <div className="rounded-full border border-white/25 bg-white/20 text-white backdrop-blur-md">
               <LocaleSwitcher triggerClassName="text-gold-100 hover:text-white" />
             </div>
-            <MobileNav
-              isAuthenticated={false}
-              triggerClassName="h-9 w-9 rounded-full border border-white/25 bg-white/20 text-white backdrop-blur-md"
-            />
+            <MobileNav triggerClassName="h-9 w-9 rounded-full border border-white/25 bg-white/20 text-white backdrop-blur-md" />
           </div>
         </div>
 
@@ -214,7 +211,9 @@ export function HomeMobileEditorial({
 
           <article className="overflow-hidden rounded-[18px] bg-white shadow-audit-elevated">
             <div className="relative aspect-[4/3]">
-              <ExperienceVisual experience={featured} priority />
+              {/* P-06: no priority — below the fold, and CSS-hidden on
+                  desktop where its preload competed with the LCP hero. */}
+              <ExperienceVisual experience={featured} />
               <button
                 className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-white/90 text-burgundy-700"
                 aria-label="Ajouter aux favoris"

@@ -6,7 +6,8 @@ import {
   JetBrains_Mono,
 } from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
-import { getMessages, setRequestLocale } from 'next-intl/server';
+import { setRequestLocale } from 'next-intl/server';
+import { getClientMessages } from '@/lib/i18n/client-messages';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import dynamic from 'next/dynamic';
 import { Toaster } from '@/components/ui/sonner';
@@ -90,8 +91,11 @@ export default async function LocaleLayout({ children, params }: Props) {
   // Enable static rendering
   setRequestLocale(locale);
 
-  // Providing all messages to the client side
-  const messages = await getMessages();
+  // P-06 (L-203): only the base client-namespace subset is serialized
+  // into the HTML here (~13 kB vs the full ~116 kB file). Route groups
+  // with more client surface (experiences, wineries, booking, protected,
+  // admin) layer their own provider with BASE + extras in their layout.
+  const messages = await getClientMessages(locale);
 
   return (
     <html lang={locale} suppressHydrationWarning>

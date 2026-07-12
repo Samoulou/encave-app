@@ -1,16 +1,20 @@
 import { getTranslations } from 'next-intl/server';
-import { auth } from '@/server/auth';
 import { Link } from '@/i18n/navigation';
-import { Button } from '@/components/ui/button';
-import { UserMenu } from '@/components/features/auth/UserMenu';
 import { NavLink } from '@/components/layout/NavLink';
 import { MobileNav } from '@/components/layout/MobileNav';
 import { MobileBackButton } from '@/components/layout/MobileBackButton';
+import { HeaderAuthSlot } from '@/components/layout/HeaderAuthSlot';
+import { HeaderRoleLink } from '@/components/layout/HeaderRoleLink';
 import { LocaleCurrencyChip } from '@/components/shared/LocaleCurrencyChip';
 
+/**
+ * Static server component (P-06 / L-202): no auth()/headers() here —
+ * that single call used to force EVERY public page into per-request
+ * rendering. Session-dependent bits live in client islands
+ * (HeaderAuthSlot, HeaderRoleLink, MobileNav's useSession), which share
+ * one better-auth store → one GET /api/auth/get-session per page load.
+ */
 export async function Header() {
-  const session = await auth();
-  const userRole = session?.user?.role;
   const t = await getTranslations('nav');
 
   return (
@@ -54,30 +58,7 @@ export async function Header() {
             >
               {t('about')}
             </NavLink>
-            {userRole === 'ADMIN' && (
-              <NavLink
-                href="/admin"
-                className="whitespace-nowrap py-[23px] text-[13px] lg:text-[13.5px]"
-              >
-                {t('admin')}
-              </NavLink>
-            )}
-            {userRole === 'WINEMAKER' && (
-              <NavLink
-                href="/dashboard"
-                className="whitespace-nowrap py-[23px] text-[13px] lg:text-[13.5px]"
-              >
-                {t('dashboard')}
-              </NavLink>
-            )}
-            {userRole === 'CLIENT' && (
-              <NavLink
-                href="/dashboard/my-bookings"
-                className="whitespace-nowrap py-[23px] text-[13px] lg:text-[13.5px]"
-              >
-                {t('myBookings')}
-              </NavLink>
-            )}
+            <HeaderRoleLink />
           </nav>
         </div>
 
@@ -90,37 +71,11 @@ export async function Header() {
 
         <div className="hidden shrink-0 items-center gap-2 md:flex lg:gap-3.5">
           <LocaleCurrencyChip />
-          {session?.user ? (
-            <UserMenu
-              userName={session.user.name}
-              userRole={session.user.role}
-              userEmail={session.user.email}
-            />
-          ) : (
-            <div className="flex items-center gap-2 lg:gap-3">
-              <Button
-                variant="outline"
-                className="h-9 rounded-full border-stone-200 px-3 text-[12.5px] font-semibold text-ink-900 lg:px-4"
-                asChild
-              >
-                <Link href="/login">{t('signIn')}</Link>
-              </Button>
-              <Button
-                className="h-9 rounded-full bg-burgundy-600 px-3 text-[12.5px] font-semibold text-white hover:bg-burgundy-700 lg:px-4"
-                asChild
-              >
-                <Link href="/register">{t('getStarted')}</Link>
-              </Button>
-            </div>
-          )}
+          <HeaderAuthSlot />
         </div>
 
         <div className="justify-self-end md:hidden">
-          <MobileNav
-            isAuthenticated={!!session?.user}
-            userName={session?.user?.name}
-            userRole={userRole}
-          />
+          <MobileNav />
         </div>
       </div>
     </header>

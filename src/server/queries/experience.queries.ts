@@ -1,5 +1,3 @@
-'use server';
-
 import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
 import { db } from '@/server/db';
@@ -9,12 +7,17 @@ import {
   OccurrenceStatus,
   Prisma,
 } from '@prisma/client';
+import { addDays } from 'date-fns';
 import { zurichTodayAsUTCDate } from '@/lib/business-rules/occurrence-expansion';
 import { isDateKey } from '@/lib/utils/date-key';
 import type { CancellationPolicy } from '@prisma/client';
 import { calculateDistance } from '@/lib/geo-utils';
 import { getLocationById } from '@/lib/constants/locations';
 import { publiclyVisibleWineryWhere } from '@/lib/business-rules/winery-visibility';
+import {
+  activeCapacityBookingWhere,
+  resolveOccurrenceCapacity,
+} from '@/lib/business-rules/capacity';
 
 export interface SearchParams {
   search?: string;
@@ -48,7 +51,6 @@ export interface ExperienceSearchResult {
   id: string;
   title: string;
   slug: string;
-  description: string;
   type: ExperienceType;
   duration: number;
   price: number;
@@ -152,6 +154,387 @@ function getOrderBy(
 
 const DEFAULT_PAGE_SIZE = 20;
 
+/** Fields shipped to the catalogue card — never `description @db.Text`
+ * or unselected columns: the whole result set crosses the RSC boundary
+ * to the client grid (P-06 / L-208). Coordinates stay: the desktop map
+ * derives its pins from the cards. */
+const SEARCH_CARD_SELECT = {
+  id: true,
+  title: true,
+  slug: true,
+  type: true,
+  duration: true,
+  price: true,
+  maxCapacity: true,
+  coverPhoto: true,
+  createdAt: true,
+  winery: {
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      commune: true,
+      latitude: true,
+      longitude: true,
+    },
+  },
+} satisfies Prisma.ExperienceSelect;
+
+/**
+ * First BOOKABLE occurrence per experience in [from, to?] — shared by
+ * the date prefilter (D3: a full slot is not a result) and the
+ * next-availability sort (P-06 / L-207). "Bookable" composes the same
+ * three predicates as the booking path: OPEN occurrence, no BlockedDate
+ * on that day (D3 — derived at read), remaining capacity > 0 via
+ * activeCapacityBookingWhere/resolveOccurrenceCapacity — never a
+ * parallel reimplementation.
+ *
+ * 4 indexed reads, no per-experience N+1: occurrences [date,status],
+ * blocked dates, seat groupBy [experienceId,date,timeSlot,status],
+ * maxCapacity of the touched experiences.
+ */
+async function mapNextBookableOccurrences(
+  from: Date,
+  to: Date | undefined,
+  experienceWhere: Prisma.ExperienceWhereInput
+): Promise<Map<string, { date: Date; startTime: string }>> {
+  const now = new Date();
+  const dateWindow = { gte: from, ...(to !== undefined && { lte: to }) };
+
+  const occurrences = await db.experienceOccurrence.findMany({
+    where: {
+      status: OccurrenceStatus.OPEN,
+      date: dateWindow,
+      experience: experienceWhere,
+    },
+    orderBy: [{ date: 'asc' }, { startTime: 'asc' }],
+    select: {
+      experienceId: true,
+      date: true,
+      startTime: true,
+      capacityOverride: true,
+    },
+  });
+  if (occurrences.length === 0) return new Map();
+
+  const experienceIds = Array.from(
+    new Set(occurrences.map((o) => o.experienceId))
+  );
+
+  const [blocked, seats, capacities] = await Promise.all([
+    db.blockedDate.findMany({
+      where: { date: dateWindow, experienceId: { in: experienceIds } },
+      select: { experienceId: true, date: true },
+    }),
+    db.booking.groupBy({
+      by: ['experienceId', 'date', 'timeSlot'],
+      where: {
+        experienceId: { in: experienceIds },
+        date: dateWindow,
+        ...activeCapacityBookingWhere(now),
+      },
+      _sum: { guestCount: true },
+    }),
+    db.experience.findMany({
+      where: { id: { in: experienceIds } },
+      select: { id: true, maxCapacity: true },
+    }),
+  ]);
+
+  const dayKey = (experienceId: string, date: Date) =>
+    `${experienceId}|${date.toISOString().slice(0, 10)}`;
+  const blockedKeys = new Set(
+    blocked.map((b) => dayKey(b.experienceId, b.date))
+  );
+  const seatsBySlot = new Map(
+    seats.map((row) => [
+      `${dayKey(row.experienceId, row.date)}|${row.timeSlot}`,
+      row._sum.guestCount ?? 0,
+    ])
+  );
+  const maxCapacityById = new Map(
+    capacities.map((exp) => [exp.id, exp.maxCapacity])
+  );
+
+  const next = new Map<string, { date: Date; startTime: string }>();
+  for (const occurrence of occurrences) {
+    if (next.has(occurrence.experienceId)) continue;
+    if (blockedKeys.has(dayKey(occurrence.experienceId, occurrence.date))) {
+      continue;
+    }
+    const capacity = resolveOccurrenceCapacity(
+      occurrence.capacityOverride,
+      maxCapacityById.get(occurrence.experienceId) ?? 0
+    );
+    const booked =
+      seatsBySlot.get(
+        `${dayKey(occurrence.experienceId, occurrence.date)}|${occurrence.startTime}`
+      ) ?? 0;
+    if (capacity - booked > 0) {
+      next.set(occurrence.experienceId, {
+        date: occurrence.date,
+        startTime: occurrence.startTime,
+      });
+    }
+  }
+  return next;
+}
+
+/**
+ * P-06 (L-212): the unstable_cache wrapper is hoisted to module level —
+ * params flow in as an ARGUMENT (part of the cache key automatically)
+ * instead of being captured by a closure rebuilt on every call.
+ */
+const cachedSearch = unstable_cache(
+  async (params: SearchParams): Promise<PaginatedSearchResult> => {
+    const page = params.page ?? 1;
+    const limit = params.limit ?? DEFAULT_PAGE_SIZE;
+    const skip = (page - 1) * limit;
+
+    // Check if location-based search
+    const hasLocationSearch = !!(
+      params.location &&
+      params.lat !== undefined &&
+      params.lng !== undefined
+    );
+    const locationName = params.location
+      ? getLocationById(params.location)?.name
+      : undefined;
+
+    const wineryWhere: Prisma.WineryWhereInput = {
+      ...publiclyVisibleWineryWhere,
+      ...(params.commune && { commune: params.commune }),
+    };
+
+    const baseWhere: Prisma.ExperienceWhereInput = {
+      status: ExperienceStatus.PUBLISHED,
+      winery: wineryWhere,
+      // Search filter — served by the P-06 trigram GIN indexes.
+      ...(params.search && {
+        OR: [
+          { title: { contains: params.search, mode: 'insensitive' } },
+          { description: { contains: params.search, mode: 'insensitive' } },
+          {
+            winery: {
+              name: { contains: params.search, mode: 'insensitive' },
+            },
+          },
+          {
+            winery: {
+              commune: { contains: params.search, mode: 'insensitive' },
+            },
+          },
+        ],
+      }),
+      // Type filter
+      ...(params.type &&
+        params.type.length > 0 && {
+          type: { in: params.type },
+        }),
+      // Price range filters
+      ...(params.minPrice !== undefined && {
+        price: { gte: params.minPrice },
+      }),
+      ...(params.maxPrice !== undefined && {
+        price: {
+          ...(params.minPrice !== undefined ? { gte: params.minPrice } : {}),
+          lte: params.maxPrice,
+        },
+      }),
+      // Capacity filter
+      ...(params.capacity !== undefined && {
+        maxCapacity: { gte: params.capacity },
+      }),
+    };
+
+    // Date window (P-05 / L-110 + P-06 / D3): keep experiences with a
+    // BOOKABLE occurrence in the window — OPEN, not blacked out AND with
+    // remaining capacity. Clamped to today (Zurich); full slots are no
+    // longer listed only to disappoint on the fiche.
+    let dateWindowIds: string[] | null = null;
+    let prefilterBookable: Map<
+      string,
+      { date: Date; startTime: string }
+    > | null = null;
+    if (
+      params.availableFrom &&
+      isDateKey(params.availableFrom) &&
+      (params.availableTo === undefined || isDateKey(params.availableTo))
+    ) {
+      const today = zurichTodayAsUTCDate();
+      const rawFrom = new Date(`${params.availableFrom}T00:00:00.000Z`);
+      const from = rawFrom.getTime() > today.getTime() ? rawFrom : today;
+      const to = new Date(
+        `${params.availableTo ?? params.availableFrom}T00:00:00.000Z`
+      );
+      if (to.getTime() < from.getTime()) {
+        dateWindowIds = [];
+      } else {
+        prefilterBookable = await mapNextBookableOccurrences(
+          from,
+          to,
+          baseWhere
+        );
+        dateWindowIds = Array.from(prefilterBookable.keys());
+      }
+    }
+
+    const where: Prisma.ExperienceWhereInput = {
+      ...baseWhere,
+      ...(dateWindowIds !== null && { id: { in: dateWindowIds } }),
+    };
+
+    // For location-based search, we fetch all matching results and sort in JS
+    // This is more efficient for small datasets (<100 wineries)
+    if (
+      hasLocationSearch &&
+      params.lat !== undefined &&
+      params.lng !== undefined
+    ) {
+      const refLat = params.lat;
+      const refLng = params.lng;
+
+      // Fetch all matching experiences with coordinates
+      const allExperiences = await db.experience.findMany({
+        where,
+        select: SEARCH_CARD_SELECT,
+      });
+
+      // Calculate distances and sort
+      const experiencesWithDistance = allExperiences.map((exp) => {
+        const distance =
+          exp.winery.latitude != null && exp.winery.longitude != null
+            ? calculateDistance(
+                refLat,
+                refLng,
+                exp.winery.latitude,
+                exp.winery.longitude
+              )
+            : null;
+        return { ...exp, distance };
+      });
+
+      // Sort by distance (nulls last)
+      experiencesWithDistance.sort((a, b) => {
+        if (a.distance === null && b.distance === null) return 0;
+        if (a.distance === null) return 1;
+        if (b.distance === null) return -1;
+        return a.distance - b.distance;
+      });
+
+      // Apply pagination
+      const total = experiencesWithDistance.length;
+      const paginatedExperiences = experiencesWithDistance.slice(
+        skip,
+        skip + limit
+      );
+
+      return {
+        experiences: paginatedExperiences,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        locationName,
+        hasLocationSearch: true,
+      };
+    }
+
+    // Next-availability sort (P-05 / L-110, reworked P-06 / L-207): the
+    // order comes from the bookable-occurrence map over a 3-month
+    // horizon (the materialization window); only IDS are sorted and
+    // sliced — the full rows of the page are fetched afterwards. No
+    // more loading every matching row to sort in JS.
+    if (params.sort === 'next_availability') {
+      // With an active date filter, sort INSIDE the user's window using
+      // the prefilter's map — no second occurrence scan, and no sorting
+      // by a slot outside the window the user asked for. Otherwise the
+      // horizon is the 3-month materialization window.
+      const today = zurichTodayAsUTCDate();
+      const candidatesPromise = db.experience.findMany({
+        where,
+        select: { id: true, createdAt: true },
+      });
+      const [candidates, bookable] = await Promise.all([
+        candidatesPromise,
+        prefilterBookable !== null
+          ? Promise.resolve(prefilterBookable)
+          : mapNextBookableOccurrences(today, addDays(today, 92), where),
+      ]);
+
+      const ordered = [...candidates].sort((a, b) => {
+        const nextA = bookable.get(a.id) ?? null;
+        const nextB = bookable.get(b.id) ?? null;
+        if (nextA === null && nextB === null) {
+          return b.createdAt.getTime() - a.createdAt.getTime();
+        }
+        if (nextA === null) return 1;
+        if (nextB === null) return -1;
+        return (
+          nextA.date.getTime() - nextB.date.getTime() ||
+          nextA.startTime.localeCompare(nextB.startTime)
+        );
+      });
+
+      const total = ordered.length;
+      const pageIds = ordered.slice(skip, skip + limit).map((c) => c.id);
+      const rows = await db.experience.findMany({
+        where: { id: { in: pageIds } },
+        select: SEARCH_CARD_SELECT,
+      });
+      const rowById = new Map(rows.map((row) => [row.id, row]));
+
+      return {
+        experiences: pageIds.flatMap((id) => {
+          const row = rowById.get(id);
+          if (!row) return [];
+          return [
+            {
+              ...row,
+              distance: undefined,
+              nextOccurrence: bookable.get(id) ?? null,
+            },
+          ];
+        }),
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        hasLocationSearch: false,
+      };
+    }
+
+    // Standard search without location
+    const [experiences, total] = await Promise.all([
+      db.experience.findMany({
+        where,
+        select: SEARCH_CARD_SELECT,
+        orderBy: getOrderBy(params.sort),
+        skip,
+        take: limit,
+      }),
+      db.experience.count({ where }),
+    ]);
+
+    return {
+      experiences: experiences.map((exp) => ({
+        ...exp,
+        distance: undefined,
+      })),
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      hasLocationSearch: false,
+    };
+  },
+  ['search-experiences'],
+  {
+    revalidate: 120, // 2 minutes
+    tags: ['experiences'],
+  }
+);
+
 /**
  * Search experiences with filters and pagination.
  * Supports location-based proximity sorting.
@@ -160,310 +543,7 @@ const DEFAULT_PAGE_SIZE = 20;
 export async function searchExperiences(
   params: SearchParams
 ): Promise<PaginatedSearchResult> {
-  // Create a cache key based on params
-  const cacheKey = JSON.stringify(params);
-
-  const cachedSearch = unstable_cache(
-    async () => {
-      const page = params.page ?? 1;
-      const limit = params.limit ?? DEFAULT_PAGE_SIZE;
-      const skip = (page - 1) * limit;
-
-      // Check if location-based search
-      const hasLocationSearch = !!(
-        params.location &&
-        params.lat !== undefined &&
-        params.lng !== undefined
-      );
-      const locationName = params.location
-        ? getLocationById(params.location)?.name
-        : undefined;
-
-      const wineryWhere: Prisma.WineryWhereInput = {
-        ...publiclyVisibleWineryWhere,
-        ...(params.commune && { commune: params.commune }),
-      };
-
-      // Date window (P-05 / L-110): keep experiences with an OPEN
-      // occurrence in the window, clamped to today (Zurich) — past dates
-      // never match. BlockedDate is derived at read (D3): an OPEN
-      // occurrence on a blocked date is NOT bookable, and that per-date
-      // correlation can't be expressed in one nested Prisma filter — so
-      // we prefilter ids with two indexed reads. null = no date filter.
-      let dateWindowIds: string[] | null = null;
-      if (
-        params.availableFrom &&
-        isDateKey(params.availableFrom) &&
-        (params.availableTo === undefined || isDateKey(params.availableTo))
-      ) {
-        const today = zurichTodayAsUTCDate();
-        const rawFrom = new Date(`${params.availableFrom}T00:00:00.000Z`);
-        const from = rawFrom.getTime() > today.getTime() ? rawFrom : today;
-        const to = new Date(
-          `${params.availableTo ?? params.availableFrom}T00:00:00.000Z`
-        );
-        if (to.getTime() < from.getTime()) {
-          dateWindowIds = [];
-        } else {
-          const [open, blocked] = await Promise.all([
-            db.experienceOccurrence.findMany({
-              where: {
-                status: OccurrenceStatus.OPEN,
-                date: { gte: from, lte: to },
-                experience: { status: ExperienceStatus.PUBLISHED },
-              },
-              select: { experienceId: true, date: true },
-            }),
-            db.blockedDate.findMany({
-              where: { date: { gte: from, lte: to } },
-              select: { experienceId: true, date: true },
-            }),
-          ]);
-          const blockedKeys = new Set(
-            blocked.map(
-              (b) => `${b.experienceId}|${b.date.toISOString().slice(0, 10)}`
-            )
-          );
-          dateWindowIds = Array.from(
-            new Set(
-              open
-                .filter(
-                  (o) =>
-                    !blockedKeys.has(
-                      `${o.experienceId}|${o.date.toISOString().slice(0, 10)}`
-                    )
-                )
-                .map((o) => o.experienceId)
-            )
-          );
-        }
-      }
-
-      const where: Prisma.ExperienceWhereInput = {
-        status: ExperienceStatus.PUBLISHED,
-        winery: wineryWhere,
-        // Search filter
-        ...(params.search && {
-          OR: [
-            { title: { contains: params.search, mode: 'insensitive' } },
-            { description: { contains: params.search, mode: 'insensitive' } },
-            {
-              winery: {
-                name: { contains: params.search, mode: 'insensitive' },
-              },
-            },
-            {
-              winery: {
-                commune: { contains: params.search, mode: 'insensitive' },
-              },
-            },
-          ],
-        }),
-        // Type filter
-        ...(params.type &&
-          params.type.length > 0 && {
-            type: { in: params.type },
-          }),
-        // Price range filters
-        ...(params.minPrice !== undefined && {
-          price: { gte: params.minPrice },
-        }),
-        ...(params.maxPrice !== undefined && {
-          price: {
-            ...(params.minPrice !== undefined ? { gte: params.minPrice } : {}),
-            lte: params.maxPrice,
-          },
-        }),
-        // Capacity filter
-        ...(params.capacity !== undefined && {
-          maxCapacity: { gte: params.capacity },
-        }),
-        // Date window (P-05 / L-110): exact prefilter computed above.
-        ...(dateWindowIds !== null && { id: { in: dateWindowIds } }),
-      };
-
-      // For location-based search, we fetch all matching results and sort in JS
-      // This is more efficient for small datasets (<100 wineries)
-      if (
-        hasLocationSearch &&
-        params.lat !== undefined &&
-        params.lng !== undefined
-      ) {
-        const refLat = params.lat;
-        const refLng = params.lng;
-
-        // Fetch all matching experiences with coordinates
-        const allExperiences = await db.experience.findMany({
-          where,
-          include: {
-            winery: {
-              select: {
-                id: true,
-                name: true,
-                slug: true,
-                commune: true,
-                latitude: true,
-                longitude: true,
-              },
-            },
-          },
-        });
-
-        // Calculate distances and sort
-        const experiencesWithDistance = allExperiences.map((exp) => {
-          const distance =
-            exp.winery.latitude != null && exp.winery.longitude != null
-              ? calculateDistance(
-                  refLat,
-                  refLng,
-                  exp.winery.latitude,
-                  exp.winery.longitude
-                )
-              : null;
-          return { ...exp, distance };
-        });
-
-        // Sort by distance (nulls last)
-        experiencesWithDistance.sort((a, b) => {
-          if (a.distance === null && b.distance === null) return 0;
-          if (a.distance === null) return 1;
-          if (b.distance === null) return -1;
-          return a.distance - b.distance;
-        });
-
-        // Apply pagination
-        const total = experiencesWithDistance.length;
-        const paginatedExperiences = experiencesWithDistance.slice(
-          skip,
-          skip + limit
-        );
-
-        return {
-          experiences: paginatedExperiences,
-          total,
-          page,
-          limit,
-          totalPages: Math.ceil(total / limit),
-          locationName,
-          hasLocationSearch: true,
-        };
-      }
-
-      // Next-availability sort (P-05 / L-110): order by the soonest OPEN
-      // future occurrence, nulls last. Ordered in JS like the distance
-      // sort — Prisma cannot order by a relation MIN. Dataset is bounded
-      // (published experiences); index refinement tracked in L-207/P-06.
-      if (params.sort === 'next_availability') {
-        const today = zurichTodayAsUTCDate();
-        const allExperiences = await db.experience.findMany({
-          where,
-          include: {
-            winery: {
-              select: {
-                id: true,
-                name: true,
-                slug: true,
-                commune: true,
-                latitude: true,
-                longitude: true,
-              },
-            },
-            // take 5, not 1: the pick below skips blacked-out dates
-            // (D3 — derived at read). >5 consecutive blocked OPEN
-            // occurrences degrades to null (sorted last), acceptable.
-            occurrences: {
-              where: { status: OccurrenceStatus.OPEN, date: { gte: today } },
-              orderBy: [{ date: 'asc' }, { startTime: 'asc' }],
-              take: 5,
-              select: { date: true, startTime: true },
-            },
-            blockedDates: {
-              where: { date: { gte: today } },
-              select: { date: true },
-            },
-          },
-        });
-
-        const withNext = allExperiences.map((exp) => {
-          const { occurrences, blockedDates, ...rest } = exp;
-          const blockedKeys = new Set(
-            blockedDates.map((b) => b.date.toISOString().slice(0, 10))
-          );
-          return {
-            ...rest,
-            distance: undefined,
-            nextOccurrence:
-              occurrences.find(
-                (o) => !blockedKeys.has(o.date.toISOString().slice(0, 10))
-              ) ?? null,
-          };
-        });
-        withNext.sort((a, b) => {
-          if (a.nextOccurrence === null && b.nextOccurrence === null) {
-            return b.createdAt.getTime() - a.createdAt.getTime();
-          }
-          if (a.nextOccurrence === null) return 1;
-          if (b.nextOccurrence === null) return -1;
-          return (
-            a.nextOccurrence.date.getTime() - b.nextOccurrence.date.getTime() ||
-            a.nextOccurrence.startTime.localeCompare(b.nextOccurrence.startTime)
-          );
-        });
-
-        const total = withNext.length;
-        return {
-          experiences: withNext.slice(skip, skip + limit),
-          total,
-          page,
-          limit,
-          totalPages: Math.ceil(total / limit),
-          hasLocationSearch: false,
-        };
-      }
-
-      // Standard search without location
-      const [experiences, total] = await Promise.all([
-        db.experience.findMany({
-          where,
-          include: {
-            winery: {
-              select: {
-                id: true,
-                name: true,
-                slug: true,
-                commune: true,
-                latitude: true,
-                longitude: true,
-              },
-            },
-          },
-          orderBy: getOrderBy(params.sort),
-          skip,
-          take: limit,
-        }),
-        db.experience.count({ where }),
-      ]);
-
-      return {
-        experiences: experiences.map((exp) => ({
-          ...exp,
-          distance: undefined,
-        })),
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-        hasLocationSearch: false,
-      };
-    },
-    ['search-experiences', cacheKey],
-    {
-      revalidate: 120, // 2 minutes
-      tags: ['experiences'],
-    }
-  );
-
-  return cachedSearch();
+  return cachedSearch(params);
 }
 
 /**

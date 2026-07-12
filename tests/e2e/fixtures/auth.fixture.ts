@@ -166,6 +166,27 @@ async function logout(page: Page): Promise<void> {
  */
 export const test = base.extend<AuthFixtures>({
   /**
+   * i18n guard (P-06 / L-203): client providers ship namespace subsets —
+   * a missed namespace surfaces as an IntlError in the browser console.
+   * Fail the test instead of silently rendering raw keys.
+   */
+  page: async ({ page }, use) => {
+    const intlErrors: string[] = [];
+    page.on('console', (message) => {
+      const text = message.text();
+      if (text.includes('IntlError') || text.includes('MISSING_MESSAGE')) {
+        intlErrors.push(text);
+      }
+    });
+    await use(page);
+    if (intlErrors.length > 0) {
+      throw new Error(
+        `IntlError(s) in browser console (missing client namespace?):\n${intlErrors.join('\n')}`
+      );
+    }
+  },
+
+  /**
    * Page with authenticated guest user
    */
   authenticatedGuestPage: async ({ page }, use) => {

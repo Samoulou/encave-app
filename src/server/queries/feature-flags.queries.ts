@@ -8,8 +8,10 @@ export const FEATURE_FLAGS_CACHE_TAG = 'feature-flags';
 /**
  * Current state of every registered flag. Missing rows fall back to the
  * registry default (OFF). Cached 60s — the admin toggle revalidates the
- * tag, so an admin kill-switch is effective immediately; a direct SQL
- * flip takes at most 60s (kill-switch DoD of P-03).
+ * tag, which since P-06 ALSO purges the ISR pages that consumed it
+ * (verified: fiche flips <1 min — the kill-switch DoD path). A direct
+ * SQL flip without the toggle worst-cases at ~60s data cache + the
+ * page's revalidate TTL (300s): use the admin toggle in an incident.
  */
 export const getFeatureFlags = cache(
   unstable_cache(

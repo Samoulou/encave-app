@@ -1358,7 +1358,8 @@
       "addPerson": "Ajouter une personne",
       "removePerson": "Retirer une personne",
       "explore": "Explorer"
-    }
+    },
+    "resultsCount": "Valais · {count, plural, =0 {aucune expérience} one {# expérience} other {# expériences}}"
   },
   "errors": {
     "somethingWentWrong": "Une erreur s'est produite!",
@@ -1926,11 +1927,6 @@
     "region": "Valais, Suisse",
     "securePayment": "Paiement sécurisé",
     "wineExperiences": "Expériences viticoles valaisannes"
-  },
-  "healthStatus": {
-    "serviceUnavailable": "Service indisponible",
-    "checkingStatus": "Vérification en cours...",
-    "allSystemsOperational": "Tous les systèmes opérationnels"
   },
   "clientDashboard": {
     "nav": {

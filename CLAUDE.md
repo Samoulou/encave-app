@@ -109,7 +109,7 @@ Component → Server Action → Service/Query → DB
 
 ## Server Actions Pattern
 
-1. `await auth()` → return UNAUTHORIZED if no session
+1. `await auth()` → return UNAUTHORIZED if no session — EXCEPTION: read-only actions over PUBLIC data (e.g. `searchExperiencesAction`) skip auth but MUST be rate-limited per IP and validate input with safeParse
 2. `safeParse()` input with schema from `src/lib/validators/`
 3. DB ops
 4. Cache invalidation with `revalidateTag()`
@@ -122,6 +122,7 @@ Component → Server Action → Service/Query → DB
 - Combined: `cache(unstable_cache(fn, [key], { tags }))` for both
 - Prefer `revalidateTag()` for granular invalidation. `revalidatePath()` only for full page-tree refresh. Never both for same data
 - `invalidateExperienceCaches(winerySlug?, experienceSlug?)` — reuse for experience cache invalidation
+- **Public pages are ISR since P-06** (home, catalogue, fiches, wineries — `revalidate = 300` + tags): the tags `'experiences'`/`'wineries'` purge BOTH the data cache and the Full Route Cache of pages that consumed them. The two invalidation helpers are tags-only — never add `revalidatePath` on public routes (thrash), and never put `auth()`/`headers()`/`cookies()` in a public page tree (kills ISR; session lives in client islands, see `HeaderAuthSlot`)
 
 ## Utility Libraries (use these, don't reinvent)
 
@@ -224,7 +225,7 @@ V3 target (see `docs/v3/ENCAVE-V3-BUSINESS.md` — build incrementally, feature-
 - **Requests (sur-mesure)**: client form → winery offer (text, total price, expiry) → payment link → tickets. Visible 48h SLA; single automatic reminder before offer expiry, then closure
 - **Anti no-show**: opt-in per winery, default 15 CHF/person (configurable 0–50). Free/pay-on-site offers take a card imprint via Stripe SetupIntent (no charge at booking). Charge triggered manually by the winemaker — never automatic — with client notification citing the accepted policy
 - **Tasting sheet** — ✅ shipped P-07 (PR #102), flag `TASTING_SHEET`: per-SESSION sheet in `OccurrenceDetailSheet` fans out to `BookingWine`; J+2 email via `ScheduledJob` (`TASTING_RECAP`, one per booking, `runAt = max(session end + 48h, fill time)`); tokenized order page `/booking/[id]/commande` (`recapTokenHash`); 21h empty-sheet reminder (double UTC cron + Zurich-hour guard); the generic J+1 follow-up is skipped when a recap is armed (PENDING/PROCESSING/DONE). Open/click per winery via Resend webhook (`RESEND_WEBHOOK_SECRET`)
-- **Espace encaveur** — ✅ shipped P-13 (PR #103): `/dashboard` is the WINEMAKER landing (« Aujourd'hui » — real 30d fill rate, Zurich-day anchored); `/dashboard/payouts` reads real Stripe payouts (correlation py_ payment → `source_transfer` → platform transfer → `payment_intent` → `Booking.stripePaymentIntentId`); monthly statement PDF via `GET /api/dashboard/statements/[month]`; scan is offline-tolerant in day mode (preloaded hash list + localStorage queue scoped per user, `scannedAt` replay bounded 48h — online scans always hit the server); email #18 anti-spam via `Winery.stripeActionDueHash`/`stripeActionEmailAt`
+- **Espace encaveur** — ✅ shipped P-13 (PR #103): `/dashboard` is the WINEMAKER landing (« Aujourd'hui » — real 30d fill rate, Zurich-day anchored); `/dashboard/payouts` reads real Stripe payouts (correlation py\_ payment → `source_transfer` → platform transfer → `payment_intent` → `Booking.stripePaymentIntentId`); monthly statement PDF via `GET /api/dashboard/statements/[month]`; scan is offline-tolerant in day mode (preloaded hash list + localStorage queue scoped per user, `scannedAt` replay bounded 48h — online scans always hit the server); email #18 anti-spam via `Winery.stripeActionDueHash`/`stripeActionEmailAt`
 - **Collective events**: a Slot experience can have participating wineries (logos, mini-program) + ONE paid organizer. Central ticketing, multi-point scanning. No automatic multi-winery split at launch
 
 ### Experience Rules
@@ -250,7 +251,7 @@ If you find unused twins along the way, propose removing them (don't leave them 
 
 ## Known Debt & Pitfalls (audited 2026-07-09)
 
-Verified against `dev` — full detail in `docs/ENCAVE-V3-GAP-ANALYSIS.md` §10 and `docs/ENCAVE-V3-PERF-AUDIT.md` (measured: home mobile Lighthouse 48, LCP 9.8s vs NFR 95/1.5s — fixes tracked as backlog epic E15). Don't rediscover these; fix them when touching the area:
+Verified against `dev` — full detail in `docs/ENCAVE-V3-GAP-ANALYSIS.md` §10 and `docs/ENCAVE-V3-PERF-AUDIT.md` (was: home mobile Lighthouse 48, LCP 9.8s vs NFR 95/1.5s; after P-01 + P-06 all OBSERVED metrics are green locally — home LCP 706 ms, HTML −33% to −69%, 173 ISR routes — but the local Lantern SIMULATION still reads home 73: known artifact, see `docs/plans/P-06-performance.md`; NFR truth = staging/CDN, tooled gate = Lighthouse CI in P-16/L-182). Don't rediscover these; fix them when touching the area:
 
 - The confirmation email is sent WITHOUT `bookingId`/`accessToken` (`checkout-confirmation.service.ts`) → no QR attachment, ticket button links to the homepage, the guest magic link is never delivered. Same bug in `resendConfirmationEmail`
 - ~~Only 2 of 5 cron routes scheduled~~ fixed: all 9 cron routes are in `vercel.json` (P-07 added `process-scheduled-jobs` hourly + `tasting-sheet-reminder` at 19:00/20:00 UTC with a 21h-Zurich guard)

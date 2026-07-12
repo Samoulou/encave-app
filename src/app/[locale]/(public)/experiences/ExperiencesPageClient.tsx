@@ -1,8 +1,13 @@
 'use client';
 
 import * as React from 'react';
-import { useCallback, useMemo, useTransition, useOptimistic } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useCallback, useEffect, useMemo } from 'react';
+import {
+  useQueryStates,
+  parseAsString,
+  parseAsInteger,
+  parseAsFloat,
+} from 'nuqs';
 import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { ExperienceType } from '@prisma/client';
@@ -22,6 +27,11 @@ import {
   parseExperienceTypes,
   type CatalogSort,
 } from '@/lib/utils/search-params';
+import {
+  searchExperiencesAction,
+  type ExperienceSearchData,
+} from '@/server/actions/experience-search';
+import type { ExperienceSearchInput } from '@/lib/validators/experienceSearch';
 import type { ExperienceSearchResult } from '@/server/queries/experience.queries';
 import type { MapWinery } from '@/components/features/map/types';
 
@@ -60,6 +70,14 @@ interface FilterState {
   quandFin: string | null;
 }
 
+/**
+ * P-06 (D2): the /experiences page is STATIC — it always serves the
+ * default dataset from the CDN. This client is the single owner of
+ * filtering: the URL stays the source of truth (nuqs, shallow — no
+ * server navigation), and any non-default state fetches results through
+ * `searchExperiencesAction` in a transition. Resetting to defaults
+ * restores the server-rendered dataset without a network call.
+ */
 export function ExperiencesPageClient({
   initialExperiences,
   communes,
@@ -67,143 +85,203 @@ export function ExperiencesPageClient({
   locationSearch,
 }: ExperiencesPageClientProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const tSearch = useTranslations('search');
-  const currentSearchParams = useMemo(
-    () => searchParams ?? new URLSearchParams(),
-    [searchParams]
+  // Explicit fetch state: React 18 useTransition stops tracking an async
+  // callback at its first await — isFetching would drop before the
+  // network answer and the grid would never dim (P-06 review).
+  const [isFetching, setIsFetching] = React.useState(false);
+  // A failed search (rate limit, network, server) must be visible: the
+  // grid keeps the PREVIOUS dataset while the URL claims new filters.
+  const [fetchFailed, setFetchFailed] = React.useState(false);
+
+  const [urlState, setUrlState] = useQueryStates(
+    {
+      q: parseAsString,
+      type: parseAsString,
+      commune: parseAsString,
+      minPrice: parseAsInteger,
+      maxPrice: parseAsInteger,
+      capacity: parseAsInteger,
+      sort: parseAsString,
+      page: parseAsInteger,
+      quand: parseAsString,
+      quand_fin: parseAsString,
+      location: parseAsString,
+      lat: parseAsFloat,
+      lng: parseAsFloat,
+    },
+    // 'replace': the debounced free-text commits would otherwise stack
+    // one history entry per keystroke batch — Back must leave the page,
+    // not unwind filter states (each of which re-fires the search).
+    { history: 'replace' }
   );
-  const [isPending, startTransition] = useTransition();
 
-  // Parse current URL params (server-confirmed state)
-  const serverParams: FilterState = {
-    search: currentSearchParams.get('q') || '',
-    types: parseExperienceTypes(currentSearchParams.get('type')),
-    commune: currentSearchParams.get('commune'),
-    minPrice: parseNumber(currentSearchParams.get('minPrice')),
-    maxPrice: parseNumber(currentSearchParams.get('maxPrice')),
-    capacity: parseNumber(currentSearchParams.get('capacity')),
-    sort: parseCatalogSort(currentSearchParams.get('sort')),
-    quand: parseDateKeyParam(currentSearchParams.get('quand')) ?? null,
-    quandFin: parseDateKeyParam(currentSearchParams.get('quand_fin')) ?? null,
-  };
+  const hasLocationSearch = Boolean(
+    urlState.location && urlState.lat !== null && urlState.lng !== null
+  );
 
-  // Optimistic state for instant UI updates
-  const [optimisticFilters, setOptimisticFilters] = useOptimistic(serverParams);
+  // Canonical filter state derived from the URL.
+  const currentParams: FilterState = useMemo(() => {
+    const quand = parseDateKeyParam(urlState.quand ?? undefined) ?? null;
+    const rawQuandFin =
+      parseDateKeyParam(urlState.quand_fin ?? undefined) ?? null;
+    return {
+      search: urlState.q ?? '',
+      types: parseExperienceTypes(urlState.type),
+      commune: urlState.commune,
+      minPrice: urlState.minPrice,
+      maxPrice: urlState.maxPrice,
+      capacity: urlState.capacity,
+      sort: parseCatalogSort(urlState.sort),
+      quand,
+      quandFin:
+        quand !== null && rawQuandFin !== null && rawQuandFin >= quand
+          ? rawQuandFin
+          : null,
+    };
+  }, [urlState]);
 
-  // Use optimistic values for display
-  const currentParams = optimisticFilters;
+  const isDefaultState =
+    !currentParams.search &&
+    currentParams.types.length === 0 &&
+    currentParams.commune === null &&
+    currentParams.minPrice === null &&
+    currentParams.maxPrice === null &&
+    currentParams.capacity === null &&
+    currentParams.sort === DEFAULT_CATALOG_SORT &&
+    currentParams.quand === null &&
+    (urlState.page ?? 1) <= 1 &&
+    !hasLocationSearch;
+
+  const initialData: ExperienceSearchData = useMemo(
+    () => ({
+      experiences: initialExperiences,
+      pagination,
+      locationSearch,
+    }),
+    [initialExperiences, pagination, locationSearch]
+  );
+
+  const [results, setResults] =
+    React.useState<ExperienceSearchData>(initialData);
+  // Displayed data derives from state: the DEFAULT view always reads the
+  // (possibly re-rendered, fresher) server props directly — no copy of
+  // props into state to go stale (P-06 review).
+  const displayData = isDefaultState ? initialData : results;
+
+  // One fetch per URL-state change: covers deep links on mount, every
+  // filter interaction, and pagination. The URL is the request.
+  const requestKey = JSON.stringify(urlState);
+  useEffect(() => {
+    if (isDefaultState) return;
+
+    const input: ExperienceSearchInput = {
+      search: currentParams.search || undefined,
+      type: currentParams.types.length > 0 ? currentParams.types : undefined,
+      commune: currentParams.commune ?? undefined,
+      minPrice: currentParams.minPrice ?? undefined,
+      maxPrice: currentParams.maxPrice ?? undefined,
+      capacity: currentParams.capacity ?? undefined,
+      sort:
+        currentParams.sort === 'distance' && !hasLocationSearch
+          ? DEFAULT_CATALOG_SORT
+          : currentParams.sort,
+      page: Math.max(urlState.page ?? 1, 1),
+      availableFrom: currentParams.quand ?? undefined,
+      availableTo: currentParams.quandFin ?? undefined,
+      location: urlState.location ?? undefined,
+      lat: urlState.lat ?? undefined,
+      lng: urlState.lng ?? undefined,
+    };
+
+    // Structural stale-response guard: each effect run cancels the
+    // previous one — no key comparison, no A→B→A hole.
+    let stale = false;
+    setIsFetching(true);
+    void (async () => {
+      const result = await searchExperiencesAction(input);
+      if (stale) return;
+      setIsFetching(false);
+      if (result.success) {
+        setResults(result.data);
+        setFetchFailed(false);
+      } else {
+        // Previous results stay visible; the notice tells the user the
+        // filters were NOT applied. Next URL change retries.
+        setFetchFailed(true);
+      }
+    })();
+    return () => {
+      stale = true;
+      setIsFetching(false);
+    };
+    // isDefaultState/currentParams/hasLocationSearch all derive from
+    // urlState, which requestKey serializes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requestKey]);
 
   // Mobile filter state
   const [showMobileFilters, setShowMobileFilters] = React.useState(false);
 
-  // Update URL with new params - optimistic updates happen immediately
-  const updateParams = useCallback(
-    (
-      updates: Record<string, string | string[] | null>,
-      optimisticUpdate?: Partial<FilterState>
-    ) => {
-      // Step 1: Update UI IMMEDIATELY (optimistic)
-      if (optimisticUpdate) {
-        setOptimisticFilters((prev) => ({ ...prev, ...optimisticUpdate }));
-      }
-
-      // Step 2: Sync with server in background (non-blocking)
-      startTransition(() => {
-        const params = new URLSearchParams(currentSearchParams.toString());
-
-        Object.entries(updates).forEach(([key, value]) => {
-          if (
-            value === null ||
-            value === '' ||
-            (Array.isArray(value) && value.length === 0)
-          ) {
-            params.delete(key);
-          } else if (Array.isArray(value)) {
-            params.set(key, value.join(','));
-          } else {
-            params.set(key, value);
-          }
-        });
-
-        router.push(`/experiences?${params.toString()}`, { scroll: false });
-      });
-    },
-    [router, currentSearchParams, setOptimisticFilters]
-  );
-
-  // Handler functions - reset page on filter changes
-  // Each handler updates UI optimistically before syncing with server
+  // Handler functions — every filter change resets the page.
   const handleSearchChange = (value: string) => {
-    updateParams({ q: value || null, page: null }, { search: value });
+    void setUrlState({ q: value || null, page: null });
   };
 
   const handleTypesChange = (types: ExperienceType[]) => {
-    updateParams(
-      { type: types.length > 0 ? types : null, page: null },
-      { types }
-    );
+    void setUrlState({
+      type: types.length > 0 ? types.join(',') : null,
+      page: null,
+    });
   };
 
   const handleCommuneChange = (commune: string | null) => {
-    updateParams({ commune, page: null }, { commune });
+    void setUrlState({ commune, page: null });
   };
 
   const handleMinPriceChange = (price: number | null) => {
-    updateParams(
-      { minPrice: price !== null ? String(price) : null, page: null },
-      { minPrice: price }
-    );
+    void setUrlState({ minPrice: price, page: null });
   };
 
   const handleMaxPriceChange = (price: number | null) => {
-    updateParams(
-      { maxPrice: price !== null ? String(price) : null, page: null },
-      { maxPrice: price }
-    );
+    void setUrlState({ maxPrice: price, page: null });
   };
 
   const handleCapacityChange = (capacity: number | null) => {
-    updateParams(
-      { capacity: capacity !== null ? String(capacity) : null, page: null },
-      { capacity }
-    );
+    void setUrlState({ capacity, page: null });
   };
 
   const handleSortChange = (sort: SortOption) => {
-    updateParams(
-      { sort: sort !== DEFAULT_CATALOG_SORT ? sort : null, page: null },
-      { sort }
-    );
+    void setUrlState({
+      sort: sort !== DEFAULT_CATALOG_SORT ? sort : null,
+      page: null,
+    });
   };
 
   const handleDateChange = (quand: string | null) => {
     // Picking a single date replaces any weekend range (quand_fin).
-    updateParams(
-      { quand, quand_fin: null, page: null },
-      { quand, quandFin: null }
-    );
+    void setUrlState({ quand, quand_fin: null, page: null });
   };
 
   const handlePageChange = (page: number) => {
-    updateParams({ page: page > 1 ? String(page) : null });
+    void setUrlState({ page: page > 1 ? page : null });
   };
 
   const handleClearFilters = () => {
-    // Reset optimistic state to defaults
-    setOptimisticFilters({
-      search: '',
-      types: [],
+    void setUrlState({
+      q: null,
+      type: null,
       commune: null,
       minPrice: null,
       maxPrice: null,
       capacity: null,
-      sort: DEFAULT_CATALOG_SORT,
+      sort: null,
+      page: null,
       quand: null,
-      quandFin: null,
-    });
-    startTransition(() => {
-      router.push('/experiences', { scroll: false });
+      quand_fin: null,
+      location: null,
+      lat: null,
+      lng: null,
     });
   };
 
@@ -232,9 +310,10 @@ export function ExperiencesPageClient({
     distance: tSearch('sort.distance'),
   };
   const visibleSortOptions = (Object.keys(sortLabels) as SortOption[]).filter(
-    (option) => option !== 'distance' || locationSearch.hasLocationSearch
+    (option) =>
+      option !== 'distance' || displayData.locationSearch.hasLocationSearch
   );
-  const mapWineries = buildMapWineries(initialExperiences);
+  const mapWineries = buildMapWineries(displayData.experiences);
 
   return (
     <>
@@ -291,15 +370,19 @@ export function ExperiencesPageClient({
             <SearchBar
               value={currentParams.search}
               onChange={handleSearchChange}
-              isPending={isPending}
+              isPending={isFetching}
               className="[&_input]:border-0 [&_input]:bg-cream-50 [&_input]:shadow-none"
             />
           </div>
 
+          {fetchFailed && !isFetching && <SearchErrorNotice />}
+
           <div className="mb-5 flex items-center justify-between">
             <div>
               <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-burgundy-700">
-                Valais · {pagination.total} expériences
+                {tSearch('resultsCount', {
+                  count: displayData.pagination.total,
+                })}
               </p>
               <h2 className="mt-1 font-display text-[30px] font-semibold text-ink-900">
                 Expériences disponibles
@@ -327,11 +410,11 @@ export function ExperiencesPageClient({
           <div
             className={cn(
               'grid gap-6 transition-opacity duration-150 xl:grid-cols-2',
-              isPending && 'pointer-events-none opacity-70'
+              isFetching && 'pointer-events-none opacity-70'
             )}
           >
-            {initialExperiences.length > 0 ? (
-              initialExperiences.map((experience, index) => (
+            {displayData.experiences.length > 0 ? (
+              displayData.experiences.map((experience, index) => (
                 <ExperienceCard
                   key={experience.id}
                   experience={experience}
@@ -370,10 +453,11 @@ export function ExperiencesPageClient({
           handleSortChange={handleSortChange}
           handlePageChange={handlePageChange}
           communes={communes}
-          initialExperiences={initialExperiences}
-          pagination={pagination}
-          locationSearch={locationSearch}
-          isPending={isPending}
+          experiences={displayData.experiences}
+          pagination={displayData.pagination}
+          locationSearch={displayData.locationSearch}
+          isFetching={isFetching}
+          fetchFailed={fetchFailed}
         />
       </div>
     </>
@@ -396,10 +480,11 @@ function MobileListing({
   handleSortChange,
   handlePageChange,
   communes,
-  initialExperiences,
+  experiences,
   pagination,
   locationSearch,
-  isPending,
+  isFetching,
+  fetchFailed,
 }: {
   currentParams: FilterState;
   showMobileFilters: boolean;
@@ -416,10 +501,11 @@ function MobileListing({
   handleSortChange: (_sort: SortOption) => void;
   handlePageChange: (_page: number) => void;
   communes: string[];
-  initialExperiences: ExperienceSearchResult[];
+  experiences: ExperienceSearchResult[];
   pagination: PaginationInfo;
   locationSearch: LocationSearchInfo;
-  isPending: boolean;
+  isFetching: boolean;
+  fetchFailed: boolean;
 }) {
   const t = useTranslations('search');
 
@@ -509,18 +595,20 @@ function MobileListing({
         <SearchBar
           value={currentParams.search}
           onChange={handleSearchChange}
-          isPending={isPending}
+          isPending={isFetching}
           className="mb-6"
         />
+
+        {fetchFailed && !isFetching && <SearchErrorNotice />}
 
         {/* Loading Overlay - smooth transition for pending state */}
         <div
           className={cn(
             'relative transition-opacity duration-150',
-            isPending && 'pointer-events-none opacity-70'
+            isFetching && 'pointer-events-none opacity-70'
           )}
         >
-          {isPending && (
+          {isFetching && (
             <div className="absolute inset-0 z-10 flex items-center justify-center">
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-burgundy-200 border-t-burgundy-600" />
             </div>
@@ -528,7 +616,7 @@ function MobileListing({
 
           {/* Results */}
           <SearchResults
-            experiences={initialExperiences}
+            experiences={experiences}
             sort={currentParams.sort}
             onSortChange={handleSortChange}
             pagination={pagination}
@@ -541,10 +629,16 @@ function MobileListing({
   );
 }
 
-function parseNumber(value: string | null): number | null {
-  if (!value) return null;
-  const num = parseInt(value, 10);
-  return isNaN(num) ? null : num;
+function SearchErrorNotice() {
+  const tErrors = useTranslations('errors');
+  return (
+    <div
+      role="alert"
+      className="mb-5 rounded-[18px] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+    >
+      {tErrors('genericError')}
+    </div>
+  );
 }
 
 function buildMapWineries(experiences: ExperienceSearchResult[]): MapWinery[] {

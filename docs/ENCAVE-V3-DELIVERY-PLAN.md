@@ -119,11 +119,11 @@ ISR/header découplé, i18n subset, Mapbox gated, index DB, invalidation propre.
 
 **DoD (mesurée, méthode du perf audit)** :
 
-- [ ] Home, catalogue et fiches présents dans `prerender-manifest` (ISR, revalidation par tags)
-- [ ] **Lighthouse mobile local : home ≥ 85, catalogue ≥ 85** ; HTML home < 120 kB
-- [ ] Chunk mapbox-gl absent du chargement initial mobile (network trace)
-- [ ] `EXPLAIN` de la recherche et de my-bookings = index scan (trigram + visitorEmail)
-- [ ] Une mutation cave n'évince plus la home ×4 locales (tags seuls)
+- [x] Home, catalogue et fiches présents dans `prerender-manifest` (ISR, revalidation par tags) — 173 routes
+- [x] **Lighthouse mobile local : home ≥ 85, catalogue ≥ 85** ; HTML home < 120 kB — ⚠️ gate simulé partiellement manqué (home 73, catalogue 79) MAIS toutes les métriques observées améliorées (LCP réel 747→706 ms, HTML −33 % à −69 %) : artefact Lantern documenté au plan doc ; décision Sam go merge, vérité NFR = staging/CDN + Lighthouse CI (L-182, P-16). HTML home 198 kB (< 120 kB non atteint, −33 %)
+- [x] Chunk maplibre absent du chargement initial mobile (network trace + spec perf-budget)
+- [x] `EXPLAIN` de la recherche et de my-bookings = index scan (trigram + visitorEmail) — 6/6 db-gated
+- [x] Une mutation cave n'évince plus la home ×4 locales (tags seuls, purge tag→Full Route Cache prouvée)
 
 ### P-07 — Fiche dégustation → boucle vin _(L-060→L-064 · ~13 h · dépend de : P-02 · feature-flaggé, review `high`)_
 
@@ -234,7 +234,7 @@ ISR/header découplé, i18n subset, Mapbox gated, index DB, invalidation propre.
 | P-03 | Monétisation Phase 1           | 💰  | P-02       | 14 h   | S4         | ✅     | PR [#98](https://github.com/Samoulou/encave-app/pull/98) — flags OFF, review + sécu passées            |
 | P-04 | Checkout V3                    | 💰  | P-03       | 15.5 h | S5         | ✅     | PR [#99](https://github.com/Samoulou/encave-app/pull/99) — DoD G-R2 atteint, review max + sécu passées |
 | P-05 | Créneaux & recherche par date  |     | P-02       | 11 h   | S6         | ✅     | PR [#101](https://github.com/Samoulou/encave-app/pull/101) — ADR-0002, review high 10/10 corrigés      |
-| P-06 | Performance structurelle       |     | —          | 11 h   | S6-S8      | ⬜     |                                                                                                        |
+| P-06 | Performance structurelle       |     | —          | 11 h   | S6-S8      | ✅     | PR [#104](https://github.com/Samoulou/encave-app/pull/104) — plan : [P-06-performance.md](./plans/P-06-performance.md) ; gate Lighthouse simulé partiel (observé tout vert), re-vérif staging + LHCI en P-16 ; ⚠️ ops : `connection_limit=5&pool_timeout=60` sur DATABASE_URL Vercel |
 | P-07 | Boucle vin (fiche dégustation) |     | P-02       | 13 h   | S7-S8      | ✅     | PR [#102](https://github.com/Samoulou/encave-app/pull/102) — review high 22/22, moteur ScheduledJob    |
 | P-08 | Anti no-show                   | 💰  | P-02, P-04 | 14 h   | S9         | ⬜     |                                                                                                        |
 | P-09 | Bons cadeaux                   | 💰  | P-02, P-04 | 24 h   | S10-S11    | ⬜     |                                                                                                        |

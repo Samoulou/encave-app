@@ -163,17 +163,16 @@ export function HomeDesktopEditorial({
         </div>
 
         <div className="grid grid-cols-4 gap-[18px]">
-          {cards.map((experience, index) => (
+          {cards.map((experience) => (
             <Link
               href={`/experiences/${experience.slug}`}
               key={experience.id}
               className="group overflow-hidden rounded-[14px] border border-stone-200 bg-white transition-all hover:-translate-y-0.5 hover:border-burgundy-200 hover:shadow-audit-card"
             >
               <div className="relative h-[200px]">
-                <ExperienceVisual
-                  experience={experience}
-                  priority={index === 0}
-                />
+                {/* P-06: no priority — this tree is CSS-hidden on
+                    mobile; its preload was competing with the LCP hero. */}
+                <ExperienceVisual experience={experience} />
                 <span className="absolute left-3 top-3 rounded bg-white/95 px-2 py-1 font-mono text-[10px] uppercase tracking-[0.08em] text-burgundy-700">
                   {formatDuration(experience.duration)}
                 </span>
