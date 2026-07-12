@@ -251,7 +251,7 @@ If you find unused twins along the way, propose removing them (don't leave them 
 
 ## Known Debt & Pitfalls (audited 2026-07-09)
 
-Verified against `dev` — full detail in `docs/ENCAVE-V3-GAP-ANALYSIS.md` §10 and `docs/ENCAVE-V3-PERF-AUDIT.md` (measured: home mobile Lighthouse 48, LCP 9.8s vs NFR 95/1.5s — fixes tracked as backlog epic E15). Don't rediscover these; fix them when touching the area:
+Verified against `dev` — full detail in `docs/ENCAVE-V3-GAP-ANALYSIS.md` §10 and `docs/ENCAVE-V3-PERF-AUDIT.md` (was: home mobile Lighthouse 48, LCP 9.8s vs NFR 95/1.5s; after P-01 + P-06 all OBSERVED metrics are green locally — home LCP 706 ms, HTML −33% to −69%, 173 ISR routes — but the local Lantern SIMULATION still reads home 73: known artifact, see `docs/plans/P-06-performance.md`; NFR truth = staging/CDN, tooled gate = Lighthouse CI in P-16/L-182). Don't rediscover these; fix them when touching the area:
 
 - The confirmation email is sent WITHOUT `bookingId`/`accessToken` (`checkout-confirmation.service.ts`) → no QR attachment, ticket button links to the homepage, the guest magic link is never delivered. Same bug in `resendConfirmationEmail`
 - ~~Only 2 of 5 cron routes scheduled~~ fixed: all 9 cron routes are in `vercel.json` (P-07 added `process-scheduled-jobs` hourly + `tasting-sheet-reminder` at 19:00/20:00 UTC with a 21h-Zurich guard)
