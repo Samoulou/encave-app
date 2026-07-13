@@ -2,8 +2,6 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { auth } from '@/server/auth';
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 import { getMyGiftCards } from '@/server/queries/giftCard.queries';
@@ -36,16 +34,13 @@ export default async function MyGiftCardsPage({ params }: Props) {
     getMyGiftCards(session.user.email),
   ]);
 
+  // Chrome (sidebar + main) comes from the /dashboard layout.
   return (
-    <>
-      <Header />
-      <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
-        <h1 className="mb-8 font-serif text-2xl font-bold sm:text-3xl">
-          {t('compteTitle')}
-        </h1>
-        <MyGiftCardsList cards={cards} locale={locale as Locale} />
-      </main>
-      <Footer />
-    </>
+    <div className="mx-auto max-w-3xl">
+      <h1 className="mb-8 font-serif text-2xl font-bold sm:text-3xl">
+        {t('compteTitle')}
+      </h1>
+      <MyGiftCardsList cards={cards} locale={locale as Locale} />
+    </div>
   );
 }

@@ -1953,7 +1953,8 @@
       "myBookings": "My Bookings",
       "myProfile": "My Profile",
       "openMenu": "Open menu",
-      "closeMenu": "Close menu"
+      "closeMenu": "Close menu",
+      "myGiftCards": "My gift cards"
     },
     "bookings": {
       "title": "My Bookings",

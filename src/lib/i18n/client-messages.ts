@@ -38,6 +38,8 @@ export const PUBLIC_BASE_NAMESPACES: readonly string[] = [
 export const SEGMENT_EXTRA_NAMESPACES = {
   auth: ['auth'],
   reservation: ['bookingError'],
+  cadeaux: ['giftCards'], // /cadeaux configurator (P-09)
+  bon: ['giftCards'], // /bon/[code] public gift view (P-09)
   experiences: [
     'experience',
     'gallery',
