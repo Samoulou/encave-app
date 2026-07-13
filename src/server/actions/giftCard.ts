@@ -101,7 +101,11 @@ export async function createGiftCardCheckoutAction(
       if (
         !experience ||
         experience.status !== ExperienceStatus.PUBLISHED ||
-        experience.winery.status !== WineryStatus.VERIFIED
+        experience.winery.status !== WineryStatus.VERIFIED ||
+        // A 0-priced experience would mint a 0-value gift → amountCents = 0,
+        // which the creation webhook rejects deterministically (paid session,
+        // no card ever created). Never sell it.
+        experience.price <= 0
       ) {
         return {
           success: false,

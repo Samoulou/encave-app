@@ -127,6 +127,17 @@ export async function createGiftCardFromPayment(
   const metadata = parseGiftMetadata(session.metadata);
   if (!metadata) return { created: false };
 
+  // Only mint on a genuinely PAID session (mirror of the booking path). For
+  // a delayed-settlement method, `completed` may fire unpaid — the card is
+  // created when `async_payment_succeeded` re-fires with payment_status paid.
+  if (session.payment_status !== 'paid') {
+    logInfo('gift_card.session_not_paid — awaiting settlement', {
+      action: 'createGiftCardFromPayment',
+      paymentStatus: session.payment_status,
+    });
+    return { created: false };
+  }
+
   const paymentIntentId =
     typeof session.payment_intent === 'string'
       ? session.payment_intent

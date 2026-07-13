@@ -36,6 +36,7 @@ function giftSession(
 ): Stripe.Checkout.Session {
   return {
     payment_intent: 'pi_123',
+    payment_status: 'paid',
     customer_email: 'jean@example.com',
     customer_details: null,
     metadata: {
@@ -80,6 +81,15 @@ describe('createGiftCardFromPayment', () => {
     );
     expect(result.created).toBe(false);
     expect(db.giftCard.findFirst).not.toHaveBeenCalled();
+  });
+
+  it('does not mint on an unpaid session (awaits settlement)', async () => {
+    const result = await createGiftCardFromPayment(
+      giftSession({ payment_status: 'unpaid' } as never)
+    );
+    expect(result.created).toBe(false);
+    expect(db.giftCard.findFirst).not.toHaveBeenCalled();
+    expect(db.$transaction).not.toHaveBeenCalled();
   });
 
   it('is idempotent on the payment intent (webhook redelivery)', async () => {

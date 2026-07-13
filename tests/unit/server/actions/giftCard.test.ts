@@ -136,6 +136,28 @@ describe('createGiftCardCheckoutAction', () => {
     expect(params.metadata.experienceTitle).toBe('Balade');
   });
 
+  it('refuses a gift on a 0-priced experience (never mint a 0-value gift)', async () => {
+    vi.mocked(db.experience.findUnique).mockResolvedValue({
+      id: 'exp-1',
+      title: 'Gratuite',
+      price: 0,
+      status: 'PUBLISHED',
+      winery: { status: 'VERIFIED' },
+    } as never);
+    const result = await createGiftCardCheckoutAction({
+      nature: 'EXPERIENCE',
+      experienceId: 'cjld2cjxh0000qzrmn831i7rn',
+      purchaserName: 'Jean',
+      purchaserEmail: 'jean@example.com',
+      recipientEmail: 'marie@example.com',
+      deliverAt: '2026-12-24T12:00:00.000Z',
+      variant: 'NEUTRE',
+      locale: 'fr',
+    });
+    expect(result.success).toBe(false);
+    expect(sessionsCreate).not.toHaveBeenCalled();
+  });
+
   it('refuses a gift on an unpublished experience', async () => {
     vi.mocked(db.experience.findUnique).mockResolvedValue({
       id: 'exp-1',
