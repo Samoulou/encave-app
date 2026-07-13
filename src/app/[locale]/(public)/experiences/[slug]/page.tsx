@@ -77,9 +77,10 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
 
   // Flag read overlaps the experience fetch — this is the LCP-critical
   // route; never serialize independent I/O here.
-  const [experience, bookingFeeEnabled] = await Promise.all([
+  const [experience, bookingFeeEnabled, giftCardsEnabled] = await Promise.all([
     getExperienceBySlug(slug),
     isFlagEnabled('BOOKING_FEE'),
+    isFlagEnabled('GIFT_CARDS'),
   ]);
 
   if (!experience) {
@@ -394,6 +395,14 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
                 serviceFeeCentsPerGuest={serviceFeeCentsPerGuest}
                 cancellationPolicy={experience.winery.cancellationPolicy}
               />
+              {giftCardsEnabled && (
+                <Link
+                  href={`/cadeaux?experience=${experience.id}`}
+                  className="mt-3 block rounded-xl border border-border bg-card px-4 py-3 text-center text-sm font-medium text-burgundy-700 transition-colors hover:bg-accent"
+                >
+                  🎁 {t('detail.giftCta')}
+                </Link>
+              )}
             </div>
           </div>
         </div>

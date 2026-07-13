@@ -128,7 +128,8 @@
       "spots": "2+ Plätze"
     },
     "wines": "Weine",
-    "payouts": "Auszahlungen"
+    "payouts": "Auszahlungen",
+    "giftCards": "Gutschein verschenken"
   },
   "locale": {
     "fr": "Francais",
@@ -584,7 +585,8 @@
       "meetingPoint": "Treffpunkt in {commune}",
       "proposedBy": "{type} angeboten von {winery}",
       "securePaymentActive": "Sichere Zahlung aktiviert",
-      "bookingToConfirm": "Buchung mit dem Weingut zu bestätigen"
+      "bookingToConfirm": "Buchung mit dem Weingut zu bestätigen",
+      "giftCta": "Dieses Erlebnis verschenken"
     },
     "freeCancellationUntilHours": "Kostenlose Stornierung bis {hours} Std. vorher.",
     "freeCancellationUntilDays": "Kostenlose Stornierung bis {days, plural, =1 {# Tag} other {# Tage}} vorher.",

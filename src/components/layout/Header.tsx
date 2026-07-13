@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
+import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
 import { NavLink } from '@/components/layout/NavLink';
 import { MobileNav } from '@/components/layout/MobileNav';
 import { MobileBackButton } from '@/components/layout/MobileBackButton';
@@ -16,6 +17,9 @@ import { LocaleCurrencyChip } from '@/components/shared/LocaleCurrencyChip';
  */
 export async function Header() {
   const t = await getTranslations('nav');
+  // Gift cards entry point (P-09), flag-gated. isFlagEnabled is
+  // unstable_cache-backed → no per-request rendering, ISR-safe.
+  const giftCardsEnabled = await isFlagEnabled('GIFT_CARDS');
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-stone-200/60 bg-cream-50/90 backdrop-blur-[14px] md:border-stone-200 md:bg-cream-100/80 md:supports-[backdrop-filter]:bg-cream-100/70">
@@ -58,6 +62,15 @@ export async function Header() {
             >
               {t('about')}
             </NavLink>
+            {giftCardsEnabled && (
+              <NavLink
+                href="/cadeaux"
+                className="whitespace-nowrap py-[23px] text-[13px] lg:text-[13.5px]"
+                activeClassName="text-ink-900"
+              >
+                {t('giftCards')}
+              </NavLink>
+            )}
             <HeaderRoleLink />
           </nav>
         </div>
@@ -75,7 +88,7 @@ export async function Header() {
         </div>
 
         <div className="justify-self-end md:hidden">
-          <MobileNav />
+          <MobileNav giftCardsEnabled={giftCardsEnabled} />
         </div>
       </div>
     </header>

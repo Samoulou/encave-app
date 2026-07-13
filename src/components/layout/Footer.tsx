@@ -1,12 +1,16 @@
 import { Link } from '@/i18n/navigation';
-import { useTranslations } from 'next-intl';
+import { getTranslations } from 'next-intl/server';
 import { Mail, MapPin, ShieldCheck, Wine } from 'lucide-react';
+import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
 
-export function Footer() {
-  const t = useTranslations('landing.footer');
-  const tNav = useTranslations('nav');
-  const tLegal = useTranslations('legal');
-  const tFooter = useTranslations('footer');
+export async function Footer() {
+  const [t, tNav, tLegal, tFooter, giftCardsEnabled] = await Promise.all([
+    getTranslations('landing.footer'),
+    getTranslations('nav'),
+    getTranslations('legal'),
+    getTranslations('footer'),
+    isFlagEnabled('GIFT_CARDS'),
+  ]);
 
   return (
     <footer className="border-t border-stone-200 bg-cream-200 text-ink-700">
@@ -69,6 +73,16 @@ export function Footer() {
                   {tNav('wineries')}
                 </Link>
               </li>
+              {giftCardsEnabled && (
+                <li>
+                  <Link
+                    href="/cadeaux"
+                    className="transition-colors hover:text-burgundy-700"
+                  >
+                    {tNav('giftCards')}
+                  </Link>
+                </li>
+              )}
               <li>
                 <Link
                   href="/about"

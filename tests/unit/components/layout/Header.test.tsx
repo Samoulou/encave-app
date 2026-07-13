@@ -34,6 +34,11 @@ vi.mock('@/lib/auth-client', () => ({
   useSession: vi.fn(),
 }));
 
+// Header reads the GIFT_CARDS flag (P-09) for the gift entry point.
+vi.mock('@/server/queries/feature-flags.queries', () => ({
+  isFlagEnabled: vi.fn(() => Promise.resolve(false)),
+}));
+
 vi.mock('@/components/shared/LocaleCurrencyChip', () => ({
   LocaleCurrencyChip: () => <div data-testid="locale-chip">FR · CHF</div>,
 }));
@@ -110,6 +115,21 @@ describe('Header (static server component — P-06)', () => {
     );
     expect(screen.getByTestId('navlink--wineries')).toHaveTextContent(
       'Wineries'
+    );
+    // Flag OFF (default mock) → no gift entry point.
+    expect(screen.queryByTestId('navlink--cadeaux')).not.toBeInTheDocument();
+  });
+
+  it('renders the gift entry point when GIFT_CARDS is enabled', async () => {
+    const { isFlagEnabled } =
+      await import('@/server/queries/feature-flags.queries');
+    vi.mocked(isFlagEnabled).mockResolvedValueOnce(true);
+
+    const HeaderComponent = await Header();
+    render(HeaderComponent);
+
+    expect(screen.getByTestId('navlink--cadeaux')).toHaveTextContent(
+      'giftCards'
     );
   });
 });

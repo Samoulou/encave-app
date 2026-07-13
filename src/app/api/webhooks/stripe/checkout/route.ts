@@ -65,7 +65,12 @@ export async function POST(req: Request) {
 
   try {
     switch (event.type) {
-      case 'checkout.session.completed': {
+      case 'checkout.session.completed':
+      // Delayed-settlement methods (e.g. some TWINT flows) fire `completed`
+      // unpaid and settle later with this event — handle both so a gift
+      // card / booking is created once the money actually lands. The
+      // handler is idempotent (payment_status + StripeEvent guards).
+      case 'checkout.session.async_payment_succeeded': {
         const session = event.data.object as Stripe.Checkout.Session;
         await handleCheckoutCompleted(session);
         break;
