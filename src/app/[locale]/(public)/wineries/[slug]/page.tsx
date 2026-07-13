@@ -19,6 +19,7 @@ import { IMAGE_PLACEHOLDERS } from '@/lib/image-placeholder';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { WineryLocationMap } from '@/components/features/winery/WineryLocationMap';
+import { SurMesureBlock } from '@/components/features/requests/SurMesureBlock';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import type { Locale } from '@/i18n/routing';
 import type { MapWinery } from '@/components/features/map/types';
@@ -66,10 +67,11 @@ export default async function WineryPage({ params }: WineryPageProps) {
   const { slug, locale } = await params;
   // Required for static rendering (ISR) with next-intl.
   setRequestLocale(locale);
-  const [winery, t, tastingEnabled] = await Promise.all([
+  const [winery, t, tastingEnabled, requestsEnabled] = await Promise.all([
     getWineryBySlug(slug),
     getTranslations('winery'),
     isFlagEnabled('TASTING_SHEET'),
+    isFlagEnabled('REQUESTS'),
   ]);
 
   if (!winery) {
@@ -195,6 +197,13 @@ export default async function WineryPage({ params }: WineryPageProps) {
                   </p>
                 </div>
               </section>
+
+              {/* Sur-mesure request block (P-10 / L-090) — verified wineries
+                  only, entirely behind the REQUESTS flag. Pure client island
+                  so it never breaks the ISR of this page. */}
+              {isVerified && requestsEnabled && (
+                <SurMesureBlock wineryId={winery.id} wineryName={winery.name} />
+              )}
 
               {/* Wines (P-07 / L-064) */}
               {wines.length > 0 && (

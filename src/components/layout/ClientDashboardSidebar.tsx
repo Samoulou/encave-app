@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import { Calendar, User, Menu, X, Wine, Gift } from 'lucide-react';
+import { Calendar, User, Menu, X, Wine, Gift, Inbox } from 'lucide-react';
 import { useState, useCallback, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ interface ClientDashboardSidebarProps {
 const sidebarLinks = [
   { href: '/dashboard/my-bookings', labelKey: 'myBookings', icon: Calendar },
   { href: '/dashboard/bons-cadeaux', labelKey: 'myGiftCards', icon: Gift },
+  { href: '/dashboard/mes-demandes', labelKey: 'myRequests', icon: Inbox },
   { href: '/dashboard/profile', labelKey: 'myProfile', icon: User },
 ];
 

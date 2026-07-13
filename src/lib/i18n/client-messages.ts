@@ -40,6 +40,7 @@ export const SEGMENT_EXTRA_NAMESPACES = {
   reservation: ['bookingError'],
   cadeaux: ['giftCards'], // /cadeaux configurator (P-09)
   bon: ['giftCards'], // /bon/[code] public gift view (P-09)
+  surMesure: ['surMesure'], // /sur-mesure form + offer pay button (P-10)
   experiences: [
     'experience',
     'gallery',
@@ -48,7 +49,8 @@ export const SEGMENT_EXTRA_NAMESPACES = {
     'checkout',
     'winery',
   ],
-  wineries: ['winery', 'experience', 'gallery', 'Public.winery'],
+  // 'surMesure' → the SurMesureBlock island on the winery fiche (P-10).
+  wineries: ['winery', 'experience', 'gallery', 'Public.winery', 'surMesure'],
   booking: [
     'booking',
     'confirmation',
