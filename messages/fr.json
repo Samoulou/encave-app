@@ -344,6 +344,12 @@
     "pricing": "Tarification",
     "pricingDescription": "Définissez le prix par personne pour votre expérience",
     "priceMustBePositive": "Le prix doit être supérieur à 0",
+    "paymentMode": {
+      "label": "Paiement",
+      "online": "Payé en ligne au checkout",
+      "onSite": "Gratuit ou payé au domaine",
+      "description": "Les offres payées sur place peuvent prendre une empreinte de carte anti no-show (aucun débit à la réservation)."
+    },
     "creating": "Création...",
     "createExperience": "Créer l'expérience",
     "updating": "Mise à jour...",
@@ -798,6 +804,12 @@
         "required": "Merci de confirmer votre age avant de poursuivre le paiement."
       }
     },
+    "noShow": {
+      "title": "Frais de non-présentation : {amount} par personne",
+      "explainer": "Cette expérience est gratuite ou payable sur place. Nous enregistrons seulement votre carte maintenant — aucun débit n'est effectué. Si vous ne vous présentez pas et n'annulez pas dans les délais, le domaine peut prélever les frais.",
+      "checkboxLabel": "J'accepte les frais de non-présentation de {amount} par personne et j'autorise l'enregistrement de ma carte à cette fin.",
+      "required": "Veuillez accepter la politique de non-présentation pour continuer."
+    },
     "hold": {
       "remaining": "Créneau réservé pendant {time}",
       "remainingUrgent": "Plus que {time} pour finaliser votre réservation",
@@ -1003,6 +1015,19 @@
       "saving": "Enregistrement...",
       "updated": "Politique d'annulation mise à jour",
       "updateError": "Impossible d'enregistrer la politique d'annulation. Veuillez réessayer."
+    },
+    "noShowFee": {
+      "title": "Frais de non-présentation",
+      "description": "Pour les offres gratuites ou payables sur place, prenez une empreinte de carte à la réservation et prélevez des frais si le client ne se présente pas. Aucun montant n'est débité tant que vous ne le déclenchez pas manuellement.",
+      "enableLabel": "Prélever des frais de non-présentation",
+      "amountLabel": "Frais par personne",
+      "perGuest": "CHF / personne",
+      "invalidAmount": "Les frais doivent être compris entre 0 et 50 CHF.",
+      "note": "La politique est affichée au client avant la réservation et doit être acceptée. Vous prélevez les frais manuellement, uniquement en cas de non-présentation.",
+      "save": "Enregistrer",
+      "saving": "Enregistrement...",
+      "updated": "Réglage de non-présentation mis à jour",
+      "updateError": "Impossible d'enregistrer le réglage de non-présentation. Veuillez réessayer."
     },
     "winesSectionTitle": "Ses vins",
     "winesSectionSubtitle": "Les vins du domaine, à déguster sur place."
@@ -2041,6 +2066,9 @@
         "markPresent": "Marquer présent",
         "markNoShow": "Marquer no-show",
         "markNoShowDisabled": "Disponible après la fin de la session",
+        "chargeNoShowFee": "Prélever les frais de non-présentation ({amount})",
+        "retryNoShowFee": "Réessayer le prélèvement",
+        "noShowFeeCharged": "Frais de non-présentation prélevés",
         "openMenu": "Ouvrir le menu d'actions",
         "cancelSessionTitle": "Annuler la session ?",
         "cancelSessionDescription": "Toutes les réservations confirmées seront annulées et intégralement remboursées ; chaque client recevra un email avec votre motif.",
@@ -2064,13 +2092,16 @@
       "errors": {
         "loadFailed": "Impossible de charger l'événement. Réessayez dans un instant.",
         "revertWindowExpired": "Impossible d'annuler après 72h.",
-        "sessionNotEnded": "Disponible après la fin de la session."
+        "sessionNotEnded": "Disponible après la fin de la session.",
+        "noShowChargeFailed": "La carte a été refusée. Vous pouvez réessayer le prélèvement.",
+        "noShowAlreadyCharged": "Les frais de non-présentation ont déjà été prélevés."
       },
       "toast": {
         "checkedIn": "Présence enregistrée.",
         "noShow": "No-show enregistré.",
         "revertedCheckIn": "Check-in annulé.",
         "revertedNoShow": "No-show annulé.",
+        "noShowCharged": "Frais de non-présentation prélevés.",
         "error": "Action impossible pour le moment."
       },
       "confirm": {
@@ -2079,7 +2110,9 @@
         "revertCheckInTitle": "Annuler le check-in ?",
         "revertCheckInDescription": "Le statut repassera à Confirmée. L'action est tracée.",
         "revertNoShowTitle": "Annuler le no-show ?",
-        "revertNoShowDescription": "Le statut repassera à Confirmée. L'action est tracée.",
+        "revertNoShowDescription": "Le statut repassera à Confirmée. L'action est tracée. Si des frais de non-présentation ont été prélevés, ils sont remboursés automatiquement.",
+        "chargeNoShowTitle": "Prélever les frais de non-présentation ?",
+        "chargeNoShowDescription": "{amount} seront prélevés sur la carte enregistrée du client, conformément à la politique qu'il a acceptée à la réservation. Il sera notifié par e-mail.",
         "confirmCta": "Confirmer",
         "cancelCta": "Retour"
       },

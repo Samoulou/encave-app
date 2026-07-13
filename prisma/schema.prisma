@@ -38,6 +38,16 @@ enum ExperienceType {
   EVENT
 }
 
+// V3 (P-08, US-220): how the guest settles the experience.
+// ONLINE = paid at checkout (current behavior, price > 0).
+// ON_SITE = free or payable at the winery (price >= 0) — no online charge;
+// if the winery opts into no-show fees, checkout takes a SetupIntent card
+// imprint instead (mode: 'setup', zero debit).
+enum ExperiencePaymentMode {
+  ONLINE
+  ON_SITE
+}
+
 enum CancellationPolicy {
   FLEXIBLE
   STANDARD
@@ -104,6 +114,16 @@ enum BookingStatus {
   CANCELLED_BY_WINERY
   COMPLETED
   NO_SHOW
+}
+
+// V3 (P-08, US-220): state of the manual off-session no-show charge.
+// null = never attempted. PENDING = an attempt is in flight (claimed via a
+// conditional update — the CAS that prevents a double debit). CHARGED = fee
+// captured. FAILED = card declined / SCA required off-session — retryable.
+enum NoShowChargeStatus {
+  PENDING
+  CHARGED
+  FAILED
 }
 
 enum Locale {
@@ -291,6 +311,10 @@ model Experience {
   // V3 (P-02 foundations): spoken languages and collective events (US-250).
   languages    Locale[]         @default([FR])
   isCollective Boolean          @default(false)
+  // V3 (P-08, US-220): ONLINE (paid at checkout, default) vs ON_SITE (free /
+  // pay-at-the-winery). ON_SITE offers take a no-show card imprint when the
+  // winery opts in. Additive default keeps every existing experience ONLINE.
+  paymentMode  ExperiencePaymentMode @default(ONLINE)
   coverPhoto   String
   // Location fields (optional - falls back to winery address if not set)
   address      String? // Street address
@@ -386,6 +410,27 @@ model Booking {
   giftCardId              String?
   giftAppliedCents        Int                   @default(0)
   giftTransferId          String?
+  // V3 (P-08, US-220): anti no-show card imprint + manual off-session charge
+  // (flag NO_SHOW_FEES). The imprint (SetupIntent) is captured at checkout for
+  // ON_SITE offers when the winery opts in — zero debit at booking. The fee is
+  // charged ONLY manually, ONLY on a NO_SHOW booking. All amounts in cents.
+  stripeCustomerId        String? // Stripe Customer holding the imprinted card
+  noShowSetupIntentId     String? // SetupIntent that vaulted the card
+  noShowPaymentMethodId   String? // vaulted payment method, charged off-session
+  // Consent snapshot: the client accepted THIS fee at THIS policy version.
+  // The charge always uses noShowFeeCentsSnapshot, never the winery's current
+  // setting. noShowFeeCentsSnapshot is per-guest; total = snapshot × guestCount.
+  noShowPolicyAcceptedAt  DateTime?
+  noShowPolicyVersion     String?
+  noShowFeeCentsSnapshot  Int?
+  // Charge state. noShowFeeChargePaymentIntentId is written ONCE on success —
+  // its presence is the idempotency guard against a double debit (mirror of
+  // giftTransferId). Refund fields cover the auto-refund on NO_SHOW revert.
+  noShowFeeChargeStatus   NoShowChargeStatus?
+  noShowFeeChargedCents   Int?
+  noShowFeeChargePaymentIntentId String?
+  noShowFeeRefundId       String?
+  noShowFeeRefundedCents  Int?
   expiresAt               DateTime? // For pending payment reservations
   accessTokenHash         String? // Hash of access token for verification (SEC-002: plaintext removed)
   confirmationSentAt      DateTime? // When client confirmation email was sent
@@ -437,6 +482,9 @@ model Booking {
   @@index([recapTokenHash])
   @@index([stripeCheckoutSessionId])
   @@index([stripePaymentIntentId])
+  // P-08: payout correlation for the off-session no-show charge (its PI id is
+  // NOT stripePaymentIntentId, so payouts.queries matches this column too).
+  @@index([noShowFeeChargePaymentIntentId])
   @@index([occurrenceId])
   @@map("bookings")
 }

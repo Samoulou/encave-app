@@ -104,7 +104,7 @@ export const createExperienceSchema = z
       ),
     price: z
       .number()
-      .positive('Price must be greater than 0')
+      .nonnegative('Price cannot be negative')
       .max(100000, 'Price seems too high'),
     minCapacity: z
       .number()
@@ -114,6 +114,11 @@ export const createExperienceSchema = z
       .number()
       .int('Maximum capacity must be a whole number')
       .min(1, 'Maximum capacity must be at least 1'),
+    // V3 (P-08 / L-070): ONLINE (paid at checkout) vs ON_SITE (free /
+    // pay-at-the-winery). Optional (not .default) to keep the Zod input and
+    // output types symmetric — a .default() diverges them and breaks
+    // zodResolver. Undefined ⇒ ONLINE (forms set it explicitly).
+    paymentMode: z.enum(['ONLINE', 'ON_SITE']).optional(),
     // Location fields (optional)
     location: locationSchema.optional(),
     // Availability slots
@@ -123,6 +128,11 @@ export const createExperienceSchema = z
     message:
       'Maximum capacity must be greater than or equal to minimum capacity',
     path: ['maxCapacity'],
+  })
+  // ONLINE offers must have a real price; ON_SITE may be free (price 0).
+  .refine((data) => data.paymentMode === 'ON_SITE' || data.price > 0, {
+    message: 'Price must be greater than 0',
+    path: ['price'],
   });
 
 export type CreateExperienceInput = z.infer<typeof createExperienceSchema>;

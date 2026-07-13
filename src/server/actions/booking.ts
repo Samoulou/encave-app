@@ -6,7 +6,7 @@ import { differenceInHours } from 'date-fns';
 import { db } from '@/server/db';
 import type { ActionResult } from '@/types/actions';
 import { BookingStatus } from '@prisma/client';
-import type { CancellationPolicy } from '@prisma/client';
+import type { CancellationPolicy, ExperiencePaymentMode } from '@prisma/client';
 import {
   sendBookingCancellationEmail,
   sendWinemakerCancellationEmail,
@@ -290,12 +290,16 @@ export interface ExperienceForBooking {
   maxCapacity: number;
   duration: number;
   coverPhoto: string;
+  /** P-08: ONLINE (paid at checkout) vs ON_SITE (free / pay-on-site). */
+  paymentMode: ExperiencePaymentMode;
   winery: {
     id: string;
     name: string;
     commune: string | null;
     stripeOnboardingComplete: boolean;
     cancellationPolicy: CancellationPolicy;
+    noShowFeeEnabled: boolean;
+    noShowFeeCents: number;
   };
   availabilitySlots: {
     dayOfWeek: number;
@@ -322,6 +326,8 @@ export async function getExperienceForBooking(
             commune: true,
             stripeOnboardingComplete: true,
             cancellationPolicy: true,
+            noShowFeeEnabled: true,
+            noShowFeeCents: true,
           },
         },
         availabilitySlots: {
@@ -354,6 +360,7 @@ export async function getExperienceForBooking(
         maxCapacity: experience.maxCapacity,
         duration: experience.duration,
         coverPhoto: experience.coverPhoto,
+        paymentMode: experience.paymentMode,
         winery: experience.winery,
         availabilitySlots: experience.availabilitySlots,
       },

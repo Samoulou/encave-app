@@ -344,6 +344,12 @@
     "pricing": "Preisgestaltung",
     "pricingDescription": "Legen Sie den Preis pro Person fur Ihr Erlebnis fest",
     "priceMustBePositive": "Der Preis muss grosser als 0 sein",
+    "paymentMode": {
+      "label": "Zahlung",
+      "online": "Online beim Checkout bezahlt",
+      "onSite": "Kostenlos oder vor Ort bezahlt",
+      "description": "Vor-Ort-Angebote können eine Anti-Nichterscheinungs-Kartenreferenz hinterlegen (keine Belastung bei der Buchung)."
+    },
     "creating": "Erstellen...",
     "createExperience": "Erlebnis erstellen",
     "updating": "Aktualisieren...",
@@ -798,6 +804,12 @@
         "required": "Bitte bestaetigen Sie Ihr Alter, bevor Sie zur Zahlung fortfahren."
       }
     },
+    "noShow": {
+      "title": "Nichterscheinungsgebühr: {amount} pro Person",
+      "explainer": "Dieses Erlebnis ist kostenlos oder vor Ort zahlbar. Wir speichern jetzt nur Ihre Karte — es erfolgt keine Belastung. Wenn Sie nicht erscheinen und nicht rechtzeitig stornieren, kann das Weingut die Gebühr belasten.",
+      "checkboxLabel": "Ich akzeptiere die Nichterscheinungsgebühr von {amount} pro Person und ermächtige die Speicherung meiner Karte zu diesem Zweck.",
+      "required": "Bitte akzeptieren Sie die Nichterscheinungs-Richtlinie, um fortzufahren."
+    },
     "hold": {
       "remaining": "Zeitfenster reserviert für {time}",
       "remainingUrgent": "Nur noch {time}, um Ihre Buchung abzuschliessen",
@@ -1003,6 +1015,19 @@
       "saving": "Wird gespeichert...",
       "updated": "Stornierungsbedingungen aktualisiert",
       "updateError": "Die Stornierungsbedingungen konnten nicht gespeichert werden. Bitte versuchen Sie es erneut."
+    },
+    "noShowFee": {
+      "title": "Nichterscheinungsgebühr",
+      "description": "Bei kostenlosen oder vor Ort zahlbaren Angeboten hinterlegen Sie bei der Buchung eine Kartenreferenz und belasten eine Gebühr, wenn der Gast nicht erscheint. Es wird kein Betrag abgebucht, bis Sie es manuell auslösen.",
+      "enableLabel": "Nichterscheinungsgebühr erheben",
+      "amountLabel": "Gebühr pro Person",
+      "perGuest": "CHF / Person",
+      "invalidAmount": "Die Gebühr muss zwischen 0 und 50 CHF liegen.",
+      "note": "Die Richtlinie wird dem Gast vor der Buchung angezeigt und muss akzeptiert werden. Sie belasten die Gebühr manuell, nur bei Nichterscheinen.",
+      "save": "Speichern",
+      "saving": "Wird gespeichert...",
+      "updated": "Nichterscheinungs-Einstellung aktualisiert",
+      "updateError": "Die Nichterscheinungs-Einstellung konnte nicht gespeichert werden. Bitte versuchen Sie es erneut."
     },
     "winesSectionTitle": "Ihre Weine",
     "winesSectionSubtitle": "Die Weine des Weinguts – vor Ort zu degustieren."
@@ -2046,6 +2071,9 @@
         "markPresent": "Als anwesend markieren",
         "markNoShow": "Als No-Show markieren",
         "markNoShowDisabled": "Nach Ende der Session verfügbar",
+        "chargeNoShowFee": "Nichterscheinungsgebühr belasten ({amount})",
+        "retryNoShowFee": "Belastung erneut versuchen",
+        "noShowFeeCharged": "Nichterscheinungsgebühr belastet",
         "openMenu": "Aktionsmenü öffnen",
         "cancelSessionTitle": "Session absagen?",
         "cancelSessionDescription": "Alle bestätigten Reservierungen werden storniert und vollständig erstattet; jeder Gast erhält eine E-Mail mit Ihrem Grund.",
@@ -2069,13 +2097,16 @@
       "errors": {
         "loadFailed": "Veranstaltung konnte nicht geladen werden. Bitte erneut versuchen.",
         "revertWindowExpired": "Nach 72 Stunden nicht mehr rückgängig zu machen.",
-        "sessionNotEnded": "Nach Ende der Session verfügbar."
+        "sessionNotEnded": "Nach Ende der Session verfügbar.",
+        "noShowChargeFailed": "Die Karte wurde abgelehnt. Sie können die Belastung erneut versuchen.",
+        "noShowAlreadyCharged": "Die Nichterscheinungsgebühr wurde bereits belastet."
       },
       "toast": {
         "checkedIn": "Anwesenheit gespeichert.",
         "noShow": "No-Show gespeichert.",
         "revertedCheckIn": "Check-in rückgängig gemacht.",
         "revertedNoShow": "No-Show rückgängig gemacht.",
+        "noShowCharged": "Nichterscheinungsgebühr belastet.",
         "error": "Aktion momentan nicht möglich."
       },
       "confirm": {
@@ -2084,7 +2115,9 @@
         "revertCheckInTitle": "Check-in rückgängig machen?",
         "revertCheckInDescription": "Der Status wird wieder auf Bestätigt gesetzt. Die Aktion wird protokolliert.",
         "revertNoShowTitle": "No-Show rückgängig machen?",
-        "revertNoShowDescription": "Der Status wird wieder auf Bestätigt gesetzt. Die Aktion wird protokolliert.",
+        "revertNoShowDescription": "Der Status wird wieder auf Bestätigt gesetzt. Die Aktion wird protokolliert. Falls eine Nichterscheinungsgebühr belastet wurde, wird sie automatisch erstattet.",
+        "chargeNoShowTitle": "Nichterscheinungsgebühr belasten?",
+        "chargeNoShowDescription": "{amount} werden der gespeicherten Karte des Gastes belastet, gemäss der bei der Buchung akzeptierten Richtlinie. Der Gast wird per E-Mail benachrichtigt.",
         "confirmCta": "Bestätigen",
         "cancelCta": "Zurück"
       },

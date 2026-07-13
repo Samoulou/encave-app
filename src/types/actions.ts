@@ -13,6 +13,7 @@ export type ErrorCode =
   | 'DATE_BLOCKED'
   | 'INVALID_SLOT'
   | 'FEE_CHANGED'
+  | 'NO_SHOW_CHANGED'
   | 'WRONG_SESSION'
   | 'WRONG_DAY'
   | 'PAYMENT_NOT_CONFIRMED'

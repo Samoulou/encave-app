@@ -1,5 +1,10 @@
 import { cache } from 'react';
-import { BookingStatus, OccurrenceStatus, Prisma } from '@prisma/client';
+import {
+  BookingStatus,
+  NoShowChargeStatus,
+  OccurrenceStatus,
+  Prisma,
+} from '@prisma/client';
 import { db } from '@/server/db';
 import {
   activeCapacityBookingWhere,
@@ -102,6 +107,12 @@ export interface OccurrenceCalendarEntryDTO {
     checkedInAt: Date | null;
     guestCount: number;
     status: BookingStatus;
+    /** P-08: total no-show fee (snapshot × guests), null if no imprint. */
+    noShowFeeTotalCents: number | null;
+    /** P-08: whether a card imprint is available to charge. */
+    hasNoShowImprint: boolean;
+    /** P-08: null = not charged, else the charge state. */
+    noShowFeeChargeStatus: NoShowChargeStatus | null;
   }[];
 }
 
@@ -193,6 +204,10 @@ export const getOccurrenceCalendar = cache(async function getOccurrenceCalendar(
         date: true,
         timeSlot: true,
         expiresAt: true,
+        // No-show fee imprint + charge state (P-08).
+        noShowFeeCentsSnapshot: true,
+        noShowPaymentMethodId: true,
+        noShowFeeChargeStatus: true,
         // Tasting sheet of the month's sessions (P-07) — piggybacked on
         // the booking read, no extra query.
         wines: { select: { wineId: true } },
@@ -278,6 +293,11 @@ export const getOccurrenceCalendar = cache(async function getOccurrenceCalendar(
         checkedInAt: b.checkedInAt,
         guestCount: b.guestCount,
         status: b.status,
+        noShowFeeTotalCents: b.noShowFeeCentsSnapshot
+          ? b.noShowFeeCentsSnapshot * b.guestCount
+          : null,
+        hasNoShowImprint: Boolean(b.noShowPaymentMethodId),
+        noShowFeeChargeStatus: b.noShowFeeChargeStatus,
       });
     }
     if (countsTowardSeats(b)) {

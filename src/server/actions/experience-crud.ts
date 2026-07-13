@@ -78,6 +78,7 @@ export async function createExperience(
       price,
       minCapacity,
       maxCapacity,
+      paymentMode,
       location,
       availabilitySlots,
     } = validated.data;
@@ -125,6 +126,7 @@ export async function createExperience(
           price: priceInCents,
           minCapacity,
           maxCapacity,
+          paymentMode,
           coverPhoto: coverPhotoUrl,
           status: 'DRAFT',
           // Location fields
@@ -265,6 +267,7 @@ export async function updateExperience(
       price,
       minCapacity,
       maxCapacity,
+      paymentMode,
     } = validated.data;
 
     // Generate new slug if title changed
@@ -305,6 +308,7 @@ export async function updateExperience(
           price: priceInCents,
           minCapacity,
           maxCapacity,
+          paymentMode,
           coverPhoto: coverPhotoUrl,
         },
       });

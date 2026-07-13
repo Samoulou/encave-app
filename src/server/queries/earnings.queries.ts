@@ -1,7 +1,12 @@
 import { cache } from 'react';
 import { db } from '@/server/db';
+import { env } from '@/lib/env';
 import { isMonthKey } from '@/lib/utils/date-key';
-import { BookingStatus, Prisma } from '@prisma/client';
+import {
+  computeCommissionCents,
+  getEffectiveCommissionRate,
+} from '@/lib/business-rules/commission';
+import { BookingStatus, NoShowChargeStatus, Prisma } from '@prisma/client';
 import {
   startOfMonth,
   endOfMonth,
@@ -371,7 +376,11 @@ export interface MonthlyStatementData {
   commissionCents: number;
   /** Client service fees — platform money, informative line only. */
   serviceFeesCents: number;
-  /** No-show fees: always 0 until P-08 ships. */
+  /**
+   * No-show fees the winery KEPT this month (P-08): Σ over charged, non-
+   * reverted no-show bookings of (fee charged − tier commission). A reverted
+   * (refunded) fee nets to 0 and is excluded. Added to the winery's net.
+   */
   noShowFeesCents: number;
   /**
    * Refund impact on the winery's NET (payout × refunded fraction) —
@@ -427,6 +436,9 @@ export const getMonthlyStatementData = cache(
         wineryPayout: true,
         refundIssued: true,
         refundAmount: true,
+        noShowFeeChargeStatus: true,
+        noShowFeeChargedCents: true,
+        noShowFeeRefundId: true,
         experience: { select: { title: true } },
       },
     });
@@ -442,18 +454,40 @@ export const getMonthlyStatementData = cache(
       refunded: b.refundIssued,
     }));
 
+    // No-show fees kept: charged, not reverted. The winery receives the fee
+    // net of its tier commission (destination charge, P-08 money routing).
+    const winery = await db.winery.findUnique({
+      where: { id: wineryId },
+      select: { commissionRate: true },
+    });
+    const noShowRate = getEffectiveCommissionRate(
+      { commissionRate: winery?.commissionRate ?? null },
+      env.PLATFORM_COMMISSION_RATE
+    );
+    const noShowFeesCents = bookings.reduce((sum, b) => {
+      if (
+        b.noShowFeeChargeStatus !== NoShowChargeStatus.CHARGED ||
+        b.noShowFeeRefundId
+      ) {
+        return sum;
+      }
+      const gross = b.noShowFeeChargedCents ?? 0;
+      return sum + (gross - computeCommissionCents(gross, noShowRate));
+    }, 0);
+
     return {
       month,
       lines,
       grossCents: bookings.reduce((sum, b) => sum + b.totalPrice, 0),
       commissionCents: bookings.reduce((sum, b) => sum + b.platformFee, 0),
       serviceFeesCents: bookings.reduce((sum, b) => sum + b.serviceFeeCents, 0),
-      noShowFeesCents: 0,
+      noShowFeesCents,
       refundedCents: bookings.reduce(
         (sum, b) => sum + Math.round(b.wineryPayout * refundedFraction(b)),
         0
       ),
-      netCents: lines.reduce((sum, line) => sum + line.netCents, 0),
+      netCents:
+        lines.reduce((sum, line) => sum + line.netCents, 0) + noShowFeesCents,
     };
   }
 );

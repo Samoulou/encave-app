@@ -1,6 +1,10 @@
 # P-08 — Anti no-show 💰
 
-> **Statut** : plan · **Branche** : `claude/p-08-implementation-plan-f2vdwf` (fallback sans Linear ; commits `feat(p-08): …`, titre PR `P-08: Anti no-show`) · **PR** : #
+> **Statut** : en cours (implémenté, avant review 💰 + vérif Stripe-test) · **Branche** : `claude/p-08-implementation-plan-f2vdwf` · **PR** : #
+>
+> **Avancement (code livré)** : migration additive (`ExperiencePaymentMode`, `NoShowChargeStatus`, empreinte + consentement + état de prélèvement sur `Booking`, `Experience.paymentMode`) ; réglage cave `setWineryNoShowPolicy` + `NoShowFeeSection` (flag-gated) ; sélecteur `paymentMode` au wizard/édition (validator relâché : ON_SITE autorise prix 0) ; **branche empreinte checkout** (`mode:'setup'` SetupIntent, garde `NO_SHOW_CHANGED`, snapshot consentement, `confirmOnSiteBooking` sans imprint, branche webhook `no_show_setup` → carte vaultée) ; **prélèvement 1 tap** `chargeNoShowFee` (off-session destination charge net commission, claim CAS `PENDING`, clé d'idempotence fraîche, carte refusée → `FAILED` retryable) + email #13 ; **revert = remboursement auto** (`refundNoShowFeeIfCharged`) ; no-show fees dans relevé mensuel + corrélation payout ; UI charge dans `BookingActionsMenu/Sheet` ; i18n ×3 ; **23 tests dédiés** (charge : nominal/refus/non-NO_SHOW/déjà-chargé/sans-empreinte/flag-off/concurrence ; validators ; réglage cave) ; suite complète **1067 verts**, lint/format/i18n/tsc verts.
+>
+> **Reste avant merge** : ⚠️ **money-routing NON vérifiable ici** (pas de Stripe/DB) → **relecture Luca** du montage (empreinte + off-session + reverse-transfer + KYC) puis **vérif Stripe-test/staging** (empreinte zéro-débit, débit off-session, transfert net commission, corrélation payout, remboursement au revert) — porté à la DoD P-16 comme pour P-09. Puis `/security-review` (package 💰) + `/code-review high`.
 > **Sources** : `docs/ENCAVE-V3-DELIVERY-PLAN.md` §P-08 · items `L-070→L-073` (E5, US-220) · specs `docs/v3/ENCAVE-V3-PRD.md` US-220 + R-5, `docs/v3/ENCAVE-V3-PAGES-EMAILS.md` (§6 espace encaveur, email #13), `docs/v3/ENCAVE-V3-BUSINESS.md` §2/§4 · **dépend de** : P-02 (schéma), P-04 (checkout V3)
 > **Review** : `/code-review high` + **`/security-review`** (package 💰). Relecture **Luca (payments)** obligatoire sur le montage Stripe (empreinte + débit off-session) AVANT de coder L-072.
 

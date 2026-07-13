@@ -6,6 +6,8 @@ import { Link } from '@/i18n/navigation';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
 import { WineryProfileForm } from '@/components/features/winery/WineryProfileForm';
 import { CancellationPolicySection } from '@/components/features/winery/CancellationPolicySection';
+import { NoShowFeeSection } from '@/components/features/winery/NoShowFeeSection';
+import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
 import { StripeOnboarding } from '@/components/features/winery/StripeOnboarding';
 import { PaymentStatus } from '@/components/features/winery/PaymentStatus';
 import { getPaymentStatusType } from '@/lib/utils/payment-status';
@@ -57,9 +59,10 @@ export default async function WineryProfilePage({
     redirect(`/${locale}/onboarding/winery`);
   }
 
-  const [t, tNav] = await Promise.all([
+  const [t, tNav, noShowFeesEnabled] = await Promise.all([
     getTranslations('winery'),
     getTranslations('nav'),
+    isFlagEnabled('NO_SHOW_FEES'),
   ]);
   const isVerified = winery.status === 'VERIFIED';
 
@@ -187,6 +190,17 @@ export default async function WineryProfilePage({
             currentPolicy={winery.cancellationPolicy}
           />
         </div>
+
+        {/* No-show fee opt-in (P-08 / L-070) — flag-gated */}
+        {noShowFeesEnabled && (
+          <div id="no-show-fee" className="mt-8 scroll-mt-24">
+            <NoShowFeeSection
+              wineryId={winery.id}
+              currentEnabled={winery.noShowFeeEnabled}
+              currentFeeCents={winery.noShowFeeCents}
+            />
+          </div>
+        )}
       </div>
     </WineryAccessGuard>
   );

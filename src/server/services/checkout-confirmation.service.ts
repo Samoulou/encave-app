@@ -1,12 +1,17 @@
 import crypto from 'crypto';
 import type Stripe from 'stripe';
-import { BookingStatus, type Prisma } from '@prisma/client';
+import {
+  BookingStatus,
+  ExperiencePaymentMode,
+  type Prisma,
+} from '@prisma/client';
 import { db } from '@/server/db';
+import { getStripe } from '@/server/stripe';
 import {
   sendBookingConfirmationEmail,
   sendWinemakerNewBookingEmail,
 } from '@/server/services/email.service';
-import { logError, logInfo } from '@/lib/logger';
+import { logError, logInfo, logWarn } from '@/lib/logger';
 import { getPostHogServer } from '@/lib/posthog';
 
 export type CheckoutConfirmationSource = 'webhook' | 'confirmation_page';
@@ -87,6 +92,7 @@ export async function confirmBookingFromPaidCheckoutSession(
         select: {
           title: true,
           duration: true,
+          paymentMode: true,
         },
       },
       winery: {
@@ -174,7 +180,7 @@ export async function confirmBookingFromPaidCheckoutSession(
 }
 
 const bookingConfirmationInclude = {
-  experience: { select: { title: true, duration: true } },
+  experience: { select: { title: true, duration: true, paymentMode: true } },
   winery: {
     select: {
       name: true,
@@ -197,7 +203,7 @@ type BookingForConfirmation = Prisma.BookingGetPayload<{
 async function sendBookingConfirmationNotifications(
   booking: BookingForConfirmation,
   accessToken: string,
-  source: CheckoutConfirmationSource | 'gift'
+  source: CheckoutConfirmationSource | 'gift' | 'on_site' | 'imprint'
 ): Promise<void> {
   const posthogServer = getPostHogServer();
   if (posthogServer) {
@@ -332,5 +338,157 @@ export async function confirmGiftFullyCoveredBooking(
     bookingRef: booking.reference,
   });
   await sendBookingConfirmationNotifications(booking, accessToken, 'gift');
+  return { result: 'confirmed', accessToken };
+}
+
+/**
+ * Confirm an ON_SITE / free booking that carries no card imprint (P-08):
+ * the winery opted out of no-show fees (or the flag is OFF), so there is no
+ * online charge and no SetupIntent. The experience price is settled at the
+ * winery. Guarded by the ON_SITE payment mode (never confirm an ONLINE,
+ * genuinely-payable booking for free) and by the PENDING_PAYMENT claim.
+ */
+export async function confirmOnSiteBooking(
+  bookingId: string
+): Promise<CheckoutConfirmationOutcome> {
+  const booking = await db.booking.findUnique({
+    where: { id: bookingId },
+    include: bookingConfirmationInclude,
+  });
+  if (!booking) return { result: 'missing_booking' };
+  if (booking.experience.paymentMode !== ExperiencePaymentMode.ON_SITE) {
+    // Never confirm an ONLINE booking without payment.
+    return { result: 'not_paid' };
+  }
+  if (booking.status === BookingStatus.CONFIRMED) {
+    return { result: 'already_confirmed' };
+  }
+  if (booking.status !== BookingStatus.PENDING_PAYMENT) {
+    return { result: 'not_pending' };
+  }
+
+  const accessToken = crypto.randomBytes(32).toString('hex');
+  const accessTokenHash = crypto
+    .createHash('sha256')
+    .update(accessToken)
+    .digest('hex');
+
+  const updated = await db.booking.updateMany({
+    where: { id: bookingId, status: BookingStatus.PENDING_PAYMENT },
+    data: {
+      status: BookingStatus.CONFIRMED,
+      expiresAt: null,
+      accessTokenHash,
+    },
+  });
+  if (updated.count !== 1) return { result: 'race_lost' };
+
+  logInfo('On-site booking confirmed (no imprint)', {
+    bookingRef: booking.reference,
+  });
+  await sendBookingConfirmationNotifications(booking, accessToken, 'on_site');
+  return { result: 'confirmed', accessToken };
+}
+
+/**
+ * Confirm an ON_SITE booking whose no-show card imprint (Stripe Checkout
+ * mode:'setup') just completed (P-08, US-220). Persists the vaulted card
+ * (Customer + payment method) so the winemaker can charge the no-show fee
+ * off-session later — ZERO debit here. A setup session reports
+ * payment_status 'no_payment_required' and carries a setup_intent, not a
+ * payment_intent, so confirmBookingFromPaidCheckoutSession would no-op it.
+ * Guarded by the PENDING_PAYMENT claim → idempotent on webhook redelivery.
+ */
+export async function confirmImprintBookingFromSetupSession(
+  session: Stripe.Checkout.Session
+): Promise<CheckoutConfirmationOutcome> {
+  const bookingId = session.metadata?.bookingId;
+  if (!bookingId) {
+    logError('No bookingId in setup session metadata');
+    return { result: 'missing_metadata' };
+  }
+
+  const setupIntentId =
+    typeof session.setup_intent === 'string'
+      ? session.setup_intent
+      : (session.setup_intent?.id ?? null);
+  if (!setupIntentId) {
+    logError('Setup session has no setup intent', undefined, {
+      bookingId,
+      sessionId: session.id,
+    });
+    return { result: 'missing_payment_intent' };
+  }
+
+  const setupIntent = await getStripe().setupIntents.retrieve(setupIntentId);
+  const paymentMethodId =
+    typeof setupIntent.payment_method === 'string'
+      ? setupIntent.payment_method
+      : (setupIntent.payment_method?.id ?? null);
+  const customerId =
+    (typeof session.customer === 'string'
+      ? session.customer
+      : (session.customer?.id ?? null)) ??
+    (typeof setupIntent.customer === 'string'
+      ? setupIntent.customer
+      : (setupIntent.customer?.id ?? null));
+
+  const booking = await db.booking.findUnique({
+    where: { id: bookingId },
+    include: bookingConfirmationInclude,
+  });
+  if (!booking) {
+    logError('Booking not found', undefined, { bookingId });
+    return { result: 'missing_booking' };
+  }
+
+  if (
+    booking.stripeCheckoutSessionId?.startsWith('cs_') &&
+    booking.stripeCheckoutSessionId !== session.id
+  ) {
+    return { result: 'session_mismatch' };
+  }
+  if (booking.status === BookingStatus.CONFIRMED) {
+    return { result: 'already_confirmed' };
+  }
+  if (booking.status !== BookingStatus.PENDING_PAYMENT) {
+    return { result: 'not_pending' };
+  }
+
+  if (!paymentMethodId || !customerId) {
+    // The client completed the setup but Stripe returned no card to vault —
+    // confirm the booking anyway (the guest showed up to book) but no fee can
+    // be charged later. The charge action guards on the imprint's presence.
+    logWarn('Setup session completed without a vaultable card', {
+      bookingRef: booking.reference,
+      hasPaymentMethod: Boolean(paymentMethodId),
+      hasCustomer: Boolean(customerId),
+    });
+  }
+
+  const accessToken = crypto.randomBytes(32).toString('hex');
+  const accessTokenHash = crypto
+    .createHash('sha256')
+    .update(accessToken)
+    .digest('hex');
+
+  const updated = await db.booking.updateMany({
+    where: { id: bookingId, status: BookingStatus.PENDING_PAYMENT },
+    data: {
+      status: BookingStatus.CONFIRMED,
+      stripeCheckoutSessionId: session.id,
+      stripeCustomerId: customerId,
+      noShowSetupIntentId: setupIntentId,
+      noShowPaymentMethodId: paymentMethodId,
+      expiresAt: null,
+      accessTokenHash,
+    },
+  });
+  if (updated.count !== 1) return { result: 'race_lost' };
+
+  logInfo('No-show imprint booking confirmed from setup session', {
+    bookingRef: booking.reference,
+  });
+  await sendBookingConfirmationNotifications(booking, accessToken, 'imprint');
   return { result: 'confirmed', accessToken };
 }

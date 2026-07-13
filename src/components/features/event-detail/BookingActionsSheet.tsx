@@ -2,9 +2,18 @@
 
 import { useState, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
-import { BookingStatus } from '@prisma/client';
+import { BookingStatus, NoShowChargeStatus } from '@prisma/client';
 import { toast } from 'sonner';
-import { Check, Loader2, MoreHorizontal, RotateCcw, UserX } from 'lucide-react';
+import {
+  Check,
+  CreditCard,
+  Loader2,
+  MoreHorizontal,
+  RotateCcw,
+  UserX,
+} from 'lucide-react';
+import { useRouter } from '@/i18n/navigation';
+import { formatCHF } from '@/lib/utils/currency';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -29,9 +38,15 @@ import {
   revertBookingCheckIn,
   revertBookingNoShow,
 } from '@/server/actions/event-detail';
+import { chargeNoShowFee } from '@/server/actions/no-show';
 import { cn } from '@/lib/utils';
 
-type DialogKind = 'markNoShow' | 'revertCheckIn' | 'revertNoShow' | null;
+type DialogKind =
+  | 'markNoShow'
+  | 'revertCheckIn'
+  | 'revertNoShow'
+  | 'chargeNoShow'
+  | null;
 
 interface BookingActionsSheetProps {
   bookingId: string;
@@ -39,6 +54,9 @@ interface BookingActionsSheetProps {
   status: BookingStatus;
   canCheckIn: boolean;
   canMarkNoShow: boolean;
+  noShowFeeTotalCents?: number | null;
+  hasNoShowImprint?: boolean;
+  noShowFeeChargeStatus?: NoShowChargeStatus | null;
 }
 
 /**
@@ -51,11 +69,24 @@ export function BookingActionsSheet({
   status,
   canCheckIn,
   canMarkNoShow,
+  noShowFeeTotalCents = null,
+  hasNoShowImprint = false,
+  noShowFeeChargeStatus = null,
 }: BookingActionsSheetProps) {
   const t = useTranslations('Dashboard.eventDetail');
+  const router = useRouter();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [dialog, setDialog] = useState<DialogKind>(null);
   const [isPending, startTransition] = useTransition();
+
+  const canChargeNoShow =
+    status === BookingStatus.NO_SHOW &&
+    hasNoShowImprint &&
+    noShowFeeChargeStatus !== NoShowChargeStatus.CHARGED &&
+    noShowFeeChargeStatus !== NoShowChargeStatus.PENDING &&
+    (noShowFeeTotalCents ?? 0) > 0;
+  const noShowAlreadyCharged =
+    noShowFeeChargeStatus === NoShowChargeStatus.CHARGED;
 
   if (
     status === BookingStatus.CANCELLED_BY_CLIENT ||
@@ -77,7 +108,8 @@ export function BookingActionsSheet({
         | 'checkedIn'
         | 'noShow'
         | 'revertedCheckIn'
-        | 'revertedNoShow';
+        | 'revertedNoShow'
+        | 'noShowCharged';
       let result;
       if (kind === 'markPresent') {
         result = await markBookingCheckedIn(input);
@@ -88,6 +120,9 @@ export function BookingActionsSheet({
       } else if (kind === 'revertCheckIn') {
         result = await revertBookingCheckIn(input);
         toastKey = 'revertedCheckIn';
+      } else if (kind === 'chargeNoShow') {
+        result = await chargeNoShowFee(input);
+        toastKey = 'noShowCharged';
       } else {
         result = await revertBookingNoShow(input);
         toastKey = 'revertedNoShow';
@@ -95,11 +130,16 @@ export function BookingActionsSheet({
       if (result.success) {
         toast.success(t(`toast.${toastKey}`));
         closeAll();
+        router.refresh();
       } else {
         if (result.error.message === 'REVERT_WINDOW_EXPIRED') {
           toast.error(t('errors.revertWindowExpired'));
         } else if (result.error.message === 'SESSION_NOT_ENDED') {
           toast.error(t('errors.sessionNotEnded'));
+        } else if (result.error.code === 'PAYMENT_FAILED') {
+          toast.error(t('errors.noShowChargeFailed'));
+        } else if (result.error.message === 'ALREADY_CHARGED') {
+          toast.error(t('errors.noShowAlreadyCharged'));
         } else {
           toast.error(t('toast.error'));
         }
@@ -123,6 +163,13 @@ export function BookingActionsSheet({
         return {
           title: t('confirm.revertNoShowTitle'),
           description: t('confirm.revertNoShowDescription'),
+        };
+      case 'chargeNoShow':
+        return {
+          title: t('confirm.chargeNoShowTitle'),
+          description: t('confirm.chargeNoShowDescription', {
+            amount: formatCHF(noShowFeeTotalCents ?? 0),
+          }),
         };
       default:
         return null;
@@ -180,12 +227,36 @@ export function BookingActionsSheet({
               />
             ) : null}
             {status === BookingStatus.NO_SHOW ? (
-              <SheetAction
-                icon={<RotateCcw className="h-5 w-5" aria-hidden="true" />}
-                label={t('actions.revertNoShow')}
-                disabled={isPending}
-                onClick={() => setDialog('revertNoShow')}
-              />
+              <>
+                {canChargeNoShow ? (
+                  <SheetAction
+                    icon={<CreditCard className="h-5 w-5" aria-hidden="true" />}
+                    label={
+                      noShowFeeChargeStatus === NoShowChargeStatus.FAILED
+                        ? t('actions.retryNoShowFee')
+                        : t('actions.chargeNoShowFee', {
+                            amount: formatCHF(noShowFeeTotalCents ?? 0),
+                          })
+                    }
+                    disabled={isPending}
+                    onClick={() => setDialog('chargeNoShow')}
+                  />
+                ) : null}
+                {noShowAlreadyCharged ? (
+                  <SheetAction
+                    icon={<Check className="h-5 w-5" aria-hidden="true" />}
+                    label={t('actions.noShowFeeCharged')}
+                    disabled
+                    onClick={() => undefined}
+                  />
+                ) : null}
+                <SheetAction
+                  icon={<RotateCcw className="h-5 w-5" aria-hidden="true" />}
+                  label={t('actions.revertNoShow')}
+                  disabled={isPending}
+                  onClick={() => setDialog('revertNoShow')}
+                />
+              </>
             ) : null}
           </div>
         </SheetContent>

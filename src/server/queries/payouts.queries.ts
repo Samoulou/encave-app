@@ -257,7 +257,13 @@ export async function getPayoutDetail(
       const bookings = paymentIntentIds.length
         ? await db.booking.findMany({
             where: {
-              stripePaymentIntentId: { in: paymentIntentIds },
+              // A transfer's payment intent is either the booking charge OR,
+              // for P-08, the off-session no-show fee (its PI id lives in a
+              // separate column). Match both.
+              OR: [
+                { stripePaymentIntentId: { in: paymentIntentIds } },
+                { noShowFeeChargePaymentIntentId: { in: paymentIntentIds } },
+              ],
               // Defense in depth: only THIS winery's bookings can match.
               winery: { stripeAccountId },
             },
@@ -269,12 +275,21 @@ export async function getPayoutDetail(
               platformFee: true,
               wineryPayout: true,
               stripePaymentIntentId: true,
+              noShowFeeChargePaymentIntentId: true,
+              noShowFeeChargedCents: true,
               experience: { select: { title: true } },
             },
           })
         : [];
       const bookingByPaymentIntent = new Map(
         bookings.map((booking) => [booking.stripePaymentIntentId, booking])
+      );
+      // Separate index for the no-show fee transfer (P-08). End-to-end payout
+      // correlation is re-verified against Stripe/staging in P-16.
+      const bookingByNoShowPaymentIntent = new Map(
+        bookings
+          .filter((b) => b.noShowFeeChargePaymentIntentId)
+          .map((b) => [b.noShowFeeChargePaymentIntentId, b])
       );
 
       const bookingLines: PayoutBookingLineDTO[] = [];
@@ -288,6 +303,10 @@ export async function getPayoutDetail(
         const booking = paymentIntentId
           ? bookingByPaymentIntent.get(paymentIntentId)
           : undefined;
+        const noShowBooking =
+          !booking && paymentIntentId
+            ? bookingByNoShowPaymentIntent.get(paymentIntentId)
+            : undefined;
         if (booking) {
           bookingLines.push({
             bookingId: booking.id,
@@ -296,6 +315,19 @@ export async function getPayoutDetail(
             dateMs: booking.date.getTime(),
             grossCents: booking.totalPrice,
             commissionCents: booking.platformFee,
+            netCents: txn.amount,
+          });
+        } else if (noShowBooking) {
+          // No-show fee transfer (P-08): gross = fee charged, net = what the
+          // transfer actually moved, commission = the difference.
+          const gross = noShowBooking.noShowFeeChargedCents ?? txn.amount;
+          bookingLines.push({
+            bookingId: noShowBooking.id,
+            reference: noShowBooking.reference,
+            experienceTitle: noShowBooking.experience.title,
+            dateMs: noShowBooking.date.getTime(),
+            grossCents: gross,
+            commissionCents: gross - txn.amount,
             netCents: txn.amount,
           });
         } else {

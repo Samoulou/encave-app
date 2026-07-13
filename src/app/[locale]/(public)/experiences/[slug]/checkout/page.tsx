@@ -82,12 +82,13 @@ export default async function CheckoutPage({
   // Fetch experience data on the server (eliminates client waterfall).
   // Booking fee (P-03 / L-041): the flag is read server-side so the client
   // only ever renders the amount — flag OFF means 0, same display as before.
-  const [result, bookingFeeEnabled, giftEnabled] = await Promise.all([
-    getExperienceForBooking(slug),
-    isFlagEnabled('BOOKING_FEE'),
-    isFlagEnabled('GIFT_CARDS'),
-  ]);
-  const serviceFeeCentsPerGuest = bookingFeeEnabled ? BOOKING_FEE_CENTS : 0;
+  const [result, bookingFeeEnabled, giftEnabled, noShowFeesEnabled] =
+    await Promise.all([
+      getExperienceForBooking(slug),
+      isFlagEnabled('BOOKING_FEE'),
+      isFlagEnabled('GIFT_CARDS'),
+      isFlagEnabled('NO_SHOW_FEES'),
+    ]);
 
   if (!result.success) {
     // Experience not found
@@ -95,6 +96,17 @@ export default async function CheckoutPage({
   }
 
   const experience = result.data;
+
+  // P-08: ON_SITE / free offers take no online charge. When the winery opts
+  // into no-show fees, checkout collects a card imprint and the client accepts
+  // the fee — no service fee is added to an ON_SITE booking.
+  const isOnSite = experience.paymentMode === 'ON_SITE';
+  const noShowFeeCentsPerGuest =
+    noShowFeesEnabled && isOnSite && experience.winery.noShowFeeEnabled
+      ? experience.winery.noShowFeeCents
+      : 0;
+  const serviceFeeCentsPerGuest =
+    !isOnSite && bookingFeeEnabled ? BOOKING_FEE_CENTS : 0;
 
   // Invalid booking params - show error
   if (!hasValidParams) {
@@ -126,6 +138,7 @@ export default async function CheckoutPage({
       time={time}
       guestCount={guestCount}
       serviceFeeCentsPerGuest={serviceFeeCentsPerGuest}
+      noShowFeeCentsPerGuest={noShowFeeCentsPerGuest}
       holdId={hasHold ? holdId : null}
       holdToken={hasHold ? holdToken : null}
       holdExpiresAt={hasHold ? holdExpiresAt : null}
