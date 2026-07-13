@@ -82,6 +82,11 @@ export type RequestFormValues = z.infer<typeof requestFormSchema>;
  * fee — decision Sam); the tier commission applies at payment. The agreed
  * date/time become Booking.date / Booking.timeSlot when the client pays.
  */
+/** yyyy-mm-dd for "today" (UTC) — the floor for a scheduled sur-mesure date. */
+function todayISODate(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
 export const composeOfferSchema = z.object({
   requestId: z.string().cuid(),
   message: z
@@ -94,7 +99,15 @@ export const composeOfferSchema = z.object({
     .int()
     .min(REQUEST_OFFER_MIN_PRICE_CENTS)
     .max(REQUEST_OFFER_MAX_PRICE_CENTS),
-  scheduledDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  // Must be today or later — a past event date would emit a ticket for a
+  // bygone day and never fire the J-1 reminder. Lexicographic compare is
+  // safe on yyyy-mm-dd.
+  scheduledDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .refine((d) => d >= todayISODate(), {
+      message: 'scheduledDate must not be in the past',
+    }),
   scheduledStartTime: z.string().regex(TIME_HHMM),
   validityDays: z
     .number()

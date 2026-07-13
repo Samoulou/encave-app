@@ -2544,7 +2544,8 @@
     "statusPending": "Ausstehend",
     "statusOffered": "Angebot erhalten",
     "statusPaid": "Bezahlt",
-    "statusExpired": "Abgelaufen"
+    "statusExpired": "Abgelaufen",
+    "stripeLineItem": "Massgeschneidertes Angebot"
   },
   "requests": {
     "inboxTitle": "Massgeschneiderte Anfragen",

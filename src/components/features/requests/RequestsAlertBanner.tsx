@@ -3,7 +3,7 @@ import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
-import { getStaleRequests } from '@/server/queries/request.queries';
+import { getStaleRequestCount } from '@/server/queries/request.queries';
 
 interface RequestsAlertBannerProps {
   wineryId: string;
@@ -19,8 +19,8 @@ export async function RequestsAlertBanner({
   wineryId,
 }: RequestsAlertBannerProps) {
   if (!(await isFlagEnabled('REQUESTS'))) return null;
-  const stale = await getStaleRequests(wineryId);
-  if (stale.length === 0) return null;
+  const staleCount = await getStaleRequestCount(wineryId);
+  if (staleCount === 0) return null;
 
   const t = await getTranslations('requests');
 
@@ -38,7 +38,7 @@ export async function RequestsAlertBanner({
           <div>
             <h2 className="font-medium text-amber-900">{t('alertTitle')}</h2>
             <p className="mt-0.5 text-sm text-amber-800">
-              {t('alertDescription', { count: stale.length })}
+              {t('alertDescription', { count: staleCount })}
             </p>
           </div>
         </div>

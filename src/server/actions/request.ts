@@ -6,6 +6,7 @@ import { revalidateTag } from 'next/cache';
 import { addDays, addMinutes } from 'date-fns';
 import type Stripe from 'stripe';
 import { createId } from '@paralleldrive/cuid2';
+import { getTranslations } from 'next-intl/server';
 import {
   BookingStatus,
   Locale,
@@ -516,10 +517,11 @@ export async function createRequestOfferCheckout(
 
     // Reuse a single booking per offer — never mint a second (double-charge).
     let bookingId = offer.bookingId;
+    let bookingReference = '';
     if (bookingId) {
       const existing = await db.booking.findUnique({
         where: { id: bookingId },
-        select: { status: true },
+        select: { status: true, reference: true },
       });
       if (existing?.status === BookingStatus.CONFIRMED) {
         return {
@@ -529,6 +531,8 @@ export async function createRequestOfferCheckout(
       }
       if (!existing || existing.status !== BookingStatus.PENDING_PAYMENT) {
         bookingId = null;
+      } else {
+        bookingReference = existing.reference;
       }
     }
 
@@ -565,6 +569,8 @@ export async function createRequestOfferCheckout(
         data: { bookingId: created.id },
       });
       if (linked.count === 0) {
+        // Lost the race: drop our booking and reuse the winner's (rare — one
+        // extra read only here, `bookingId` is a loose string, no relation).
         await db.booking.delete({ where: { id: created.id } });
         const winner = await db.requestOffer.findUnique({
           where: { id: offer.id },
@@ -577,20 +583,24 @@ export async function createRequestOfferCheckout(
           };
         }
         bookingId = winner.bookingId;
+        bookingReference =
+          (
+            await db.booking.findUnique({
+              where: { id: bookingId },
+              select: { reference: true },
+            })
+          )?.reference ?? '';
       } else {
         bookingId = created.id;
+        bookingReference = created.reference;
       }
     }
 
     const baseUrl = getBaseUrl();
     const routing = routingPath(offer.request.locale);
-    const bookingReference =
-      (
-        await db.booking.findUnique({
-          where: { id: bookingId },
-          select: { reference: true },
-        })
-      )?.reference ?? '';
+    const lineItemName = (
+      await getTranslations({ locale: routing, namespace: 'surMesure' })
+    )('stripeLineItem');
 
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
       payment_method_types: ['twint', 'card', 'link'],
@@ -600,7 +610,7 @@ export async function createRequestOfferCheckout(
           price_data: {
             currency: 'chf',
             product_data: {
-              name: 'Offre sur-mesure',
+              name: lineItemName,
               description: winery.name,
             },
             unit_amount: totalPrice,

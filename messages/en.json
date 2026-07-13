@@ -2539,7 +2539,8 @@
     "statusPending": "Pending",
     "statusOffered": "Offer received",
     "statusPaid": "Paid",
-    "statusExpired": "Expired"
+    "statusExpired": "Expired",
+    "stripeLineItem": "Bespoke offer"
   },
   "requests": {
     "inboxTitle": "Bespoke requests",

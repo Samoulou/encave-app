@@ -164,18 +164,15 @@ export const getPendingRequestCount = cache((wineryId: string) =>
 );
 
 /**
- * Dashboard alert (P-10 / L-094): requests still PENDING older than 24h.
- * Not cached — it's an "as of now" age window, cheap and rarely non-empty.
+ * Dashboard alert (P-10 / L-094): count of requests still PENDING older than
+ * 24h. Not cached — it's an "as of now" age window, cheap and rarely non-zero.
  */
-export const getStaleRequests = cache(
-  async (wineryId: string): Promise<{ id: string; count: number }[]> => {
+export const getStaleRequestCount = cache(
+  async (wineryId: string): Promise<number> => {
     const cutoff = subHours(new Date(), REQUEST_ALERT_HOURS);
-    const rows = await db.request.findMany({
+    return db.request.count({
       where: { wineryId, status: 'PENDING', createdAt: { lt: cutoff } },
-      select: { id: true },
-      orderBy: { createdAt: 'asc' },
     });
-    return rows.map((r) => ({ id: r.id, count: 1 }));
   }
 );
 
