@@ -128,7 +128,8 @@
       "spots": "2+ places"
     },
     "wines": "Vins",
-    "payouts": "Reversements"
+    "payouts": "Reversements",
+    "giftCards": "Offrir un bon"
   },
   "locale": {
     "fr": "Français",
@@ -584,7 +585,8 @@
       "meetingPoint": "Rendez-vous à {commune}",
       "proposedBy": "{type} proposé par {winery}",
       "securePaymentActive": "Paiement sécurisé activé",
-      "bookingToConfirm": "Réservation à confirmer avec le domaine"
+      "bookingToConfirm": "Réservation à confirmer avec le domaine",
+      "giftCta": "Offrir cette expérience"
     },
     "freeCancellationUntilHours": "Annulation gratuite jusqu'à {hours} h avant.",
     "freeCancellationUntilDays": "Annulation gratuite jusqu'à {days, plural, =1 {# jour} other {# jours}} avant.",

@@ -52,8 +52,11 @@ function todayKey(): string {
 
 export function GiftCardConfigurator({
   experiences,
+  preselectExperienceId,
 }: {
   experiences: GiftableExperience[];
+  /** Deep-link from an experience page (?experience=id) → EXPERIENCE gift. */
+  preselectExperienceId?: string;
 }) {
   const t = useTranslations('giftCards');
   const locale = useLocale();
@@ -68,8 +71,9 @@ export function GiftCardConfigurator({
   } = useForm<GiftCardFormValues>({
     resolver: zodResolver(giftCardFormSchema),
     defaultValues: {
-      nature: 'AMOUNT',
+      nature: preselectExperienceId ? 'EXPERIENCE' : 'AMOUNT',
       amountCents: 10000,
+      experienceId: preselectExperienceId,
       variant: 'NEUTRE',
       deliverDate: todayKey(),
       purchaserName: '',

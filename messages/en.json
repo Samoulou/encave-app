@@ -128,7 +128,8 @@
       "spots": "2+ spots"
     },
     "wines": "Wines",
-    "payouts": "Payouts"
+    "payouts": "Payouts",
+    "giftCards": "Gift a card"
   },
   "locale": {
     "fr": "Francais",
@@ -584,7 +585,8 @@
       "meetingPoint": "Meeting point in {commune}",
       "proposedBy": "{type} offered by {winery}",
       "securePaymentActive": "Secure payment enabled",
-      "bookingToConfirm": "Booking to be confirmed with the winery"
+      "bookingToConfirm": "Booking to be confirmed with the winery",
+      "giftCta": "Gift this experience"
     },
     "freeCancellationUntilHours": "Free cancellation until {hours}h before.",
     "freeCancellationUntilDays": "Free cancellation until {days, plural, =1 {# day} other {# days}} before.",

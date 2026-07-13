@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   Calendar,
   LogOut,
+  Gift,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Link, usePathname } from '@/i18n/navigation';
@@ -77,6 +78,8 @@ function getRoleNavItems(
 
 interface MobileNavSheetBodyProps {
   closeMenu: () => void;
+  /** GIFT_CARDS flag — adds the "Offrir un bon" nav item (P-09). */
+  giftCardsEnabled?: boolean;
 }
 
 /**
@@ -87,6 +90,7 @@ interface MobileNavSheetBodyProps {
  */
 export default function MobileNavSheetBody({
   closeMenu,
+  giftCardsEnabled = false,
 }: MobileNavSheetBodyProps) {
   const t = useTranslations('nav');
   const pathname = usePathname();
@@ -102,7 +106,19 @@ export default function MobileNavSheetBody({
     closeMenu();
   }
 
-  const navItems = [...baseNavItems(t), ...getRoleNavItems(userRole, t)];
+  const navItems = [
+    ...baseNavItems(t),
+    ...(giftCardsEnabled
+      ? [
+          {
+            href: '/cadeaux',
+            label: t('giftCards'),
+            icon: <Gift className="h-5 w-5" />,
+          },
+        ]
+      : []),
+    ...getRoleNavItems(userRole, t),
+  ];
 
   return (
     <>

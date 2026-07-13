@@ -10,6 +10,8 @@ import { cn } from '@/lib/utils';
 
 interface MobileNavProps {
   triggerClassName?: string;
+  /** GIFT_CARDS flag — adds the "Offrir un bon" nav item (P-09). */
+  giftCardsEnabled?: boolean;
 }
 
 // P-06 (L-202): the sheet body (nav items, session state, logout) loads
@@ -34,7 +36,10 @@ const MobileNavSheetBody = dynamic(
   }
 );
 
-export function MobileNav({ triggerClassName }: MobileNavProps) {
+export function MobileNav({
+  triggerClassName,
+  giftCardsEnabled = false,
+}: MobileNavProps) {
   // Radix unmounts SheetContent's subtree while closed: rendering the
   // body unconditionally still only loads the chunk on first open.
   const [open, setOpen] = useState(false);
@@ -56,7 +61,10 @@ export function MobileNav({ triggerClassName }: MobileNavProps) {
         </Button>
       </SheetTrigger>
       <SheetContent side="right" className="w-full bg-cream-50 sm:w-[350px]">
-        <MobileNavSheetBody closeMenu={() => setOpen(false)} />
+        <MobileNavSheetBody
+          closeMenu={() => setOpen(false)}
+          giftCardsEnabled={giftCardsEnabled}
+        />
       </SheetContent>
     </Sheet>
   );

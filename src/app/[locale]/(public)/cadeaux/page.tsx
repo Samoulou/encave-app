@@ -17,7 +17,7 @@ import { GiftCardConfigurator } from '@/components/features/gift-cards/GiftCardC
 
 interface Props {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; experience?: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -80,7 +80,15 @@ export default async function GiftCardsPage({ params, searchParams }: Props) {
           </div>
         )}
 
-        <GiftCardConfigurator experiences={experiences} />
+        <GiftCardConfigurator
+          experiences={experiences}
+          preselectExperienceId={
+            search.experience &&
+            experiences.some((e) => e.id === search.experience)
+              ? search.experience
+              : undefined
+          }
+        />
 
         <section className="mt-16">
           <h2 className="mb-4 font-serif text-2xl font-semibold">
