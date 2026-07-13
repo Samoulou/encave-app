@@ -42,9 +42,12 @@ export async function ExperiencesContent({
 }: ExperiencesContentProps) {
   const statusFilter = getStatusFilter(filter);
 
-  // Build where clause
+  // Build where clause. `isCustom: false` hides the P-10 sur-mesure holder
+  // experience — a real DRAFT row that must never appear in this management
+  // grid nor inflate the "Brouillons"/"Tous" counters.
   const where: Prisma.ExperienceWhereInput = {
     wineryId,
+    isCustom: false,
     ...(statusFilter && { status: statusFilter }),
     ...(search && {
       title: { contains: search, mode: 'insensitive' },
@@ -70,9 +73,15 @@ export async function ExperiencesContent({
         },
       }),
       db.experience.count({ where }),
-      db.experience.count({ where: { wineryId, status: 'PUBLISHED' } }),
-      db.experience.count({ where: { wineryId, status: 'DRAFT' } }),
-      db.experience.count({ where: { wineryId, status: 'ARCHIVED' } }),
+      db.experience.count({
+        where: { wineryId, isCustom: false, status: 'PUBLISHED' },
+      }),
+      db.experience.count({
+        where: { wineryId, isCustom: false, status: 'DRAFT' },
+      }),
+      db.experience.count({
+        where: { wineryId, isCustom: false, status: 'ARCHIVED' },
+      }),
     ]);
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);

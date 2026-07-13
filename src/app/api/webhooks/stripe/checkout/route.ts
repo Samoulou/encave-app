@@ -9,6 +9,7 @@ import { confirmBookingFromPaidCheckoutSession } from '@/server/services/checkou
 import { createGiftCardFromPayment } from '@/server/services/giftCard.service';
 import { settleGiftTransfer } from '@/server/services/giftCard-transfer.service';
 import { releaseGiftForBooking } from '@/server/services/giftCard-redemption.service';
+import { flipRequestOfferPaid } from '@/server/services/request.service';
 import { logError, logInfo } from '@/lib/logger';
 import {
   claimStripeEvent,
@@ -109,6 +110,27 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   // ledger, sends email #6, schedules #7.
   if (session.metadata?.kind === 'gift_card') {
     await createGiftCardFromPayment(session);
+    return;
+  }
+
+  // Sur-mesure offer payment (P-10): the booking is confirmed exactly like a
+  // normal booking (same metadata.bookingId), then the offer/request flip to
+  // PAID. The status flip runs only after a real confirmation and is
+  // idempotent on redelivery (guarded updateMany inside flipRequestOfferPaid).
+  if (session.metadata?.kind === 'request_offer') {
+    const { result } = await confirmBookingFromPaidCheckoutSession(
+      session,
+      'webhook'
+    );
+    if (result === 'missing_payment_intent') {
+      throw new Error('Checkout session has no payment intent');
+    }
+    if (result === 'confirmed' || result === 'already_confirmed') {
+      const requestOfferId = session.metadata?.requestOfferId;
+      if (requestOfferId) {
+        await flipRequestOfferPaid(requestOfferId);
+      }
+    }
     return;
   }
 

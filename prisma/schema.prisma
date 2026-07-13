@@ -291,6 +291,11 @@ model Experience {
   // V3 (P-02 foundations): spoken languages and collective events (US-250).
   languages    Locale[]         @default([FR])
   isCollective Boolean          @default(false)
+  // V3 (P-10): hidden per-winery holder for sur-mesure request bookings.
+  // Always DRAFT (excluded from every PUBLISHED-gated public surface) +
+  // this flag (filters the two winemaker lists that show DRAFT rows).
+  // Never shown in the catalogue; a paid offer books against it.
+  isCustom     Boolean          @default(false)
   coverPhoto   String
   // Location fields (optional - falls back to winery address if not set)
   address      String? // Street address
@@ -720,9 +725,19 @@ model RequestOffer {
   request                 Request            @relation(fields: [requestId], references: [id], onDelete: Cascade)
   status                  RequestOfferStatus @default(SENT)
   message                 String             @db.Text
-  totalPrice              Int // cents
+  totalPrice              Int // cents — all-in (winery value, commission base); no service fee (P-10 decision)
+  // V3 (P-10): agreed event day/time captured by the winemaker when
+  // composing the offer → Booking.date / Booking.timeSlot on payment.
+  scheduledDate           DateTime?          @db.Date
+  scheduledStartTime      String? // "HH:mm"
   expiresAt               DateTime
   reminderSentAt          DateTime? // single automatic reminder (spec)
+  // V3 (P-10): unguessable capability token for the payment link. Plaintext
+  // (like a Stripe payment-link URL) — it must survive across email #9 and
+  // the #10 reminder, and grants only "view offer + pay it", never data a
+  // DB reader wouldn't already have. NOT hashed on purpose (a rotating hash
+  // would break the #9 link when #10 mints a new one).
+  paymentToken            String?            @unique
   stripeCheckoutSessionId String?
   bookingId               String?
   createdAt               DateTime           @default(now())

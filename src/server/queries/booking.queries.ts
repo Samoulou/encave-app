@@ -241,8 +241,11 @@ export const getWineryExperiencesForFilter = cache(
   async function getWineryExperiencesForFilter(
     wineryId: string
   ): Promise<ExperienceOption[]> {
+    // `isCustom: false` drops the P-10 sur-mesure holder from the filter
+    // dropdown (a stray entry for the wineries that never use it); those
+    // bookings still appear in the unfiltered list.
     const experiences = await db.experience.findMany({
-      where: { wineryId },
+      where: { wineryId, isCustom: false },
       select: {
         id: true,
         title: true,
