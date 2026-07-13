@@ -800,7 +800,19 @@
       "remaining": "Créneau réservé pendant {time}",
       "remainingUrgent": "Plus que {time} pour finaliser votre réservation",
       "expired": "Créneau expiré, redirection…"
-    }
+    },
+    "giftApplied": "Bon cadeau",
+    "giftCodeLabel": "Bon cadeau",
+    "giftCodePlaceholder": "Votre code",
+    "giftApply": "Appliquer",
+    "giftRemove": "Retirer",
+    "giftAppliedNote": "{amount} appliqués sur ce paiement.",
+    "giftErrorNOT_FOUND": "Code introuvable.",
+    "giftErrorDISABLED": "Ce bon a été désactivé.",
+    "giftErrorEXPIRED": "Ce bon a expiré.",
+    "giftErrorDEPLETED": "Ce bon est épuisé.",
+    "giftErrorWRONG_EXPERIENCE": "Ce bon n’est valable que pour une autre expérience.",
+    "giftErrorGeneric": "Impossible d’appliquer ce code."
   },
   "confirmation": {
     "bookingConfirmed": "Réservation confirmée !",

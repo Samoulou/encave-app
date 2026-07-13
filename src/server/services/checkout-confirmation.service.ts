@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import type Stripe from 'stripe';
-import { BookingStatus } from '@prisma/client';
+import { BookingStatus, type Prisma } from '@prisma/client';
 import { db } from '@/server/db';
 import {
   sendBookingConfirmationEmail,
@@ -169,6 +169,36 @@ export async function confirmBookingFromPaidCheckoutSession(
     source,
   });
 
+  await sendBookingConfirmationNotifications(booking, accessToken, source);
+  return { result: 'confirmed', accessToken };
+}
+
+const bookingConfirmationInclude = {
+  experience: { select: { title: true, duration: true } },
+  winery: {
+    select: {
+      name: true,
+      email: true,
+      user: { select: { name: true, preferredLocale: true } },
+    },
+  },
+} as const;
+
+type BookingForConfirmation = Prisma.BookingGetPayload<{
+  include: typeof bookingConfirmationInclude;
+}>;
+
+/**
+ * Post-confirmation side effects shared by the paid path and the fully
+ * gift-covered path (P-09): analytics + client confirmation email + winery
+ * notification. Email failures are logged, never thrown — the booking is
+ * already CONFIRMED.
+ */
+async function sendBookingConfirmationNotifications(
+  booking: BookingForConfirmation,
+  accessToken: string,
+  source: CheckoutConfirmationSource | 'gift'
+): Promise<void> {
   const posthogServer = getPostHogServer();
   if (posthogServer) {
     posthogServer.capture({
@@ -189,6 +219,7 @@ export async function confirmBookingFromPaidCheckoutSession(
         total_paid_chf: (booking.totalPrice + booking.serviceFeeCents) / 100,
         platform_fee_chf: booking.platformFee / 100,
         winery_payout_chf: booking.wineryPayout / 100,
+        gift_applied_chf: booking.giftAppliedCents / 100,
         source,
       },
     });
@@ -217,19 +248,15 @@ export async function confirmBookingFromPaidCheckoutSession(
       },
       booking.winery.user.preferredLocale
     );
-
     await db.booking.update({
-      where: { id: bookingId },
+      where: { id: booking.id },
       data: { confirmationSentAt: new Date() },
     });
-
-    logInfo('Confirmation email sent', {
-      to: booking.visitorEmail,
-      bookingRef: booking.reference,
+  } catch (error) {
+    logError('Failed to send confirmation email', error, {
+      bookingId: booking.id,
       source,
     });
-  } catch (error) {
-    logError('Failed to send confirmation email', error, { bookingId, source });
   }
 
   try {
@@ -247,23 +274,63 @@ export async function confirmBookingFromPaidCheckoutSession(
       },
       booking.winery.user.preferredLocale
     );
-
     await db.booking.update({
-      where: { id: bookingId },
+      where: { id: booking.id },
       data: { wineryNotifiedAt: new Date() },
-    });
-
-    logInfo('Winery notification sent', {
-      to: booking.winery.email,
-      bookingRef: booking.reference,
-      source,
     });
   } catch (error) {
     logError('Failed to send winery notification', error, {
-      bookingId,
+      bookingId: booking.id,
       source,
     });
   }
+}
 
+/**
+ * Confirm a booking fully covered by a gift card (P-09, Luca design §4):
+ * no Stripe session exists (Checkout refuses a 0 total), so the redemption
+ * already reserved the funds and we confirm server-side. The platform→winery
+ * transfer is settled separately by the caller (settleGiftTransfer). Guarded
+ * by the PENDING_PAYMENT claim → idempotent against a double call.
+ */
+export async function confirmGiftFullyCoveredBooking(
+  bookingId: string
+): Promise<CheckoutConfirmationOutcome> {
+  const booking = await db.booking.findUnique({
+    where: { id: bookingId },
+    include: bookingConfirmationInclude,
+  });
+  if (!booking) return { result: 'missing_booking' };
+  if (booking.status === BookingStatus.CONFIRMED) {
+    return { result: 'already_confirmed' };
+  }
+  if (booking.status !== BookingStatus.PENDING_PAYMENT) {
+    return { result: 'not_pending' };
+  }
+  if (booking.giftAppliedCents <= 0) {
+    // Not actually gift-covered — never confirm a booking for free.
+    return { result: 'not_paid' };
+  }
+
+  const accessToken = crypto.randomBytes(32).toString('hex');
+  const accessTokenHash = crypto
+    .createHash('sha256')
+    .update(accessToken)
+    .digest('hex');
+
+  const updated = await db.booking.updateMany({
+    where: { id: bookingId, status: BookingStatus.PENDING_PAYMENT },
+    data: {
+      status: BookingStatus.CONFIRMED,
+      expiresAt: null,
+      accessTokenHash,
+    },
+  });
+  if (updated.count !== 1) return { result: 'race_lost' };
+
+  logInfo('Gift-fully-covered booking confirmed', {
+    bookingRef: booking.reference,
+  });
+  await sendBookingConfirmationNotifications(booking, accessToken, 'gift');
   return { result: 'confirmed', accessToken };
 }

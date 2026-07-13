@@ -17,6 +17,8 @@ interface MobileOrderSummaryProps {
   guestCount: number;
   pricePerPerson: number;
   serviceFee?: number;
+  /** Gift-card amount applied at checkout in cents (P-09), 0 when none. */
+  giftAppliedCents?: number;
   /** Winery cancellation policy — forwarded to the expanded summary. */
   cancellationPolicy: CancellationPolicy;
 }
@@ -25,8 +27,12 @@ export function MobileOrderSummary(props: MobileOrderSummaryProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const t = useTranslations('checkout');
 
-  const total =
-    props.pricePerPerson * props.guestCount + (props.serviceFee ?? 0);
+  const total = Math.max(
+    0,
+    props.pricePerPerson * props.guestCount +
+      (props.serviceFee ?? 0) -
+      (props.giftAppliedCents ?? 0)
+  );
 
   return (
     <div className="lg:hidden">

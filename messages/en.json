@@ -800,7 +800,19 @@
       "remaining": "Slot held for {time}",
       "remainingUrgent": "Only {time} left to complete your booking",
       "expired": "Hold expired, redirecting…"
-    }
+    },
+    "giftApplied": "Gift card",
+    "giftCodeLabel": "Gift card",
+    "giftCodePlaceholder": "Your code",
+    "giftApply": "Apply",
+    "giftRemove": "Remove",
+    "giftAppliedNote": "{amount} applied to this payment.",
+    "giftErrorNOT_FOUND": "Code not found.",
+    "giftErrorDISABLED": "This card has been disabled.",
+    "giftErrorEXPIRED": "This card has expired.",
+    "giftErrorDEPLETED": "This card is used up.",
+    "giftErrorWRONG_EXPERIENCE": "This card is only valid for another experience.",
+    "giftErrorGeneric": "Could not apply this code."
   },
   "confirmation": {
     "bookingConfirmed": "Booking Confirmed!",

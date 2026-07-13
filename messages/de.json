@@ -800,7 +800,19 @@
       "remaining": "Zeitfenster reserviert für {time}",
       "remainingUrgent": "Nur noch {time}, um Ihre Buchung abzuschliessen",
       "expired": "Zeitfenster abgelaufen, Weiterleitung…"
-    }
+    },
+    "giftApplied": "Geschenkgutschein",
+    "giftCodeLabel": "Geschenkgutschein",
+    "giftCodePlaceholder": "Ihr Code",
+    "giftApply": "Anwenden",
+    "giftRemove": "Entfernen",
+    "giftAppliedNote": "{amount} auf diese Zahlung angewendet.",
+    "giftErrorNOT_FOUND": "Code nicht gefunden.",
+    "giftErrorDISABLED": "Dieser Gutschein wurde deaktiviert.",
+    "giftErrorEXPIRED": "Dieser Gutschein ist abgelaufen.",
+    "giftErrorDEPLETED": "Dieser Gutschein ist aufgebraucht.",
+    "giftErrorWRONG_EXPERIENCE": "Dieser Gutschein gilt nur für ein anderes Erlebnis.",
+    "giftErrorGeneric": "Code konnte nicht angewendet werden."
   },
   "confirmation": {
     "bookingConfirmed": "Buchung bestatigt!",

@@ -45,6 +45,12 @@ import {
 import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
 import { getPlatformCommissionRate } from '@/server/services/payment.service';
 import {
+  redeemGiftCardInTx,
+  releaseGiftForBooking,
+} from '@/server/services/giftCard-redemption.service';
+import { settleGiftTransfer } from '@/server/services/giftCard-transfer.service';
+import { confirmGiftFullyCoveredBooking } from '@/server/services/checkout-confirmation.service';
+import {
   checkRateLimit,
   getClientIp,
   BOOKING_RATE_LIMIT,
@@ -179,6 +185,15 @@ const CreateBookingSchema = z.object({
    * client refresh (never charge more or less than displayed).
    */
   displayedServiceFeeCentsPerGuest: z.number().int().min(0),
+  /** Gift card code applied at checkout (P-09). Flag-gated server-side. */
+  giftCode: z.string().trim().min(4).max(24).optional(),
+  /**
+   * Gift amount the UI displayed as covered. If the authoritative applied
+   * amount differs (card drained meanwhile), refuse with GIFT_CHANGED —
+   * never charge a different card total than accepted (mirror of the fee
+   * guard).
+   */
+  displayedGiftAppliedCents: z.number().int().min(0).optional(),
   /** Hold created at « Continuer » (L-050) — claimed by this submit. */
   holdId: z.string().cuid().optional(),
   /**
@@ -726,6 +741,62 @@ export async function createBookingAndCheckout(
       throw txError; // Re-throw other errors to be caught by outer catch
     }
 
+    // --- Gift-card redemption (P-09, flag-gated). RESERVE at session
+    // creation so the FOR UPDATE lock serializes concurrent redemptions of
+    // the same code; the platform→winery transfer of the covered part
+    // settles at confirmation (webhook) or inline when the card total is 0
+    // (Luca design §3). Amounts in cents. Flag OFF ⇒ this whole block is a
+    // no-op and the booking path is byte-identical to before.
+    const giftEnabled = await isFlagEnabled('GIFT_CARDS');
+    const giftCode =
+      giftEnabled && validated.data.giftCode
+        ? validated.data.giftCode.trim()
+        : undefined;
+    const dueCents = totalPrice + serviceFeeCents;
+    let giftAppliedCents = 0;
+    if (giftCode) {
+      const reservation = await db.$transaction((tx) =>
+        redeemGiftCardInTx(tx, {
+          code: giftCode,
+          dueCents,
+          experienceId,
+          bookingId: booking.id,
+        })
+      );
+      if (!reservation.ok) {
+        // The booking stays a PENDING hold (expires normally); the client
+        // corrects the code and resubmits.
+        return {
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: `GIFT_${reservation.error}`,
+          },
+        };
+      }
+      giftAppliedCents = reservation.result.appliedCents;
+      // Guard mirror of FEE_CHANGED: never charge a card total the client
+      // did not accept (the code may have been drained since the preview).
+      if (
+        validated.data.displayedGiftAppliedCents !== undefined &&
+        validated.data.displayedGiftAppliedCents !== giftAppliedCents
+      ) {
+        await releaseGiftForBooking(booking.id);
+        return {
+          success: false,
+          error: { code: 'CONFLICT', message: 'GIFT_CHANGED' },
+        };
+      }
+      await db.booking.update({
+        where: { id: booking.id },
+        data: {
+          giftCardId: reservation.result.giftCardId,
+          giftAppliedCents,
+        },
+      });
+    }
+    const cardCents = dueCents - giftAppliedCents;
+
     // Stripe-hosted page label, in the client's locale.
     const serviceFeeLabel =
       serviceFeeCents > 0
@@ -739,6 +810,53 @@ export async function createBookingAndCheckout(
 
     // Create Stripe Checkout Session
     const baseUrl = getBaseUrl();
+    const loc = validated.data.locale ?? 'fr';
+
+    // Gift covers the whole due → no Stripe session (Checkout refuses a 0
+    // total). Confirm server-side and settle the winery transfer inline
+    // (Luca design §4). The REDEMPTION is already reserved above.
+    if (giftAppliedCents > 0 && cardCents === 0) {
+      const confirmation = await confirmGiftFullyCoveredBooking(booking.id);
+      if (
+        confirmation.result !== 'confirmed' &&
+        confirmation.result !== 'already_confirmed'
+      ) {
+        // Could not confirm — release the gift so the funds aren't stuck.
+        await releaseGiftForBooking(booking.id);
+        return {
+          success: false,
+          error: {
+            code: 'INTERNAL_ERROR',
+            message: 'Failed to confirm gift booking',
+          },
+        };
+      }
+      try {
+        await settleGiftTransfer(booking.id);
+      } catch (transferError) {
+        // Booking stays CONFIRMED (client owes nothing); the reconciliation
+        // cron retries the transfer. Never fail the client on this.
+        logError(
+          'Gift transfer failed inline — cron will retry',
+          transferError,
+          {
+            action: 'createBookingAndCheckout',
+            bookingId: booking.id,
+          }
+        );
+      }
+      const confirmationUrl = confirmation.accessToken
+        ? `${baseUrl}/${loc}/booking/${booking.id}?token=${confirmation.accessToken}`
+        : `${baseUrl}/${loc}/booking/${booking.id}`;
+      return {
+        success: true,
+        data: {
+          bookingId: booking.id,
+          bookingReference: booking.reference,
+          checkoutUrl: confirmationUrl,
+        },
+      };
+    }
 
     if (process.env.E2E_TEST === 'true') {
       const checkoutUrl = `https://checkout.stripe.com/pay/e2e_${booking.id}`;
@@ -775,48 +893,80 @@ export async function createBookingAndCheckout(
         Math.floor(Date.now() / 1000) +
         STRIPE_SESSION_DURATION_MINUTES * 60 +
         60;
+
+      // Gift branch (P-09, Luca §1): SEPARATE charges & transfers. The
+      // client is charged only `cardCents` on the PLATFORM (no
+      // transfer_data, no application_fee); the winery payout `P` is a
+      // standalone transfer settled at confirmation, so full coverage
+      // (cardCents small) can never underpay the winery. The no-gift path
+      // keeps the classic destination charge, untouched.
+      const isGiftBranch = giftAppliedCents > 0;
+
+      const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] =
+        isGiftBranch
+          ? [
+              {
+                price_data: {
+                  currency: 'chf',
+                  product_data: {
+                    name: experience.title,
+                    description: `${guestCount} ${guestCount === 1 ? 'guest' : 'guests'} - ${experience.winery.name}`,
+                  },
+                  // Net of the gift already applied to the ledger.
+                  unit_amount: cardCents,
+                },
+                quantity: 1,
+              },
+            ]
+          : [
+              {
+                price_data: {
+                  currency: 'chf',
+                  product_data: {
+                    name: experience.title,
+                    description: `${guestCount} ${guestCount === 1 ? 'guest' : 'guests'} - ${experience.winery.name}`,
+                  },
+                  unit_amount: experience.price,
+                },
+                quantity: guestCount,
+              },
+              // Client booking fee — always a separate visible line, never
+              // blended into the experience price (BUSINESS §2).
+              ...(serviceFeeCents > 0
+                ? [
+                    {
+                      price_data: {
+                        currency: 'chf' as const,
+                        product_data: { name: serviceFeeLabel },
+                        unit_amount: BOOKING_FEE_CENTS,
+                      },
+                      quantity: guestCount,
+                    },
+                  ]
+                : []),
+            ];
+
+      const paymentIntentData: Stripe.Checkout.SessionCreateParams.PaymentIntentData =
+        isGiftBranch
+          ? {
+              // Correlates the platform charge with the standalone winery
+              // transfer created at confirmation (settleGiftTransfer).
+              transfer_group: `booking_${booking.id}`,
+            }
+          : {
+              // Commission + client fee: both platform revenue. Omitted when
+              // 0 (Founder at 0% with the fee OFF) — Stripe rejects a zero fee.
+              ...(platformFee + serviceFeeCents > 0
+                ? { application_fee_amount: platformFee + serviceFeeCents }
+                : {}),
+              transfer_data: { destination: stripeAccountId },
+            };
+
       return {
         payment_method_types: paymentMethodTypes,
         mode: 'payment',
-        line_items: [
-          {
-            price_data: {
-              currency: 'chf',
-              product_data: {
-                name: experience.title,
-                description: `${guestCount} ${guestCount === 1 ? 'guest' : 'guests'} - ${experience.winery.name}`,
-              },
-              unit_amount: experience.price,
-            },
-            quantity: guestCount,
-          },
-          // Client booking fee — always a separate visible line, never
-          // blended into the experience price (BUSINESS §2).
-          ...(serviceFeeCents > 0
-            ? [
-                {
-                  price_data: {
-                    currency: 'chf',
-                    product_data: {
-                      name: serviceFeeLabel,
-                    },
-                    unit_amount: BOOKING_FEE_CENTS,
-                  },
-                  quantity: guestCount,
-                },
-              ]
-            : []),
-        ],
-        payment_intent_data: {
-          // Commission + client fee: both platform revenue. Omitted when 0
-          // (Founder at 0% with the fee OFF) — Stripe rejects a zero fee.
-          ...(platformFee + serviceFeeCents > 0
-            ? { application_fee_amount: platformFee + serviceFeeCents }
-            : {}),
-          transfer_data: {
-            destination: stripeAccountId,
-          },
-        },
+        line_items: lineItems,
+        payment_intent_data: paymentIntentData,
         customer_email: visitorEmail,
         success_url: `${baseUrl}/booking/${booking.id}/confirmation?session_id={CHECKOUT_SESSION_ID}`,
         // Aborted/failed payment → dedicated error page (L-052). The
@@ -838,6 +988,11 @@ export async function createBookingAndCheckout(
         metadata: {
           bookingId: booking.id,
           bookingReference: booking.reference,
+          // Signals the confirmation webhook to settle the platform→winery
+          // transfer for the gift-covered part (P-09).
+          ...(giftAppliedCents > 0
+            ? { giftAppliedCents: String(giftAppliedCents) }
+            : {}),
         },
       };
     };

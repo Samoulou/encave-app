@@ -82,9 +82,10 @@ export default async function CheckoutPage({
   // Fetch experience data on the server (eliminates client waterfall).
   // Booking fee (P-03 / L-041): the flag is read server-side so the client
   // only ever renders the amount — flag OFF means 0, same display as before.
-  const [result, bookingFeeEnabled] = await Promise.all([
+  const [result, bookingFeeEnabled, giftEnabled] = await Promise.all([
     getExperienceForBooking(slug),
     isFlagEnabled('BOOKING_FEE'),
+    isFlagEnabled('GIFT_CARDS'),
   ]);
   const serviceFeeCentsPerGuest = bookingFeeEnabled ? BOOKING_FEE_CENTS : 0;
 
@@ -129,6 +130,7 @@ export default async function CheckoutPage({
       holdToken={hasHold ? holdToken : null}
       holdExpiresAt={hasHold ? holdExpiresAt : null}
       serverNowMs={Date.now()}
+      giftEnabled={giftEnabled}
     />
   );
 }

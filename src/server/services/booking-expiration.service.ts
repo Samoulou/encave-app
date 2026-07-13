@@ -5,6 +5,7 @@ import { getStripe } from '@/server/stripe';
 import { logError, logInfo, logWarn } from '@/lib/logger';
 import { isHoldPlaceholderEmail } from '@/lib/constants/booking-hold';
 import { sendBookingExpiredEmail } from '@/server/services/email.service';
+import { releaseGiftForBooking } from '@/server/services/giftCard-redemption.service';
 
 /**
  * Fallback for legacy rows without an expiresAt — every current creation
@@ -131,6 +132,11 @@ export async function expirePendingPaymentBookings(now = new Date()): Promise<{
       });
 
       if (!updated) continue;
+
+      // Return any gift-card funds reserved on this now-cancelled booking
+      // (P-09) — idempotent, no-op without a gift. The expiry webhook won't
+      // do it (the booking is no longer PENDING_PAYMENT here).
+      await releaseGiftForBooking(candidate.id);
 
       if (candidate.stripeCheckoutSessionId?.startsWith('cs_')) {
         try {

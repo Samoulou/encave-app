@@ -38,6 +38,10 @@ vi.mock('@/server/stripe', () => ({
   }),
 }));
 
+vi.mock('@/server/services/giftCard-redemption.service', () => ({
+  releaseGiftForBooking: vi.fn(async () => 'noop'),
+}));
+
 vi.mock('@/server/services/email.service', () => ({
   sendBookingExpiredEmail: vi.fn().mockResolvedValue(true),
 }));
