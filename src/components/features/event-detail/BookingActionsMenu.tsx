@@ -2,9 +2,18 @@
 
 import { useState, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
-import { BookingStatus } from '@prisma/client';
+import { BookingStatus, NoShowChargeStatus } from '@prisma/client';
 import { toast } from 'sonner';
-import { Check, Loader2, MoreHorizontal, RotateCcw, UserX } from 'lucide-react';
+import {
+  Check,
+  CreditCard,
+  Loader2,
+  MoreHorizontal,
+  RotateCcw,
+  UserX,
+} from 'lucide-react';
+import { useRouter } from '@/i18n/navigation';
+import { formatCHF } from '@/lib/utils/currency';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -34,8 +43,14 @@ import {
   revertBookingCheckIn,
   revertBookingNoShow,
 } from '@/server/actions/event-detail';
+import { chargeNoShowFee } from '@/server/actions/no-show';
 
-type DialogKind = 'markNoShow' | 'revertCheckIn' | 'revertNoShow' | null;
+type DialogKind =
+  | 'markNoShow'
+  | 'revertCheckIn'
+  | 'revertNoShow'
+  | 'chargeNoShow'
+  | null;
 
 interface BookingActionsMenuProps {
   bookingId: string;
@@ -44,6 +59,12 @@ interface BookingActionsMenuProps {
   canCheckIn: boolean;
   /** Past session — controls the "mark no-show" item availability. */
   canMarkNoShow: boolean;
+  /** P-08: total no-show fee (snapshot × guests); null when no imprint. */
+  noShowFeeTotalCents?: number | null;
+  /** P-08: whether a card imprint is available to charge. */
+  hasNoShowImprint?: boolean;
+  /** P-08: charge state — null (chargeable), CHARGED, FAILED, PENDING. */
+  noShowFeeChargeStatus?: NoShowChargeStatus | null;
 }
 
 export function BookingActionsMenu({
@@ -51,12 +72,25 @@ export function BookingActionsMenu({
   status,
   canCheckIn,
   canMarkNoShow,
+  noShowFeeTotalCents = null,
+  hasNoShowImprint = false,
+  noShowFeeChargeStatus = null,
 }: BookingActionsMenuProps) {
   const t = useTranslations('Dashboard.eventDetail');
+  const router = useRouter();
   const [dialog, setDialog] = useState<DialogKind>(null);
   const [isPending, startTransition] = useTransition();
 
   const closeDialog = () => setDialog(null);
+
+  const canChargeNoShow =
+    status === BookingStatus.NO_SHOW &&
+    hasNoShowImprint &&
+    noShowFeeChargeStatus !== NoShowChargeStatus.CHARGED &&
+    noShowFeeChargeStatus !== NoShowChargeStatus.PENDING &&
+    (noShowFeeTotalCents ?? 0) > 0;
+  const noShowAlreadyCharged =
+    noShowFeeChargeStatus === NoShowChargeStatus.CHARGED;
 
   const runAction = (kind: Exclude<DialogKind, null> | 'markPresent') => {
     startTransition(async () => {
@@ -65,7 +99,8 @@ export function BookingActionsMenu({
         | 'checkedIn'
         | 'noShow'
         | 'revertedCheckIn'
-        | 'revertedNoShow';
+        | 'revertedNoShow'
+        | 'noShowCharged';
       let result;
 
       if (kind === 'markPresent') {
@@ -77,6 +112,9 @@ export function BookingActionsMenu({
       } else if (kind === 'revertCheckIn') {
         result = await revertBookingCheckIn(input);
         toastKey = 'revertedCheckIn';
+      } else if (kind === 'chargeNoShow') {
+        result = await chargeNoShowFee(input);
+        toastKey = 'noShowCharged';
       } else {
         result = await revertBookingNoShow(input);
         toastKey = 'revertedNoShow';
@@ -85,12 +123,17 @@ export function BookingActionsMenu({
       if (result.success) {
         toast.success(t(`toast.${toastKey}`));
         closeDialog();
+        router.refresh();
       } else {
         // Surface typed messages from the server action so the user knows why.
         if (result.error.message === 'REVERT_WINDOW_EXPIRED') {
           toast.error(t('errors.revertWindowExpired'));
         } else if (result.error.message === 'SESSION_NOT_ENDED') {
           toast.error(t('errors.sessionNotEnded'));
+        } else if (result.error.code === 'PAYMENT_FAILED') {
+          toast.error(t('errors.noShowChargeFailed'));
+        } else if (result.error.message === 'ALREADY_CHARGED') {
+          toast.error(t('errors.noShowAlreadyCharged'));
         } else {
           toast.error(t('toast.error'));
         }
@@ -123,6 +166,13 @@ export function BookingActionsMenu({
         return {
           title: t('confirm.revertNoShowTitle'),
           description: t('confirm.revertNoShowDescription'),
+        };
+      case 'chargeNoShow':
+        return {
+          title: t('confirm.chargeNoShowTitle'),
+          description: t('confirm.chargeNoShowDescription', {
+            amount: formatCHF(noShowFeeTotalCents ?? 0),
+          }),
         };
       default:
         return null;
@@ -210,16 +260,40 @@ export function BookingActionsMenu({
           ) : null}
 
           {status === BookingStatus.NO_SHOW ? (
-            <DropdownMenuItem
-              disabled={isPending}
-              onSelect={(event) => {
-                event.preventDefault();
-                setDialog('revertNoShow');
-              }}
-            >
-              <RotateCcw className="mr-2 h-4 w-4" aria-hidden="true" />
-              {t('actions.revertNoShow')}
-            </DropdownMenuItem>
+            <>
+              {canChargeNoShow ? (
+                <DropdownMenuItem
+                  disabled={isPending}
+                  onSelect={(event) => {
+                    event.preventDefault();
+                    setDialog('chargeNoShow');
+                  }}
+                >
+                  <CreditCard className="mr-2 h-4 w-4" aria-hidden="true" />
+                  {noShowFeeChargeStatus === NoShowChargeStatus.FAILED
+                    ? t('actions.retryNoShowFee')
+                    : t('actions.chargeNoShowFee', {
+                        amount: formatCHF(noShowFeeTotalCents ?? 0),
+                      })}
+                </DropdownMenuItem>
+              ) : null}
+              {noShowAlreadyCharged ? (
+                <DropdownMenuItem disabled>
+                  <Check className="mr-2 h-4 w-4" aria-hidden="true" />
+                  {t('actions.noShowFeeCharged')}
+                </DropdownMenuItem>
+              ) : null}
+              <DropdownMenuItem
+                disabled={isPending}
+                onSelect={(event) => {
+                  event.preventDefault();
+                  setDialog('revertNoShow');
+                }}
+              >
+                <RotateCcw className="mr-2 h-4 w-4" aria-hidden="true" />
+                {t('actions.revertNoShow')}
+              </DropdownMenuItem>
+            </>
           ) : null}
         </DropdownMenuContent>
       </DropdownMenu>

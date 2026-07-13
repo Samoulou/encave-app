@@ -4,6 +4,7 @@ import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { redirect, notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
+import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
 import { UpcomingOccurrencesPreview } from '@/components/features/experience/UpcomingOccurrencesPreview';
 import { Skeleton } from '@/components/shared/Skeleton';
@@ -106,9 +107,10 @@ export default async function EditExperiencePage({ params }: PageProps) {
     notFound();
   }
 
-  const [t, tNav] = await Promise.all([
+  const [t, tNav, noShowFeesEnabled] = await Promise.all([
     getTranslations('experience'),
     getTranslations('nav'),
+    isFlagEnabled('NO_SHOW_FEES'),
   ]);
 
   // Transform for form
@@ -121,6 +123,7 @@ export default async function EditExperiencePage({ params }: PageProps) {
     price: experience.price / 100, // Convert cents to CHF
     minCapacity: experience.minCapacity,
     maxCapacity: experience.maxCapacity,
+    paymentMode: experience.paymentMode,
     coverPhoto: experience.coverPhoto,
     galleryImages: experience.galleryImages.map((img) => ({
       id: img.id,
@@ -151,7 +154,10 @@ export default async function EditExperiencePage({ params }: PageProps) {
           </div>
         </div>
 
-        <EditExperienceForm experience={experienceData} />
+        <EditExperienceForm
+          experience={experienceData}
+          noShowFeesEnabled={noShowFeesEnabled}
+        />
 
         {/* Availability Section */}
         <section className="mt-12 space-y-6">

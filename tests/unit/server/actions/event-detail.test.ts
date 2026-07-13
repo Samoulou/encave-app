@@ -28,6 +28,13 @@ vi.mock('@/lib/logger', () => ({
   logInfo: vi.fn(),
 }));
 
+// P-08: revertBookingNoShow now refunds a charged no-show fee first. That path
+// has its own coverage (no-show.service / no-show.test) — stub it here so it
+// doesn't consume a findUnique from these tests' mock queue.
+vi.mock('@/server/services/no-show.service', () => ({
+  refundNoShowFeeIfCharged: vi.fn().mockResolvedValue({ refunded: false }),
+}));
+
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { revalidatePath, revalidateTag } from 'next/cache';

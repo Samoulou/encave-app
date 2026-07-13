@@ -229,7 +229,11 @@ describe('getPayoutDetail', () => {
       expand: ['source_transaction'],
     });
     expect(vi.mocked(db.booking.findMany).mock.calls[0]?.[0]?.where).toEqual({
-      stripePaymentIntentId: { in: ['pi_1'] },
+      // P-08: also correlate the no-show fee transfer (separate PI column).
+      OR: [
+        { stripePaymentIntentId: { in: ['pi_1'] } },
+        { noShowFeeChargePaymentIntentId: { in: ['pi_1'] } },
+      ],
       winery: { stripeAccountId: ACCT },
     });
     expect(result?.bookings).toEqual([

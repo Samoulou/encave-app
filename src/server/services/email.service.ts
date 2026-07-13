@@ -11,6 +11,7 @@ import {
   BookingExpiredEmail,
   ManualRefundClientEmail,
   ManualRefundWinemakerEmail,
+  NoShowFeeChargedEmail,
   AccountDeletedEmail,
   PasswordResetEmail,
   WelcomeEmail,
@@ -546,6 +547,38 @@ export async function sendManualRefundWinemakerEmail(
   return sendEmail({
     to: email,
     subject: t(subjects.manualRefundWinemaker, loc),
+    html,
+  });
+}
+
+/**
+ * Email #13 (P-08): no-show fee charged, to the CLIENT — send in the booking's
+ * locale (never the winemaker's preferredLocale).
+ */
+export async function sendNoShowFeeChargedEmail(
+  email: string,
+  data: {
+    firstName: string;
+    reference: string;
+    experienceTitle: string;
+    wineryName: string;
+    date: Date;
+    amountCents: number;
+    acceptedAt: Date;
+  },
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const html = await render(
+    NoShowFeeChargedEmail({
+      locale: loc,
+      ...data,
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.noShowFeeCharged, loc),
     html,
   });
 }

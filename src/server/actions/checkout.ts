@@ -13,6 +13,7 @@ import { getTranslations } from 'next-intl/server';
 import type { ActionResult } from '@/types/actions';
 import {
   BookingStatus,
+  ExperiencePaymentMode,
   ExperienceStatus,
   Locale,
   OccurrenceStatus,
@@ -20,7 +21,10 @@ import {
   type Prisma,
 } from '@prisma/client';
 import { timeSlotSchema, createHoldSchema } from '@/lib/validators/booking';
-import { AGE_GATE_VERSION } from '@/lib/constants/consent';
+import {
+  AGE_GATE_VERSION,
+  NO_SHOW_POLICY_VERSION,
+} from '@/lib/constants/consent';
 import {
   HOLD_DURATION_MINUTES,
   STRIPE_SESSION_DURATION_MINUTES,
@@ -49,7 +53,10 @@ import {
   releaseGiftForBooking,
 } from '@/server/services/giftCard-redemption.service';
 import { settleGiftTransfer } from '@/server/services/giftCard-transfer.service';
-import { confirmGiftFullyCoveredBooking } from '@/server/services/checkout-confirmation.service';
+import {
+  confirmGiftFullyCoveredBooking,
+  confirmOnSiteBooking,
+} from '@/server/services/checkout-confirmation.service';
 import {
   checkRateLimit,
   getClientIp,
@@ -185,6 +192,12 @@ const CreateBookingSchema = z.object({
    * client refresh (never charge more or less than displayed).
    */
   displayedServiceFeeCentsPerGuest: z.number().int().min(0),
+  /**
+   * No-show fee/guest the UI displayed for an ON_SITE offer (P-08). If the
+   * winery changed it since render, refuse with NO_SHOW_CHANGED so the client
+   * never accepts a fee they didn't see (mirror of the service-fee guard).
+   */
+  displayedNoShowFeeCents: z.number().int().min(0).optional(),
   /** Gift card code applied at checkout (P-09). Flag-gated server-side. */
   giftCode: z.string().trim().min(4).max(24).optional(),
   /**
@@ -478,6 +491,8 @@ export async function createBookingAndCheckout(
             stripeOnboardingComplete: true,
             commissionRate: true,
             cancellationPolicy: true,
+            noShowFeeEnabled: true,
+            noShowFeeCents: true,
           },
         },
       },
@@ -535,6 +550,15 @@ export async function createBookingAndCheckout(
     // Narrowed once here — the closure below can't see the guard.
     const stripeAccountId = experience.winery.stripeAccountId;
 
+    // P-08: an ON_SITE / free offer is settled at the winery — never charged
+    // online. When the winery opts into no-show fees (flag ON) the client
+    // leaves a card imprint (SetupIntent, zero debit); otherwise the booking
+    // is confirmed with no online transaction at all.
+    const isOnSite = experience.paymentMode === ExperiencePaymentMode.ON_SITE;
+    const noShowFeesEnabled = await isFlagEnabled('NO_SHOW_FEES');
+    const wantsImprint =
+      isOnSite && noShowFeesEnabled && experience.winery.noShowFeeEnabled;
+
     // Calculate prices. totalPrice/platformFee/wineryPayout keep their
     // historical meaning (fee EXCLUDED); the client is charged
     // totalPrice + serviceFeeCents. The fee and the commission both go to
@@ -546,8 +570,11 @@ export async function createBookingAndCheckout(
     );
     const platformFee = computeCommissionCents(totalPrice, commissionRate);
     const wineryPayout = totalPrice - platformFee;
+    // No client booking fee on an ON_SITE offer — there is no online charge to
+    // attach a separate fee line to.
     const bookingFeeEnabled = await isFlagEnabled('BOOKING_FEE');
-    const serviceFeeCentsPerGuest = bookingFeeEnabled ? BOOKING_FEE_CENTS : 0;
+    const serviceFeeCentsPerGuest =
+      !isOnSite && bookingFeeEnabled ? BOOKING_FEE_CENTS : 0;
     const serviceFeeCents = serviceFeeCentsPerGuest * guestCount;
 
     if (
@@ -563,6 +590,33 @@ export async function createBookingAndCheckout(
         },
       };
     }
+
+    // Never let the client accept a no-show fee different from the one the UI
+    // showed (winery edited it since render). Snapshot the accepted per-guest
+    // amount + policy version onto the booking for the later charge + email.
+    const noShowFeeCentsSnapshot = wantsImprint
+      ? experience.winery.noShowFeeCents
+      : null;
+    if (
+      wantsImprint &&
+      validated.data.displayedNoShowFeeCents !== noShowFeeCentsSnapshot
+    ) {
+      return {
+        success: false,
+        error: {
+          code: 'NO_SHOW_CHANGED',
+          message:
+            'The no-show policy changed while you were booking. Please refresh.',
+        },
+      };
+    }
+    const noShowConsentData = wantsImprint
+      ? {
+          noShowFeeCentsSnapshot,
+          noShowPolicyAcceptedAt: new Date(),
+          noShowPolicyVersion: NO_SHOW_POLICY_VERSION,
+        }
+      : {};
 
     const bookingDate = new Date(date);
     // Stripe enforces a >= 30 min session expiry; claiming a hold extends
@@ -606,6 +660,7 @@ export async function createBookingAndCheckout(
           expiresAt,
           ageConfirmedAt: new Date(),
           ageConfirmedVersion: AGE_GATE_VERSION,
+          ...noShowConsentData,
         },
       });
       if (claimed.count === 1) {
@@ -714,6 +769,7 @@ export async function createBookingAndCheckout(
                     expiresAt,
                     ageConfirmedAt: new Date(),
                     ageConfirmedVersion: AGE_GATE_VERSION,
+                    ...noShowConsentData,
                   },
                 });
               },
@@ -739,6 +795,104 @@ export async function createBookingAndCheckout(
         return occurrenceRefusalError('OCCURRENCE_CLOSED');
       }
       throw txError; // Re-throw other errors to be caught by outer catch
+    }
+
+    // --- P-08: ON_SITE / free offer — settled at the winery, never charged
+    // online. Bypass the gift/fee/payment path entirely. With no-show fees
+    // ON, take a SetupIntent card imprint (zero debit) and confirm when the
+    // setup session completes (webhook); otherwise confirm immediately.
+    if (isOnSite) {
+      const baseUrl = getBaseUrl();
+      const loc = validated.data.locale ?? 'fr';
+
+      if (wantsImprint && process.env.E2E_TEST !== 'true') {
+        const sessionExpiresAtUnix =
+          Math.floor(Date.now() / 1000) +
+          STRIPE_SESSION_DURATION_MINUTES * 60 +
+          60;
+        // mode:'setup' vaults a card without charging. Card only — TWINT
+        // can't be re-charged off-session reliably (decision D5). Stripe
+        // creates the Customer; the completion webhook persists it + the
+        // payment method.
+        const session = await getStripe().checkout.sessions.create({
+          mode: 'setup',
+          payment_method_types: ['card'],
+          customer_email: visitorEmail,
+          success_url: `${baseUrl}/booking/${booking.id}/confirmation?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${baseUrl}/reservation/erreur?${new URLSearchParams({
+            cause: 'payment',
+            slug: experience.slug,
+            date,
+            time: timeSlot,
+            guests: String(guestCount),
+            holdId: booking.id,
+            ...(validated.data.holdToken !== undefined
+              ? { holdToken: validated.data.holdToken }
+              : {}),
+            holdExpiresAt: new Date(sessionExpiresAtUnix * 1000).toISOString(),
+          }).toString()}`,
+          expires_at: sessionExpiresAtUnix,
+          metadata: {
+            bookingId: booking.id,
+            bookingReference: booking.reference,
+            kind: 'no_show_setup',
+          },
+        });
+
+        await db.booking.update({
+          where: { id: booking.id },
+          data: {
+            stripeCheckoutSessionId: session.id,
+            ...(session.expires_at
+              ? { expiresAt: new Date(session.expires_at * 1000) }
+              : {}),
+          },
+        });
+
+        if (!session.url) {
+          return {
+            success: false,
+            error: {
+              code: 'STRIPE_ERROR',
+              message: 'Failed to create checkout session',
+            },
+          };
+        }
+        return {
+          success: true,
+          data: {
+            bookingId: booking.id,
+            bookingReference: booking.reference,
+            checkoutUrl: session.url,
+          },
+        };
+      }
+
+      // No imprint (winery opted out, flag OFF, or E2E) → confirm now.
+      const confirmation = await confirmOnSiteBooking(booking.id);
+      if (
+        confirmation.result !== 'confirmed' &&
+        confirmation.result !== 'already_confirmed'
+      ) {
+        return {
+          success: false,
+          error: {
+            code: 'INTERNAL_ERROR',
+            message: 'Failed to confirm booking',
+          },
+        };
+      }
+      const confirmationUrl = confirmation.accessToken
+        ? `${baseUrl}/${loc}/booking/${booking.id}?token=${confirmation.accessToken}`
+        : `${baseUrl}/${loc}/booking/${booking.id}`;
+      return {
+        success: true,
+        data: {
+          bookingId: booking.id,
+          bookingReference: booking.reference,
+          checkoutUrl: confirmationUrl,
+        },
+      };
     }
 
     // --- Gift-card redemption (P-09, flag-gated). RESERVE at session

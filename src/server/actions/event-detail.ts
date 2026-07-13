@@ -14,6 +14,7 @@ import {
 import { parseTimeSlot, timeSlotSchema } from '@/lib/validators/booking';
 import { isHoldPlaceholderEmail } from '@/lib/constants/booking-hold';
 import { cancelOccurrenceForSlot } from '@/server/services/occurrence.service';
+import { refundNoShowFeeIfCharged } from '@/server/services/no-show.service';
 import type { ActionResult } from '@/types/actions';
 import type { BookingDTO } from '@/types/event-detail';
 import { z } from 'zod';
@@ -466,6 +467,26 @@ export async function revertBookingNoShow(
 
   const windowCheck = checkRevertWindow(booking);
   if (!windowCheck.success) return windowCheck;
+
+  // P-08 (D2): a reverted no-show is no longer a no-show — if the fee was
+  // charged, refund it BEFORE flipping the status. If Stripe can't return the
+  // money, abort the revert so the client isn't left charged for a non-no-show.
+  try {
+    await refundNoShowFeeIfCharged(booking.id);
+  } catch (error) {
+    logError('revertBookingNoShow: no-show fee refund failed', error, {
+      action: 'revertBookingNoShow',
+      bookingId: booking.id,
+      userId,
+    });
+    return {
+      success: false,
+      error: {
+        code: 'STRIPE_ERROR',
+        message: 'Could not refund the no-show fee — revert aborted',
+      },
+    };
+  }
 
   try {
     await db.booking.update({

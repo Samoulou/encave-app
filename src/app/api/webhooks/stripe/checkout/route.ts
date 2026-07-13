@@ -5,7 +5,10 @@ import { getStripe, isStripeConfigured } from '@/server/stripe';
 import { db } from '@/server/db';
 import { env } from '@/lib/env';
 import { BookingStatus } from '@prisma/client';
-import { confirmBookingFromPaidCheckoutSession } from '@/server/services/checkout-confirmation.service';
+import {
+  confirmBookingFromPaidCheckoutSession,
+  confirmImprintBookingFromSetupSession,
+} from '@/server/services/checkout-confirmation.service';
 import { createGiftCardFromPayment } from '@/server/services/giftCard.service';
 import { settleGiftTransfer } from '@/server/services/giftCard-transfer.service';
 import { releaseGiftForBooking } from '@/server/services/giftCard-redemption.service';
@@ -109,6 +112,14 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   // ledger, sends email #6, schedules #7.
   if (session.metadata?.kind === 'gift_card') {
     await createGiftCardFromPayment(session);
+    return;
+  }
+
+  // No-show card imprint (P-08): a mode:'setup' session carries a setup_intent
+  // (not a payment_intent) and is 'no_payment_required' — vault the card and
+  // confirm the booking without any charge.
+  if (session.metadata?.kind === 'no_show_setup') {
+    await confirmImprintBookingFromSetupSession(session);
     return;
   }
 

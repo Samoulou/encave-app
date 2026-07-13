@@ -71,6 +71,25 @@ export type SetWineryCancellationPolicyInput = z.infer<
 >;
 
 /**
+ * Schema for the winery no-show fee policy (P-08 / L-070, US-220).
+ * feeCents is per guest, 0–50 CHF. The DB also enforces the bound
+ * (wineries_no_show_fee_bounds CHECK 0–5000, P-02).
+ */
+export const setWineryNoShowPolicySchema = z.object({
+  wineryId: z.string().min(1, 'Winery id is required'),
+  enabled: z.boolean(),
+  feeCents: z
+    .number()
+    .int('Fee must be a whole number of cents')
+    .min(0, 'Fee cannot be negative')
+    .max(5000, 'Fee cannot exceed 50 CHF'),
+});
+
+export type SetWineryNoShowPolicyInput = z.infer<
+  typeof setWineryNoShowPolicySchema
+>;
+
+/**
  * Image file validation schema
  * @deprecated Use wineryImageSchema from '@/lib/validators/image' instead
  */

@@ -577,6 +577,11 @@ export function OccurrenceDetailSheet({
                               status={attendee.status}
                               canCheckIn={canCheckIn}
                               canMarkNoShow={canMarkNoShow}
+                              noShowFeeTotalCents={attendee.noShowFeeTotalCents}
+                              hasNoShowImprint={attendee.hasNoShowImprint}
+                              noShowFeeChargeStatus={
+                                attendee.noShowFeeChargeStatus
+                              }
                             />
                           </div>
                           <div className="md:hidden">
@@ -586,6 +591,11 @@ export function OccurrenceDetailSheet({
                               status={attendee.status}
                               canCheckIn={canCheckIn}
                               canMarkNoShow={canMarkNoShow}
+                              noShowFeeTotalCents={attendee.noShowFeeTotalCents}
+                              hasNoShowImprint={attendee.hasNoShowImprint}
+                              noShowFeeChargeStatus={
+                                attendee.noShowFeeChargeStatus
+                              }
                             />
                           </div>
                         </div>
