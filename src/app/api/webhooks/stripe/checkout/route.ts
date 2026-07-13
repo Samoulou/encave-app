@@ -6,6 +6,9 @@ import { db } from '@/server/db';
 import { env } from '@/lib/env';
 import { BookingStatus } from '@prisma/client';
 import { confirmBookingFromPaidCheckoutSession } from '@/server/services/checkout-confirmation.service';
+import { createGiftCardFromPayment } from '@/server/services/giftCard.service';
+import { settleGiftTransfer } from '@/server/services/giftCard-transfer.service';
+import { releaseGiftForBooking } from '@/server/services/giftCard-redemption.service';
 import { logError, logInfo } from '@/lib/logger';
 import {
   claimStripeEvent,
@@ -96,6 +99,14 @@ export async function POST(req: Request) {
  * Updates booking status to CONFIRMED and sends confirmation emails
  */
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
+  // Gift-card purchases (P-09) ride the same completed event but are not
+  // bookings — the metadata discriminates. Creates the card via the
+  // ledger, sends email #6, schedules #7.
+  if (session.metadata?.kind === 'gift_card') {
+    await createGiftCardFromPayment(session);
+    return;
+  }
+
   const { result } = await confirmBookingFromPaidCheckoutSession(
     session,
     'webhook'
@@ -104,6 +115,18 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   if (result === 'missing_payment_intent') {
     throw new Error('Checkout session has no payment intent');
   }
+
+  // Gift-redeemed booking (P-09): settle the platform→winery transfer of
+  // the gift-covered part, INDEPENDENTLY of the confirmation result — it
+  // runs on every delivery while giftTransferId is still null (Luca §2/§5),
+  // so a redelivery after an 'already_confirmed' still lands the transfer.
+  // A Stripe failure throws → the event is marked FAILED and retried.
+  if (session.metadata?.giftAppliedCents) {
+    const bookingId = session.metadata?.bookingId;
+    if (bookingId) {
+      await settleGiftTransfer(bookingId);
+    }
+  }
 }
 
 /**
@@ -111,6 +134,11 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
  * Cancels the pending booking
  */
 async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
+  // Gift-card sessions create no pre-payment row — nothing to clean up.
+  if (session.metadata?.kind === 'gift_card') {
+    return;
+  }
+
   const bookingId = session.metadata?.bookingId;
 
   if (!bookingId) {
@@ -157,6 +185,10 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
     });
     return;
   }
+
+  // Return any gift-card funds reserved on this booking BEFORE deleting it
+  // (P-09, Luca §4) — idempotent, no-op when no gift was applied.
+  await releaseGiftForBooking(bookingId);
 
   // Delete the pending booking to free up capacity
   await db.booking.delete({

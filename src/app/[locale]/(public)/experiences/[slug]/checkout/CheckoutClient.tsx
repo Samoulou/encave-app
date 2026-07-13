@@ -25,6 +25,7 @@ import { ContactDetailsSection } from '@/components/features/checkout/ContactDet
 import { HoldCountdown } from '@/components/features/checkout/HoldCountdown';
 import { OrderSummary } from '@/components/features/checkout/OrderSummary';
 import { MobileOrderSummary } from '@/components/features/checkout/MobileOrderSummary';
+import { GiftCodeField } from '@/components/features/checkout/GiftCodeField';
 import { TrustBadges } from '@/components/features/checkout/TrustBadges';
 import {
   checkAvailability,
@@ -70,6 +71,8 @@ interface CheckoutClientProps {
   holdExpiresAt: string | null;
   /** Server clock at render — anchors the countdown against client skew. */
   serverNowMs: number;
+  /** GIFT_CARDS flag — gates the gift-code field (P-09). */
+  giftEnabled: boolean;
 }
 
 /**
@@ -87,6 +90,7 @@ export function CheckoutClient({
   holdToken,
   holdExpiresAt,
   serverNowMs,
+  giftEnabled,
 }: CheckoutClientProps) {
   const t = useTranslations('checkout');
   const locale = useLocale() as 'fr' | 'de' | 'en';
@@ -95,6 +99,9 @@ export function CheckoutClient({
   const { navigate } = useNavigateWithTransition();
 
   const [submitError, setSubmitError] = useState<string | null>(null);
+  // Gift card applied at checkout (P-09) — code + previewed covered amount.
+  const [giftCode, setGiftCode] = useState('');
+  const [giftAppliedCents, setGiftAppliedCents] = useState(0);
   // Once the submit started, the countdown must never yank the user away —
   // the server extends the hold to the Stripe session window, and a
   // redirect mid-flight would abandon a live payment session.
@@ -266,6 +273,14 @@ export function CheckoutClient({
         ageConfirmed: true,
         locale,
         displayedServiceFeeCentsPerGuest: serviceFeeCentsPerGuest,
+        // Gift card (P-09) — the server re-locks and re-checks the amount;
+        // displayedGiftAppliedCents guards against a drained code.
+        ...(giftEnabled && giftCode && giftAppliedCents > 0
+          ? {
+              giftCode,
+              displayedGiftAppliedCents: giftAppliedCents,
+            }
+          : {}),
         // Claim the upstream hold (L-050); undefined = fresh create.
         // The token proves ownership — the server refuses a bare id.
         holdId: holdId ?? undefined,
@@ -405,8 +420,26 @@ export function CheckoutClient({
             guestCount={guestCount}
             pricePerPerson={experience.price}
             serviceFee={serviceFee}
+            giftAppliedCents={giftAppliedCents}
             cancellationPolicy={experience.winery.cancellationPolicy}
           />
+          {giftEnabled && (
+            <div className="mt-3 rounded-xl border border-border bg-white p-4 shadow-sm lg:hidden">
+              <GiftCodeField
+                experienceId={experience.id}
+                guestCount={guestCount}
+                appliedCents={giftAppliedCents}
+                onApplied={(code, applied) => {
+                  setGiftCode(code);
+                  setGiftAppliedCents(applied);
+                }}
+                onCleared={() => {
+                  setGiftCode('');
+                  setGiftAppliedCents(0);
+                }}
+              />
+            </div>
+          )}
         </div>
 
         {/* Main Grid Layout */}
@@ -575,8 +608,27 @@ export function CheckoutClient({
                   guestCount={guestCount}
                   pricePerPerson={experience.price}
                   serviceFee={serviceFee}
+                  giftAppliedCents={giftAppliedCents}
                   cancellationPolicy={experience.winery.cancellationPolicy}
                 />
+
+                {giftEnabled && (
+                  <div className="mt-4 rounded-xl border border-border bg-white p-4 shadow-sm">
+                    <GiftCodeField
+                      experienceId={experience.id}
+                      guestCount={guestCount}
+                      appliedCents={giftAppliedCents}
+                      onApplied={(code, applied) => {
+                        setGiftCode(code);
+                        setGiftAppliedCents(applied);
+                      }}
+                      onCleared={() => {
+                        setGiftCode('');
+                        setGiftAppliedCents(0);
+                      }}
+                    />
+                  </div>
+                )}
 
                 {/* Capacity Status Indicator */}
                 {remainingCapacity !== null && !capacityExceeded && (

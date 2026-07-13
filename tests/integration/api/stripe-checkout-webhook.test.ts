@@ -42,6 +42,18 @@ vi.mock('@/server/db', () => ({
   },
 }));
 
+vi.mock('@/server/services/giftCard.service', () => ({
+  createGiftCardFromPayment: vi.fn(),
+}));
+
+vi.mock('@/server/services/giftCard-transfer.service', () => ({
+  settleGiftTransfer: vi.fn(async () => 'noop'),
+}));
+
+vi.mock('@/server/services/giftCard-redemption.service', () => ({
+  releaseGiftForBooking: vi.fn(async () => 'noop'),
+}));
+
 vi.mock('@/server/services/checkout-confirmation.service', () => ({
   confirmBookingFromPaidCheckoutSession: vi.fn().mockResolvedValue('confirmed'),
 }));

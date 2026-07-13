@@ -21,6 +21,8 @@ interface OrderSummaryProps {
   guestCount: number;
   pricePerPerson: number;
   serviceFee?: number;
+  /** Gift-card amount applied at checkout in cents (P-09), 0 when none. */
+  giftAppliedCents?: number;
   /** Winery cancellation policy — falls back to the legacy note if absent. */
   cancellationPolicy: CancellationPolicy;
 }
@@ -48,6 +50,7 @@ export function OrderSummary({
   guestCount,
   pricePerPerson,
   serviceFee = 0,
+  giftAppliedCents = 0,
   cancellationPolicy,
 }: OrderSummaryProps) {
   const t = useTranslations('checkout');
@@ -60,7 +63,7 @@ export function OrderSummary({
     locale: dateLocale,
   });
   const subtotal = pricePerPerson * guestCount;
-  const total = subtotal + serviceFee;
+  const total = Math.max(0, subtotal + serviceFee - giftAppliedCents);
 
   return (
     <div
@@ -173,6 +176,14 @@ export function OrderSummary({
             <span>{t('serviceFee')}</span>
             <span>{formatCHF(serviceFee)}</span>
           </div>
+          {giftAppliedCents > 0 && (
+            <div className="flex justify-between text-primary">
+              <span>{t('giftApplied')}</span>
+              <span data-testid="summary-gift">
+                −{formatCHF(giftAppliedCents)}
+              </span>
+            </div>
+          )}
           <div className="mt-2 flex items-center justify-between border-t border-[#f2e9eb] pt-4">
             <span className="text-lg font-bold text-foreground">
               {t('totalCHF')}

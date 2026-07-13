@@ -377,6 +377,15 @@ model Booking {
   status                  BookingStatus         @default(PENDING_PAYMENT)
   stripeCheckoutSessionId String?
   stripePaymentIntentId   String?
+  // V3 (P-09): gift-card redemption on this booking. giftCardId + the
+  // reserved amount are stamped at session creation, when the REDEMPTION
+  // movement is written to the ledger (Luca design §3). giftTransferId is
+  // the platform→winery transfer written ONCE at confirmation — its
+  // presence is the idempotency guard against a double transfer on webhook
+  // redelivery (§2). All amounts in cents.
+  giftCardId              String?
+  giftAppliedCents        Int                   @default(0)
+  giftTransferId          String?
   expiresAt               DateTime? // For pending payment reservations
   accessTokenHash         String? // Hash of access token for verification (SEC-002: plaintext removed)
   confirmationSentAt      DateTime? // When client confirmation email was sent

@@ -7,7 +7,9 @@ import {
   type ScheduledJobHandler,
 } from '@/server/services/scheduled-jobs.service';
 import { processTastingRecapJob } from '@/server/services/tasting-recap.service';
+import { processGiftCardDeliveryJob } from '@/server/services/giftCard-delivery.service';
 import { TASTING_RECAP_JOB_TYPE } from '@/lib/constants/wine';
+import { GIFT_CARD_DELIVERY_JOB_TYPE } from '@/lib/constants/gift-card';
 import { logError, logInfo } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
@@ -34,6 +36,11 @@ const JOB_REGISTRY: {
     type: TASTING_RECAP_JOB_TYPE,
     flag: 'TASTING_SHEET',
     handler: processTastingRecapJob,
+  },
+  {
+    type: GIFT_CARD_DELIVERY_JOB_TYPE,
+    flag: 'GIFT_CARDS',
+    handler: processGiftCardDeliveryJob,
   },
 ];
 
