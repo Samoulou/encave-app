@@ -109,6 +109,16 @@ const PUBLIC_SURFACES: Record<
     componentDirs: [],
     appDirs: ['app/[locale]/(public)/reservation'],
   },
+  'cadeaux segment (gift configurator)': {
+    provided: [...PUBLIC_BASE_NAMESPACES, ...SEGMENT_EXTRA_NAMESPACES.cadeaux],
+    componentDirs: ['components/features/gift-cards'],
+    appDirs: ['app/[locale]/(public)/cadeaux'],
+  },
+  'bon segment (public gift view)': {
+    provided: [...PUBLIC_BASE_NAMESPACES, ...SEGMENT_EXTRA_NAMESPACES.bon],
+    componentDirs: [],
+    appDirs: ['app/[locale]/(public)/bon'],
+  },
 };
 
 // Client components living in public component dirs but only ever
