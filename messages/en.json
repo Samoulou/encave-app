@@ -1446,7 +1446,26 @@
       "removePerson": "Remove a person",
       "explore": "Explore"
     },
-    "resultsCount": "Valais · {count, plural, =0 {no experiences} one {# experience} other {# experiences}}"
+    "resultsCount": "Valais · {count, plural, =0 {no experiences} one {# experience} other {# experiences}}",
+    "budget": {
+      "label": "Budget",
+      "under50": "< 50",
+      "50to100": "50–100",
+      "over100": "100+"
+    },
+    "language": "Language",
+    "languageAll": "All languages",
+    "languages": {
+      "FR": "Français",
+      "DE": "Deutsch",
+      "EN": "English"
+    },
+    "activeFilters": "Active filters",
+    "removeFilter": "Remove {filter} filter",
+    "clearAll": "Clear all",
+    "capacityPill": "{count, plural, one {# person} other {# people}}",
+    "viewList": "List",
+    "viewMap": "Map"
   },
   "errors": {
     "somethingWentWrong": "Something went wrong!",

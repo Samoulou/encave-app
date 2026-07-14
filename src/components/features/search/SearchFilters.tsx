@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ExperienceType } from '@prisma/client';
+import { ExperienceType, Locale as ContentLocale } from '@prisma/client';
 import { useLocale, useTranslations } from 'next-intl';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -23,6 +23,11 @@ import { Button } from '@/components/ui/button';
 import { X, SlidersHorizontal, CalendarDays } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { EXPERIENCE_TYPE_OPTIONS } from '@/lib/validators/experience';
+import {
+  BUDGET_PRESETS,
+  matchBudgetPreset,
+  type BudgetPreset,
+} from '@/lib/constants/budget-presets';
 import { localDateFromKey, localDateKey } from '@/lib/utils/date-key';
 import { formatDateShort } from '@/lib/i18n/formatters';
 import type { Locale } from '@/i18n/routing';
@@ -30,6 +35,12 @@ import type { Locale } from '@/i18n/routing';
 const TYPE_OPTIONS: ExperienceType[] = EXPERIENCE_TYPE_OPTIONS.map(
   (option) => option.value
 );
+
+const LANGUAGE_OPTIONS: ContentLocale[] = [
+  ContentLocale.FR,
+  ContentLocale.DE,
+  ContentLocale.EN,
+];
 
 interface SearchFiltersProps {
   types: ExperienceType[];
@@ -48,6 +59,9 @@ interface SearchFiltersProps {
   /** Optional inclusive range end (weekend chip). */
   quandFin: string | null;
   onDateChange: (_quand: string | null) => void;
+  /** Spoken-language filter (L-115), null = any language. */
+  language: ContentLocale | null;
+  onLanguageChange: (_language: ContentLocale | null) => void;
   onClearFilters: () => void;
   className?: string;
 }
@@ -67,6 +81,8 @@ export function SearchFilters({
   quand,
   quandFin,
   onDateChange,
+  language,
+  onLanguageChange,
   onClearFilters,
   className,
 }: SearchFiltersProps) {
@@ -82,7 +98,21 @@ export function SearchFilters({
     minPrice !== null ||
     maxPrice !== null ||
     capacity !== null ||
-    quand !== null;
+    quand !== null ||
+    language !== null;
+
+  const activeBudgetKey = matchBudgetPreset(minPrice, maxPrice)?.key ?? null;
+
+  const handleBudgetPreset = (preset: BudgetPreset) => {
+    if (activeBudgetKey === preset.key) {
+      // Re-clicking the active preset clears the range entirely.
+      onMinPriceChange(null);
+      onMaxPriceChange(null);
+    } else {
+      onMinPriceChange(preset.minPrice);
+      onMaxPriceChange(preset.maxPrice);
+    }
+  };
 
   const dateLabel =
     quand === null
@@ -196,6 +226,31 @@ export function SearchFilters({
         </Select>
       </div>
 
+      {/* Spoken language (L-115) */}
+      <div className="space-y-3">
+        <Label className="text-sm font-medium text-foreground">
+          {t('language')}
+        </Label>
+        <Select
+          value={language ?? 'all'}
+          onValueChange={(v) =>
+            onLanguageChange(LANGUAGE_OPTIONS.find((l) => l === v) ?? null)
+          }
+        >
+          <SelectTrigger>
+            <SelectValue placeholder={t('languageAll')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('languageAll')}</SelectItem>
+            {LANGUAGE_OPTIONS.map((l) => (
+              <SelectItem key={l} value={l}>
+                {t(`languages.${l}`)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       {/* Date (P-05 / L-110) */}
       <div className="space-y-3">
         <Label className="text-sm font-medium text-slate-700">
@@ -249,6 +304,32 @@ export function SearchFilters({
         <Label className="text-sm font-medium text-foreground">
           {t('priceRange')}
         </Label>
+        {/* Budget presets (L-115) — mutually exclusive quick ranges */}
+        <div
+          className="flex flex-wrap gap-2"
+          role="group"
+          aria-label={t('budget.label')}
+        >
+          {BUDGET_PRESETS.map((preset) => {
+            const isActive = activeBudgetKey === preset.key;
+            return (
+              <button
+                key={preset.key}
+                type="button"
+                onClick={() => handleBudgetPreset(preset)}
+                aria-pressed={isActive}
+                className={cn(
+                  'h-8 rounded-lg border px-3 text-xs font-semibold transition-colors',
+                  isActive
+                    ? 'border-burgundy-600 bg-burgundy-600 text-white'
+                    : 'border-stone-200 bg-white text-ink-700 hover:border-burgundy-200'
+                )}
+              >
+                {t(`budget.${preset.key}`)}
+              </button>
+            );
+          })}
+        </div>
         <div className="flex items-center gap-2">
           <Input
             type="number"

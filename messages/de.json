@@ -1446,7 +1446,26 @@
       "removePerson": "Person entfernen",
       "explore": "Entdecken"
     },
-    "resultsCount": "Wallis · {count, plural, =0 {keine Erlebnisse} one {# Erlebnis} other {# Erlebnisse}}"
+    "resultsCount": "Wallis · {count, plural, =0 {keine Erlebnisse} one {# Erlebnis} other {# Erlebnisse}}",
+    "budget": {
+      "label": "Budget",
+      "under50": "< 50",
+      "50to100": "50–100",
+      "over100": "100+"
+    },
+    "language": "Sprache",
+    "languageAll": "Alle Sprachen",
+    "languages": {
+      "FR": "Français",
+      "DE": "Deutsch",
+      "EN": "English"
+    },
+    "activeFilters": "Aktive Filter",
+    "removeFilter": "Filter {filter} entfernen",
+    "clearAll": "Alle löschen",
+    "capacityPill": "{count, plural, one {# Person} other {# Personen}}",
+    "viewList": "Liste",
+    "viewMap": "Karte"
   },
   "errors": {
     "somethingWentWrong": "Etwas ist schiefgelaufen!",

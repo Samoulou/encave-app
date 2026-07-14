@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { useCallback, useEffect, useMemo } from 'react';
 import {
+  useQueryState,
   useQueryStates,
   parseAsString,
   parseAsInteger,
@@ -10,15 +11,23 @@ import {
 } from 'nuqs';
 import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
-import { ExperienceType } from '@prisma/client';
+import { ExperienceType, Locale } from '@prisma/client';
 import { SearchBar } from '@/components/features/search/SearchBar';
 import { SearchFilters } from '@/components/features/search/SearchFilters';
 import { SearchResults } from '@/components/features/search/SearchResults';
+import { ActiveFilterPills } from '@/components/features/search/ActiveFilterPills';
 import { ExperienceCard } from '@/components/features/experience/ExperienceCard';
 import { DynamicMap } from '@/components/features/map/DynamicMap';
 import { DesktopOnly } from '@/components/shared/DesktopOnly';
 import { Button } from '@/components/ui/button';
-import { SlidersHorizontal, X, MapPin, Search } from 'lucide-react';
+import {
+  SlidersHorizontal,
+  X,
+  MapPin,
+  Search,
+  List,
+  Map as MapIcon,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   DEFAULT_CATALOG_SORT,
@@ -56,6 +65,8 @@ interface ExperiencesPageClientProps {
   locationSearch: LocationSearchInfo;
 }
 
+type CatalogueView = 'list' | 'map';
+
 interface FilterState {
   search: string;
   types: ExperienceType[];
@@ -68,6 +79,20 @@ interface FilterState {
   quand: string | null;
   /** Optional inclusive range end (weekend chip), null = single date. */
   quandFin: string | null;
+  /** Spoken-language filter (L-115), null = any language. */
+  language: Locale | null;
+}
+
+/** Parse a `language` URL param into a valid Locale, else null. */
+function parseLanguageParam(value: string | null | undefined): Locale | null {
+  switch (value) {
+    case Locale.FR:
+    case Locale.DE:
+    case Locale.EN:
+      return value;
+    default:
+      return null;
+  }
 }
 
 /**
@@ -102,6 +127,7 @@ export function ExperiencesPageClient({
       minPrice: parseAsInteger,
       maxPrice: parseAsInteger,
       capacity: parseAsInteger,
+      language: parseAsString,
       sort: parseAsString,
       page: parseAsInteger,
       quand: parseAsString,
@@ -115,6 +141,16 @@ export function ExperiencesPageClient({
     // not unwind filter states (each of which re-fires the search).
     { history: 'replace' }
   );
+
+  // L-116: the Liste/Carte view lives in its OWN query state, deliberately
+  // OUTSIDE `useQueryStates` above — it must not enter `requestKey`, so
+  // toggling the view is a pure client re-render over already-fetched data
+  // (no refetch). 'list' is the default; absent param === list.
+  const [viewParam, setViewParam] = useQueryState('view', parseAsString);
+  const view: CatalogueView = viewParam === 'map' ? 'map' : 'list';
+  const handleViewChange = (next: CatalogueView) => {
+    void setViewParam(next === 'map' ? 'map' : null);
+  };
 
   const hasLocationSearch = Boolean(
     urlState.location && urlState.lat !== null && urlState.lng !== null
@@ -138,6 +174,7 @@ export function ExperiencesPageClient({
         quand !== null && rawQuandFin !== null && rawQuandFin >= quand
           ? rawQuandFin
           : null,
+      language: parseLanguageParam(urlState.language),
     };
   }, [urlState]);
 
@@ -148,6 +185,7 @@ export function ExperiencesPageClient({
     currentParams.minPrice === null &&
     currentParams.maxPrice === null &&
     currentParams.capacity === null &&
+    currentParams.language === null &&
     currentParams.sort === DEFAULT_CATALOG_SORT &&
     currentParams.quand === null &&
     (urlState.page ?? 1) <= 1 &&
@@ -182,6 +220,7 @@ export function ExperiencesPageClient({
       minPrice: currentParams.minPrice ?? undefined,
       maxPrice: currentParams.maxPrice ?? undefined,
       capacity: currentParams.capacity ?? undefined,
+      language: currentParams.language ?? undefined,
       sort:
         currentParams.sort === 'distance' && !hasLocationSearch
           ? DEFAULT_CATALOG_SORT
@@ -251,6 +290,10 @@ export function ExperiencesPageClient({
     void setUrlState({ capacity, page: null });
   };
 
+  const handleLanguageChange = (language: Locale | null) => {
+    void setUrlState({ language, page: null });
+  };
+
   const handleSortChange = (sort: SortOption) => {
     void setUrlState({
       sort: sort !== DEFAULT_CATALOG_SORT ? sort : null,
@@ -275,6 +318,7 @@ export function ExperiencesPageClient({
       minPrice: null,
       maxPrice: null,
       capacity: null,
+      language: null,
       sort: null,
       page: null,
       quand: null,
@@ -299,6 +343,7 @@ export function ExperiencesPageClient({
     currentParams.minPrice !== null ||
     currentParams.maxPrice !== null ||
     currentParams.capacity !== null ||
+    currentParams.language !== null ||
     currentParams.quand !== null;
 
   const sortLabels: Record<SortOption, string> = {
@@ -342,29 +387,33 @@ export function ExperiencesPageClient({
             quand={currentParams.quand}
             quandFin={currentParams.quandFin}
             onDateChange={handleDateChange}
+            language={currentParams.language}
+            onLanguageChange={handleLanguageChange}
             onClearFilters={handleClearFilters}
           />
         </aside>
 
         <main className="min-w-0">
-          <div className="relative mb-6 h-[320px] overflow-hidden rounded-[18px] border border-stone-200 bg-stone-50 shadow-audit-card">
-            <DesktopOnly>
-              <DynamicMap
-                wineries={mapWineries}
-                onWineryClick={handleWineryClick}
-                className="h-full w-full rounded-[18px]"
-              />
-            </DesktopOnly>
-            <div className="absolute left-4 top-4 rounded-xl bg-white/95 px-4 py-3 shadow-audit-card">
-              <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-burgundy-700">
-                Domaines
-              </div>
-              <div className="mt-1 flex items-center gap-2 font-display text-lg font-semibold">
-                <MapPin className="h-4 w-4 text-burgundy-700" />
-                {mapWineries.length} lieux
+          {view === 'list' && (
+            <div className="relative mb-6 h-[320px] overflow-hidden rounded-[18px] border border-stone-200 bg-stone-50 shadow-audit-card">
+              <DesktopOnly>
+                <DynamicMap
+                  wineries={mapWineries}
+                  onWineryClick={handleWineryClick}
+                  className="h-full w-full rounded-[18px]"
+                />
+              </DesktopOnly>
+              <div className="absolute left-4 top-4 rounded-xl bg-white/95 px-4 py-3 shadow-audit-card">
+                <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-burgundy-700">
+                  Domaines
+                </div>
+                <div className="mt-1 flex items-center gap-2 font-display text-lg font-semibold">
+                  <MapPin className="h-4 w-4 text-burgundy-700" />
+                  {mapWineries.length} lieux
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           <div className="mb-5 rounded-[18px] border border-stone-200 bg-white p-3 shadow-audit-card">
             <SearchBar
@@ -377,7 +426,21 @@ export function ExperiencesPageClient({
 
           {fetchFailed && !isFetching && <SearchErrorNotice />}
 
-          <div className="mb-5 flex items-center justify-between">
+          <CatalogueActiveFilters
+            currentParams={currentParams}
+            handleTypesChange={handleTypesChange}
+            handleCommuneChange={handleCommuneChange}
+            handleMinPriceChange={handleMinPriceChange}
+            handleMaxPriceChange={handleMaxPriceChange}
+            handleCapacityChange={handleCapacityChange}
+            handleDateChange={handleDateChange}
+            handleLanguageChange={handleLanguageChange}
+            handleSearchChange={handleSearchChange}
+            handleClearFilters={handleClearFilters}
+            className="mb-5"
+          />
+
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
             <div>
               <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-burgundy-700">
                 {tSearch('resultsCount', {
@@ -388,51 +451,64 @@ export function ExperiencesPageClient({
                 Expériences disponibles
               </h2>
             </div>
-            <div className="flex min-w-max gap-2">
-              {visibleSortOptions.map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => handleSortChange(option)}
-                  className={cn(
-                    'h-9 shrink-0 whitespace-nowrap rounded-lg border px-3 text-xs font-semibold transition-colors',
-                    currentParams.sort === option
-                      ? 'border-burgundy-600 bg-burgundy-600 text-white'
-                      : 'border-stone-200 bg-white text-ink-700 hover:border-burgundy-200'
-                  )}
-                >
-                  {sortLabels[option]}
-                </button>
-              ))}
+            <div className="flex flex-wrap items-center gap-3">
+              <ViewSwitch view={view} onViewChange={handleViewChange} />
+              <div className="flex min-w-max gap-2">
+                {visibleSortOptions.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => handleSortChange(option)}
+                    className={cn(
+                      'h-9 shrink-0 whitespace-nowrap rounded-lg border px-3 text-xs font-semibold transition-colors',
+                      currentParams.sort === option
+                        ? 'border-burgundy-600 bg-burgundy-600 text-white'
+                        : 'border-stone-200 bg-white text-ink-700 hover:border-burgundy-200'
+                    )}
+                  >
+                    {sortLabels[option]}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
-          <div
-            className={cn(
-              'grid gap-6 transition-opacity duration-150 xl:grid-cols-2',
-              isFetching && 'pointer-events-none opacity-70'
-            )}
-          >
-            {displayData.experiences.length > 0 ? (
-              displayData.experiences.map((experience, index) => (
-                <ExperienceCard
-                  key={experience.id}
-                  experience={experience}
-                  priority={index < 2}
-                />
-              ))
-            ) : (
-              <div className="rounded-[18px] border border-dashed border-stone-300 bg-white p-10 text-center xl:col-span-2">
-                <Search className="mx-auto h-8 w-8 text-burgundy-600" />
-                <h3 className="mt-4 font-display text-xl font-semibold">
-                  Aucun résultat trouvé
-                </h3>
-                <p className="mt-2 text-sm text-ink-500">
-                  Essayez d’ajuster les filtres ou la recherche.
-                </p>
-              </div>
-            )}
-          </div>
+          {view === 'list' ? (
+            <div
+              className={cn(
+                'grid gap-6 transition-opacity duration-150 xl:grid-cols-2',
+                isFetching && 'pointer-events-none opacity-70'
+              )}
+            >
+              {displayData.experiences.length > 0 ? (
+                displayData.experiences.map((experience, index) => (
+                  <ExperienceCard
+                    key={experience.id}
+                    experience={experience}
+                    priority={index < 2}
+                  />
+                ))
+              ) : (
+                <div className="rounded-[18px] border border-dashed border-stone-300 bg-white p-10 text-center xl:col-span-2">
+                  <Search className="mx-auto h-8 w-8 text-burgundy-600" />
+                  <h3 className="mt-4 font-display text-xl font-semibold">
+                    Aucun résultat trouvé
+                  </h3>
+                  <p className="mt-2 text-sm text-ink-500">
+                    Essayez d’ajuster les filtres ou la recherche.
+                  </p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <CatalogueMapView
+              experiences={displayData.experiences}
+              mapWineries={mapWineries}
+              onWineryClick={handleWineryClick}
+              heightClassName="h-[600px]"
+              isFetching={isFetching}
+            />
+          )}
         </main>
       </div>
 
@@ -449,6 +525,7 @@ export function ExperiencesPageClient({
           handleMaxPriceChange={handleMaxPriceChange}
           handleCapacityChange={handleCapacityChange}
           handleDateChange={handleDateChange}
+          handleLanguageChange={handleLanguageChange}
           handleSearchChange={handleSearchChange}
           handleSortChange={handleSortChange}
           handlePageChange={handlePageChange}
@@ -456,6 +533,10 @@ export function ExperiencesPageClient({
           experiences={displayData.experiences}
           pagination={displayData.pagination}
           locationSearch={displayData.locationSearch}
+          mapWineries={mapWineries}
+          handleWineryClick={handleWineryClick}
+          view={view}
+          onViewChange={handleViewChange}
           isFetching={isFetching}
           fetchFailed={fetchFailed}
         />
@@ -476,6 +557,7 @@ function MobileListing({
   handleMaxPriceChange,
   handleCapacityChange,
   handleDateChange,
+  handleLanguageChange,
   handleSearchChange,
   handleSortChange,
   handlePageChange,
@@ -483,6 +565,10 @@ function MobileListing({
   experiences,
   pagination,
   locationSearch,
+  mapWineries,
+  handleWineryClick,
+  view,
+  onViewChange,
   isFetching,
   fetchFailed,
 }: {
@@ -497,6 +583,7 @@ function MobileListing({
   handleMaxPriceChange: (_price: number | null) => void;
   handleCapacityChange: (_capacity: number | null) => void;
   handleDateChange: (_quand: string | null) => void;
+  handleLanguageChange: (_language: Locale | null) => void;
   handleSearchChange: (_value: string) => void;
   handleSortChange: (_sort: SortOption) => void;
   handlePageChange: (_page: number) => void;
@@ -504,6 +591,10 @@ function MobileListing({
   experiences: ExperienceSearchResult[];
   pagination: PaginationInfo;
   locationSearch: LocationSearchInfo;
+  mapWineries: MapWinery[];
+  handleWineryClick: (_slug: string) => void;
+  view: CatalogueView;
+  onViewChange: (_view: CatalogueView) => void;
   isFetching: boolean;
   fetchFailed: boolean;
 }) {
@@ -562,32 +653,11 @@ function MobileListing({
           quand={currentParams.quand}
           quandFin={currentParams.quandFin}
           onDateChange={handleDateChange}
+          language={currentParams.language}
+          onLanguageChange={handleLanguageChange}
           onClearFilters={handleClearFilters}
         />
       </div>
-
-      {/* Desktop Sidebar Filters */}
-      <aside className="hidden lg:block">
-        <div className="sticky top-24 rounded-xl border border-stone-200 bg-white p-6">
-          <SearchFilters
-            types={currentParams.types}
-            onTypesChange={handleTypesChange}
-            commune={currentParams.commune}
-            onCommuneChange={handleCommuneChange}
-            communes={communes}
-            minPrice={currentParams.minPrice}
-            onMinPriceChange={handleMinPriceChange}
-            maxPrice={currentParams.maxPrice}
-            onMaxPriceChange={handleMaxPriceChange}
-            capacity={currentParams.capacity}
-            onCapacityChange={handleCapacityChange}
-            quand={currentParams.quand}
-            quandFin={currentParams.quandFin}
-            onDateChange={handleDateChange}
-            onClearFilters={handleClearFilters}
-          />
-        </div>
-      </aside>
 
       {/* Main Content */}
       <main>
@@ -601,29 +671,58 @@ function MobileListing({
 
         {fetchFailed && !isFetching && <SearchErrorNotice />}
 
-        {/* Loading Overlay - smooth transition for pending state */}
-        <div
-          className={cn(
-            'relative transition-opacity duration-150',
-            isFetching && 'pointer-events-none opacity-70'
-          )}
-        >
-          {isFetching && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-burgundy-200 border-t-burgundy-600" />
-            </div>
-          )}
+        <CatalogueActiveFilters
+          currentParams={currentParams}
+          handleTypesChange={handleTypesChange}
+          handleCommuneChange={handleCommuneChange}
+          handleMinPriceChange={handleMinPriceChange}
+          handleMaxPriceChange={handleMaxPriceChange}
+          handleCapacityChange={handleCapacityChange}
+          handleDateChange={handleDateChange}
+          handleLanguageChange={handleLanguageChange}
+          handleSearchChange={handleSearchChange}
+          handleClearFilters={handleClearFilters}
+          className="mb-4"
+        />
 
-          {/* Results */}
-          <SearchResults
-            experiences={experiences}
-            sort={currentParams.sort}
-            onSortChange={handleSortChange}
-            pagination={pagination}
-            onPageChange={handlePageChange}
-            locationSearch={locationSearch}
-          />
+        {/* Liste / Carte toggle (L-116) */}
+        <div className="mb-4 flex justify-end">
+          <ViewSwitch view={view} onViewChange={onViewChange} />
         </div>
+
+        {view === 'map' ? (
+          <CatalogueMapView
+            experiences={experiences}
+            mapWineries={mapWineries}
+            onWineryClick={handleWineryClick}
+            heightClassName="h-[70vh]"
+            isFetching={isFetching}
+          />
+        ) : (
+          /* Loading Overlay - smooth transition for pending state */
+          <div
+            className={cn(
+              'relative transition-opacity duration-150',
+              isFetching && 'pointer-events-none opacity-70'
+            )}
+          >
+            {isFetching && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-burgundy-200 border-t-burgundy-600" />
+              </div>
+            )}
+
+            {/* Results */}
+            <SearchResults
+              experiences={experiences}
+              sort={currentParams.sort}
+              onSortChange={handleSortChange}
+              pagination={pagination}
+              onPageChange={handlePageChange}
+              locationSearch={locationSearch}
+            />
+          </div>
+        )}
       </main>
     </div>
   );
@@ -638,6 +737,169 @@ function SearchErrorNotice() {
     >
       {tErrors('genericError')}
     </div>
+  );
+}
+
+/** L-116: segmented Liste / Carte switch (pure client view, no refetch). */
+function ViewSwitch({
+  view,
+  onViewChange,
+}: {
+  view: CatalogueView;
+  onViewChange: (_view: CatalogueView) => void;
+}) {
+  const t = useTranslations('search');
+  const options: { value: CatalogueView; label: string; Icon: typeof List }[] =
+    [
+      { value: 'list', label: t('viewList'), Icon: List },
+      { value: 'map', label: t('viewMap'), Icon: MapIcon },
+    ];
+
+  return (
+    <div className="inline-flex items-center rounded-lg border border-stone-200 bg-white p-1">
+      {options.map(({ value, label, Icon }) => (
+        <button
+          key={value}
+          type="button"
+          onClick={() => onViewChange(value)}
+          aria-pressed={view === value}
+          className={cn(
+            'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors',
+            view === value
+              ? 'bg-burgundy-600 text-white'
+              : 'text-ink-700 hover:text-burgundy-700'
+          )}
+        >
+          <Icon className="h-4 w-4" aria-hidden="true" />
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * L-116: map view — full-width interactive map + a horizontal snap
+ * carousel of the current page's cards. Renders over already-fetched
+ * `displayData` (no extra request). mapbox-gl only downloads once the
+ * user opens this view (DynamicMap is ssr:false + dynamically imported).
+ */
+function CatalogueMapView({
+  experiences,
+  mapWineries,
+  onWineryClick,
+  heightClassName,
+  isFetching,
+}: {
+  experiences: ExperienceSearchResult[];
+  mapWineries: MapWinery[];
+  onWineryClick: (_slug: string) => void;
+  heightClassName: string;
+  isFetching: boolean;
+}) {
+  const t = useTranslations('search');
+
+  return (
+    <div
+      className={cn(
+        'space-y-4 transition-opacity duration-150',
+        isFetching && 'pointer-events-none opacity-70'
+      )}
+    >
+      <div
+        className={cn(
+          'overflow-hidden rounded-[18px] border border-stone-200 bg-stone-50 shadow-audit-card',
+          heightClassName
+        )}
+      >
+        <DynamicMap
+          wineries={mapWineries}
+          onWineryClick={onWineryClick}
+          className="h-full w-full rounded-[18px]"
+        />
+      </div>
+
+      {experiences.length > 0 ? (
+        <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2">
+          {experiences.map((experience, index) => (
+            <div
+              key={experience.id}
+              className="w-[280px] shrink-0 snap-start sm:w-[320px]"
+            >
+              <ExperienceCard experience={experience} priority={index < 2} />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-[18px] border border-dashed border-stone-300 bg-white p-10 text-center">
+          <Search className="mx-auto h-8 w-8 text-burgundy-600" />
+          <h3 className="mt-4 font-display text-xl font-semibold">
+            {t('noResultsFound')}
+          </h3>
+          <p className="mt-2 text-sm text-ink-500">
+            {t('tryDifferentFilters')}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * L-115: wires the shared filter state to the ActiveFilterPills badges —
+ * used identically in the desktop and mobile layouts.
+ */
+function CatalogueActiveFilters({
+  currentParams,
+  handleTypesChange,
+  handleCommuneChange,
+  handleMinPriceChange,
+  handleMaxPriceChange,
+  handleCapacityChange,
+  handleDateChange,
+  handleLanguageChange,
+  handleSearchChange,
+  handleClearFilters,
+  className,
+}: {
+  currentParams: FilterState;
+  handleTypesChange: (_types: ExperienceType[]) => void;
+  handleCommuneChange: (_commune: string | null) => void;
+  handleMinPriceChange: (_price: number | null) => void;
+  handleMaxPriceChange: (_price: number | null) => void;
+  handleCapacityChange: (_capacity: number | null) => void;
+  handleDateChange: (_quand: string | null) => void;
+  handleLanguageChange: (_language: Locale | null) => void;
+  handleSearchChange: (_value: string) => void;
+  handleClearFilters: () => void;
+  className?: string;
+}) {
+  return (
+    <ActiveFilterPills
+      search={currentParams.search}
+      types={currentParams.types}
+      commune={currentParams.commune}
+      minPrice={currentParams.minPrice}
+      maxPrice={currentParams.maxPrice}
+      capacity={currentParams.capacity}
+      quand={currentParams.quand}
+      quandFin={currentParams.quandFin}
+      language={currentParams.language}
+      onRemoveSearch={() => handleSearchChange('')}
+      onRemoveType={(type) =>
+        handleTypesChange(currentParams.types.filter((v) => v !== type))
+      }
+      onRemoveCommune={() => handleCommuneChange(null)}
+      onRemoveBudget={() => {
+        handleMinPriceChange(null);
+        handleMaxPriceChange(null);
+      }}
+      onRemoveDate={() => handleDateChange(null)}
+      onRemoveCapacity={() => handleCapacityChange(null)}
+      onRemoveLanguage={() => handleLanguageChange(null)}
+      onClearAll={handleClearFilters}
+      className={className}
+    />
   );
 }
 

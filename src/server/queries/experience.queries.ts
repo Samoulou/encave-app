@@ -6,6 +6,7 @@ import {
   ExperienceStatus,
   ExperiencePaymentMode,
   OccurrenceStatus,
+  Locale,
   Prisma,
 } from '@prisma/client';
 import { addDays } from 'date-fns';
@@ -27,6 +28,9 @@ export interface SearchParams {
   minPrice?: number;
   maxPrice?: number;
   capacity?: number;
+  // Spoken-language filter (L-115): keep experiences whose `languages`
+  // array contains the requested Locale.
+  language?: Locale;
   sort?:
     | 'relevance'
     | 'price_asc'
@@ -350,6 +354,12 @@ const cachedSearch = unstable_cache(
       // Capacity filter
       ...(params.capacity !== undefined && {
         maxCapacity: { gte: params.capacity },
+      }),
+      // Spoken-language filter (L-115): shared by the list, the count,
+      // the date prefilter and the next_availability sort — all derive
+      // from baseWhere.
+      ...(params.language && {
+        languages: { has: params.language },
       }),
     };
 

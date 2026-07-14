@@ -1446,7 +1446,26 @@
       "removePerson": "Retirer une personne",
       "explore": "Explorer"
     },
-    "resultsCount": "Valais · {count, plural, =0 {aucune expérience} one {# expérience} other {# expériences}}"
+    "resultsCount": "Valais · {count, plural, =0 {aucune expérience} one {# expérience} other {# expériences}}",
+    "budget": {
+      "label": "Budget",
+      "under50": "< 50",
+      "50to100": "50–100",
+      "over100": "100+"
+    },
+    "language": "Langue",
+    "languageAll": "Toutes les langues",
+    "languages": {
+      "FR": "Français",
+      "DE": "Deutsch",
+      "EN": "English"
+    },
+    "activeFilters": "Filtres actifs",
+    "removeFilter": "Retirer le filtre {filter}",
+    "clearAll": "Tout effacer",
+    "capacityPill": "{count, plural, one {# personne} other {# personnes}}",
+    "viewList": "Liste",
+    "viewMap": "Carte"
   },
   "errors": {
     "somethingWentWrong": "Une erreur s'est produite!",
