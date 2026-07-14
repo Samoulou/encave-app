@@ -176,11 +176,11 @@ ISR/header découplé, i18n subset, Mapbox gated, index DB, invalidation propre.
 
 **DoD** :
 
-- [ ] Politique d'annulation + no-show lisibles sur CHAQUE fiche et au checkout avant paiement
-- [ ] Home complète : sections bon cadeau + sur-mesure + comment ça marche ; ISR active
-- [ ] `/contact` (formulaire), `/mentions-legales`, `/maintenance` en ligne, 3 locales
-- [ ] Fiche domaine : horaires + bloc sur-mesure prérempli ; empty state « Vous êtes encaveur ? »
-- [ ] Sitemap public [L] : plus aucune page ❌ au mapping GAP §6
+- [x] Politique d'annulation + no-show lisibles sur CHAQUE fiche et au checkout avant paiement
+- [x] Home complète : sections bon cadeau + sur-mesure + comment ça marche ; ISR active
+- [x] `/contact` (formulaire), `/mentions-legales`, `/maintenance` en ligne, 3 locales
+- [x] Fiche domaine : horaires + bloc sur-mesure prérempli ; empty state « Vous êtes encaveur ? »
+- [x] Sitemap public [L] : plus aucune page ❌ au mapping GAP §6
 
 ### P-13 — Espace encaveur V3 _(L-130, L-133, L-134, L-140→L-144 · ~21 h dont 7.5 Should · dépend de : P-05)_
 
@@ -242,7 +242,7 @@ ISR/header découplé, i18n subset, Mapbox gated, index DB, invalidation propre.
 | P-09   | Bons cadeaux                   | 💰  | P-02, P-04 | 24 h   | S10-S11    | ⬜     |                                                                                                                                                                                                                                                                                              |
 | P-10   | Request / sur-mesure           | 💰  | P-02, P-03 | 18.5 h | S12-S13    | 🟨     | plan : [P-10-request-sur-mesure.md](./plans/P-10-request-sur-mesure.md) ; branche `claude/p10-implementation-plan-tj96sd` — décisions Sam tranchées (offre tout compris, cave obligatoire, escalade 48 h email)                                                                              |
 | P-11   | Événements collectifs          |     | P-02, P-05 | 10 h   | S13-S14    | ⬜     |                                                                                                                                                                                                                                                                                              |
-| P-12   | Pages publiques & légal        |     | P-03       | 16 h   | S14        | ⬜     |                                                                                                                                                                                                                                                                                              |
+| P-12   | Pages publiques & légal        |     | P-03       | 16 h   | S14        | 🟨     | plan : [P-12-pages-publiques-legal.md](./plans/P-12-pages-publiques-legal.md) ; branche `claude/zealous-bohr-e4sm3d` — L-112→L-117 + L-220/L-221 implémentés, socle vert (tsc/lint/i18n/1123 tests) ; PR à ouvrir                                                                             |
 | P-13   | Espace encaveur V3             |     | P-05       | 21 h   | S15        | ✅     | PR [#103](https://github.com/Samoulou/encave-app/pull/103) — review high 47 candidats corrigés, plan : [P-13-espace-encaveur.md](./archive/plans/P-13-espace-encaveur.md)                                                                                                                    |
 | P-14   | Auth V3                        |     | —          | 9 h    | S15        | ⬜     |                                                                                                                                                                                                                                                                                              |
 | P-15   | Admin V3 & emails              |     | —          | 8 h    | S15        | ⬜     |                                                                                                                                                                                                                                                                                              |

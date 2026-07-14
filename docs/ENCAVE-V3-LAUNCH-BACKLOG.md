@@ -312,5 +312,5 @@ Chemin critique : `E1 (schéma) → E2 (monétisation) → E3 (checkout) → E5/
 
 | ID    | Note (date)                                                                                                                                                                                      | Package cible | Statut |
 | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------- | ------ |
-| L-220 | Fiche expérience : skeleton **et** loader s'affichent pendant le chargement — ne garder que le skeleton (09.07)                                                                                  | P-06 ou P-12  | ⬜     |
-| L-221 | Fiche expérience desktop : le panneau de réservation (prix/dates/heures, colonne droite) doit s'aligner au niveau des photos — actuellement à moitié visible sous la ligne de flottaison (09.07) | P-12          | ⬜     |
+| L-220 | Fiche expérience : skeleton **et** loader s'affichent pendant le chargement — ne garder que le skeleton (09.07)                                                                                  | P-06 ou P-12  | ✅     |
+| L-221 | Fiche expérience desktop : le panneau de réservation (prix/dates/heures, colonne droite) doit s'aligner au niveau des photos — actuellement à moitié visible sous la ligne de flottaison (09.07) | P-12          | ✅     |
