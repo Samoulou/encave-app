@@ -394,7 +394,9 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
               </Suspense>
             </div>
 
-            <div className="relative hidden lg:block">
+            {/* L-221: sticky + self-start so the reservation panel aligns with
+                the gallery and stays in view instead of sliding below the fold. */}
+            <div className="sticky top-24 hidden self-start lg:block">
               <BookingWidget
                 price={experience.price}
                 experienceSlug={experience.slug}
