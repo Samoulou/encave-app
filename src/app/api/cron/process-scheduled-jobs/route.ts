@@ -8,8 +8,18 @@ import {
 } from '@/server/services/scheduled-jobs.service';
 import { processTastingRecapJob } from '@/server/services/tasting-recap.service';
 import { processGiftCardDeliveryJob } from '@/server/services/giftCard-delivery.service';
+import {
+  processRequestOfferReminderJob,
+  processRequestOfferExpiryJob,
+  processRequestSlaEscalationJob,
+} from '@/server/services/request-jobs.service';
 import { TASTING_RECAP_JOB_TYPE } from '@/lib/constants/wine';
 import { GIFT_CARD_DELIVERY_JOB_TYPE } from '@/lib/constants/gift-card';
+import {
+  REQUEST_OFFER_REMINDER_JOB_TYPE,
+  REQUEST_OFFER_EXPIRY_JOB_TYPE,
+  REQUEST_SLA_ESCALATION_JOB_TYPE,
+} from '@/lib/constants/request';
 import { logError, logInfo } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
@@ -41,6 +51,21 @@ const JOB_REGISTRY: {
     type: GIFT_CARD_DELIVERY_JOB_TYPE,
     flag: 'GIFT_CARDS',
     handler: processGiftCardDeliveryJob,
+  },
+  {
+    type: REQUEST_OFFER_REMINDER_JOB_TYPE,
+    flag: 'REQUESTS',
+    handler: processRequestOfferReminderJob,
+  },
+  {
+    type: REQUEST_OFFER_EXPIRY_JOB_TYPE,
+    flag: 'REQUESTS',
+    handler: processRequestOfferExpiryJob,
+  },
+  {
+    type: REQUEST_SLA_ESCALATION_JOB_TYPE,
+    flag: 'REQUESTS',
+    handler: processRequestSlaEscalationJob,
   },
 ];
 

@@ -171,6 +171,18 @@ export async function getWineryByUserId(userId: string) {
 }
 
 /**
+ * Winery id + name for the dashboard layout (P-10): the sidebar needs the id
+ * to resolve the requests nav badge count. Kept separate from
+ * getWineryByUserId to avoid widening its shape for existing callers.
+ */
+export async function getWineryNavContext(userId: string) {
+  return db.winery.findUnique({
+    where: { userId },
+    select: { id: true, name: true },
+  });
+}
+
+/**
  * Get all publicly visible winery slugs (for sitemap / static generation).
  *
  * SQL-only filter: same trade-off as `getDistinctCommunes`.

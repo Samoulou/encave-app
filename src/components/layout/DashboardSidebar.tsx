@@ -8,6 +8,7 @@ import {
   PartyPopper,
   Calendar,
   Grape,
+  Inbox,
   Landmark,
   Settings,
   Menu,
@@ -24,6 +25,10 @@ interface DashboardSidebarProps {
   userName?: string;
   /** TASTING_SHEET flag (P-07) — server-resolved by the dashboard layout. */
   showWines?: boolean;
+  /** REQUESTS flag (P-10) — server-resolved by the dashboard layout. */
+  showRequests?: boolean;
+  /** PENDING sur-mesure requests count for the nav badge (P-10). */
+  requestsCount?: number;
 }
 
 interface SidebarLink {
@@ -31,6 +36,8 @@ interface SidebarLink {
   labelKey: string;
   icon: typeof Home;
   exact?: boolean;
+  /** Optional count rendered as a small badge next to the label (P-10). */
+  badgeCount?: number;
 }
 
 const sidebarLinks: SidebarLink[] = [
@@ -57,6 +64,8 @@ export function DashboardSidebar({
   wineryName,
   userName,
   showWines = false,
+  showRequests = false,
+  requestsCount = 0,
 }: DashboardSidebarProps) {
   const pathname = usePathname();
   const currentPathname = pathname ?? '';
@@ -65,17 +74,28 @@ export function DashboardSidebar({
   const t = useTranslations('nav');
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const links = useMemo(() => {
-    if (!showWines) return sidebarLinks;
-    // « Vins » right after « Réservations » (V3 pages inventory §6).
+    // Insert « Vins » then « Demandes » right after « Réservations »
+    // (V3 pages inventory §6), each behind its own flag.
     const bookingsIndex = sidebarLinks.findIndex(
       (link) => link.labelKey === 'bookings'
     );
+    const inserted: SidebarLink[] = [];
+    if (showWines) inserted.push(winesLink);
+    if (showRequests) {
+      inserted.push({
+        href: '/dashboard/demandes',
+        labelKey: 'requests',
+        icon: Inbox,
+        badgeCount: requestsCount,
+      });
+    }
+    if (inserted.length === 0) return sidebarLinks;
     return [
       ...sidebarLinks.slice(0, bookingsIndex + 1),
-      winesLink,
+      ...inserted,
       ...sidebarLinks.slice(bookingsIndex + 1),
     ];
-  }, [showWines]);
+  }, [showWines, showRequests, requestsCount]);
 
   // Prefetch all dashboard routes on mount for instant navigation
   useEffect(() => {
@@ -193,6 +213,16 @@ export function DashboardSidebar({
                   >
                     {t(link.labelKey)}
                   </span>
+                  {link.badgeCount != null && link.badgeCount > 0 && (
+                    <span
+                      className="ml-auto inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-burgundy-700 px-1.5 text-xs font-semibold text-white"
+                      aria-label={t('requestsBadge', {
+                        count: link.badgeCount,
+                      })}
+                    >
+                      {link.badgeCount}
+                    </span>
+                  )}
                 </Link>
               );
             })}

@@ -10,6 +10,7 @@ import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuar
 import { VisibilityBanner } from '@/components/features/dashboard/VisibilityBanner';
 import { VisibilityBannerSkeleton } from '@/components/features/dashboard/VisibilityBannerSkeleton';
 import { TastingSheetAlertBanner } from '@/components/features/wine/TastingSheetAlertBanner';
+import { RequestsAlertBanner } from '@/components/features/requests/RequestsAlertBanner';
 import { StripeKycBanner } from '@/components/features/dashboard/StripeKycBanner';
 import { TodayKpis } from '@/components/features/dashboard/today/TodayKpis';
 import { UpcomingSessionsCard } from '@/components/features/dashboard/today/UpcomingSessionsCard';
@@ -103,6 +104,9 @@ export default async function DashboardTodayPage() {
         </Suspense>
         <Suspense fallback={null}>
           <TastingSheetAlertBanner userId={session.user.id} />
+        </Suspense>
+        <Suspense fallback={null}>
+          <RequestsAlertBanner wineryId={winery.id} />
         </Suspense>
 
         {/* KPIs */}

@@ -119,6 +119,14 @@ const PUBLIC_SURFACES: Record<
     componentDirs: [],
     appDirs: ['app/[locale]/(public)/bon'],
   },
+  'sur-mesure segment (request form + offer pay)': {
+    provided: [
+      ...PUBLIC_BASE_NAMESPACES,
+      ...SEGMENT_EXTRA_NAMESPACES.surMesure,
+    ],
+    componentDirs: ['components/features/requests'],
+    appDirs: ['app/[locale]/(public)/sur-mesure'],
+  },
 };
 
 // Client components living in public component dirs but only ever
@@ -126,6 +134,8 @@ const PUBLIC_SURFACES: Record<
 const PROTECTED_ONLY_FILES = [
   // dashboard-only shell/badges (mounted under (protected) exclusively)
   `layout${sep}ClientDashboardSidebar.tsx`,
+  // winemaker offer composer — only mounted on the protected demandes detail
+  `features${sep}requests${sep}ComposeOfferForm.tsx`,
   `features${sep}booking${sep}BookingStatusBadge.tsx`,
   `features${sep}winery${sep}PaymentStatus.tsx`,
   `features${sep}winery${sep}StripeOnboarding.tsx`,

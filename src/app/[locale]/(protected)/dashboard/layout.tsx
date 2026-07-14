@@ -3,8 +3,9 @@ import { redirect } from 'next/navigation';
 import { getLocale } from 'next-intl/server';
 import { DashboardSidebar } from '@/components/layout/DashboardSidebar';
 import { ClientDashboardSidebar } from '@/components/layout/ClientDashboardSidebar';
-import { getWineryByUserId } from '@/server/queries/winery.queries';
+import { getWineryNavContext } from '@/server/queries/winery.queries';
 import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
+import { getPendingRequestCount } from '@/server/queries/request.queries';
 
 export default async function DashboardLayout({
   children,
@@ -19,11 +20,15 @@ export default async function DashboardLayout({
 
   // WINEMAKER: show winery dashboard sidebar
   if (session.user.role === 'WINEMAKER') {
-    const [winery, tastingEnabled] = await Promise.all([
-      getWineryByUserId(session.user.id),
+    const [winery, tastingEnabled, requestsEnabled] = await Promise.all([
+      getWineryNavContext(session.user.id),
       isFlagEnabled('TASTING_SHEET'),
+      isFlagEnabled('REQUESTS'),
     ]);
     const wineryName = winery?.name ?? 'My Winery';
+    // Badge count only when the flag is ON and the winery exists.
+    const requestsCount =
+      requestsEnabled && winery ? await getPendingRequestCount(winery.id) : 0;
 
     return (
       <div className="flex h-screen w-full overflow-hidden bg-primary-light">
@@ -31,6 +36,8 @@ export default async function DashboardLayout({
           wineryName={wineryName}
           userName={session.user.name ?? undefined}
           showWines={tastingEnabled}
+          showRequests={requestsEnabled}
+          requestsCount={requestsCount}
         />
         <main className="relative flex h-full flex-1 flex-col overflow-hidden md:ml-64">
           <div className="h-14 flex-shrink-0 md:hidden" />

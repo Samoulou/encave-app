@@ -260,3 +260,10 @@ export const WINE_ORDER_RATE_LIMIT: RateLimitConfig = {
   maxRequests: 5,
   windowMs: 60 * 60 * 1000, // per hour
 };
+
+// Public sur-mesure request form (P-10 / L-090) — unauthenticated; keep the
+// per-IP budget tight to bound spam without blocking a genuine second try.
+export const REQUEST_RATE_LIMIT: RateLimitConfig = {
+  maxRequests: 5,
+  windowMs: 60 * 60 * 1000, // per hour
+};

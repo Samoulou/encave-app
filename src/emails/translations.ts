@@ -137,6 +137,31 @@ export const subjects = {
     DE: 'Handlungsbedarf: Ihr Stripe-Konto braucht Sie',
     EN: 'Action required: your Stripe account needs you',
   },
+  requestSubmitted: {
+    FR: 'Votre demande a bien été transmise à {wineryName}',
+    DE: 'Ihre Anfrage wurde an {wineryName} übermittelt',
+    EN: 'Your request has been sent to {wineryName}',
+  },
+  requestNewCustom: {
+    FR: 'Nouvelle demande sur-mesure — {clientName}',
+    DE: 'Neue Massanfrage — {clientName}',
+    EN: 'New custom request — {clientName}',
+  },
+  requestOfferReceived: {
+    FR: 'Votre offre de {wineryName} est arrivée',
+    DE: 'Ihr Angebot von {wineryName} ist da',
+    EN: 'Your offer from {wineryName} has arrived',
+  },
+  requestOfferExpiring: {
+    FR: 'Votre offre de {wineryName} expire bientôt',
+    DE: 'Ihr Angebot von {wineryName} läuft bald ab',
+    EN: 'Your offer from {wineryName} is expiring soon',
+  },
+  requestSlaEscalation: {
+    FR: 'Demande sur-mesure sans réponse depuis 48 h — {wineryName}',
+    DE: 'Massanfrage seit 48 h unbeantwortet — {wineryName}',
+    EN: 'Custom request unanswered for 48 h — {wineryName}',
+  },
 } as const;
 
 // Common email strings
@@ -1036,6 +1061,205 @@ export const stripeRequirementLabels: Record<string, Record<Locale, string>> = {
     EN: 'Personal address',
   },
 };
+
+// Sur-mesure request emails (P-10 / US-240, PAGES-EMAILS §8)
+export const request = {
+  // #8 — acknowledgement to the CLIENT (locale = Request.locale)
+  submitted: {
+    title: {
+      FR: 'Votre demande est bien partie',
+      DE: 'Ihre Anfrage ist unterwegs',
+      EN: 'Your request is on its way',
+    },
+    intro: {
+      FR: 'Bonjour {clientName}, nous avons transmis votre demande à {wineryName}. La cave revient vers vous avec une proposition sous 48 h.',
+      DE: 'Guten Tag {clientName}, wir haben Ihre Anfrage an {wineryName} weitergeleitet. Das Weingut meldet sich innerhalb von 48 Stunden mit einem Vorschlag bei Ihnen.',
+      EN: 'Hello {clientName}, we have forwarded your request to {wineryName}. The winery will get back to you with a proposal within 48 hours.',
+    },
+    recapTitle: {
+      FR: 'Récapitulatif de votre demande',
+      DE: 'Zusammenfassung Ihrer Anfrage',
+      EN: 'Summary of your request',
+    },
+    guests: {
+      FR: 'Nombre de personnes : {count}',
+      DE: 'Anzahl Personen: {count}',
+      EN: 'Number of guests: {count}',
+    },
+    desiredDate: {
+      FR: 'Date souhaitée : {date}',
+      DE: 'Gewünschtes Datum: {date}',
+      EN: 'Preferred date: {date}',
+    },
+    reference: {
+      FR: 'Référence : {reference}',
+      DE: 'Referenz: {reference}',
+      EN: 'Reference: {reference}',
+    },
+    signoff: {
+      FR: 'À très vite chez nos encaveurs,',
+      DE: 'Bis bald bei unseren Winzern,',
+      EN: 'See you soon at our winemakers,',
+    },
+  },
+  // #15 — new custom request to the WINERY (locale = winemaker preferredLocale)
+  newCustom: {
+    title: {
+      FR: 'Nouvelle demande sur-mesure',
+      DE: 'Neue Massanfrage',
+      EN: 'New custom request',
+    },
+    intro: {
+      FR: '{clientName} vous a envoyé une demande sur-mesure ({reference}). Voici les détails :',
+      DE: '{clientName} hat Ihnen eine Massanfrage gesendet ({reference}). Hier die Details:',
+      EN: '{clientName} has sent you a custom request ({reference}). Here are the details:',
+    },
+    contact: {
+      FR: 'Coordonnées : {email}{phone}',
+      DE: 'Kontakt: {email}{phone}',
+      EN: 'Contact details: {email}{phone}',
+    },
+    guests: {
+      FR: 'Nombre de personnes : {count}',
+      DE: 'Anzahl Personen: {count}',
+      EN: 'Number of guests: {count}',
+    },
+    desiredDate: {
+      FR: 'Date souhaitée : {date}',
+      DE: 'Gewünschtes Datum: {date}',
+      EN: 'Preferred date: {date}',
+    },
+    budget: {
+      FR: 'Budget indicatif : {amount}',
+      DE: 'Richtbudget: {amount}',
+      EN: 'Indicative budget: {amount}',
+    },
+    descriptionLabel: {
+      FR: 'Sa demande :',
+      DE: 'Die Anfrage:',
+      EN: 'Their request:',
+    },
+    sla: {
+      FR: 'Merci de répondre sous 48 h pour tenir votre délai de réponse.',
+      DE: 'Bitte antworten Sie innerhalb von 48 Stunden, um Ihre Antwortfrist einzuhalten.',
+      EN: 'Please reply within 48 hours to meet your response time.',
+    },
+    cta: {
+      FR: 'Répondre à la demande',
+      DE: 'Auf die Anfrage antworten',
+      EN: 'Reply to the request',
+    },
+  },
+  // #9 — offer ready, to the CLIENT (locale = Request.locale)
+  offerReceived: {
+    title: {
+      FR: 'Votre offre de {wineryName}',
+      DE: 'Ihr Angebot von {wineryName}',
+      EN: 'Your offer from {wineryName}',
+    },
+    intro: {
+      FR: 'Bonjour {clientName}, bonne nouvelle : {wineryName} vous a préparé une offre sur-mesure.',
+      DE: 'Guten Tag {clientName}, gute Nachricht: {wineryName} hat Ihnen ein massgeschneidertes Angebot erstellt.',
+      EN: 'Hello {clientName}, good news: {wineryName} has prepared a custom offer for you.',
+    },
+    messageLabel: {
+      FR: 'Le mot de la cave :',
+      DE: 'Die Nachricht des Weinguts:',
+      EN: 'A word from the winery:',
+    },
+    schedule: {
+      FR: 'Date et heure : {date} à {time}',
+      DE: 'Datum und Uhrzeit: {date} um {time}',
+      EN: 'Date and time: {date} at {time}',
+    },
+    guests: {
+      FR: 'Nombre de personnes : {count}',
+      DE: 'Anzahl Personen: {count}',
+      EN: 'Number of guests: {count}',
+    },
+    total: {
+      FR: 'Prix total, tout compris : {amount}',
+      DE: 'Gesamtpreis, alles inklusive: {amount}',
+      EN: 'Total price, all included: {amount}',
+    },
+    expiry: {
+      FR: 'À confirmer avant le {date}.',
+      DE: 'Bitte bis zum {date} bestätigen.',
+      EN: 'Please confirm before {date}.',
+    },
+    cta: {
+      FR: 'Payer maintenant',
+      DE: 'Jetzt bezahlen',
+      EN: 'Pay now',
+    },
+  },
+  // #10 — single reminder before the offer expires, to the CLIENT
+  offerExpiring: {
+    title: {
+      FR: 'Votre offre expire bientôt',
+      DE: 'Ihr Angebot läuft bald ab',
+      EN: 'Your offer is expiring soon',
+    },
+    intro: {
+      FR: 'Bonjour {clientName}, votre offre sur-mesure de {wineryName} expire le {date}. Sans confirmation, elle sera annulée.',
+      DE: 'Guten Tag {clientName}, Ihr massgeschneidertes Angebot von {wineryName} läuft am {date} ab. Ohne Bestätigung wird es storniert.',
+      EN: 'Hello {clientName}, your custom offer from {wineryName} expires on {date}. Without confirmation, it will be cancelled.',
+    },
+    total: {
+      FR: 'Montant à régler : {amount}',
+      DE: 'Zu zahlender Betrag: {amount}',
+      EN: 'Amount to pay: {amount}',
+    },
+    cta: {
+      FR: 'Payer mon offre',
+      DE: 'Mein Angebot bezahlen',
+      EN: 'Pay for my offer',
+    },
+  },
+  // Escalation — 48h no-answer, to the ADMIN (locale FR fixe)
+  slaEscalation: {
+    title: {
+      FR: 'Demande sur-mesure sans réponse depuis 48 h',
+      DE: 'Massanfrage seit 48 Stunden unbeantwortet',
+      EN: 'Custom request unanswered for 48 hours',
+    },
+    intro: {
+      FR: 'La cave {wineryName} n’a pas répondu à une demande sur-mesure dans le délai de 48 h.',
+      DE: 'Das Weingut {wineryName} hat eine Massanfrage nicht innerhalb von 48 Stunden beantwortet.',
+      EN: 'The winery {wineryName} has not answered a custom request within the 48-hour window.',
+    },
+    winery: {
+      FR: 'Cave : {name}',
+      DE: 'Weingut: {name}',
+      EN: 'Winery: {name}',
+    },
+    client: {
+      FR: 'Client : {name} ({email})',
+      DE: 'Kunde: {name} ({email})',
+      EN: 'Client: {name} ({email})',
+    },
+    reference: {
+      FR: 'Référence : {reference}',
+      DE: 'Referenz: {reference}',
+      EN: 'Reference: {reference}',
+    },
+    guests: {
+      FR: 'Nombre de personnes : {count}',
+      DE: 'Anzahl Personen: {count}',
+      EN: 'Number of guests: {count}',
+    },
+    createdAt: {
+      FR: 'Demande créée le : {date}',
+      DE: 'Anfrage erstellt am: {date}',
+      EN: 'Request created on: {date}',
+    },
+    cta: {
+      FR: 'Ouvrir l’inbox de la cave',
+      DE: 'Posteingang des Weinguts öffnen',
+      EN: 'Open the winery inbox',
+    },
+  },
+} as const;
 
 // Helper function to get translation
 export function t<T extends Record<Locale, unknown>>(

@@ -29,6 +29,9 @@ const envSchema = z.object({
   // Svix signing secret of the Resend webhook (open/click tracking, P-07).
   // Unset = webhook route rejects everything; sending is unaffected.
   RESEND_WEBHOOK_SECRET: z.string().optional(),
+  // Internal escalation inbox (P-10): a sur-mesure request unanswered > 48h
+  // emails Sam here. Unset = escalation job skips cleanly (no throw).
+  ADMIN_ALERT_EMAIL: z.string().email().optional(),
 
   // Storage (Vercel Blob)
   BLOB_READ_WRITE_TOKEN: z.string().optional(),

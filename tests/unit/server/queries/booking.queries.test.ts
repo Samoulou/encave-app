@@ -350,7 +350,7 @@ describe('booking.queries', () => {
       await getWineryExperiencesForFilter('winery-123');
 
       expect(db.experience.findMany).toHaveBeenCalledWith({
-        where: { wineryId: 'winery-123' },
+        where: { wineryId: 'winery-123', isCustom: false },
         select: { id: true, title: true },
         orderBy: { title: 'asc' },
       });

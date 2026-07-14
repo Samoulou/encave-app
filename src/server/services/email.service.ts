@@ -2,6 +2,9 @@ import { Resend } from 'resend';
 import { render } from '@react-email/components';
 import { env, getBaseUrl } from '@/lib/env';
 import { logInfo, logError, logWarn } from '@/lib/logger';
+import { formatCHF } from '@/lib/utils/currency';
+import { formatDate } from '@/lib/i18n/formatters';
+import type { Locale as RoutingLocale } from '@/i18n/routing';
 import type { Locale } from '@prisma/client';
 import {
   BookingConfirmationEmail,
@@ -34,6 +37,11 @@ import {
   StripeActionRequiredEmail,
   GiftCardPurchaseEmail,
   GiftCardDeliveryEmail,
+  RequestSubmittedEmail,
+  RequestNewCustomEmail,
+  RequestOfferReceivedEmail,
+  RequestOfferExpiringEmail,
+  RequestSlaEscalationEmail,
 } from '@/emails';
 import { subjects, t } from '@/emails/translations';
 import { generateBookingQrPng } from '@/server/services/qr-code.service';
@@ -1070,5 +1078,227 @@ export async function sendGiftCardDeliveryEmail(
       { name: 'email_type', value: 'gift_card_delivery' },
       { name: 'gift_card_id', value: data.giftCardId },
     ],
+  });
+}
+
+// Sur-mesure request emails (P-10 / US-240)
+
+export interface RequestSubmittedEmailData {
+  clientName: string;
+  wineryName: string;
+  guestCount: number;
+  desiredDate: Date | null;
+  requestReference: string;
+}
+
+/** Email #8 — acknowledgement to the client (locale = Request.locale). */
+export async function sendRequestSubmittedEmail(
+  email: string,
+  data: RequestSubmittedEmailData,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const routingLocale = loc.toLowerCase() as RoutingLocale;
+  const html = await render(
+    RequestSubmittedEmail({
+      locale: loc,
+      clientName: data.clientName,
+      wineryName: data.wineryName,
+      guestCount: data.guestCount,
+      desiredDate: data.desiredDate
+        ? formatDate(data.desiredDate, routingLocale)
+        : null,
+      requestReference: data.requestReference,
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.requestSubmitted, loc).replace(
+      '{wineryName}',
+      data.wineryName
+    ),
+    html,
+    tags: [{ name: 'email_type', value: 'request_submitted' }],
+  });
+}
+
+export interface RequestNewCustomEmailData {
+  wineryId: string;
+  winemakerName: string;
+  clientName: string;
+  clientEmail: string;
+  clientPhone: string | null;
+  guestCount: number;
+  desiredDate: Date | null;
+  budgetCents: number | null;
+  description: string;
+  requestReference: string;
+  inboxUrl: string;
+}
+
+/** Email #15 — new sur-mesure request to the winery (winemaker locale). */
+export async function sendRequestNewCustomEmail(
+  email: string,
+  data: RequestNewCustomEmailData,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const routingLocale = loc.toLowerCase() as RoutingLocale;
+  const html = await render(
+    RequestNewCustomEmail({
+      locale: loc,
+      winemakerName: data.winemakerName,
+      clientName: data.clientName,
+      clientEmail: data.clientEmail,
+      clientPhone: data.clientPhone,
+      guestCount: data.guestCount,
+      desiredDate: data.desiredDate
+        ? formatDate(data.desiredDate, routingLocale)
+        : null,
+      budget: data.budgetCents !== null ? formatCHF(data.budgetCents) : null,
+      description: data.description,
+      requestReference: data.requestReference,
+      inboxUrl: data.inboxUrl,
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.requestNewCustom, loc).replace(
+      '{clientName}',
+      data.clientName
+    ),
+    html,
+    tags: [
+      { name: 'email_type', value: 'request_new_custom' },
+      { name: 'winery_id', value: data.wineryId },
+    ],
+  });
+}
+
+export interface RequestOfferReceivedEmailData {
+  clientName: string;
+  wineryName: string;
+  message: string;
+  totalPriceCents: number;
+  scheduledDate: Date;
+  scheduledStartTime: string; // "HH:mm"
+  guestCount: number;
+  expiresAt: Date;
+  payUrl: string;
+}
+
+/** Email #9 — the winery's offer, ready to pay (locale = Request.locale). */
+export async function sendRequestOfferReceivedEmail(
+  email: string,
+  data: RequestOfferReceivedEmailData,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const routingLocale = loc.toLowerCase() as RoutingLocale;
+  const html = await render(
+    RequestOfferReceivedEmail({
+      locale: loc,
+      clientName: data.clientName,
+      wineryName: data.wineryName,
+      message: data.message,
+      total: formatCHF(data.totalPriceCents),
+      eventDate: formatDate(data.scheduledDate, routingLocale),
+      eventTime: data.scheduledStartTime,
+      guestCount: data.guestCount,
+      expiry: formatDate(data.expiresAt, routingLocale),
+      payUrl: data.payUrl,
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.requestOfferReceived, loc).replace(
+      '{wineryName}',
+      data.wineryName
+    ),
+    html,
+    tags: [{ name: 'email_type', value: 'request_offer_received' }],
+  });
+}
+
+export interface RequestOfferExpiringEmailData {
+  clientName: string;
+  wineryName: string;
+  totalPriceCents: number;
+  expiresAt: Date;
+  payUrl: string;
+}
+
+/** Email #10 — single reminder before the offer expires (Request.locale). */
+export async function sendRequestOfferExpiringEmail(
+  email: string,
+  data: RequestOfferExpiringEmailData,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const routingLocale = loc.toLowerCase() as RoutingLocale;
+  const html = await render(
+    RequestOfferExpiringEmail({
+      locale: loc,
+      clientName: data.clientName,
+      wineryName: data.wineryName,
+      total: formatCHF(data.totalPriceCents),
+      expiry: formatDate(data.expiresAt, routingLocale),
+      payUrl: data.payUrl,
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.requestOfferExpiring, loc).replace(
+      '{wineryName}',
+      data.wineryName
+    ),
+    html,
+    tags: [{ name: 'email_type', value: 'request_offer_expiring' }],
+  });
+}
+
+export interface RequestSlaEscalationEmailData {
+  wineryName: string;
+  clientName: string;
+  clientEmail: string;
+  requestReference: string;
+  guestCount: number;
+  createdAt: Date;
+  inboxUrl: string;
+}
+
+/** Escalation — 48h no-answer, to the admin (locale FR fixe). */
+export async function sendRequestSlaEscalationEmail(
+  email: string,
+  data: RequestSlaEscalationEmailData,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const routingLocale = loc.toLowerCase() as RoutingLocale;
+  const html = await render(
+    RequestSlaEscalationEmail({
+      locale: loc,
+      wineryName: data.wineryName,
+      clientName: data.clientName,
+      clientEmail: data.clientEmail,
+      requestReference: data.requestReference,
+      guestCount: data.guestCount,
+      createdAt: formatDate(data.createdAt, routingLocale),
+      inboxUrl: data.inboxUrl,
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.requestSlaEscalation, loc).replace(
+      '{wineryName}',
+      data.wineryName
+    ),
+    html,
+    tags: [{ name: 'email_type', value: 'request_sla_escalation' }],
   });
 }
