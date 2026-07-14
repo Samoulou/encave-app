@@ -1901,11 +1901,6 @@
         }
       }
     },
-    "navLinks": {
-      "privacy": "Datenschutz",
-      "terms": "AGB",
-      "cancellation": "Stornierungen"
-    },
     "cookies": {
       "banner": {
         "title": "Cookie-Einstellungen",

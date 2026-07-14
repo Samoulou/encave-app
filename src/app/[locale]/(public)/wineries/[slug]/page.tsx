@@ -184,7 +184,7 @@ export default async function WineryPage({ params }: WineryPageProps) {
         {(winery.familyName ||
           winery.altitude != null ||
           winery.hectares != null ||
-          winery.signatureGrapes.length > 0) && (
+          (winery.signatureGrapes ?? []).length > 0) && (
           <div className="border-b border-stone-200/60 bg-white">
             <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-10 gap-y-4 px-6 py-5 lg:px-8">
               {winery.familyName && (
@@ -217,13 +217,13 @@ export default async function WineryPage({ params }: WineryPageProps) {
                   </p>
                 </div>
               )}
-              {winery.signatureGrapes.length > 0 && (
+              {(winery.signatureGrapes ?? []).length > 0 && (
                 <div className="min-w-0">
                   <p className="text-xs uppercase tracking-wide text-slate-500">
                     {t('signatureGrapesLabel')}
                   </p>
                   <ul className="mt-1 flex flex-wrap gap-2">
-                    {winery.signatureGrapes.map((grape) => (
+                    {(winery.signatureGrapes ?? []).map((grape) => (
                       <li
                         key={grape}
                         className="rounded-full bg-gold-100 px-3 py-1 text-sm font-medium text-gold-900"

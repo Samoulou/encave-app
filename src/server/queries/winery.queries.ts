@@ -121,10 +121,11 @@ export const getWineryBySlug = unstable_cache(
 
     return winery;
   },
-  // v2: payload shape changed in P-07 (wines include) — the version bump
-  // prevents pre-deploy cache entries (no `wines` key) from being served
-  // to code that reads it.
-  ['winery-by-slug-v2'],
+  // v3 (P-12 / L-117): payload gained the enrichment scalars (signatureGrapes
+  // etc.). The bump prevents pre-deploy cache entries (missing signatureGrapes)
+  // being served to the fiche, which reads `.length` — an undefined would
+  // throw. v2 added the P-07 `wines` include for the same reason.
+  ['winery-by-slug-v3'],
   {
     revalidate: 300,
     tags: ['wineries'],
