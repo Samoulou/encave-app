@@ -346,6 +346,12 @@
     "pricing": "Pricing",
     "pricingDescription": "Set the price per person for your experience",
     "priceMustBePositive": "Price must be greater than 0",
+    "paymentMode": {
+      "label": "Payment",
+      "online": "Paid online at checkout",
+      "onSite": "Free or paid at the winery",
+      "description": "Pay-on-site offers can take a no-show card imprint (no charge at booking)."
+    },
     "creating": "Creating...",
     "createExperience": "Create Experience",
     "updating": "Updating...",
@@ -800,6 +806,12 @@
         "required": "Please confirm your age before continuing to payment."
       }
     },
+    "noShow": {
+      "title": "No-show fee: {amount} per guest",
+      "explainer": "This experience is free or paid on site. We only save your card now — no charge is made. If you don't show up and don't cancel in time, the winery may charge the fee.",
+      "checkboxLabel": "I accept the no-show fee of {amount} per guest and authorize saving my card for this purpose.",
+      "required": "Please accept the no-show policy to continue."
+    },
     "hold": {
       "remaining": "Slot held for {time}",
       "remainingUrgent": "Only {time} left to complete your booking",
@@ -1005,6 +1017,19 @@
       "saving": "Saving...",
       "updated": "Cancellation policy updated",
       "updateError": "Could not save the cancellation policy. Please try again."
+    },
+    "noShowFee": {
+      "title": "No-show fee",
+      "description": "For free or pay-on-site offers, take a card imprint at booking and charge a fee if the guest does not show up. No amount is debited until you trigger it manually.",
+      "enableLabel": "Charge a no-show fee",
+      "amountLabel": "Fee per guest",
+      "perGuest": "CHF / guest",
+      "invalidAmount": "The fee must be between 0 and 50 CHF.",
+      "note": "The policy is shown to the guest before booking and must be accepted. You charge the fee manually, only on a no-show.",
+      "save": "Save",
+      "saving": "Saving...",
+      "updated": "No-show settings updated",
+      "updateError": "Could not save the no-show settings. Please try again."
     },
     "winesSectionTitle": "Their wines",
     "winesSectionSubtitle": "The estate's wines, to taste on site."
@@ -2056,6 +2081,9 @@
         "markPresent": "Mark as present",
         "markNoShow": "Mark as no-show",
         "markNoShowDisabled": "Available after the session ends",
+        "chargeNoShowFee": "Charge the no-show fee ({amount})",
+        "retryNoShowFee": "Retry the no-show charge",
+        "noShowFeeCharged": "No-show fee charged",
         "openMenu": "Open actions menu",
         "cancelSessionTitle": "Cancel the session?",
         "cancelSessionDescription": "All confirmed bookings will be cancelled and fully refunded; every guest receives an email with your reason.",
@@ -2079,13 +2107,16 @@
       "errors": {
         "loadFailed": "Could not load the event. Try again in a moment.",
         "revertWindowExpired": "Cannot revert after 72h.",
-        "sessionNotEnded": "Available after the session ends."
+        "sessionNotEnded": "Available after the session ends.",
+        "noShowChargeFailed": "The card was declined. You can retry the charge.",
+        "noShowAlreadyCharged": "The no-show fee has already been charged."
       },
       "toast": {
         "checkedIn": "Attendance saved.",
         "noShow": "No-show saved.",
         "revertedCheckIn": "Check-in cancelled.",
         "revertedNoShow": "No-show cancelled.",
+        "noShowCharged": "No-show fee charged.",
         "error": "Action unavailable right now."
       },
       "confirm": {
@@ -2094,7 +2125,9 @@
         "revertCheckInTitle": "Cancel check-in?",
         "revertCheckInDescription": "The status will go back to Confirmed. The action is logged.",
         "revertNoShowTitle": "Cancel no-show?",
-        "revertNoShowDescription": "The status will go back to Confirmed. The action is logged.",
+        "revertNoShowDescription": "The status will go back to Confirmed. The action is logged. If a no-show fee was charged, it is refunded automatically.",
+        "chargeNoShowTitle": "Charge the no-show fee?",
+        "chargeNoShowDescription": "{amount} will be charged to the guest's saved card, matching the policy they accepted at booking. They will be notified by email.",
         "confirmCta": "Confirm",
         "cancelCta": "Back"
       },

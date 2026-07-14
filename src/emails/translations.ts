@@ -67,6 +67,11 @@ export const subjects = {
     DE: 'Eine Reservierung wurde von EnCave erstattet',
     EN: 'A booking has been refunded by EnCave',
   },
+  noShowFeeCharged: {
+    FR: 'Frais de non-présentation prélevés',
+    DE: 'Nichterscheinungsgebühr abgebucht',
+    EN: 'No-show fee charged',
+  },
   accountDeleted: {
     FR: 'Votre compte EnCave a été supprimé',
     DE: 'Ihr EnCave-Konto wurde gelöscht',
@@ -781,6 +786,30 @@ export const manualRefund = {
       DE: 'Dieser Betrag wird automatisch von Ihrer nächsten Stripe-Connect-Auszahlung abgezogen.',
       EN: 'This amount is automatically deducted from your next Stripe Connect payout.',
     },
+  },
+} as const;
+
+// No-show fee charged, to the client (P-08 / email #13, US-220)
+export const noShowFeeCharged = {
+  title: {
+    FR: 'Frais de non-présentation prélevés',
+    DE: 'Nichterscheinungsgebühr abgebucht',
+    EN: 'No-show fee charged',
+  },
+  intro: {
+    FR: 'Bonjour {firstName}, comme vous ne vous êtes pas présenté·e à votre réservation {reference} ({experienceTitle}, le {date}) et sans annulation dans les délais, {wineryName} a prélevé les frais de non-présentation de {amount}.',
+    DE: 'Guten Tag {firstName}, da Sie zu Ihrer Reservierung {reference} ({experienceTitle}, am {date}) nicht erschienen sind und nicht rechtzeitig storniert haben, hat {wineryName} die Nichterscheinungsgebühr von {amount} abgebucht.',
+    EN: 'Hello {firstName}, as you did not attend your booking {reference} ({experienceTitle}, on {date}) and did not cancel in time, {wineryName} charged the no-show fee of {amount}.',
+  },
+  policy: {
+    FR: 'Vous aviez accepté cette politique de non-présentation le {acceptedDate} lors de votre réservation.',
+    DE: 'Sie hatten diese Nichterscheinungs-Richtlinie am {acceptedDate} bei Ihrer Reservierung akzeptiert.',
+    EN: 'You accepted this no-show policy on {acceptedDate} when you booked.',
+  },
+  contact: {
+    FR: 'Une question ? Répondez à cet e-mail ou contactez directement le domaine.',
+    DE: 'Fragen? Antworten Sie auf diese E-Mail oder kontaktieren Sie das Weingut direkt.',
+    EN: 'Any questions? Reply to this email or contact the winery directly.',
   },
 } as const;
 

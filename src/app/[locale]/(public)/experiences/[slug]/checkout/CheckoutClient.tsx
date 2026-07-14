@@ -63,6 +63,11 @@ interface CheckoutClientProps {
   guestCount: number;
   /** Client booking fee per ticket in cents — 0 when BOOKING_FEE is OFF. */
   serviceFeeCentsPerGuest: number;
+  /**
+   * No-show fee per guest in cents (P-08) — > 0 only for an ON_SITE offer with
+   * the winery opted in and the flag ON. Drives the card-imprint acceptance.
+   */
+  noShowFeeCentsPerGuest: number;
   /** Hold created at « Continuer » (L-050) — null = degraded, no-hold flow. */
   holdId: string | null;
   /** Ownership secret of the hold — required to claim it at submit. */
@@ -86,6 +91,7 @@ export function CheckoutClient({
   time,
   guestCount,
   serviceFeeCentsPerGuest,
+  noShowFeeCentsPerGuest,
   holdId,
   holdToken,
   holdExpiresAt,
@@ -99,6 +105,11 @@ export function CheckoutClient({
   const { navigate } = useNavigateWithTransition();
 
   const [submitError, setSubmitError] = useState<string | null>(null);
+  // No-show card imprint (P-08): the client must accept the fee before booking
+  // an ON_SITE offer that carries no-show protection.
+  const noShowApplies = noShowFeeCentsPerGuest > 0;
+  const [noShowAccepted, setNoShowAccepted] = useState(false);
+  const [noShowError, setNoShowError] = useState(false);
   // Gift card applied at checkout (P-09) — code + previewed covered amount.
   const [giftCode, setGiftCode] = useState('');
   const [giftAppliedCents, setGiftAppliedCents] = useState(0);
@@ -247,6 +258,11 @@ export function CheckoutClient({
   }, [navigate, slug, date, time, guestCount]);
 
   const onSubmit = async (data: CheckoutFormData) => {
+    // Card-imprint acceptance is mandatory for an ON_SITE no-show offer.
+    if (noShowApplies && !noShowAccepted) {
+      setNoShowError(true);
+      return;
+    }
     hasSubmittedRef.current = true;
     setSubmitError(null);
 
@@ -273,6 +289,11 @@ export function CheckoutClient({
         ageConfirmed: true,
         locale,
         displayedServiceFeeCentsPerGuest: serviceFeeCentsPerGuest,
+        // No-show fee the client accepted (P-08) — the server re-checks it
+        // against the winery's current setting (NO_SHOW_CHANGED guard).
+        ...(noShowApplies
+          ? { displayedNoShowFeeCents: noShowFeeCentsPerGuest }
+          : {}),
         // Gift card (P-09) — the server re-locks and re-checks the amount;
         // displayedGiftAppliedCents guards against a drained code.
         ...(giftEnabled && giftCode && giftAppliedCents > 0
@@ -504,6 +525,50 @@ export function CheckoutClient({
                 {submitError && (
                   <div className="mb-4 rounded-md bg-red-50 p-4">
                     <p className="text-sm text-red-700">{submitError}</p>
+                  </div>
+                )}
+
+                {/* No-show card imprint acceptance (P-08 / US-220) */}
+                {noShowApplies && (
+                  <div className="mb-6 rounded-lg border border-amber-300 bg-amber-50 p-4">
+                    <p className="mb-3 text-sm font-semibold text-amber-900">
+                      {t('noShow.title', {
+                        amount: formatCHF(noShowFeeCentsPerGuest),
+                      })}
+                    </p>
+                    <p className="mb-3 text-sm text-amber-800">
+                      {t('noShow.explainer')}
+                    </p>
+                    <div className="flex items-start gap-3">
+                      <Checkbox
+                        id="noShowAccepted"
+                        aria-required="true"
+                        aria-describedby="no-show-error"
+                        checked={noShowAccepted}
+                        onCheckedChange={(checked) => {
+                          setNoShowAccepted(checked === true);
+                          if (checked === true) setNoShowError(false);
+                        }}
+                      />
+                      <div className="space-y-1">
+                        <Label
+                          htmlFor="noShowAccepted"
+                          className="text-sm font-semibold text-amber-900"
+                        >
+                          {t('noShow.checkboxLabel', {
+                            amount: formatCHF(noShowFeeCentsPerGuest),
+                          })}
+                        </Label>
+                        {noShowError && (
+                          <p
+                            id="no-show-error"
+                            className="text-sm font-medium text-red-700"
+                          >
+                            {t('noShow.required')}
+                          </p>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 )}
 

@@ -8,6 +8,7 @@ export {
   ManualRefundClientEmail,
   ManualRefundWinemakerEmail,
 } from './ManualRefundEmail';
+export { NoShowFeeChargedEmail } from './NoShowFeeChargedEmail';
 export { AccountDeletedEmail } from './AccountDeletedEmail';
 
 export { BookingReminderEmail } from './BookingReminderEmail';

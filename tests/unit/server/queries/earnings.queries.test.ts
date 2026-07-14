@@ -5,6 +5,7 @@ import { BookingStatus } from '@prisma/client';
 vi.mock('@/server/db', () => ({
   db: {
     booking: { findMany: vi.fn() },
+    winery: { findUnique: vi.fn() },
     experience: { findMany: vi.fn() },
   },
 }));

@@ -23,9 +23,15 @@ import { SectionHeader } from './SectionHeader';
 interface DetailsSectionProps {
   form: UseFormReturn<CreateExperienceInput>;
   sectionRef: (_el: HTMLElement | null) => void;
+  /** P-08: show the ONLINE / ON_SITE payment-mode picker (NO_SHOW_FEES flag). */
+  showPaymentMode?: boolean;
 }
 
-export function DetailsSection({ form, sectionRef }: DetailsSectionProps) {
+export function DetailsSection({
+  form,
+  sectionRef,
+  showPaymentMode = false,
+}: DetailsSectionProps) {
   const t = useTranslations('experience');
 
   return (
@@ -99,6 +105,40 @@ export function DetailsSection({ form, sectionRef }: DetailsSectionProps) {
             </FormItem>
           )}
         />
+
+        {/* Payment mode (P-08 / L-070) — flag-gated */}
+        {showPaymentMode && (
+          <FormField
+            control={form.control}
+            name="paymentMode"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  {t('paymentMode.label')}
+                </FormLabel>
+                <FormControl>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value ?? 'ONLINE'}
+                  >
+                    <SelectTrigger className="h-12 border-stone-200 bg-muted">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ONLINE">
+                        {t('paymentMode.online')}
+                      </SelectItem>
+                      <SelectItem value="ON_SITE">
+                        {t('paymentMode.onSite')}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         {/* Max Capacity */}
         <FormField

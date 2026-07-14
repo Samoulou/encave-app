@@ -38,6 +38,16 @@ enum ExperienceType {
   EVENT
 }
 
+// V3 (P-08, US-220): how the guest settles the experience.
+// ONLINE = paid at checkout (current behavior, price > 0).
+// ON_SITE = free or payable at the winery (price >= 0) — no online charge;
+// if the winery opts into no-show fees, checkout takes a SetupIntent card
+// imprint instead (mode: 'setup', zero debit).
+enum ExperiencePaymentMode {
+  ONLINE
+  ON_SITE
+}
+
 enum CancellationPolicy {
   FLEXIBLE
   STANDARD
@@ -104,6 +114,16 @@ enum BookingStatus {
   CANCELLED_BY_WINERY
   COMPLETED
   NO_SHOW
+}
+
+// V3 (P-08, US-220): state of the manual off-session no-show charge.
+// null = never attempted. PENDING = an attempt is in flight (claimed via a
+// conditional update — the CAS that prevents a double debit). CHARGED = fee
+// captured. FAILED = card declined / SCA required off-session — retryable.
+enum NoShowChargeStatus {
+  PENDING
+  CHARGED
+  FAILED
 }
 
 enum Locale {
@@ -277,25 +297,29 @@ model VerificationLog {
 }
 
 model Experience {
-  id           String           @id @default(cuid())
+  id           String                @id @default(cuid())
   wineryId     String
-  winery       Winery           @relation(fields: [wineryId], references: [id], onDelete: Cascade)
+  winery       Winery                @relation(fields: [wineryId], references: [id], onDelete: Cascade)
   title        String
   slug         String
-  description  String           @db.Text
+  description  String                @db.Text
   type         ExperienceType
   duration     Int // minutes
   price        Int // cents (CHF)
   minCapacity  Int
   maxCapacity  Int
   // V3 (P-02 foundations): spoken languages and collective events (US-250).
-  languages    Locale[]         @default([FR])
-  isCollective Boolean          @default(false)
+  languages    Locale[]              @default([FR])
+  isCollective Boolean               @default(false)
   // V3 (P-10): hidden per-winery holder for sur-mesure request bookings.
   // Always DRAFT (excluded from every PUBLISHED-gated public surface) +
   // this flag (filters the two winemaker lists that show DRAFT rows).
   // Never shown in the catalogue; a paid offer books against it.
-  isCustom     Boolean          @default(false)
+  isCustom     Boolean               @default(false)
+  // V3 (P-08, US-220): ONLINE (paid at checkout, default) vs ON_SITE (free /
+  // pay-at-the-winery). ON_SITE offers take a no-show card imprint when the
+  // winery opts in. Additive default keeps every existing experience ONLINE.
+  paymentMode  ExperiencePaymentMode @default(ONLINE)
   coverPhoto   String
   // Location fields (optional - falls back to winery address if not set)
   address      String? // Street address
@@ -303,9 +327,9 @@ model Experience {
   zipCode      String? // Postal code
   latitude     Float? // Geocoded latitude
   longitude    Float? // Geocoded longitude
-  status       ExperienceStatus @default(DRAFT)
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
+  status       ExperienceStatus      @default(DRAFT)
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
 
   galleryImages     ExperienceGalleryImage[]
   availabilitySlots AvailabilitySlot[]
@@ -357,69 +381,90 @@ model AvailabilitySlot {
 }
 
 model Booking {
-  id                      String                @id @default(cuid())
-  reference               String                @unique // ENC-XXXXXX
-  visitorEmail            String
-  visitorName             String
-  visitorPhone            String
-  experienceId            String
-  experience              Experience            @relation(fields: [experienceId], references: [id])
-  wineryId                String
-  winery                  Winery                @relation(fields: [wineryId], references: [id])
-  date                    DateTime              @db.Date
-  timeSlot                String // "HH:mm"
-  guestCount              Int
-  totalPrice              Int // cents — experience price × guests (fee EXCLUDED)
-  platformFee             Int // cents — commission only (fee excluded)
+  id                             String                @id @default(cuid())
+  reference                      String                @unique // ENC-XXXXXX
+  visitorEmail                   String
+  visitorName                    String
+  visitorPhone                   String
+  experienceId                   String
+  experience                     Experience            @relation(fields: [experienceId], references: [id])
+  wineryId                       String
+  winery                         Winery                @relation(fields: [wineryId], references: [id])
+  date                           DateTime              @db.Date
+  timeSlot                       String // "HH:mm"
+  guestCount                     Int
+  totalPrice                     Int // cents — experience price × guests (fee EXCLUDED)
+  platformFee                    Int // cents — commission only (fee excluded)
   // Client booking fee (2.50 CHF/ticket, flag BOOKING_FEE). Platform's,
   // never part of wineryPayout. Charged amount = totalPrice + serviceFee.
-  serviceFeeCents         Int                   @default(0)
+  serviceFeeCents                Int                   @default(0)
   // Snapshot of the winery's cancellation policy at booking time — the
   // contractual terms the client accepted. Refunds use this, never the
   // winery's CURRENT policy. Null = legacy booking (fallback to winery).
-  cancellationPolicy      CancellationPolicy?
-  wineryPayout            Int // cents
-  status                  BookingStatus         @default(PENDING_PAYMENT)
-  stripeCheckoutSessionId String?
-  stripePaymentIntentId   String?
+  cancellationPolicy             CancellationPolicy?
+  wineryPayout                   Int // cents
+  status                         BookingStatus         @default(PENDING_PAYMENT)
+  stripeCheckoutSessionId        String?
+  stripePaymentIntentId          String?
   // V3 (P-09): gift-card redemption on this booking. giftCardId + the
   // reserved amount are stamped at session creation, when the REDEMPTION
   // movement is written to the ledger (Luca design §3). giftTransferId is
   // the platform→winery transfer written ONCE at confirmation — its
   // presence is the idempotency guard against a double transfer on webhook
   // redelivery (§2). All amounts in cents.
-  giftCardId              String?
-  giftAppliedCents        Int                   @default(0)
-  giftTransferId          String?
-  expiresAt               DateTime? // For pending payment reservations
-  accessTokenHash         String? // Hash of access token for verification (SEC-002: plaintext removed)
-  confirmationSentAt      DateTime? // When client confirmation email was sent
-  wineryNotifiedAt        DateTime? // When winery notification was sent
-  reminder24hSentAt       DateTime? // When 24h reminder was sent
-  reminder2hSentAt        DateTime? // When 2h reminder was sent
-  followUpSentAt          DateTime? // When post-experience follow-up was sent
+  giftCardId                     String?
+  giftAppliedCents               Int                   @default(0)
+  giftTransferId                 String?
+  // V3 (P-08, US-220): anti no-show card imprint + manual off-session charge
+  // (flag NO_SHOW_FEES). The imprint (SetupIntent) is captured at checkout for
+  // ON_SITE offers when the winery opts in — zero debit at booking. The fee is
+  // charged ONLY manually, ONLY on a NO_SHOW booking. All amounts in cents.
+  stripeCustomerId               String? // Stripe Customer holding the imprinted card
+  noShowSetupIntentId            String? // SetupIntent that vaulted the card
+  noShowPaymentMethodId          String? // vaulted payment method, charged off-session
+  // Consent snapshot: the client accepted THIS fee at THIS policy version.
+  // The charge always uses noShowFeeCentsSnapshot, never the winery's current
+  // setting. noShowFeeCentsSnapshot is per-guest; total = snapshot × guestCount.
+  noShowPolicyAcceptedAt         DateTime?
+  noShowPolicyVersion            String?
+  noShowFeeCentsSnapshot         Int?
+  // Charge state. noShowFeeChargePaymentIntentId is written ONCE on success —
+  // its presence is the idempotency guard against a double debit (mirror of
+  // giftTransferId). Refund fields cover the auto-refund on NO_SHOW revert.
+  noShowFeeChargeStatus          NoShowChargeStatus?
+  noShowFeeChargedCents          Int?
+  noShowFeeChargePaymentIntentId String?
+  noShowFeeRefundId              String?
+  noShowFeeRefundedCents         Int?
+  expiresAt                      DateTime? // For pending payment reservations
+  accessTokenHash                String? // Hash of access token for verification (SEC-002: plaintext removed)
+  confirmationSentAt             DateTime? // When client confirmation email was sent
+  wineryNotifiedAt               DateTime? // When winery notification was sent
+  reminder24hSentAt              DateTime? // When 24h reminder was sent
+  reminder2hSentAt               DateTime? // When 2h reminder was sent
+  followUpSentAt                 DateTime? // When post-experience follow-up was sent
   // V3 (P-07): client locale captured at checkout — emails to the CLIENT use
   // this, never the winemaker's preferredLocale. FR default covers legacy rows.
-  locale                  Locale                @default(FR)
+  locale                         Locale                @default(FR)
   // V3 (P-07): hash of the tasting-recap token minted when the J+2 email is
   // sent (the confirmation accessToken plaintext is unrecoverable by then).
-  recapTokenHash          String?
-  tastingRecapSentAt      DateTime? // When the J+2 "coups de cœur" email was sent
-  cancelledAt             DateTime? // When booking was cancelled
-  cancellationReason      String?
-  refundIssued            Boolean               @default(false)
-  refundAmount            Int? // cents - amount refunded
-  stripeRefundId          String? // Stripe refund ID for tracking
-  refundError             String?
-  checkedInAt             DateTime? // When client was checked in by winery (ENC-096)
-  ageConfirmedAt          DateTime?
-  ageConfirmedVersion     String?
+  recapTokenHash                 String?
+  tastingRecapSentAt             DateTime? // When the J+2 "coups de cœur" email was sent
+  cancelledAt                    DateTime? // When booking was cancelled
+  cancellationReason             String?
+  refundIssued                   Boolean               @default(false)
+  refundAmount                   Int? // cents - amount refunded
+  stripeRefundId                 String? // Stripe refund ID for tracking
+  refundError                    String?
+  checkedInAt                    DateTime? // When client was checked in by winery (ENC-096)
+  ageConfirmedAt                 DateTime?
+  ageConfirmedVersion            String?
   // V3 (P-02): optional link to a persisted occurrence. Capacity checks
   // keep using (experienceId, date, timeSlot) until P-05 switches over.
-  occurrenceId            String?
-  occurrence              ExperienceOccurrence? @relation(fields: [occurrenceId], references: [id], onDelete: SetNull)
-  createdAt               DateTime              @default(now())
-  updatedAt               DateTime              @updatedAt
+  occurrenceId                   String?
+  occurrence                     ExperienceOccurrence? @relation(fields: [occurrenceId], references: [id], onDelete: SetNull)
+  createdAt                      DateTime              @default(now())
+  updatedAt                      DateTime              @updatedAt
 
   wines            BookingWine[]
   wineOrderRequest WineOrderRequest?
@@ -442,6 +487,9 @@ model Booking {
   @@index([recapTokenHash])
   @@index([stripeCheckoutSessionId])
   @@index([stripePaymentIntentId])
+  // P-08: payout correlation for the off-session no-show charge (its PI id is
+  // NOT stripePaymentIntentId, so payouts.queries matches this column too).
+  @@index([noShowFeeChargePaymentIntentId])
   @@index([occurrenceId])
   @@map("bookings")
 }
@@ -499,12 +547,12 @@ model NotificationPreferences {
 }
 
 model EmailLog {
-  id           String   @id @default(cuid())
-  type         String // reminder_24h, reminder_2h, daily_digest, follow_up, weekly_summary, tasting_recap, tasting_sheet_reminder, wine_order_request
-  recipientId  String // User ID, Winery ID, or email address
-  bookingId    String? // Optional booking reference
-  status       String // sent, failed, skipped
-  errorMessage String? // Error details if failed
+  id              String    @id @default(cuid())
+  type            String // reminder_24h, reminder_2h, daily_digest, follow_up, weekly_summary, tasting_recap, tasting_sheet_reminder, wine_order_request
+  recipientId     String // User ID, Winery ID, or email address
+  bookingId       String? // Optional booking reference
+  status          String // sent, failed, skipped
+  errorMessage    String? // Error details if failed
   // V3 (P-07): per-winery open/click tracking. resendMessageId is the id
   // returned by resend.emails.send; the /api/webhooks/resend route matches
   // email.opened / email.clicked events back to this row (first-wins).
@@ -512,7 +560,7 @@ model EmailLog {
   wineryId        String?
   openedAt        DateTime?
   clickedAt       DateTime?
-  createdAt    DateTime @default(now())
+  createdAt       DateTime  @default(now())
 
   @@index([type, createdAt])
   @@index([recipientId])

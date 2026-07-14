@@ -61,7 +61,14 @@ const FORM_SECTIONS = [
   { id: 'location', labelKey: 'location', icon: MapPin },
 ] as const;
 
-export function CreateExperienceForm() {
+interface CreateExperienceFormProps {
+  /** P-08: expose the ONLINE / ON_SITE payment-mode picker (NO_SHOW_FEES flag). */
+  noShowFeesEnabled?: boolean;
+}
+
+export function CreateExperienceForm({
+  noShowFeesEnabled = false,
+}: CreateExperienceFormProps = {}) {
   const t = useTranslations('experience');
   const tCommon = useTranslations('common');
   const router = useRouter();
@@ -118,6 +125,7 @@ export function CreateExperienceForm() {
       price: undefined,
       minCapacity: 1,
       maxCapacity: 12,
+      paymentMode: 'ONLINE',
     },
   });
 
@@ -571,6 +579,7 @@ export function CreateExperienceForm() {
 
                 <DetailsSection
                   form={form}
+                  showPaymentMode={noShowFeesEnabled}
                   sectionRef={(el) => {
                     sectionRefs.current['details'] = el;
                   }}

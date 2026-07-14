@@ -54,7 +54,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import type { ExperienceType } from '@prisma/client';
+import type { ExperienceType, ExperiencePaymentMode } from '@prisma/client';
 
 interface GalleryImage {
   id: string;
@@ -72,9 +72,12 @@ interface EditExperienceFormProps {
     price: number;
     minCapacity: number;
     maxCapacity: number;
+    paymentMode: ExperiencePaymentMode;
     coverPhoto: string;
     galleryImages: GalleryImage[];
   };
+  /** P-08: expose the ONLINE / ON_SITE payment-mode picker (NO_SHOW_FEES flag). */
+  noShowFeesEnabled?: boolean;
 }
 
 // Section Header Component
@@ -104,7 +107,10 @@ function SectionHeader({
   );
 }
 
-export function EditExperienceForm({ experience }: EditExperienceFormProps) {
+export function EditExperienceForm({
+  experience,
+  noShowFeesEnabled = false,
+}: EditExperienceFormProps) {
   const t = useTranslations('experience');
   const tCommon = useTranslations('common');
   const router = useRouter();
@@ -129,6 +135,7 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
       price: experience.price,
       minCapacity: experience.minCapacity,
       maxCapacity: experience.maxCapacity,
+      paymentMode: experience.paymentMode,
     },
   });
 
@@ -665,6 +672,43 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
                 </FormItem>
               )}
             />
+
+            {/* Payment mode (P-08 / L-070) — flag-gated */}
+            {noShowFeesEnabled && (
+              <FormField
+                control={form.control}
+                name="paymentMode"
+                render={({ field }) => (
+                  <FormItem className="mt-6 max-w-xs">
+                    <FormLabel className="text-base font-medium">
+                      {t('paymentMode.label')}
+                    </FormLabel>
+                    <FormControl>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value ?? 'ONLINE'}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="ONLINE">
+                            {t('paymentMode.online')}
+                          </SelectItem>
+                          <SelectItem value="ON_SITE">
+                            {t('paymentMode.onSite')}
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormDescription>
+                      {t('paymentMode.description')}
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
           </section>
 
           {/* Form Actions */}

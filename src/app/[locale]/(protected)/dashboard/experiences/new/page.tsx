@@ -2,6 +2,7 @@ import dynamic from 'next/dynamic';
 import { auth } from '@/server/auth';
 import { redirect } from 'next/navigation';
 import { getLocale } from 'next-intl/server';
+import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
 import { Skeleton } from '@/components/shared/Skeleton';
 import { generatePageMetadata } from '@/lib/seo/metadata';
@@ -47,9 +48,11 @@ export default async function NewExperiencePage() {
     redirect(`/${locale}/login`);
   }
 
+  const noShowFeesEnabled = await isFlagEnabled('NO_SHOW_FEES');
+
   return (
     <WineryAccessGuard>
-      <CreateExperienceForm />
+      <CreateExperienceForm noShowFeesEnabled={noShowFeesEnabled} />
     </WineryAccessGuard>
   );
 }
