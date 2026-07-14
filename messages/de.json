@@ -1700,7 +1700,7 @@
       "sections": {
         "introduction": {
           "title": "Einleitung",
-          "content": "EnCave SA (\"wir\", \"uns\" oder \"unser\") respektiert Ihre Privatsphäre und verpflichtet sich, Ihre persönlichen Daten zu schützen. Diese Datenschutzerklärung erklärt, wie wir Ihre persönlichen Daten erheben, verwenden und schützen, wenn Sie unsere Plattform besuchen oder unsere Dienste nutzen."
+          "content": "EnCave SA (\"wir\", \"uns\" oder \"unser\") verpflichtet sich, Ihre Privatsphäre zu schützen. Diese Datenschutzerklärung erklärt, wie wir Ihre personenbezogenen Daten erheben, verwenden und schützen, wenn Sie unsere Plattform nutzen. Die Bearbeitung Ihrer Daten richtet sich nach dem Schweizer Bundesgesetz über den Datenschutz (nLPD)."
         },
         "dataCollection": {
           "title": "Daten, die wir erheben",
@@ -1732,7 +1732,7 @@
         },
         "rights": {
           "title": "Ihre Rechte",
-          "content": "Nach Schweizer Recht und der DSGVO haben Sie folgende Rechte:",
+          "content": "Nach dem Schweizer Datenschutzgesetz (nLPD) haben Sie folgende Rechte:",
           "items": {
             "access": "Recht auf Zugang zu Ihren persönlichen Daten",
             "rectification": "Recht auf Berichtigung unrichtiger Daten",
@@ -1744,6 +1744,17 @@
           "title": "Kontakt",
           "content": "Bei Fragen zu dieser Datenschutzerklärung oder zur Ausübung Ihrer Rechte kontaktieren Sie uns bitte:",
           "address": "Rue du Vignoble 1, 1950 Sion, Schweiz"
+        },
+        "subprocessors": {
+          "title": "Auftragsbearbeiter",
+          "content": "Wir setzen Auftragsbearbeiter ein, um die Plattform zu betreiben. Jeder verarbeitet Ihre Daten nur für die oben genannten Zwecke:",
+          "items": {
+            "vercel": "Vercel — Hosting der Website (USA)",
+            "neon": "Neon — Datenbank (Europa)",
+            "stripe": "Stripe — Zahlungen (wir speichern keine Kartendaten)",
+            "resend": "Resend — Versand von Transaktions-E-Mails",
+            "posthog": "PostHog — Reichweitenmessung (nur mit Ihrer Einwilligung aktiv)"
+          }
         }
       }
     },
@@ -1887,7 +1898,8 @@
           "description": "Hilft uns zu verstehen, welche Seiten nuetzlich sind. Tool: PostHog."
         }
       }
-    }
+    },
+    "mentionsLegalesLink": "Impressum"
   },
   "landing": {
     "degustation": {
@@ -2028,7 +2040,9 @@
     "brandDescription": "Buchungsplattform für Weinerlebnisse im Wallis, Schweiz.",
     "region": "Wallis, Schweiz",
     "securePayment": "Sichere Zahlung",
-    "wineExperiences": "Walliser Weinerlebnisse"
+    "wineExperiences": "Walliser Weinerlebnisse",
+    "contact": "Kontakt",
+    "mentionsLegales": "Impressum"
   },
   "clientDashboard": {
     "nav": {
@@ -2678,5 +2692,75 @@
     "alertTitle": "Ausstehende Anfragen",
     "alertDescription": "{count, plural, one {# Anfrage wartet seit über 24 Stunden auf eine Antwort} other {# Anfragen warten seit über 24 Stunden auf eine Antwort}}.",
     "alertCta": "Anfragen ansehen"
+  },
+  "contact": {
+    "metadata": {
+      "title": "Kontakt | EnCave",
+      "description": "Eine Frage? Kontaktieren Sie das EnCave-Team."
+    },
+    "hero": {
+      "title": "Kontaktieren Sie uns",
+      "subtitle": "Eine Frage zu einem Erlebnis, einer Buchung oder einer Partnerschaft? Schreiben Sie uns, wir antworten schnell."
+    },
+    "form": {
+      "name": "Name",
+      "namePlaceholder": "Ihr Name",
+      "nameError": "Bitte geben Sie Ihren Namen an.",
+      "email": "E-Mail",
+      "emailPlaceholder": "sie@beispiel.ch",
+      "emailError": "Ungültige E-Mail-Adresse.",
+      "subject": "Betreff",
+      "subjectPlaceholder": "Der Betreff Ihrer Nachricht",
+      "subjectError": "Bitte geben Sie einen Betreff an.",
+      "message": "Nachricht",
+      "messagePlaceholder": "Ihre Nachricht…",
+      "messageError": "Ihre Nachricht ist etwas kurz.",
+      "submit": "Senden",
+      "submitting": "Senden…",
+      "successTitle": "Nachricht gesendet",
+      "successBody": "Danke! Wir melden uns schnellstmöglich bei Ihnen.",
+      "errorGeneric": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut."
+    }
+  },
+  "maintenance": {
+    "metadata": {
+      "title": "Wartung | EnCave",
+      "description": "EnCave wird gewartet."
+    },
+    "title": "Wir sind gleich zurück",
+    "message": "EnCave wird gerade gewartet. Danke für Ihre Geduld — versuchen Sie es in Kürze erneut."
+  },
+  "mentionsLegales": {
+    "metadata": {
+      "title": "Impressum | EnCave",
+      "description": "Impressum und Angaben zum Betreiber von EnCave."
+    },
+    "title": "Impressum",
+    "intro": "Rechtliche Angaben zur Website EnCave (encave.ch).",
+    "editor": {
+      "title": "Betreiber",
+      "body": "Firma: [À COMPLÉTER]\nRechtsform: [À COMPLÉTER]\nAdresse: [À COMPLÉTER]\nUID / CHE-Nr.: [À COMPLÉTER]"
+    },
+    "publication": {
+      "title": "Verantwortlich für den Inhalt",
+      "body": "[À COMPLÉTER]"
+    },
+    "contact": {
+      "title": "Kontakt",
+      "body": "E-Mail: samuel@encave.ch"
+    },
+    "hosting": {
+      "title": "Hosting",
+      "body": "Die Website wird von Vercel Inc. (340 S Lemon Ave #4133, Walnut, CA 91789, USA) gehostet. Die Datenbank wird von Neon (Daten in Europa) gehostet."
+    },
+    "ip": {
+      "title": "Urheberrecht",
+      "body": "Alle Inhalte der Website (Texte, Bilder, Logos, Marken) sind geschützt. Jede Vervielfältigung ohne Genehmigung ist untersagt."
+    },
+    "data": {
+      "title": "Personenbezogene Daten",
+      "body": "Die Verarbeitung personenbezogener Daten ist in unserer Datenschutzerklärung gemäss revDSG beschrieben.",
+      "privacyLink": "Datenschutzerklärung lesen"
+    }
   }
 }

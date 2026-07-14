@@ -91,6 +91,14 @@ export async function Footer() {
                   {tNav('about')}
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/contact"
+                  className="transition-colors hover:text-burgundy-700"
+                >
+                  {tFooter('contact')}
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -145,6 +153,14 @@ export async function Footer() {
                   className="transition-colors hover:text-burgundy-700"
                 >
                   {tLegal('cancellation.title')}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/mentions-legales"
+                  className="transition-colors hover:text-burgundy-700"
+                >
+                  {tFooter('mentionsLegales')}
                 </Link>
               </li>
             </ul>

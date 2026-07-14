@@ -79,3 +79,8 @@ export type { GiftCardPurchaseEmailProps } from './GiftCardPurchaseEmail';
 
 export { GiftCardDeliveryEmail } from './GiftCardDeliveryEmail';
 export type { GiftCardDeliveryEmailProps } from './GiftCardDeliveryEmail';
+
+export { ContactMessageEmail } from './ContactMessageEmail';
+export type { ContactMessageEmailProps } from './ContactMessageEmail';
+export { ContactAckEmail } from './ContactAckEmail';
+export type { ContactAckEmailProps } from './ContactAckEmail';

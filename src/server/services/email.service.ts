@@ -42,6 +42,8 @@ import {
   RequestOfferReceivedEmail,
   RequestOfferExpiringEmail,
   RequestSlaEscalationEmail,
+  ContactMessageEmail,
+  ContactAckEmail,
 } from '@/emails';
 import { subjects, t } from '@/emails/translations';
 import { generateBookingQrPng } from '@/server/services/qr-code.service';
@@ -58,6 +60,8 @@ interface SendEmailOptions {
   to: string;
   subject: string;
   html: string;
+  /** Optional reply-to (P-12 / L-114 contact form routes replies to sender). */
+  replyTo?: string;
   attachments?: {
     filename: string;
     content: string;
@@ -87,6 +91,7 @@ async function sendEmailDetailed({
   to,
   subject,
   html,
+  replyTo,
   attachments,
   tags,
 }: SendEmailOptions): Promise<SendEmailResult> {
@@ -119,6 +124,7 @@ async function sendEmailDetailed({
         to,
         subject,
         html,
+        ...(replyTo ? { replyTo } : {}),
         attachments,
         tags,
       });
@@ -1301,4 +1307,65 @@ export async function sendRequestSlaEscalationEmail(
     html,
     tags: [{ name: 'email_type', value: 'request_sla_escalation' }],
   });
+}
+
+// Contact form (P-12 / L-114)
+
+/** Internal inbox that receives contact-form messages. */
+const CONTACT_INBOX = 'samuel@encave.ch';
+
+export interface ContactMessageData {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}
+
+/**
+ * Contact form (P-12 / L-114): notify the team (reply-to the sender) and send
+ * the sender a short accusé. Returns whether the TEAM notification went out —
+ * that is the deliverable; a failed accusé is logged, never fatal.
+ */
+export async function sendContactMessageEmail(
+  data: ContactMessageData,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+
+  const teamHtml = await render(
+    ContactMessageEmail({
+      locale: loc,
+      name: data.name,
+      email: data.email,
+      subject: data.subject,
+      message: data.message,
+    })
+  );
+  const teamOk = await sendEmail({
+    to: CONTACT_INBOX,
+    replyTo: data.email,
+    subject: t(subjects.contactMessage, loc).replace('{name}', data.name),
+    html: teamHtml,
+    tags: [{ name: 'email_type', value: 'contact_message' }],
+  });
+
+  // Client accusé — best effort, never blocks the success path.
+  try {
+    const ackHtml = await render(
+      ContactAckEmail({ locale: loc, name: data.name, message: data.message })
+    );
+    const ackOk = await sendEmail({
+      to: data.email,
+      subject: t(subjects.contactAck, loc),
+      html: ackHtml,
+      tags: [{ name: 'email_type', value: 'contact_ack' }],
+    });
+    if (!ackOk) {
+      logWarn('contact accusé email failed', { to: data.email });
+    }
+  } catch (error) {
+    logError('contact accusé render/send failed', error, { to: data.email });
+  }
+
+  return teamOk;
 }

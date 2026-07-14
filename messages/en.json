@@ -1700,7 +1700,7 @@
       "sections": {
         "introduction": {
           "title": "Introduction",
-          "content": "EnCave SA (\"we\", \"us\", or \"our\") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform."
+          "content": "EnCave SA (\"we\", \"us\", or \"our\") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your personal data when you use our platform. The processing of your personal data is governed by the Swiss Federal Act on Data Protection (nLPD)."
         },
         "dataCollection": {
           "title": "Information We Collect",
@@ -1732,7 +1732,7 @@
         },
         "rights": {
           "title": "Your Rights",
-          "content": "Under applicable data protection laws, you have the right to:",
+          "content": "Under the Swiss Federal Act on Data Protection (nLPD), you have the right to:",
           "items": {
             "access": "Access your personal data",
             "rectification": "Correct inaccurate data",
@@ -1744,6 +1744,17 @@
           "title": "Contact Us",
           "content": "If you have questions about this Privacy Policy, please contact us at:",
           "address": "Rue du Vin 1, 1950 Sion, Switzerland"
+        },
+        "subprocessors": {
+          "title": "Sub-processors",
+          "content": "We rely on sub-processors to operate the platform. Each processes your data only for the purposes described above:",
+          "items": {
+            "vercel": "Vercel — website hosting (United States)",
+            "neon": "Neon — database (Europe)",
+            "stripe": "Stripe — payments (we never store card data)",
+            "resend": "Resend — transactional email delivery",
+            "posthog": "PostHog — analytics (enabled only with your consent)"
+          }
         }
       }
     },
@@ -1882,7 +1893,8 @@
           "description": "Help us understand which pages are useful. Tool: PostHog."
         }
       }
-    }
+    },
+    "mentionsLegalesLink": "Legal notice"
   },
   "landing": {
     "degustation": {
@@ -2023,7 +2035,9 @@
     "brandDescription": "Wine experience booking platform in Valais, Switzerland.",
     "region": "Valais, Switzerland",
     "securePayment": "Secure payment",
-    "wineExperiences": "Valais wine experiences"
+    "wineExperiences": "Valais wine experiences",
+    "contact": "Contact",
+    "mentionsLegales": "Legal notice"
   },
   "clientDashboard": {
     "nav": {
@@ -2673,5 +2687,75 @@
     "alertTitle": "Pending requests",
     "alertDescription": "{count, plural, one {# request has been waiting for a reply for over 24 hours} other {# requests have been waiting for a reply for over 24 hours}}.",
     "alertCta": "View requests"
+  },
+  "contact": {
+    "metadata": {
+      "title": "Contact | EnCave",
+      "description": "A question? Get in touch with the EnCave team."
+    },
+    "hero": {
+      "title": "Contact us",
+      "subtitle": "A question about an experience, a booking or a partnership? Write to us — we reply quickly."
+    },
+    "form": {
+      "name": "Name",
+      "namePlaceholder": "Your name",
+      "nameError": "Please enter your name.",
+      "email": "Email",
+      "emailPlaceholder": "you@example.ch",
+      "emailError": "Invalid email address.",
+      "subject": "Subject",
+      "subjectPlaceholder": "What your message is about",
+      "subjectError": "Please enter a subject.",
+      "message": "Message",
+      "messagePlaceholder": "Your message…",
+      "messageError": "Your message is a little short.",
+      "submit": "Send",
+      "submitting": "Sending…",
+      "successTitle": "Message sent",
+      "successBody": "Thank you! We'll get back to you as soon as possible.",
+      "errorGeneric": "Something went wrong. Please try again."
+    }
+  },
+  "maintenance": {
+    "metadata": {
+      "title": "Maintenance | EnCave",
+      "description": "EnCave is under maintenance."
+    },
+    "title": "We'll be right back",
+    "message": "EnCave is briefly under maintenance. Thanks for your patience — please try again shortly."
+  },
+  "mentionsLegales": {
+    "metadata": {
+      "title": "Legal notice | EnCave",
+      "description": "Legal notice and publisher information for EnCave."
+    },
+    "title": "Legal notice",
+    "intro": "Legal information about the EnCave website (encave.ch).",
+    "editor": {
+      "title": "Publisher",
+      "body": "Company name: [À COMPLÉTER]\nLegal form: [À COMPLÉTER]\nAddress: [À COMPLÉTER]\nBusiness ID / CHE no.: [À COMPLÉTER]"
+    },
+    "publication": {
+      "title": "Publication manager",
+      "body": "[À COMPLÉTER]"
+    },
+    "contact": {
+      "title": "Contact",
+      "body": "Email: samuel@encave.ch"
+    },
+    "hosting": {
+      "title": "Hosting",
+      "body": "The site is hosted by Vercel Inc. (340 S Lemon Ave #4133, Walnut, CA 91789, USA). The database is hosted by Neon (data in Europe)."
+    },
+    "ip": {
+      "title": "Intellectual property",
+      "body": "All content on the site (text, images, logos, trademarks) is protected. Any reproduction without authorization is prohibited."
+    },
+    "data": {
+      "title": "Personal data",
+      "body": "The processing of personal data is described in our privacy policy, compliant with the Swiss nLPD.",
+      "privacyLink": "Read the privacy policy"
+    }
   }
 }
