@@ -3,6 +3,8 @@
 import { Suspense, useMemo } from 'react';
 import { useQueryState } from 'nuqs';
 import { useTranslations } from 'next-intl';
+import { ArrowRight } from 'lucide-react';
+import { Link } from '@/i18n/navigation';
 import { WineryCard } from '@/components/features/winery/WineryCard';
 import { CommuneFilter } from '@/components/features/winery/CommuneFilter';
 import {
@@ -86,10 +88,23 @@ export function WineriesExplorer({
       ) : (
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-12">
           {filtered.length === 0 ? (
-            <EmptyState
-              title={t('comingSoon')}
-              description={t('emptyDescription')}
-            />
+            <div className="space-y-6">
+              <EmptyState
+                title={t('comingSoon')}
+                description={t('emptyDescription')}
+              />
+              {/* P-12 / L-117 — winemaker acquisition prompt on the empty grid */}
+              <div className="rounded-xl border border-burgundy-100 bg-white px-6 py-5 text-center">
+                <p className="text-sm text-slate-600">{t('areYouWinemaker')}</p>
+                <Link
+                  href="/register"
+                  className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-burgundy-700 transition-colors hover:text-burgundy-800"
+                >
+                  {t('joinEncave')}
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
+              </div>
+            </div>
           ) : (
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8 lg:grid-cols-3">
               {filtered.map((winery, index) => (

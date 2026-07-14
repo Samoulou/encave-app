@@ -2,7 +2,15 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { Link } from '@/i18n/navigation';
-import { ArrowLeft, MapPin, Phone, Mail, Calendar, Wine } from 'lucide-react';
+import {
+  ArrowLeft,
+  MapPin,
+  Phone,
+  Mail,
+  Calendar,
+  Wine,
+  Clock,
+} from 'lucide-react';
 import {
   getWineryBySlug,
   getPubliclyVisibleWinerySlugs,
@@ -171,6 +179,65 @@ export default async function WineryPage({ params }: WineryPageProps) {
           </div>
         </div>
 
+        {/* Domaine identity band (P-12 / L-117) — Fraunces figures + cépages
+            chips; only rendered when the encaveur has filled anything. */}
+        {(winery.familyName ||
+          winery.altitude != null ||
+          winery.hectares != null ||
+          winery.signatureGrapes.length > 0) && (
+          <div className="border-b border-stone-200/60 bg-white">
+            <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-10 gap-y-4 px-6 py-5 lg:px-8">
+              {winery.familyName && (
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-slate-500">
+                    {t('familyLabel')}
+                  </p>
+                  <p className="font-display text-lg text-slate-900">
+                    {winery.familyName}
+                  </p>
+                </div>
+              )}
+              {winery.altitude != null && (
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-slate-500">
+                    {t('altitudeLabel')}
+                  </p>
+                  <p className="font-display text-lg text-slate-900">
+                    {t('altitudeValue', { value: winery.altitude })}
+                  </p>
+                </div>
+              )}
+              {winery.hectares != null && (
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-slate-500">
+                    {t('hectaresLabel')}
+                  </p>
+                  <p className="font-display text-lg text-slate-900">
+                    {t('hectaresValue', { value: winery.hectares })}
+                  </p>
+                </div>
+              )}
+              {winery.signatureGrapes.length > 0 && (
+                <div className="min-w-0">
+                  <p className="text-xs uppercase tracking-wide text-slate-500">
+                    {t('signatureGrapesLabel')}
+                  </p>
+                  <ul className="mt-1 flex flex-wrap gap-2">
+                    {winery.signatureGrapes.map((grape) => (
+                      <li
+                        key={grape}
+                        className="rounded-full bg-gold-100 px-3 py-1 text-sm font-medium text-gold-900"
+                      >
+                        {grape}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Experiences Section */}
         {experiences.length > 0 && (
           <div className="mx-auto max-w-6xl px-6 py-10 lg:px-8 lg:py-12">
@@ -310,6 +377,23 @@ export default async function WineryPage({ params }: WineryPageProps) {
                       <p>{winery.commune}, Valais</p>
                     </div>
                   </div>
+
+                  {/* Opening hours (P-12 / L-117) — only when filled */}
+                  {winery.openingHours && (
+                    <div className="flex items-start gap-3 text-sm text-slate-700">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-burgundy-50">
+                        <Clock className="h-5 w-5 text-burgundy-600" />
+                      </div>
+                      <div className="pt-2">
+                        <p className="font-medium text-slate-900">
+                          {t('openingHoursLabel')}
+                        </p>
+                        <p className="whitespace-pre-line">
+                          {winery.openingHours}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 

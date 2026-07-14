@@ -191,6 +191,14 @@ model Winery {
   cancellationPolicy       CancellationPolicy @default(STANDARD)
   noShowFeeEnabled         Boolean            @default(false)
   noShowFeeCents           Int                @default(1500)
+  // V3 (P-12 / L-117): public winery-fiche enrichment. All optional —
+  // displayed only when filled, edited in the encaveur settings. openingHours
+  // is free text (multiline); the rest feed the identity chips (Fraunces).
+  openingHours             String?
+  altitude                 Int? // meters above sea level
+  hectares                 Float? // vineyard surface (ha)
+  familyName               String? // the family behind the domaine
+  signatureGrapes          String[] // cépages signature (chips)
   createdAt                DateTime           @default(now())
   updatedAt                DateTime           @updatedAt
 
@@ -427,6 +435,10 @@ model Booking {
   // setting. noShowFeeCentsSnapshot is per-guest; total = snapshot × guestCount.
   noShowPolicyAcceptedAt         DateTime?
   noShowPolicyVersion            String?
+  // V3 (P-12 / L-112): timestamp the client accepted the CGV + cancellation
+  // policy at checkout via the explicit checkbox. Legal audit trail; null =
+  // legacy booking created before the checkbox shipped.
+  termsAcceptedAt                DateTime?
   noShowFeeCentsSnapshot         Int?
   // Charge state. noShowFeeChargePaymentIntentId is written ONCE on success —
   // its presence is the idempotency guard against a double debit (mirror of

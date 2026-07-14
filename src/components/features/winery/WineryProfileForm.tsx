@@ -22,6 +22,7 @@ import { useTranslations } from 'next-intl';
 import { WineryMediaSection } from './WineryMediaSection';
 import { WineryBasicInfoSection } from './WineryBasicInfoSection';
 import { WineryContactSection } from './WineryContactSection';
+import { WineryDomaineDetailsSection } from './WineryDomaineDetailsSection';
 
 interface GalleryImage {
   id: string;
@@ -40,6 +41,12 @@ interface WineryProfileFormProps {
     phone: string;
     coverPhoto: string | null;
     galleryImages: GalleryImage[];
+    // P-12 / L-117 — public-fiche enrichment (all optional).
+    openingHours: string | null;
+    altitude: number | null;
+    hectares: number | null;
+    familyName: string | null;
+    signatureGrapes: string[];
   };
 }
 
@@ -67,6 +74,11 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
       address: winery.address,
       commune: winery.commune,
       phone: winery.phone,
+      openingHours: winery.openingHours ?? '',
+      altitude: winery.altitude != null ? String(winery.altitude) : '',
+      hectares: winery.hectares != null ? String(winery.hectares) : '',
+      familyName: winery.familyName ?? '',
+      signatureGrapes: winery.signatureGrapes.join(', '),
     },
   });
 
@@ -220,6 +232,11 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
             {/* ENC-027: deep-link target for "Add address" criterion */}
             <div id="location" className="scroll-mt-24">
               <WineryContactSection control={form.control} />
+            </div>
+
+            {/* Domaine details — public-fiche enrichment (P-12 / L-117) */}
+            <div id="domaine-details" className="scroll-mt-24">
+              <WineryDomaineDetailsSection control={form.control} />
             </div>
 
             {/* Save Actions */}
