@@ -232,7 +232,19 @@
     "meetWinemakers": "Meet our winemakers",
     "readyToExplore": "Ready to explore?",
     "startJourney": "Start your journey through the world of Swiss wines today.",
-    "searchPlaceholder": "Search wine experiences..."
+    "searchPlaceholder": "Search wine experiences...",
+    "giftCard": {
+      "eyebrow": "Gift card",
+      "title": "Give an experience, not an object",
+      "subtitle": "An EnCave gift card, valid for 5 years, redeemable on all our experiences.",
+      "cta": "Offer a gift card"
+    },
+    "surMesure": {
+      "eyebrow": "Bespoke",
+      "title": "Something special in mind?",
+      "subtitle": "Describe your ideal moment — a winemaker replies within 48h with a personalized offer.",
+      "cta": "Make a request"
+    }
   },
   "experience": {
     "aboutTitle": "About This Experience",

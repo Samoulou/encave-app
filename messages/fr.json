@@ -232,7 +232,19 @@
     "meetWinemakers": "Rencontrer nos vignerons",
     "readyToExplore": "Prêt à explorer?",
     "startJourney": "Commencez votre voyage à travers le monde des vins suisses aujourd'hui.",
-    "searchPlaceholder": "Rechercher des expériences viticoles..."
+    "searchPlaceholder": "Rechercher des expériences viticoles...",
+    "giftCard": {
+      "eyebrow": "Bon cadeau",
+      "title": "Offrez une expérience, pas un objet",
+      "subtitle": "Un bon cadeau EnCave, valable 5 ans, utilisable sur toutes nos expériences.",
+      "cta": "Offrir un bon cadeau"
+    },
+    "surMesure": {
+      "eyebrow": "Sur-mesure",
+      "title": "Une envie particulière ?",
+      "subtitle": "Décrivez votre moment idéal — un encaveur vous répond avec une offre personnalisée sous 48 h.",
+      "cta": "Faire une demande"
+    }
   },
   "experience": {
     "aboutTitle": "À propos de cette expérience",

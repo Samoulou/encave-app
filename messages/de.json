@@ -232,7 +232,19 @@
     "meetWinemakers": "Unsere Winzer kennenlernen",
     "readyToExplore": "Bereit zu entdecken?",
     "startJourney": "Beginnen Sie noch heute Ihre Reise durch die Welt der Schweizer Weine.",
-    "searchPlaceholder": "Weinerlebnisse suchen..."
+    "searchPlaceholder": "Weinerlebnisse suchen...",
+    "giftCard": {
+      "eyebrow": "Geschenkgutschein",
+      "title": "Verschenken Sie ein Erlebnis, kein Objekt",
+      "subtitle": "Ein EnCave-Gutschein, 5 Jahre gültig, für alle unsere Erlebnisse einlösbar.",
+      "cta": "Gutschein verschenken"
+    },
+    "surMesure": {
+      "eyebrow": "Massgeschneidert",
+      "title": "Ein besonderer Wunsch?",
+      "subtitle": "Beschreiben Sie Ihren idealen Moment — ein Winzer antwortet innerhalb von 48 Stunden mit einem persönlichen Angebot.",
+      "cta": "Anfrage stellen"
+    }
   },
   "experience": {
     "aboutTitle": "Über dieses Erlebnis",
