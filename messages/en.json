@@ -248,6 +248,11 @@
     "nearStation": "Near {commune} station",
     "pricePerPersonLabel": "Price per person",
     "available": "AVAILABLE",
+    "noShowPolicy": {
+      "title": "No-show fee:",
+      "amountPerPerson": "{amount} per person",
+      "explainer": "This experience is free or payable on site: your card is registered at booking (imprint, no charge). If you don't show up and don't cancel in time, the winery may charge this fee."
+    },
     "cancellationPolicy": {
       "title": "Cancellation policy:",
       "labels": {
@@ -811,6 +816,10 @@
       "explainer": "This experience is free or paid on site. We only save your card now — no charge is made. If you don't show up and don't cancel in time, the winery may charge the fee.",
       "checkboxLabel": "I accept the no-show fee of {amount} per guest and authorize saving my card for this purpose.",
       "required": "Please accept the no-show policy to continue."
+    },
+    "acceptance": {
+      "label": "I accept the <cgv>terms of sale</cgv> and the <policy>cancellation policy</policy>.",
+      "required": "Please accept the terms and cancellation policy to continue."
     },
     "hold": {
       "remaining": "Slot held for {time}",

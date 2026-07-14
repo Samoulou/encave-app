@@ -248,6 +248,11 @@
     "nearStation": "Proche de la gare de {commune}",
     "pricePerPersonLabel": "Prix par personne",
     "available": "DISPONIBLE",
+    "noShowPolicy": {
+      "title": "Frais de non-présentation :",
+      "amountPerPerson": "{amount} par personne",
+      "explainer": "Cette expérience est gratuite ou payable sur place : votre carte est enregistrée à la réservation (empreinte, sans débit). En cas de non-présentation sans annulation dans les délais, le domaine peut prélever ces frais."
+    },
     "cancellationPolicy": {
       "title": "Politique d'annulation :",
       "labels": {
@@ -811,6 +816,10 @@
       "explainer": "Cette expérience est gratuite ou payable sur place. Nous enregistrons seulement votre carte maintenant — aucun débit n'est effectué. Si vous ne vous présentez pas et n'annulez pas dans les délais, le domaine peut prélever les frais.",
       "checkboxLabel": "J'accepte les frais de non-présentation de {amount} par personne et j'autorise l'enregistrement de ma carte à cette fin.",
       "required": "Veuillez accepter la politique de non-présentation pour continuer."
+    },
+    "acceptance": {
+      "label": "J'accepte les <cgv>conditions générales de vente</cgv> et la <policy>politique d'annulation</policy>.",
+      "required": "Merci d'accepter les CGV et la politique d'annulation pour continuer."
     },
     "hold": {
       "remaining": "Créneau réservé pendant {time}",

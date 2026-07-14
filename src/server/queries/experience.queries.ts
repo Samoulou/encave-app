@@ -4,6 +4,7 @@ import { db } from '@/server/db';
 import {
   ExperienceType,
   ExperienceStatus,
+  ExperiencePaymentMode,
   OccurrenceStatus,
   Prisma,
 } from '@prisma/client';
@@ -95,6 +96,8 @@ export interface ExperienceDetail {
   coverPhoto: string;
   status: ExperienceStatus;
   wineryId: string;
+  // Payment mode (P-08): ON_SITE offers can carry a no-show card imprint.
+  paymentMode: ExperiencePaymentMode;
   // Experience-specific location fields
   address: string | null;
   city: string | null;
@@ -112,6 +115,9 @@ export interface ExperienceDetail {
     longitude: number | null;
     stripeOnboardingComplete: boolean;
     cancellationPolicy: CancellationPolicy;
+    // No-show policy (P-08 / L-112) — displayed en clair on the fiche.
+    noShowFeeEnabled: boolean;
+    noShowFeeCents: number;
   };
   galleryImages: Array<{
     id: string;
@@ -607,6 +613,7 @@ export const getExperienceBySlug = cache(
           coverPhoto: true,
           status: true,
           wineryId: true,
+          paymentMode: true,
           // Experience-specific location fields
           address: true,
           city: true,
@@ -625,6 +632,8 @@ export const getExperienceBySlug = cache(
               longitude: true,
               stripeOnboardingComplete: true,
               cancellationPolicy: true,
+              noShowFeeEnabled: true,
+              noShowFeeCents: true,
             },
           },
           galleryImages: {
@@ -637,7 +646,9 @@ export const getExperienceBySlug = cache(
         },
       });
     },
-    ['experience-by-slug'],
+    // v2 (P-12 / L-112): payload gained paymentMode + winery no-show fields —
+    // the bump prevents pre-deploy cache entries (missing them) being served.
+    ['experience-by-slug-v2'],
     {
       revalidate: 300, // 5 minutes
       tags: ['experiences'],

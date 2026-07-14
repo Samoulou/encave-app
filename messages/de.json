@@ -248,6 +248,11 @@
     "nearStation": "In der Nähe des Bahnhofs {commune}",
     "pricePerPersonLabel": "Preis pro Person",
     "available": "VERFÜGBAR",
+    "noShowPolicy": {
+      "title": "Nichterscheinungsgebühr:",
+      "amountPerPerson": "{amount} pro Person",
+      "explainer": "Dieses Erlebnis ist kostenlos oder vor Ort zahlbar: Ihre Karte wird bei der Buchung hinterlegt (Vormerkung, keine Belastung). Bei Nichterscheinen ohne fristgerechte Stornierung kann das Weingut diese Gebühr erheben."
+    },
     "cancellationPolicy": {
       "title": "Stornierungsbedingungen:",
       "labels": {
@@ -811,6 +816,10 @@
       "explainer": "Dieses Erlebnis ist kostenlos oder vor Ort zahlbar. Wir speichern jetzt nur Ihre Karte — es erfolgt keine Belastung. Wenn Sie nicht erscheinen und nicht rechtzeitig stornieren, kann das Weingut die Gebühr belasten.",
       "checkboxLabel": "Ich akzeptiere die Nichterscheinungsgebühr von {amount} pro Person und ermächtige die Speicherung meiner Karte zu diesem Zweck.",
       "required": "Bitte akzeptieren Sie die Nichterscheinungs-Richtlinie, um fortzufahren."
+    },
+    "acceptance": {
+      "label": "Ich akzeptiere die <cgv>Allgemeinen Geschäftsbedingungen</cgv> und die <policy>Stornierungsrichtlinie</policy>.",
+      "required": "Bitte akzeptieren Sie die AGB und die Stornierungsrichtlinie, um fortzufahren."
     },
     "hold": {
       "remaining": "Zeitfenster reserviert für {time}",

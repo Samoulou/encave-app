@@ -51,6 +51,11 @@ const checkoutFormSchema = z.object({
   ageConfirmed: z
     .boolean()
     .refine((value) => value, 'Merci de confirmer votre age.'),
+  // P-12 / L-112: explicit CGV + cancellation-policy acceptance. No booking
+  // without it (mirrors the server's acceptedTerms: z.literal(true)).
+  acceptedTerms: z
+    .boolean()
+    .refine((value) => value, 'Merci d’accepter les CGV et la politique.'),
 });
 
 type CheckoutFormData = z.infer<typeof checkoutFormSchema>;
@@ -158,6 +163,7 @@ export function CheckoutClient({
     resolver: zodResolver(checkoutFormSchema),
     defaultValues: {
       ageConfirmed: false,
+      acceptedTerms: false,
     },
   });
 
@@ -287,6 +293,7 @@ export function CheckoutClient({
         visitorEmail: data.email,
         visitorPhone: data.phone.replace(/\s/g, ''),
         ageConfirmed: true,
+        acceptedTerms: true,
         locale,
         displayedServiceFeeCentsPerGuest: serviceFeeCentsPerGuest,
         // No-show fee the client accepted (P-08) — the server re-checks it
@@ -610,6 +617,66 @@ export function CheckoutClient({
                           className="text-sm font-medium text-red-700"
                         >
                           {t('ageGate.errors.required')}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* CGV + cancellation-policy acceptance (P-12 / L-112) */}
+                <div className="mb-6 rounded-lg border border-border bg-white p-4">
+                  <div className="flex items-start gap-3">
+                    <Controller
+                      name="acceptedTerms"
+                      control={control}
+                      render={({ field }) => (
+                        <Checkbox
+                          id="acceptedTerms"
+                          aria-required="true"
+                          aria-describedby="accepted-terms-error"
+                          checked={field.value}
+                          onCheckedChange={(checked) => {
+                            field.onChange(checked === true);
+                          }}
+                          onBlur={field.onBlur}
+                          ref={field.ref}
+                        />
+                      )}
+                    />
+                    <div className="space-y-1">
+                      <Label
+                        htmlFor="acceptedTerms"
+                        className="text-sm font-semibold text-foreground"
+                      >
+                        {t.rich('acceptance.label', {
+                          cgv: (chunks) => (
+                            <Link
+                              href="/legal/terms"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-burgundy-700 underline hover:text-burgundy-800"
+                            >
+                              {chunks}
+                            </Link>
+                          ),
+                          policy: (chunks) => (
+                            <Link
+                              href="/legal/cancellation"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-burgundy-700 underline hover:text-burgundy-800"
+                            >
+                              {chunks}
+                            </Link>
+                          ),
+                        })}
+                      </Label>
+                      {errors.acceptedTerms && (
+                        <p
+                          id="accepted-terms-error"
+                          className="text-sm font-medium text-red-700"
+                        >
+                          {t('acceptance.required')}
                         </p>
                       )}
                     </div>
