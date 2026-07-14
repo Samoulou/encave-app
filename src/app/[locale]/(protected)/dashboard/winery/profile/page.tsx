@@ -180,6 +180,11 @@ export default async function WineryProfilePage({
             phone: winery.phone,
             coverPhoto: winery.coverPhoto,
             galleryImages: winery.galleryImages,
+            openingHours: winery.openingHours,
+            altitude: winery.altitude,
+            hectares: winery.hectares,
+            familyName: winery.familyName,
+            signatureGrapes: winery.signatureGrapes,
           }}
         />
 

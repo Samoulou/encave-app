@@ -353,6 +353,33 @@ describe('searchExperiences date window (P-05 / L-110, refonte P-06 / D3)', () =
     expect(result.experiences).toEqual([]);
   });
 
+  it('applies the spoken-language filter to the shared where (L-115)', async () => {
+    await searchExperiences({ language: 'DE', sort: 'newest' });
+
+    // Both the list query and the count share baseWhere; assert the
+    // languages predicate landed on the standard findMany call.
+    expect(db.experience.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ languages: { has: 'DE' } }),
+      })
+    );
+    expect(db.experience.count).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ languages: { has: 'DE' } }),
+      })
+    );
+  });
+
+  it('omits the languages predicate when no language is requested (L-115)', async () => {
+    await searchExperiences({ sort: 'newest' });
+
+    const call = vi.mocked(db.experience.findMany).mock.calls[0]?.[0] as
+      | { where?: Record<string, unknown> }
+      | undefined;
+    expect(call?.where).toBeDefined();
+    expect(call?.where && 'languages' in call.where).toBe(false);
+  });
+
   it('next_availability orders ids by soonest bookable occurrence and fetches only the page (P-06)', async () => {
     const blockedDay = new Date('2099-07-04T00:00:00.000Z');
     const freeDay = new Date('2099-07-11T00:00:00.000Z');

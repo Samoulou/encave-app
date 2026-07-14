@@ -170,6 +170,7 @@ describe('Checkout Server Actions', () => {
     visitorEmail: 'john@example.com',
     visitorPhone: '+41791234567',
     ageConfirmed: true as const,
+    acceptedTerms: true as const,
     displayedServiceFeeCentsPerGuest: 0,
   };
 
@@ -186,6 +187,21 @@ describe('Checkout Server Actions', () => {
       const result = await createBookingAndCheckout({
         ...validInput,
         ageConfirmed: false,
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe('VALIDATION_ERROR');
+      }
+      expect(db.experience.findUnique).not.toHaveBeenCalled();
+    });
+
+    it('requires CGV + policy acceptance before creating Stripe checkout (P-12 / L-112)', async () => {
+      const { createBookingAndCheckout } =
+        await import('@/server/actions/checkout');
+      const result = await createBookingAndCheckout({
+        ...validInput,
+        acceptedTerms: false as never,
       });
 
       expect(result.success).toBe(false);

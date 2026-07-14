@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { getTranslations } from 'next-intl/server';
 import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -52,6 +52,12 @@ export default async function LegalLayout({
               className="text-slate-600 hover:text-burgundy-600"
             >
               {t('cancellation.title')}
+            </Link>
+            <Link
+              href="/mentions-legales"
+              className="text-slate-600 hover:text-burgundy-600"
+            >
+              {t('mentionsLegalesLink')}
             </Link>
           </nav>
         </div>

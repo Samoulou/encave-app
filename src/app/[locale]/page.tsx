@@ -6,7 +6,9 @@ import { generateHomeMetadata } from '@/lib/seo';
 import { getBaseUrl } from '@/lib/env';
 import { HomeMobileEditorial } from '@/components/features/home/HomeMobileEditorial';
 import { HomeDesktopEditorial } from '@/components/features/home/HomeDesktopEditorial';
+import { HomeConversionSections } from '@/components/features/home/HomeConversionSections';
 import { searchExperiences } from '@/server/queries/experience.queries';
+import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
 import type { Locale } from '@/i18n/routing';
 
 type Props = {
@@ -31,9 +33,15 @@ export default async function Home({ params }: Props) {
 
   // Use the same published experience source as the listing page so the
   // editorial home stays aligned with real inventory.
-  const { experiences: featuredExperiences } = await searchExperiences({
-    limit: 8,
-  });
+  const [
+    { experiences: featuredExperiences },
+    giftCardsEnabled,
+    requestsEnabled,
+  ] = await Promise.all([
+    searchExperiences({ limit: 8 }),
+    isFlagEnabled('GIFT_CARDS'),
+    isFlagEnabled('REQUESTS'),
+  ]);
 
   // SEO-003: Organization schema for home page
   const organizationSchema = {
@@ -77,6 +85,12 @@ export default async function Home({ params }: Props) {
           <div className="hidden md:block">
             <HomeDesktopEditorial experiences={featuredExperiences} />
           </div>
+
+          {/* Conversion sections (P-12 / L-113) — responsive, rendered once */}
+          <HomeConversionSections
+            giftCardsEnabled={giftCardsEnabled}
+            requestsEnabled={requestsEnabled}
+          />
         </main>
         <Footer />
       </div>

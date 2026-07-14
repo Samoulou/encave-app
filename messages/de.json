@@ -232,7 +232,19 @@
     "meetWinemakers": "Unsere Winzer kennenlernen",
     "readyToExplore": "Bereit zu entdecken?",
     "startJourney": "Beginnen Sie noch heute Ihre Reise durch die Welt der Schweizer Weine.",
-    "searchPlaceholder": "Weinerlebnisse suchen..."
+    "searchPlaceholder": "Weinerlebnisse suchen...",
+    "giftCard": {
+      "eyebrow": "Geschenkgutschein",
+      "title": "Verschenken Sie ein Erlebnis, kein Objekt",
+      "subtitle": "Ein EnCave-Gutschein, 5 Jahre gültig, für alle unsere Erlebnisse einlösbar.",
+      "cta": "Gutschein verschenken"
+    },
+    "surMesure": {
+      "eyebrow": "Massgeschneidert",
+      "title": "Ein besonderer Wunsch?",
+      "subtitle": "Beschreiben Sie Ihren idealen Moment — ein Winzer antwortet innerhalb von 48 Stunden mit einem persönlichen Angebot.",
+      "cta": "Anfrage stellen"
+    }
   },
   "experience": {
     "aboutTitle": "Über dieses Erlebnis",
@@ -248,6 +260,11 @@
     "nearStation": "In der Nähe des Bahnhofs {commune}",
     "pricePerPersonLabel": "Preis pro Person",
     "available": "VERFÜGBAR",
+    "noShowPolicy": {
+      "title": "Nichterscheinungsgebühr:",
+      "amountPerPerson": "{amount} pro Person",
+      "explainer": "Dieses Erlebnis ist kostenlos oder vor Ort zahlbar: Ihre Karte wird bei der Buchung hinterlegt (Vormerkung, keine Belastung). Bei Nichterscheinen ohne fristgerechte Stornierung kann das Weingut diese Gebühr erheben."
+    },
     "cancellationPolicy": {
       "title": "Stornierungsbedingungen:",
       "labels": {
@@ -812,6 +829,10 @@
       "checkboxLabel": "Ich akzeptiere die Nichterscheinungsgebühr von {amount} pro Person und ermächtige die Speicherung meiner Karte zu diesem Zweck.",
       "required": "Bitte akzeptieren Sie die Nichterscheinungs-Richtlinie, um fortzufahren."
     },
+    "acceptance": {
+      "label": "Ich akzeptiere die <cgv>Allgemeinen Geschäftsbedingungen</cgv> und die <policy>Stornierungsrichtlinie</policy>.",
+      "required": "Bitte akzeptieren Sie die AGB und die Stornierungsrichtlinie, um fortzufahren."
+    },
     "hold": {
       "remaining": "Zeitfenster reserviert für {time}",
       "remainingUrgent": "Nur noch {time}, um Ihre Buchung abzuschliessen",
@@ -921,6 +942,31 @@
     "goToImage": "Zu Bild {index} gehen"
   },
   "winery": {
+    "familyLabel": "Familie",
+    "altitudeLabel": "Höhe",
+    "altitudeValue": "{value} m",
+    "hectaresLabel": "Fläche",
+    "hectaresValue": "{value} ha",
+    "signatureGrapesLabel": "Leitrebsorten",
+    "openingHoursLabel": "Öffnungszeiten",
+    "domaineDetails": {
+      "title": "Das Weingut",
+      "description": "Diese Angaben ergänzen Ihr öffentliches Profil — lassen Sie leer, was Sie nicht anzeigen möchten.",
+      "openingHours": "Öffnungszeiten",
+      "openingHoursPlaceholder": "Mo–Fr 9–18 Uhr · Sa 10–17 Uhr · So geschlossen",
+      "openingHoursHint": "Eine Zeile pro Tag oder ein freier Bereich. Wird unverändert angezeigt.",
+      "familyName": "Familie",
+      "familyNamePlaceholder": "Familie Dupont",
+      "signatureGrapes": "Leitrebsorten",
+      "signatureGrapesPlaceholder": "Fendant, Petite Arvine, Cornalin",
+      "signatureGrapesHint": "Mit Kommas trennen (max. 8).",
+      "altitude": "Höhe (m)",
+      "altitudePlaceholder": "650",
+      "altitudeHint": "In Metern.",
+      "hectares": "Fläche (ha)",
+      "hectaresPlaceholder": "4.5",
+      "hectaresHint": "In Hektar."
+    },
     "verified": "Verifiziert",
     "coverPhoto": "Titelbild",
     "coverPhotoDescription": "Dieses Bild erscheint oben auf Ihrem offentlichen Profil",
@@ -1400,7 +1446,26 @@
       "removePerson": "Person entfernen",
       "explore": "Entdecken"
     },
-    "resultsCount": "Wallis · {count, plural, =0 {keine Erlebnisse} one {# Erlebnis} other {# Erlebnisse}}"
+    "resultsCount": "Wallis · {count, plural, =0 {keine Erlebnisse} one {# Erlebnis} other {# Erlebnisse}}",
+    "budget": {
+      "label": "Budget",
+      "under50": "< 50",
+      "50to100": "50–100",
+      "over100": "100+"
+    },
+    "language": "Sprache",
+    "languageAll": "Alle Sprachen",
+    "languages": {
+      "FR": "Français",
+      "DE": "Deutsch",
+      "EN": "English"
+    },
+    "activeFilters": "Aktive Filter",
+    "removeFilter": "Filter {filter} entfernen",
+    "clearAll": "Alle löschen",
+    "capacityPill": "{count, plural, one {# Person} other {# Personen}}",
+    "viewList": "Liste",
+    "viewMap": "Karte"
   },
   "errors": {
     "somethingWentWrong": "Etwas ist schiefgelaufen!",
@@ -1439,6 +1504,8 @@
   },
   "wineries": {
     "comingSoon": "Winzer bald verfügbar...",
+    "areYouWinemaker": "Sind Sie Winzer?",
+    "joinEncave": "EnCave beitreten",
     "filterByCommune": "Nach Gemeinde filtern",
     "title": "Weingüter im Wallis",
     "subtitle": "Entdecken Sie aussergewöhnliche Winzer in der führenden Weinregion der Schweiz. Jedes Weingut bietet einzigartige Erlebnisse, verwurzelt in jahrhundertealter Tradition.",
@@ -1664,7 +1731,7 @@
       "sections": {
         "introduction": {
           "title": "Einleitung",
-          "content": "EnCave SA (\"wir\", \"uns\" oder \"unser\") respektiert Ihre Privatsphäre und verpflichtet sich, Ihre persönlichen Daten zu schützen. Diese Datenschutzerklärung erklärt, wie wir Ihre persönlichen Daten erheben, verwenden und schützen, wenn Sie unsere Plattform besuchen oder unsere Dienste nutzen."
+          "content": "EnCave SA (\"wir\", \"uns\" oder \"unser\") verpflichtet sich, Ihre Privatsphäre zu schützen. Diese Datenschutzerklärung erklärt, wie wir Ihre personenbezogenen Daten erheben, verwenden und schützen, wenn Sie unsere Plattform nutzen. Die Bearbeitung Ihrer Daten richtet sich nach dem Schweizer Bundesgesetz über den Datenschutz (nLPD)."
         },
         "dataCollection": {
           "title": "Daten, die wir erheben",
@@ -1696,7 +1763,7 @@
         },
         "rights": {
           "title": "Ihre Rechte",
-          "content": "Nach Schweizer Recht und der DSGVO haben Sie folgende Rechte:",
+          "content": "Nach dem Schweizer Datenschutzgesetz (nLPD) haben Sie folgende Rechte:",
           "items": {
             "access": "Recht auf Zugang zu Ihren persönlichen Daten",
             "rectification": "Recht auf Berichtigung unrichtiger Daten",
@@ -1708,6 +1775,17 @@
           "title": "Kontakt",
           "content": "Bei Fragen zu dieser Datenschutzerklärung oder zur Ausübung Ihrer Rechte kontaktieren Sie uns bitte:",
           "address": "Rue du Vignoble 1, 1950 Sion, Schweiz"
+        },
+        "subprocessors": {
+          "title": "Auftragsbearbeiter",
+          "content": "Wir setzen Auftragsbearbeiter ein, um die Plattform zu betreiben. Jeder verarbeitet Ihre Daten nur für die oben genannten Zwecke:",
+          "items": {
+            "vercel": "Vercel — Hosting der Website (USA)",
+            "neon": "Neon — Datenbank (Europa)",
+            "stripe": "Stripe — Zahlungen (wir speichern keine Kartendaten)",
+            "resend": "Resend — Versand von Transaktions-E-Mails",
+            "posthog": "PostHog — Reichweitenmessung (nur mit Ihrer Einwilligung aktiv)"
+          }
         }
       }
     },
@@ -1823,11 +1901,6 @@
         }
       }
     },
-    "navLinks": {
-      "privacy": "Datenschutz",
-      "terms": "AGB",
-      "cancellation": "Stornierungen"
-    },
     "cookies": {
       "banner": {
         "title": "Cookie-Einstellungen",
@@ -1851,7 +1924,8 @@
           "description": "Hilft uns zu verstehen, welche Seiten nuetzlich sind. Tool: PostHog."
         }
       }
-    }
+    },
+    "mentionsLegalesLink": "Impressum"
   },
   "landing": {
     "degustation": {
@@ -1992,7 +2066,9 @@
     "brandDescription": "Buchungsplattform für Weinerlebnisse im Wallis, Schweiz.",
     "region": "Wallis, Schweiz",
     "securePayment": "Sichere Zahlung",
-    "wineExperiences": "Walliser Weinerlebnisse"
+    "wineExperiences": "Walliser Weinerlebnisse",
+    "contact": "Kontakt",
+    "mentionsLegales": "Impressum"
   },
   "clientDashboard": {
     "nav": {
@@ -2642,5 +2718,75 @@
     "alertTitle": "Ausstehende Anfragen",
     "alertDescription": "{count, plural, one {# Anfrage wartet seit über 24 Stunden auf eine Antwort} other {# Anfragen warten seit über 24 Stunden auf eine Antwort}}.",
     "alertCta": "Anfragen ansehen"
+  },
+  "contact": {
+    "metadata": {
+      "title": "Kontakt | EnCave",
+      "description": "Eine Frage? Kontaktieren Sie das EnCave-Team."
+    },
+    "hero": {
+      "title": "Kontaktieren Sie uns",
+      "subtitle": "Eine Frage zu einem Erlebnis, einer Buchung oder einer Partnerschaft? Schreiben Sie uns, wir antworten schnell."
+    },
+    "form": {
+      "name": "Name",
+      "namePlaceholder": "Ihr Name",
+      "nameError": "Bitte geben Sie Ihren Namen an.",
+      "email": "E-Mail",
+      "emailPlaceholder": "sie@beispiel.ch",
+      "emailError": "Ungültige E-Mail-Adresse.",
+      "subject": "Betreff",
+      "subjectPlaceholder": "Der Betreff Ihrer Nachricht",
+      "subjectError": "Bitte geben Sie einen Betreff an.",
+      "message": "Nachricht",
+      "messagePlaceholder": "Ihre Nachricht…",
+      "messageError": "Ihre Nachricht ist etwas kurz.",
+      "submit": "Senden",
+      "submitting": "Senden…",
+      "successTitle": "Nachricht gesendet",
+      "successBody": "Danke! Wir melden uns schnellstmöglich bei Ihnen.",
+      "errorGeneric": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut."
+    }
+  },
+  "maintenance": {
+    "metadata": {
+      "title": "Wartung | EnCave",
+      "description": "EnCave wird gewartet."
+    },
+    "title": "Wir sind gleich zurück",
+    "message": "EnCave wird gerade gewartet. Danke für Ihre Geduld — versuchen Sie es in Kürze erneut."
+  },
+  "mentionsLegales": {
+    "metadata": {
+      "title": "Impressum | EnCave",
+      "description": "Impressum und Angaben zum Betreiber von EnCave."
+    },
+    "title": "Impressum",
+    "intro": "Rechtliche Angaben zur Website EnCave (encave.ch).",
+    "editor": {
+      "title": "Betreiber",
+      "body": "Firma: [À COMPLÉTER]\nRechtsform: [À COMPLÉTER]\nAdresse: [À COMPLÉTER]\nUID / CHE-Nr.: [À COMPLÉTER]"
+    },
+    "publication": {
+      "title": "Verantwortlich für den Inhalt",
+      "body": "[À COMPLÉTER]"
+    },
+    "contact": {
+      "title": "Kontakt",
+      "body": "E-Mail: samuel@encave.ch"
+    },
+    "hosting": {
+      "title": "Hosting",
+      "body": "Die Website wird von Vercel Inc. (340 S Lemon Ave #4133, Walnut, CA 91789, USA) gehostet. Die Datenbank wird von Neon (Daten in Europa) gehostet."
+    },
+    "ip": {
+      "title": "Urheberrecht",
+      "body": "Alle Inhalte der Website (Texte, Bilder, Logos, Marken) sind geschützt. Jede Vervielfältigung ohne Genehmigung ist untersagt."
+    },
+    "data": {
+      "title": "Personenbezogene Daten",
+      "body": "Die Verarbeitung personenbezogener Daten ist in unserer Datenschutzerklärung gemäss revDSG beschrieben.",
+      "privacyLink": "Datenschutzerklärung lesen"
+    }
   }
 }

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ExperienceType } from '@prisma/client';
+import { ExperienceType, Locale } from '@prisma/client';
 import { isDateKey } from '@/lib/utils/date-key';
 import { CATALOG_SORT_VALUES } from '@/lib/utils/search-params';
 
@@ -22,6 +22,8 @@ export const experienceSearchSchema = z
     minPrice: z.number().int().min(0).max(1_000_000).optional(),
     maxPrice: z.number().int().min(0).max(1_000_000).optional(),
     capacity: z.number().int().min(1).max(500).optional(),
+    // Spoken-language filter (L-115): matches Experience.languages.
+    language: z.nativeEnum(Locale).optional(),
     sort: z.enum(CATALOG_SORT_VALUES).optional(),
     page: z.number().int().min(1).max(500).optional(),
     availableFrom: dateKeySchema.optional(),

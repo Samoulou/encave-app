@@ -142,6 +142,16 @@ export const subjects = {
     DE: 'Ihre Anfrage wurde an {wineryName} übermittelt',
     EN: 'Your request has been sent to {wineryName}',
   },
+  contactMessage: {
+    FR: 'Nouveau message de contact — {name}',
+    DE: 'Neue Kontaktnachricht — {name}',
+    EN: 'New contact message — {name}',
+  },
+  contactAck: {
+    FR: 'Nous avons bien reçu votre message',
+    DE: 'Wir haben Ihre Nachricht erhalten',
+    EN: 'We received your message',
+  },
   requestNewCustom: {
     FR: 'Nouvelle demande sur-mesure — {clientName}',
     DE: 'Neue Massanfrage — {clientName}',
@@ -1262,6 +1272,54 @@ export const request = {
 } as const;
 
 // Helper function to get translation
+// Contact form (P-12 / L-114) — team notification (internal) + client accusé.
+export const contact = {
+  notify: {
+    title: {
+      FR: 'Nouveau message de contact',
+      DE: 'Neue Kontaktnachricht',
+      EN: 'New contact message',
+    },
+    from: {
+      FR: 'De : {name} <{email}>',
+      DE: 'Von: {name} <{email}>',
+      EN: 'From: {name} <{email}>',
+    },
+    subjectLine: {
+      FR: 'Sujet : {subject}',
+      DE: 'Betreff: {subject}',
+      EN: 'Subject: {subject}',
+    },
+    messageTitle: {
+      FR: 'Message',
+      DE: 'Nachricht',
+      EN: 'Message',
+    },
+  },
+  ack: {
+    title: {
+      FR: 'Message bien reçu',
+      DE: 'Nachricht erhalten',
+      EN: 'Message received',
+    },
+    intro: {
+      FR: 'Bonjour {name}, merci pour votre message. Notre équipe vous répond dans les meilleurs délais.',
+      DE: 'Guten Tag {name}, vielen Dank für Ihre Nachricht. Unser Team meldet sich so schnell wie möglich bei Ihnen.',
+      EN: 'Hello {name}, thank you for your message. Our team will get back to you as soon as possible.',
+    },
+    recapTitle: {
+      FR: 'Votre message',
+      DE: 'Ihre Nachricht',
+      EN: 'Your message',
+    },
+    signoff: {
+      FR: "L'équipe EnCave",
+      DE: 'Ihr EnCave-Team',
+      EN: 'The EnCave team',
+    },
+  },
+};
+
 export function t<T extends Record<Locale, unknown>>(
   translations: T,
   locale: Locale

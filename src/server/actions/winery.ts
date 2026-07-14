@@ -6,6 +6,7 @@ import { put, del } from '@vercel/blob';
 import {
   wineryOnboardingSchema,
   wineryProfileSchema,
+  parseSignatureGrapes,
   type WineryOnboardingInput,
   type WineryProfileInput,
 } from '@/lib/validators/winery';
@@ -254,11 +255,36 @@ export async function updateWineryProfile(
       }
     }
 
+    // P-12 / L-117: pull the enrichment fields out of the spread — they are
+    // strings at the form layer but Int / Float / String[] in the DB.
+    const {
+      openingHours,
+      altitude,
+      hectares,
+      familyName,
+      signatureGrapes,
+      ...baseData
+    } = validated.data;
+
+    const altitudeMeters =
+      altitude && altitude.trim().length > 0
+        ? Number.parseInt(altitude, 10)
+        : null;
+    const hectaresValue =
+      hectares && hectares.trim().length > 0
+        ? Number.parseFloat(hectares.replace(',', '.'))
+        : null;
+
     // Update winery
     const updated = await db.winery.update({
       where: { id: winery.id },
       data: {
-        ...validated.data,
+        ...baseData,
+        openingHours: openingHours?.trim() ? openingHours.trim() : null,
+        familyName: familyName?.trim() ? familyName.trim() : null,
+        altitude: Number.isNaN(altitudeMeters) ? null : altitudeMeters,
+        hectares: Number.isNaN(hectaresValue) ? null : hectaresValue,
+        signatureGrapes: parseSignatureGrapes(signatureGrapes),
         // Only update coordinates if address changed and we got new ones
         ...(addressChanged && {
           latitude: coordinates?.latitude ?? null,

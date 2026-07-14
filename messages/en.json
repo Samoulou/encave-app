@@ -232,7 +232,19 @@
     "meetWinemakers": "Meet our winemakers",
     "readyToExplore": "Ready to explore?",
     "startJourney": "Start your journey through the world of Swiss wines today.",
-    "searchPlaceholder": "Search wine experiences..."
+    "searchPlaceholder": "Search wine experiences...",
+    "giftCard": {
+      "eyebrow": "Gift card",
+      "title": "Give an experience, not an object",
+      "subtitle": "An EnCave gift card, valid for 5 years, redeemable on all our experiences.",
+      "cta": "Offer a gift card"
+    },
+    "surMesure": {
+      "eyebrow": "Bespoke",
+      "title": "Something special in mind?",
+      "subtitle": "Describe your ideal moment — a winemaker replies within 48h with a personalized offer.",
+      "cta": "Make a request"
+    }
   },
   "experience": {
     "aboutTitle": "About This Experience",
@@ -248,6 +260,11 @@
     "nearStation": "Near {commune} station",
     "pricePerPersonLabel": "Price per person",
     "available": "AVAILABLE",
+    "noShowPolicy": {
+      "title": "No-show fee:",
+      "amountPerPerson": "{amount} per person",
+      "explainer": "This experience is free or payable on site: your card is registered at booking (imprint, no charge). If you don't show up and don't cancel in time, the winery may charge this fee."
+    },
     "cancellationPolicy": {
       "title": "Cancellation policy:",
       "labels": {
@@ -812,6 +829,10 @@
       "checkboxLabel": "I accept the no-show fee of {amount} per guest and authorize saving my card for this purpose.",
       "required": "Please accept the no-show policy to continue."
     },
+    "acceptance": {
+      "label": "I accept the <cgv>terms of sale</cgv> and the <policy>cancellation policy</policy>.",
+      "required": "Please accept the terms and cancellation policy to continue."
+    },
     "hold": {
       "remaining": "Slot held for {time}",
       "remainingUrgent": "Only {time} left to complete your booking",
@@ -921,6 +942,31 @@
     "goToImage": "Go to image {index}"
   },
   "winery": {
+    "familyLabel": "Family",
+    "altitudeLabel": "Altitude",
+    "altitudeValue": "{value} m",
+    "hectaresLabel": "Surface",
+    "hectaresValue": "{value} ha",
+    "signatureGrapesLabel": "Signature grapes",
+    "openingHoursLabel": "Opening hours",
+    "domaineDetails": {
+      "title": "The estate",
+      "description": "These details enrich your public page — leave blank anything you'd rather not show.",
+      "openingHours": "Opening hours",
+      "openingHoursPlaceholder": "Mon–Fri 9am–6pm · Sat 10am–5pm · Sun closed",
+      "openingHoursHint": "One line per day or a free range. Shown as-is.",
+      "familyName": "Family",
+      "familyNamePlaceholder": "Dupont family",
+      "signatureGrapes": "Signature grapes",
+      "signatureGrapesPlaceholder": "Fendant, Petite Arvine, Cornalin",
+      "signatureGrapesHint": "Separate with commas (max 8).",
+      "altitude": "Altitude (m)",
+      "altitudePlaceholder": "650",
+      "altitudeHint": "In metres.",
+      "hectares": "Surface (ha)",
+      "hectaresPlaceholder": "4.5",
+      "hectaresHint": "In hectares."
+    },
     "verified": "Verified",
     "coverPhoto": "Cover Photo",
     "coverPhotoDescription": "This image appears at the top of your public profile",
@@ -1400,7 +1446,26 @@
       "removePerson": "Remove a person",
       "explore": "Explore"
     },
-    "resultsCount": "Valais · {count, plural, =0 {no experiences} one {# experience} other {# experiences}}"
+    "resultsCount": "Valais · {count, plural, =0 {no experiences} one {# experience} other {# experiences}}",
+    "budget": {
+      "label": "Budget",
+      "under50": "< 50",
+      "50to100": "50–100",
+      "over100": "100+"
+    },
+    "language": "Language",
+    "languageAll": "All languages",
+    "languages": {
+      "FR": "Français",
+      "DE": "Deutsch",
+      "EN": "English"
+    },
+    "activeFilters": "Active filters",
+    "removeFilter": "Remove {filter} filter",
+    "clearAll": "Clear all",
+    "capacityPill": "{count, plural, one {# person} other {# people}}",
+    "viewList": "List",
+    "viewMap": "Map"
   },
   "errors": {
     "somethingWentWrong": "Something went wrong!",
@@ -1439,6 +1504,8 @@
   },
   "wineries": {
     "comingSoon": "Winemakers coming soon...",
+    "areYouWinemaker": "Are you a winemaker?",
+    "joinEncave": "Join EnCave",
     "filterByCommune": "Filter by commune",
     "title": "Wineries in Valais",
     "subtitle": "Discover exceptional winemakers in Switzerland's premier wine region. Each winery offers unique experiences rooted in centuries of tradition.",
@@ -1664,7 +1731,7 @@
       "sections": {
         "introduction": {
           "title": "Introduction",
-          "content": "EnCave SA (\"we\", \"us\", or \"our\") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform."
+          "content": "EnCave SA (\"we\", \"us\", or \"our\") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your personal data when you use our platform. The processing of your personal data is governed by the Swiss Federal Act on Data Protection (nLPD)."
         },
         "dataCollection": {
           "title": "Information We Collect",
@@ -1696,7 +1763,7 @@
         },
         "rights": {
           "title": "Your Rights",
-          "content": "Under applicable data protection laws, you have the right to:",
+          "content": "Under the Swiss Federal Act on Data Protection (nLPD), you have the right to:",
           "items": {
             "access": "Access your personal data",
             "rectification": "Correct inaccurate data",
@@ -1708,6 +1775,17 @@
           "title": "Contact Us",
           "content": "If you have questions about this Privacy Policy, please contact us at:",
           "address": "Rue du Vin 1, 1950 Sion, Switzerland"
+        },
+        "subprocessors": {
+          "title": "Sub-processors",
+          "content": "We rely on sub-processors to operate the platform. Each processes your data only for the purposes described above:",
+          "items": {
+            "vercel": "Vercel — website hosting (United States)",
+            "neon": "Neon — database (Europe)",
+            "stripe": "Stripe — payments (we never store card data)",
+            "resend": "Resend — transactional email delivery",
+            "posthog": "PostHog — analytics (enabled only with your consent)"
+          }
         }
       }
     },
@@ -1846,7 +1924,8 @@
           "description": "Help us understand which pages are useful. Tool: PostHog."
         }
       }
-    }
+    },
+    "mentionsLegalesLink": "Legal notice"
   },
   "landing": {
     "degustation": {
@@ -1987,7 +2066,9 @@
     "brandDescription": "Wine experience booking platform in Valais, Switzerland.",
     "region": "Valais, Switzerland",
     "securePayment": "Secure payment",
-    "wineExperiences": "Valais wine experiences"
+    "wineExperiences": "Valais wine experiences",
+    "contact": "Contact",
+    "mentionsLegales": "Legal notice"
   },
   "clientDashboard": {
     "nav": {
@@ -2637,5 +2718,75 @@
     "alertTitle": "Pending requests",
     "alertDescription": "{count, plural, one {# request has been waiting for a reply for over 24 hours} other {# requests have been waiting for a reply for over 24 hours}}.",
     "alertCta": "View requests"
+  },
+  "contact": {
+    "metadata": {
+      "title": "Contact | EnCave",
+      "description": "A question? Get in touch with the EnCave team."
+    },
+    "hero": {
+      "title": "Contact us",
+      "subtitle": "A question about an experience, a booking or a partnership? Write to us — we reply quickly."
+    },
+    "form": {
+      "name": "Name",
+      "namePlaceholder": "Your name",
+      "nameError": "Please enter your name.",
+      "email": "Email",
+      "emailPlaceholder": "you@example.ch",
+      "emailError": "Invalid email address.",
+      "subject": "Subject",
+      "subjectPlaceholder": "What your message is about",
+      "subjectError": "Please enter a subject.",
+      "message": "Message",
+      "messagePlaceholder": "Your message…",
+      "messageError": "Your message is a little short.",
+      "submit": "Send",
+      "submitting": "Sending…",
+      "successTitle": "Message sent",
+      "successBody": "Thank you! We'll get back to you as soon as possible.",
+      "errorGeneric": "Something went wrong. Please try again."
+    }
+  },
+  "maintenance": {
+    "metadata": {
+      "title": "Maintenance | EnCave",
+      "description": "EnCave is under maintenance."
+    },
+    "title": "We'll be right back",
+    "message": "EnCave is briefly under maintenance. Thanks for your patience — please try again shortly."
+  },
+  "mentionsLegales": {
+    "metadata": {
+      "title": "Legal notice | EnCave",
+      "description": "Legal notice and publisher information for EnCave."
+    },
+    "title": "Legal notice",
+    "intro": "Legal information about the EnCave website (encave.ch).",
+    "editor": {
+      "title": "Publisher",
+      "body": "Company name: [À COMPLÉTER]\nLegal form: [À COMPLÉTER]\nAddress: [À COMPLÉTER]\nBusiness ID / CHE no.: [À COMPLÉTER]"
+    },
+    "publication": {
+      "title": "Publication manager",
+      "body": "[À COMPLÉTER]"
+    },
+    "contact": {
+      "title": "Contact",
+      "body": "Email: samuel@encave.ch"
+    },
+    "hosting": {
+      "title": "Hosting",
+      "body": "The site is hosted by Vercel Inc. (340 S Lemon Ave #4133, Walnut, CA 91789, USA). The database is hosted by Neon (data in Europe)."
+    },
+    "ip": {
+      "title": "Intellectual property",
+      "body": "All content on the site (text, images, logos, trademarks) is protected. Any reproduction without authorization is prohibited."
+    },
+    "data": {
+      "title": "Personal data",
+      "body": "The processing of personal data is described in our privacy policy, compliant with the Swiss nLPD.",
+      "privacyLink": "Read the privacy policy"
+    }
   }
 }

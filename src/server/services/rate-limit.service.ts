@@ -267,3 +267,9 @@ export const REQUEST_RATE_LIMIT: RateLimitConfig = {
   maxRequests: 5,
   windowMs: 60 * 60 * 1000, // per hour
 };
+
+// Public contact form (P-12 / L-114) — abuse guard on an unauthenticated write.
+export const CONTACT_RATE_LIMIT: RateLimitConfig = {
+  maxRequests: 5,
+  windowMs: 60 * 60 * 1000, // per hour
+};

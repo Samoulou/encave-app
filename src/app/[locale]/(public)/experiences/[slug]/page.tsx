@@ -19,6 +19,7 @@ import { ExperienceDetailGallery } from '@/components/features/experience/Experi
 import { LocationSection } from '@/components/features/experience/LocationSection';
 import { BookingWidget } from '@/components/features/experience/BookingWidget';
 import { CancellationPolicyInfo } from '@/components/features/experience/CancellationPolicyInfo';
+import { NoShowFeeInfo } from '@/components/features/experience/NoShowFeeInfo';
 import { MobileBookingBar } from '@/components/features/experience/MobileBookingBar';
 import { ExperienceDetailActions } from '@/components/features/experience/ExperienceDetailActions';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
@@ -77,11 +78,13 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
 
   // Flag read overlaps the experience fetch — this is the LCP-critical
   // route; never serialize independent I/O here.
-  const [experience, bookingFeeEnabled, giftCardsEnabled] = await Promise.all([
-    getExperienceBySlug(slug),
-    isFlagEnabled('BOOKING_FEE'),
-    isFlagEnabled('GIFT_CARDS'),
-  ]);
+  const [experience, bookingFeeEnabled, giftCardsEnabled, noShowFeesEnabled] =
+    await Promise.all([
+      getExperienceBySlug(slug),
+      isFlagEnabled('BOOKING_FEE'),
+      isFlagEnabled('GIFT_CARDS'),
+      isFlagEnabled('NO_SHOW_FEES'),
+    ]);
 
   if (!experience) {
     notFound();
@@ -357,6 +360,16 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
                   policy={experience.winery.cancellationPolicy}
                   className="mt-5 rounded-[14px] border border-stone-200 bg-white p-4 shadow-audit-card"
                 />
+                {/* No-show policy en clair (P-12 / L-112) — ON_SITE offers of a
+                    winery opted into no-show fees, flag-gated. */}
+                {noShowFeesEnabled &&
+                  experience.paymentMode === 'ON_SITE' &&
+                  experience.winery.noShowFeeEnabled && (
+                    <NoShowFeeInfo
+                      feeCentsPerGuest={experience.winery.noShowFeeCents}
+                      className="mt-4 rounded-[14px] border border-amber-200 bg-amber-50 p-4"
+                    />
+                  )}
               </section>
 
               <div className="mt-10">
@@ -381,7 +394,9 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
               </Suspense>
             </div>
 
-            <div className="relative hidden lg:block">
+            {/* L-221: sticky + self-start so the reservation panel aligns with
+                the gallery and stays in view instead of sliding below the fold. */}
+            <div className="sticky top-24 hidden self-start lg:block">
               <BookingWidget
                 price={experience.price}
                 experienceSlug={experience.slug}

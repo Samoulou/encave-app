@@ -184,6 +184,12 @@ const CreateBookingSchema = z.object({
     }),
   visitorPhone: z.string().min(6),
   ageConfirmed: z.literal(true),
+  /**
+   * Explicit CGV + cancellation-policy acceptance (P-12 / L-112). A literal
+   * true — a missing or false value fails validation, so no booking is ever
+   * created without the client having accepted the terms.
+   */
+  acceptedTerms: z.literal(true),
   /** Locale of the checkout UI — used for the Stripe line-item labels. */
   locale: z.enum(['fr', 'de', 'en']).optional(),
   /**
@@ -660,6 +666,7 @@ export async function createBookingAndCheckout(
           expiresAt,
           ageConfirmedAt: new Date(),
           ageConfirmedVersion: AGE_GATE_VERSION,
+          termsAcceptedAt: new Date(),
           ...noShowConsentData,
         },
       });
@@ -769,6 +776,7 @@ export async function createBookingAndCheckout(
                     expiresAt,
                     ageConfirmedAt: new Date(),
                     ageConfirmedVersion: AGE_GATE_VERSION,
+                    termsAcceptedAt: new Date(),
                     ...noShowConsentData,
                   },
                 });
