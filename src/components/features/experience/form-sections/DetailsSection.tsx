@@ -18,8 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 import { SectionHeader } from './SectionHeader';
+import { CollectiveEventToggle } from './CollectiveEventToggle';
 
 interface DetailsSectionProps {
   form: UseFormReturn<CreateExperienceInput>;
@@ -180,29 +180,7 @@ export function DetailsSection({
           managed after creation, on the experience edit page. */}
       {showCollective && (
         <div className="mt-6 border-t border-stone-200 pt-6">
-          <FormField
-            control={form.control}
-            name="isCollective"
-            render={({ field }) => (
-              <FormItem className="flex items-center justify-between rounded-lg border border-stone-200 p-4">
-                <div className="space-y-0.5 pr-4">
-                  <FormLabel className="text-sm font-semibold">
-                    {t('collective.toggleLabel')}
-                  </FormLabel>
-                  <p className="text-xs text-muted-foreground">
-                    {t('collective.toggleDescription')}
-                  </p>
-                </div>
-                <FormControl>
-                  <Switch
-                    checked={field.value ?? false}
-                    onCheckedChange={field.onChange}
-                    aria-label={t('collective.toggleLabel')}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
+          <CollectiveEventToggle form={form} />
         </div>
       )}
     </section>

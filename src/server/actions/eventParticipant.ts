@@ -1,8 +1,10 @@
 'use server';
 
+import { Prisma } from '@prisma/client';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
+import { withSerializableRetry } from '@/server/services/serializable-retry.service';
 import {
   addEventParticipantSchema,
   removeEventParticipantSchema,
@@ -161,21 +163,32 @@ export async function addEventParticipant(
       };
     }
 
-    const maxOrder = await db.eventParticipant.aggregate({
-      where: { experienceId: parsed.data.experienceId },
-      _max: { order: true },
-    });
-
-    const participant = await db.eventParticipant.create({
-      data: {
-        experienceId: parsed.data.experienceId,
-        wineryId: parsed.data.wineryId,
-        description: parsed.data.description,
-        logo: parsed.data.logo,
-        order: (maxOrder._max.order ?? -1) + 1,
-      },
-      select: { id: true },
-    });
+    // Append at the end. The max-read and the insert run in one Serializable
+    // transaction so two concurrent adds can't both claim the same order value
+    // (the loser aborts with P2034 and retries, re-reading the new max).
+    const participant = await withSerializableRetry(
+      () =>
+        db.$transaction(
+          async (tx) => {
+            const maxOrder = await tx.eventParticipant.aggregate({
+              where: { experienceId: parsed.data.experienceId },
+              _max: { order: true },
+            });
+            return tx.eventParticipant.create({
+              data: {
+                experienceId: parsed.data.experienceId,
+                wineryId: parsed.data.wineryId,
+                description: parsed.data.description,
+                logo: parsed.data.logo,
+                order: (maxOrder._max.order ?? -1) + 1,
+              },
+              select: { id: true },
+            });
+          },
+          { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
+        ),
+      'addEventParticipant'
+    );
 
     invalidateExperienceCaches(
       owned.data.winerySlug,

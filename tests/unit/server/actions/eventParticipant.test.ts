@@ -90,6 +90,12 @@ describe('addEventParticipant', () => {
     vi.mocked(db.eventParticipant.create).mockResolvedValue({
       id: PARTICIPANT,
     } as never);
+    // The order read + create run inside an interactive Serializable
+    // transaction — run the callback with the mocked db as the tx client.
+    vi.mocked(db.$transaction).mockImplementation(((fn: unknown) =>
+      typeof fn === 'function'
+        ? (fn as (tx: typeof db) => unknown)(db)
+        : Promise.resolve(fn)) as never);
   });
 
   const validInput = {

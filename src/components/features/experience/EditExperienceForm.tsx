@@ -47,7 +47,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ImageUpload } from '@/components/shared/ImageUpload';
-import { Switch } from '@/components/ui/switch';
+import { CollectiveEventToggle } from './form-sections/CollectiveEventToggle';
 import {
   Tooltip,
   TooltipContent,
@@ -726,29 +726,7 @@ export function EditExperienceForm({
                 title={t('collective.sectionTitle')}
                 description={t('collective.sectionDescription')}
               />
-              <FormField
-                control={form.control}
-                name="isCollective"
-                render={({ field }) => (
-                  <FormItem className="flex items-center justify-between rounded-xl border border-stone-200 p-4">
-                    <div className="space-y-0.5 pr-4">
-                      <FormLabel className="text-base font-medium">
-                        {t('collective.toggleLabel')}
-                      </FormLabel>
-                      <FormDescription>
-                        {t('collective.toggleDescription')}
-                      </FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value ?? false}
-                        onCheckedChange={field.onChange}
-                        aria-label={t('collective.toggleLabel')}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+              <CollectiveEventToggle form={form} />
             </section>
           )}
 
