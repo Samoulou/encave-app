@@ -47,6 +47,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ImageUpload } from '@/components/shared/ImageUpload';
+import { CollectiveEventToggle } from './form-sections/CollectiveEventToggle';
 import {
   Tooltip,
   TooltipContent,
@@ -73,11 +74,14 @@ interface EditExperienceFormProps {
     minCapacity: number;
     maxCapacity: number;
     paymentMode: ExperiencePaymentMode;
+    isCollective: boolean;
     coverPhoto: string;
     galleryImages: GalleryImage[];
   };
   /** P-08: expose the ONLINE / ON_SITE payment-mode picker (NO_SHOW_FEES flag). */
   noShowFeesEnabled?: boolean;
+  /** P-11: expose the « Événement collectif » toggle (COLLECTIVE_EVENTS flag). */
+  collectiveEventsEnabled?: boolean;
 }
 
 // Section Header Component
@@ -110,6 +114,7 @@ function SectionHeader({
 export function EditExperienceForm({
   experience,
   noShowFeesEnabled = false,
+  collectiveEventsEnabled = false,
 }: EditExperienceFormProps) {
   const t = useTranslations('experience');
   const tCommon = useTranslations('common');
@@ -136,6 +141,7 @@ export function EditExperienceForm({
       minCapacity: experience.minCapacity,
       maxCapacity: experience.maxCapacity,
       paymentMode: experience.paymentMode,
+      isCollective: experience.isCollective,
     },
   });
 
@@ -710,6 +716,19 @@ export function EditExperienceForm({
               />
             )}
           </section>
+
+          {/* Collective event (P-11 / L-100) — flag-gated. Manage the
+              participating wineries in the panel below the form. */}
+          {collectiveEventsEnabled && (
+            <section className="space-y-6">
+              <SectionHeader
+                icon={<Users className="h-5 w-5" />}
+                title={t('collective.sectionTitle')}
+                description={t('collective.sectionDescription')}
+              />
+              <CollectiveEventToggle form={form} />
+            </section>
+          )}
 
           {/* Form Actions */}
           <div className="flex items-center justify-between border-t border-stone-200 pt-8">

@@ -847,6 +847,9 @@ model EventParticipant {
   wineryId     String
   winery       Winery     @relation(fields: [wineryId], references: [id], onDelete: Cascade)
   description  String?
+  // P-11 (L-100): optional per-event logo shown on the public fiche grid.
+  // Additive, nullable — the render falls back to Winery.coverPhoto.
+  logo         String?
   order        Int        @default(0)
   createdAt    DateTime   @default(now())
 

@@ -8,6 +8,7 @@ import {
   getExperienceBySlug,
   getAllPublishedExperienceSlugs,
 } from '@/server/queries/experience.queries';
+import { getEventParticipants } from '@/server/queries/event-participant.queries';
 import { getBookableOccurrences } from '@/server/queries/occurrence.queries';
 import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
 import {
@@ -27,6 +28,7 @@ import { ImageWithFallback } from '@/components/shared/ImageWithFallback';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { RelatedExperiencesSection } from './RelatedExperiencesSection';
+import { EventParticipantsSection } from './EventParticipantsSection';
 import { JsonLd } from '@/components/shared/JsonLd';
 import { Skeleton } from '@/components/shared/Skeleton';
 import { generateExperienceDetailMetadata } from '@/lib/seo';
@@ -78,17 +80,27 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
 
   // Flag read overlaps the experience fetch — this is the LCP-critical
   // route; never serialize independent I/O here.
-  const [experience, bookingFeeEnabled, giftCardsEnabled, noShowFeesEnabled] =
-    await Promise.all([
-      getExperienceBySlug(slug),
-      isFlagEnabled('BOOKING_FEE'),
-      isFlagEnabled('GIFT_CARDS'),
-      isFlagEnabled('NO_SHOW_FEES'),
-    ]);
+  const [
+    experience,
+    bookingFeeEnabled,
+    giftCardsEnabled,
+    noShowFeesEnabled,
+    collectiveEventsEnabled,
+  ] = await Promise.all([
+    getExperienceBySlug(slug),
+    isFlagEnabled('BOOKING_FEE'),
+    isFlagEnabled('GIFT_CARDS'),
+    isFlagEnabled('NO_SHOW_FEES'),
+    isFlagEnabled('COLLECTIVE_EVENTS'),
+  ]);
 
   if (!experience) {
     notFound();
   }
+
+  // Collective event (P-11 / L-101): flag-gated. When OFF, getEventParticipants
+  // is never called and the fiche renders exactly like a normal experience.
+  const showCollective = collectiveEventsEnabled && experience.isCollective;
 
   const t = await getTranslations('experience');
   const tNav = await getTranslations('nav');
@@ -105,10 +117,14 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
   // dates are UTC midnights of Zurich calendar days — localDateKey would
   // shift them by a day in some client timezones.
   const occurrenceWindowFrom = zurichTodayAsUTCDate();
-  const bookableOccurrences = await getBookableOccurrences(experience.id, {
-    from: occurrenceWindowFrom,
-    to: addDays(addMonths(occurrenceWindowFrom, 3), 2),
-  });
+  const [bookableOccurrences, collectiveParticipants] = await Promise.all([
+    getBookableOccurrences(experience.id, {
+      from: occurrenceWindowFrom,
+      to: addDays(addMonths(occurrenceWindowFrom, 3), 2),
+    }),
+    // Deduped + flag-gated: only collective events pay for this read.
+    showCollective ? getEventParticipants(experience.id) : Promise.resolve([]),
+  ]);
   const occurrenceDateKeys = Array.from(
     new Set(bookableOccurrences.map((occurrence) => dateKeyOf(occurrence.date)))
   );
@@ -174,6 +190,14 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
     },
     maximumAttendeeCapacity: experience.maxCapacity,
     remainingAttendeeCapacity: experience.maxCapacity,
+    // Collective event (P-11): the participating wineries are the performers.
+    ...(showCollective &&
+      collectiveParticipants.length > 0 && {
+        performer: collectiveParticipants.map((participant) => ({
+          '@type': 'Organization',
+          name: participant.wineryName,
+        })),
+      }),
   };
 
   const breadcrumbItems = [
@@ -226,6 +250,22 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
         </div>
 
         <div className="mx-auto max-w-[1440px] px-4 py-6 sm:px-6 lg:px-10 lg:pb-14 lg:pt-5">
+          {showCollective && (
+            <div
+              className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-[14px] border border-burgundy-200 bg-burgundy-50 px-4 py-3"
+              data-testid="collective-banner"
+            >
+              <span className="inline-flex items-center gap-2 rounded-full bg-burgundy-700 px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-white">
+                <Users className="h-3.5 w-3.5" aria-hidden="true" />
+                {t('detail.collective.banner')}
+              </span>
+              <span className="text-sm font-medium text-burgundy-800">
+                {t('detail.collective.organizedBy', {
+                  winery: experience.winery.name,
+                })}
+              </span>
+            </div>
+          )}
           <ExperienceDetailGallery
             coverPhoto={experience.coverPhoto}
             images={experience.galleryImages}
@@ -340,6 +380,12 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
                   )}
                 </div>
               </section>
+
+              {showCollective && (
+                <EventParticipantsSection
+                  participants={collectiveParticipants}
+                />
+              )}
 
               <section className="mt-9">
                 <h2 className="mb-4 font-display text-2xl font-semibold text-ink-900">

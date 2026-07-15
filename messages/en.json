@@ -131,7 +131,8 @@
     "payouts": "Payouts",
     "giftCards": "Gift a card",
     "requests": "Requests",
-    "requestsBadge": "{count, plural, one {# pending request} other {# pending requests}}"
+    "requestsBadge": "{count, plural, one {# pending request} other {# pending requests}}",
+    "collectiveEvents": "Events"
   },
   "locale": {
     "fr": "Francais",
@@ -611,11 +612,41 @@
       "proposedBy": "{type} offered by {winery}",
       "securePaymentActive": "Secure payment enabled",
       "bookingToConfirm": "Booking to be confirmed with the winery",
-      "giftCta": "Gift this experience"
+      "giftCta": "Gift this experience",
+      "collective": {
+        "banner": "Collective event",
+        "organizedBy": "Organized by {winery}",
+        "programTitle": "Participating wineries",
+        "programSubtitle": "Discover the estates coming together for this event."
+      }
     },
     "freeCancellationUntilHours": "Free cancellation until {hours}h before.",
     "freeCancellationUntilDays": "Free cancellation until {days, plural, =1 {# day} other {# days}} before.",
-    "nextAvailability": "Next availability: {date} · {time}"
+    "nextAvailability": "Next availability: {date} · {time}",
+    "collective": {
+      "sectionTitle": "Collective event",
+      "sectionDescription": "Bring several wineries together around one event. You collect the ticketing; participating wineries follow attendance.",
+      "toggleLabel": "Collective event",
+      "toggleDescription": "Shows a banner and the participating-wineries grid on the public page.",
+      "panel": {
+        "subtitle": "Add the participating wineries (logo + description) shown on the page.",
+        "selectWineryFirst": "Select a winery first.",
+        "added": "Winery added.",
+        "removed": "Winery removed.",
+        "empty": "No participating wineries yet.",
+        "hiddenWarning": "This winery is no longer visible (suspended or unverified) — hidden on the page.",
+        "moveUp": "Move up",
+        "moveDown": "Move down",
+        "remove": "Remove",
+        "addTitle": "Add a participating winery",
+        "noWineriesLeft": "All available wineries are already added.",
+        "selectWinery": "Select a winery",
+        "logo": "Logo",
+        "descriptionPlaceholder": "Short description (what the winery offers at the event)…",
+        "adding": "Adding…",
+        "add": "Add"
+      }
+    }
   },
   "booking": {
     "selectDate": "Select a date",
@@ -1386,7 +1417,35 @@
     "yesReject": "Yes, Reject",
     "wineryApprovedSuccess": "Winery approved successfully",
     "wineryRejectedSuccess": "Winery rejected",
-    "pleaseProvideRejectionReason": "Please provide a reason for rejection"
+    "pleaseProvideRejectionReason": "Please provide a reason for rejection",
+    "events": {
+      "title": "Events",
+      "subtitle": "Search and oversee experiences; filter collective events and their participating wineries.",
+      "filters": {
+        "title": "Filters",
+        "searchPlaceholder": "Title, winery, commune",
+        "allStatuses": "All statuses",
+        "allTypes": "All types",
+        "collectiveOnly": "Collective events only",
+        "apply": "Filter"
+      },
+      "status": {
+        "DRAFT": "Draft",
+        "PUBLISHED": "Published",
+        "ARCHIVED": "Archived"
+      },
+      "table": {
+        "event": "Event",
+        "winery": "Winery",
+        "status": "Status",
+        "type": "Type",
+        "participants": "Participants",
+        "activity": "Activity",
+        "activityValue": "{sold} sold · {scanned} scanned",
+        "collectiveBadge": "Collective",
+        "noResults": "No results."
+      }
+    }
   },
   "search": {
     "placeholder": "Search experiences, wineries...",
@@ -1631,6 +1690,10 @@
       "myRequests": {
         "title": "My requests | EnCave",
         "description": "Track your bespoke requests."
+      },
+      "collectiveEvents": {
+        "title": "Collective events",
+        "description": "Collective events your winery participates in."
       }
     },
     "onboarding": {
@@ -2787,6 +2850,27 @@
       "title": "Personal data",
       "body": "The processing of personal data is described in our privacy policy, compliant with the Swiss nLPD.",
       "privacyLink": "Read the privacy policy"
+    }
+  },
+  "collectiveEvents": {
+    "title": "Collective events",
+    "subtitle": "Events your winery takes part in. Read-only view.",
+    "empty": {
+      "title": "No collective events",
+      "description": "You don't take part in any published collective event yet."
+    },
+    "organizedBy": "Organized by {winery}",
+    "sold": "Sold",
+    "scanned": "Scanned",
+    "attendees": {
+      "name": "Name",
+      "contact": "Contact",
+      "date": "Date",
+      "guests": "Guests",
+      "status": "Status",
+      "checkedIn": "Scanned",
+      "noShow": "No-show",
+      "expected": "Expected"
     }
   }
 }

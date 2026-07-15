@@ -119,6 +119,11 @@ export const createExperienceSchema = z
     // output types symmetric — a .default() diverges them and breaks
     // zodResolver. Undefined ⇒ ONLINE (forms set it explicitly).
     paymentMode: z.enum(['ONLINE', 'ON_SITE']).optional(),
+    // V3 (P-11 / L-100): mark the experience as a collective event
+    // (bandeau + participating-wineries grid on the fiche). Optional (not
+    // .default) for the same zodResolver symmetry reason as paymentMode —
+    // undefined ⇒ false (@default(false) preserved on create).
+    isCollective: z.boolean().optional(),
     // Location fields (optional)
     location: locationSchema.optional(),
     // Availability slots

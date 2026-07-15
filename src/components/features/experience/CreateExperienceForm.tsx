@@ -64,10 +64,13 @@ const FORM_SECTIONS = [
 interface CreateExperienceFormProps {
   /** P-08: expose the ONLINE / ON_SITE payment-mode picker (NO_SHOW_FEES flag). */
   noShowFeesEnabled?: boolean;
+  /** P-11: expose the « Événement collectif » toggle (COLLECTIVE_EVENTS flag). */
+  collectiveEventsEnabled?: boolean;
 }
 
 export function CreateExperienceForm({
   noShowFeesEnabled = false,
+  collectiveEventsEnabled = false,
 }: CreateExperienceFormProps = {}) {
   const t = useTranslations('experience');
   const tCommon = useTranslations('common');
@@ -126,6 +129,7 @@ export function CreateExperienceForm({
       minCapacity: 1,
       maxCapacity: 12,
       paymentMode: 'ONLINE',
+      isCollective: false,
     },
   });
 
@@ -580,6 +584,7 @@ export function CreateExperienceForm({
                 <DetailsSection
                   form={form}
                   showPaymentMode={noShowFeesEnabled}
+                  showCollective={collectiveEventsEnabled}
                   sectionRef={(el) => {
                     sectionRefs.current['details'] = el;
                   }}

@@ -131,7 +131,8 @@
     "payouts": "Reversements",
     "giftCards": "Offrir un bon",
     "requests": "Demandes",
-    "requestsBadge": "{count, plural, one {# demande en attente} other {# demandes en attente}}"
+    "requestsBadge": "{count, plural, one {# demande en attente} other {# demandes en attente}}",
+    "collectiveEvents": "Événements"
   },
   "locale": {
     "fr": "Français",
@@ -611,11 +612,41 @@
       "proposedBy": "{type} proposé par {winery}",
       "securePaymentActive": "Paiement sécurisé activé",
       "bookingToConfirm": "Réservation à confirmer avec le domaine",
-      "giftCta": "Offrir cette expérience"
+      "giftCta": "Offrir cette expérience",
+      "collective": {
+        "banner": "Événement collectif",
+        "organizedBy": "Organisé par {winery}",
+        "programTitle": "Les caves participantes",
+        "programSubtitle": "Découvrez les domaines réunis pour cet événement."
+      }
     },
     "freeCancellationUntilHours": "Annulation gratuite jusqu'à {hours} h avant.",
     "freeCancellationUntilDays": "Annulation gratuite jusqu'à {days, plural, =1 {# jour} other {# jours}} avant.",
-    "nextAvailability": "Prochaine dispo : {date} · {time}"
+    "nextAvailability": "Prochaine dispo : {date} · {time}",
+    "collective": {
+      "sectionTitle": "Événement collectif",
+      "sectionDescription": "Réunissez plusieurs caves autour d’un même événement. Vous encaissez la billetterie ; les caves participantes suivent l’affluence.",
+      "toggleLabel": "Événement collectif",
+      "toggleDescription": "Affiche un bandeau et la grille des caves participantes sur la fiche publique.",
+      "panel": {
+        "subtitle": "Ajoutez les caves participantes (logo + descriptif) affichées sur la fiche.",
+        "selectWineryFirst": "Choisissez d’abord une cave.",
+        "added": "Cave ajoutée.",
+        "removed": "Cave retirée.",
+        "empty": "Aucune cave participante pour l’instant.",
+        "hiddenWarning": "Cette cave n’est plus visible (suspendue ou non vérifiée) — masquée sur la fiche.",
+        "moveUp": "Monter",
+        "moveDown": "Descendre",
+        "remove": "Retirer",
+        "addTitle": "Ajouter une cave participante",
+        "noWineriesLeft": "Toutes les caves disponibles sont déjà ajoutées.",
+        "selectWinery": "Sélectionner une cave",
+        "logo": "Logo",
+        "descriptionPlaceholder": "Descriptif court (ce que propose la cave à l’événement)…",
+        "adding": "Ajout…",
+        "add": "Ajouter"
+      }
+    }
   },
   "booking": {
     "selectDate": "Choisissez une date",
@@ -1386,7 +1417,35 @@
     "yesReject": "Oui, Refuser",
     "wineryApprovedSuccess": "Domaine approuvé avec succès",
     "wineryRejectedSuccess": "Domaine refusé",
-    "pleaseProvideRejectionReason": "Veuillez fournir un motif de refus"
+    "pleaseProvideRejectionReason": "Veuillez fournir un motif de refus",
+    "events": {
+      "title": "Événements",
+      "subtitle": "Recherchez et supervisez les expériences ; filtrez les événements collectifs et leurs caves participantes.",
+      "filters": {
+        "title": "Filtres",
+        "searchPlaceholder": "Titre, cave, commune",
+        "allStatuses": "Tous les statuts",
+        "allTypes": "Tous les types",
+        "collectiveOnly": "Événements collectifs uniquement",
+        "apply": "Filtrer"
+      },
+      "status": {
+        "DRAFT": "Brouillon",
+        "PUBLISHED": "Publié",
+        "ARCHIVED": "Archivé"
+      },
+      "table": {
+        "event": "Événement",
+        "winery": "Cave",
+        "status": "Statut",
+        "type": "Type",
+        "participants": "Participants",
+        "activity": "Activité",
+        "activityValue": "{sold} vendus · {scanned} scannés",
+        "collectiveBadge": "Collectif",
+        "noResults": "Aucun résultat."
+      }
+    }
   },
   "search": {
     "placeholder": "Rechercher des expériences, domaines...",
@@ -1631,6 +1690,10 @@
       "myRequests": {
         "title": "Mes demandes | EnCave",
         "description": "Suivez vos demandes sur-mesure."
+      },
+      "collectiveEvents": {
+        "title": "Événements collectifs",
+        "description": "Événements collectifs auxquels votre cave participe."
       }
     },
     "onboarding": {
@@ -2787,6 +2850,27 @@
       "title": "Données personnelles",
       "body": "Le traitement des données personnelles est décrit dans notre politique de confidentialité, conforme à la nLPD.",
       "privacyLink": "Lire la politique de confidentialité"
+    }
+  },
+  "collectiveEvents": {
+    "title": "Événements collectifs",
+    "subtitle": "Les événements auxquels votre cave participe. Vue en lecture seule.",
+    "empty": {
+      "title": "Aucun événement collectif",
+      "description": "Vous ne participez à aucun événement collectif publié pour l’instant."
+    },
+    "organizedBy": "Organisé par {winery}",
+    "sold": "Vendus",
+    "scanned": "Scannés",
+    "attendees": {
+      "name": "Nom",
+      "contact": "Contact",
+      "date": "Date",
+      "guests": "Pers.",
+      "status": "Statut",
+      "checkedIn": "Scanné",
+      "noShow": "Absent",
+      "expected": "Attendu"
     }
   }
 }

@@ -102,6 +102,8 @@ export interface ExperienceDetail {
   wineryId: string;
   // Payment mode (P-08): ON_SITE offers can carry a no-show card imprint.
   paymentMode: ExperiencePaymentMode;
+  // Collective event (P-11): drives the organizer banner + participants grid.
+  isCollective: boolean;
   // Experience-specific location fields
   address: string | null;
   city: string | null;
@@ -624,6 +626,7 @@ export const getExperienceBySlug = cache(
           status: true,
           wineryId: true,
           paymentMode: true,
+          isCollective: true,
           // Experience-specific location fields
           address: true,
           city: true,
@@ -656,9 +659,10 @@ export const getExperienceBySlug = cache(
         },
       });
     },
-    // v2 (P-12 / L-112): payload gained paymentMode + winery no-show fields —
-    // the bump prevents pre-deploy cache entries (missing them) being served.
-    ['experience-by-slug-v2'],
+    // v3 (P-11 / L-101): payload gained isCollective (fiche branches on it) —
+    // the bump prevents pre-deploy cache entries (missing it) being served.
+    // v2 (P-12 / L-112): added paymentMode + winery no-show fields.
+    ['experience-by-slug-v3'],
     {
       revalidate: 300, // 5 minutes
       tags: ['experiences'],

@@ -6,6 +6,7 @@ import { ClientDashboardSidebar } from '@/components/layout/ClientDashboardSideb
 import { getWineryNavContext } from '@/server/queries/winery.queries';
 import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
 import { getPendingRequestCount } from '@/server/queries/request.queries';
+import { hasCollectiveParticipations } from '@/server/queries/participant-events.queries';
 
 export default async function DashboardLayout({
   children,
@@ -20,15 +21,26 @@ export default async function DashboardLayout({
 
   // WINEMAKER: show winery dashboard sidebar
   if (session.user.role === 'WINEMAKER') {
-    const [winery, tastingEnabled, requestsEnabled] = await Promise.all([
-      getWineryNavContext(session.user.id),
-      isFlagEnabled('TASTING_SHEET'),
-      isFlagEnabled('REQUESTS'),
-    ]);
+    const [winery, tastingEnabled, requestsEnabled, collectiveEnabled] =
+      await Promise.all([
+        getWineryNavContext(session.user.id),
+        isFlagEnabled('TASTING_SHEET'),
+        isFlagEnabled('REQUESTS'),
+        isFlagEnabled('COLLECTIVE_EVENTS'),
+      ]);
     const wineryName = winery?.name ?? 'My Winery';
-    // Badge count only when the flag is ON and the winery exists.
-    const requestsCount =
-      requestsEnabled && winery ? await getPendingRequestCount(winery.id) : 0;
+    // Both nav signals are independent — resolve them concurrently.
+    // - requestsCount: only when the REQUESTS flag is ON and the winery exists.
+    // - showCollectiveEvents: only when COLLECTIVE_EVENTS is ON and the winery
+    //   participates in ≥1 published collective event (P-11 / L-102).
+    const [requestsCount, showCollectiveEvents] = await Promise.all([
+      requestsEnabled && winery
+        ? getPendingRequestCount(winery.id)
+        : Promise.resolve(0),
+      collectiveEnabled && winery
+        ? hasCollectiveParticipations(session.user.id)
+        : Promise.resolve(false),
+    ]);
 
     return (
       <div className="flex h-screen w-full overflow-hidden bg-primary-light">
@@ -38,6 +50,7 @@ export default async function DashboardLayout({
           showWines={tastingEnabled}
           showRequests={requestsEnabled}
           requestsCount={requestsCount}
+          showCollectiveEvents={showCollectiveEvents}
         />
         <main className="relative flex h-full flex-1 flex-col overflow-hidden md:ml-64">
           <div className="h-14 flex-shrink-0 md:hidden" />

@@ -19,18 +19,22 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { SectionHeader } from './SectionHeader';
+import { CollectiveEventToggle } from './CollectiveEventToggle';
 
 interface DetailsSectionProps {
   form: UseFormReturn<CreateExperienceInput>;
   sectionRef: (_el: HTMLElement | null) => void;
   /** P-08: show the ONLINE / ON_SITE payment-mode picker (NO_SHOW_FEES flag). */
   showPaymentMode?: boolean;
+  /** P-11: show the « Événement collectif » toggle (COLLECTIVE_EVENTS flag). */
+  showCollective?: boolean;
 }
 
 export function DetailsSection({
   form,
   sectionRef,
   showPaymentMode = false,
+  showCollective = false,
 }: DetailsSectionProps) {
   const t = useTranslations('experience');
 
@@ -171,6 +175,14 @@ export function DetailsSection({
           )}
         />
       </div>
+
+      {/* Collective event (P-11 / L-100) — flag-gated. Participants are
+          managed after creation, on the experience edit page. */}
+      {showCollective && (
+        <div className="mt-6 border-t border-stone-200 pt-6">
+          <CollectiveEventToggle form={form} />
+        </div>
+      )}
     </section>
   );
 }
