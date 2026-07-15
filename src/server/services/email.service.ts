@@ -49,6 +49,11 @@ import {
 } from '@/emails';
 import { subjects, t } from '@/emails/translations';
 import { generateBookingQrPng } from '@/server/services/qr-code.service';
+import { generateBookingReceiptPDF } from '@/server/services/booking-receipt.service';
+import {
+  createBookingCalendarEvent,
+  generateICalEvent,
+} from '@/lib/utils/calendar';
 
 const resend = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null;
 const FROM_EMAIL = 'EnCave <noreply@encave.ch>';
@@ -185,7 +190,11 @@ export interface BookingConfirmationData {
   guestName: string;
   experienceTitle: string;
   wineryName: string;
+  wineryAddress: string;
+  wineryCommune: string;
   date: Date;
+  /** "HH:mm" start time — used for the PDF ticket + .ics attachments. */
+  timeSlot: string;
   guestCount: number;
   duration: number;
   totalPrice: number;
@@ -230,6 +239,66 @@ export async function sendBookingConfirmationEmail(
         bookingRef: data.bookingRef,
       });
     }
+  }
+
+  // PDF receipt/ticket + .ics — each guarded so a generation failure never
+  // blocks the confirmation email (same doctrine as the QR block above).
+  try {
+    const pdf = await generateBookingReceiptPDF({
+      reference: data.bookingRef,
+      visitorName: data.guestName,
+      visitorEmail: email,
+      experienceTitle: data.experienceTitle,
+      wineryName: data.wineryName,
+      wineryAddress: data.wineryAddress,
+      wineryCommune: data.wineryCommune,
+      date: data.date,
+      timeSlot: data.timeSlot,
+      durationMinutes: data.duration,
+      guestCount: data.guestCount,
+      totalPrice: data.totalPrice,
+      serviceFeeCents: data.serviceFeeCents ?? 0,
+      generatedAt: new Date(),
+    });
+    attachments.push({
+      filename: `billet-${data.bookingRef}.pdf`,
+      content: pdf.toString('base64'),
+      contentType: 'application/pdf',
+    });
+  } catch (error) {
+    logError('Failed to generate booking PDF ticket', error, {
+      action: 'sendBookingConfirmationEmail',
+      bookingRef: data.bookingRef,
+    });
+  }
+
+  try {
+    const ics = generateICalEvent(
+      createBookingCalendarEvent({
+        experienceTitle: data.experienceTitle,
+        wineryName: data.wineryName,
+        wineryAddress: data.wineryAddress,
+        wineryCommune: data.wineryCommune,
+        date: data.date,
+        timeSlot: data.timeSlot,
+        durationMinutes: data.duration,
+        guestCount: data.guestCount,
+        reference: data.bookingRef,
+        bookingUrl,
+      })
+    );
+    if (ics) {
+      attachments.push({
+        filename: `encave-${data.bookingRef}.ics`,
+        content: Buffer.from(ics, 'utf-8').toString('base64'),
+        contentType: 'text/calendar',
+      });
+    }
+  } catch (error) {
+    logError('Failed to generate booking calendar invite', error, {
+      action: 'sendBookingConfirmationEmail',
+      bookingRef: data.bookingRef,
+    });
   }
 
   return sendEmail({
