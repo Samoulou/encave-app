@@ -14,6 +14,7 @@ import {
   CalendarDays,
   ClipboardList,
   ShieldCheck,
+  UserPlus,
   LogOut,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -115,6 +116,13 @@ export default async function AdminLayout({
                 >
                   <ClipboardList className="h-4 w-4" aria-hidden="true" />
                   Bookings
+                </Link>
+                <Link
+                  href="/admin/invitations"
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-burgundy-700"
+                >
+                  <UserPlus className="h-4 w-4" aria-hidden="true" />
+                  Invitations
                 </Link>
                 <Link
                   href="/admin/compliance"

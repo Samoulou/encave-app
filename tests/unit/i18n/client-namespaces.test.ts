@@ -134,6 +134,12 @@ const PUBLIC_SURFACES: Record<
 const PROTECTED_ONLY_FILES = [
   // dashboard-only shell/badges (mounted under (protected) exclusively)
   `layout${sep}ClientDashboardSidebar.tsx`,
+  // P-14: auth sections mounted only on protected/admin-setup/invitation
+  // surfaces (accountSecurity / invitation namespaces, full messages there).
+  `features${sep}auth${sep}ChangePasswordSection.tsx`,
+  `features${sep}auth${sep}ChangeEmailSection.tsx`,
+  `features${sep}auth${sep}TotpSetupSection.tsx`,
+  `features${sep}auth${sep}InvitationAcceptForm.tsx`,
   // winemaker offer composer — only mounted on the protected demandes detail
   `features${sep}requests${sep}ComposeOfferForm.tsx`,
   `features${sep}booking${sep}BookingStatusBadge.tsx`,
