@@ -13,8 +13,7 @@ const envSchema = z.object({
   // OAuth Providers
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
-  APPLE_CLIENT_ID: z.string().optional(),
-  APPLE_CLIENT_SECRET: z.string().optional(),
+  // P-14 (D5): Apple OAuth removed — Google + email OTP suffice at launch.
 
   // Vercel automatic environment variables
   VERCEL: z.string().optional(),

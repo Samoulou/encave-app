@@ -20,6 +20,8 @@ export type { BookingCancellationEmailProps } from './BookingCancellationEmail';
 // Authentication emails
 export { PasswordResetEmail } from './PasswordResetEmail';
 export type { PasswordResetEmailProps } from './PasswordResetEmail';
+export { OtpEmail } from './OtpEmail';
+export type { OtpEmailProps, OtpPurpose } from './OtpEmail';
 
 export { WelcomeEmail } from './WelcomeEmail';
 export type { WelcomeEmailProps } from './WelcomeEmail';
