@@ -762,6 +762,11 @@ export const bookingCancelledByWinery = {
     DE: 'Weitere Erlebnisse entdecken',
     EN: 'Browse more experiences',
   },
+  alternativesTitle: {
+    FR: 'Des domaines à proximité pour vous consoler',
+    DE: 'Weingüter in der Nähe als kleiner Trost',
+    EN: 'Nearby wineries to make it up to you',
+  },
   apology: {
     FR: 'Avec nos excuses,',
     DE: 'Mit unserer Entschuldigung,',

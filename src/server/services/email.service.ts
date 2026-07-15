@@ -54,6 +54,7 @@ import {
   createBookingCalendarEvent,
   generateICalEvent,
 } from '@/lib/utils/calendar';
+import type { WineryAlternative } from '@/server/queries/winery-alternatives.queries';
 
 const resend = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null;
 const FROM_EMAIL = 'EnCave <noreply@encave.ch>';
@@ -344,6 +345,8 @@ export interface BookingCancelledByWineryData {
   date: Date;
   amountCents: number;
   reason: string;
+  /** Up to 3 nearby publicly-visible wineries to console the guest (#5). */
+  alternatives?: WineryAlternative[];
 }
 
 export async function sendBookingCancelledByWineryEmail(
@@ -352,10 +355,17 @@ export async function sendBookingCancelledByWineryEmail(
   locale?: Locale | null
 ): Promise<boolean> {
   const loc = getLocale(locale);
+  const alternatives = (data.alternatives ?? []).map((alt) => ({
+    name: alt.name,
+    commune: alt.commune,
+    distanceLabel: alt.distanceLabel,
+    url: `${getBaseUrl()}/${loc.toLowerCase()}/wineries/${alt.slug}`,
+  }));
   const html = await render(
     BookingCancelledByWineryEmail({
       locale: loc,
       ...data,
+      alternatives,
       experiencesUrl: `${getBaseUrl()}/${loc.toLowerCase()}/experiences`,
     })
   );
