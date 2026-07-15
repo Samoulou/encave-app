@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { SectionHeader } from './SectionHeader';
 
 interface DetailsSectionProps {
@@ -25,12 +26,15 @@ interface DetailsSectionProps {
   sectionRef: (_el: HTMLElement | null) => void;
   /** P-08: show the ONLINE / ON_SITE payment-mode picker (NO_SHOW_FEES flag). */
   showPaymentMode?: boolean;
+  /** P-11: show the « Événement collectif » toggle (COLLECTIVE_EVENTS flag). */
+  showCollective?: boolean;
 }
 
 export function DetailsSection({
   form,
   sectionRef,
   showPaymentMode = false,
+  showCollective = false,
 }: DetailsSectionProps) {
   const t = useTranslations('experience');
 
@@ -171,6 +175,36 @@ export function DetailsSection({
           )}
         />
       </div>
+
+      {/* Collective event (P-11 / L-100) — flag-gated. Participants are
+          managed after creation, on the experience edit page. */}
+      {showCollective && (
+        <div className="mt-6 border-t border-stone-200 pt-6">
+          <FormField
+            control={form.control}
+            name="isCollective"
+            render={({ field }) => (
+              <FormItem className="flex items-center justify-between rounded-lg border border-stone-200 p-4">
+                <div className="space-y-0.5 pr-4">
+                  <FormLabel className="text-sm font-semibold">
+                    {t('collective.toggleLabel')}
+                  </FormLabel>
+                  <p className="text-xs text-muted-foreground">
+                    {t('collective.toggleDescription')}
+                  </p>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value ?? false}
+                    onCheckedChange={field.onChange}
+                    aria-label={t('collective.toggleLabel')}
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        </div>
+      )}
     </section>
   );
 }

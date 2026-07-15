@@ -5,10 +5,15 @@ import { db } from '@/server/db';
 import { redirect, notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
+import {
+  getManageableParticipants,
+  getSelectableWineriesForEvent,
+} from '@/server/queries/event-participant.queries';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
 import { UpcomingOccurrencesPreview } from '@/components/features/experience/UpcomingOccurrencesPreview';
+import { EventParticipantsPanel } from '@/components/features/experience/EventParticipantsPanel';
 import { Skeleton } from '@/components/shared/Skeleton';
-import { Calendar, CalendarDays, ArrowRight } from 'lucide-react';
+import { Calendar, CalendarDays, ArrowRight, Users } from 'lucide-react';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
 import { Link } from '@/i18n/navigation';
 import { generatePageMetadata } from '@/lib/seo/metadata';
@@ -107,11 +112,13 @@ export default async function EditExperiencePage({ params }: PageProps) {
     notFound();
   }
 
-  const [t, tNav, noShowFeesEnabled] = await Promise.all([
-    getTranslations('experience'),
-    getTranslations('nav'),
-    isFlagEnabled('NO_SHOW_FEES'),
-  ]);
+  const [t, tNav, noShowFeesEnabled, collectiveEventsEnabled] =
+    await Promise.all([
+      getTranslations('experience'),
+      getTranslations('nav'),
+      isFlagEnabled('NO_SHOW_FEES'),
+      isFlagEnabled('COLLECTIVE_EVENTS'),
+    ]);
 
   // Transform for form
   const experienceData = {
@@ -124,6 +131,7 @@ export default async function EditExperiencePage({ params }: PageProps) {
     minCapacity: experience.minCapacity,
     maxCapacity: experience.maxCapacity,
     paymentMode: experience.paymentMode,
+    isCollective: experience.isCollective,
     coverPhoto: experience.coverPhoto,
     galleryImages: experience.galleryImages.map((img) => ({
       id: img.id,
@@ -131,6 +139,17 @@ export default async function EditExperiencePage({ params }: PageProps) {
       order: img.order,
     })),
   };
+
+  // Collective event (P-11 / L-100): the participants panel loads only for a
+  // flag-enabled collective event (owner-gated queries).
+  const showCollectivePanel =
+    collectiveEventsEnabled && experience.isCollective;
+  const [participants, selectableWineries] = showCollectivePanel
+    ? await Promise.all([
+        getManageableParticipants(experience.id, session.user.id),
+        getSelectableWineriesForEvent(winery.id),
+      ])
+    : [[], []];
 
   return (
     <WineryAccessGuard>
@@ -157,7 +176,32 @@ export default async function EditExperiencePage({ params }: PageProps) {
         <EditExperienceForm
           experience={experienceData}
           noShowFeesEnabled={noShowFeesEnabled}
+          collectiveEventsEnabled={collectiveEventsEnabled}
         />
+
+        {/* Collective-event participants (P-11 / L-100) */}
+        {showCollectivePanel && (
+          <section className="mt-12 space-y-6">
+            <div className="flex items-start gap-4 border-b border-stone-200 pb-6">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-burgundy-100 text-burgundy-600">
+                <Users className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="font-display text-xl font-semibold text-foreground">
+                  {t('collective.sectionTitle')}
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {t('collective.panel.subtitle')}
+                </p>
+              </div>
+            </div>
+            <EventParticipantsPanel
+              experienceId={experience.id}
+              initialParticipants={participants}
+              selectableWineries={selectableWineries}
+            />
+          </section>
+        )}
 
         {/* Availability Section */}
         <section className="mt-12 space-y-6">

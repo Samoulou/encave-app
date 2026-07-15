@@ -47,6 +47,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ImageUpload } from '@/components/shared/ImageUpload';
+import { Switch } from '@/components/ui/switch';
 import {
   Tooltip,
   TooltipContent,
@@ -73,11 +74,14 @@ interface EditExperienceFormProps {
     minCapacity: number;
     maxCapacity: number;
     paymentMode: ExperiencePaymentMode;
+    isCollective: boolean;
     coverPhoto: string;
     galleryImages: GalleryImage[];
   };
   /** P-08: expose the ONLINE / ON_SITE payment-mode picker (NO_SHOW_FEES flag). */
   noShowFeesEnabled?: boolean;
+  /** P-11: expose the « Événement collectif » toggle (COLLECTIVE_EVENTS flag). */
+  collectiveEventsEnabled?: boolean;
 }
 
 // Section Header Component
@@ -110,6 +114,7 @@ function SectionHeader({
 export function EditExperienceForm({
   experience,
   noShowFeesEnabled = false,
+  collectiveEventsEnabled = false,
 }: EditExperienceFormProps) {
   const t = useTranslations('experience');
   const tCommon = useTranslations('common');
@@ -136,6 +141,7 @@ export function EditExperienceForm({
       minCapacity: experience.minCapacity,
       maxCapacity: experience.maxCapacity,
       paymentMode: experience.paymentMode,
+      isCollective: experience.isCollective,
     },
   });
 
@@ -710,6 +716,41 @@ export function EditExperienceForm({
               />
             )}
           </section>
+
+          {/* Collective event (P-11 / L-100) — flag-gated. Manage the
+              participating wineries in the panel below the form. */}
+          {collectiveEventsEnabled && (
+            <section className="space-y-6">
+              <SectionHeader
+                icon={<Users className="h-5 w-5" />}
+                title={t('collective.sectionTitle')}
+                description={t('collective.sectionDescription')}
+              />
+              <FormField
+                control={form.control}
+                name="isCollective"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between rounded-xl border border-stone-200 p-4">
+                    <div className="space-y-0.5 pr-4">
+                      <FormLabel className="text-base font-medium">
+                        {t('collective.toggleLabel')}
+                      </FormLabel>
+                      <FormDescription>
+                        {t('collective.toggleDescription')}
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value ?? false}
+                        onCheckedChange={field.onChange}
+                        aria-label={t('collective.toggleLabel')}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </section>
+          )}
 
           {/* Form Actions */}
           <div className="flex items-center justify-between border-t border-stone-200 pt-8">

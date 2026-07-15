@@ -48,11 +48,17 @@ export default async function NewExperiencePage() {
     redirect(`/${locale}/login`);
   }
 
-  const noShowFeesEnabled = await isFlagEnabled('NO_SHOW_FEES');
+  const [noShowFeesEnabled, collectiveEventsEnabled] = await Promise.all([
+    isFlagEnabled('NO_SHOW_FEES'),
+    isFlagEnabled('COLLECTIVE_EVENTS'),
+  ]);
 
   return (
     <WineryAccessGuard>
-      <CreateExperienceForm noShowFeesEnabled={noShowFeesEnabled} />
+      <CreateExperienceForm
+        noShowFeesEnabled={noShowFeesEnabled}
+        collectiveEventsEnabled={collectiveEventsEnabled}
+      />
     </WineryAccessGuard>
   );
 }

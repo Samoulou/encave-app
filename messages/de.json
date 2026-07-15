@@ -131,7 +131,8 @@
     "payouts": "Auszahlungen",
     "giftCards": "Gutschein verschenken",
     "requests": "Anfragen",
-    "requestsBadge": "{count, plural, one {# ausstehende Anfrage} other {# ausstehende Anfragen}}"
+    "requestsBadge": "{count, plural, one {# ausstehende Anfrage} other {# ausstehende Anfragen}}",
+    "collectiveEvents": "Events"
   },
   "locale": {
     "fr": "Francais",
@@ -611,11 +612,41 @@
       "proposedBy": "{type} angeboten von {winery}",
       "securePaymentActive": "Sichere Zahlung aktiviert",
       "bookingToConfirm": "Buchung mit dem Weingut zu bestätigen",
-      "giftCta": "Dieses Erlebnis verschenken"
+      "giftCta": "Dieses Erlebnis verschenken",
+      "collective": {
+        "banner": "Gemeinschaftsevent",
+        "organizedBy": "Organisiert von {winery}",
+        "programTitle": "Die teilnehmenden Weingüter",
+        "programSubtitle": "Entdecken Sie die Weingüter, die sich für dieses Event zusammengeschlossen haben."
+      }
     },
     "freeCancellationUntilHours": "Kostenlose Stornierung bis {hours} Std. vorher.",
     "freeCancellationUntilDays": "Kostenlose Stornierung bis {days, plural, =1 {# Tag} other {# Tage}} vorher.",
-    "nextAvailability": "Nächster Termin: {date} · {time}"
+    "nextAvailability": "Nächster Termin: {date} · {time}",
+    "collective": {
+      "sectionTitle": "Gemeinschaftsevent",
+      "sectionDescription": "Bringen Sie mehrere Weingüter zu einem Event zusammen. Sie kassieren die Tickets; die teilnehmenden Weingüter sehen die Auslastung.",
+      "toggleLabel": "Gemeinschaftsevent",
+      "toggleDescription": "Zeigt ein Banner und die Liste der teilnehmenden Weingüter auf der öffentlichen Seite.",
+      "panel": {
+        "subtitle": "Fügen Sie die teilnehmenden Weingüter (Logo + Beschreibung) hinzu, die auf der Seite erscheinen.",
+        "selectWineryFirst": "Wählen Sie zuerst ein Weingut.",
+        "added": "Weingut hinzugefügt.",
+        "removed": "Weingut entfernt.",
+        "empty": "Noch keine teilnehmenden Weingüter.",
+        "hiddenWarning": "Dieses Weingut ist nicht mehr sichtbar (gesperrt oder nicht verifiziert) — auf der Seite ausgeblendet.",
+        "moveUp": "Nach oben",
+        "moveDown": "Nach unten",
+        "remove": "Entfernen",
+        "addTitle": "Teilnehmendes Weingut hinzufügen",
+        "noWineriesLeft": "Alle verfügbaren Weingüter sind bereits hinzugefügt.",
+        "selectWinery": "Weingut auswählen",
+        "logo": "Logo",
+        "descriptionPlaceholder": "Kurze Beschreibung (was das Weingut beim Event anbietet)…",
+        "adding": "Wird hinzugefügt…",
+        "add": "Hinzufügen"
+      }
+    }
   },
   "booking": {
     "selectDate": "Datum auswahlen",
@@ -1386,7 +1417,35 @@
     "yesReject": "Ja, ablehnen",
     "wineryApprovedSuccess": "Weingut erfolgreich genehmigt",
     "wineryRejectedSuccess": "Weingut abgelehnt",
-    "pleaseProvideRejectionReason": "Bitte geben Sie einen Ablehnungsgrund an"
+    "pleaseProvideRejectionReason": "Bitte geben Sie einen Ablehnungsgrund an",
+    "events": {
+      "title": "Veranstaltungen",
+      "subtitle": "Erlebnisse suchen und überwachen; Gemeinschaftsevents und ihre teilnehmenden Weingüter filtern.",
+      "filters": {
+        "title": "Filter",
+        "searchPlaceholder": "Titel, Weingut, Gemeinde",
+        "allStatuses": "Alle Status",
+        "allTypes": "Alle Typen",
+        "collectiveOnly": "Nur Gemeinschaftsevents",
+        "apply": "Filtern"
+      },
+      "status": {
+        "DRAFT": "Entwurf",
+        "PUBLISHED": "Veröffentlicht",
+        "ARCHIVED": "Archiviert"
+      },
+      "table": {
+        "event": "Veranstaltung",
+        "winery": "Weingut",
+        "status": "Status",
+        "type": "Typ",
+        "participants": "Teilnehmer",
+        "activity": "Aktivität",
+        "activityValue": "{sold} verkauft · {scanned} gescannt",
+        "collectiveBadge": "Gemeinsam",
+        "noResults": "Keine Ergebnisse."
+      }
+    }
   },
   "search": {
     "placeholder": "Erlebnisse, Weinguter suchen...",
@@ -1631,6 +1690,10 @@
       "myRequests": {
         "title": "Meine Anfragen | EnCave",
         "description": "Verfolgen Sie Ihre massgeschneiderten Anfragen."
+      },
+      "collectiveEvents": {
+        "title": "Gemeinschaftsevents",
+        "description": "Gemeinschaftsevents, an denen Ihr Weingut teilnimmt."
       }
     },
     "onboarding": {
@@ -2787,6 +2850,27 @@
       "title": "Personenbezogene Daten",
       "body": "Die Verarbeitung personenbezogener Daten ist in unserer Datenschutzerklärung gemäss revDSG beschrieben.",
       "privacyLink": "Datenschutzerklärung lesen"
+    }
+  },
+  "collectiveEvents": {
+    "title": "Gemeinschaftsevents",
+    "subtitle": "Events, an denen Ihr Weingut teilnimmt. Schreibgeschützte Ansicht.",
+    "empty": {
+      "title": "Keine Gemeinschaftsevents",
+      "description": "Sie nehmen derzeit an keinem veröffentlichten Gemeinschaftsevent teil."
+    },
+    "organizedBy": "Organisiert von {winery}",
+    "sold": "Verkauft",
+    "scanned": "Gescannt",
+    "attendees": {
+      "name": "Name",
+      "contact": "Kontakt",
+      "date": "Datum",
+      "guests": "Pers.",
+      "status": "Status",
+      "checkedIn": "Gescannt",
+      "noShow": "Abwesend",
+      "expected": "Erwartet"
     }
   }
 }

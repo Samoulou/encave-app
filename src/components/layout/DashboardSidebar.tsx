@@ -15,6 +15,7 @@ import {
   X,
   Wine,
   Wallet,
+  Users,
 } from 'lucide-react';
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { cn } from '@/lib/utils';
@@ -29,6 +30,11 @@ interface DashboardSidebarProps {
   showRequests?: boolean;
   /** PENDING sur-mesure requests count for the nav badge (P-10). */
   requestsCount?: number;
+  /**
+   * COLLECTIVE_EVENTS flag AND ≥1 participation (P-11) — server-resolved.
+   * Read-only view of events the winery participates in.
+   */
+  showCollectiveEvents?: boolean;
 }
 
 interface SidebarLink {
@@ -66,6 +72,7 @@ export function DashboardSidebar({
   showWines = false,
   showRequests = false,
   requestsCount = 0,
+  showCollectiveEvents = false,
 }: DashboardSidebarProps) {
   const pathname = usePathname();
   const currentPathname = pathname ?? '';
@@ -89,13 +96,20 @@ export function DashboardSidebar({
         badgeCount: requestsCount,
       });
     }
+    if (showCollectiveEvents) {
+      inserted.push({
+        href: '/dashboard/evenements-participes',
+        labelKey: 'collectiveEvents',
+        icon: Users,
+      });
+    }
     if (inserted.length === 0) return sidebarLinks;
     return [
       ...sidebarLinks.slice(0, bookingsIndex + 1),
       ...inserted,
       ...sidebarLinks.slice(bookingsIndex + 1),
     ];
-  }, [showWines, showRequests, requestsCount]);
+  }, [showWines, showRequests, requestsCount, showCollectiveEvents]);
 
   // Prefetch all dashboard routes on mount for instant navigation
   useEffect(() => {

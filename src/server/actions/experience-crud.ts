@@ -79,6 +79,7 @@ export async function createExperience(
       minCapacity,
       maxCapacity,
       paymentMode,
+      isCollective,
       location,
       availabilitySlots,
     } = validated.data;
@@ -127,6 +128,8 @@ export async function createExperience(
           minCapacity,
           maxCapacity,
           paymentMode,
+          // P-11 (L-100): additive — undefined keeps the @default(false).
+          ...(isCollective !== undefined && { isCollective }),
           coverPhoto: coverPhotoUrl,
           status: 'DRAFT',
           // Location fields
@@ -268,6 +271,7 @@ export async function updateExperience(
       minCapacity,
       maxCapacity,
       paymentMode,
+      isCollective,
     } = validated.data;
 
     // Generate new slug if title changed
@@ -309,6 +313,8 @@ export async function updateExperience(
           minCapacity,
           maxCapacity,
           paymentMode,
+          // P-11 (L-100): additive — undefined leaves the stored flag untouched.
+          ...(isCollective !== undefined && { isCollective }),
           coverPhoto: coverPhotoUrl,
         },
       });
