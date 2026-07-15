@@ -12,9 +12,16 @@ import {
 import { addHours, startOfDay } from 'date-fns';
 import { BookingStatus } from '@prisma/client';
 import { logError } from '@/lib/logger';
+import { zonedHourOf } from '@/lib/datetime/zurich';
+import { zurichTodayAsUTCDate } from '@/lib/business-rules/occurrence-expansion';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
+
+/** The J-1 reminder (#2) goes out at 18h local (Europe/Zurich) — L-164. */
+const REMINDER_LOCAL_HOUR = 18;
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 function toDateOnlyUTC(date: Date): Date {
   return new Date(
@@ -35,23 +42,28 @@ export async function GET() {
   }
 
   const now = new Date();
+  // Scheduled at BOTH 16:00 and 17:00 UTC (vercel.json); only the run matching
+  // 18h Europe/Zurich acts — CET in winter, CEST in summer, DST-proof without
+  // touching the schedule twice a year (same doctrine as tasting-sheet-reminder).
+  if (zonedHourOf(now) !== REMINDER_LOCAL_HOUR) {
+    return NextResponse.json({ skipped: 'not_local_reminder_hour' });
+  }
+
   const results = {
     reminder24h: { sent: 0, failed: 0, skipped: 0 },
     reminder2h: { sent: 0, failed: 0, skipped: 0 },
   };
 
   try {
-    // Find bookings for 24h reminder (between 23-25 hours from now)
-    const reminder24Start = addHours(now, 23);
-    const reminder24End = addHours(now, 25);
+    // The reminder fires the EVENING BEFORE (18h Zurich) → target tomorrow's
+    // Zurich calendar day. `@db.Date` is a UTC-midnight date; +24h in UTC is
+    // exactly the next calendar date (UTC has no DST).
+    const tomorrowUTC = new Date(zurichTodayAsUTCDate(now).getTime() + DAY_MS);
     const bookings24h = await db.booking.findMany({
       where: {
         status: BookingStatus.CONFIRMED,
         reminder24hSentAt: null,
-        date: {
-          gte: toDateOnlyUTC(startOfDay(reminder24Start)),
-          lte: toDateOnlyUTC(startOfDay(reminder24End)),
-        },
+        date: tomorrowUTC,
       },
       include: {
         experience: true,
@@ -59,7 +71,7 @@ export async function GET() {
       },
     });
 
-    // Send 24h reminders
+    // Send day-before reminders
     for (const booking of bookings24h) {
       try {
         // Combine date and time slot for the email
@@ -68,24 +80,21 @@ export async function GET() {
           booking.timeSlot
         );
 
-        if (
-          bookingDateTime < reminder24Start ||
-          bookingDateTime > reminder24End
-        ) {
-          results.reminder24h.skipped++;
-          continue;
-        }
-
-        const success = await sendBookingReminderEmail(booking.visitorEmail, {
-          guestName: booking.visitorName,
-          experienceTitle: booking.experience.title,
-          wineryName: booking.winery.name,
-          wineryAddress: booking.winery.address,
-          date: bookingDateTime,
-          guestCount: booking.guestCount,
-          bookingRef: booking.reference,
-          isTomorrow: true,
-        });
+        const success = await sendBookingReminderEmail(
+          booking.visitorEmail,
+          {
+            guestName: booking.visitorName,
+            experienceTitle: booking.experience.title,
+            wineryName: booking.winery.name,
+            wineryAddress: booking.winery.address,
+            date: bookingDateTime,
+            guestCount: booking.guestCount,
+            bookingRef: booking.reference,
+            isTomorrow: true,
+          },
+          // Client email in the guest's own locale (persisted at checkout).
+          booking.locale
+        );
 
         if (success) {
           await db.booking.update({
@@ -154,15 +163,20 @@ export async function GET() {
           continue;
         }
 
-        const success = await sendClientReminder2hEmail(booking.visitorEmail, {
-          guestName: booking.visitorName,
-          experienceTitle: booking.experience.title,
-          wineryName: booking.winery.name,
-          wineryAddress: booking.winery.address,
-          wineryPhone: booking.winery.phone,
-          date: bookingDateTime,
-          guestCount: booking.guestCount,
-        });
+        const success = await sendClientReminder2hEmail(
+          booking.visitorEmail,
+          {
+            guestName: booking.visitorName,
+            experienceTitle: booking.experience.title,
+            wineryName: booking.winery.name,
+            wineryAddress: booking.winery.address,
+            wineryPhone: booking.winery.phone,
+            date: bookingDateTime,
+            guestCount: booking.guestCount,
+          },
+          // Client email in the guest's own locale (persisted at checkout).
+          booking.locale
+        );
 
         if (success) {
           await db.booking.update({
