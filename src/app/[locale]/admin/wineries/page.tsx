@@ -154,7 +154,10 @@ export default async function AdminWineriesPage({
                         </Badge>
                       </td>
                       <td className="px-6 py-4 text-sm text-muted-foreground">
-                        {formatDateShort(new Date(winery.createdAt), locale as Locale)}
+                        {formatDateShort(
+                          new Date(winery.createdAt),
+                          locale as Locale
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         <Link href={`/admin/wineries/${winery.id}`}>

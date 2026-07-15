@@ -794,9 +794,15 @@ export async function sendAdminNewWineryToValidateEmail(
       wineryId: data.wineryId,
     });
   } else {
-    await logEmailFailed('admin_new_winery', recipient, 'Failed to send', undefined, {
-      wineryId: data.wineryId,
-    });
+    await logEmailFailed(
+      'admin_new_winery',
+      recipient,
+      'Failed to send',
+      undefined,
+      {
+        wineryId: data.wineryId,
+      }
+    );
   }
   return ok;
 }

@@ -8,12 +8,7 @@ import { AdminSuspensionControls } from '@/components/features/admin/AdminSuspen
 import { WineryMonetizationPanel } from '@/components/features/admin/WineryMonetizationPanel';
 import { AdminActionHistory } from '@/components/features/admin/AdminActionHistory';
 import { getWineryHistory } from '@/server/queries/admin-wineries.queries';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 

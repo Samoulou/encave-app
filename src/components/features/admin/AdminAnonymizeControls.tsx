@@ -43,7 +43,11 @@ export function AdminAnonymizeControls({
       return;
     }
     startTransition(async () => {
-      const result = await anonymizeUserAsAdmin({ targetId, reason, notifyUser });
+      const result = await anonymizeUserAsAdmin({
+        targetId,
+        reason,
+        notifyUser,
+      });
       if (result.success) {
         toast.success(t('anonymized'));
         setOpen(false);

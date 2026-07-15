@@ -841,7 +841,10 @@ export async function changeUserRole(
   if (parsed.data.targetId === admin.data.adminId) {
     return {
       success: false,
-      error: { code: 'VALIDATION_ERROR', message: 'Cannot change your own role' },
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: 'Cannot change your own role',
+      },
     };
   }
 

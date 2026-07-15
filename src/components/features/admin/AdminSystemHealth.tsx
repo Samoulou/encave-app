@@ -1,10 +1,5 @@
 import { useTranslations, useLocale } from 'next-intl';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { formatDateTime } from '@/lib/i18n/formatters';
 import type { Locale } from '@/i18n/routing';

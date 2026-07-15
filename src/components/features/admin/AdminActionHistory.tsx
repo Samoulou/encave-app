@@ -29,7 +29,9 @@ export function AdminActionHistory({ entries }: AdminActionHistoryProps) {
           key={entry.id}
           className="flex flex-wrap items-baseline gap-x-2 gap-y-1 border-b border-stone-100 pb-3 text-sm last:border-0"
         >
-          <Badge variant={entry.status === 'FAILED' ? 'destructive' : 'outline'}>
+          <Badge
+            variant={entry.status === 'FAILED' ? 'destructive' : 'outline'}
+          >
             {entry.action}
           </Badge>
           <span className="text-muted-foreground">
