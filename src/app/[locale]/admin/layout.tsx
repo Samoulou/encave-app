@@ -7,8 +7,10 @@ import { db } from '@/server/db';
 import {
   Home,
   Building2,
+  Store,
   CalendarDays,
   ClipboardList,
+  Users,
   ShieldCheck,
   UserPlus,
   LogOut,
@@ -104,6 +106,20 @@ export default async function AdminLayout({
                       {pendingCount}
                     </span>
                   )}
+                </Link>
+                <Link
+                  href="/admin/wineries"
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-burgundy-700"
+                >
+                  <Store className="h-4 w-4" aria-hidden="true" />
+                  Wineries
+                </Link>
+                <Link
+                  href="/admin/utilisateurs"
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-burgundy-700"
+                >
+                  <Users className="h-4 w-4" aria-hidden="true" />
+                  Users
                 </Link>
                 <Link
                   href="/admin/events"

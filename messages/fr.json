@@ -1437,6 +1437,24 @@
       "noFailedJobs": "Aucune tâche en échec",
       "attempts": "{count} tentative(s)"
     },
+    "wineriesList": {
+      "title": "Domaines",
+      "subtitle": "Rechercher et gérer tous les domaines, tous statuts.",
+      "filters": "Filtres de recherche",
+      "searchPlaceholder": "Nom, commune, email",
+      "allStatuses": "Tous les statuts",
+      "filter": "Filtrer",
+      "status": "Statut",
+      "plan": "Formule",
+      "suspended": "Suspendu",
+      "ownerSuspended": "Compte suspendu",
+      "empty": "Aucun domaine trouvé."
+    },
+    "history": {
+      "title": "Historique de validation",
+      "empty": "Aucune action enregistrée.",
+      "by": "par"
+    },
     "pendingReview": "En attente de validation",
     "verified": "Vérifié",
     "rejected": "Rejeté",

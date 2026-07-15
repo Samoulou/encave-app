@@ -1437,6 +1437,24 @@
       "noFailedJobs": "Keine fehlgeschlagenen Aufgaben",
       "attempts": "{count} Versuche"
     },
+    "wineriesList": {
+      "title": "Weingüter",
+      "subtitle": "Alle Weingüter durchsuchen und verwalten.",
+      "filters": "Suchfilter",
+      "searchPlaceholder": "Name, Gemeinde, E-Mail",
+      "allStatuses": "Alle Status",
+      "filter": "Filtern",
+      "status": "Status",
+      "plan": "Tarif",
+      "suspended": "Gesperrt",
+      "ownerSuspended": "Konto gesperrt",
+      "empty": "Keine Weingüter gefunden."
+    },
+    "history": {
+      "title": "Validierungsverlauf",
+      "empty": "Keine erfassten Aktionen.",
+      "by": "von"
+    },
     "pendingReview": "Ausstehende Überprüfung",
     "verified": "Verifiziert",
     "rejected": "Abgelehnt",

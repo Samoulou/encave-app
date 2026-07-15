@@ -2,9 +2,18 @@ import { db } from '@/server/db';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import { getTranslations } from 'next-intl/server';
 import { WineryDetailView } from '@/components/features/admin/WineryDetailView';
 import { AdminSuspensionControls } from '@/components/features/admin/AdminSuspensionControls';
 import { WineryMonetizationPanel } from '@/components/features/admin/WineryMonetizationPanel';
+import { AdminActionHistory } from '@/components/features/admin/AdminActionHistory';
+import { getWineryHistory } from '@/server/queries/admin-wineries.queries';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
@@ -48,7 +57,11 @@ export default async function WineryDetailPage({
   params,
 }: WineryDetailPageProps) {
   const { id } = await params;
-  const winery = await getWinery(id);
+  const [winery, history, t] = await Promise.all([
+    getWinery(id),
+    getWineryHistory(id),
+    getTranslations('admin.history'),
+  ]);
 
   if (!winery) {
     notFound();
@@ -101,6 +114,15 @@ export default async function WineryDetailPage({
           }
         />
       </div>
+
+      <Card className="mt-6 shadow-warm">
+        <CardHeader>
+          <CardTitle>{t('title')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <AdminActionHistory entries={history} />
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -1437,6 +1437,24 @@
       "noFailedJobs": "No failed jobs",
       "attempts": "{count} attempt(s)"
     },
+    "wineriesList": {
+      "title": "Wineries",
+      "subtitle": "Search and manage all wineries, every status.",
+      "filters": "Search filters",
+      "searchPlaceholder": "Name, municipality, email",
+      "allStatuses": "All statuses",
+      "filter": "Filter",
+      "status": "Status",
+      "plan": "Plan",
+      "suspended": "Suspended",
+      "ownerSuspended": "Account suspended",
+      "empty": "No wineries found."
+    },
+    "history": {
+      "title": "Validation history",
+      "empty": "No recorded actions.",
+      "by": "by"
+    },
     "pendingReview": "Pending Review",
     "verified": "Verified",
     "rejected": "Rejected",
