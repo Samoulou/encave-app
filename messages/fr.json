@@ -1415,6 +1415,28 @@
       "giftCardRevenue": "CA bons cadeaux",
       "giftCardLiability": "Passif bons cadeaux"
     },
+    "today": {
+      "title": "Aujourd'hui",
+      "bookedToday": "CA réservé aujourd'hui",
+      "bookingsToday": "Réservations du jour",
+      "tastingsToday": "Dégustations du jour",
+      "guestsToday": "Convives du jour"
+    },
+    "systemHealth": {
+      "title": "Santé du système",
+      "webhooks": "Webhooks Stripe",
+      "failedEvents": "{count} en échec",
+      "stuckEvents": "{count} bloqué(s)",
+      "webhooksOk": "OK",
+      "lastEvent": "Dernier événement",
+      "avgLag": "Latence moy.",
+      "maxLag": "Latence max",
+      "failedEmails": "Emails en échec",
+      "noFailedEmails": "Aucun email en échec",
+      "failedJobs": "Tâches en échec",
+      "noFailedJobs": "Aucune tâche en échec",
+      "attempts": "{count} tentative(s)"
+    },
     "pendingReview": "En attente de validation",
     "verified": "Vérifié",
     "rejected": "Rejeté",

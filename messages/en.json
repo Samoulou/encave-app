@@ -1415,6 +1415,28 @@
       "giftCardRevenue": "Gift card revenue",
       "giftCardLiability": "Gift card liability"
     },
+    "today": {
+      "title": "Today",
+      "bookedToday": "Booked today",
+      "bookingsToday": "Bookings today",
+      "tastingsToday": "Tastings today",
+      "guestsToday": "Guests today"
+    },
+    "systemHealth": {
+      "title": "System health",
+      "webhooks": "Stripe webhooks",
+      "failedEvents": "{count} failed",
+      "stuckEvents": "{count} stuck",
+      "webhooksOk": "OK",
+      "lastEvent": "Last event",
+      "avgLag": "Avg lag",
+      "maxLag": "Max lag",
+      "failedEmails": "Failed emails",
+      "noFailedEmails": "No failed emails",
+      "failedJobs": "Failed jobs",
+      "noFailedJobs": "No failed jobs",
+      "attempts": "{count} attempt(s)"
+    },
     "pendingReview": "Pending Review",
     "verified": "Verified",
     "rejected": "Rejected",

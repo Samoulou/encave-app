@@ -1,8 +1,17 @@
 import { db } from '@/server/db';
 import { getFeatureFlags } from '@/server/queries/feature-flags.queries';
-import { getAdminBusinessKpis } from '@/server/queries/admin-metrics.queries';
+import {
+  getAdminBusinessKpis,
+  getTodayAdminKpis,
+} from '@/server/queries/admin-metrics.queries';
+import {
+  getWebhookHealth,
+  getRecentIncidents,
+} from '@/server/queries/admin-ops.queries';
 import { AdminStats } from '@/components/features/admin/AdminStats';
 import { AdminBusinessKpis } from '@/components/features/admin/AdminBusinessKpis';
+import { AdminTodayKpis } from '@/components/features/admin/AdminTodayKpis';
+import { AdminSystemHealth } from '@/components/features/admin/AdminSystemHealth';
 import { FeatureFlagsPanel } from '@/components/features/admin/FeatureFlagsPanel';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -66,13 +75,17 @@ async function getRecentPending() {
 }
 
 export default async function AdminDashboard() {
-  const [stats, recentPending, flags, kpis, t] = await Promise.all([
-    getWineryStats(),
-    getRecentPending(),
-    getFeatureFlags(),
-    getAdminBusinessKpis(),
-    getTranslations('admin'),
-  ]);
+  const [stats, recentPending, flags, kpis, todayKpis, webhook, incidents, t] =
+    await Promise.all([
+      getWineryStats(),
+      getRecentPending(),
+      getFeatureFlags(),
+      getAdminBusinessKpis(),
+      getTodayAdminKpis(),
+      getWebhookHealth(),
+      getRecentIncidents(),
+      getTranslations('admin'),
+    ]);
 
   return (
     <div className="container py-10">
@@ -85,7 +98,11 @@ export default async function AdminDashboard() {
 
       <AdminStats {...stats} />
 
+      <AdminTodayKpis kpis={todayKpis} />
+
       <AdminBusinessKpis kpis={kpis} />
+
+      <AdminSystemHealth webhook={webhook} incidents={incidents} />
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         {/* Recent Pending Section */}

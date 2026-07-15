@@ -1415,6 +1415,28 @@
       "giftCardRevenue": "Umsatz Geschenkgutscheine",
       "giftCardLiability": "Verbindlichkeit Geschenkgutscheine"
     },
+    "today": {
+      "title": "Heute",
+      "bookedToday": "Heute gebucht",
+      "bookingsToday": "Buchungen heute",
+      "tastingsToday": "Verkostungen heute",
+      "guestsToday": "Gäste heute"
+    },
+    "systemHealth": {
+      "title": "Systemzustand",
+      "webhooks": "Stripe-Webhooks",
+      "failedEvents": "{count} fehlgeschlagen",
+      "stuckEvents": "{count} blockiert",
+      "webhooksOk": "OK",
+      "lastEvent": "Letztes Ereignis",
+      "avgLag": "Ø Verzögerung",
+      "maxLag": "Max. Verzögerung",
+      "failedEmails": "Fehlgeschlagene E-Mails",
+      "noFailedEmails": "Keine fehlgeschlagenen E-Mails",
+      "failedJobs": "Fehlgeschlagene Aufgaben",
+      "noFailedJobs": "Keine fehlgeschlagenen Aufgaben",
+      "attempts": "{count} Versuche"
+    },
     "pendingReview": "Ausstehende Überprüfung",
     "verified": "Verifiziert",
     "rejected": "Abgelehnt",
