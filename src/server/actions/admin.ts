@@ -17,6 +17,11 @@ import type { ActionResult } from '@/types/actions';
 import { logError, logInfo, logWarn } from '@/lib/logger';
 import { invalidateWineryCaches } from './winery-helpers';
 import { requireAdmin } from '@/server/admin-guard';
+import { anonymizeUser } from '@/server/services/anonymization.service';
+import {
+  ChangeUserRoleSchema,
+  AnonymizeUserSchema,
+} from '@/lib/validators/adminUsers';
 
 const ApproveWinerySchema = z.object({
   wineryId: z.string().min(1, 'Winery ID is required'),
@@ -812,4 +817,159 @@ export async function reinstateUser(
   ]);
 
   return { success: true, data: { reinstated: true } };
+}
+
+/**
+ * Change a user's role (P-15 / L-162). Restricted to CLIENT ↔ WINEMAKER —
+ * the schema makes ADMIN unassignable, and we additionally refuse to touch an
+ * ADMIN target or to demote a winery-owning WINEMAKER (which would orphan the
+ * winery). Journalized via AdminAction(USER_ROLE_CHANGED).
+ */
+export async function changeUserRole(
+  input: unknown
+): Promise<ActionResult<{ role: 'CLIENT' | 'WINEMAKER' }>> {
+  const parsed = ChangeUserRoleSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: 'Invalid role change' },
+    };
+  }
+
+  const admin = await requireAdmin();
+  if (!admin.success) return admin;
+  if (parsed.data.targetId === admin.data.adminId) {
+    return {
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: 'Cannot change your own role' },
+    };
+  }
+
+  const target = await db.user.findUnique({
+    where: { id: parsed.data.targetId },
+    select: { role: true, winery: { select: { id: true } } },
+  });
+  if (!target) {
+    return {
+      success: false,
+      error: { code: 'NOT_FOUND', message: 'User not found' },
+    };
+  }
+  if (target.role === 'ADMIN') {
+    return {
+      success: false,
+      error: {
+        code: 'FORBIDDEN',
+        message: 'Admin accounts are managed manually',
+      },
+    };
+  }
+  if (
+    target.role === 'WINEMAKER' &&
+    parsed.data.role === 'CLIENT' &&
+    target.winery
+  ) {
+    return {
+      success: false,
+      error: {
+        code: 'CONFLICT',
+        message: 'This user owns a winery — reassign or remove it first',
+      },
+    };
+  }
+  if (target.role === parsed.data.role) {
+    return { success: true, data: { role: parsed.data.role } };
+  }
+
+  await db.$transaction([
+    db.user.update({
+      where: { id: parsed.data.targetId },
+      data: { role: parsed.data.role },
+    }),
+    db.adminAction.create({
+      data: {
+        adminId: admin.data.adminId,
+        action: 'USER_ROLE_CHANGED',
+        targetType: 'User',
+        targetId: parsed.data.targetId,
+        metadata: { from: target.role, to: parsed.data.role },
+      },
+    }),
+  ]);
+
+  logInfo('user.role_changed', {
+    targetId: parsed.data.targetId,
+    from: target.role,
+    to: parsed.data.role,
+    adminId: admin.data.adminId,
+  });
+  return { success: true, data: { role: parsed.data.role } };
+}
+
+/**
+ * Admin-initiated nLPD anonymization (P-15 / L-162). Thin wrapper over the
+ * anonymizeUser service — which throws — mapped to an ActionResult (an action
+ * must never throw). The service writes the AdminAction(USER_ANONYMIZED) audit
+ * row when actorId is passed. `notifyUser` decides whether the user is emailed.
+ */
+export async function anonymizeUserAsAdmin(
+  input: unknown
+): Promise<ActionResult<{ alreadyAnonymized: boolean }>> {
+  const parsed = AnonymizeUserSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: 'Invalid input' },
+    };
+  }
+
+  const admin = await requireAdmin();
+  if (!admin.success) return admin;
+  if (parsed.data.targetId === admin.data.adminId) {
+    return {
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: 'Cannot anonymize your own account here',
+      },
+    };
+  }
+
+  try {
+    const result = await anonymizeUser(parsed.data.targetId, {
+      actorId: admin.data.adminId,
+      reason: parsed.data.reason,
+      notifyUser: parsed.data.notifyUser,
+    });
+    return { success: true, data: result };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '';
+    if (message === 'USER_NOT_FOUND') {
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'User not found' },
+      };
+    }
+    if (message.startsWith('FUTURE_WINERY_BOOKINGS:')) {
+      const count = message.split(':')[1] ?? '';
+      return {
+        success: false,
+        error: {
+          code: 'CONFLICT',
+          message: `This user's winery has ${count} upcoming booking(s) — cancel them first`,
+        },
+      };
+    }
+    logError('anonymizeUserAsAdmin error', error, {
+      action: 'anonymizeUserAsAdmin',
+      targetId: parsed.data.targetId,
+    });
+    return {
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Something went wrong. Please try again.',
+      },
+    };
+  }
 }
