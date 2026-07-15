@@ -113,6 +113,24 @@ Après merge : un utilisateur peut se connecter **par code OTP** (« Recevoir un
 - **R-8 — `storeOTP` défaut 'plain'** stocke l'OTP en clair dans `verifications` → forcer `'hashed'`.
 - **Rollback** : le socle est additif. En cas de dérive, revert PR. Les plugins peuvent être retirés du tableau `plugins` (la migration reste, inerte). Apple retiré = pas de retour arrière requis (Google + OTP couvrent).
 
+## 6bis. Revue `/code-review high` — findings (2026-07-15)
+
+37 candidats vérifiés. **Corrigés** (commit `fix(p-14): address /code-review high`) :
+
+- **Escalade invitation** (critique) : `provisionFounderWinery` lie désormais la rédemption à l'email invité (l'email de session doit matcher) — un lien fondateur fuité/transféré ne peut plus provisionner une cave VERIFIED FOUNDER sur un autre compte.
+- **Concurrence invitation** : consume CAS (`updateMany where acceptedAt null`) dans la transaction.
+- **Signup silencieux OTP** : `emailOTP({ disableSignUp: true })` — le login par code ne crée plus de compte pour un email inconnu/mal saisi.
+- **Invitation compte existant** : fallback `signIn` (était bloqué) ; corrige aussi l'orphelin non-atomique.
+- **Gate Coming-Soon** : `/invitation/[token]` autorisé pré-launch.
+- **Lockout admin OAuth** : `AdminSecuritySetup` fait définir un mot de passe par OTP avant l'enrôlement TOTP (qui en exige un).
+- **Admin layout** : une seule lecture user (suspendedAt + twoFactorEnabled).
+
+**⚠️ Gaps connus à traiter AVANT `dev` → `main`** (nécessitent un test en preview ou une décision produit — non corrigés ici) :
+
+- **G-1 (HAUT) — Bypass MFA admin via social + email-OTP.** Le hook `after` du plugin `twoFactor` ne matche que `/sign-in/email` (vérifié dans `node_modules`) : un admin 2FA-enrôlé qui se connecte via **Google** ou **code OTP** n'est **pas** challengé → il entre dans `/admin` sans TOTP. Le gate admin ne vérifie que l'enrôlement, pas la vérif 2FA de la session. **Fix** : hook `after` custom mirroring le built-in pour `/sign-in/email-otp` + callback social, OU restreindre le login admin au mot de passe. À implémenter + **tester en preview** (risqué à faire à l'aveugle).
+- **G-2 (MOYEN) — `changeEmail` instantané pour comptes non vérifiés.** better-auth n'envoie la confirmation que si l'email courant est vérifié ; or `emailVerified=false` par défaut. Un porteur de session peut changer l'email sans notification à l'ancienne adresse. **Fix** : activer la vérification d'email à l'inscription (hors scope P-14) ou notifier l'ancienne adresse.
+- **G-3 (FAIBLE, documenté) — Cap de session par rôle uniquement au login.** Le refresh `updateAge` remet `expiresAt` au global 90 j : le cap admin 7 j ne borne pas une session active. Mitigé par TOTP obligatoire (lui-même affaibli par G-1) + re-check suspension live.
+
 ## 7. Décisions ouvertes (défauts proposés, non bloquants)
 
 - [ ] **D-C** `await` dans `sendVerificationOTP` (défaut : **await**, garantie livraison serverless).
