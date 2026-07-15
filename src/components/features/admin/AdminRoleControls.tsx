@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import type { UserRole } from '@prisma/client';
+import { useRouter } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { changeUserRole } from '@/server/actions/admin';
 

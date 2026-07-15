@@ -42,93 +42,99 @@ export async function GET() {
   }
 
   const now = new Date();
-  // Scheduled at BOTH 16:00 and 17:00 UTC (vercel.json); only the run matching
-  // 18h Europe/Zurich acts — CET in winter, CEST in summer, DST-proof without
-  // touching the schedule twice a year (same doctrine as tasting-sheet-reminder).
-  if (zonedHourOf(now) !== REMINDER_LOCAL_HOUR) {
-    return NextResponse.json({ skipped: 'not_local_reminder_hour' });
-  }
-
   const results = {
     reminder24h: { sent: 0, failed: 0, skipped: 0 },
     reminder2h: { sent: 0, failed: 0, skipped: 0 },
   };
 
   try {
-    // The reminder fires the EVENING BEFORE (18h Zurich) → target tomorrow's
-    // Zurich calendar day. `@db.Date` is a UTC-midnight date; +24h in UTC is
-    // exactly the next calendar date (UTC has no DST).
-    const tomorrowUTC = new Date(zurichTodayAsUTCDate(now).getTime() + DAY_MS);
-    const bookings24h = await db.booking.findMany({
-      where: {
-        status: BookingStatus.CONFIRMED,
-        reminder24hSentAt: null,
-        date: tomorrowUTC,
-      },
-      include: {
-        experience: true,
-        winery: true,
-      },
-    });
+    // J-1 reminder (#2): scheduled at BOTH 16:00 and 17:00 UTC (vercel.json);
+    // only the run matching 18h Europe/Zurich acts — DST-proof (same doctrine
+    // as tasting-sheet-reminder). Scoped HERE so it never gates the independent
+    // 2h block below (which needs its own cadence).
+    if (zonedHourOf(now) === REMINDER_LOCAL_HOUR) {
+      // Fires the EVENING BEFORE (18h Zurich) → target tomorrow's Zurich calendar
+      // day. `@db.Date` is UTC-midnight; +24h in UTC is exactly the next date.
+      const tomorrowUTC = new Date(
+        zurichTodayAsUTCDate(now).getTime() + DAY_MS
+      );
+      const bookings24h = await db.booking.findMany({
+        where: {
+          status: BookingStatus.CONFIRMED,
+          reminder24hSentAt: null,
+          date: tomorrowUTC,
+        },
+        include: {
+          experience: true,
+          winery: true,
+        },
+      });
 
-    // Send day-before reminders
-    for (const booking of bookings24h) {
-      try {
-        // Combine date and time slot for the email
-        const bookingDateTime = getBookingDateTime(
-          booking.date,
-          booking.timeSlot
-        );
+      // Send day-before reminders
+      for (const booking of bookings24h) {
+        try {
+          // Combine date and time slot for the email
+          const bookingDateTime = getBookingDateTime(
+            booking.date,
+            booking.timeSlot
+          );
 
-        const success = await sendBookingReminderEmail(
-          booking.visitorEmail,
-          {
-            guestName: booking.visitorName,
-            experienceTitle: booking.experience.title,
-            wineryName: booking.winery.name,
-            wineryAddress: booking.winery.address,
-            date: bookingDateTime,
-            guestCount: booking.guestCount,
-            bookingRef: booking.reference,
-            isTomorrow: true,
-          },
-          // Client email in the guest's own locale (persisted at checkout).
-          booking.locale
-        );
+          const success = await sendBookingReminderEmail(
+            booking.visitorEmail,
+            {
+              guestName: booking.visitorName,
+              experienceTitle: booking.experience.title,
+              wineryName: booking.winery.name,
+              wineryAddress: booking.winery.address,
+              date: bookingDateTime,
+              guestCount: booking.guestCount,
+              bookingRef: booking.reference,
+              isTomorrow: true,
+            },
+            // Client email in the guest's own locale (persisted at checkout).
+            booking.locale
+          );
 
-        if (success) {
-          await db.booking.update({
-            where: { id: booking.id },
-            data: { reminder24hSentAt: new Date() },
+          if (success) {
+            await db.booking.update({
+              where: { id: booking.id },
+              data: { reminder24hSentAt: new Date() },
+            });
+            await logEmailSent(
+              'reminder_24h',
+              booking.visitorEmail,
+              booking.id
+            );
+            results.reminder24h.sent++;
+          } else {
+            await logEmailFailed(
+              'reminder_24h',
+              booking.visitorEmail,
+              'Failed to send',
+              booking.id
+            );
+            results.reminder24h.failed++;
+          }
+        } catch (error) {
+          logError('Error sending 24h reminder', error, {
+            action: 'cronReminders',
+            bookingId: booking.id,
           });
-          await logEmailSent('reminder_24h', booking.visitorEmail, booking.id);
-          results.reminder24h.sent++;
-        } else {
           await logEmailFailed(
             'reminder_24h',
             booking.visitorEmail,
-            'Failed to send',
+            error instanceof Error ? error.message : 'Unknown error',
             booking.id
           );
           results.reminder24h.failed++;
         }
-      } catch (error) {
-        logError('Error sending 24h reminder', error, {
-          action: 'cronReminders',
-          bookingId: booking.id,
-        });
-        await logEmailFailed(
-          'reminder_24h',
-          booking.visitorEmail,
-          error instanceof Error ? error.message : 'Unknown error',
-          booking.id
-        );
-        results.reminder24h.failed++;
       }
     }
 
-    // Find bookings for 2h reminder (between 1.5-2.5 hours from now)
-    // Using a wider window to account for time slot parsing
+    // 2h reminder — runs on EVERY invocation, independent of the 18h J-1 guard
+    // above. NOTE (pre-existing, out of P-15 scope): this path needs an hourly
+    // cron + a Zurich-correct window to reliably fire ~2h before the session;
+    // on the current twice-daily schedule it is best-effort. Tracked as debt.
     const bookings2h = await db.booking.findMany({
       where: {
         status: BookingStatus.CONFIRMED,

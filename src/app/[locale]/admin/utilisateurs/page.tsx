@@ -170,10 +170,7 @@ export default async function AdminUsersPage({
                                     : t('users.suspendAccount')
                                 }
                               />
-                              <AdminAnonymizeControls
-                                targetId={user.id}
-                                alreadyAnonymized={user.anonymized}
-                              />
+                              <AdminAnonymizeControls targetId={user.id} />
                             </div>
                           )}
                           {history.length > 0 && (

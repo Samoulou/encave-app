@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Trash2 } from 'lucide-react';
+import { useRouter } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -12,17 +12,16 @@ import { anonymizeUserAsAdmin } from '@/server/actions/admin';
 
 interface AdminAnonymizeControlsProps {
   targetId: string;
-  alreadyAnonymized: boolean;
 }
 
 /**
  * Admin-initiated nLPD anonymization (P-15 / L-162). Irreversible + scrubs the
  * account, so it is gated behind an explicit confirm with a mandatory reason
- * and a per-case "notify user" checkbox.
+ * and a per-case "notify user" checkbox. Only rendered for non-anonymized
+ * users (the page handles the already-anonymized row shape).
  */
 export function AdminAnonymizeControls({
   targetId,
-  alreadyAnonymized,
 }: AdminAnonymizeControlsProps) {
   const t = useTranslations('admin.users');
   const router = useRouter();
@@ -30,12 +29,6 @@ export function AdminAnonymizeControls({
   const [reason, setReason] = useState('');
   const [notifyUser, setNotifyUser] = useState(false);
   const [isPending, startTransition] = useTransition();
-
-  if (alreadyAnonymized) {
-    return (
-      <p className="text-sm text-muted-foreground">{t('anonymizedBadge')}</p>
-    );
-  }
 
   function submit() {
     if (reason.trim().length < 10) {

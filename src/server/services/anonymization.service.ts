@@ -55,10 +55,6 @@ export async function anonymizeUser(
   const deletedEmail = `deleted-${suffix}@encave.ch`;
   const deletedName = 'Utilisateur supprime';
 
-  if (options.notifyUser ?? true) {
-    await sendAccountDeletedEmail(user.email, user.preferredLocale);
-  }
-
   await db.$transaction(async (tx) => {
     // Case-insensitive: checkout stores the visitor email as typed, and
     // the privacy export already matches insensitively — deletion must
@@ -109,6 +105,14 @@ export async function anonymizeUser(
       });
     }
   });
+
+  // Notify AFTER the transaction commits (uses the original email captured
+  // above): a failed anonymization must never send a "your account was
+  // deleted" email while the account is still live (review). Default true
+  // keeps the self-service path unchanged.
+  if (options.notifyUser ?? true) {
+    await sendAccountDeletedEmail(user.email, user.preferredLocale);
+  }
 
   logInfo('user.anonymized', { userId, actorId: options.actorId });
   return { alreadyAnonymized: false };
