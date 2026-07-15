@@ -1,4 +1,8 @@
-import { auth, isCurrentUserSuspended } from '@/server/auth';
+import {
+  auth,
+  isCurrentUserSuspended,
+  getCurrentUserTwoFactorEnabled,
+} from '@/server/auth';
 import { notFound, redirect } from 'next/navigation';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
@@ -44,6 +48,14 @@ export default async function AdminLayout({
   if (await isCurrentUserSuspended()) {
     const locale = await getLocale();
     redirect(`/${locale}`);
+  }
+
+  // P-14 (L-152): TOTP is mandatory for admins. A fresh (non-cached) read so a
+  // just-enrolled admin isn't bounced back to setup. The setup page lives
+  // outside this layout (admin-setup/2fa) — no redirect loop.
+  if (!(await getCurrentUserTwoFactorEnabled())) {
+    const locale = await getLocale();
+    redirect(`/${locale}/admin-setup/2fa`);
   }
 
   const pendingCount = await getPendingCount();
