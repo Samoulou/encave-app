@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
-import { signUp } from '@/lib/auth-client';
+import { signUp, signIn } from '@/lib/auth-client';
 import { provisionFounderWinery } from '@/server/actions/invitation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,12 +44,16 @@ export function InvitationAcceptForm({
     }
     setIsLoading(true);
     try {
+      // New invitee → sign up. Already-registered invitee (e.g. an existing
+      // CLIENT) → fall back to sign-in with the same password. Either way the
+      // session lands on the invited email, which the server re-checks.
       const signUpResult = await signUp.email({ email, password, name });
       if (signUpResult.error) {
-        setError(
-          signUpResult.error.message || tCommon('errors.somethingWentWrong')
-        );
-        return;
+        const signInResult = await signIn.email({ email, password });
+        if (signInResult.error) {
+          setError(t('signInFailed'));
+          return;
+        }
       }
       const provision = await provisionFounderWinery({
         token,

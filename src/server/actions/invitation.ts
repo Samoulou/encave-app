@@ -19,6 +19,7 @@ import type { ActionResult } from '@/types/actions';
 import { invalidateWineryCaches } from './winery-helpers';
 
 const INVITATION_TTL_DAYS = 7;
+const INVITATION_ALREADY_USED = 'INVITATION_ALREADY_USED';
 
 /**
  * Admin issues a founder-invitation link. The plaintext token is returned
@@ -101,13 +102,30 @@ export async function provisionFounderWinery(
 
     const invitation = await db.invitation.findUnique({
       where: { tokenHash: hashToken(parsed.data.token) },
-      select: { id: true, acceptedAt: true, expiresAt: true, invitedBy: true },
+      select: {
+        id: true,
+        email: true,
+        acceptedAt: true,
+        expiresAt: true,
+        invitedBy: true,
+      },
     });
 
     if (!invitation) {
       return {
         success: false,
         error: { code: 'NOT_FOUND', message: 'Invitation not found' },
+      };
+    }
+    // The token is bound to the invited email — a leaked/forwarded link must
+    // not let a different account self-provision a FOUNDER winery (review R).
+    if (invitation.email.toLowerCase() !== session.user.email.toLowerCase()) {
+      return {
+        success: false,
+        error: {
+          code: 'FORBIDDEN',
+          message: 'This invitation is for a different email address',
+        },
       };
     }
     if (invitation.acceptedAt) {
@@ -145,6 +163,16 @@ export async function provisionFounderWinery(
     );
 
     const winery = await db.$transaction(async (tx) => {
+      // Compare-and-swap consume: two concurrent redemptions of the same
+      // one-time link → only the one that flips acceptedAt proceeds.
+      const claim = await tx.invitation.updateMany({
+        where: { id: invitation.id, acceptedAt: null },
+        data: { acceptedAt: new Date(), acceptedUserId: session.user.id },
+      });
+      if (claim.count !== 1) {
+        throw new Error(INVITATION_ALREADY_USED);
+      }
+
       const created = await tx.winery.create({
         data: {
           name: parsed.data.wineryName,
@@ -168,11 +196,6 @@ export async function provisionFounderWinery(
         data: { role: 'WINEMAKER' },
       });
 
-      await tx.invitation.update({
-        where: { id: invitation.id },
-        data: { acceptedAt: new Date(), acceptedUserId: session.user.id },
-      });
-
       await tx.verificationLog.create({
         data: {
           wineryId: created.id,
@@ -192,6 +215,12 @@ export async function provisionFounderWinery(
       data: { wineryId: winery.id, slug: winery.slug },
     };
   } catch (error) {
+    if (error instanceof Error && error.message === INVITATION_ALREADY_USED) {
+      return {
+        success: false,
+        error: { code: 'CONFLICT', message: 'Invitation already used' },
+      };
+    }
     logError('provisionFounderWinery error', error, {
       action: 'provisionFounderWinery',
     });

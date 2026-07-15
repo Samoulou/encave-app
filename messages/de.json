@@ -2968,6 +2968,16 @@
       "invalidCode": "Ungültiger Code.",
       "forcedTitle": "Sichern Sie Ihr Admin-Konto",
       "forcedSubtitle": "Zwei-Faktor-Authentifizierung ist für Administratoren obligatorisch."
+    },
+    "setPassword": {
+      "title": "Passwort festlegen",
+      "description": "Ihr Konto nutzt Google. Legen Sie zuerst ein Passwort (per E-Mail) fest, um die Zwei-Faktor-Authentifizierung zu aktivieren.",
+      "sendCode": "Code per E-Mail erhalten",
+      "codeLabel": "6-stelliger Code",
+      "newPassword": "Neues Passwort",
+      "submit": "Passwort festlegen",
+      "tooShort": "Mindestens {min} Zeichen.",
+      "failed": "Fehlgeschlagen. Prüfen Sie den Code."
     }
   },
   "invitation": {
@@ -2979,6 +2989,7 @@
     "wineryNameLabel": "Name des Weinguts",
     "cta": "Konto erstellen",
     "creating": "Wird erstellt…",
-    "passwordTooShort": "Das Passwort muss mindestens {min} Zeichen lang sein."
+    "passwordTooShort": "Das Passwort muss mindestens {min} Zeichen lang sein.",
+    "signInFailed": "Konto existiert bereits: falsches Passwort. Versuchen Sie es erneut."
   }
 }

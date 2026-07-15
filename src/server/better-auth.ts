@@ -109,6 +109,9 @@ export const auth = betterAuth({
       otpLength: 6,
       expiresIn: 60 * 15, // 15 minutes
       storeOTP: 'hashed', // never store the OTP in clear (R-8)
+      // OTP login must NOT silently create accounts — a mistyped email on the
+      // "get a code" tab should fail, not fork a new CLIENT (review).
+      disableSignUp: true,
       sendVerificationOTP: async ({ email, otp, type }) => {
         const user = await db.user.findUnique({
           where: { email },

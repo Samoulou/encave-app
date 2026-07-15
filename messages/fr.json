@@ -2968,6 +2968,16 @@
       "invalidCode": "Code invalide.",
       "forcedTitle": "Sécurisez votre compte administrateur",
       "forcedSubtitle": "L'authentification à deux facteurs est obligatoire pour les administrateurs."
+    },
+    "setPassword": {
+      "title": "Définir un mot de passe",
+      "description": "Votre compte utilise Google. Définissez d’abord un mot de passe (par e-mail) pour activer la double authentification.",
+      "sendCode": "Recevoir un code par e-mail",
+      "codeLabel": "Code à 6 chiffres",
+      "newPassword": "Nouveau mot de passe",
+      "submit": "Définir le mot de passe",
+      "tooShort": "Au moins {min} caractères.",
+      "failed": "Échec. Vérifiez le code."
     }
   },
   "invitation": {
@@ -2979,6 +2989,7 @@
     "wineryNameLabel": "Nom du domaine",
     "cta": "Créer mon compte",
     "creating": "Création…",
-    "passwordTooShort": "Le mot de passe doit contenir au moins {min} caractères."
+    "passwordTooShort": "Le mot de passe doit contenir au moins {min} caractères.",
+    "signInFailed": "Compte existant : mot de passe incorrect. Réessayez."
   }
 }

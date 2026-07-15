@@ -6,7 +6,12 @@ vi.mock('@/server/admin-guard', () => ({ requireAdmin: vi.fn() }));
 
 vi.mock('@/server/db', () => ({
   db: {
-    invitation: { create: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
+    invitation: {
+      create: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+    },
     winery: { findUnique: vi.fn(), create: vi.fn() },
     user: { update: vi.fn() },
     verificationLog: { create: vi.fn() },
@@ -114,6 +119,7 @@ describe('createFounderInvitation', () => {
 describe('provisionFounderWinery', () => {
   const validInvitation = {
     id: 'inv-1',
+    email: 'founder@test.ch', // matches the session user
     acceptedAt: null,
     expiresAt: new Date(Date.now() + 86400000),
     invitedBy: 'admin-1',
@@ -125,6 +131,9 @@ describe('provisionFounderWinery', () => {
     vi.mocked(db.invitation.findUnique).mockResolvedValue(
       validInvitation as never
     );
+    vi.mocked(db.invitation.updateMany).mockResolvedValue({
+      count: 1,
+    } as never);
     vi.mocked(db.winery.findUnique).mockResolvedValue(null); // no existing winery
     vi.mocked(db.winery.create).mockResolvedValue({
       id: 'winery-1',
@@ -218,11 +227,36 @@ describe('provisionFounderWinery', () => {
     expect(db.user.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: { role: 'WINEMAKER' } })
     );
-    expect(db.invitation.update).toHaveBeenCalledWith(
+    // Consumed via a CAS updateMany (acceptedAt null) — not a bare update.
+    expect(db.invitation.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: 'inv-1' },
+        where: { id: 'inv-1', acceptedAt: null },
         data: expect.objectContaining({ acceptedUserId: 'user-1' }),
       })
     );
+  });
+
+  it('is FORBIDDEN when the caller email differs from the invited email', async () => {
+    vi.mocked(db.invitation.findUnique).mockResolvedValue({
+      ...validInvitation,
+      email: 'someone-else@test.ch',
+    } as never);
+    const result = await provisionFounderWinery(input);
+    expect(result).toMatchObject({
+      success: false,
+      error: { code: 'FORBIDDEN' },
+    });
+    expect(db.winery.create).not.toHaveBeenCalled();
+  });
+
+  it('is CONFLICT when the CAS consume loses the race (count 0)', async () => {
+    vi.mocked(db.invitation.updateMany).mockResolvedValue({
+      count: 0,
+    } as never);
+    const result = await provisionFounderWinery(input);
+    expect(result).toMatchObject({
+      success: false,
+      error: { code: 'CONFLICT' },
+    });
   });
 });

@@ -1,7 +1,8 @@
 import { notFound, redirect } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { auth, getCurrentUserTwoFactorEnabled } from '@/server/auth';
-import { TotpSetupSection } from '@/components/features/auth/TotpSetupSection';
+import { db } from '@/server/db';
+import { AdminSecuritySetup } from '@/components/features/auth/AdminSecuritySetup';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
@@ -41,6 +42,13 @@ export default async function AdminTotpSetupPage() {
     redirect(`/${locale}/admin`);
   }
 
+  // An OAuth-only admin has no password → they must set one before TOTP
+  // enrolment (which requires a password), else they'd be locked out.
+  const credentialAccount = await db.account.findFirst({
+    where: { userId: session.user.id, providerId: 'credential' },
+    select: { id: true },
+  });
+
   return (
     <div className="mx-auto max-w-2xl space-y-6 px-4 py-12">
       <div>
@@ -49,7 +57,10 @@ export default async function AdminTotpSetupPage() {
         </h1>
         <p className="mt-2 text-muted-foreground">{t('totp.forcedSubtitle')}</p>
       </div>
-      <TotpSetupSection redirectTo="/admin" />
+      <AdminSecuritySetup
+        hasPassword={!!credentialAccount}
+        email={session.user.email}
+      />
     </div>
   );
 }

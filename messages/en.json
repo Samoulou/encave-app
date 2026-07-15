@@ -2968,6 +2968,16 @@
       "invalidCode": "Invalid code.",
       "forcedTitle": "Secure your admin account",
       "forcedSubtitle": "Two-factor authentication is mandatory for administrators."
+    },
+    "setPassword": {
+      "title": "Set a password",
+      "description": "Your account uses Google. Set a password first (by email) to enable two-factor authentication.",
+      "sendCode": "Get a code by email",
+      "codeLabel": "6-digit code",
+      "newPassword": "New password",
+      "submit": "Set password",
+      "tooShort": "At least {min} characters.",
+      "failed": "Failed. Check the code."
     }
   },
   "invitation": {
@@ -2979,6 +2989,7 @@
     "wineryNameLabel": "Winery name",
     "cta": "Create my account",
     "creating": "Creating…",
-    "passwordTooShort": "Password must be at least {min} characters."
+    "passwordTooShort": "Password must be at least {min} characters.",
+    "signInFailed": "Account exists: wrong password. Please try again."
   }
 }

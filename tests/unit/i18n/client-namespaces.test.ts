@@ -139,6 +139,7 @@ const PROTECTED_ONLY_FILES = [
   `features${sep}auth${sep}ChangePasswordSection.tsx`,
   `features${sep}auth${sep}ChangeEmailSection.tsx`,
   `features${sep}auth${sep}TotpSetupSection.tsx`,
+  `features${sep}auth${sep}AdminSecuritySetup.tsx`,
   `features${sep}auth${sep}InvitationAcceptForm.tsx`,
   // winemaker offer composer — only mounted on the protected demandes detail
   `features${sep}requests${sep}ComposeOfferForm.tsx`,

@@ -1,8 +1,4 @@
-import {
-  auth,
-  isCurrentUserSuspended,
-  getCurrentUserTwoFactorEnabled,
-} from '@/server/auth';
+import { auth } from '@/server/auth';
 import { notFound, redirect } from 'next/navigation';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
@@ -46,15 +42,21 @@ export default async function AdminLayout({
     notFound();
   }
 
-  if (await isCurrentUserSuspended()) {
+  // One fresh read for both admin gates (suspension + mandatory TOTP) — fresh
+  // (not the cookie-cached session) so a just-enrolled admin isn't bounced
+  // back to setup. The setup page lives outside this layout (no redirect loop).
+  const guard = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { suspendedAt: true, twoFactorEnabled: true },
+  });
+
+  if (guard?.suspendedAt) {
     const locale = await getLocale();
     redirect(`/${locale}`);
   }
 
-  // P-14 (L-152): TOTP is mandatory for admins. A fresh (non-cached) read so a
-  // just-enrolled admin isn't bounced back to setup. The setup page lives
-  // outside this layout (admin-setup/2fa) — no redirect loop.
-  if (!(await getCurrentUserTwoFactorEnabled())) {
+  // P-14 (L-152): TOTP is mandatory for admins.
+  if (!guard?.twoFactorEnabled) {
     const locale = await getLocale();
     redirect(`/${locale}/admin-setup/2fa`);
   }
