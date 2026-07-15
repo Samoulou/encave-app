@@ -44,10 +44,15 @@ import {
   RequestOfferReceivedEmail,
   RequestOfferExpiringEmail,
   RequestSlaEscalationEmail,
+  AdminNewWineryToValidateEmail,
   ContactMessageEmail,
   ContactAckEmail,
 } from '@/emails';
 import { subjects, t } from '@/emails/translations';
+import {
+  logEmailSent,
+  logEmailFailed,
+} from '@/server/services/email-log.service';
 import { generateBookingQrPng } from '@/server/services/qr-code.service';
 import { generateBookingReceiptPDF } from '@/server/services/booking-receipt.service';
 import {
@@ -743,6 +748,57 @@ export async function sendWineryRejectedEmail(
     subject: t(subjects.wineryRejected, loc),
     html,
   });
+}
+
+export interface AdminNewWineryData {
+  wineryName: string;
+  commune: string;
+  contactEmail: string;
+  wineryId: string;
+}
+
+/**
+ * Admin notification #22 (P-15 / L-163): a new winery signed up and awaits
+ * validation. Sent to the internal admin inbox (ADMIN_ALERT_EMAIL, else the
+ * CONTACT_INBOX), always in FR — the admin surface is French.
+ */
+export async function sendAdminNewWineryToValidateEmail(
+  data: AdminNewWineryData
+): Promise<boolean> {
+  const loc = getLocale('FR');
+  const recipient = env.ADMIN_ALERT_EMAIL ?? CONTACT_INBOX;
+  const html = await render(
+    AdminNewWineryToValidateEmail({
+      locale: loc,
+      wineryName: data.wineryName,
+      commune: data.commune,
+      contactEmail: data.contactEmail,
+      reviewUrl: `${getBaseUrl()}/${loc.toLowerCase()}/admin/wineries/${data.wineryId}`,
+    })
+  );
+
+  const ok = await sendEmail({
+    to: recipient,
+    subject: t(subjects.adminNewWinery, loc).replace(
+      '{wineryName}',
+      data.wineryName
+    ),
+    html,
+  });
+
+  // Logged here (not by the caller) because this is the only sender that
+  // targets a fixed internal inbox — the caller has no recipient to pass.
+  // A failure surfaces in the admin incidents panel (L-160).
+  if (ok) {
+    await logEmailSent('admin_new_winery', recipient, undefined, {
+      wineryId: data.wineryId,
+    });
+  } else {
+    await logEmailFailed('admin_new_winery', recipient, 'Failed to send', undefined, {
+      wineryId: data.wineryId,
+    });
+  }
+  return ok;
 }
 
 // Automated Notification Emails

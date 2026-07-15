@@ -10,7 +10,8 @@ type EmailLogType =
   | 'tasting_recap'
   | 'tasting_sheet_reminder'
   | 'wine_order_request'
-  | 'stripe_action_required';
+  | 'stripe_action_required'
+  | 'admin_new_winery';
 
 // P-07: optional tracking metadata. resendMessageId links the row to
 // Resend open/click webhook events; wineryId powers per-winery stats.

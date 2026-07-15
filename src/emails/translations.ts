@@ -97,6 +97,11 @@ export const subjects = {
     DE: 'Aktualisierung Ihrer Registrierung',
     EN: 'Registration update',
   },
+  adminNewWinery: {
+    FR: 'Nouveau domaine à valider : {wineryName}',
+    DE: 'Neues Weingut zu prüfen: {wineryName}',
+    EN: 'New winery to review: {wineryName}',
+  },
   passwordReset: {
     FR: 'Reinitialisation de votre mot de passe',
     DE: 'Zurucksetzung Ihres Passworts',
@@ -771,6 +776,40 @@ export const bookingCancelledByWinery = {
     FR: 'Avec nos excuses,',
     DE: 'Mit unserer Entschuldigung,',
     EN: 'With our apologies,',
+  },
+} as const;
+
+// Admin notification #22 — new winery to validate (internal inbox)
+export const adminNewWinery = {
+  title: {
+    FR: 'Nouveau domaine à valider',
+    DE: 'Neues Weingut zu prüfen',
+    EN: 'New winery to review',
+  },
+  intro: {
+    FR: 'Un nouveau domaine vient de s’inscrire et attend une validation.',
+    DE: 'Ein neues Weingut hat sich registriert und wartet auf Prüfung.',
+    EN: 'A new winery has just signed up and is awaiting review.',
+  },
+  nameLabel: {
+    FR: 'Domaine',
+    DE: 'Weingut',
+    EN: 'Winery',
+  },
+  communeLabel: {
+    FR: 'Commune',
+    DE: 'Gemeinde',
+    EN: 'Municipality',
+  },
+  contactLabel: {
+    FR: 'Contact',
+    DE: 'Kontakt',
+    EN: 'Contact',
+  },
+  cta: {
+    FR: 'Examiner le domaine',
+    DE: 'Weingut prüfen',
+    EN: 'Review the winery',
   },
 } as const;
 
