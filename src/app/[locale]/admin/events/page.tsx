@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EXPERIENCE_TYPE_OPTIONS } from '@/lib/validators/experience';
+import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
+import { COLLECTIVE_SOLD_STATUSES } from '@/lib/business-rules/collective-events';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 import type { ExperienceStatus, ExperienceType } from '@prisma/client';
@@ -35,24 +37,16 @@ interface AdminEventsPageProps {
   }>;
 }
 
-// Seats that are sold (real attendees) vs. scanned (checked in) — kept in
-// sync with the participant read view. A booking holds a single status, so
-// summing guestCount over the sold set never double-counts.
-const SOLD_STATUSES = [
-  BookingStatus.CONFIRMED,
-  BookingStatus.COMPLETED,
-  BookingStatus.NO_SHOW,
-];
-
 export default async function AdminEventsPage({
   params,
   searchParams,
 }: AdminEventsPageProps) {
   const { locale } = await params;
   const filters = await searchParams;
-  const [t, tExp] = await Promise.all([
+  const [t, tExp, collectiveEventsEnabled] = await Promise.all([
     getTranslations({ locale, namespace: 'admin.events' }),
     getTranslations({ locale, namespace: 'experience' }),
+    isFlagEnabled('COLLECTIVE_EVENTS'),
   ]);
 
   const q = filters.q?.trim() ?? '';
@@ -60,7 +54,9 @@ export default async function AdminEventsPage({
     filters.status && filters.status !== 'ALL' ? filters.status : undefined;
   const type =
     filters.type && filters.type !== 'ALL' ? filters.type : undefined;
-  const collectiveOnly = filters.collective === '1';
+  // Collective-specific controls (filter, badge, participants column) only
+  // exist when the feature is ON — flag OFF keeps the plain support console.
+  const collectiveOnly = collectiveEventsEnabled && filters.collective === '1';
 
   const experiences = await db.experience.findMany({
     where: {
@@ -101,7 +97,7 @@ export default async function AdminEventsPage({
           by: ['experienceId'],
           where: {
             experienceId: { in: experienceIds },
-            status: { in: SOLD_STATUSES },
+            status: { in: [...COLLECTIVE_SOLD_STATUSES] },
           },
           _sum: { guestCount: true },
         }),
@@ -172,16 +168,18 @@ export default async function AdminEventsPage({
               ))}
             </select>
             <Button type="submit">{t('filters.apply')}</Button>
-            <label className="flex items-center gap-2 text-sm text-muted-foreground md:col-span-4">
-              <input
-                type="checkbox"
-                name="collective"
-                value="1"
-                defaultChecked={collectiveOnly}
-                className="h-4 w-4 rounded border-input"
-              />
-              {t('filters.collectiveOnly')}
-            </label>
+            {collectiveEventsEnabled && (
+              <label className="flex items-center gap-2 text-sm text-muted-foreground md:col-span-4">
+                <input
+                  type="checkbox"
+                  name="collective"
+                  value="1"
+                  defaultChecked={collectiveOnly}
+                  className="h-4 w-4 rounded border-input"
+                />
+                {t('filters.collectiveOnly')}
+              </label>
+            )}
           </form>
         </CardContent>
       </Card>
@@ -196,7 +194,9 @@ export default async function AdminEventsPage({
                   <th className="px-6 py-4">{t('table.winery')}</th>
                   <th className="px-6 py-4">{t('table.status')}</th>
                   <th className="px-6 py-4">{t('table.type')}</th>
-                  <th className="px-6 py-4">{t('table.participants')}</th>
+                  {collectiveEventsEnabled && (
+                    <th className="px-6 py-4">{t('table.participants')}</th>
+                  )}
                   <th className="px-6 py-4">{t('table.activity')}</th>
                 </tr>
               </thead>
@@ -204,7 +204,7 @@ export default async function AdminEventsPage({
                 {experiences.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={collectiveEventsEnabled ? 6 : 5}
                       className="px-6 py-10 text-center text-sm text-muted-foreground"
                     >
                       {t('table.noResults')}
@@ -218,11 +218,12 @@ export default async function AdminEventsPage({
                           <p className="font-medium text-foreground">
                             {experience.title}
                           </p>
-                          {experience.isCollective && (
-                            <Badge variant="gold">
-                              {t('table.collectiveBadge')}
-                            </Badge>
-                          )}
+                          {collectiveEventsEnabled &&
+                            experience.isCollective && (
+                              <Badge variant="gold">
+                                {t('table.collectiveBadge')}
+                              </Badge>
+                            )}
                         </div>
                         <p className="text-sm text-muted-foreground">
                           {experience.price / 100} CHF · {experience.duration}m
@@ -256,11 +257,13 @@ export default async function AdminEventsPage({
                       <td className="px-6 py-4 text-sm text-muted-foreground">
                         {tExp(`types.${experience.type}`)}
                       </td>
-                      <td className="px-6 py-4 text-sm text-muted-foreground">
-                        {experience.isCollective
-                          ? experience._count.participants
-                          : '—'}
-                      </td>
+                      {collectiveEventsEnabled && (
+                        <td className="px-6 py-4 text-sm text-muted-foreground">
+                          {experience.isCollective
+                            ? experience._count.participants
+                            : '—'}
+                        </td>
+                      )}
                       <td className="px-6 py-4 text-sm text-muted-foreground">
                         {t('table.activityValue', {
                           sold: soldById.get(experience.id) ?? 0,

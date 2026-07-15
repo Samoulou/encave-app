@@ -5,7 +5,7 @@ vi.mock('@/server/auth', () => ({ auth: vi.fn() }));
 
 vi.mock('@/server/db', () => ({
   db: {
-    winery: { findUnique: vi.fn() },
+    winery: { findUnique: vi.fn(), findFirst: vi.fn() },
     experience: { findFirst: vi.fn() },
     eventParticipant: {
       findUnique: vi.fn(),
@@ -67,16 +67,19 @@ const organizerWinery = {
   status: 'VERIFIED',
 };
 const ownedExperience = { id: EXP, slug: 'jardin', wineryId: ORG_WINERY };
-const verifiedTarget = { status: 'VERIFIED', user: { suspendedAt: null } };
+// Eligible target: the add action now resolves it via findFirst (which
+// applies the eligibility where-clause) and only checks for a truthy row.
+const verifiedTarget = { id: TARGET_WINERY };
 
 describe('addEventParticipant', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(auth).mockResolvedValue(session);
     vi.mocked(isFlagEnabled).mockResolvedValue(true);
-    vi.mocked(db.winery.findUnique)
-      .mockResolvedValueOnce(organizerWinery as never) // owner gate
-      .mockResolvedValueOnce(verifiedTarget as never); // target winery
+    // Owner gate (resolveOwnedExperience) reads findUnique; the target
+    // eligibility check reads findFirst.
+    vi.mocked(db.winery.findUnique).mockResolvedValue(organizerWinery as never);
+    vi.mocked(db.winery.findFirst).mockResolvedValue(verifiedTarget as never);
     vi.mocked(db.experience.findFirst).mockResolvedValue(
       ownedExperience as never
     );
@@ -150,14 +153,10 @@ describe('addEventParticipant', () => {
     expect(db.eventParticipant.create).not.toHaveBeenCalled();
   });
 
-  it('rejects a target winery that is not VERIFIED', async () => {
-    vi.mocked(db.winery.findUnique).mockReset();
-    vi.mocked(db.winery.findUnique)
-      .mockResolvedValueOnce(organizerWinery as never)
-      .mockResolvedValueOnce({
-        status: 'PENDING',
-        user: { suspendedAt: null },
-      } as never);
+  it('rejects a target winery that is not eligible', async () => {
+    // findFirst applies the eligibility where-clause, so an ineligible
+    // (suspended / unverified) target resolves to null.
+    vi.mocked(db.winery.findFirst).mockResolvedValue(null);
     const result = await addEventParticipant(validInput);
     expect(result).toMatchObject({
       success: false,

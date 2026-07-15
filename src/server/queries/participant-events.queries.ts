@@ -1,6 +1,10 @@
 import { cache } from 'react';
 import { BookingStatus } from '@prisma/client';
 import { db } from '@/server/db';
+import {
+  COLLECTIVE_SOLD_STATUSES,
+  eligibleParticipantWineryWhere,
+} from '@/lib/business-rules/collective-events';
 
 /**
  * Participant read-only view of collective events (P-11 / L-102).
@@ -8,20 +12,13 @@ import { db } from '@/server/db';
  * A participating winery does NOT own the event's bookings (they belong to
  * the organizer), so the tenant gate is PARTICIPATION, not ownership: the
  * caller's winery must be an `EventParticipant` of a PUBLISHED collective
- * experience. The view is strictly read: sold/scanned aggregates + the
- * attendee roster. No financial figures. Per Sam's D-Visibilité decision the
- * roster is nominative (name + contact) — a cross-winery PII share to be
- * covered by the CGV (P-12/P-16).
+ * experience AND itself eligible (VERIFIED, owner not suspended) — a suspended
+ * winery sees nothing, matching WineryAccessGuard on every sibling dashboard
+ * surface. The view is strictly read: sold/scanned aggregates + the attendee
+ * roster. No financial figures. Per Sam's D-Visibilité decision the roster is
+ * nominative (name + contact) — a cross-winery PII share to be covered by the
+ * CGV (P-12/P-16).
  */
-
-// Real attendees only — live holds (PENDING_PAYMENT) and cancellations never
-// appear. A booking has a single status, so summing guestCount over this set
-// never double-counts.
-const ATTENDEE_STATUSES = [
-  BookingStatus.CONFIRMED,
-  BookingStatus.COMPLETED,
-  BookingStatus.NO_SHOW,
-] as const;
 
 export interface ParticipantEventAttendeeDTO {
   bookingId: string;
@@ -51,8 +48,10 @@ export interface ParticipantEventDTO {
  */
 export const hasCollectiveParticipations = cache(
   async (userId: string): Promise<boolean> => {
-    const winery = await db.winery.findUnique({
-      where: { userId },
+    // Eligibility-gated: a suspended/unverified caller resolves to null, so
+    // the nav entry hides — the query is no longer a bare id lookup.
+    const winery = await db.winery.findFirst({
+      where: { userId, ...eligibleParticipantWineryWhere },
       select: { id: true },
     });
     if (!winery) return false;
@@ -73,8 +72,11 @@ export const hasCollectiveParticipations = cache(
  */
 export const getParticipantCollectiveEvents = cache(
   async (userId: string): Promise<ParticipantEventDTO[]> => {
-    const winery = await db.winery.findUnique({
-      where: { userId },
+    // Tenant gate: the caller's winery must be eligible (VERIFIED, owner not
+    // suspended). A suspended winery gets [] — it must never read the
+    // organizer's attendee PII, consistent with the public grid gate.
+    const winery = await db.winery.findFirst({
+      where: { userId, ...eligibleParticipantWineryWhere },
       select: { id: true },
     });
     if (!winery) return [];
@@ -108,7 +110,7 @@ export const getParticipantCollectiveEvents = cache(
     const bookings = await db.booking.findMany({
       where: {
         experienceId: { in: experienceIds },
-        status: { in: [...ATTENDEE_STATUSES] },
+        status: { in: [...COLLECTIVE_SOLD_STATUSES] },
       },
       orderBy: [{ date: 'asc' }, { timeSlot: 'asc' }],
       select: {

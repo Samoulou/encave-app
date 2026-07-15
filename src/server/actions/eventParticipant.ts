@@ -11,6 +11,7 @@ import {
   type RemoveEventParticipantInput,
   type ReorderEventParticipantsInput,
 } from '@/lib/validators/eventParticipant';
+import { eligibleParticipantWineryWhere } from '@/lib/business-rules/collective-events';
 import { logError } from '@/lib/logger';
 import type { ActionResult } from '@/types/actions';
 import { invalidateExperienceCaches } from './experience-helpers';
@@ -26,7 +27,6 @@ import { invalidateExperienceCaches } from './experience-helpers';
  */
 
 interface OwnedExperienceContext {
-  experienceId: string;
   experienceSlug: string;
   /** The organizing winery — the single paid organizer (schema invariant). */
   wineryId: string;
@@ -66,7 +66,7 @@ async function resolveOwnedExperience(
 
   const experience = await db.experience.findFirst({
     where: { id: experienceId, wineryId: winery.id },
-    select: { id: true, slug: true, wineryId: true },
+    select: { slug: true, wineryId: true },
   });
 
   if (!experience) {
@@ -79,7 +79,6 @@ async function resolveOwnedExperience(
   return {
     success: true,
     data: {
-      experienceId: experience.id,
       experienceSlug: experience.slug,
       wineryId: experience.wineryId,
       winerySlug: winery.slug,
@@ -126,12 +125,13 @@ export async function addEventParticipant(
       };
     }
 
-    // Target must be a VERIFIED, non-suspended winery.
-    const target = await db.winery.findUnique({
-      where: { id: parsed.data.wineryId },
-      select: { status: true, user: { select: { suspendedAt: true } } },
+    // Target must be an eligible (VERIFIED, non-suspended) winery — same rule
+    // as the public grid + picker (single source in collective-events.ts).
+    const target = await db.winery.findFirst({
+      where: { id: parsed.data.wineryId, ...eligibleParticipantWineryWhere },
+      select: { id: true },
     });
-    if (!target || target.status !== 'VERIFIED' || target.user.suspendedAt) {
+    if (!target) {
       return {
         success: false,
         error: {
@@ -296,15 +296,22 @@ export async function reorderEventParticipants(
       select: { id: true },
     });
     const currentIds = new Set(current.map((p) => p.id));
-    const allBelong = parsed.data.items.every((item) =>
-      currentIds.has(item.participantId)
-    );
-    if (!allBelong) {
+    const submittedIds = parsed.data.items.map((item) => item.participantId);
+    const uniqueSubmitted = new Set(submittedIds);
+    // The items list must be the COMPLETE participant set (index order is
+    // authoritative). A partial payload would leave omitted rows with stale
+    // order → duplicate/gappy order values, so reject anything but an exact,
+    // duplicate-free cover of the current participants.
+    const isCompleteCover =
+      uniqueSubmitted.size === submittedIds.length &&
+      uniqueSubmitted.size === currentIds.size &&
+      submittedIds.every((id) => currentIds.has(id));
+    if (!isCompleteCover) {
       return {
         success: false,
         error: {
           code: 'VALIDATION_ERROR',
-          message: 'A participant does not belong to this event',
+          message: 'The reorder must list every participant exactly once',
         },
       };
     }

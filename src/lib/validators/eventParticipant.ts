@@ -38,6 +38,7 @@ export const reorderEventParticipantsSchema = z.object({
         order: z.number().int().min(0),
       })
     )
+    .min(1)
     .max(50),
 });
 

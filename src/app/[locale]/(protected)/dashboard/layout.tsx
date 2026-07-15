@@ -29,15 +29,18 @@ export default async function DashboardLayout({
         isFlagEnabled('COLLECTIVE_EVENTS'),
       ]);
     const wineryName = winery?.name ?? 'My Winery';
-    // Badge count only when the flag is ON and the winery exists.
-    const requestsCount =
-      requestsEnabled && winery ? await getPendingRequestCount(winery.id) : 0;
-    // Collective-events nav entry only when the flag is ON and the winery
-    // participates in ≥1 published collective event (P-11 / L-102).
-    const showCollectiveEvents =
+    // Both nav signals are independent — resolve them concurrently.
+    // - requestsCount: only when the REQUESTS flag is ON and the winery exists.
+    // - showCollectiveEvents: only when COLLECTIVE_EVENTS is ON and the winery
+    //   participates in ≥1 published collective event (P-11 / L-102).
+    const [requestsCount, showCollectiveEvents] = await Promise.all([
+      requestsEnabled && winery
+        ? getPendingRequestCount(winery.id)
+        : Promise.resolve(0),
       collectiveEnabled && winery
-        ? await hasCollectiveParticipations(session.user.id)
-        : false;
+        ? hasCollectiveParticipations(session.user.id)
+        : Promise.resolve(false),
+    ]);
 
     return (
       <div className="flex h-screen w-full overflow-hidden bg-primary-light">

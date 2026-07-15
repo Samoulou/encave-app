@@ -1,6 +1,7 @@
 import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
 import { db } from '@/server/db';
+import { eligibleParticipantWineryWhere } from '@/lib/business-rules/collective-events';
 
 /**
  * Collective-event participant reads (P-11 / L-100, L-101).
@@ -35,7 +36,7 @@ export const getEventParticipants = cache(
       const rows = await db.eventParticipant.findMany({
         where: {
           experienceId,
-          winery: { status: 'VERIFIED', user: { suspendedAt: null } },
+          winery: eligibleParticipantWineryWhere,
         },
         orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
         select: {
@@ -147,8 +148,7 @@ export const getSelectableWineriesForEvent = cache(
   async (organizerWineryId: string): Promise<SelectableWineryDTO[]> => {
     return db.winery.findMany({
       where: {
-        status: 'VERIFIED',
-        user: { suspendedAt: null },
+        ...eligibleParticipantWineryWhere,
         id: { not: organizerWineryId },
       },
       orderBy: { name: 'asc' },
