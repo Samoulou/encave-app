@@ -118,7 +118,7 @@ Migrations **additives** uniquement. Tout modèle d'argent a ses invariants test
 | L-094 | SLA visible : alerte dashboard « demande sans réponse > 24 h » ; notification EnCave/Sam si > 48 h                                                                                                  | Alertes actionnables          | PRD US-240 | 1.5 h              |
 | L-095 | `/compte/demandes` : suivi statut (En attente / Offre reçue / Payée / Expirée) + CTA payer                                                                                                          | Suivi client                  | PAGES §5   | 1.5 h — **Should** |
 
-### E8 — Événements collectifs light (US-250) — **10 h, Must** `[FLAG]`
+### E8 — Événements collectifs light (US-250) — **10 h, Must** `[FLAG]` — ✅ livré P-11 (PR [#113](https://github.com/Samoulou/encave-app/pull/113))
 
 | ID    | Item                                                                                                                                                                | DoD                                          | Réf        | Est.  |
 | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ---------- | ----- |

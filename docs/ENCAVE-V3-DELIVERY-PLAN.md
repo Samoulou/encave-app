@@ -168,9 +168,9 @@ ISR/header découplé, i18n subset, Mapbox gated, index DB, invalidation propre.
 
 **DoD (= US-250 light)** :
 
-- [ ] Créer un événement avec caves participantes (logo + descriptif) + UN organisateur payé ; publier → fiche publique avec bandeau + grille + programme
-- [ ] Billetterie centrale opérationnelle ; **2 scanners différents sur le même événement sans collision** (test)
-- [ ] Chaque participant voit billets/scans en lecture ; pas de split automatique (organisateur encaisse)
+- [x] Créer un événement avec caves participantes (logo + descriptif) + UN organisateur payé ; publier → fiche publique avec bandeau + grille + programme
+- [x] Billetterie centrale opérationnelle ; **2 scanners différents sur le même événement sans collision** (test `tests/db/collective-scan-concurrency.test.ts`, CI Postgres)
+- [x] Chaque participant voit billets/scans en lecture ; pas de split automatique (organisateur encaisse)
 
 ### P-12 — Pages publiques & légal _(L-112→L-117 · ~16 h dont 7 Should · dépend de : P-03)_
 
@@ -241,7 +241,7 @@ ISR/header découplé, i18n subset, Mapbox gated, index DB, invalidation propre.
 | P-08   | Anti no-show                   | 💰  | P-02, P-04 | 14 h   | S9         | 🟨     | plan : [P-08-anti-no-show.md](./plans/P-08-anti-no-show.md) ; branche `claude/p-08-implementation-plan-f2vdwf`                                                                                                                                                                               |
 | P-09   | Bons cadeaux                   | 💰  | P-02, P-04 | 24 h   | S10-S11    | ⬜     |                                                                                                                                                                                                                                                                                              |
 | P-10   | Request / sur-mesure           | 💰  | P-02, P-03 | 18.5 h | S12-S13    | 🟨     | plan : [P-10-request-sur-mesure.md](./plans/P-10-request-sur-mesure.md) ; branche `claude/p10-implementation-plan-tj96sd` — décisions Sam tranchées (offre tout compris, cave obligatoire, escalade 48 h email)                                                                              |
-| P-11   | Événements collectifs          |     | P-02, P-05 | 10 h   | S13-S14    | ⬜     |                                                                                                                                                                                                                                                                                              |
+| P-11   | Événements collectifs          |     | P-02, P-05 | 10 h   | S13-S14    | ✅     | PR [#113](https://github.com/Samoulou/encave-app/pull/113) — plan : [P-11-evenements-collectifs.md](./plans/P-11-evenements-collectifs.md) ; gate éligibilité partagé (`collective-events.ts`), scan CAS existant, review high 10/10 corrigés                                                  |
 | P-12   | Pages publiques & légal        |     | P-03       | 16 h   | S14        | 🟨     | plan : [P-12-pages-publiques-legal.md](./plans/P-12-pages-publiques-legal.md) ; branche `claude/zealous-bohr-e4sm3d` — L-112→L-117 + L-220/L-221 implémentés, socle vert (tsc/lint/i18n/1123 tests) ; PR à ouvrir                                                                             |
 | P-13   | Espace encaveur V3             |     | P-05       | 21 h   | S15        | ✅     | PR [#103](https://github.com/Samoulou/encave-app/pull/103) — review high 47 candidats corrigés, plan : [P-13-espace-encaveur.md](./archive/plans/P-13-espace-encaveur.md)                                                                                                                    |
 | P-14   | Auth V3                        |     | —          | 9 h    | S15        | ⬜     |                                                                                                                                                                                                                                                                                              |
