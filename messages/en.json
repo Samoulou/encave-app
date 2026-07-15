@@ -169,7 +169,8 @@
       "rememberMe": "Remember for 30 days",
       "orContinueWith": "Or continue with",
       "showPassword": "Show password",
-      "hidePassword": "Hide password"
+      "hidePassword": "Hide password",
+      "useOtp": "Get a code by email"
     },
     "register": {
       "title": "Create an account",
@@ -187,6 +188,52 @@
       "createAccount": "Create account",
       "haveAccount": "Already have an account?",
       "emailExists": "An account already exists with this email"
+    },
+    "otpLogin": {
+      "sendCode": "Send code",
+      "sending": "Sending…",
+      "codeSentTo": "Code sent to {email}",
+      "codeLabel": "6-digit code",
+      "verify": "Sign in",
+      "verifying": "Signing in…",
+      "resend": "Resend code",
+      "usePassword": "Use a password",
+      "invalidCode": "Invalid or expired code."
+    },
+    "forgotPassword": {
+      "imageAlt": "Wine cellar in Valais",
+      "heroTitle": "Reset your access",
+      "heroSubtitle": "Get a code by email to set a new password.",
+      "title": "Forgot password",
+      "subtitle": "Enter your email to receive a reset code.",
+      "sendCode": "Send code",
+      "sending": "Sending…",
+      "codeSentTo": "Code sent to {email}",
+      "codeLabel": "6-digit code",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm password",
+      "resetPassword": "Reset password",
+      "resetting": "Resetting…",
+      "successMessage": "Your password has been reset.",
+      "backToLogin": "Back to login",
+      "passwordTooShort": "Password must be at least {min} characters.",
+      "passwordMismatch": "Passwords don't match.",
+      "resetFailed": "Reset failed. Check the code."
+    },
+    "twoFactor": {
+      "imageAlt": "Wine cellar in Valais",
+      "heroTitle": "Two-factor verification",
+      "heroSubtitle": "Enter the code from your authenticator app.",
+      "title": "Two-factor verification",
+      "subtitle": "Enter the 6-digit code from your app.",
+      "backupSubtitle": "Enter one of your backup codes.",
+      "codeLabel": "6-digit code",
+      "backupLabel": "Backup code",
+      "verify": "Verify",
+      "verifying": "Verifying…",
+      "useBackup": "Use a backup code",
+      "useTotp": "Use the authenticator app",
+      "invalid": "Invalid code."
     }
   },
   "home": {
@@ -1140,6 +1187,10 @@
       "language": {
         "title": "Language",
         "description": "Change your preferred language"
+      },
+      "account": {
+        "title": "Account security",
+        "description": "Password and email address"
       }
     },
     "notifications": {
@@ -1445,6 +1496,14 @@
         "collectiveBadge": "Collective",
         "noResults": "No results."
       }
+    },
+    "invitations": {
+      "title": "Founder invitations",
+      "subtitle": "Generate an invitation link that creates a verified winery, skipping the queue.",
+      "wineryName": "Winery name",
+      "generate": "Generate link",
+      "linkReady": "Invitation link ready — copy and send it to the winery.",
+      "linkHint": "Valid for 7 days. Single use."
     }
   },
   "search": {
@@ -2872,5 +2931,65 @@
       "noShow": "No-show",
       "expected": "Expected"
     }
+  },
+  "accountSecurity": {
+    "title": "Account security",
+    "password": {
+      "title": "Password",
+      "description": "Change your password. Your other sessions will be signed out.",
+      "current": "Current password",
+      "new": "New password",
+      "confirm": "Confirm",
+      "cta": "Change password",
+      "success": "Password changed.",
+      "tooShort": "At least {min} characters.",
+      "mismatch": "Passwords don't match."
+    },
+    "email": {
+      "title": "Email address",
+      "description": "Current address: {email}. A confirmation email may be required.",
+      "newEmail": "New email address",
+      "cta": "Change email",
+      "success": "Request saved. Check your inbox if a confirmation is required.",
+      "sameEmail": "That's already your current address."
+    },
+    "totp": {
+      "title": "Two-factor authentication (TOTP)",
+      "description": "Add a layer of security with an authenticator app.",
+      "confirmPassword": "Confirm your password",
+      "start": "Enable",
+      "scan": "Scan this QR code with your authenticator app.",
+      "backupTitle": "Backup codes",
+      "backupDescription": "Keep these codes safe. Each can be used once.",
+      "enterCode": "Enter the displayed code",
+      "verify": "Verify and enable",
+      "enabled": "Two-factor authentication enabled.",
+      "enableFailed": "Couldn't enable. Check your password.",
+      "invalidCode": "Invalid code.",
+      "forcedTitle": "Secure your admin account",
+      "forcedSubtitle": "Two-factor authentication is mandatory for administrators."
+    },
+    "setPassword": {
+      "title": "Set a password",
+      "description": "Your account uses Google. Set a password first (by email) to enable two-factor authentication.",
+      "sendCode": "Get a code by email",
+      "codeLabel": "6-digit code",
+      "newPassword": "New password",
+      "submit": "Set password",
+      "tooShort": "At least {min} characters.",
+      "failed": "Failed. Check the code."
+    }
+  },
+  "invitation": {
+    "title": "Join EnCave as a founding winery",
+    "subtitle": "Create your account to activate your winery — no queue.",
+    "invalidTitle": "Invalid invitation",
+    "invalidDescription": "This invitation link is invalid, expired or already used.",
+    "nameLabel": "Your name",
+    "wineryNameLabel": "Winery name",
+    "cta": "Create my account",
+    "creating": "Creating…",
+    "passwordTooShort": "Password must be at least {min} characters.",
+    "signInFailed": "Account exists: wrong password. Please try again."
   }
 }

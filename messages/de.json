@@ -169,7 +169,8 @@
       "rememberMe": "30 Tage merken",
       "orContinueWith": "Oder fortfahren mit",
       "showPassword": "Passwort anzeigen",
-      "hidePassword": "Passwort verbergen"
+      "hidePassword": "Passwort verbergen",
+      "useOtp": "Code per E-Mail erhalten"
     },
     "register": {
       "title": "Konto erstellen",
@@ -187,6 +188,52 @@
       "createAccount": "Konto erstellen",
       "haveAccount": "Bereits ein Konto?",
       "emailExists": "Mit dieser E-Mail-Adresse existiert bereits ein Konto"
+    },
+    "otpLogin": {
+      "sendCode": "Code erhalten",
+      "sending": "Wird gesendet…",
+      "codeSentTo": "Code an {email} gesendet",
+      "codeLabel": "6-stelliger Code",
+      "verify": "Anmelden",
+      "verifying": "Anmeldung…",
+      "resend": "Code erneut senden",
+      "usePassword": "Passwort verwenden",
+      "invalidCode": "Ungültiger oder abgelaufener Code."
+    },
+    "forgotPassword": {
+      "imageAlt": "Weinkeller im Wallis",
+      "heroTitle": "Setzen Sie Ihren Zugang zurück",
+      "heroSubtitle": "Erhalten Sie einen Code per E-Mail, um ein neues Passwort festzulegen.",
+      "title": "Passwort vergessen",
+      "subtitle": "Geben Sie Ihre E-Mail ein, um einen Code zu erhalten.",
+      "sendCode": "Code erhalten",
+      "sending": "Wird gesendet…",
+      "codeSentTo": "Code an {email} gesendet",
+      "codeLabel": "6-stelliger Code",
+      "newPassword": "Neues Passwort",
+      "confirmPassword": "Passwort bestätigen",
+      "resetPassword": "Zurücksetzen",
+      "resetting": "Wird zurückgesetzt…",
+      "successMessage": "Ihr Passwort wurde zurückgesetzt.",
+      "backToLogin": "Zurück zur Anmeldung",
+      "passwordTooShort": "Das Passwort muss mindestens {min} Zeichen lang sein.",
+      "passwordMismatch": "Die Passwörter stimmen nicht überein.",
+      "resetFailed": "Zurücksetzen fehlgeschlagen. Prüfen Sie den Code."
+    },
+    "twoFactor": {
+      "imageAlt": "Weinkeller im Wallis",
+      "heroTitle": "Zwei-Faktor-Verifizierung",
+      "heroSubtitle": "Geben Sie den Code aus Ihrer Authenticator-App ein.",
+      "title": "2FA-Verifizierung",
+      "subtitle": "Geben Sie den 6-stelligen Code aus Ihrer App ein.",
+      "backupSubtitle": "Geben Sie einen Ihrer Backup-Codes ein.",
+      "codeLabel": "6-stelliger Code",
+      "backupLabel": "Backup-Code",
+      "verify": "Verifizieren",
+      "verifying": "Wird verifiziert…",
+      "useBackup": "Backup-Code verwenden",
+      "useTotp": "Authenticator-App verwenden",
+      "invalid": "Ungültiger Code."
     }
   },
   "home": {
@@ -1140,6 +1187,10 @@
       "language": {
         "title": "Sprache",
         "description": "Ändern Sie Ihre bevorzugte Sprache"
+      },
+      "account": {
+        "title": "Kontosicherheit",
+        "description": "Passwort und E-Mail-Adresse"
       }
     },
     "notifications": {
@@ -1445,6 +1496,14 @@
         "collectiveBadge": "Gemeinsam",
         "noResults": "Keine Ergebnisse."
       }
+    },
+    "invitations": {
+      "title": "Gründer-Einladungen",
+      "subtitle": "Erstellen Sie einen Einladungslink, der ein verifiziertes Weingut ohne Warteschlange erstellt.",
+      "wineryName": "Name des Weinguts",
+      "generate": "Link erstellen",
+      "linkReady": "Einladungslink bereit — kopieren und an das Weingut senden.",
+      "linkHint": "7 Tage gültig. Einmalig verwendbar."
     }
   },
   "search": {
@@ -2872,5 +2931,65 @@
       "noShow": "Abwesend",
       "expected": "Erwartet"
     }
+  },
+  "accountSecurity": {
+    "title": "Kontosicherheit",
+    "password": {
+      "title": "Passwort",
+      "description": "Ändern Sie Ihr Passwort. Ihre anderen Sitzungen werden abgemeldet.",
+      "current": "Aktuelles Passwort",
+      "new": "Neues Passwort",
+      "confirm": "Bestätigen",
+      "cta": "Passwort ändern",
+      "success": "Passwort geändert.",
+      "tooShort": "Mindestens {min} Zeichen.",
+      "mismatch": "Die Passwörter stimmen nicht überein."
+    },
+    "email": {
+      "title": "E-Mail-Adresse",
+      "description": "Aktuelle Adresse: {email}. Eine Bestätigungs-E-Mail kann erforderlich sein.",
+      "newEmail": "Neue E-Mail-Adresse",
+      "cta": "E-Mail ändern",
+      "success": "Anfrage gespeichert. Prüfen Sie Ihr Postfach, falls eine Bestätigung nötig ist.",
+      "sameEmail": "Das ist bereits Ihre aktuelle Adresse."
+    },
+    "totp": {
+      "title": "Zwei-Faktor-Authentifizierung (TOTP)",
+      "description": "Fügen Sie mit einer Authenticator-App eine Sicherheitsebene hinzu.",
+      "confirmPassword": "Bestätigen Sie Ihr Passwort",
+      "start": "Aktivieren",
+      "scan": "Scannen Sie diesen QR-Code mit Ihrer Authenticator-App.",
+      "backupTitle": "Backup-Codes",
+      "backupDescription": "Bewahren Sie diese Codes sicher auf. Jeder ist nur einmal verwendbar.",
+      "enterCode": "Geben Sie den angezeigten Code ein",
+      "verify": "Verifizieren und aktivieren",
+      "enabled": "Zwei-Faktor-Authentifizierung aktiviert.",
+      "enableFailed": "Aktivierung fehlgeschlagen. Prüfen Sie Ihr Passwort.",
+      "invalidCode": "Ungültiger Code.",
+      "forcedTitle": "Sichern Sie Ihr Admin-Konto",
+      "forcedSubtitle": "Zwei-Faktor-Authentifizierung ist für Administratoren obligatorisch."
+    },
+    "setPassword": {
+      "title": "Passwort festlegen",
+      "description": "Ihr Konto nutzt Google. Legen Sie zuerst ein Passwort (per E-Mail) fest, um die Zwei-Faktor-Authentifizierung zu aktivieren.",
+      "sendCode": "Code per E-Mail erhalten",
+      "codeLabel": "6-stelliger Code",
+      "newPassword": "Neues Passwort",
+      "submit": "Passwort festlegen",
+      "tooShort": "Mindestens {min} Zeichen.",
+      "failed": "Fehlgeschlagen. Prüfen Sie den Code."
+    }
+  },
+  "invitation": {
+    "title": "Treten Sie EnCave als Gründerwinzer bei",
+    "subtitle": "Erstellen Sie Ihr Konto, um Ihr Weingut ohne Warteschlange zu aktivieren.",
+    "invalidTitle": "Ungültige Einladung",
+    "invalidDescription": "Dieser Einladungslink ist ungültig, abgelaufen oder bereits verwendet.",
+    "nameLabel": "Ihr Name",
+    "wineryNameLabel": "Name des Weinguts",
+    "cta": "Konto erstellen",
+    "creating": "Wird erstellt…",
+    "passwordTooShort": "Das Passwort muss mindestens {min} Zeichen lang sein.",
+    "signInFailed": "Konto existiert bereits: falsches Passwort. Versuchen Sie es erneut."
   }
 }

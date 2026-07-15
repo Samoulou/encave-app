@@ -17,6 +17,8 @@ import {
   NoShowFeeChargedEmail,
   AccountDeletedEmail,
   PasswordResetEmail,
+  OtpEmail,
+  type OtpPurpose,
   WelcomeEmail,
   EmailVerificationEmail,
   WinemakerNewBookingEmail,
@@ -383,6 +385,24 @@ export async function sendPasswordResetEmail(
   return sendEmail({
     to: email,
     subject: t(subjects.passwordReset, loc),
+    html,
+  });
+}
+
+// P-14 (L-150): email #11 — the 6-digit OTP code (login / password reset /
+// email verification). Wired into better-auth's emailOTP sendVerificationOTP.
+export async function sendOtpEmail(
+  email: string,
+  otp: string,
+  purpose: OtpPurpose,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const html = await render(OtpEmail({ locale: loc, otp, purpose }));
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.otpCode, loc),
     html,
   });
 }

@@ -2,7 +2,14 @@ import { auth } from '@/server/auth';
 import { redirect } from 'next/navigation';
 import { getLocale } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { Bell, User, Languages, ChevronRight, LucideIcon } from 'lucide-react';
+import {
+  Bell,
+  User,
+  Languages,
+  ChevronRight,
+  ShieldCheck,
+  LucideIcon,
+} from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { getTranslations } from 'next-intl/server';
 import { generatePageMetadata } from '@/lib/seo/metadata';
@@ -29,6 +36,11 @@ interface SettingsSection {
 }
 
 const settingsSections: SettingsSection[] = [
+  {
+    key: 'account',
+    href: '/dashboard/settings/account',
+    icon: ShieldCheck,
+  },
   {
     key: 'notifications',
     href: '/dashboard/settings/notifications',

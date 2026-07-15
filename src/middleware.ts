@@ -68,6 +68,11 @@ export default async function middleware(request: NextRequest) {
     if (allowedPaths.some((p) => pathnameNoLocale === p)) {
       return intlMiddleware(request);
     }
+    // Founder invitation links must work pre-launch (P-14 / L-154) — onboard
+    // the first wineries before the gate is lifted.
+    if (pathnameNoLocale.startsWith('/invitation/')) {
+      return intlMiddleware(request);
+    }
 
     // Redirect everything else to coming-soon
     return NextResponse.redirect(new URL('/coming-soon', request.url));

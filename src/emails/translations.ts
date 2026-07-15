@@ -112,6 +112,11 @@ export const subjects = {
     DE: 'Verifizieren Sie Ihre E-Mail-Adresse',
     EN: 'Verify your email address',
   },
+  otpCode: {
+    FR: 'Votre code de vérification EnCave',
+    DE: 'Ihr EnCave-Bestätigungscode',
+    EN: 'Your EnCave verification code',
+  },
   reminder2h: {
     FR: 'Votre experience commence bientot!',
     DE: 'Ihr Erlebnis beginnt bald!',
@@ -474,6 +479,38 @@ export const auth = {
       FR: "Si vous n'avez pas fait cette demande, vous pouvez ignorer cet e-mail.",
       DE: 'Wenn Sie diese Anfrage nicht gestellt haben, konnen Sie diese E-Mail ignorieren.',
       EN: "If you didn't make this request, you can safely ignore this email.",
+    },
+  },
+  otp: {
+    title: {
+      FR: 'Votre code de vérification',
+      DE: 'Ihr Bestätigungscode',
+      EN: 'Your verification code',
+    },
+    introSignIn: {
+      FR: 'Utilisez ce code pour vous connecter à votre compte EnCave.',
+      DE: 'Verwenden Sie diesen Code, um sich bei Ihrem EnCave-Konto anzumelden.',
+      EN: 'Use this code to sign in to your EnCave account.',
+    },
+    introForgetPassword: {
+      FR: 'Utilisez ce code pour réinitialiser votre mot de passe EnCave.',
+      DE: 'Verwenden Sie diesen Code, um Ihr EnCave-Passwort zurückzusetzen.',
+      EN: 'Use this code to reset your EnCave password.',
+    },
+    introEmailVerification: {
+      FR: 'Utilisez ce code pour vérifier votre adresse e-mail.',
+      DE: 'Verwenden Sie diesen Code, um Ihre E-Mail-Adresse zu bestätigen.',
+      EN: 'Use this code to verify your email address.',
+    },
+    expiry: {
+      FR: 'Ce code expire dans 15 minutes.',
+      DE: 'Dieser Code läuft in 15 Minuten ab.',
+      EN: 'This code expires in 15 minutes.',
+    },
+    ignore: {
+      FR: "Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail.",
+      DE: 'Wenn Sie diese Anfrage nicht gestellt haben, ignorieren Sie diese E-Mail.',
+      EN: "If you didn't request this, you can safely ignore this email.",
     },
   },
   welcome: {

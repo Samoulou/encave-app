@@ -1,4 +1,4 @@
-import { auth, isCurrentUserSuspended } from '@/server/auth';
+import { auth } from '@/server/auth';
 import { notFound, redirect } from 'next/navigation';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
@@ -10,6 +10,7 @@ import {
   CalendarDays,
   ClipboardList,
   ShieldCheck,
+  UserPlus,
   LogOut,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -41,9 +42,23 @@ export default async function AdminLayout({
     notFound();
   }
 
-  if (await isCurrentUserSuspended()) {
+  // One fresh read for both admin gates (suspension + mandatory TOTP) — fresh
+  // (not the cookie-cached session) so a just-enrolled admin isn't bounced
+  // back to setup. The setup page lives outside this layout (no redirect loop).
+  const guard = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { suspendedAt: true, twoFactorEnabled: true },
+  });
+
+  if (guard?.suspendedAt) {
     const locale = await getLocale();
     redirect(`/${locale}`);
+  }
+
+  // P-14 (L-152): TOTP is mandatory for admins.
+  if (!guard?.twoFactorEnabled) {
+    const locale = await getLocale();
+    redirect(`/${locale}/admin-setup/2fa`);
   }
 
   const pendingCount = await getPendingCount();
@@ -103,6 +118,13 @@ export default async function AdminLayout({
                 >
                   <ClipboardList className="h-4 w-4" aria-hidden="true" />
                   Bookings
+                </Link>
+                <Link
+                  href="/admin/invitations"
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-burgundy-700"
+                >
+                  <UserPlus className="h-4 w-4" aria-hidden="true" />
+                  Invitations
                 </Link>
                 <Link
                   href="/admin/compliance"

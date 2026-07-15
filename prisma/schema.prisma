@@ -146,13 +146,16 @@ model User {
   // Custom fields (not part of Better Auth core schema)
   role             UserRole  @default(CLIENT)
   preferredLocale  Locale    @default(FR)
+  // P-14 (L-152): better-auth twoFactor plugin — mandatory TOTP for ADMIN.
+  twoFactorEnabled Boolean   @default(false)
   // Timestamps
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
-  accounts Account[]
-  sessions Session[]
-  winery   Winery?
+  accounts  Account[]
+  sessions  Session[]
+  winery    Winery?
+  twoFactor TwoFactor?
 
   @@index([suspendedAt])
   @@map("users")
@@ -290,6 +293,49 @@ model Verification {
   updatedAt  DateTime @default(now()) @updatedAt
 
   @@map("verifications")
+}
+
+// P-14 (L-152): better-auth twoFactor plugin storage. Schema mirrors the
+// plugin's expected shape (two-factor/schema.d.mts): secret + backupCodes
+// (both returned:false) keyed by userId. One row per user (1-1).
+model TwoFactor {
+  id          String @id @default(cuid())
+  secret      String
+  backupCodes String
+  userId      String @unique
+  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("two_factors")
+}
+
+// P-14 (L-155): better-auth rateLimit database storage — persistent auth /
+// registration throttling across Vercel instances. Shape mirrors the plugin's
+// createDBStorage (model "rateLimit": key / count / lastRequest bigint ms).
+model RateLimit {
+  id          String @id @default(cuid())
+  key         String @unique
+  count       Int
+  lastRequest BigInt
+
+  @@map("rate_limits")
+}
+
+// P-14 (L-154): founder invitation — a one-time link that provisions a
+// VERIFIED FOUNDER winery, skipping the approval queue. Token stored hashed
+// (sha256) like every other access token (SEC-002).
+model Invitation {
+  id             String    @id @default(cuid())
+  email          String
+  tokenHash      String    @unique
+  wineryName     String?
+  invitedBy      String
+  acceptedAt     DateTime?
+  acceptedUserId String?
+  expiresAt      DateTime
+  createdAt      DateTime  @default(now())
+
+  @@index([email])
+  @@map("invitations")
 }
 
 model VerificationLog {

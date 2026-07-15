@@ -169,7 +169,8 @@
       "rememberMe": "Se souvenir pendant 30 jours",
       "orContinueWith": "Ou continuer avec",
       "showPassword": "Afficher le mot de passe",
-      "hidePassword": "Masquer le mot de passe"
+      "hidePassword": "Masquer le mot de passe",
+      "useOtp": "Recevoir un code par e-mail"
     },
     "register": {
       "title": "Créer un compte",
@@ -187,6 +188,52 @@
       "createAccount": "Créer le compte",
       "haveAccount": "Vous avez déjà un compte?",
       "emailExists": "Un compte existe déjà avec cet email"
+    },
+    "otpLogin": {
+      "sendCode": "Recevoir un code",
+      "sending": "Envoi…",
+      "codeSentTo": "Code envoyé à {email}",
+      "codeLabel": "Code à 6 chiffres",
+      "verify": "Se connecter",
+      "verifying": "Connexion…",
+      "resend": "Renvoyer le code",
+      "usePassword": "Utiliser un mot de passe",
+      "invalidCode": "Code invalide ou expiré."
+    },
+    "forgotPassword": {
+      "imageAlt": "Cave en Valais",
+      "heroTitle": "Réinitialisez votre accès",
+      "heroSubtitle": "Recevez un code par e-mail pour définir un nouveau mot de passe.",
+      "title": "Mot de passe oublié",
+      "subtitle": "Entrez votre e-mail pour recevoir un code de réinitialisation.",
+      "sendCode": "Recevoir un code",
+      "sending": "Envoi…",
+      "codeSentTo": "Code envoyé à {email}",
+      "codeLabel": "Code à 6 chiffres",
+      "newPassword": "Nouveau mot de passe",
+      "confirmPassword": "Confirmer le mot de passe",
+      "resetPassword": "Réinitialiser",
+      "resetting": "Réinitialisation…",
+      "successMessage": "Votre mot de passe a été réinitialisé.",
+      "backToLogin": "Retour à la connexion",
+      "passwordTooShort": "Le mot de passe doit contenir au moins {min} caractères.",
+      "passwordMismatch": "Les mots de passe ne correspondent pas.",
+      "resetFailed": "Échec de la réinitialisation. Vérifiez le code."
+    },
+    "twoFactor": {
+      "imageAlt": "Cave en Valais",
+      "heroTitle": "Vérification en deux étapes",
+      "heroSubtitle": "Saisissez le code de votre application d'authentification.",
+      "title": "Vérification 2FA",
+      "subtitle": "Entrez le code à 6 chiffres de votre application.",
+      "backupSubtitle": "Entrez l'un de vos codes de secours.",
+      "codeLabel": "Code à 6 chiffres",
+      "backupLabel": "Code de secours",
+      "verify": "Vérifier",
+      "verifying": "Vérification…",
+      "useBackup": "Utiliser un code de secours",
+      "useTotp": "Utiliser l'application d'authentification",
+      "invalid": "Code invalide."
     }
   },
   "home": {
@@ -1140,6 +1187,10 @@
       "language": {
         "title": "Langue",
         "description": "Changez votre langue préférée"
+      },
+      "account": {
+        "title": "Sécurité du compte",
+        "description": "Mot de passe et adresse e-mail"
       }
     },
     "notifications": {
@@ -1445,6 +1496,14 @@
         "collectiveBadge": "Collectif",
         "noResults": "Aucun résultat."
       }
+    },
+    "invitations": {
+      "title": "Invitations fondateurs",
+      "subtitle": "Générez un lien d'invitation qui crée un domaine vérifié sans file d'attente.",
+      "wineryName": "Nom du domaine",
+      "generate": "Générer le lien",
+      "linkReady": "Lien d’invitation prêt — copiez-le et envoyez-le à la cave.",
+      "linkHint": "Valable 7 jours. Utilisable une seule fois."
     }
   },
   "search": {
@@ -2872,5 +2931,65 @@
       "noShow": "Absent",
       "expected": "Attendu"
     }
+  },
+  "accountSecurity": {
+    "title": "Sécurité du compte",
+    "password": {
+      "title": "Mot de passe",
+      "description": "Modifiez votre mot de passe. Vos autres sessions seront déconnectées.",
+      "current": "Mot de passe actuel",
+      "new": "Nouveau mot de passe",
+      "confirm": "Confirmer",
+      "cta": "Modifier le mot de passe",
+      "success": "Mot de passe modifié.",
+      "tooShort": "Au moins {min} caractères.",
+      "mismatch": "Les mots de passe ne correspondent pas."
+    },
+    "email": {
+      "title": "Adresse e-mail",
+      "description": "Adresse actuelle : {email}. Un e-mail de confirmation peut être requis.",
+      "newEmail": "Nouvelle adresse e-mail",
+      "cta": "Modifier l'e-mail",
+      "success": "Demande enregistrée. Vérifiez votre boîte mail si une confirmation est requise.",
+      "sameEmail": "C'est déjà votre adresse actuelle."
+    },
+    "totp": {
+      "title": "Authentification à deux facteurs (TOTP)",
+      "description": "Ajoutez une couche de sécurité avec une application d'authentification.",
+      "confirmPassword": "Confirmez votre mot de passe",
+      "start": "Activer",
+      "scan": "Scannez ce QR code avec votre application d'authentification.",
+      "backupTitle": "Codes de secours",
+      "backupDescription": "Conservez ces codes en lieu sûr. Chacun est utilisable une seule fois.",
+      "enterCode": "Entrez le code affiché",
+      "verify": "Vérifier et activer",
+      "enabled": "Authentification à deux facteurs activée.",
+      "enableFailed": "Impossible d'activer. Vérifiez votre mot de passe.",
+      "invalidCode": "Code invalide.",
+      "forcedTitle": "Sécurisez votre compte administrateur",
+      "forcedSubtitle": "L'authentification à deux facteurs est obligatoire pour les administrateurs."
+    },
+    "setPassword": {
+      "title": "Définir un mot de passe",
+      "description": "Votre compte utilise Google. Définissez d’abord un mot de passe (par e-mail) pour activer la double authentification.",
+      "sendCode": "Recevoir un code par e-mail",
+      "codeLabel": "Code à 6 chiffres",
+      "newPassword": "Nouveau mot de passe",
+      "submit": "Définir le mot de passe",
+      "tooShort": "Au moins {min} caractères.",
+      "failed": "Échec. Vérifiez le code."
+    }
+  },
+  "invitation": {
+    "title": "Rejoignez EnCave en tant que cave fondatrice",
+    "subtitle": "Créez votre compte pour activer votre domaine, sans file d'attente.",
+    "invalidTitle": "Invitation invalide",
+    "invalidDescription": "Ce lien d’invitation est invalide, expiré ou déjà utilisé.",
+    "nameLabel": "Votre nom",
+    "wineryNameLabel": "Nom du domaine",
+    "cta": "Créer mon compte",
+    "creating": "Création…",
+    "passwordTooShort": "Le mot de passe doit contenir au moins {min} caractères.",
+    "signInFailed": "Compte existant : mot de passe incorrect. Réessayez."
   }
 }
