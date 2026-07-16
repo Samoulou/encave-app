@@ -1006,7 +1006,7 @@
     "cancelling": "Annulation en cours...",
     "cancelled": "Réservation annulée",
     "cancelledDescription": "Votre réservation a été annulée avec succès.",
-    "refundProcessed": "Un remboursement de {amount} sera traité sous 5-10 jours ouvrables.",
+    "refundProcessed": "Un montant de {amount} vous sera restitué : sur votre moyen de paiement (5-10 jours ouvrables) et, pour la part payée par bon cadeau, recréditée sur votre bon.",
     "cancelError": "Échec de l'annulation. Veuillez réessayer."
   },
   "gallery": {
@@ -2336,7 +2336,7 @@
       "keepBooking": "Garder la réservation",
       "confirm": "Confirmer l'annulation",
       "cancelling": "Annulation en cours...",
-      "successWithRefund": "Réservation annulée. Un remboursement de CHF {amount} sera traité dans les 5 à 10 jours ouvrables.",
+      "successWithRefund": "Réservation annulée. Un montant de CHF {amount} vous sera restitué — moyen de paiement (5-10 jours ouvrables) et/ou recrédit de votre bon cadeau.",
       "successNoRefund": "Réservation annulée. Aucun remboursement n'est disponible car l'expérience est dans moins de 24 heures.",
       "error": "Échec de l'annulation. Veuillez réessayer."
     },

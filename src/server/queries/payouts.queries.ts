@@ -332,9 +332,24 @@ export async function getPayoutDetail(
 
       const bookingLines: PayoutBookingLineDTO[] = [];
       const unmatchedLines: PayoutDetailDTO['unmatchedLines'] = [];
+      // One booking line per TRANSFER (review #120): if Stripe ever
+      // delivers the same tr_ under two balance-transaction shapes
+      // (payment + transfer), the second occurrence must not double the
+      // gross/commission totals. Negative lines (reversals, refunds) are
+      // never booking lines either — they stay visibly unmatched.
+      const consumedTransferIds = new Set<string>();
       for (const txn of transactions) {
         if (txn.type === 'payout') continue; // the payout line itself
-        const transferId = getSourceTransferId(txn);
+        const transferId = txn.amount > 0 ? getSourceTransferId(txn) : null;
+        if (transferId && consumedTransferIds.has(transferId)) {
+          unmatchedLines.push({
+            type: txn.type,
+            amountCents: txn.amount,
+            createdMs: txn.created * 1000,
+          });
+          continue;
+        }
+        if (transferId) consumedTransferIds.add(transferId);
         const paymentIntentId = transferId
           ? paymentIntentByTransfer.get(transferId)
           : undefined;

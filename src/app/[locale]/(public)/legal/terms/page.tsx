@@ -1,5 +1,11 @@
 import type { Metadata } from 'next';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { formatDate } from '@/lib/i18n/formatters';
+import type { Locale } from '@/i18n/routing';
+
+// Bump on every substantive CGV change (P-16 review: rendered through the
+// localized formatter, never as a raw ISO literal).
+const TERMS_LAST_UPDATED = new Date('2026-07-16');
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -23,7 +29,11 @@ export default async function TermsOfServicePage({ params }: Props) {
   return (
     <>
       <h1>{t('terms.title')}</h1>
-      <p className="lead">{t('terms.lastUpdated', { date: '2026-07-16' })}</p>
+      <p className="lead">
+        {t('terms.lastUpdated', {
+          date: formatDate(TERMS_LAST_UPDATED, locale as Locale),
+        })}
+      </p>
 
       <h2>{t('terms.sections.acceptance.title')}</h2>
       <p>{t('terms.sections.acceptance.content')}</p>

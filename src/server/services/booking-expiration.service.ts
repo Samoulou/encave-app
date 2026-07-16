@@ -16,6 +16,8 @@ const PAYMENT_EXPIRATION_MINUTES = 30;
 export async function expirePendingPaymentBookings(now = new Date()): Promise<{
   expired: number;
   deletedHolds: number;
+  /** Candidates whose expiration threw (P-16 review: surfaced, not hidden). */
+  failed: number;
 }> {
   const candidates = await db.booking.findMany({
     where: {
@@ -53,6 +55,7 @@ export async function expirePendingPaymentBookings(now = new Date()): Promise<{
 
   let expired = 0;
   let deletedHolds = 0;
+  let failed = 0;
   for (const candidate of candidates) {
     const isPastDeadline = candidate.expiresAt
       ? isBefore(candidate.expiresAt, now)
@@ -163,6 +166,7 @@ export async function expirePendingPaymentBookings(now = new Date()): Promise<{
       }
       expired++;
     } catch (error) {
+      failed++;
       logError('Failed to expire pending booking', error, {
         action: 'expirePendingPaymentBookings',
         bookingId: candidate.id,
@@ -170,6 +174,6 @@ export async function expirePendingPaymentBookings(now = new Date()): Promise<{
     }
   }
 
-  logInfo('booking.pending_payment.expired', { expired, deletedHolds });
-  return { expired, deletedHolds };
+  logInfo('booking.pending_payment.expired', { expired, deletedHolds, failed });
+  return { expired, deletedHolds, failed };
 }

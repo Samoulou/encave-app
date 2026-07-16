@@ -99,6 +99,16 @@ describe('/api/health (P-16 / WS-E)', () => {
     expect(data.checks.stripeEvents).toBe('degraded');
   });
 
+  it('deep: a terminal FAILED scheduled job → warn, still 200 (no 24h page)', async () => {
+    scheduledJobCount.mockResolvedValue(1);
+    const response = await GET(makeRequest(true));
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(data.status).toBe('warn');
+    expect(data.checks.scheduledJobs).toBe('warn');
+  });
+
   it('deep: Stripe API unreachable → 503 down', async () => {
     balanceRetrieve.mockRejectedValue(new Error('stripe timeout'));
     const response = await GET(makeRequest(true));

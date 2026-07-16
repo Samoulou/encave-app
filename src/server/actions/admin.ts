@@ -335,6 +335,24 @@ export async function refundBookingManually(
     };
   }
 
+  // P-16 (ADR-0003, review #120): a gift-funded booking's card charge is a
+  // PLATFORM charge (no transfer) — this destination-charge refund
+  // (reverse_transfer + application fee) would be rejected by Stripe, and
+  // the paid-based cap below would offer the gift-covered part as if it
+  // were card money. Manual refunds on these bookings go through the
+  // incident-paiement runbook (Stripe Dashboard + gift ledger) until a
+  // gift-aware admin flow exists.
+  if (booking.giftAppliedCents > 0) {
+    return {
+      success: false,
+      error: {
+        code: 'CONFLICT',
+        message:
+          'Gift-funded booking — manual refunds are not supported here. Follow the incident-paiement runbook (platform charge refund + gift ledger + transfer reversal).',
+      },
+    };
+  }
+
   const alreadyRefunded = booking.refundAmount ?? 0;
   // Refundable base = everything the client paid (tickets + service fee).
   const paidCents = booking.totalPrice + booking.serviceFeeCents;

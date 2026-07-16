@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const bookingUpdate = vi.fn(async () => ({}));
+const bookingFindUnique = vi.fn(async () => ({ refundError: null }));
 vi.mock('@/server/db', () => ({
-  db: { booking: { update: bookingUpdate } },
+  db: { booking: { update: bookingUpdate, findUnique: bookingFindUnique } },
 }));
 
 const processRefund = vi.fn();
@@ -42,7 +43,7 @@ const giftBookingInput = {
   refundDueCents: 12000,
   alreadyRefundedCents: 0,
   paidCents: 12000,
-  refundPercent: 100,
+  reversalCents: 10560,
   actionName: 'cancelBooking',
 };
 
@@ -80,7 +81,7 @@ describe('processCancellationRefund — classic booking', () => {
     const outcome = await processCancellationRefund({
       ...giftBookingInput,
       refundDueCents: 0,
-      refundPercent: 0,
+      reversalCents: 0,
     });
     expect(processRefund).not.toHaveBeenCalled();
     expect(outcome.totalReturnedCents).toBe(0);
@@ -145,7 +146,7 @@ describe('processCancellationRefund — gift-funded booking (ADR-0003)', () => {
     const outcome = await processCancellationRefund({
       ...giftBookingInput,
       refundDueCents: 6000,
-      refundPercent: 50,
+      reversalCents: 5280,
     });
     // 60 CHF due < 70 CHF card headroom → all from the card, gift untouched.
     expect(processRefund).toHaveBeenCalledWith(

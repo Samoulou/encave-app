@@ -1006,7 +1006,7 @@
     "cancelling": "Wird storniert...",
     "cancelled": "Buchung storniert",
     "cancelledDescription": "Ihre Buchung wurde erfolgreich storniert.",
-    "refundProcessed": "Eine Ruckerstattung von {amount} wird innerhalb von 5-10 Werktagen bearbeitet.",
+    "refundProcessed": "Ein Betrag von {amount} wird Ihnen zurückerstattet: auf Ihre Zahlungsmethode (5-10 Werktage) und, für den mit Gutschein bezahlten Anteil, als Wiedergutschrift auf Ihren Gutschein.",
     "cancelError": "Stornierung fehlgeschlagen. Bitte versuchen Sie es erneut."
   },
   "gallery": {
@@ -2336,7 +2336,7 @@
       "keepBooking": "Buchung behalten",
       "confirm": "Stornierung bestätigen",
       "cancelling": "Wird storniert...",
-      "successWithRefund": "Buchung storniert. Eine Rückerstattung von CHF {amount} wird innerhalb von 5-10 Werktagen bearbeitet.",
+      "successWithRefund": "Buchung storniert. Ein Betrag von CHF {amount} wird Ihnen zurückerstattet — Zahlungsmethode (5-10 Werktage) und/oder Wiedergutschrift auf Ihren Gutschein.",
       "successNoRefund": "Buchung storniert. Keine Rückerstattung möglich, da das Erlebnis innerhalb von 24 Stunden stattfindet.",
       "error": "Stornierung fehlgeschlagen. Bitte versuchen Sie es erneut."
     },

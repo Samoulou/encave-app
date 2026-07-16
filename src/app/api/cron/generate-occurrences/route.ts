@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import * as Sentry from '@sentry/nextjs';
 import { ExperienceStatus, WineryStatus } from '@prisma/client';
 import { verifyCronRequest } from '@/lib/cron-auth';
 import { withCronMonitor } from '@/lib/cron-monitor';
@@ -63,6 +64,16 @@ export async function GET() {
         });
       }
 
+      // Per-item failures are swallowed by design (one broken experience
+      // must not block the roll) — but a run with failures must alert:
+      // the 200 + green check-in would otherwise hide it (review #120).
+      if (failures > 0) {
+        Sentry.captureMessage('generate-occurrences: failures in run', {
+          level: 'warning',
+          tags: { area: 'cron' },
+          extra: { experiences: experiences.length, created, failures },
+        });
+      }
       logInfo('occurrences.cron_roll', {
         action: 'generateOccurrencesCron',
         experiences: experiences.length,

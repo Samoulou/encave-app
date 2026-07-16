@@ -1006,7 +1006,7 @@
     "cancelling": "Cancelling...",
     "cancelled": "Booking Cancelled",
     "cancelledDescription": "Your booking has been successfully cancelled.",
-    "refundProcessed": "A refund of {amount} will be processed within 5-10 business days.",
+    "refundProcessed": "An amount of {amount} will be returned to you: to your payment method (5-10 business days) and, for the share paid with a gift card, re-credited to your card.",
     "cancelError": "Failed to cancel booking. Please try again."
   },
   "gallery": {
@@ -2336,7 +2336,7 @@
       "keepBooking": "Keep Booking",
       "confirm": "Confirm Cancellation",
       "cancelling": "Cancelling...",
-      "successWithRefund": "Booking cancelled. A refund of CHF {amount} will be processed within 5-10 business days.",
+      "successWithRefund": "Booking cancelled. An amount of CHF {amount} will be returned to you — payment method (5-10 business days) and/or re-credited to your gift card.",
       "successNoRefund": "Booking cancelled. No refund is available as the experience is within 24 hours.",
       "error": "Failed to cancel booking. Please try again."
     },

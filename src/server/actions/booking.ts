@@ -11,10 +11,13 @@ import {
   sendBookingCancellationEmail,
   sendWinemakerCancellationEmail,
 } from '@/server/services/email.service';
-import { processCancellationRefund } from '@/server/services/booking-refund.service';
+import {
+  appendRefundError,
+  processCancellationRefund,
+} from '@/server/services/booking-refund.service';
 import {
   computeBookingRefund,
-  getRefundPercent,
+  computeRefundCents,
 } from '@/lib/business-rules/cancellation-policy';
 import {
   activeCapacityBookingWhere,
@@ -579,6 +582,7 @@ export async function cancelBooking(
     let refundAmount: number | null = null;
     let stripeRefundId: string | null = null;
     let giftRestoredCents = 0;
+    let totalReturnedCents = 0;
 
     // Atomic claim: the status flip IS the lock. Two concurrent
     // cancellations would otherwise both pass the CONFIRMED check and
@@ -614,12 +618,19 @@ export async function cancelBooking(
           refundDueCents,
           alreadyRefundedCents,
           paidCents,
-          refundPercent: getRefundPercent(policy, hoursUntilExperience),
+          // Same rounding rule as the client refund (computeRefundCents),
+          // applied to the winery payout for the clawback share.
+          reversalCents: computeRefundCents(
+            policy,
+            hoursUntilExperience,
+            booking.wineryPayout
+          ),
           actionName: 'cancelBooking',
         });
         refundAmount = outcome.cardRefundCents;
         stripeRefundId = outcome.stripeRefundId;
         giftRestoredCents = outcome.giftRestoredCents;
+        totalReturnedCents = outcome.totalReturnedCents;
       } catch (refundError) {
         // Release the claim ONLY on a deterministic Stripe rejection —
         // after an ambiguous network error the refund may have succeeded,
@@ -669,14 +680,15 @@ export async function cancelBooking(
     // Conditional on the refundAmount we READ: a concurrent admin refund
     // that landed in between must not be clobbered out of the ledger —
     // on conflict we keep the DB value and flag for reconciliation.
-    const totalReturnedCents = (refundAmount ?? 0) + giftRestoredCents;
     if (totalReturnedCents > 0) {
       const recorded = await db.booking.updateMany({
         where: { id: bookingId, refundAmount: booking.refundAmount },
         data: {
           refundIssued: true,
           refundAmount: alreadyRefundedCents + totalReturnedCents,
-          stripeRefundId,
+          // A gift-only restitution has no Stripe refund — never null out
+          // a re_ written by an earlier admin refund (review #120).
+          ...(stripeRefundId ? { stripeRefundId } : {}),
         },
       });
       if (recorded.count === 0) {
@@ -686,12 +698,10 @@ export async function cancelBooking(
           cancelRefundCents: totalReturnedCents,
           stripeRefundId,
         });
-        await db.booking.update({
-          where: { id: bookingId },
-          data: {
-            refundError: `LEDGER_CONFLICT: cancellation returned ${totalReturnedCents} (${stripeRefundId ?? 'gift only'}) concurrently with another refund writer — reconcile with Stripe`,
-          },
-        });
+        await appendRefundError(
+          bookingId,
+          `LEDGER_CONFLICT: cancellation returned ${totalReturnedCents} (${stripeRefundId ?? 'gift only'}) concurrently with another refund writer — reconcile with Stripe`
+        );
       }
     }
     const updatedBooking = await db.booking.findUniqueOrThrow({

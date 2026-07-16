@@ -83,9 +83,6 @@ describe('cancellation-policy', () => {
       expect(r.policy).toBe('STANDARD');
       expect(r.paidCents).toBe(21000);
       expect(r.refundDueCents).toBe(21000);
-      // Always explicit — "refund the remaining balance" would change
-      // meaning under a concurrent admin refund.
-      expect(r.stripeAmountArg).toBe(21000);
     });
 
     it('subtracts a prior partial refund from what the policy owes', () => {
@@ -95,7 +92,6 @@ describe('cancellation-policy', () => {
       );
       expect(r.alreadyRefundedCents).toBe(5000);
       expect(r.refundDueCents).toBe(16000);
-      expect(r.stripeAmountArg).toBe(16000);
     });
 
     it('never goes negative when the prior refund exceeds the policy due', () => {
@@ -106,7 +102,6 @@ describe('cancellation-policy', () => {
       };
       const r = computeBookingRefund(strict, 72);
       expect(r.refundDueCents).toBe(0);
-      expect(r.stripeAmountArg).toBeUndefined();
     });
 
     it('falls back to the winery policy for legacy bookings', () => {

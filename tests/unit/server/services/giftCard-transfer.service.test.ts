@@ -146,12 +146,14 @@ describe('reverseGiftTransferForCancellation (P-16 / ADR-0003)', () => {
     transfersCreateReversal.mockResolvedValue({ id: 'trr_1' });
   });
 
-  it('noops when no transfer was ever settled (nothing to claw back)', async () => {
+  it("returns 'no-transfer' when nothing was ever settled — the caller decides if the winery is owed", async () => {
     findUnique.mockResolvedValue({
       ...reversibleBooking,
       giftTransferId: null,
     });
-    expect(await reverseGiftTransferForCancellation('bk-1', 7200)).toBe('noop');
+    expect(await reverseGiftTransferForCancellation('bk-1', 7200)).toBe(
+      'no-transfer'
+    );
     expect(transfersCreateReversal).not.toHaveBeenCalled();
   });
 

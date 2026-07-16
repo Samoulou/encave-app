@@ -108,12 +108,14 @@ export async function settleGiftTransfer(
       tags: { area: 'gift-transfer' },
       extra: { bookingId, transferId: transfer.id },
     });
-    await db.booking.update({
-      where: { id: bookingId },
-      data: {
-        refundError: `GIFT_RACE_REVERSED: transfer ${transfer.id} fully reversed after mid-flight cancellation — re-transfer manually if the policy left the payout to the winery (runbook incident-paiement)`,
-      },
-    });
+    // Appended, never overwritten: the concurrent cancellation may have
+    // just written its own reconciliation markers (review #120).
+    const { appendRefundError } =
+      await import('@/server/services/booking-refund.service');
+    await appendRefundError(
+      bookingId,
+      `GIFT_RACE_REVERSED: transfer ${transfer.id} fully reversed after mid-flight cancellation — re-transfer manually if the policy left the payout to the winery (runbook incident-paiement)`
+    );
     return 'skipped';
   }
 
@@ -133,15 +135,16 @@ export async function settleGiftTransfer(
  *  - Stripe idempotencyKey `gift_reversal_{bookingId}`.
  * `reversalCents` is the policy-proportional clawback computed by the
  * caller, capped here at the transferred amount. No transfer settled yet
- * (`giftTransferId` null) → noop, and none will ever settle: both
- * settleGiftTransfer and the reconcile cron only touch CONFIRMED bookings.
+ * (`giftTransferId` null) → 'no-transfer', and none will ever settle:
+ * settleGiftTransfer and the reconcile cron only touch CONFIRMED bookings
+ * — the caller decides whether the winery is owed its share (review #120).
  * A Stripe failure throws — the caller logs and stores it for manual
  * reconciliation (runbook incident-paiement), never silently.
  */
 export async function reverseGiftTransferForCancellation(
   bookingId: string,
   reversalCents: number
-): Promise<'reversed' | 'noop'> {
+): Promise<'reversed' | 'noop' | 'no-transfer'> {
   if (reversalCents <= 0) return 'noop';
   const booking = await db.booking.findUnique({
     where: { id: bookingId },
@@ -151,7 +154,7 @@ export async function reverseGiftTransferForCancellation(
       wineryPayout: true,
     },
   });
-  if (!booking?.giftTransferId) return 'noop';
+  if (!booking?.giftTransferId) return 'no-transfer';
   if (booking.giftTransferReversalId) return 'noop';
 
   const amount = Math.min(reversalCents, booking.wineryPayout);

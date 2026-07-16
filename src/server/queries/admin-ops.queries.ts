@@ -53,7 +53,11 @@ export const getWebhookHealth = cache(async (): Promise<WebhookHealth> => {
     if (event.status === 'FAILED') {
       failedCount++;
     } else if (event.status === 'PROCESSING') {
-      if (now - event.createdAt.getTime() > STUCK_THRESHOLD_MS) {
+      // updatedAt, not createdAt (P-16 review, same fix as /api/health):
+      // a FAILED event Stripe redelivers flips its ORIGINAL row back to
+      // PROCESSING — its creation time would flag every retry of an event
+      // older than 15 min as stuck the instant it restarts.
+      if (now - event.updatedAt.getTime() > STUCK_THRESHOLD_MS) {
         stuckCount++;
       }
     } else if (event.status === 'PROCESSED') {

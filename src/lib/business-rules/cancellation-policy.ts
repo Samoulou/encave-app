@@ -122,8 +122,6 @@ export function computeBookingRefund(
   paidCents: number;
   alreadyRefundedCents: number;
   refundDueCents: number;
-  /** Stripe amount arg: always explicit when a refund is due. */
-  stripeAmountArg: number | undefined;
 } {
   const policy =
     booking.cancellationPolicy ?? booking.winery.cancellationPolicy;
@@ -131,11 +129,12 @@ export function computeBookingRefund(
   const alreadyRefundedCents = booking.refundAmount ?? 0;
   const policyDueCents = computeRefundCents(policy, hoursUntilStart, paidCents);
   const refundDueCents = Math.max(0, policyDueCents - alreadyRefundedCents);
+  // (P-16 review: the old `stripeAmountArg` field is gone — since ADR-0003
+  // the due amount splits card/gift and no caller may pass it to Stripe.)
   return {
     policy,
     paidCents,
     alreadyRefundedCents,
     refundDueCents,
-    stripeAmountArg: refundDueCents > 0 ? refundDueCents : undefined,
   };
 }

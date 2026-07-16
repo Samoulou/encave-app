@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { Link } from '@/i18n/navigation';
+import { Badge } from '@/components/ui/badge';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
 import { PayoutsErrorBanner } from '@/components/features/payouts/PayoutsErrorBanner';
 import { getPayoutDetail } from '@/server/queries/payouts.queries';
@@ -149,14 +150,14 @@ export default async function PayoutDetailPage({
                     <p className="truncate text-sm font-medium text-foreground">
                       {line.experienceTitle}
                       {line.kind === 'gift' && (
-                        <span className="ml-2 inline-block rounded-full bg-burgundy-50 px-2 py-0.5 text-xs font-medium text-burgundy-700">
+                        <Badge variant="info" className="ml-2">
                           {t('detail.giftBadge')}
-                        </span>
+                        </Badge>
                       )}
                       {line.kind === 'noShowFee' && (
-                        <span className="ml-2 inline-block rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
+                        <Badge variant="warning" className="ml-2">
                           {t('detail.noShowBadge')}
-                        </span>
+                        </Badge>
                       )}
                     </p>
                     <p className="text-xs text-muted-foreground">
