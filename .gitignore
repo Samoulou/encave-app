@@ -60,3 +60,6 @@ _bmad/
 _bmad-output/
 .bmad-core/
 .env*.local
+
+# Lighthouse CI artifacts (P-16)
+.lighthouseci/
