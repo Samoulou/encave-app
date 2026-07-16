@@ -23,6 +23,8 @@ module.exports = {
       ],
       numberOfRuns: 3,
       settings: {
+        // Standard CI flags (rootless containers / GitHub runners).
+        chromeFlags: '--no-sandbox --disable-dev-shm-usage',
         preset: 'perf',
         formFactor: 'mobile',
         screenEmulation: {
