@@ -4,14 +4,97 @@
  * cancelBooking → CANCELLED_BY_CLIENT with the refund recorded (the
  * e2e_ payment intent resolves to a synthetic refund in processRefund).
  */
+import crypto from 'crypto';
+
 import { test, expect } from '../fixtures/auth.fixture';
 import { testDb } from '../utils/db';
 
 const BOOKING_ID = 'test-booking-cancel-target';
 const TOKEN = 'token-cancel-target';
-// Per-run booking id (append-only ledger) — resolved by reference.
-const GIFT_BOOKING_REF = 'ENC-E2E103';
-const GIFT_TOKEN = 'token-gift-cancel-target';
+
+// Experience owned by the auth winery, seeded with a FIXED id (see
+// setup-test-db.ts) — the gift fixture below attaches to it.
+const AUTH_EXPERIENCE_ID = 'ce2eauthwinerytasting00001';
+
+/**
+ * Gift-funded cancellation fixture (ADR-0003): 9000 paid as 5000 gift +
+ * 4000 card (`e2e_…` intent → synthetic refund), winery transfer settled
+ * as the synthetic `tr_e2e_…`. Created PER TEST ATTEMPT (Codex review):
+ * the cancellation mutates the booking, so a CI retry against a global
+ * seed would find it already cancelled and fail deterministically. The
+ * gift ledger is append-only by DB trigger — unique card code, booking
+ * reference and token per attempt, never reuse or reset.
+ */
+async function seedGiftCancelFixture() {
+  const db = testDb();
+  const experience = await db.experience.findUnique({
+    where: { id: AUTH_EXPERIENCE_ID },
+    select: { id: true, wineryId: true },
+  });
+  if (!experience) {
+    throw new Error('auth-winery experience missing — reseed the test DB');
+  }
+
+  const suffix = crypto.randomBytes(4).toString('hex').toUpperCase();
+  const token = `token-gift-cancel-${suffix}`;
+  const date = new Date();
+  date.setDate(date.getDate() + 7);
+  date.setHours(0, 0, 0, 0);
+
+  const card = await db.giftCard.create({
+    data: {
+      code: `E2EGC${suffix}`,
+      initialAmount: 10000,
+      balance: 5000,
+      purchaserEmail: 'gift-cancel-purchaser@test.example.com',
+      purchaserName: 'Gift Cancel Purchaser',
+      expiresAt: new Date(Date.now() + 5 * 365 * 24 * 60 * 60 * 1000),
+    },
+  });
+  const booking = await db.booking.create({
+    data: {
+      reference: `ENC-${suffix}`,
+      visitorName: 'Gift Cancel Visitor',
+      visitorEmail: 'gift-cancel@test.example.com',
+      visitorPhone: '+41 79 000 00 03',
+      experienceId: experience.id,
+      wineryId: experience.wineryId,
+      date,
+      timeSlot: '11:00',
+      guestCount: 2,
+      totalPrice: 9000,
+      platformFee: 1080,
+      wineryPayout: 7920,
+      status: 'CONFIRMED',
+      stripePaymentIntentId: `e2e_pi_gift_cancel_${suffix}`,
+      giftCardId: card.id,
+      giftAppliedCents: 5000,
+      accessTokenHash: crypto.createHash('sha256').update(token).digest('hex'),
+    },
+  });
+  await db.booking.update({
+    where: { id: booking.id },
+    data: { giftTransferId: `tr_e2e_${booking.id}` },
+  });
+  await db.giftCardTransaction.createMany({
+    data: [
+      {
+        giftCardId: card.id,
+        type: 'PURCHASE',
+        amount: 10000,
+        note: 'e2e fixture',
+      },
+      {
+        giftCardId: card.id,
+        type: 'REDEMPTION',
+        amount: -5000,
+        bookingId: booking.id,
+        note: 'e2e fixture redemption',
+      },
+    ],
+  });
+  return { bookingId: booking.id, giftCardId: card.id, token };
+}
 
 test.describe('Cancellation + refund', () => {
   test('guest cancels >24h before start and gets the full refund', async ({
@@ -59,17 +142,9 @@ test.describe('Cancellation + refund', () => {
   test('gift-funded booking cancellation runs the 3 movements (ADR-0003)', async ({
     page,
   }) => {
-    // Fixture: 9000 paid as 5000 gift + 4000 card, transfer settled.
-    const seeded = await testDb().booking.findFirst({
-      where: { reference: GIFT_BOOKING_REF },
-      select: { id: true, giftCardId: true },
-    });
-    if (!seeded?.giftCardId) {
-      throw new Error('gift-cancel fixture missing — reseed the test DB');
-    }
-    const giftBookingId = seeded.id;
+    const fixture = await seedGiftCancelFixture();
 
-    await page.goto(`/fr/booking/${giftBookingId}?token=${GIFT_TOKEN}`);
+    await page.goto(`/fr/booking/${fixture.bookingId}?token=${fixture.token}`);
     await expect(
       page.getByRole('heading', { name: 'Détails de la réservation' })
     ).toBeVisible();
@@ -93,7 +168,7 @@ test.describe('Cancellation + refund', () => {
     // Movement 1+2 — card refund (capped at the 4000 card charge) + gift
     // re-credit: refundAmount records the TOTAL returned to the client.
     const booking = await testDb().booking.findUnique({
-      where: { id: giftBookingId },
+      where: { id: fixture.bookingId },
     });
     expect(booking?.status).toBe('CANCELLED_BY_CLIENT');
     expect(booking?.refundIssued).toBe(true);
@@ -102,17 +177,19 @@ test.describe('Cancellation + refund', () => {
     expect(booking?.refundError).toBeNull();
     // Movement 3 — the winery transfer is clawed back (100% tier →
     // full wineryPayout), recorded on the durable idempotency column.
-    expect(booking?.giftTransferReversalId).toBe(`trr_e2e_${giftBookingId}`);
+    expect(booking?.giftTransferReversalId).toBe(
+      `trr_e2e_${fixture.bookingId}`
+    );
 
     // The gift card got its 5000 back — balance restored, and the ledger
     // gained the REFUND movement tied to this booking.
     const card = await testDb().giftCard.findUnique({
-      where: { id: seeded.giftCardId },
+      where: { id: fixture.giftCardId },
       include: { transactions: { orderBy: { createdAt: 'asc' } } },
     });
     expect(card?.balance).toBe(10000);
     const refundMovement = card?.transactions.find(
-      (t) => t.type === 'REFUND' && t.bookingId === giftBookingId
+      (t) => t.type === 'REFUND' && t.bookingId === fixture.bookingId
     );
     expect(refundMovement?.amount).toBe(5000);
     expect(refundMovement?.note).toBe('cancellation_refund');

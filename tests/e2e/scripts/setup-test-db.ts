@@ -433,67 +433,6 @@ async function main() {
     },
   });
 
-  // Gift-funded cancellation target (ADR-0003): 9000 paid as 5000 gift +
-  // 4000 card (`e2e_…` intent → synthetic refund). The winery transfer is
-  // the synthetic `tr_e2e_…` settled at confirmation — cancelling must run
-  // the 3 movements: card refund first, gift re-credit, transfer reversal.
-  // Per-run unique code AND booking id (Prisma cuid): the ledger is
-  // append-only, so a reused id would inherit the previous run's REFUND
-  // rows and the spec resolves the booking by its reference (ENC-E2E103,
-  // same pattern as the scan target).
-  const giftCancelCard = await prisma.giftCard.create({
-    data: {
-      code: `E2EGC${Date.now()}`,
-      initialAmount: 10000,
-      balance: 5000,
-      purchaserEmail: 'gift-cancel-purchaser@test.example.com',
-      purchaserName: 'Gift Cancel Purchaser',
-      expiresAt: new Date(Date.now() + 5 * 365 * 24 * 60 * 60 * 1000),
-    },
-  });
-  const giftCancelBooking = await prisma.booking.create({
-    data: {
-      reference: 'ENC-E2E103',
-      visitorName: 'Gift Cancel Visitor',
-      visitorEmail: 'gift-cancel@test.example.com',
-      visitorPhone: '+41 79 000 00 03',
-      experienceId: authExperience.id,
-      wineryId: authWineryId,
-      date: toDateOnly(7),
-      timeSlot: '11:00',
-      guestCount: 2,
-      totalPrice: 9000,
-      platformFee: 1080,
-      wineryPayout: 7920,
-      status: 'CONFIRMED',
-      stripePaymentIntentId: 'e2e_pi_gift_cancel_target',
-      giftCardId: giftCancelCard.id,
-      giftAppliedCents: 5000,
-      accessTokenHash: hashAccessToken('token-gift-cancel-target'),
-    },
-  });
-  await prisma.booking.update({
-    where: { id: giftCancelBooking.id },
-    data: { giftTransferId: `tr_e2e_${giftCancelBooking.id}` },
-  });
-  await prisma.giftCardTransaction.createMany({
-    data: [
-      {
-        giftCardId: giftCancelCard.id,
-        type: 'PURCHASE',
-        amount: 10000,
-        note: 'e2e seed',
-      },
-      {
-        giftCardId: giftCancelCard.id,
-        type: 'REDEMPTION',
-        amount: -5000,
-        bookingId: giftCancelBooking.id,
-        note: 'e2e seed redemption',
-      },
-    ],
-  });
-
   console.log('E2E database ready');
   console.log(`  - ${Object.keys(TEST_USERS).length} winemaker users`);
   console.log(`  - ${Object.keys(AUTH_TEST_USERS).length} auth users`);
