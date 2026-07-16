@@ -8,7 +8,14 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/api/', '/dashboard/', '/admin/', '/_next/'],
+        // /coming-soon: pre-launch gate page — never index (P-16 / WS-H)
+        disallow: [
+          '/api/',
+          '/dashboard/',
+          '/admin/',
+          '/_next/',
+          '/coming-soon',
+        ],
       },
     ],
     sitemap: `${baseUrl}/sitemap.xml`,

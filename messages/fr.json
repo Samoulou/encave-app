@@ -1959,7 +1959,8 @@
             "rectification": "Corriger les données inexactes",
             "deletion": "Demander la suppression de vos données",
             "portability": "Recevoir vos données dans un format portable"
-          }
+          },
+          "selfService": "Vous pouvez exporter vos données ou demander la suppression de votre compte à tout moment depuis votre espace « Compte », ou en nous écrivant à privacy@encave.ch."
         },
         "contact": {
           "title": "Nous contacter",
@@ -1974,7 +1975,9 @@
             "neon": "Neon — base de données (Europe)",
             "stripe": "Stripe — paiements (nous ne stockons aucune donnée de carte)",
             "resend": "Resend — envoi d’e-mails transactionnels",
-            "posthog": "PostHog — mesure d’audience (activée uniquement avec votre consentement)"
+            "posthog": "PostHog — mesure d’audience (activée uniquement avec votre consentement)",
+            "sentry": "Sentry — suivi des erreurs applicatives (données techniques)",
+            "upstash": "Upstash — limitation de débit (adresses IP, conservation brève)"
           }
         }
       }
@@ -2008,6 +2011,42 @@
         "payments": {
           "title": "Paiements",
           "content": "Tous les paiements sont traités de manière sécurisée via Stripe. Les prix sont affichés en francs suisses (CHF). En effectuant une réservation, vous nous autorisez à débiter votre moyen de paiement."
+        },
+        "bookingFee": {
+          "title": "Frais de réservation",
+          "content": "Une contribution de service de 2.50 CHF par billet est facturée lors de la réservation en ligne. Elle apparaît toujours comme une ligne distincte au moment du paiement — jamais fondue dans le prix de l'expérience — et suit la même règle de remboursement que le billet."
+        },
+        "cancellationPolicies": {
+          "title": "Annulation et remboursement",
+          "content": "Chaque domaine choisit la politique d'annulation applicable à ses expériences. Elle est affichée sur la fiche de l'expérience et récapitulée avant le paiement :",
+          "items": {
+            "flexible": "Flexible — remboursement intégral jusqu'à 2 heures avant le début.",
+            "standard": "Standard — remboursement intégral jusqu'à 24 heures avant le début.",
+            "strict": "Stricte — remboursement intégral jusqu'à 7 jours avant le début, 50 % jusqu'à 48 heures, aucun remboursement ensuite."
+          },
+          "snapshot": "La politique applicable est celle acceptée au moment de la réservation. Le remboursement porte sur le montant total payé (billets et frais de réservation). La part réglée par bon cadeau est recréditée sur le bon, jamais remboursée en espèces."
+        },
+        "giftCards": {
+          "title": "Bons cadeaux",
+          "content": "Les bons cadeaux EnCave sont utilisables sur les expériences proposées sur la plateforme, aux conditions suivantes :",
+          "items": {
+            "validity": "Validité de 5 ans à compter de l'achat.",
+            "partial": "Utilisation en une ou plusieurs fois — le solde restant demeure disponible.",
+            "noCash": "Ni remboursables ni échangeables contre des espèces ; l'achat d'un bon comporte des frais de service de 2.50 CHF.",
+            "cancellation": "En cas d'annulation d'une réservation payée avec un bon, la part couverte par le bon est recréditée sur celui-ci, selon la politique d'annulation applicable."
+          }
+        },
+        "noShow": {
+          "title": "Frais de non-présentation (no-show)",
+          "content": "Certains domaines conditionnent les réservations gratuites ou payables sur place à une empreinte de carte bancaire. Vous en êtes informé avant de confirmer votre réservation et acceptez qu'en cas de non-présentation sans annulation, le domaine puisse prélever des frais par personne du montant annoncé lors de la réservation (de 0 à 50 CHF). Le prélèvement est déclenché par le domaine, jamais automatiquement, et vous en êtes notifié par e-mail avec rappel de la politique que vous avez acceptée."
+        },
+        "surMesure": {
+          "title": "Demandes sur mesure",
+          "content": "Pour une demande sur mesure, le domaine s'efforce de répondre sous 48 heures par une offre précisant le contenu, le prix total et sa date d'expiration. L'offre est ferme jusqu'à son expiration ; la réservation est confirmée au paiement du lien reçu. La politique d'annulation du domaine s'applique."
+        },
+        "collectiveEvents": {
+          "title": "Événements collectifs",
+          "content": "Pour les événements réunissant plusieurs domaines, la billetterie est assurée par le domaine organisateur. Afin d'organiser l'accueil, la liste des participants (nom et adresse e-mail) est accessible à ce domaine organisateur, qui s'engage à ne l'utiliser que pour la gestion de l'événement, conformément à la nLPD."
         },
         "winemakers": {
           "title": "Obligations des vignerons",

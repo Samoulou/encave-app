@@ -1959,7 +1959,8 @@
             "rectification": "Correct inaccurate data",
             "deletion": "Request deletion of your data",
             "portability": "Receive your data in a portable format"
-          }
+          },
+          "selfService": "You can export your data or request the deletion of your account at any time from your “Account” area, or by writing to privacy@encave.ch."
         },
         "contact": {
           "title": "Contact Us",
@@ -1974,7 +1975,9 @@
             "neon": "Neon — database (Europe)",
             "stripe": "Stripe — payments (we never store card data)",
             "resend": "Resend — transactional email delivery",
-            "posthog": "PostHog — analytics (enabled only with your consent)"
+            "posthog": "PostHog — analytics (enabled only with your consent)",
+            "sentry": "Sentry — application error tracking (technical data)",
+            "upstash": "Upstash — rate limiting (IP addresses, short retention)"
           }
         }
       }
@@ -2008,6 +2011,42 @@
         "payments": {
           "title": "Payments",
           "content": "All payments are processed securely through Stripe. Prices are displayed in Swiss Francs (CHF). By making a booking, you authorize us to charge your payment method."
+        },
+        "bookingFee": {
+          "title": "Booking fee",
+          "content": "A service contribution of CHF 2.50 per ticket is charged when booking online. It always appears as a separate line at checkout — never blended into the experience price — and follows the same refund rule as the ticket."
+        },
+        "cancellationPolicies": {
+          "title": "Cancellation and refunds",
+          "content": "Each winery chooses the cancellation policy applying to its experiences. It is displayed on the experience page and summarised before payment:",
+          "items": {
+            "flexible": "Flexible — full refund until 2 hours before the start.",
+            "standard": "Standard — full refund until 24 hours before the start.",
+            "strict": "Strict — full refund until 7 days before the start, 50% until 48 hours, no refund afterwards."
+          },
+          "snapshot": "The applicable policy is the one accepted at booking time. Refunds cover the full amount paid (tickets and booking fee). The share paid with a gift card is re-credited to the card, never refunded in cash."
+        },
+        "giftCards": {
+          "title": "Gift cards",
+          "content": "EnCave gift cards can be used on the experiences offered on the platform, under the following conditions:",
+          "items": {
+            "validity": "Valid for 5 years from purchase.",
+            "partial": "Usable in one or several times — the remaining balance stays available.",
+            "noCash": "Neither refundable nor exchangeable for cash; purchasing a gift card carries a CHF 2.50 service fee.",
+            "cancellation": "If a booking paid with a gift card is cancelled, the share covered by the card is re-credited to it, per the applicable cancellation policy."
+          }
+        },
+        "noShow": {
+          "title": "No-show fee",
+          "content": "Some wineries require a card imprint for free or pay-on-site bookings. You are informed before confirming your booking and thereby accept that, in case of no-show without cancellation, the winery may charge a per-person fee of the amount stated at booking (CHF 0 to 50). The charge is triggered by the winery, never automatically, and you are notified by email with a reminder of the policy you accepted."
+        },
+        "surMesure": {
+          "title": "Tailor-made requests",
+          "content": "For a tailor-made request, the winery aims to reply within 48 hours with an offer stating the content, the total price and its expiry date. The offer is firm until it expires; the booking is confirmed upon payment of the link received. The winery's cancellation policy applies."
+        },
+        "collectiveEvents": {
+          "title": "Collective events",
+          "content": "For events gathering several wineries, ticketing is handled by the organising winery. To organise the welcome, the list of participants (name and email address) is accessible to that organising winery, which commits to using it only for running the event, in accordance with the Swiss FADP (nLPD)."
         },
         "winemakers": {
           "title": "Winemaker Obligations",

@@ -60,6 +60,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // About page
   entries.push(...createEntry('/about', 'monthly', 0.7));
 
+  // V3 public surfaces (P-16 / WS-H): gift cards, sur-mesure, contact
+  entries.push(...createEntry('/cadeaux', 'weekly', 0.8));
+  entries.push(...createEntry('/sur-mesure', 'weekly', 0.7));
+  entries.push(...createEntry('/contact', 'monthly', 0.5));
+
   // Auth pages (lower priority, but still indexed for discoverability)
   entries.push(...createEntry('/login', 'monthly', 0.3));
   entries.push(...createEntry('/register', 'monthly', 0.3));
@@ -68,6 +73,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   entries.push(...createEntry('/legal/privacy', 'monthly', 0.2));
   entries.push(...createEntry('/legal/terms', 'monthly', 0.2));
   entries.push(...createEntry('/legal/cancellation', 'monthly', 0.2));
+  entries.push(...createEntry('/mentions-legales', 'monthly', 0.2));
 
   // Dynamic pages - experiences
   try {

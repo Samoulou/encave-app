@@ -23,7 +23,7 @@ export default async function TermsOfServicePage({ params }: Props) {
   return (
     <>
       <h1>{t('terms.title')}</h1>
-      <p className="lead">{t('terms.lastUpdated', { date: '2026-01-12' })}</p>
+      <p className="lead">{t('terms.lastUpdated', { date: '2026-07-16' })}</p>
 
       <h2>{t('terms.sections.acceptance.title')}</h2>
       <p>{t('terms.sections.acceptance.content')}</p>
@@ -44,6 +44,39 @@ export default async function TermsOfServicePage({ params }: Props) {
 
       <h2>{t('terms.sections.payments.title')}</h2>
       <p>{t('terms.sections.payments.content')}</p>
+
+      {/* P-16 (WS-H, L-185): launch-pillar clauses — gift cards, no-show
+          fees, sur-mesure, per-winery cancellation, booking fee, and the
+          collective-events roster disclosure (nLPD debt from P-11). */}
+      <h2>{t('terms.sections.bookingFee.title')}</h2>
+      <p>{t('terms.sections.bookingFee.content')}</p>
+
+      <h2>{t('terms.sections.cancellationPolicies.title')}</h2>
+      <p>{t('terms.sections.cancellationPolicies.content')}</p>
+      <ul>
+        <li>{t('terms.sections.cancellationPolicies.items.flexible')}</li>
+        <li>{t('terms.sections.cancellationPolicies.items.standard')}</li>
+        <li>{t('terms.sections.cancellationPolicies.items.strict')}</li>
+      </ul>
+      <p>{t('terms.sections.cancellationPolicies.snapshot')}</p>
+
+      <h2>{t('terms.sections.giftCards.title')}</h2>
+      <p>{t('terms.sections.giftCards.content')}</p>
+      <ul>
+        <li>{t('terms.sections.giftCards.items.validity')}</li>
+        <li>{t('terms.sections.giftCards.items.partial')}</li>
+        <li>{t('terms.sections.giftCards.items.noCash')}</li>
+        <li>{t('terms.sections.giftCards.items.cancellation')}</li>
+      </ul>
+
+      <h2>{t('terms.sections.noShow.title')}</h2>
+      <p>{t('terms.sections.noShow.content')}</p>
+
+      <h2>{t('terms.sections.surMesure.title')}</h2>
+      <p>{t('terms.sections.surMesure.content')}</p>
+
+      <h2>{t('terms.sections.collectiveEvents.title')}</h2>
+      <p>{t('terms.sections.collectiveEvents.content')}</p>
 
       <h2>{t('terms.sections.winemakers.title')}</h2>
       <p>{t('terms.sections.winemakers.content')}</p>
