@@ -1,7 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Session } from '@/server/auth';
 
-vi.mock('@/server/auth', () => ({ auth: vi.fn() }));
+vi.mock('@/server/auth', () => ({
+  auth: vi.fn(),
+  // G-3 boundary check (P-16) — not expired by default in tests.
+  isCurrentAdminSessionExpired: vi.fn(async () => false),
+}));
 
 vi.mock('@/server/db', () => ({
   db: {
