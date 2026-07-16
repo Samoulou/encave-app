@@ -15,3 +15,6 @@ export { RequestOfferExpiringEmail } from './templates/RequestOfferExpiringEmail
 export type { RequestOfferExpiringEmailProps } from './templates/RequestOfferExpiringEmail';
 export { RequestSlaEscalationEmail } from './templates/RequestSlaEscalationEmail';
 export type { RequestSlaEscalationEmailProps } from './templates/RequestSlaEscalationEmail';
+// Admin notification #22 (P-15 / L-163).
+export { AdminNewWineryToValidateEmail } from './templates/AdminNewWineryToValidateEmail';
+export type { AdminNewWineryToValidateEmailProps } from './templates/AdminNewWineryToValidateEmail';

@@ -44,11 +44,22 @@ import {
   RequestOfferReceivedEmail,
   RequestOfferExpiringEmail,
   RequestSlaEscalationEmail,
+  AdminNewWineryToValidateEmail,
   ContactMessageEmail,
   ContactAckEmail,
 } from '@/emails';
 import { subjects, t } from '@/emails/translations';
+import {
+  logEmailSent,
+  logEmailFailed,
+} from '@/server/services/email-log.service';
 import { generateBookingQrPng } from '@/server/services/qr-code.service';
+import { generateBookingReceiptPDF } from '@/server/services/booking-receipt.service';
+import {
+  createBookingCalendarEvent,
+  generateICalEvent,
+} from '@/lib/utils/calendar';
+import type { WineryAlternative } from '@/server/queries/winery-alternatives.queries';
 
 const resend = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null;
 const FROM_EMAIL = 'EnCave <noreply@encave.ch>';
@@ -185,7 +196,11 @@ export interface BookingConfirmationData {
   guestName: string;
   experienceTitle: string;
   wineryName: string;
+  wineryAddress: string;
+  wineryCommune: string;
   date: Date;
+  /** "HH:mm" start time — used for the PDF ticket + .ics attachments. */
+  timeSlot: string;
   guestCount: number;
   duration: number;
   totalPrice: number;
@@ -232,6 +247,66 @@ export async function sendBookingConfirmationEmail(
     }
   }
 
+  // PDF receipt/ticket + .ics — each guarded so a generation failure never
+  // blocks the confirmation email (same doctrine as the QR block above).
+  try {
+    const pdf = await generateBookingReceiptPDF({
+      reference: data.bookingRef,
+      visitorName: data.guestName,
+      visitorEmail: email,
+      experienceTitle: data.experienceTitle,
+      wineryName: data.wineryName,
+      wineryAddress: data.wineryAddress,
+      wineryCommune: data.wineryCommune,
+      date: data.date,
+      timeSlot: data.timeSlot,
+      durationMinutes: data.duration,
+      guestCount: data.guestCount,
+      totalPrice: data.totalPrice,
+      serviceFeeCents: data.serviceFeeCents ?? 0,
+      generatedAt: new Date(),
+    });
+    attachments.push({
+      filename: `billet-${data.bookingRef}.pdf`,
+      content: pdf.toString('base64'),
+      contentType: 'application/pdf',
+    });
+  } catch (error) {
+    logError('Failed to generate booking PDF ticket', error, {
+      action: 'sendBookingConfirmationEmail',
+      bookingRef: data.bookingRef,
+    });
+  }
+
+  try {
+    const ics = generateICalEvent(
+      createBookingCalendarEvent({
+        experienceTitle: data.experienceTitle,
+        wineryName: data.wineryName,
+        wineryAddress: data.wineryAddress,
+        wineryCommune: data.wineryCommune,
+        date: data.date,
+        timeSlot: data.timeSlot,
+        durationMinutes: data.duration,
+        guestCount: data.guestCount,
+        reference: data.bookingRef,
+        bookingUrl,
+      })
+    );
+    if (ics) {
+      attachments.push({
+        filename: `encave-${data.bookingRef}.ics`,
+        content: Buffer.from(ics, 'utf-8').toString('base64'),
+        contentType: 'text/calendar',
+      });
+    }
+  } catch (error) {
+    logError('Failed to generate booking calendar invite', error, {
+      action: 'sendBookingConfirmationEmail',
+      bookingRef: data.bookingRef,
+    });
+  }
+
   return sendEmail({
     to: email,
     subject: t(subjects.bookingConfirmation, loc),
@@ -275,6 +350,8 @@ export interface BookingCancelledByWineryData {
   date: Date;
   amountCents: number;
   reason: string;
+  /** Up to 3 nearby publicly-visible wineries to console the guest (#5). */
+  alternatives?: WineryAlternative[];
 }
 
 export async function sendBookingCancelledByWineryEmail(
@@ -283,10 +360,17 @@ export async function sendBookingCancelledByWineryEmail(
   locale?: Locale | null
 ): Promise<boolean> {
   const loc = getLocale(locale);
+  const alternatives = (data.alternatives ?? []).map((alt) => ({
+    name: alt.name,
+    commune: alt.commune,
+    distanceLabel: alt.distanceLabel,
+    url: `${getBaseUrl()}/${loc.toLowerCase()}/wineries/${alt.slug}`,
+  }));
   const html = await render(
     BookingCancelledByWineryEmail({
       locale: loc,
       ...data,
+      alternatives,
       experiencesUrl: `${getBaseUrl()}/${loc.toLowerCase()}/experiences`,
     })
   );
@@ -664,6 +748,63 @@ export async function sendWineryRejectedEmail(
     subject: t(subjects.wineryRejected, loc),
     html,
   });
+}
+
+export interface AdminNewWineryData {
+  wineryName: string;
+  commune: string;
+  contactEmail: string;
+  wineryId: string;
+}
+
+/**
+ * Admin notification #22 (P-15 / L-163): a new winery signed up and awaits
+ * validation. Sent to the internal admin inbox (ADMIN_ALERT_EMAIL, else the
+ * CONTACT_INBOX), always in FR — the admin surface is French.
+ */
+export async function sendAdminNewWineryToValidateEmail(
+  data: AdminNewWineryData
+): Promise<boolean> {
+  const loc = getLocale('FR');
+  const recipient = env.ADMIN_ALERT_EMAIL ?? CONTACT_INBOX;
+  const html = await render(
+    AdminNewWineryToValidateEmail({
+      locale: loc,
+      wineryName: data.wineryName,
+      commune: data.commune,
+      contactEmail: data.contactEmail,
+      reviewUrl: `${getBaseUrl()}/${loc.toLowerCase()}/admin/wineries/${data.wineryId}`,
+    })
+  );
+
+  const ok = await sendEmail({
+    to: recipient,
+    subject: t(subjects.adminNewWinery, loc).replace(
+      '{wineryName}',
+      data.wineryName
+    ),
+    html,
+  });
+
+  // Logged here (not by the caller) because this is the only sender that
+  // targets a fixed internal inbox — the caller has no recipient to pass.
+  // A failure surfaces in the admin incidents panel (L-160).
+  if (ok) {
+    await logEmailSent('admin_new_winery', recipient, undefined, {
+      wineryId: data.wineryId,
+    });
+  } else {
+    await logEmailFailed(
+      'admin_new_winery',
+      recipient,
+      'Failed to send',
+      undefined,
+      {
+        wineryId: data.wineryId,
+      }
+    );
+  }
+  return ok;
 }
 
 // Automated Notification Emails

@@ -87,27 +87,7 @@ export async function confirmBookingFromPaidCheckoutSession(
 
   const booking = await db.booking.findUnique({
     where: { id: bookingId },
-    include: {
-      experience: {
-        select: {
-          title: true,
-          duration: true,
-          paymentMode: true,
-        },
-      },
-      winery: {
-        select: {
-          name: true,
-          email: true,
-          user: {
-            select: {
-              name: true,
-              preferredLocale: true,
-            },
-          },
-        },
-      },
-    },
+    include: bookingConfirmationInclude,
   });
 
   if (!booking) {
@@ -185,6 +165,8 @@ const bookingConfirmationInclude = {
     select: {
       name: true,
       email: true,
+      address: true,
+      commune: true,
       user: { select: { name: true, preferredLocale: true } },
     },
   },
@@ -245,14 +227,19 @@ async function sendBookingConfirmationNotifications(
         guestName: booking.visitorName,
         experienceTitle: booking.experience.title,
         wineryName: booking.winery.name,
+        wineryAddress: booking.winery.address,
+        wineryCommune: booking.winery.commune,
         date: bookingDateTime,
+        timeSlot: booking.timeSlot,
         guestCount: booking.guestCount,
         duration: booking.experience.duration,
         totalPrice: booking.totalPrice,
         serviceFeeCents: booking.serviceFeeCents,
         bookingRef: booking.reference,
       },
-      booking.winery.user.preferredLocale
+      // Client email in the CLIENT's locale (persisted at checkout), NOT the
+      // winemaker's — the winery notification below keeps its own locale.
+      booking.locale
     );
     await db.booking.update({
       where: { id: booking.id },

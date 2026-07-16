@@ -1,8 +1,15 @@
-import { Text } from '@react-email/components';
+import { Link, Text } from '@react-email/components';
 import type { Locale } from '@prisma/client';
 import { EmailLayout, EmailButton } from '../components';
 import { formatEmailDate, formatEmailPrice } from '../utils';
 import { t, common, bookingCancelledByWinery, subjects } from '../translations';
+
+export interface CancelledWineryAlternative {
+  name: string;
+  commune: string;
+  distanceLabel: string;
+  url: string;
+}
 
 interface BookingCancelledByWineryEmailProps {
   locale: Locale;
@@ -13,6 +20,7 @@ interface BookingCancelledByWineryEmailProps {
   amountCents: number;
   reason: string;
   experiencesUrl: string;
+  alternatives?: CancelledWineryAlternative[];
 }
 
 export function BookingCancelledByWineryEmail({
@@ -24,6 +32,7 @@ export function BookingCancelledByWineryEmail({
   amountCents,
   reason,
   experiencesUrl,
+  alternatives = [],
 }: BookingCancelledByWineryEmailProps) {
   return (
     <EmailLayout
@@ -54,6 +63,22 @@ export function BookingCancelledByWineryEmail({
           formatEmailPrice(amountCents)
         )}
       </Text>
+      {alternatives.length > 0 && (
+        <>
+          <Text style={{ fontWeight: 'bold', marginTop: '8px' }}>
+            {t(bookingCancelledByWinery.alternativesTitle, locale)}
+          </Text>
+          {alternatives.map((alt) => (
+            <Text key={alt.url} style={{ margin: '4px 0' }}>
+              <Link href={alt.url} style={{ color: '#9f2448' }}>
+                {alt.name}
+              </Link>{' '}
+              — {alt.commune}
+              {alt.distanceLabel ? ` (${alt.distanceLabel})` : ''}
+            </Text>
+          ))}
+        </>
+      )}
       <EmailButton href={experiencesUrl}>
         {t(bookingCancelledByWinery.browseMore, locale)}
       </EmailButton>

@@ -7,6 +7,12 @@ import { sendAccountDeletedEmail } from '@/server/services/email.service';
 interface AnonymizeUserOptions {
   actorId?: string;
   reason?: string;
+  /**
+   * Send the "account deleted" email to the user. Defaults to true so the
+   * self-service path is unchanged; admin-initiated anonymization decides per
+   * case (P-15 / L-162).
+   */
+  notifyUser?: boolean;
 }
 
 // Booking.date is @db.Date (stored at midnight): comparing to `new Date()`
@@ -48,8 +54,6 @@ export async function anonymizeUser(
   const suffix = createId().slice(0, 8);
   const deletedEmail = `deleted-${suffix}@encave.ch`;
   const deletedName = 'Utilisateur supprime';
-
-  await sendAccountDeletedEmail(user.email, user.preferredLocale);
 
   await db.$transaction(async (tx) => {
     // Case-insensitive: checkout stores the visitor email as typed, and
@@ -101,6 +105,14 @@ export async function anonymizeUser(
       });
     }
   });
+
+  // Notify AFTER the transaction commits (uses the original email captured
+  // above): a failed anonymization must never send a "your account was
+  // deleted" email while the account is still live (review). Default true
+  // keeps the self-service path unchanged.
+  if (options.notifyUser ?? true) {
+    await sendAccountDeletedEmail(user.email, user.preferredLocale);
+  }
 
   logInfo('user.anonymized', { userId, actorId: options.actorId });
   return { alreadyAnonymized: false };

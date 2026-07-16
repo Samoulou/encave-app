@@ -7,6 +7,7 @@ import { db } from '@/server/db';
 import { logError, logInfo } from '@/lib/logger';
 import { getStripe } from '@/server/stripe';
 import { sendBookingCancelledByWineryEmail } from '@/server/services/email.service';
+import { getNearbyWineryAlternatives } from '@/server/queries/winery-alternatives.queries';
 import {
   attendeeEmailsSchema,
   bookingIdSchema,
@@ -569,6 +570,7 @@ export async function cancelEventSession(
       duration: true,
       winery: {
         select: {
+          id: true,
           userId: true,
           name: true,
           user: { select: { preferredLocale: true } },
@@ -607,6 +609,7 @@ export async function cancelEventSession(
       totalPrice: true,
       serviceFeeCents: true,
       status: true,
+      locale: true,
       stripeCheckoutSessionId: true,
       stripePaymentIntentId: true,
     },
@@ -616,6 +619,11 @@ export async function cancelEventSession(
   let refunded = 0;
   let failed = 0;
   const startsAt = zonedWallClockToUTC(date, timeSlot);
+  // 3 nearby publicly-visible wineries to offer as alternatives (#5); the
+  // list is locale-agnostic, the email builds each URL with the guest locale.
+  const alternatives = await getNearbyWineryAlternatives(experience.winery.id, {
+    limit: 3,
+  });
 
   for (const booking of bookings) {
     try {
@@ -703,8 +711,10 @@ export async function cancelEventSession(
               ? booking.totalPrice + booking.serviceFeeCents
               : 0,
           reason: parsed.data.reason,
+          alternatives,
         },
-        experience.winery.user.preferredLocale
+        // Client email in the guest's own locale, not the winemaker's.
+        booking.locale
       );
       cancelled++;
     } catch (error) {

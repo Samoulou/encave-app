@@ -17,6 +17,7 @@ import type { ActionResult } from '@/types/actions';
 import { logError, logWarn } from '@/lib/logger';
 import { getPostHogServer } from '@/lib/posthog';
 import { sendWelcomeEmailToWinemaker } from '@/server/services/welcome-email.service';
+import { sendAdminNewWineryToValidateEmail } from '@/server/services/email.service';
 import { invalidateWineryCaches } from './winery-helpers';
 
 /**
@@ -166,6 +167,21 @@ export async function createWinery(
       logError('send welcome winemaker email failed', error, {
         action: 'createWinery',
         userId: session.user.id,
+      });
+    });
+
+    // Email #22 (L-163): notify the admin inbox of a new domain to validate.
+    // The founder invitation path creates VERIFIED wineries via a different
+    // action, so it never reaches here — only real signups notify.
+    void sendAdminNewWineryToValidateEmail({
+      wineryName: name,
+      commune,
+      contactEmail: user.email,
+      wineryId: winery.id,
+    }).catch((error) => {
+      logError('send admin new-winery email failed', error, {
+        action: 'createWinery',
+        wineryId: winery.id,
       });
     });
 
