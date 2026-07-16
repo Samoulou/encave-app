@@ -107,21 +107,10 @@ export async function createWinery(
       };
     }
 
-    // 7. Geocode address (non-blocking, best effort)
-    let coordinates: { latitude: number; longitude: number } | null = null;
-    try {
-      coordinates = await geocodeWineryAddress(address, commune);
-    } catch (geocodeError) {
-      // Log but don't fail - geocoding is optional
-      logWarn('Geocoding failed for new winery', {
-        action: 'createWinery',
-        error: geocodeError,
-      });
-    }
-
-    // 8. Create winery and update user role in a transaction
+    // 7. Create winery and update user role in a transaction. Geocoding
+    // happens AFTER the commit (P-16 / WS-F, L-210): signup must never
+    // wait on — or fail because of — Nominatim.
     const winery = await db.$transaction(async (tx) => {
-      // Create the winery with coordinates if available
       const newWinery = await tx.winery.create({
         data: {
           name,
@@ -133,8 +122,6 @@ export async function createWinery(
           email: user.email,
           userId: session.user.id,
           status: 'PENDING',
-          latitude: coordinates?.latitude ?? null,
-          longitude: coordinates?.longitude ?? null,
         },
       });
 
@@ -146,6 +133,26 @@ export async function createWinery(
 
       return newWinery;
     });
+
+    // 8. Post-commit, best-effort geocode (bounded by the 3s fetch timeout).
+    try {
+      const coordinates = await geocodeWineryAddress(address, commune);
+      if (coordinates) {
+        await db.winery.update({
+          where: { id: winery.id },
+          data: {
+            latitude: coordinates.latitude,
+            longitude: coordinates.longitude,
+          },
+        });
+      }
+    } catch (geocodeError) {
+      // Log but don't fail - geocoding is optional
+      logWarn('Geocoding failed for new winery', {
+        action: 'createWinery',
+        error: geocodeError,
+      });
+    }
 
     // Track producer onboarding in PostHog (server-side)
     const posthogServer = getPostHogServer();
@@ -252,24 +259,12 @@ export async function updateWineryProfile(
       };
     }
 
-    // Check if address or commune changed - if so, re-geocode
+    // Check if address or commune changed - if so, re-geocode AFTER the
+    // commit (P-16 / WS-F, L-210): the profile save must never wait on —
+    // or fail because of — Nominatim.
     const addressChanged =
       (validated.data.address && validated.data.address !== winery.address) ||
       (validated.data.commune && validated.data.commune !== winery.commune);
-
-    let coordinates: { latitude: number; longitude: number } | null = null;
-    if (addressChanged) {
-      try {
-        const newAddress = validated.data.address ?? winery.address;
-        const newCommune = validated.data.commune ?? winery.commune;
-        coordinates = await geocodeWineryAddress(newAddress, newCommune);
-      } catch (geocodeError) {
-        logWarn('Geocoding failed for winery update', {
-          action: 'updateWineryProfile',
-          error: geocodeError,
-        });
-      }
-    }
 
     // P-12 / L-117: pull the enrichment fields out of the spread — they are
     // strings at the form layer but Int / Float / String[] in the DB.
@@ -301,13 +296,39 @@ export async function updateWineryProfile(
         altitude: Number.isNaN(altitudeMeters) ? null : altitudeMeters,
         hectares: Number.isNaN(hectaresValue) ? null : hectaresValue,
         signatureGrapes: parseSignatureGrapes(signatureGrapes),
-        // Only update coordinates if address changed and we got new ones
+        // A changed address invalidates the old point until the post-commit
+        // geocode below refreshes it — stale coordinates are worse than a
+        // temporary commune fallback on the map.
         ...(addressChanged && {
-          latitude: coordinates?.latitude ?? null,
-          longitude: coordinates?.longitude ?? null,
+          latitude: null,
+          longitude: null,
         }),
       },
     });
+
+    // Post-commit, best-effort geocode (bounded by the 3s fetch timeout):
+    // the saved profile is already durable whatever Nominatim does.
+    if (addressChanged) {
+      try {
+        const newAddress = validated.data.address ?? winery.address;
+        const newCommune = validated.data.commune ?? winery.commune;
+        const coordinates = await geocodeWineryAddress(newAddress, newCommune);
+        if (coordinates) {
+          await db.winery.update({
+            where: { id: winery.id },
+            data: {
+              latitude: coordinates.latitude,
+              longitude: coordinates.longitude,
+            },
+          });
+        }
+      } catch (geocodeError) {
+        logWarn('Geocoding failed for winery update', {
+          action: 'updateWineryProfile',
+          error: geocodeError,
+        });
+      }
+    }
 
     // Profile mutations can flip visibility (description / address /
     // geocoding) — invalidate public caches.

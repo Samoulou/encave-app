@@ -284,13 +284,13 @@ describe('Earnings Queries', () => {
   // getMonthlyEarnings
   // ========================================
   describe('getMonthlyEarnings', () => {
-    it('returns earnings for default 6 months', async () => {
+    it('returns earnings for default 6 months in ONE query (L-208)', async () => {
       mockDb.booking.findMany.mockResolvedValue([] as never);
 
       const result = await getMonthlyEarnings('winery-123');
 
       expect(result).toHaveLength(6);
-      expect(mockDb.booking.findMany).toHaveBeenCalledTimes(6);
+      expect(mockDb.booking.findMany).toHaveBeenCalledTimes(1);
     });
 
     it('returns earnings for custom number of months', async () => {
@@ -299,16 +299,23 @@ describe('Earnings Queries', () => {
       const result = await getMonthlyEarnings('winery-123', 3);
 
       expect(result).toHaveLength(3);
-      expect(mockDb.booking.findMany).toHaveBeenCalledTimes(3);
+      expect(mockDb.booking.findMany).toHaveBeenCalledTimes(1);
     });
 
-    it('calculates revenue and payout per month', async () => {
-      mockDb.booking.findMany
-        .mockResolvedValueOnce([] as never) // month 1 - empty
-        .mockResolvedValueOnce([
-          { totalPrice: 10000, wineryPayout: 8800 },
-          { totalPrice: 5000, wineryPayout: 4400 },
-        ] as never); // month 2 - has bookings
+    it('buckets revenue and payout per month from the single window query', async () => {
+      // System time: 2026-01-14 → window months are Dec 2025 + Jan 2026.
+      mockDb.booking.findMany.mockResolvedValueOnce([
+        {
+          date: new Date('2026-01-05T00:00:00Z'),
+          totalPrice: 10000,
+          wineryPayout: 8800,
+        },
+        {
+          date: new Date('2026-01-10T00:00:00Z'),
+          totalPrice: 5000,
+          wineryPayout: 4400,
+        },
+      ] as never);
 
       const result = await getMonthlyEarnings('winery-123', 2);
 
@@ -342,7 +349,7 @@ describe('Earnings Queries', () => {
       expect(result[0].monthLabel).toBe('Jan');
     });
 
-    it('queries only confirmed/completed non-refunded bookings per month', async () => {
+    it('queries only confirmed/completed non-refunded bookings over the window', async () => {
       mockDb.booking.findMany.mockResolvedValue([] as never);
 
       await getMonthlyEarnings('winery-123', 1);
@@ -359,6 +366,7 @@ describe('Earnings Queries', () => {
             }),
           }),
           select: {
+            date: true,
             totalPrice: true,
             wineryPayout: true,
           },

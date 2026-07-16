@@ -682,6 +682,27 @@ export const getRelatedExperiences = cache(
       type: ExperienceType,
       limit: number = 3
     ) => {
+      // P-16 (WS-F / L-208): exactly the ExperienceCard fields — the old
+      // `include` dragged `description` (multi-KB rich text) into the
+      // cache entry of every fiche for cards that never render it.
+      const cardSelect = {
+        id: true,
+        title: true,
+        slug: true,
+        type: true,
+        duration: true,
+        price: true,
+        maxCapacity: true,
+        coverPhoto: true,
+        winery: {
+          select: {
+            name: true,
+            slug: true,
+            commune: true,
+          },
+        },
+      } as const;
+
       // First try to get experiences from the same winery
       const sameWinery = await db.experience.findMany({
         where: {
@@ -690,15 +711,7 @@ export const getRelatedExperiences = cache(
           status: ExperienceStatus.PUBLISHED,
           winery: publiclyVisibleWineryWhere,
         },
-        include: {
-          winery: {
-            select: {
-              name: true,
-              slug: true,
-              commune: true,
-            },
-          },
-        },
+        select: cardSelect,
         take: limit,
       });
 
@@ -717,21 +730,14 @@ export const getRelatedExperiences = cache(
           status: ExperienceStatus.PUBLISHED,
           winery: publiclyVisibleWineryWhere,
         },
-        include: {
-          winery: {
-            select: {
-              name: true,
-              slug: true,
-              commune: true,
-            },
-          },
-        },
+        select: cardSelect,
         take: remaining,
       });
 
       return [...sameWinery, ...sameType];
     },
-    ['related-experiences'],
+    // v2 (P-16 / L-208): payload slimmed to the card fields.
+    ['related-experiences-v2'],
     {
       revalidate: 300, // 5 minutes
       tags: ['experiences'],

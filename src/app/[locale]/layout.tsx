@@ -15,6 +15,7 @@ import { SkipLink } from '@/components/shared/SkipLink';
 import { ProgressBarProvider } from '@/components/shared/ProgressBarProvider';
 import { SentryUserSync } from '@/components/shared/SentryUserSync';
 import { CookieConsentBanner } from '@/components/shared/CookieConsentBanner';
+import { WebVitalsReporter } from '@/components/shared/WebVitalsReporter';
 import {
   PostHogProvider,
   PostHogUserSync,
@@ -117,6 +118,8 @@ export default async function LocaleLayout({ children, params }: Props) {
             <SentryUserSync />
             <PostHogUserSync />
             <CookieConsentBanner />
+            {/* P-16 (L-213): field Web Vitals → PostHog, consent-gated. */}
+            <WebVitalsReporter />
             <Analytics />
           </PostHogProvider>
         </NextIntlClientProvider>
