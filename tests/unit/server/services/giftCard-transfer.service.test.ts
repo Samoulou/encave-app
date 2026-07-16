@@ -2,8 +2,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const findUnique = vi.fn();
 const update = vi.fn(async () => ({}));
+const updateMany = vi.fn(async () => ({ count: 1 }));
 vi.mock('@/server/db', () => ({
-  db: { booking: { findUnique, update } },
+  db: { booking: { findUnique, update, updateMany } },
+}));
+
+vi.mock('@sentry/nextjs', () => ({
+  captureMessage: vi.fn(),
+  captureException: vi.fn(),
 }));
 
 const transfersCreate = vi.fn();
@@ -83,10 +89,48 @@ describe('settleGiftTransfer', () => {
     expect(params.transfer_group).toBe('booking_bk-1');
     expect(params.metadata.bookingId).toBe('bk-1');
     expect(opts.idempotencyKey).toBe('gift_payout_bk-1');
-    expect(update).toHaveBeenCalledWith({
-      where: { id: 'bk-1' },
+    // Conditional write: only a still-CONFIRMED, still-unsettled booking
+    // can record the transfer (cancellation-race guard, Codex review).
+    expect(updateMany).toHaveBeenCalledWith({
+      where: { id: 'bk-1', status: 'CONFIRMED', giftTransferId: null },
       data: { giftTransferId: 'tr_1' },
     });
+    expect(transfersCreateReversal).not.toHaveBeenCalled();
+  });
+
+  it('fully reverses its own transfer when a cancellation claimed the booking mid-flight', async () => {
+    findUnique
+      .mockResolvedValueOnce(giftBooking) // initial eligibility read
+      .mockResolvedValueOnce({
+        status: 'CANCELLED_BY_CLIENT',
+        giftTransferId: null,
+      }); // post-write re-read
+    updateMany.mockResolvedValueOnce({ count: 0 });
+
+    const r = await settleGiftTransfer('bk-1');
+
+    expect(r).toBe('skipped');
+    const [transferId, params, opts] =
+      transfersCreateReversal.mock.calls[0] ?? [];
+    expect(transferId).toBe('tr_1');
+    expect(params.metadata.reason).toBe('settle_cancellation_race');
+    expect(opts.idempotencyKey).toBe('gift_payout_race_reversal_bk-1');
+    expect(update).toHaveBeenCalledWith({
+      where: { id: 'bk-1' },
+      data: { refundError: expect.stringContaining('GIFT_RACE_REVERSED') },
+    });
+  });
+
+  it('noops (no reversal) when a concurrent settle already recorded the SAME transfer', async () => {
+    findUnique
+      .mockResolvedValueOnce(giftBooking)
+      .mockResolvedValueOnce({ status: 'CONFIRMED', giftTransferId: 'tr_1' });
+    updateMany.mockResolvedValueOnce({ count: 0 });
+
+    const r = await settleGiftTransfer('bk-1');
+
+    expect(r).toBe('noop');
+    expect(transfersCreateReversal).not.toHaveBeenCalled();
   });
 });
 

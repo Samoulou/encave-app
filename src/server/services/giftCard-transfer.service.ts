@@ -67,10 +67,55 @@ export async function settleGiftTransfer(
     { idempotencyKey: `gift_payout_${bookingId}` }
   );
 
-  await db.booking.update({
-    where: { id: bookingId },
+  // Conditional write (P-16 / ADR-0003, Codex review): a cancellation can
+  // claim the booking between our CONFIRMED read above and this write —
+  // its reversal step would then see giftTransferId null and skip, leaving
+  // the winery paid for a refunded booking. The status guard detects that
+  // race so the transfer can be pulled back immediately.
+  const recorded = await db.booking.updateMany({
+    where: {
+      id: bookingId,
+      status: BookingStatus.CONFIRMED,
+      giftTransferId: null,
+    },
     data: { giftTransferId: transfer.id },
   });
+
+  if (recorded.count === 0) {
+    const current = await db.booking.findUnique({
+      where: { id: bookingId },
+      select: { status: true, giftTransferId: true },
+    });
+    // A concurrent settle raced us: Stripe's idempotency key collapsed
+    // both calls into the SAME transfer — already recorded, nothing to do.
+    if (current?.giftTransferId === transfer.id) return 'noop';
+
+    // Mid-flight cancellation. Reverse the whole transfer — platform-safe
+    // by default: on the rare 0%-refund cancellation the winery's payout
+    // is re-issued manually (refundError + runbook incident-paiement).
+    await getStripe().transfers.createReversal(
+      transfer.id,
+      { metadata: { bookingId, reason: 'settle_cancellation_race' } },
+      { idempotencyKey: `gift_payout_race_reversal_${bookingId}` }
+    );
+    logError(
+      'gift transfer settled against a mid-flight cancellation — fully reversed',
+      undefined,
+      { action: 'settleGiftTransfer', bookingId, transferId: transfer.id }
+    );
+    Sentry.captureMessage('gift transfer reversed after cancellation race', {
+      level: 'warning',
+      tags: { area: 'gift-transfer' },
+      extra: { bookingId, transferId: transfer.id },
+    });
+    await db.booking.update({
+      where: { id: bookingId },
+      data: {
+        refundError: `GIFT_RACE_REVERSED: transfer ${transfer.id} fully reversed after mid-flight cancellation — re-transfer manually if the policy left the payout to the winery (runbook incident-paiement)`,
+      },
+    });
+    return 'skipped';
+  }
 
   logInfo('gift_transfer.settled', {
     action: 'settleGiftTransfer',

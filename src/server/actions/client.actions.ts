@@ -194,14 +194,17 @@ export async function cancelClientBooking(
     }
 
     // Record the refund outcome on the already-cancelled booking.
+    // refundAmount persists the TOTAL value returned — card + restored
+    // gift balance (ADR-0003, Codex review; see cancelBooking).
     // Conditional on the refundAmount we READ — a concurrent admin
     // refund must not be clobbered out of the ledger (see cancelBooking).
-    if (refundAmount !== null) {
+    const totalReturnedCents = (refundAmount ?? 0) + giftRestoredCents;
+    if (totalReturnedCents > 0) {
       const recorded = await db.booking.updateMany({
         where: { id: bookingId, refundAmount: booking.refundAmount },
         data: {
           refundIssued: true,
-          refundAmount: alreadyRefundedCents + refundAmount,
+          refundAmount: alreadyRefundedCents + totalReturnedCents,
           stripeRefundId,
         },
       });
@@ -209,13 +212,13 @@ export async function cancelClientBooking(
         logWarn('Refund ledger conflict — concurrent refund writer', {
           action: 'cancelClientBooking',
           bookingId,
-          cancelRefundCents: refundAmount,
+          cancelRefundCents: totalReturnedCents,
           stripeRefundId,
         });
         await db.booking.update({
           where: { id: bookingId },
           data: {
-            refundError: `LEDGER_CONFLICT: cancellation refunded ${refundAmount} (${stripeRefundId}) concurrently with another refund writer — reconcile with Stripe`,
+            refundError: `LEDGER_CONFLICT: cancellation returned ${totalReturnedCents} (${stripeRefundId ?? 'gift only'}) concurrently with another refund writer — reconcile with Stripe`,
           },
         });
       }
@@ -232,7 +235,6 @@ export async function cancelClientBooking(
     // Send cancellation email to client (full paid total; refund exact,
     // or generic wording when due but unprocessable — see cancelBooking).
     // Restored gift balance counts as returned value (ADR-0003).
-    const totalReturnedCents = (refundAmount ?? 0) + giftRestoredCents;
     const refundUnprocessable =
       refundDueCents > 0 && refundAmount === null && giftRestoredCents === 0;
     if (refundUnprocessable) {

@@ -58,20 +58,24 @@ l'utilisateur comme échouée — le refund carte, lui, a déjà eu lieu.
 
 ## Conséquences & limites assumées
 
-- `Booking.refundAmount` reste un **fait Stripe** (refund carte uniquement).
-  La part bon restaurée vit dans le ledger `gift_card_transactions`.
-  L'e-mail client et le résultat de l'action annoncent le **total retourné**
-  (carte + bon).
-- `refundIssued` reste « un refund Stripe a eu lieu » — un booking card=0
-  annulé a `refundIssued=false` mais son ledger porte le REFUND.
+- `Booking.refundAmount` persiste le **total retourné** (carte + bon
+  restauré) et `refundIssued` passe à vrai dès qu'une valeur est retournée
+  (revue Codex #120) : les vues client/admin rechargées, le plafond de
+  remboursement admin et la `refundedFraction` des earnings lisent ce
+  champ — un montant carte-seulement les fausserait tous. Le fait Stripe
+  pur reste traçable via `stripeRefundId` ; la part bon vit aussi dans le
+  ledger `gift_card_transactions`.
 - Le refund manuel admin (`refundBookingManually`) sur un booking bon
   cadeau reste **hors périmètre** : il suppose une destination charge. À
   traiter si le besoin apparaît (le runbook litige le signale).
-- Fenêtre de course théorique : un settle de transfert en vol pendant le
-  claim d'annulation peut poser `giftTransferId` après notre lecture →
-  reversal noop. Couvert par la campagne staging A.2 (d) et le runbook
-  (reversal manuel) ; jugé acceptable (fenêtre de quelques secondes,
-  détectable par rapprochement Stripe).
+- Course settle/annulation (revue Codex #120) : l'écriture de
+  `giftTransferId` est conditionnelle (`status = CONFIRMED`). Si
+  l'annulation a claim le booking pendant que le transfert partait, le
+  settle détecte l'échec de l'écriture et **reverse intégralement** son
+  propre transfert (clé `gift_payout_race_reversal_{bookingId}`, Sentry
+  warning, `refundError`) — sûr par défaut pour la plateforme ; le cas
+  ultra-marginal « annulation à 0 % de refund » (la cave gardait le
+  payout) se répare manuellement via le runbook incident-paiement.
 - Barème 50 % (STRICT 48 h–7 j) : le client récupère la carte d'abord puis
   le bon ; la cave subit le reversal proportionnel (50 % de son payout) —
   cohérent avec une annulation carte classique où `reverse_transfer`

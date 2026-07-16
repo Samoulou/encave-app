@@ -661,15 +661,21 @@ export async function cancelBooking(
     }
 
     // Record the refund outcome on the already-cancelled booking.
+    // refundAmount persists the TOTAL value returned — card refund AND
+    // restored gift balance (ADR-0003, Codex review): reloaded client/admin
+    // views and the admin remaining-refund cap read this field, and the
+    // earnings refundedFraction must reflect the full clawback. The pure
+    // Stripe fact stays traceable via stripeRefundId + the gift ledger.
     // Conditional on the refundAmount we READ: a concurrent admin refund
     // that landed in between must not be clobbered out of the ledger —
     // on conflict we keep the DB value and flag for reconciliation.
-    if (refundAmount !== null) {
+    const totalReturnedCents = (refundAmount ?? 0) + giftRestoredCents;
+    if (totalReturnedCents > 0) {
       const recorded = await db.booking.updateMany({
         where: { id: bookingId, refundAmount: booking.refundAmount },
         data: {
           refundIssued: true,
-          refundAmount: alreadyRefundedCents + refundAmount,
+          refundAmount: alreadyRefundedCents + totalReturnedCents,
           stripeRefundId,
         },
       });
@@ -677,13 +683,13 @@ export async function cancelBooking(
         logWarn('Refund ledger conflict — concurrent refund writer', {
           action: 'cancelBooking',
           bookingId,
-          cancelRefundCents: refundAmount,
+          cancelRefundCents: totalReturnedCents,
           stripeRefundId,
         });
         await db.booking.update({
           where: { id: bookingId },
           data: {
-            refundError: `LEDGER_CONFLICT: cancellation refunded ${refundAmount} (${stripeRefundId}) concurrently with another refund writer — reconcile with Stripe`,
+            refundError: `LEDGER_CONFLICT: cancellation returned ${totalReturnedCents} (${stripeRefundId ?? 'gift only'}) concurrently with another refund writer — reconcile with Stripe`,
           },
         });
       }
@@ -703,7 +709,6 @@ export async function cancelBooking(
     // file (never affirm "no refund" to a client the policy entitles).
     // A gift-funded booking counts the restored balance as returned value
     // (ADR-0003) — a card=0 cancellation is fully processed, not missing.
-    const totalReturnedCents = (refundAmount ?? 0) + giftRestoredCents;
     const refundUnprocessable =
       refundDueCents > 0 && refundAmount === null && giftRestoredCents === 0;
     if (refundUnprocessable) {
