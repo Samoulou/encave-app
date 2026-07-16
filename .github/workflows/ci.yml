@@ -125,6 +125,75 @@ jobs:
           INVARIANTS_DATABASE_URL: 'postgresql://encave:encave@localhost:5432/encave_invariants'
           DIRECT_URL: 'postgresql://encave:encave@localhost:5432/encave_invariants'
 
+  e2e:
+    name: E2E (6 launch journeys + a11y)
+    runs-on: ubuntu-latest
+    needs: [lint-and-typecheck, test]
+
+    # Hermetic: .env.test.example works verbatim (placeholder Stripe keys,
+    # synthetic signed webhooks) — the service is mapped to 5433 to match it.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: encave_test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Create test env file
+        run: cp .env.test.example .env.test
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      # prebuild migrates the service DB; the build's static pages then
+      # query it. Same URL the tests use (.env.test).
+      - name: Build application
+        run: npm run build
+        env:
+          DATABASE_URL: 'postgresql://postgres:postgres@localhost:5433/encave_test'
+          DIRECT_URL: 'postgresql://postgres:postgres@localhost:5433/encave_test'
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
   build:
     name: Build
     runs-on: ubuntu-latest

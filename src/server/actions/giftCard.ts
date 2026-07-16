@@ -173,6 +173,19 @@ export async function createGiftCardCheckoutAction(
       metadata,
     };
 
+    // E2E (P-16): same fake-session convention as the booking checkout —
+    // no Stripe call; the spec POSTs the signed synthetic
+    // `checkout.session.completed` (kind: gift_card) itself and the card
+    // is minted by the REAL webhook code.
+    if (process.env.E2E_TEST === 'true') {
+      return {
+        success: true,
+        data: {
+          checkoutUrl: `https://checkout.stripe.com/pay/e2e_gift_${Date.now()}`,
+        },
+      };
+    }
+
     // TWINT may be disabled on the platform account — same fallback as the
     // booking checkout (D4): retry card-only on a payment-method rejection.
     const isPaymentMethodRejection = (err: unknown): boolean => {

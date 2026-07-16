@@ -42,6 +42,16 @@ const WINERY_COORDINATES: Record<
 async function main() {
   console.log('Cleaning E2E test database...');
 
+  // P-16 surfaces first (loose/no FKs to the core graph). The gift ledger
+  // (gift_card_transactions) is append-only by DB trigger — NEVER
+  // deleteMany it; cards accumulate across local runs by design, specs use
+  // per-run unique emails/codes.
+  await prisma.requestOffer.deleteMany();
+  await prisma.request.deleteMany();
+  await prisma.scheduledJob.deleteMany();
+  await prisma.stripeEvent.deleteMany();
+  await prisma.emailLog.deleteMany();
+
   await prisma.booking.deleteMany();
   await prisma.availabilitySlot.deleteMany();
   await prisma.experience.deleteMany();
@@ -52,7 +62,12 @@ async function main() {
 
   await prisma.user.deleteMany({
     where: {
-      OR: [{ id: { in: testUserIds } }, { email: { in: authUserEmails } }],
+      OR: [
+        { id: { in: testUserIds } },
+        { email: { in: authUserEmails } },
+        // Accounts registered by the winery-onboarding spec (P-16).
+        { email: { contains: 'e2e-onboarding' } },
+      ],
     },
   });
 
@@ -74,6 +89,8 @@ async function main() {
     winery_owner: 'WINEMAKER',
     admin: 'ADMIN',
   };
+
+  let authWineryId: string | null = null;
 
   for (const [key, user] of Object.entries(AUTH_TEST_USERS)) {
     const hashedPassword = await bcrypt.hash(user.password, 10);
@@ -102,7 +119,7 @@ async function main() {
       const wineryName =
         key === 'wineryOwner' ? 'Auth Test Winery' : `E2E ${user.name} Winery`;
 
-      await prisma.winery.create({
+      const createdWinery = await prisma.winery.create({
         data: {
           name: wineryName,
           slug:
@@ -134,6 +151,9 @@ async function main() {
               },
         },
       });
+      if (key === 'wineryOwner') {
+        authWineryId = createdWinery.id;
+      }
     }
   }
 
@@ -280,6 +300,94 @@ async function main() {
       },
     });
   }
+
+  console.log('Seeding P-16 fixtures (flags, scan & cancellation targets)...');
+
+  // Money flags exercised by the gift/request A→Z journeys. The other
+  // flags keep their registry default (OFF) — the pre-existing specs are
+  // the flag-OFF proof required by the delivery-plan DoD.
+  for (const key of ['GIFT_CARDS', 'REQUESTS']) {
+    await prisma.featureFlag.upsert({
+      where: { key },
+      update: { enabled: true },
+      create: { key, enabled: true },
+    });
+  }
+
+  if (!authWineryId) {
+    throw new Error('auth-test-winery missing — P-16 fixtures need it');
+  }
+
+  // Experience owned by the auth wineryOwner so the scan spec can log in
+  // as that account and check the visitor in.
+  const authExperience = await prisma.experience.create({
+    data: {
+      slug: 'auth-winery-tasting',
+      title: 'Auth Winery Tasting',
+      description:
+        'Experience owned by the auth-test winery for scan and cancellation E2E journeys.',
+      type: 'TASTING',
+      price: 4500,
+      minCapacity: 1,
+      maxCapacity: 8,
+      duration: 90,
+      coverPhoto: '/images/test/domaine-du-test.jpg',
+      wineryId: authWineryId,
+      status: 'PUBLISHED',
+      availabilitySlots: {
+        create: [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
+          dayOfWeek,
+          startTime: '10:00',
+          endTime: '11:30',
+        })),
+      },
+    },
+  });
+
+  // Scan target: CONFIRMED today on the auth winery (token-scan-target).
+  await prisma.booking.create({
+    data: {
+      id: 'test-booking-scan-target',
+      reference: 'ENC-E2E101',
+      visitorName: 'Scan Target Visitor',
+      visitorEmail: 'scan-target@test.example.com',
+      visitorPhone: '+41 79 000 00 01',
+      experienceId: authExperience.id,
+      wineryId: authWineryId,
+      date: toDateOnly(0),
+      timeSlot: '10:00',
+      guestCount: 2,
+      totalPrice: 9000,
+      platformFee: 1080,
+      wineryPayout: 7920,
+      status: 'CONFIRMED',
+      accessTokenHash: hashAccessToken('token-scan-target'),
+    },
+  });
+
+  // Cancellation target: CONFIRMED at +7d with an E2E payment intent —
+  // processRefund resolves `e2e_…` intents synthetically (P-16), so the
+  // full cancel-with-refund path runs without Stripe.
+  await prisma.booking.create({
+    data: {
+      id: 'test-booking-cancel-target',
+      reference: 'ENC-E2E102',
+      visitorName: 'Cancel Target Visitor',
+      visitorEmail: 'cancel-target@test.example.com',
+      visitorPhone: '+41 79 000 00 02',
+      experienceId: authExperience.id,
+      wineryId: authWineryId,
+      date: toDateOnly(7),
+      timeSlot: '10:00',
+      guestCount: 2,
+      totalPrice: 9000,
+      platformFee: 1080,
+      wineryPayout: 7920,
+      status: 'CONFIRMED',
+      stripePaymentIntentId: 'e2e_pi_cancel_target',
+      accessTokenHash: hashAccessToken('token-cancel-target'),
+    },
+  });
 
   console.log('E2E database ready');
   console.log(`  - ${Object.keys(TEST_USERS).length} winemaker users`);

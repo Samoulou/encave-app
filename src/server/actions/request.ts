@@ -643,6 +643,30 @@ export async function createRequestOfferCheckout(
       );
     };
 
+    // E2E (P-16): fake-session convention (cf. booking checkout) — the
+    // booking/offer still get a session id (NOT cs_-prefixed, so the
+    // webhook's stale-session guard stays inert) and the spec POSTs the
+    // signed synthetic completed event with kind: request_offer.
+    if (process.env.E2E_TEST === 'true') {
+      const e2eSessionId = `e2e_sess_${bookingId}`;
+      await db.$transaction([
+        db.booking.update({
+          where: { id: bookingId },
+          data: { stripeCheckoutSessionId: e2eSessionId, expiresAt },
+        }),
+        db.requestOffer.update({
+          where: { id: offer.id },
+          data: { stripeCheckoutSessionId: e2eSessionId },
+        }),
+      ]);
+      return {
+        success: true,
+        data: {
+          checkoutUrl: `https://checkout.stripe.com/pay/${e2eSessionId}`,
+        },
+      };
+    }
+
     let session;
     try {
       session = await getStripe().checkout.sessions.create(sessionParams);
