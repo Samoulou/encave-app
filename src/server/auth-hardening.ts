@@ -76,7 +76,8 @@ export function authHardening(): BetterAuthPlugin {
       after: [
         {
           // G-1 — TOTP challenge on the paths the built-in plugin misses.
-          matcher: (context) => isSecondFactorGapPath(context.path),
+          matcher: (context) =>
+            context.path ? isSecondFactorGapPath(context.path) : false,
           handler: createAuthMiddleware(async (ctx) => {
             const data = ctx.context.newSession;
             if (!data) return;
