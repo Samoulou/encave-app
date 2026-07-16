@@ -10,6 +10,11 @@
  *
  * This module is PURE (importable from client and server components) —
  * no db, no env.
+ *
+ * ONE flag lives OUTSIDE this registry: `COMING_SOON` (env var, P-16 /
+ * WS-I) gates encave.ch behind the Coming Soon page from the Edge
+ * middleware, which cannot reach the DB. Flip = Vercel env change +
+ * redeploy. Every other flag belongs here — don't add env flags.
  */
 
 export const FLAG_REGISTRY = {

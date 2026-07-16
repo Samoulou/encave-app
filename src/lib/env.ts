@@ -49,6 +49,13 @@ const envSchema = z.object({
   // Cron Jobs
   CRON_SECRET: z.string().min(32).optional(),
 
+  // Launch gate (P-16 / WS-I, L-189). The ONLY env-based feature flag:
+  // the Edge middleware cannot read the DB flag table. Anything but the
+  // string 'false' keeps encave.ch on the Coming Soon page (fail-closed).
+  // Read directly via process.env in src/middleware.ts (Edge runtime);
+  // declared here so the variable is documented and validated.
+  COMING_SOON: z.string().optional(),
+
   // Sentry (Error Tracking)
   NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
   SENTRY_AUTH_TOKEN: z.string().optional(),

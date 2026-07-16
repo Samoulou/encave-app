@@ -103,6 +103,18 @@ const nextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        // P-16 (WS-I): canonical host is the apex — belt-and-braces with
+        // the Vercel domain-level redirect (ops). 308 keeps method+body.
+        source: '/:path*',
+        has: [{ type: 'host', value: 'www.encave.ch' }],
+        destination: 'https://encave.ch/:path*',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 module.exports = withSentryConfig(withNextIntl(nextConfig), {
