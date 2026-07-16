@@ -30,17 +30,31 @@ module.exports = {
           deviceScaleFactor: 1.75,
           disabled: false,
         },
-        budgetPath: './budgets.json',
       },
     },
     assert: {
       assertions: {
         'categories:performance': ['warn', { minScore: 0.95 }],
-        // Resource budgets (budgets.json) are the blocking part.
-        'resource-summary:script:size': 'error',
-        'resource-summary:document:size': 'error',
-        'resource-summary:image:size': 'error',
-        'resource-summary:total:size': 'error',
+        // Blocking regression budgets — calibrated on the seeded local
+        // baseline (P-16: script 516 KB / doc 33 KB / font 296 KB) +10-15%
+        // headroom. maxNumericValue is in BYTES; budgets.json is NOT wired
+        // by LHCI (the performance-budget audit stays informative), the
+        // resource-summary assertions are the enforcement mechanism.
+        'resource-summary:script:size': ['error', { maxNumericValue: 580_000 }],
+        'resource-summary:document:size': [
+          'error',
+          { maxNumericValue: 80_000 },
+        ],
+        'resource-summary:stylesheet:size': [
+          'error',
+          { maxNumericValue: 40_000 },
+        ],
+        'resource-summary:font:size': ['error', { maxNumericValue: 330_000 }],
+        'resource-summary:image:size': ['error', { maxNumericValue: 250_000 }],
+        'resource-summary:total:size': [
+          'error',
+          { maxNumericValue: 1_300_000 },
+        ],
       },
     },
     upload: { target: 'filesystem', outputDir: '.lighthouseci' },

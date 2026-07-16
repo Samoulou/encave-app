@@ -34,17 +34,25 @@ module.exports = {
           deviceScaleFactor: 1.75,
           disabled: false,
         },
-        budgetPath: './budgets.json',
       },
     },
     assert: {
       assertions: {
         'categories:performance': ['error', { minScore: 0.95 }],
         'largest-contentful-paint': ['error', { maxNumericValue: 1500 }],
-        'resource-summary:script:size': 'error',
-        'resource-summary:document:size': 'error',
-        'resource-summary:image:size': 'error',
-        'resource-summary:total:size': 'error',
+        // Staging carries real content (home HTML ~198 KB post-P-06, real
+        // photos) — wider byte budgets; the score + LCP above are the gate.
+        'resource-summary:script:size': ['error', { maxNumericValue: 650_000 }],
+        'resource-summary:document:size': [
+          'error',
+          { maxNumericValue: 250_000 },
+        ],
+        'resource-summary:font:size': ['error', { maxNumericValue: 330_000 }],
+        'resource-summary:image:size': ['error', { maxNumericValue: 900_000 }],
+        'resource-summary:total:size': [
+          'error',
+          { maxNumericValue: 2_500_000 },
+        ],
       },
     },
     upload: { target: 'filesystem', outputDir: '.lighthouseci' },
