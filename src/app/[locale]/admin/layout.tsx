@@ -1,4 +1,4 @@
-import { auth } from '@/server/auth';
+import { auth, isCurrentAdminSessionExpired } from '@/server/auth';
 import { notFound, redirect } from 'next/navigation';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
@@ -61,6 +61,15 @@ export default async function AdminLayout({
   if (!guard?.twoFactorEnabled) {
     const locale = await getLocale();
     redirect(`/${locale}/admin-setup/2fa`);
+  }
+
+  // P-16 (G-3): the sliding refresh resets expiresAt to the global 90 d —
+  // enforce the 7 d admin window on the session's AGE at the boundary. The
+  // revocation happens in a route handler (an RSC render cannot set
+  // cookies), which then lands on the login page.
+  if (await isCurrentAdminSessionExpired()) {
+    const locale = await getLocale();
+    redirect(`/api/auth/session-expired?locale=${locale}`);
   }
 
   const pendingCount = await getPendingCount();
