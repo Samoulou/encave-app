@@ -1,0 +1,83 @@
+[
+  {
+    "url": "http://localhost:3000/fr",
+    "isRepresentativeRun": false,
+    "htmlPath": "/home/user/encave-app/.lighthouseci/localhost-fr-2026_07_16_06_28_15.report.html",
+    "jsonPath": "/home/user/encave-app/.lighthouseci/localhost-fr-2026_07_16_06_28_15.report.json",
+    "summary": {
+      "performance": 0.61
+    }
+  },
+  {
+    "url": "http://localhost:3000/fr",
+    "isRepresentativeRun": false,
+    "htmlPath": "/home/user/encave-app/.lighthouseci/localhost-fr-2026_07_16_06_28_50.report.html",
+    "jsonPath": "/home/user/encave-app/.lighthouseci/localhost-fr-2026_07_16_06_28_50.report.json",
+    "summary": {
+      "performance": 0.61
+    }
+  },
+  {
+    "url": "http://localhost:3000/fr/experiences",
+    "isRepresentativeRun": false,
+    "htmlPath": "/home/user/encave-app/.lighthouseci/localhost-fr_experiences-2026_07_16_06_30_29.report.html",
+    "jsonPath": "/home/user/encave-app/.lighthouseci/localhost-fr_experiences-2026_07_16_06_30_29.report.json",
+    "summary": {
+      "performance": 0.65
+    }
+  },
+  {
+    "url": "http://localhost:3000/fr/experiences",
+    "isRepresentativeRun": false,
+    "htmlPath": "/home/user/encave-app/.lighthouseci/localhost-fr_experiences-2026_07_16_06_31_02.report.html",
+    "jsonPath": "/home/user/encave-app/.lighthouseci/localhost-fr_experiences-2026_07_16_06_31_02.report.json",
+    "summary": {
+      "performance": 0.63
+    }
+  },
+  {
+    "url": "http://localhost:3000/fr/experiences/wine-tasting-test",
+    "isRepresentativeRun": false,
+    "htmlPath": "/home/user/encave-app/.lighthouseci/localhost-fr_experiences_wine_tasting_test-2026_07_16_06_31_35.report.html",
+    "jsonPath": "/home/user/encave-app/.lighthouseci/localhost-fr_experiences_wine_tasting_test-2026_07_16_06_31_35.report.json",
+    "summary": {
+      "performance": 0.46
+    }
+  },
+  {
+    "url": "http://localhost:3000/fr/experiences/wine-tasting-test",
+    "isRepresentativeRun": false,
+    "htmlPath": "/home/user/encave-app/.lighthouseci/localhost-fr_experiences_wine_tasting_test-2026_07_16_06_32_12.report.html",
+    "jsonPath": "/home/user/encave-app/.lighthouseci/localhost-fr_experiences_wine_tasting_test-2026_07_16_06_32_12.report.json",
+    "summary": {
+      "performance": 0.5
+    }
+  },
+  {
+    "url": "http://localhost:3000/fr",
+    "isRepresentativeRun": true,
+    "htmlPath": "/home/user/encave-app/.lighthouseci/localhost-fr-2026_07_16_06_29_23.report.html",
+    "jsonPath": "/home/user/encave-app/.lighthouseci/localhost-fr-2026_07_16_06_29_23.report.json",
+    "summary": {
+      "performance": 0.6
+    }
+  },
+  {
+    "url": "http://localhost:3000/fr/experiences",
+    "isRepresentativeRun": true,
+    "htmlPath": "/home/user/encave-app/.lighthouseci/localhost-fr_experiences-2026_07_16_06_29_56.report.html",
+    "jsonPath": "/home/user/encave-app/.lighthouseci/localhost-fr_experiences-2026_07_16_06_29_56.report.json",
+    "summary": {
+      "performance": 0.63
+    }
+  },
+  {
+    "url": "http://localhost:3000/fr/experiences/wine-tasting-test",
+    "isRepresentativeRun": true,
+    "htmlPath": "/home/user/encave-app/.lighthouseci/localhost-fr_experiences_wine_tasting_test-2026_07_16_06_32_49.report.html",
+    "jsonPath": "/home/user/encave-app/.lighthouseci/localhost-fr_experiences_wine_tasting_test-2026_07_16_06_32_49.report.json",
+    "summary": {
+      "performance": 0.5
+    }
+  }
+]
