@@ -2,9 +2,15 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
-    branches: [main]
+    branches: [main, dev]
+
+# One run per ref: a force-push or rapid follow-up commit cancels the
+# superseded run instead of stacking e2e/Lighthouse jobs.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 # CI is hermetic: no job talks to a real database (the DB-invariant tests
 # skip without INVARIANTS_DATABASE_URL), so a well-formed placeholder is all
@@ -68,6 +74,56 @@ jobs:
 
       - name: Run tests
         run: npm run test:run
+
+  db-invariants:
+    name: DB Invariants
+    runs-on: ubuntu-latest
+
+    # The tests/db suites (money invariants, hold/scan/gift concurrency) are
+    # skipped without INVARIANTS_DATABASE_URL — this job is the only place
+    # they run against a real Postgres (P-16 / L-180).
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: encave
+          POSTGRES_PASSWORD: encave
+          POSTGRES_DB: encave_invariants
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U encave"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Apply migrations
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: 'postgresql://encave:encave@localhost:5432/encave_invariants'
+          DIRECT_URL: 'postgresql://encave:encave@localhost:5432/encave_invariants'
+
+      - name: Run DB invariant & concurrency tests
+        run: npm run test:db:invariants
+        env:
+          INVARIANTS_DATABASE_URL: 'postgresql://encave:encave@localhost:5432/encave_invariants'
+          DIRECT_URL: 'postgresql://encave:encave@localhost:5432/encave_invariants'
 
   build:
     name: Build
