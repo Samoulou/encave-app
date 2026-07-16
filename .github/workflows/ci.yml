@@ -132,6 +132,12 @@ jobs:
 
     # Hermetic: .env.test.example works verbatim (placeholder Stripe keys,
     # synthetic signed webhooks) — the service is mapped to 5433 to match it.
+    # Job-level env REQUIRED: dotenv -e .env.test does NOT override an
+    # already-set variable, and the workflow-level placeholder DATABASE_URL
+    # would otherwise win over .env.test (first CI run failure).
+    env:
+      DATABASE_URL: 'postgresql://postgres:postgres@localhost:5433/encave_test'
+      DIRECT_URL: 'postgresql://postgres:postgres@localhost:5433/encave_test'
     services:
       postgres:
         image: postgres:16
@@ -176,12 +182,9 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       # prebuild migrates the service DB; the build's static pages then
-      # query it. Same URL the tests use (.env.test).
+      # query it. Same URL the tests use (job env).
       - name: Build application
         run: npm run build
-        env:
-          DATABASE_URL: 'postgresql://postgres:postgres@localhost:5433/encave_test'
-          DIRECT_URL: 'postgresql://postgres:postgres@localhost:5433/encave_test'
 
       - name: Run E2E tests
         run: npm run test:e2e
