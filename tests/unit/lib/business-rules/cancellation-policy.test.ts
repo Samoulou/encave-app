@@ -4,6 +4,7 @@ import {
   computeRefundCents,
   computeBookingRefund,
   getPolicyTiers,
+  splitRefundBetweenCardAndGift,
 } from '@/lib/business-rules/cancellation-policy';
 
 // Barèmes D1 (plan P-03 §7, validés Sam 09.07.2026):
@@ -116,6 +117,63 @@ describe('cancellation-policy', () => {
       // FLEXIBLE fallback: 100% until 2h → still refundable at 3h.
       expect(r.policy).toBe('FLEXIBLE');
       expect(r.refundDueCents).toBe(21000);
+    });
+  });
+
+  describe('splitRefundBetweenCardAndGift (P-16 / ADR-0003)', () => {
+    it('full refund on a partial gift: card first, remainder onto the gift', () => {
+      expect(
+        splitRefundBetweenCardAndGift({
+          refundDueCents: 12000,
+          cardPaidCents: 7000,
+          giftAppliedCents: 5000,
+          alreadyRefundedCents: 0,
+        })
+      ).toEqual({ cardRefundCents: 7000, giftRestoreCents: 5000 });
+    });
+
+    it('50% refund smaller than the card charge: gift untouched', () => {
+      expect(
+        splitRefundBetweenCardAndGift({
+          refundDueCents: 6000,
+          cardPaidCents: 7000,
+          giftAppliedCents: 5000,
+          alreadyRefundedCents: 0,
+        })
+      ).toEqual({ cardRefundCents: 6000, giftRestoreCents: 0 });
+    });
+
+    it('card=0 booking: everything back onto the gift', () => {
+      expect(
+        splitRefundBetweenCardAndGift({
+          refundDueCents: 12000,
+          cardPaidCents: 0,
+          giftAppliedCents: 12000,
+          alreadyRefundedCents: 0,
+        })
+      ).toEqual({ cardRefundCents: 0, giftRestoreCents: 12000 });
+    });
+
+    it('prior refund consumes the card headroom first', () => {
+      expect(
+        splitRefundBetweenCardAndGift({
+          refundDueCents: 8000,
+          cardPaidCents: 7000,
+          giftAppliedCents: 5000,
+          alreadyRefundedCents: 3000,
+        })
+      ).toEqual({ cardRefundCents: 4000, giftRestoreCents: 4000 });
+    });
+
+    it('clamps to zero — never negative, never above the gift applied', () => {
+      expect(
+        splitRefundBetweenCardAndGift({
+          refundDueCents: 20000,
+          cardPaidCents: 7000,
+          giftAppliedCents: 5000,
+          alreadyRefundedCents: 9000,
+        })
+      ).toEqual({ cardRefundCents: 0, giftRestoreCents: 5000 });
     });
   });
 });

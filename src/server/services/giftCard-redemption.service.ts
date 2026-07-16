@@ -136,9 +136,16 @@ export async function redeemGiftCard(input: {
  * booking row is deleted. Idempotent: the card is locked FOR UPDATE, then
  * a REFUND is written only if none exists yet for this booking. The ledger
  * rows survive the booking deletion (no FK, intentional).
+ *
+ * P-16 (WS-A.3, ADR-0003): the cancellation of a CONFIRMED gift-funded
+ * booking reuses this mechanic with `options.amountCents` (the policy may
+ * owe less than the full redemption — e.g. STRICT 50%) and a distinct
+ * ledger note. The one-REFUND-per-booking guard is shared: an abandon
+ * release and a cancellation restore can never both apply.
  */
 export async function releaseGiftForBooking(
-  bookingId: string
+  bookingId: string,
+  options?: { amountCents?: number; note?: string }
 ): Promise<'refunded' | 'noop'> {
   return db.$transaction(async (tx) => {
     const redemption = await tx.giftCardTransaction.findFirst({
@@ -163,17 +170,22 @@ export async function releaseGiftForBooking(
     const applied = -redemption.amount; // REDEMPTION is negative → positive
     if (applied <= 0) return 'noop';
 
+    // Never restore more than was redeemed; a partial cancellation
+    // restore (ADR-0003) passes the policy-derived share.
+    const restored = Math.min(applied, options?.amountCents ?? applied);
+    if (restored <= 0) return 'noop';
+
     await tx.giftCard.update({
       where: { id: redemption.giftCardId },
-      data: { balance: { increment: applied } },
+      data: { balance: { increment: restored } },
     });
     await tx.giftCardTransaction.create({
       data: {
         giftCardId: redemption.giftCardId,
         type: GiftCardTransactionType.REFUND,
-        amount: applied,
+        amount: restored,
         bookingId,
-        note: 'checkout_abandon',
+        note: options?.note ?? 'checkout_abandon',
       },
     });
     return 'refunded';

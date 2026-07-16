@@ -2682,7 +2682,9 @@
       "totalGross": "Total brut",
       "totalCommission": "Commission EnCave",
       "totalNet": "Total net versé",
-      "otherLines": "Autres mouvements (remboursements, ajustements)"
+      "otherLines": "Autres mouvements (remboursements, ajustements)",
+      "giftBadge": "Bon cadeau",
+      "noShowBadge": "Frais no-show"
     }
   },
   "giftCards": {

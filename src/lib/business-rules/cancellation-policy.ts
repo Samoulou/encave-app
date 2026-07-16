@@ -78,6 +78,36 @@ export function getPolicyTiers(
  * money that already went back, and the Stripe amount is always explicit
  * so a concurrent refund can't silently change what "the rest" means.
  */
+/**
+ * P-16 (WS-A.3, ADR-0003): split of `refundDueCents` for a gift-funded
+ * booking. Real money first — the card refund is capped by what the card
+ * actually paid (net of prior refunds, assumed card-side); the remainder
+ * is restored onto the gift card, capped by what the gift covered. Any
+ * residual beyond both caps is impossible by construction (refundDue ≤
+ * paid − alreadyRefunded) but clamped to 0 defensively.
+ */
+export function splitRefundBetweenCardAndGift(input: {
+  refundDueCents: number;
+  /** totalPrice + serviceFee − giftAppliedCents (the platform card charge). */
+  cardPaidCents: number;
+  giftAppliedCents: number;
+  alreadyRefundedCents: number;
+}): { cardRefundCents: number; giftRestoreCents: number } {
+  const cardHeadroom = Math.max(
+    0,
+    input.cardPaidCents - input.alreadyRefundedCents
+  );
+  const cardRefundCents = Math.max(
+    0,
+    Math.min(input.refundDueCents, cardHeadroom)
+  );
+  const giftRestoreCents = Math.max(
+    0,
+    Math.min(input.refundDueCents - cardRefundCents, input.giftAppliedCents)
+  );
+  return { cardRefundCents, giftRestoreCents };
+}
+
 export function computeBookingRefund(
   booking: {
     totalPrice: number;

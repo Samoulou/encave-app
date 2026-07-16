@@ -2,6 +2,7 @@ import { unstable_cache } from 'next/cache';
 import type Stripe from 'stripe';
 import { getStripe } from '@/server/stripe';
 import { db } from '@/server/db';
+import { logWarn } from '@/lib/logger';
 
 /**
  * Real Stripe payout reads (P-13 / L-141, ENC-114 MVP). Source of truth
@@ -158,6 +159,12 @@ export interface PayoutBookingLineDTO {
   grossCents: number;
   commissionCents: number;
   netCents: number;
+  /**
+   * charge = destination charge of the card payment; noShowFee = P-08
+   * off-session fee transfer; gift = P-09 separate-charges transfer of
+   * the gift-covered payout (correlated via transfer.metadata.bookingId).
+   */
+  kind: 'charge' | 'noShowFee' | 'gift';
 }
 
 export interface PayoutDetailDTO {
@@ -225,6 +232,10 @@ export async function getPayoutDetail(
       // retrieves would trip Stripe's read rate limit and silently push
       // real bookings into "unmatched".
       const paymentIntentByTransfer = new Map<string, string>();
+      // P-16 (WS-A.1): the gift transfer (P-09, separate charges) has NO
+      // source_transaction — its only link back is metadata.bookingId set
+      // by settleGiftTransfer. Second correlation map, keyed by transfer.
+      const giftBookingIdByTransfer = new Map<string, string>();
       const CHUNK = 10;
       for (let index = 0; index < transferIds.length; index += CHUNK) {
         await Promise.all(
@@ -245,6 +256,11 @@ export async function getPayoutDetail(
                   transferId,
                   sourceTxn.payment_intent
                 );
+              } else if (typeof transfer.metadata?.bookingId === 'string') {
+                giftBookingIdByTransfer.set(
+                  transferId,
+                  transfer.metadata.bookingId
+                );
               }
             } catch {
               // Unresolvable transfer → the line stays unmatched.
@@ -254,17 +270,27 @@ export async function getPayoutDetail(
       }
 
       const paymentIntentIds = Array.from(paymentIntentByTransfer.values());
-      const bookings = paymentIntentIds.length
+      const giftBookingIds = Array.from(giftBookingIdByTransfer.values());
+      const orClauses = [
+        ...(paymentIntentIds.length
+          ? [
+              { stripePaymentIntentId: { in: paymentIntentIds } },
+              { noShowFeeChargePaymentIntentId: { in: paymentIntentIds } },
+            ]
+          : []),
+        // P-16 (WS-A.1): gift transfers correlate by booking id (metadata).
+        ...(giftBookingIds.length ? [{ id: { in: giftBookingIds } }] : []),
+      ];
+      const bookings = orClauses.length
         ? await db.booking.findMany({
             where: {
               // A transfer's payment intent is either the booking charge OR,
               // for P-08, the off-session no-show fee (its PI id lives in a
-              // separate column). Match both.
-              OR: [
-                { stripePaymentIntentId: { in: paymentIntentIds } },
-                { noShowFeeChargePaymentIntentId: { in: paymentIntentIds } },
-              ],
-              // Defense in depth: only THIS winery's bookings can match.
+              // separate column) — and the P-09 gift transfer carries only a
+              // bookingId. Match all three.
+              OR: orClauses,
+              // Defense in depth: only THIS winery's bookings can match — a
+              // forged metadata.bookingId from another cave stays unmatched.
               winery: { stripeAccountId },
             },
             select: {
@@ -291,6 +317,7 @@ export async function getPayoutDetail(
           .filter((b) => b.noShowFeeChargePaymentIntentId)
           .map((b) => [b.noShowFeeChargePaymentIntentId, b])
       );
+      const bookingById = new Map(bookings.map((b) => [b.id, b]));
 
       const bookingLines: PayoutBookingLineDTO[] = [];
       const unmatchedLines: PayoutDetailDTO['unmatchedLines'] = [];
@@ -307,6 +334,13 @@ export async function getPayoutDetail(
           !booking && paymentIntentId
             ? bookingByNoShowPaymentIntent.get(paymentIntentId)
             : undefined;
+        const giftBookingId = transferId
+          ? giftBookingIdByTransfer.get(transferId)
+          : undefined;
+        const giftBooking =
+          !booking && !noShowBooking && giftBookingId
+            ? bookingById.get(giftBookingId)
+            : undefined;
         if (booking) {
           bookingLines.push({
             bookingId: booking.id,
@@ -316,6 +350,7 @@ export async function getPayoutDetail(
             grossCents: booking.totalPrice,
             commissionCents: booking.platformFee,
             netCents: txn.amount,
+            kind: 'charge',
           });
         } else if (noShowBooking) {
           // No-show fee transfer (P-08): gross = fee charged, net = what the
@@ -329,6 +364,29 @@ export async function getPayoutDetail(
             grossCents: gross,
             commissionCents: gross - txn.amount,
             netCents: txn.amount,
+            kind: 'noShowFee',
+          });
+        } else if (giftBooking) {
+          // Gift transfer (P-09): the single winery-side line of a
+          // gift-funded booking moves exactly wineryPayout — anything else
+          // is a money-routing anomaly worth a log, never a silent hide.
+          if (txn.amount !== giftBooking.wineryPayout) {
+            logWarn('gift transfer amount differs from wineryPayout', {
+              action: 'getPayoutDetail',
+              bookingId: giftBooking.id,
+              transferAmountCents: txn.amount,
+              wineryPayoutCents: giftBooking.wineryPayout,
+            });
+          }
+          bookingLines.push({
+            bookingId: giftBooking.id,
+            reference: giftBooking.reference,
+            experienceTitle: giftBooking.experience.title,
+            dateMs: giftBooking.date.getTime(),
+            grossCents: giftBooking.totalPrice,
+            commissionCents: giftBooking.platformFee,
+            netCents: txn.amount,
+            kind: 'gift',
           });
         } else {
           unmatchedLines.push({

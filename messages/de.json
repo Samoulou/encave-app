@@ -2682,7 +2682,9 @@
       "totalGross": "Brutto gesamt",
       "totalCommission": "EnCave-Kommission",
       "totalNet": "Netto ausgezahlt",
-      "otherLines": "Weitere Bewegungen (Erstattungen, Anpassungen)"
+      "otherLines": "Weitere Bewegungen (Erstattungen, Anpassungen)",
+      "giftBadge": "Gutschein",
+      "noShowBadge": "No-Show-Gebühr"
     }
   },
   "giftCards": {

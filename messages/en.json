@@ -2682,7 +2682,9 @@
       "totalGross": "Total gross",
       "totalCommission": "EnCave commission",
       "totalNet": "Total net paid",
-      "otherLines": "Other movements (refunds, adjustments)"
+      "otherLines": "Other movements (refunds, adjustments)",
+      "giftBadge": "Gift card",
+      "noShowBadge": "No-show fee"
     }
   },
   "giftCards": {

@@ -7,8 +7,14 @@ vi.mock('@/server/db', () => ({
 }));
 
 const transfersCreate = vi.fn();
+const transfersCreateReversal = vi.fn();
 vi.mock('@/server/stripe', () => ({
-  getStripe: () => ({ transfers: { create: transfersCreate } }),
+  getStripe: () => ({
+    transfers: {
+      create: transfersCreate,
+      createReversal: transfersCreateReversal,
+    },
+  }),
 }));
 
 vi.mock('@/lib/logger', () => ({
@@ -17,7 +23,7 @@ vi.mock('@/lib/logger', () => ({
   logWarn: vi.fn(),
 }));
 
-const { settleGiftTransfer } =
+const { settleGiftTransfer, reverseGiftTransferForCancellation } =
   await import('@/server/services/giftCard-transfer.service');
 
 const giftBooking = {
@@ -81,5 +87,67 @@ describe('settleGiftTransfer', () => {
       where: { id: 'bk-1' },
       data: { giftTransferId: 'tr_1' },
     });
+  });
+});
+
+describe('reverseGiftTransferForCancellation (P-16 / ADR-0003)', () => {
+  const reversibleBooking = {
+    giftTransferId: 'tr_1',
+    giftTransferReversalId: null,
+    wineryPayout: 7200,
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    transfersCreateReversal.mockResolvedValue({ id: 'trr_1' });
+  });
+
+  it('noops when no transfer was ever settled (nothing to claw back)', async () => {
+    findUnique.mockResolvedValue({
+      ...reversibleBooking,
+      giftTransferId: null,
+    });
+    expect(await reverseGiftTransferForCancellation('bk-1', 7200)).toBe('noop');
+    expect(transfersCreateReversal).not.toHaveBeenCalled();
+  });
+
+  it('noops when already reversed (durable idempotency guard)', async () => {
+    findUnique.mockResolvedValue({
+      ...reversibleBooking,
+      giftTransferReversalId: 'trr_old',
+    });
+    expect(await reverseGiftTransferForCancellation('bk-1', 7200)).toBe('noop');
+    expect(transfersCreateReversal).not.toHaveBeenCalled();
+  });
+
+  it('noops on a non-positive reversal amount (0% refund tier)', async () => {
+    expect(await reverseGiftTransferForCancellation('bk-1', 0)).toBe('noop');
+    expect(findUnique).not.toHaveBeenCalled();
+    expect(transfersCreateReversal).not.toHaveBeenCalled();
+  });
+
+  it('reverses with the idempotency key, capped at the transferred amount', async () => {
+    findUnique.mockResolvedValue(reversibleBooking);
+    const r = await reverseGiftTransferForCancellation('bk-1', 99999);
+    expect(r).toBe('reversed');
+    const [transferId, params, opts] =
+      transfersCreateReversal.mock.calls[0] ?? [];
+    expect(transferId).toBe('tr_1');
+    expect(params.amount).toBe(7200);
+    expect(params.metadata.bookingId).toBe('bk-1');
+    expect(opts.idempotencyKey).toBe('gift_reversal_bk-1');
+    expect(update).toHaveBeenCalledWith({
+      where: { id: 'bk-1' },
+      data: { giftTransferReversalId: 'trr_1' },
+    });
+  });
+
+  it('propagates a Stripe failure (caller logs + stores refundError)', async () => {
+    findUnique.mockResolvedValue(reversibleBooking);
+    transfersCreateReversal.mockRejectedValue(new Error('balance error'));
+    await expect(
+      reverseGiftTransferForCancellation('bk-1', 3600)
+    ).rejects.toThrow('balance error');
+    expect(update).not.toHaveBeenCalled();
   });
 });

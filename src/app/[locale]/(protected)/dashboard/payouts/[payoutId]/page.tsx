@@ -142,12 +142,22 @@ export default async function PayoutDetailPage({
             <ul className="mt-3 divide-y divide-stone-100">
               {detail.bookings.map((line) => (
                 <li
-                  key={line.bookingId}
+                  key={`${line.bookingId}-${line.kind}`}
                   className="flex items-center gap-4 py-3"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-foreground">
                       {line.experienceTitle}
+                      {line.kind === 'gift' && (
+                        <span className="ml-2 inline-block rounded-full bg-burgundy-50 px-2 py-0.5 text-xs font-medium text-burgundy-700">
+                          {t('detail.giftBadge')}
+                        </span>
+                      )}
+                      {line.kind === 'noShowFee' && (
+                        <span className="ml-2 inline-block rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
+                          {t('detail.noShowBadge')}
+                        </span>
+                      )}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       <span className="font-mono">{line.reference}</span>

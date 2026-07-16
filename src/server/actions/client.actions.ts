@@ -8,8 +8,11 @@ import { auth } from '@/server/auth';
 import { BookingStatus, Locale } from '@prisma/client';
 import type { ActionResult } from '@/types/actions';
 import { logError, logWarn } from '@/lib/logger';
-import { processRefund } from '@/server/services/payment.service';
-import { computeBookingRefund } from '@/lib/business-rules/cancellation-policy';
+import { processCancellationRefund } from '@/server/services/booking-refund.service';
+import {
+  computeBookingRefund,
+  getRefundPercent,
+} from '@/lib/business-rules/cancellation-policy';
 import {
   sendBookingCancellationEmail,
   sendWinemakerCancellationEmail,
@@ -108,10 +111,11 @@ export async function cancelClientBooking(
     // Refund per the policy snapshotted at booking (fallback: winery's
     // current policy for legacy rows) on the full paid amount (D2),
     // minus anything already refunded (e.g. an admin partial refund).
-    const { paidCents, alreadyRefundedCents, refundDueCents, stripeAmountArg } =
+    const { policy, paidCents, alreadyRefundedCents, refundDueCents } =
       computeBookingRefund(booking, hoursUntilExperience);
     let refundAmount: number | null = null;
     let stripeRefundId: string | null = null;
+    let giftRestoredCents = 0;
 
     // Atomic claim — see cancelBooking: prevents two concurrent
     // cancellations from both obtaining a partial refund.
@@ -132,16 +136,23 @@ export async function cancelClientBooking(
       };
     }
 
-    if (refundDueCents > 0 && booking.stripePaymentIntentId) {
+    // Gift-aware refund since P-16 (ADR-0003) — see cancelBooking.
+    if (refundDueCents > 0) {
       try {
-        const refundResult = await processRefund(
-          booking.stripePaymentIntentId,
-          true,
-          stripeAmountArg,
-          `cancel-refund:${bookingId}:${refundDueCents}`
-        );
-        refundAmount = refundResult.amount;
-        stripeRefundId = refundResult.refundId;
+        const outcome = await processCancellationRefund({
+          bookingId,
+          stripePaymentIntentId: booking.stripePaymentIntentId,
+          giftAppliedCents: booking.giftAppliedCents,
+          wineryPayout: booking.wineryPayout,
+          refundDueCents,
+          alreadyRefundedCents,
+          paidCents,
+          refundPercent: getRefundPercent(policy, hoursUntilExperience),
+          actionName: 'cancelClientBooking',
+        });
+        refundAmount = outcome.cardRefundCents;
+        stripeRefundId = outcome.stripeRefundId;
+        giftRestoredCents = outcome.giftRestoredCents;
       } catch (refundError) {
         // Release the claim ONLY on a deterministic Stripe rejection —
         // after an ambiguous network error the refund may have succeeded,
@@ -220,7 +231,11 @@ export async function cancelClientBooking(
 
     // Send cancellation email to client (full paid total; refund exact,
     // or generic wording when due but unprocessable — see cancelBooking).
-    if (refundDueCents > 0 && refundAmount === null) {
+    // Restored gift balance counts as returned value (ADR-0003).
+    const totalReturnedCents = (refundAmount ?? 0) + giftRestoredCents;
+    const refundUnprocessable =
+      refundDueCents > 0 && refundAmount === null && giftRestoredCents === 0;
+    if (refundUnprocessable) {
       logError(
         'Refund due but no Stripe payment intent on booking',
         undefined,
@@ -233,10 +248,7 @@ export async function cancelClientBooking(
       wineryName: booking.winery.name,
       date: bookingDateTime,
       totalPrice: paidCents,
-      refundAmountCents:
-        refundDueCents > 0 && refundAmount === null
-          ? null
-          : (refundAmount ?? 0),
+      refundAmountCents: refundUnprocessable ? null : totalReturnedCents,
       bookingRef: booking.reference,
     });
 
@@ -261,8 +273,9 @@ export async function cancelClientBooking(
       data: {
         bookingId: updatedBooking.id,
         status: updatedBooking.status,
-        refundIssued: refundAmount !== null,
-        refundAmount,
+        // Client-facing: card refund + restored gift balance (ADR-0003).
+        refundIssued: totalReturnedCents > 0,
+        refundAmount: totalReturnedCents > 0 ? totalReturnedCents : null,
       },
     };
   } catch (error) {

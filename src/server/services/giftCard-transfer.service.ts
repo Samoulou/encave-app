@@ -81,6 +81,58 @@ export async function settleGiftTransfer(
 }
 
 /**
+ * Reversal of the winery transfer when a gift-funded CONFIRMED booking is
+ * cancelled (P-16 / WS-A.3, ADR-0003). Idempotent on two levels:
+ *  - `Booking.giftTransferReversalId != null` → durable guard,
+ *  - Stripe idempotencyKey `gift_reversal_{bookingId}`.
+ * `reversalCents` is the policy-proportional clawback computed by the
+ * caller, capped here at the transferred amount. No transfer settled yet
+ * (`giftTransferId` null) → noop, and none will ever settle: both
+ * settleGiftTransfer and the reconcile cron only touch CONFIRMED bookings.
+ * A Stripe failure throws — the caller logs and stores it for manual
+ * reconciliation (runbook incident-paiement), never silently.
+ */
+export async function reverseGiftTransferForCancellation(
+  bookingId: string,
+  reversalCents: number
+): Promise<'reversed' | 'noop'> {
+  if (reversalCents <= 0) return 'noop';
+  const booking = await db.booking.findUnique({
+    where: { id: bookingId },
+    select: {
+      giftTransferId: true,
+      giftTransferReversalId: true,
+      wineryPayout: true,
+    },
+  });
+  if (!booking?.giftTransferId) return 'noop';
+  if (booking.giftTransferReversalId) return 'noop';
+
+  const amount = Math.min(reversalCents, booking.wineryPayout);
+  if (amount <= 0) return 'noop';
+
+  const reversal = await getStripe().transfers.createReversal(
+    booking.giftTransferId,
+    { amount, metadata: { bookingId, reason: 'booking_cancellation' } },
+    { idempotencyKey: `gift_reversal_${bookingId}` }
+  );
+
+  await db.booking.update({
+    where: { id: bookingId },
+    data: { giftTransferReversalId: reversal.id },
+  });
+
+  logInfo('gift_transfer.reversed', {
+    action: 'reverseGiftTransferForCancellation',
+    bookingId,
+    amount,
+    transferId: booking.giftTransferId,
+    reversalId: reversal.id,
+  });
+  return 'reversed';
+}
+
+/**
  * Reconciliation sweep (P-09, Luca §5/§8): retry the winery transfer for
  * CONFIRMED bookings whose gift transfer never landed (transient
  * balance_insufficient, a webhook that failed after confirmation, a KYC

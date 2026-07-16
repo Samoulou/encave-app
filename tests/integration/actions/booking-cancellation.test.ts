@@ -66,6 +66,9 @@ describe('Booking Cancellation Actions', () => {
     totalPrice: 20000,
     serviceFeeCents: 0,
     refundAmount: null,
+    // P-16 (ADR-0003): the classic (non-gift) refund path.
+    giftAppliedCents: 0,
+    wineryPayout: 17600,
     stripePaymentIntentId: 'pi_test123',
     accessToken,
     accessTokenHash: tokenHash,

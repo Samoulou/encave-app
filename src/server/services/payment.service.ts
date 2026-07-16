@@ -164,12 +164,19 @@ export function getPlatformCommissionRate(): number {
  * Handles both full and partial refunds, including application fee refund.
  * Omitting `amountCents` refunds the full charge; a partial amount
  * reverses the transfer and the application fee proportionally (Stripe).
+ *
+ * `options.reverseTransfer` (default true) MUST be false for the card
+ * charge of a gift-funded booking (P-16 / ADR-0003): that charge is a
+ * PLATFORM charge with no transfer attached — Stripe rejects
+ * reverse_transfer on it. The winery clawback goes through
+ * transfers.createReversal instead.
  */
 export async function processRefund(
   stripePaymentIntentOrSessionId: string,
   refundApplicationFee: boolean = true,
   amountCents?: number,
-  idempotencyKey?: string
+  idempotencyKey?: string,
+  options?: { reverseTransfer?: boolean }
 ): Promise<{ refundId: string; amount: number }> {
   if (
     amountCents !== undefined &&
@@ -199,7 +206,7 @@ export async function processRefund(
   const refund = await getStripe().refunds.create(
     {
       payment_intent: paymentIntentId,
-      reverse_transfer: true,
+      reverse_transfer: options?.reverseTransfer ?? true,
       refund_application_fee: refundApplicationFee,
       ...(amountCents !== undefined ? { amount: amountCents } : {}),
     },
