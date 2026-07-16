@@ -161,12 +161,14 @@ export function GiftCardConfigurator({
         {/* Amount or experience */}
         {nature === 'AMOUNT' ? (
           <div className="space-y-2">
-            <Label>{t('amountLabel')}</Label>
+            {/* htmlFor/id: the combobox trigger had no accessible name
+                (axe button-name, P-16 / L-183). */}
+            <Label htmlFor="amountCents">{t('amountLabel')}</Label>
             <Select
               value={String(amountCents)}
               onValueChange={(v) => setValue('amountCents', Number(v))}
             >
-              <SelectTrigger>
+              <SelectTrigger id="amountCents">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -180,12 +182,12 @@ export function GiftCardConfigurator({
           </div>
         ) : (
           <div className="space-y-2">
-            <Label>{t('experienceLabel')}</Label>
+            <Label htmlFor="experienceId">{t('experienceLabel')}</Label>
             <Select
               value={experienceId ?? ''}
               onValueChange={(v) => setValue('experienceId', v)}
             >
-              <SelectTrigger>
+              <SelectTrigger id="experienceId">
                 <SelectValue placeholder={t('experiencePlaceholder')} />
               </SelectTrigger>
               <SelectContent>

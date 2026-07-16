@@ -4,11 +4,14 @@ import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import type { GiftCardVariant } from '@/lib/constants/gift-card';
 
+// Each variant carries a SOLID background color under its gradient: axe
+// cannot read background-image gradients and falls through to the page
+// background, flagging the light text (color-contrast, P-16 / L-183).
 const VARIANT_CLASSES: Record<GiftCardVariant, string> = {
-  NOEL: 'from-red-950 to-red-800 text-red-50',
+  NOEL: 'bg-red-950 from-red-950 to-red-800 text-red-50',
   ANNIVERSAIRE:
-    'from-primary to-[hsl(var(--primary-hover))] text-primary-foreground',
-  NEUTRE: 'from-neutral-900 to-neutral-700 text-neutral-50',
+    'bg-primary from-primary to-[hsl(var(--primary-hover))] text-primary-foreground',
+  NEUTRE: 'bg-neutral-900 from-neutral-900 to-neutral-700 text-neutral-50',
 };
 
 export function GiftCardPreview({

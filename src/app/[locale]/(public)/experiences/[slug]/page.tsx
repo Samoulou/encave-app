@@ -234,7 +234,12 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
       <main className="w-full flex-grow pb-24 lg:pb-8">
         <div className="border-b border-stone-200 bg-white px-4 py-3 sm:px-6 lg:px-10">
           <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-4">
-            <nav className="min-w-0 overflow-x-auto whitespace-nowrap text-xs text-ink-500">
+            {/* tabIndex: a scrollable region must be keyboard-reachable
+                (axe scrollable-region-focusable, P-16 / L-183). */}
+            <nav
+              tabIndex={0}
+              className="min-w-0 overflow-x-auto whitespace-nowrap text-xs text-ink-500"
+            >
               <span className="hidden lg:inline">
                 {t('detail.explore')} &gt; {experienceTypeLabel} &gt;{' '}
                 <strong className="font-semibold text-ink-900">

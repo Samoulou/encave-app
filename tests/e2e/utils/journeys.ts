@@ -59,10 +59,13 @@ export async function startBooking(
   await expect(widget).toBeVisible();
 
   // Date strip: role=application « Calendrier », day buttons (« jeu 16 »).
+  // LAST enabled day: today can carry a punctual occurrence (scan target)
+  // whose slot fills up / drifts past the current hour — a future weekly
+  // slot is always bookable.
   await page
     .getByRole('application', { name: 'Calendrier' })
     .locator('button:not([disabled])')
-    .first()
+    .last()
     .click();
 
   // Time slots load async once a date is picked (loading → grid).

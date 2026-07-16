@@ -175,6 +175,18 @@ export async function checkRateLimit(
   identifier: string,
   config: RateLimitConfig
 ): Promise<RateLimitResult> {
+  // E2E (P-16): the whole Playwright suite shares one client IP, so the
+  // per-IP budgets serialize/starve unrelated specs. Same convention as
+  // the better-auth rateLimit (P-14: enabled unless E2E_TEST). The rate
+  // limiting logic itself keeps its own unit tests.
+  if (process.env.E2E_TEST === 'true') {
+    return {
+      success: true,
+      remaining: config.maxRequests,
+      resetAt: Date.now() + config.windowMs,
+    };
+  }
+
   // Use Redis in production if configured
   if (isRedisConfigured) {
     return checkRateLimitRedis(identifier, config);

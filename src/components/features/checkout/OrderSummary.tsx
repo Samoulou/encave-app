@@ -81,7 +81,10 @@ export function OrderSummary({
             sizes="(max-width: 768px) 100vw, 400px"
           />
         ) : (
-          <div className="h-full w-full bg-gradient-to-br from-burgundy-100 to-burgundy-200" />
+          // Dark fallback: the title overlay is white text — the previous
+          // light burgundy gradient failed WCAG AA (axe color-contrast,
+          // P-16 / L-183).
+          <div className="h-full w-full bg-burgundy-900 bg-gradient-to-br from-burgundy-800 to-burgundy-900" />
         )}
         <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/60 to-transparent p-6">
           <h3

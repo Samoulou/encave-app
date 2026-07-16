@@ -171,14 +171,16 @@ test.describe('Application regression matrix - admin journey', () => {
       );
     }
 
+    // A same-URL/client-side navigation yields a null response — only a
+    // real document response can carry an error status.
     const adminResponse = await page.goto(localizedPath('/admin'));
-    expect(adminResponse?.status()).toBeLessThan(400);
+    expect(adminResponse?.status() ?? 200).toBeLessThan(400);
     await expectPageHealthy(page);
 
     const pendingResponse = await page.goto(
       localizedPath('/admin/wineries/pending')
     );
-    expect(pendingResponse?.status()).toBeLessThan(400);
+    expect(pendingResponse?.status() ?? 200).toBeLessThan(400);
     await expect(
       page.getByText('E2E Vigneron En Attente Winery')
     ).toBeVisible();

@@ -357,7 +357,9 @@ async function main() {
       type: 'TASTING',
       price: 4500,
       minCapacity: 1,
-      maxCapacity: 8,
+      // Generous capacity: several journeys (gift ×2, a11y checkout) book
+      // this experience in one run, and CI retries stack 10-min holds.
+      maxCapacity: 30,
       duration: 90,
       coverPhoto: '/images/test/domaine-du-test.jpg',
       wineryId: authWineryId,
