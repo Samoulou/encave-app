@@ -37,7 +37,7 @@ export function GiftCardPreview({
       )}
     >
       <div>
-        <p className="text-xs uppercase tracking-widest opacity-80">
+        <p className="text-xs uppercase tracking-widest text-white/90">
           {t('previewEyebrow')}
         </p>
         <p className="mt-1 font-serif text-xl font-semibold">EnCave</p>
@@ -45,19 +45,19 @@ export function GiftCardPreview({
 
       <div>
         {experienceTitle ? (
-          <p className="mb-1 text-sm font-medium opacity-90">
+          <p className="mb-1 text-sm font-medium text-white/95">
             {experienceTitle}
           </p>
         ) : null}
         <p className="font-serif text-4xl font-bold">{amount}</p>
         {message ? (
-          <p className="mt-2 line-clamp-2 text-sm italic opacity-90">
+          <p className="mt-2 line-clamp-2 text-sm italic text-white/95">
             « {message} »
           </p>
         ) : null}
       </div>
 
-      <div className="flex items-end justify-between text-xs opacity-80">
+      <div className="flex items-end justify-between text-xs text-white/90">
         <span>
           {purchaserName ? `${t('previewFrom')} ${purchaserName}` : ' '}
         </span>

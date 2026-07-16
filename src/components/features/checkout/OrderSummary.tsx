@@ -70,8 +70,10 @@ export function OrderSummary({
       className="overflow-hidden rounded-xl border border-border bg-white shadow-lg"
       data-testid="checkout-summary"
     >
-      {/* Image Header with Gradient Overlay */}
-      <div className="relative h-48 w-full">
+      {/* Image Header with Gradient Overlay — solid dark bg: the white
+          title must contrast even before/without the photo (axe reads
+          neither images nor gradients — P-16 / L-183). */}
+      <div className="relative h-48 w-full bg-burgundy-900">
         {experienceImage ? (
           <Image
             src={experienceImage}

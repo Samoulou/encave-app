@@ -45,6 +45,19 @@ test.describe('Winery onboarding A→Z', () => {
     if (!pending) return;
 
     // 2. Admin journey: forced TOTP enrolment (real flow) then approval.
+    // Retry-deterministic: reset the dedicated admin's 2FA (an earlier
+    // attempt may have enrolled it; the secret is lost across retries).
+    const adminUser = await testDb().user.findFirst({
+      where: { email: TEST_USERS.adminOnboarding.email },
+    });
+    if (adminUser) {
+      await testDb().twoFactor.deleteMany({ where: { userId: adminUser.id } });
+      await testDb().session.deleteMany({ where: { userId: adminUser.id } });
+      await testDb().user.update({
+        where: { id: adminUser.id },
+        data: { twoFactorEnabled: false },
+      });
+    }
     const adminContext = await browser.newContext();
     const adminPage = await adminContext.newPage();
     // Dedicated admin: the TOTP enrolment is once-per-account and the

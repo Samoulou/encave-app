@@ -158,6 +158,24 @@ test.describe('Application regression matrix - admin journey', () => {
   test('admin can access overview and pending wineries queue', async ({
     page,
   }) => {
+    // Retry-deterministic: a previous attempt may have enrolled TOTP (the
+    // secret is lost across retries and the login would then challenge)
+    // — reset the admin to the un-enrolled state first.
+    const { testDb } = await import('../utils/db');
+    const adminUser = await testDb().user.findFirst({
+      where: { email: TEST_USERS.admin.email },
+    });
+    if (adminUser) {
+      await testDb().twoFactor.deleteMany({
+        where: { userId: adminUser.id },
+      });
+      await testDb().session.deleteMany({ where: { userId: adminUser.id } });
+      await testDb().user.update({
+        where: { id: adminUser.id },
+        data: { twoFactorEnabled: false },
+      });
+    }
+
     await loginAs(page, TEST_USERS.admin);
 
     // P-14 (L-152): TOTP is mandatory — a fresh admin is force-redirected
