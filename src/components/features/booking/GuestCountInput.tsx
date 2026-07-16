@@ -87,7 +87,12 @@ export function GuestCountInput({
           <Minus className="h-5 w-5" />
         </Button>
 
-        <div className="flex min-w-[80px] flex-col items-center">
+        {/* aria-live (P-16 / L-214): the +/- buttons move focusless value
+            changes — announce them to screen readers. */}
+        <div
+          className="flex min-w-[80px] flex-col items-center"
+          aria-live="polite"
+        >
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5 text-burgundy-600" />
             <span

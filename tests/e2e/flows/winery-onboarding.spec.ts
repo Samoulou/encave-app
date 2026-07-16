@@ -47,9 +47,11 @@ test.describe('Winery onboarding A→Z', () => {
     // 2. Admin journey: forced TOTP enrolment (real flow) then approval.
     const adminContext = await browser.newContext();
     const adminPage = await adminContext.newPage();
-    await loginAsFr(adminPage, TEST_USERS.admin);
+    // Dedicated admin: the TOTP enrolment is once-per-account and the
+    // regression matrix enrolls TEST_USERS.admin in parallel.
+    await loginAsFr(adminPage, TEST_USERS.adminOnboarding);
     const admin = new AdminVerificationPage(adminPage);
-    await admin.enrollTotp(TEST_USERS.admin.password);
+    await admin.enrollTotp(TEST_USERS.adminOnboarding.password);
     await admin.approveWinery(wineryName);
     await adminContext.close();
 
@@ -59,10 +61,21 @@ test.describe('Winery onboarding A→Z', () => {
     expect(verified?.status).toBe('VERIFIED');
 
     // 3. Stripe Connect: hosted onboarding is external — attach the fake
-    //    account (staging covers the real flow) and check the dashboard
-    //    no longer asks for payment setup.
+    //    account (staging covers the real flow). The WINEMAKER role is
+    //    stamped on the session at login (P-14) — re-login for a fresh
+    //    session, which must land on the winemaker dashboard.
     await attachFakeStripeAccount(pending.id);
+    await page.context().clearCookies();
+    await loginAsFr(page, {
+      email,
+      password: 'TestPassword123!',
+      name: '',
+      role: 'winery_owner',
+    });
     await page.goto('/fr/dashboard');
-    await expect(page.getByText(wineryName).first()).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: "Aujourd'hui" })
+    ).toBeVisible();
+    expect(page.url()).not.toContain('/onboarding');
   });
 });

@@ -1,4 +1,5 @@
 import { Page, expect } from '@playwright/test';
+import { acceptCookiesIfVisible } from '../utils/journeys';
 
 /**
  * POM — winery onboarding journey (P-16 / L-181): registration with the
@@ -9,6 +10,9 @@ export class OnboardingPage {
 
   async register(input: { name: string; email: string; password: string }) {
     await this.page.goto('/fr/register');
+    // The consent banner overlays the bottom of the form (pointer-blocks
+    // the submit/continue buttons).
+    await acceptCookiesIfVisible(this.page);
     const form = this.page.locator('form');
     await form.locator('input[name="name"], #name').first().fill(input.name);
     await form.locator('input[type="email"]').first().fill(input.email);
@@ -36,7 +40,11 @@ export class OnboardingPage {
     await this.page.getByLabel('Commune').click();
     await this.page.getByRole('option', { name: input.commune }).click();
     await this.page.getByLabel('Téléphone').fill(input.phone);
-    await this.page.getByRole('button', { name: 'Continuer' }).click();
+    // exact: the cookie banner's « Continuer sans accepter » also matches
+    // the substring.
+    await this.page
+      .getByRole('button', { name: 'Continuer', exact: true })
+      .click();
     await this.page.waitForURL(/onboarding\/winery\/confirmation/, {
       timeout: 15000,
     });

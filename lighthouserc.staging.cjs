@@ -1,0 +1,50 @@
+/**
+ * LHCI — GATE stage (P-16 / L-182, blocking): measured against staging
+ * (encave-dev.vercel.app) = CDN + ISR, the NFR truth per the P-06
+ * decision. categories.performance ≥ 0.95 + LCP < 1.5 s on the discovery
+ * pages + resource budgets, all `error`. If this gate fails after the
+ * WS-F perf leviers are exhausted, the delivery-plan fuse applies
+ * (launch 23.11) — never bypass it silently.
+ *
+ * URLs are overridable for the pre-launch run against production:
+ *   LHCI_BASE_URL=https://encave.ch npx lhci autorun --config=lighthouserc.staging.cjs
+ */
+const BASE = process.env.LHCI_BASE_URL || 'https://encave-dev.vercel.app';
+
+module.exports = {
+  ci: {
+    collect: {
+      url: [
+        `${BASE}/fr`,
+        `${BASE}/fr/experiences`,
+        // A stable seeded fiche must exist on staging — adjust the slug if
+        // the staging seed changes.
+        `${BASE}/fr/experiences/${process.env.LHCI_FICHE_PATH || 'degustation-cave-du-rhodan'}`,
+      ],
+      numberOfRuns: 3,
+      settings: {
+        preset: 'perf',
+        formFactor: 'mobile',
+        screenEmulation: {
+          mobile: true,
+          width: 412,
+          height: 823,
+          deviceScaleFactor: 1.75,
+          disabled: false,
+        },
+        budgetsPath: './budgets.json',
+      },
+    },
+    assert: {
+      assertions: {
+        'categories:performance': ['error', { minScore: 0.95 }],
+        'largest-contentful-paint': ['error', { maxNumericValue: 1500 }],
+        'resource-summary:script:size': 'error',
+        'resource-summary:document:size': 'error',
+        'resource-summary:image:size': 'error',
+        'resource-summary:total:size': 'error',
+      },
+    },
+    upload: { target: 'filesystem', outputDir: '.lighthouseci' },
+  },
+};

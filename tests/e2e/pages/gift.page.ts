@@ -51,8 +51,12 @@ export class GiftPage {
       .first()
       .click();
     // Applied note replaces the input: « {amount} appliqués sur ce paiement. »
+    // (two responsive twins — assert the visible one, 10s for the preview
+    // action roundtrip)
     await expect(
-      this.page.getByText(/appliqués sur ce paiement/).first()
-    ).toBeVisible();
+      this.page
+        .locator('p:visible', { hasText: 'appliqués sur ce paiement' })
+        .first()
+    ).toBeVisible({ timeout: 10000 });
   }
 }

@@ -8,6 +8,9 @@ on:
   schedule:
     - cron: '0 5 * * 1'
   workflow_dispatch:
+  # Each merge to dev re-runs the gates once staging redeployed.
+  push:
+    branches: [dev]
 
 env:
   BETTER_AUTH_SECRET: 'ci-placeholder-not-a-secret-0123456789abcdef'
@@ -143,3 +146,42 @@ jobs:
 
       - name: k6 smoke (public surface under light load)
         run: k6 run -e K6_BASE_URL=http://localhost:3000 tests/k6/smoke.js
+
+  lhci-staging:
+    name: Lighthouse gate ≥ 95 (staging)
+    runs-on: ubuntu-latest
+
+    # THE blocking L-182 gate — measured on staging (CDN/ISR = NFR truth,
+    # P-06 decision). Failure after the WS-F levers are exhausted = the
+    # delivery-plan fuse (launch 23.11), never a silent bypass.
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # On a dev push the Vercel staging deploy races this job — give it
+      # time to go live before measuring.
+      - name: Wait for the staging deploy
+        if: github.event_name == 'push'
+        run: sleep 240
+
+      - name: Run Lighthouse CI against staging
+        run: npx lhci autorun --config=lighthouserc.staging.cjs
+        env:
+          LHCI_FICHE_PATH: ${{ vars.LHCI_FICHE_PATH }}
+
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-staging-reports
+          path: .lighthouseci/
+          retention-days: 14

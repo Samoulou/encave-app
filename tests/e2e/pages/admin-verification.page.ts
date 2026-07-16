@@ -1,5 +1,6 @@
 import { Page, expect } from '@playwright/test';
-import { authenticator } from 'otplib';
+// otplib v13 functional API (the v12 `authenticator` object is gone).
+import { generateSync } from 'otplib';
 
 /**
  * POM — admin side of the onboarding journey (P-16 / L-181): mandatory
@@ -28,7 +29,7 @@ export class AdminVerificationPage {
     if (!secret) {
       throw new Error('totpURI has no secret param');
     }
-    await this.page.locator('#totp-code').fill(authenticator.generate(secret));
+    await this.page.locator('#totp-code').fill(generateSync({ secret }));
     await this.page
       .getByRole('button', { name: 'Vérifier et activer' })
       .click();
@@ -38,10 +39,8 @@ export class AdminVerificationPage {
 
   async approveWinery(wineryName: string) {
     await this.page.goto('/fr/admin/wineries/pending');
-    const row = this.page
-      .locator('tr, li, div[class*="card"]')
-      .filter({ hasText: wineryName })
-      .first();
+    // One table row per pending winery — other pending fixtures coexist.
+    const row = this.page.getByRole('row').filter({ hasText: wineryName });
     await row.getByRole('button', { name: 'Examiner' }).click();
     await this.page.waitForURL(/admin\/wineries\/(?!pending)/);
     await this.page.getByRole('button', { name: 'Approuver' }).click();

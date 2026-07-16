@@ -9,20 +9,17 @@ test.describe('Mobile UX redesign', () => {
     await page.goto('/fr');
 
     await expect(page.locator('body')).not.toContainText('Voir les dates');
-    await expect(page.getByTestId('mobile-home-capacity')).toContainText(
-      '2+ places'
-    );
-    const capacityLink = page
-      .locator('a[href="/fr/experiences?capacity=2"]:visible')
+    // The P-06 mobile home dropped the capacity shortcut; the real filters
+    // are the weekend date chip (P-05 / L-111) + type categories.
+    const weekendChip = page
+      .locator('a[href*="quand="]:visible', { hasText: 'Ce week-end' })
       .first();
-    await expect(capacityLink).toBeVisible();
+    await expect(weekendChip).toBeVisible();
     await expect(
-      page.locator('a[href="/fr/experiences?type=TASTING"]:visible').first()
+      page.locator('a[href*="type=TASTING"]:visible').first()
     ).toBeVisible();
     await expect(
-      page
-        .locator('a[href="/fr/experiences?type=CELLAR_VISIT"]:visible')
-        .first()
+      page.locator('a[href*="type=CELLAR_VISIT"]:visible').first()
     ).toBeVisible();
   });
 

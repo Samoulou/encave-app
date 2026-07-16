@@ -160,6 +160,17 @@ test.describe('Application regression matrix - admin journey', () => {
   }) => {
     await loginAs(page, TEST_USERS.admin);
 
+    // P-14 (L-152): TOTP is mandatory — a fresh admin is force-redirected
+    // to the enrolment before any /admin surface renders.
+    await page.goto(localizedPath('/admin'));
+    if (page.url().includes('/admin-setup/2fa')) {
+      const { AdminVerificationPage } =
+        await import('../pages/admin-verification.page');
+      await new AdminVerificationPage(page).enrollTotp(
+        TEST_USERS.admin.password
+      );
+    }
+
     const adminResponse = await page.goto(localizedPath('/admin'));
     expect(adminResponse?.status()).toBeLessThan(400);
     await expectPageHealthy(page);

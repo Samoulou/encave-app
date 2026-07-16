@@ -140,6 +140,12 @@ async function main() {
 
       const createdWinery = await prisma.winery.create({
         data: {
+          // Fixed cuid-shaped id for the main auth winery: ISR pages
+          // (/sur-mesure select, fiches) embed winery ids — a reseed must
+          // not orphan them, and the request schema validates cuids.
+          ...(key === 'wineryOwner'
+            ? { id: 'ce2eauthtestwinery00000001' }
+            : {}),
           name: wineryName,
           slug:
             key === 'wineryOwner' ? 'auth-test-winery' : `e2e-${suffix}-winery`,
