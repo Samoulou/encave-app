@@ -76,6 +76,15 @@ export const TEST_USERS: Record<string, TestUser> = {
     name: 'Test Admin',
     role: 'admin',
   },
+  // Second admin, exclusive to the winery-onboarding journey: the forced
+  // TOTP enrolment (P-14) is once-per-account, so parallel specs must not
+  // share an admin.
+  adminOnboarding: {
+    email: 'admin-onboarding@test.example.com',
+    password: 'AdminPassword123!',
+    name: 'Test Admin Onboarding',
+    role: 'admin',
+  },
   clientA: {
     email: 'client-a@test.encave.ch',
     password: 'TestPassword123!',

@@ -40,6 +40,7 @@ Après merge : `/admin` affiche **CA/dégustations du jour + santé webhooks + d
 ## 2. Scope
 
 **IN** (L-160→L-164) :
+
 - L-160 `/admin` : `getTodayAdminKpis` (extension `admin-metrics.queries.ts`) + `admin-ops.queries.ts` (`getWebhookHealth`, `getRecentIncidents`) + 3 cartes présentation.
 - L-161 `/admin/wineries` (index tous statuts, recherche) + `getWineryHistory` + `AdminActionHistory` + section historique sur `/admin/wineries/[id]`.
 - L-162 `/admin/utilisateurs` (recherche, filtre rôle) + actions `changeUserRole` + `anonymizeUserAsAdmin` + contrôles UI (réutilise `AdminSuspensionControls` + `AdminActionHistory`).
@@ -48,6 +49,7 @@ Après merge : `/admin` affiche **CA/dégustations du jour + santé webhooks + d
 - i18n fr/de/en (`admin.*` dans `messages/*.json` + blocs `translations.ts`) ; états loading/empty/error ; tests.
 
 **OUT (explicitement)** :
+
 - Toute **migration de schéma** (rien à ajouter) ; tout **nouveau flag**.
 - **Franciser** `/admin/wineries/*` (épisode dédié avec redirects).
 - Page **`/admin/journal`** globale (audit reste inline).
@@ -85,6 +87,7 @@ Emails d'abord (autonomes, un bug client live), puis les 3 surfaces admin (L-161
 **7 — L-161 : caves tous statuts + historique.** Nouveau `src/server/queries/admin-wineries.queries.ts` : `getWineriesForAdmin({q,status})` (patron bookings : `where` OR name/commune/user.email insensitive + `status?`, `take:100`, include user.email) ; `getWineryHistory(wineryId)` (`Promise.all([verificationLog, adminAction where targetType:'Winery',targetId])` → DTO unifié `{kind,action,adminId,reason,at,metadata}`, tri `at desc`). Nouvelle page `src/app/[locale]/admin/wineries/page.tsx` (gabarit `bookings/page.tsx`). Nouveau composant présentation `src/components/features/admin/AdminActionHistory.tsx` (tolère reason/metadata null + action inconnue, `metadata Json?` narrow sans `as any`). Section historique sur `wineries/[id]/page.tsx`. Strings ×3.
 
 **8 — L-162 : `/admin/utilisateurs`.** Validateurs `src/lib/validators/admin-users.ts` : `ChangeUserRoleSchema` (**enum `CLIENT|WINEMAKER`** — ADMIN non représentable), `AnonymizeUserSchema` (`targetId`, `reason`, `notifyUser:boolean`). Actions dans `src/server/actions/admin.ts` :
+
 - `changeUserRole` : `requireAdmin` → safeParse → gardes `targetId≠adminId`, **cible non-ADMIN**, **pas de rétrogradation d'un WINEMAKER propriétaire de cave** (`USER_OWNS_WINERY`) → `$transaction([user.update, adminAction.create({action:'USER_ROLE_CHANGED',targetType:'User',targetId,metadata:{from,to}})])`.
 - `anonymizeUserAsAdmin` : `requireAdmin` → garde `targetId≠adminId` → safeParse → **try/catch autour de** `anonymizeUser(targetId,{actorId:adminId,reason,notifyUser})` (le service **throw** `USER_NOT_FOUND`/`FUTURE_WINERY_BOOKINGS:<n>` → mapper en `ActionResult`, ne jamais throw). ⚠️ Ajout additif au service : param **`notifyUser?:boolean` (défaut true)** gardant l'appel `sendAccountDeletedEmail` (self-service inchangé).
 

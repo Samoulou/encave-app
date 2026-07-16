@@ -178,6 +178,20 @@ export async function processRefund(
     throw new Error('Refund amount must be a positive integer (cents)');
   }
 
+  // E2E (P-16): payment intents minted by the fake-session convention
+  // (`e2e_…`, cf. booking checkout) resolve to a synthetic refund — never
+  // call Stripe. The cancellation paths always pass an explicit amount
+  // when a refund is due (computeBookingRefund.stripeAmountArg).
+  if (
+    process.env.E2E_TEST === 'true' &&
+    stripePaymentIntentOrSessionId.startsWith('e2e_')
+  ) {
+    return {
+      refundId: `re_e2e_${Date.now()}`,
+      amount: amountCents ?? 0,
+    };
+  }
+
   let paymentIntentId = stripePaymentIntentOrSessionId;
 
   if (stripePaymentIntentOrSessionId.startsWith('cs_')) {

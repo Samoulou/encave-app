@@ -2,9 +2,15 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
-    branches: [main]
+    branches: [main, dev]
+
+# One run per ref: a force-push or rapid follow-up commit cancels the
+# superseded run instead of stacking e2e/Lighthouse jobs.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 # CI is hermetic: no job talks to a real database (the DB-invariant tests
 # skip without INVARIANTS_DATABASE_URL), so a well-formed placeholder is all
@@ -68,6 +74,202 @@ jobs:
 
       - name: Run tests
         run: npm run test:run
+
+  db-invariants:
+    name: DB Invariants
+    runs-on: ubuntu-latest
+
+    # The tests/db suites (money invariants, hold/scan/gift concurrency) are
+    # skipped without INVARIANTS_DATABASE_URL — this job is the only place
+    # they run against a real Postgres (P-16 / L-180).
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: encave
+          POSTGRES_PASSWORD: encave
+          POSTGRES_DB: encave_invariants
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U encave"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Apply migrations
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: 'postgresql://encave:encave@localhost:5432/encave_invariants'
+          DIRECT_URL: 'postgresql://encave:encave@localhost:5432/encave_invariants'
+
+      - name: Run DB invariant & concurrency tests
+        run: npm run test:db:invariants
+        env:
+          INVARIANTS_DATABASE_URL: 'postgresql://encave:encave@localhost:5432/encave_invariants'
+          DIRECT_URL: 'postgresql://encave:encave@localhost:5432/encave_invariants'
+
+  e2e:
+    name: E2E (6 launch journeys + a11y)
+    runs-on: ubuntu-latest
+    needs: [lint-and-typecheck, test]
+
+    # Hermetic: .env.test.example works verbatim (placeholder Stripe keys,
+    # synthetic signed webhooks) — the service is mapped to 5433 to match it.
+    # Job-level env REQUIRED: dotenv -e .env.test does NOT override an
+    # already-set variable, and the workflow-level placeholder DATABASE_URL
+    # would otherwise win over .env.test (first CI run failure).
+    env:
+      DATABASE_URL: 'postgresql://postgres:postgres@localhost:5433/encave_test'
+      DIRECT_URL: 'postgresql://postgres:postgres@localhost:5433/encave_test'
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: encave_test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Create test env file
+        run: cp .env.test.example .env.test
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      # Migrate + seed BEFORE the build: /cadeaux and /sur-mesure are ISR
+      # pages that notFound() when their flag rows are absent at prerender
+      # time — an unseeded build would cache 404s for the whole run
+      # (Codex review on the first CI run).
+      - name: Apply migrations
+        run: npx prisma migrate deploy
+
+      - name: Seed E2E data (flags ON before prerender)
+        run: npx tsx tests/e2e/scripts/setup-test-db.ts
+
+      - name: Build application
+        run: npm run build
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  lighthouse:
+    name: Lighthouse (local build, budgets blocking)
+    runs-on: ubuntu-latest
+    needs: [lint-and-typecheck, test]
+
+    # PR stage of L-182: scores are WARN-only against the local build (the
+    # Lantern mobile simulation is a documented artifact on this app);
+    # resource budgets are blocking. The >= 95 gate runs against staging
+    # (weekly-gates.yml + push on dev).
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: encave
+          POSTGRES_PASSWORD: encave
+          POSTGRES_DB: encave_lhci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U encave"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: 'postgresql://encave:encave@localhost:5432/encave_lhci'
+      DIRECT_URL: 'postgresql://encave:encave@localhost:5432/encave_lhci'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      # Seed BEFORE the build so the prerendered discovery pages carry
+      # real content (an empty prerender would measure blank pages).
+      - name: Apply migrations
+        run: npx prisma migrate deploy
+
+      - name: Seed discovery pages
+        run: npx tsx tests/e2e/scripts/setup-test-db.ts
+
+      - name: Build application
+        run: npm run build
+
+      - name: Run Lighthouse CI
+        run: npx lhci autorun --config=lighthouserc.local.cjs
+
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: .lighthouseci/
+          retention-days: 7
 
   build:
     name: Build

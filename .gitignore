@@ -34,6 +34,7 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 !.env.example
+!.env.test.example
 
 # Vercel
 .vercel
@@ -59,3 +60,6 @@ _bmad/
 _bmad-output/
 .bmad-core/
 .env*.local
+
+# Lighthouse CI artifacts (P-16)
+.lighthouseci/

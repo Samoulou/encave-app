@@ -17,7 +17,9 @@ export function CancellationPolicy() {
             <li>{t('halfRefund')}</li>
             <li>{t('noRefund')}</li>
           </ul>
-          <p className="mt-2 text-xs text-amber-600">
+          {/* amber-700: amber-600 on white is ~3.3:1, under WCAG AA for
+              12px text (axe color-contrast, P-16 / L-183). */}
+          <p className="mt-2 text-xs text-amber-700">
             {t('contactForChanges')}
           </p>
         </div>

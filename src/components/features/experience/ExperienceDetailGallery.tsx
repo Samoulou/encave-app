@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { IMAGE_PLACEHOLDERS } from '@/lib/image-placeholder';
@@ -71,10 +72,6 @@ export function ExperienceDetailGallery({
     setLightboxOpen(true);
   };
 
-  const closeLightbox = () => {
-    setLightboxOpen(false);
-  };
-
   const goToPrevious = useCallback(() => {
     setCurrentIndex((prev) => (prev === 0 ? allImages.length - 1 : prev - 1));
   }, [allImages.length]);
@@ -82,25 +79,6 @@ export function ExperienceDetailGallery({
   const goToNext = useCallback(() => {
     setCurrentIndex((prev) => (prev === allImages.length - 1 ? 0 : prev + 1));
   }, [allImages.length]);
-
-  // Keyboard navigation
-  useEffect(() => {
-    if (!lightboxOpen) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeLightbox();
-      if (e.key === 'ArrowLeft') goToPrevious();
-      if (e.key === 'ArrowRight') goToNext();
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = '';
-    };
-  }, [lightboxOpen, goToPrevious, goToNext]);
 
   const validGalleryCount = images.filter((image) =>
     getValidImageUrl(image.url)
@@ -201,106 +179,120 @@ export function ExperienceDetailGallery({
         )}
       </div>
 
-      {/* Lightbox */}
-      {lightboxOpen && allImages[currentIndex] && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95"
-          role="dialog"
-          aria-modal="true"
-          aria-label={t('lightbox')}
-        >
-          {/* Close button */}
-          <button
-            type="button"
-            onClick={closeLightbox}
-            className="absolute right-4 top-4 z-10 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white"
-            aria-label={t('closeLightbox')}
+      {/* Lightbox — Radix Dialog (P-16 / L-214): focus trap + restore,
+          Escape, scroll lock and aria-modal come from the primitive; the
+          hand-rolled version trapped neither Tab nor the returning focus. */}
+      <DialogPrimitive.Root open={lightboxOpen} onOpenChange={setLightboxOpen}>
+        <DialogPrimitive.Portal>
+          <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/95" />
+          <DialogPrimitive.Content
+            className="fixed inset-0 z-50 flex items-center justify-center focus:outline-none"
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowLeft') goToPrevious();
+              if (e.key === 'ArrowRight') goToNext();
+            }}
           >
-            <X className="h-6 w-6" />
-          </button>
+            <DialogPrimitive.Title className="sr-only">
+              {t('lightbox')}
+            </DialogPrimitive.Title>
+            {allImages[currentIndex] && (
+              <>
+                {/* Close button */}
+                <DialogPrimitive.Close asChild>
+                  <button
+                    type="button"
+                    className="absolute right-4 top-4 z-10 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white"
+                    aria-label={t('closeLightbox')}
+                  >
+                    <X className="h-6 w-6" />
+                  </button>
+                </DialogPrimitive.Close>
 
-          {/* Previous button */}
-          {allImages.length > 1 && (
-            <button
-              type="button"
-              onClick={goToPrevious}
-              className="absolute left-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white transition-colors hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white"
-              aria-label={t('previousImage')}
-            >
-              <ChevronLeft className="h-8 w-8" />
-            </button>
-          )}
+                {/* Previous button */}
+                {allImages.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={goToPrevious}
+                    className="absolute left-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white transition-colors hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white"
+                    aria-label={t('previousImage')}
+                  >
+                    <ChevronLeft className="h-8 w-8" />
+                  </button>
+                )}
 
-          {/* Image */}
-          <div className="relative h-[80vh] w-[90vw] max-w-5xl">
-            <ImageWithFallback
-              src={allImages[currentIndex].url}
-              alt={t('imageAlt', {
-                title: experienceTitle,
-                index: currentIndex + 1,
-              })}
-              fill
-              className="object-contain"
-              sizes="90vw"
-              priority
-              unoptimized
-              placeholder="blur"
-              blurDataURL={IMAGE_PLACEHOLDERS.hero}
-            />
-          </div>
-
-          {/* Next button */}
-          {allImages.length > 1 && (
-            <button
-              type="button"
-              onClick={goToNext}
-              className="absolute right-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white transition-colors hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white"
-              aria-label={t('nextImage')}
-            >
-              <ChevronRight className="h-8 w-8" />
-            </button>
-          )}
-
-          {/* Image counter */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-4 py-2 text-sm text-white">
-            {t('imageCounter', {
-              current: currentIndex + 1,
-              total: allImages.length,
-            })}
-          </div>
-
-          {/* Thumbnail strip */}
-          {allImages.length > 1 && (
-            <div className="absolute bottom-16 left-1/2 flex -translate-x-1/2 gap-2">
-              {allImages.map((image, index) => (
-                <button
-                  key={image.id}
-                  type="button"
-                  onClick={() => setCurrentIndex(index)}
-                  className={cn(
-                    'relative h-12 w-12 overflow-hidden rounded-md border-2 transition-all focus:outline-none focus:ring-2 focus:ring-white',
-                    index === currentIndex
-                      ? 'border-white'
-                      : 'border-transparent opacity-60 hover:opacity-100'
-                  )}
-                  aria-label={t('goToImage', { index: index + 1 })}
-                >
+                {/* Image */}
+                <div className="relative h-[80vh] w-[90vw] max-w-5xl">
                   <ImageWithFallback
-                    src={image.url}
-                    alt=""
+                    src={allImages[currentIndex].url}
+                    alt={t('imageAlt', {
+                      title: experienceTitle,
+                      index: currentIndex + 1,
+                    })}
                     fill
-                    className="object-cover"
-                    sizes="48px"
+                    className="object-contain"
+                    sizes="90vw"
+                    priority
                     unoptimized
                     placeholder="blur"
-                    blurDataURL={IMAGE_PLACEHOLDERS.square}
+                    blurDataURL={IMAGE_PLACEHOLDERS.hero}
                   />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+                </div>
+
+                {/* Next button */}
+                {allImages.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={goToNext}
+                    className="absolute right-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white transition-colors hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white"
+                    aria-label={t('nextImage')}
+                  >
+                    <ChevronRight className="h-8 w-8" />
+                  </button>
+                )}
+
+                {/* Image counter */}
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-4 py-2 text-sm text-white">
+                  {t('imageCounter', {
+                    current: currentIndex + 1,
+                    total: allImages.length,
+                  })}
+                </div>
+
+                {/* Thumbnail strip */}
+                {allImages.length > 1 && (
+                  <div className="absolute bottom-16 left-1/2 flex -translate-x-1/2 gap-2">
+                    {allImages.map((image, index) => (
+                      <button
+                        key={image.id}
+                        type="button"
+                        onClick={() => setCurrentIndex(index)}
+                        className={cn(
+                          'relative h-12 w-12 overflow-hidden rounded-md border-2 transition-all focus:outline-none focus:ring-2 focus:ring-white',
+                          index === currentIndex
+                            ? 'border-white'
+                            : 'border-transparent opacity-60 hover:opacity-100'
+                        )}
+                        aria-label={t('goToImage', { index: index + 1 })}
+                      >
+                        <ImageWithFallback
+                          src={image.url}
+                          alt=""
+                          fill
+                          className="object-cover"
+                          sizes="48px"
+                          unoptimized
+                          placeholder="blur"
+                          blurDataURL={IMAGE_PLACEHOLDERS.square}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </DialogPrimitive.Content>
+        </DialogPrimitive.Portal>
+      </DialogPrimitive.Root>
     </>
   );
 }

@@ -70,8 +70,10 @@ export function OrderSummary({
       className="overflow-hidden rounded-xl border border-border bg-white shadow-lg"
       data-testid="checkout-summary"
     >
-      {/* Image Header with Gradient Overlay */}
-      <div className="relative h-48 w-full">
+      {/* Image Header with Gradient Overlay — solid dark bg: the white
+          title must contrast even before/without the photo (axe reads
+          neither images nor gradients — P-16 / L-183). */}
+      <div className="relative h-48 w-full bg-burgundy-900">
         {experienceImage ? (
           <Image
             src={experienceImage}
@@ -81,11 +83,17 @@ export function OrderSummary({
             sizes="(max-width: 768px) 100vw, 400px"
           />
         ) : (
-          <div className="h-full w-full bg-gradient-to-br from-burgundy-100 to-burgundy-200" />
+          // Dark fallback: the title overlay is white text — the previous
+          // light burgundy gradient failed WCAG AA (axe color-contrast,
+          // P-16 / L-183).
+          <div className="h-full w-full bg-burgundy-900 bg-gradient-to-br from-burgundy-800 to-burgundy-900" />
         )}
         <div className="absolute inset-0 flex items-end bg-gradient-to-t from-black/60 to-transparent p-6">
+          {/* Solid backdrop on the title itself: over a photo, gradients
+              and semi-transparent overlays are unresolvable for the
+              contrast algorithm (axe color-contrast, P-16 / L-183). */}
           <h3
-            className="text-xl font-bold leading-tight text-white drop-shadow-sm"
+            className="rounded-md bg-burgundy-900 px-3 py-1.5 text-xl font-bold leading-tight text-white"
             data-testid="summary-experience-title"
           >
             {experienceTitle}

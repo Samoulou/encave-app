@@ -458,6 +458,7 @@ export function ExperiencesPageClient({
                   <button
                     key={option}
                     type="button"
+                    aria-pressed={currentParams.sort === option}
                     onClick={() => handleSortChange(option)}
                     className={cn(
                       'h-9 shrink-0 whitespace-nowrap rounded-lg border px-3 text-xs font-semibold transition-colors',

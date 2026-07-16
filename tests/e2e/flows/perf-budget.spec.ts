@@ -78,9 +78,12 @@ test('desktop fiche expérience: la carte se charge après scroll (garde anti-su
   page,
 }) => {
   await page.setViewportSize(DESKTOP);
+  // No networkidle here: the DESKTOP catalogue legitimately loads maplibre
+  // whose tile requests keep the network busy indefinitely — wait for the
+  // grid instead.
   await page.goto('/fr/experiences');
-  await page.waitForLoadState('networkidle');
   const firstCard = page.getByTestId('experience-card').first();
+  await firstCard.waitFor({ timeout: 15_000 });
   const href = await firstCard
     .locator('xpath=ancestor-or-self::a')
     .first()
@@ -89,7 +92,7 @@ test('desktop fiche expérience: la carte se charge après scroll (garde anti-su
   test.skip(!href, 'no seeded experience card');
 
   await page.goto(href as string);
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
 
   const locationSection = page.getByTestId('location-section');
   test.skip(

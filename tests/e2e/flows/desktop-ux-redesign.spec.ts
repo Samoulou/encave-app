@@ -8,20 +8,19 @@ test.describe('Desktop UX redesign', () => {
   }) => {
     await page.goto('/fr');
 
-    await expect(page.locator('body')).not.toContainText('Ce week-end');
+    // P-01-era fake CTA must stay gone…
     await expect(page.locator('body')).not.toContainText('Voir les dates');
-    const capacityLink = page
-      .locator('a[href="/fr/experiences?capacity=2"]:visible')
+    // …but « Ce week-end » is now a REAL date filter (P-05 / L-111): the
+    // chip carries the computed weekend range (client-mounted href).
+    const weekendChip = page
+      .locator('a[href*="quand="]:visible', { hasText: 'Ce week-end' })
       .first();
-    await expect(capacityLink).toBeVisible();
-    await expect(capacityLink).toContainText('2+ places');
+    await expect(weekendChip).toBeVisible();
     await expect(
-      page.locator('a[href="/fr/experiences?type=TASTING"]:visible').first()
+      page.locator('a[href*="type=TASTING"]:visible').first()
     ).toBeVisible();
     await expect(
-      page
-        .locator('a[href="/fr/experiences?type=CELLAR_VISIT"]:visible')
-        .first()
+      page.locator('a[href*="type=CELLAR_VISIT"]:visible').first()
     ).toBeVisible();
   });
 
@@ -29,12 +28,18 @@ test.describe('Desktop UX redesign', () => {
     page,
   }) => {
     await page.goto('/fr/experiences');
-    await expect(page.locator('body')).not.toContainText('Plus proche');
+    // Sort pill labels moved to search.sort — « Distance » only with a geo
+    // context (visibleSortOptions gate).
+    await expect(
+      page.getByRole('button', { name: 'Distance', exact: true })
+    ).toBeHidden();
 
     await page.goto(
       '/fr/experiences?location=sion&lat=46.2333&lng=7.3667&sort=distance'
     );
-    await expect(page.getByText('Plus proche')).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Distance', exact: true })
+    ).toBeVisible();
   });
 
   test('detail page uses factual content instead of mocked badges', async ({

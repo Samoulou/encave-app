@@ -1,0 +1,187 @@
+name: Weekly Gates
+
+# P-16 / L-180-L-182 — the standing launch gates: concurrency invariants,
+# k6 load, Lighthouse CI against staging. Scheduled weekly (Monday 05:00
+# UTC) and runnable on demand (workflow_dispatch = the pre-release run
+# mandated by the DoD).
+on:
+  schedule:
+    - cron: '0 5 * * 1'
+  workflow_dispatch:
+  # Each merge to dev re-runs the gates once staging redeployed.
+  push:
+    branches: [dev]
+
+env:
+  BETTER_AUTH_SECRET: 'ci-placeholder-not-a-secret-0123456789abcdef'
+
+jobs:
+  db-invariants:
+    name: DB Invariants & Concurrency
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: encave
+          POSTGRES_PASSWORD: encave
+          POSTGRES_DB: encave_invariants
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U encave"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: 'postgresql://encave:encave@localhost:5432/encave_invariants'
+      DIRECT_URL: 'postgresql://encave:encave@localhost:5432/encave_invariants'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Apply migrations
+        run: npx prisma migrate deploy
+
+      - name: Run DB invariant & concurrency tests
+        run: npm run test:db:invariants
+        env:
+          INVARIANTS_DATABASE_URL: 'postgresql://encave:encave@localhost:5432/encave_invariants'
+
+  k6-load:
+    name: k6 — oversell & smoke
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: encave
+          POSTGRES_PASSWORD: encave
+          POSTGRES_DB: encave_k6
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U encave"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: 'postgresql://encave:encave@localhost:5432/encave_k6'
+      DIRECT_URL: 'postgresql://encave:encave@localhost:5432/encave_k6'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      # prebuild (scripts/deploy-migrations.js) applies the migration
+      # history to the service Postgres before next build's static pages
+      # query it.
+      - name: Build application
+        run: npm run build
+
+      - name: Start server
+        run: |
+          E2E_TEST=true npm run start &
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3000/api/health > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Server did not become ready" >&2
+          exit 1
+
+      - name: Seed oversell target
+        run: npx tsx scripts/k6-seed-oversell.ts > k6-target.json && cat k6-target.json
+
+      - name: Setup k6
+        uses: grafana/setup-k6-action@v1
+
+      - name: k6 oversell (20 VUs on a 3-seat slot)
+        run: |
+          k6 run \
+            -e K6_BASE_URL=http://localhost:3000 \
+            -e K6_EXPERIENCE_ID=$(jq -r .experienceId k6-target.json) \
+            -e K6_DATE=$(jq -r .date k6-target.json) \
+            -e K6_TIME_SLOT=$(jq -r .timeSlot k6-target.json) \
+            -e K6_CAPACITY=$(jq -r .capacity k6-target.json) \
+            tests/k6/booking-oversell.js
+
+      - name: Assert SQL oversell invariant
+        run: |
+          K6_EXPERIENCE_ID=$(jq -r .experienceId k6-target.json) \
+          K6_DATE=$(jq -r .date k6-target.json) \
+          K6_TIME_SLOT=$(jq -r .timeSlot k6-target.json) \
+          K6_CAPACITY=$(jq -r .capacity k6-target.json) \
+          npx tsx scripts/k6-assert-invariants.ts
+
+      - name: k6 smoke (public surface under light load)
+        run: k6 run -e K6_BASE_URL=http://localhost:3000 tests/k6/smoke.js
+
+  lhci-staging:
+    name: Lighthouse gate ≥ 95 (staging)
+    runs-on: ubuntu-latest
+
+    # THE blocking L-182 gate — measured on staging (CDN/ISR = NFR truth,
+    # P-06 decision). Failure after the WS-F levers are exhausted = the
+    # delivery-plan fuse (launch 23.11), never a silent bypass.
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # On a dev push the Vercel staging deploy races this job — give it
+      # time to go live before measuring.
+      - name: Wait for the staging deploy
+        if: github.event_name == 'push'
+        run: sleep 240
+
+      - name: Run Lighthouse CI against staging
+        run: npx lhci autorun --config=lighthouserc.staging.cjs
+        env:
+          LHCI_FICHE_PATH: ${{ vars.LHCI_FICHE_PATH }}
+
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-staging-reports
+          path: .lighthouseci/
+          retention-days: 14

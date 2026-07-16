@@ -2,6 +2,8 @@ import { test, expect, Page } from '@playwright/test';
 import { LoginPage } from '../pages';
 import { TEST_USERS, localizedPath } from '../fixtures/auth.fixture';
 import { TEST_EXPERIENCES } from '../fixtures/test-data';
+import { AdminVerificationPage } from '../pages/admin-verification.page';
+import { testDb } from '../utils/db';
 
 const LOCALES = ['fr', 'de', 'en'] as const;
 const DEFAULT_LOCALE = process.env.E2E_LOCALE ?? 'en';
@@ -158,16 +160,49 @@ test.describe('Application regression matrix - admin journey', () => {
   test('admin can access overview and pending wineries queue', async ({
     page,
   }) => {
+    // Retry-deterministic: a previous attempt may have enrolled TOTP (the
+    // secret is lost across retries and the login would then challenge)
+    // — reset the admin to the un-enrolled state first.
+    const adminUser = await testDb().user.findFirst({
+      where: { email: TEST_USERS.admin.email },
+    });
+    if (adminUser) {
+      await testDb().twoFactor.deleteMany({
+        where: { userId: adminUser.id },
+      });
+      await testDb().session.deleteMany({ where: { userId: adminUser.id } });
+      await testDb().user.update({
+        where: { id: adminUser.id },
+        data: { twoFactorEnabled: false },
+      });
+    }
+
     await loginAs(page, TEST_USERS.admin);
 
+    // P-14 (L-152): TOTP is mandatory — a fresh admin is force-redirected
+    // to the enrolment before any /admin surface renders.
+    await page.goto(localizedPath('/admin'));
+    // The forced-setup redirect is a STREAMED RSC redirect — it lands
+    // after goto() resolves. Wait for it before deciding.
+    await page
+      .waitForURL(/admin-setup\/2fa/, { timeout: 5000 })
+      .catch(() => undefined);
+    if (page.url().includes('/admin-setup/2fa')) {
+      await new AdminVerificationPage(page).enrollTotp(
+        TEST_USERS.admin.password
+      );
+    }
+
+    // A same-URL/client-side navigation yields a null response — only a
+    // real document response can carry an error status.
     const adminResponse = await page.goto(localizedPath('/admin'));
-    expect(adminResponse?.status()).toBeLessThan(400);
+    expect(adminResponse?.status() ?? 200).toBeLessThan(400);
     await expectPageHealthy(page);
 
     const pendingResponse = await page.goto(
       localizedPath('/admin/wineries/pending')
     );
-    expect(pendingResponse?.status()).toBeLessThan(400);
+    expect(pendingResponse?.status() ?? 200).toBeLessThan(400);
     await expect(
       page.getByText('E2E Vigneron En Attente Winery')
     ).toBeVisible();

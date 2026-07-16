@@ -26,6 +26,7 @@ const prisma = new PrismaClient();
 
 const TAG = 'p10-db-test';
 const createdRequestIds: string[] = [];
+const createdOfferIds: string[] = [];
 
 async function seedOfferedRequest(): Promise<{
   requestId: string;
@@ -57,6 +58,7 @@ async function seedOfferedRequest(): Promise<{
     },
     select: { id: true },
   });
+  createdOfferIds.push(offer.id);
   return { requestId: request.id, offerId: offer.id };
 }
 
@@ -80,7 +82,14 @@ describe.skipIf(!url)('P-10 request flip + expiry (real DB)', () => {
       where: { request: { clientName: TAG } },
     });
     await prisma.scheduledJob.deleteMany({
-      where: { dedupeKey: { contains: 'p10dbtest' } },
+      where: {
+        dedupeKey: {
+          in: createdOfferIds.flatMap((offerId) => [
+            dedupe.requestOfferReminderDedupeKey(offerId),
+            dedupe.requestOfferExpiryDedupeKey(offerId),
+          ]),
+        },
+      },
     });
     await prisma.request.deleteMany({ where: { clientName: TAG } });
     await prisma.$disconnect();
@@ -88,20 +97,26 @@ describe.skipIf(!url)('P-10 request flip + expiry (real DB)', () => {
 
   it('flips offer + request to PAID and cancels the lifecycle jobs, idempotently', async () => {
     const { requestId, offerId } = await seedOfferedRequest();
+    // Seed the lifecycle jobs under their CANONICAL dedupe keys — the flip
+    // cancels by requestOffer{Reminder,Expiry}DedupeKey(offerId), a custom
+    // test prefix would never match (bug found when this suite first ran in
+    // CI, P-16 db-invariants job).
+    const reminderKey = dedupe.requestOfferReminderDedupeKey(offerId);
+    const expiryKey = dedupe.requestOfferExpiryDedupeKey(offerId);
     await prisma.scheduledJob.createMany({
       data: [
         {
           type: dedupe.REQUEST_OFFER_REMINDER_JOB_TYPE,
           runAt: new Date(),
           payload: { requestOfferId: offerId },
-          dedupeKey: `p10dbtest:reminder:${offerId}`,
+          dedupeKey: reminderKey,
           status: 'PENDING',
         },
         {
           type: dedupe.REQUEST_OFFER_EXPIRY_JOB_TYPE,
           runAt: new Date(),
           payload: { requestOfferId: offerId },
-          dedupeKey: `p10dbtest:expiry:${offerId}`,
+          dedupeKey: expiryKey,
           status: 'PENDING',
         },
       ],
@@ -118,9 +133,10 @@ describe.skipIf(!url)('P-10 request flip + expiry (real DB)', () => {
       select: { status: true },
     });
     const jobs = await prisma.scheduledJob.findMany({
-      where: { dedupeKey: { contains: `p10dbtest` } },
+      where: { dedupeKey: { in: [reminderKey, expiryKey] } },
       select: { status: true },
     });
+    expect(jobs).toHaveLength(2);
     expect(offer?.status).toBe('PAID');
     expect(request?.status).toBe('PAID');
     expect(jobs.every((j) => j.status === ScheduledJobStatus.CANCELLED)).toBe(
@@ -136,7 +152,7 @@ describe.skipIf(!url)('P-10 request flip + expiry (real DB)', () => {
     expect(offerAgain?.status).toBe('PAID');
 
     await prisma.scheduledJob.deleteMany({
-      where: { dedupeKey: { contains: `p10dbtest` } },
+      where: { dedupeKey: { in: [reminderKey, expiryKey] } },
     });
   });
 

@@ -201,7 +201,10 @@ model Winery {
   altitude                 Int? // meters above sea level
   hectares                 Float? // vineyard surface (ha)
   familyName               String? // the family behind the domaine
-  signatureGrapes          String[] // cépages signature (chips)
+  // @default([]) matches the P-12 migration's DEFAULT ARRAY[] — without it
+  // `prisma db push` (e2e DB) creates the column default-less and every
+  // seed create violates NOT NULL (schema/migration drift, found P-16).
+  signatureGrapes          String[]           @default([]) // cépages signature (chips)
   createdAt                DateTime           @default(now())
   updatedAt                DateTime           @updatedAt
 
