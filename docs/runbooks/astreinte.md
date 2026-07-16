@@ -5,14 +5,14 @@
 
 ## Signaux entrants
 
-| Source | Canal | Gravité |
-| --- | --- | --- |
+| Source                                                            | Canal                             | Gravité                                    |
+| ----------------------------------------------------------------- | --------------------------------- | ------------------------------------------ |
 | Better Stack / moniteur uptime sur `/api/health?deep=1` (non-200) | [À DÉCIDER : e-mail / SMS / push] | Haute — paiements potentiellement impactés |
-| Alerte Sentry `area:stripe-webhook` | E-mail Sentry → [À DÉCIDER] | Haute |
-| Alerte Sentry `area:gift-transfer` | idem | Haute (cave non payée) |
-| Alerte Sentry `area:email` | idem | Moyenne |
-| Sentry Cron Monitor « missed check-in » (cron mort) | idem | Moyenne |
-| Client / cave via contact@encave.ch | Boîte mail | Variable |
+| Alerte Sentry `area:stripe-webhook`                               | E-mail Sentry → [À DÉCIDER]       | Haute                                      |
+| Alerte Sentry `area:gift-transfer`                                | idem                              | Haute (cave non payée)                     |
+| Alerte Sentry `area:email`                                        | idem                              | Moyenne                                    |
+| Sentry Cron Monitor « missed check-in » (cron mort)               | idem                              | Moyenne                                    |
+| Client / cave via contact@encave.ch                               | Boîte mail                        | Variable                                   |
 
 ## Fenêtres de réponse (proposition à valider)
 

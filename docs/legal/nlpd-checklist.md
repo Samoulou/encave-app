@@ -6,19 +6,19 @@
 
 ## 1. Registre des traitements
 
-| Traitement | Données | Base | Durée | Sous-traitants | Statut |
-| --- | --- | --- | --- | --- | --- |
-| Comptes utilisateurs | nom, e-mail, tél, locale, mot de passe (bcrypt) | exécution du contrat | vie du compte + anonymisation sur demande | Neon, Vercel | ✅ en place |
-| Réservations | identité visiteur, e-mail, tél, contenu réservation | contrat | 10 ans (compta) | Neon, Stripe, Resend | ✅ |
-| Paiements | aucune donnée carte chez nous (Stripe) ; ids Stripe + montants | contrat / obligation légale | 10 ans | Stripe | ✅ |
-| Empreinte no-show | customer + payment method Stripe, consentement horodaté (`noShowPolicyAcceptedAt`, version, montant) | consentement explicite | jusqu'à exécution/annulation | Stripe | ✅ (P-08) |
-| Bons cadeaux | acheteur, bénéficiaire (nom, e-mail), message | contrat | 5 ans + compta | Neon, Resend | ✅ (P-09) |
-| Sur-mesure | demandeur (nom, e-mail, tél), contenu demande | mesures précontractuelles | 2 ans | Neon, Resend | ✅ (P-10) |
-| Événements collectifs — roster | nom + e-mail des participants, exposés au domaine organisateur | contrat ; information dans les CGV (§ Événements collectifs) | durée de l'événement + compta | Neon | ✅ CGV P-16 (dette P-11 soldée) |
-| E-mails transactionnels + open/click | e-mail, événements d'ouverture/clic par cave | intérêt légitime ; désinscription | 2 ans | Resend | ⚠️ 3 e-mails agrégés sans lien de désinscription tokenisé (dette connue CLAUDE.md) |
-| Mesure d'audience | événements produit (PostHog EU), Web Vitals | consentement (bannière cookies) | 12 mois | PostHog | ✅ |
-| Erreurs & logs | données techniques, ids | intérêt légitime | 90 jours | Sentry, Vercel (Pino) | ✅ |
-| Rate limiting | IP (courte durée) | intérêt légitime (sécurité) | fenêtres minutes | Upstash | ✅ |
+| Traitement                           | Données                                                                                              | Base                                                         | Durée                                     | Sous-traitants        | Statut                                                                             |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | ----------------------------------------- | --------------------- | ---------------------------------------------------------------------------------- |
+| Comptes utilisateurs                 | nom, e-mail, tél, locale, mot de passe (bcrypt)                                                      | exécution du contrat                                         | vie du compte + anonymisation sur demande | Neon, Vercel          | ✅ en place                                                                        |
+| Réservations                         | identité visiteur, e-mail, tél, contenu réservation                                                  | contrat                                                      | 10 ans (compta)                           | Neon, Stripe, Resend  | ✅                                                                                 |
+| Paiements                            | aucune donnée carte chez nous (Stripe) ; ids Stripe + montants                                       | contrat / obligation légale                                  | 10 ans                                    | Stripe                | ✅                                                                                 |
+| Empreinte no-show                    | customer + payment method Stripe, consentement horodaté (`noShowPolicyAcceptedAt`, version, montant) | consentement explicite                                       | jusqu'à exécution/annulation              | Stripe                | ✅ (P-08)                                                                          |
+| Bons cadeaux                         | acheteur, bénéficiaire (nom, e-mail), message                                                        | contrat                                                      | 5 ans + compta                            | Neon, Resend          | ✅ (P-09)                                                                          |
+| Sur-mesure                           | demandeur (nom, e-mail, tél), contenu demande                                                        | mesures précontractuelles                                    | 2 ans                                     | Neon, Resend          | ✅ (P-10)                                                                          |
+| Événements collectifs — roster       | nom + e-mail des participants, exposés au domaine organisateur                                       | contrat ; information dans les CGV (§ Événements collectifs) | durée de l'événement + compta             | Neon                  | ✅ CGV P-16 (dette P-11 soldée)                                                    |
+| E-mails transactionnels + open/click | e-mail, événements d'ouverture/clic par cave                                                         | intérêt légitime ; désinscription                            | 2 ans                                     | Resend                | ⚠️ 3 e-mails agrégés sans lien de désinscription tokenisé (dette connue CLAUDE.md) |
+| Mesure d'audience                    | événements produit (PostHog EU), Web Vitals                                                          | consentement (bannière cookies)                              | 12 mois                                   | PostHog               | ✅                                                                                 |
+| Erreurs & logs                       | données techniques, ids                                                                              | intérêt légitime                                             | 90 jours                                  | Sentry, Vercel (Pino) | ✅                                                                                 |
+| Rate limiting                        | IP (courte durée)                                                                                    | intérêt légitime (sécurité)                                  | fenêtres minutes                          | Upstash               | ✅                                                                                 |
 
 ## 2. Droits des personnes
 
@@ -41,7 +41,7 @@
       événements).
 - [ ] **Désinscription tokenisée** des 3 e-mails agrégés (producteur du
       lien `/api/unsubscribe/[token]`) — dette technique à planifier.
-- [ ] Signature de cette checklist (date + nom) : ______________________
+- [ ] Signature de cette checklist (date + nom) : `________________________`
 
 ## 4. Violations de données
 
