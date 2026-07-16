@@ -22,6 +22,7 @@ Après merge : un utilisateur peut se connecter **par code OTP** (« Recevoir un
 ## 2. Scope
 
 **IN** :
+
 - Plugins `emailOTP` + `twoFactor` (server + client) ; retrait d'Apple.
 - Login OTP + page `/forgot-password` (email → OTP → nouveau mot de passe).
 - Sections self-service **changement de mot de passe + email** (client `/dashboard/profile` + encaveur `/dashboard/settings/account`).
@@ -32,6 +33,7 @@ Après merge : un utilisateur peut se connecter **par code OTP** (« Recevoir un
 - Migration additive ; i18n fr/de/en ; états loading/empty/error ; tests actions + e2e.
 
 **OUT (explicitement)** :
+
 - Vérification d'email à l'inscription (`requireEmailVerification` reste OFF — l'inscription auto-login inchangée ; changer ça = comportement séparé).
 - 2FA optionnelle encaveur/client, magic link, SMS/phone 2FA (plugins présents, non demandés).
 - Auto-attribution « 20 premières caves → FOUNDER » (l'invitation pose `plan=FOUNDER` explicitement ; l'auto reste manuel via `setWineryPlan`).
@@ -49,12 +51,14 @@ Après merge : un utilisateur peut se connecter **par code OTP** (« Recevoir un
 ## 4. Découpage technique (ordonné — chaque étape compile vert avant la suivante)
 
 **1 — Migration additive** `prisma/migrations/20260715140000_p14_auth_v3/` (SQL à la main, pas de `better-auth generate`) :
+
 - `User` : `twoFactorEnabled Boolean @default(false)` (+ relation `twoFactor TwoFactor?`).
 - `model TwoFactor { id, secret String, backupCodes String, userId String FK onDelete:Cascade, @@index([userId]), @@map("two_factors") }` (colonnes confirmées dans `node_modules/better-auth/dist/plugins/two-factor/schema.d.mts`).
 - `model Invitation { id, email, tokenHash String @unique, wineryName String?, invitedBy, acceptedAt?, acceptedUserId?, expiresAt, createdAt, @@index([email]), @@map("invitations") }`.
 - `model RateLimit { … }` selon le schéma attendu par better-auth `rateLimit.storage:'database'` (confirmer les colonnes `key`/`count`/`lastRequest` dans les types better-auth). `emailOTP` réutilise la table `verifications` existante (aucun champ).
 
 **2 — Server config** `src/server/better-auth.ts` :
+
 - `import { emailOTP, twoFactor } from 'better-auth/plugins'`.
 - `plugins: [ emailOTP({ otpLength: 6, expiresIn: 60*15, storeOTP: 'hashed', sendVerificationOTP }), twoFactor({ issuer: 'EnCave', totpOptions: { digits: 6, period: 30 }, skipVerificationOnEnable: false }) ]`.
 - `sendVerificationOTP({ email, otp, type })` : résoudre `preferredLocale` (`db.user.findUnique`), puis `await sendOtpEmail(email, otp, type, locale)` (étape 3). **await** (garantie de livraison serverless — décision D-C par défaut).
@@ -70,22 +74,26 @@ Après merge : un utilisateur peut se connecter **par code OTP** (« Recevoir un
 **5 — Session shape** `src/server/auth.ts` : ajouter `twoFactorEnabled: boolean` à l'interface `Session['user']` + le lire depuis `session.user` (booléen natif, **pas** de cast comme role/locale). Évite une requête dans le gate admin.
 
 **6 — Login OTP + forgot-password** :
+
 - `LoginForm.tsx` : toggle `password | otp` ; en mode OTP → email → « Recevoir un code » (`emailOtp.sendVerificationOtp({type:'sign-in'})`) → input 6 chiffres → `signIn.emailOtp`. Extraire le chemin OTP dans `src/components/features/auth/OtpLoginForm.tsx`. Réutiliser la redirection par rôle existante.
 - Remplacer le `mailto:` (L179-185) par `<Link href="/forgot-password">`.
 - `src/app/[locale]/(auth)/forgot-password/page.tsx` + `ForgotPasswordForm.tsx` (3 états : email → OTP → nouveau mot de passe ; `sendVerificationOtp({type:'forget-password'})` puis `emailOtp.resetPassword`).
 
 **7 — Changement mot de passe + email (client + encaveur)** :
+
 - `src/components/features/auth/ChangePasswordSection.tsx` + `ChangeEmailSection.tsx` (calqués sur `DeleteAccountSection.tsx` : section + `useTransition` + bannière résultat). `changePassword` **masqué** pour comptes sans credential (prop dérivée d'un check serveur `Account.providerId='credential'`).
 - Montage client : `src/app/[locale]/(protected)/dashboard/profile/page.tsx` (à côté de `DeleteAccountSection`).
 - Montage encaveur : nouvelle sous-page `src/app/[locale]/(protected)/dashboard/settings/account/page.tsx` + carte depuis `settings/page.tsx` (patron hub de cartes).
 
 **8 — TOTP admin (setup + vérif login)** :
+
 - `src/components/features/auth/TotpSetupSection.tsx` : mot de passe → `twoFactor.enable` → rendre `totpURI` en QR (réutiliser `src/server/services/qr-code.service.ts` pour un PNG data-URL depuis l'`otpauth://` — pas de nouvelle dépendance) + afficher les `backupCodes` → confirmer par `verifyTotp` (bascule `twoFactorEnabled`). **Monté uniquement** sur la page setup admin (2FA admin-only).
 - Vérif login : `src/app/[locale]/(auth)/login/2fa/page.tsx` + `TwoFactorVerifyForm.tsx` (6 chiffres → `verifyTotp` ; « code de secours » → `verifyBackupCode`). Atteignable en état 2FA-pending (cookie `better-auth.two_factor` seulement).
 
 **9 — Enforcement admin** `src/app/[locale]/admin/layout.tsx` : après le check rôle, `if (!session.user.twoFactorEnabled) redirect('/{locale}/admin-setup/2fa')`. Page setup **hors** layout admin (sinon boucle) : `src/app/[locale]/(protected)/admin-setup/2fa/page.tsx` (gardée session + rôle ADMIN + `!twoFactorEnabled`), rend `TotpSetupSection`, succès → `/admin`.
 
 **10 — Invitation fondateur (L-154)** :
+
 - `src/server/actions/invitation.ts` : `createFounderInvitation({ email, wineryName? })` (`requireAdmin()`, token `randomBytes(32).hex`, stocker `hashToken(token)` via `src/lib/utils/token.ts`, expiry 7 j, retourner l'URL `/invitation/{token}`). `provisionFounderWinery({ token, wineryName })` : re-valider (hash, non expiré, non accepté) ; `$transaction` : `Winery` (`status:'VERIFIED'`, `plan:'FOUNDER'`, `commissionRate:0`, `verifiedAt`, `verifiedBy`, slug via `ensureUniqueSlug`) + rôle `WINEMAKER` + `Invitation.acceptedAt/acceptedUserId` + `VerificationLog(APPROVED)`.
 - Admin : `src/app/[locale]/admin/invitations/page.tsx` (form générer + copier le lien ; entrée nav) — UX minimale (décision D-D).
 - Accept : `src/app/[locale]/invitation/[token]/page.tsx` (server : valider → form ou état expiré/consommé) + `InvitationAcceptForm.tsx` : **deux appels** — `authClient.signUp.email({email préremplie, name, password})` (pose le cookie + crée le compte credential via bcrypt) **puis** `provisionFounderWinery`. Page top-level → son propre `NextIntlClientProvider` (namespaces `invitation` + `auth`).

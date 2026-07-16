@@ -17,6 +17,11 @@ export class AdminVerificationPage {
    */
   async enrollTotp(password: string): Promise<string> {
     await this.page.waitForURL(/admin-setup\/2fa/, { timeout: 15000 });
+    // The POM's button names are French — force the FR page whatever
+    // locale the caller navigated in (the ids are locale-free).
+    if (!this.page.url().includes('/fr/')) {
+      await this.page.goto('/fr/admin-setup/2fa');
+    }
     await this.page.locator('#totp-password').fill(password);
     const enableResponse = this.page.waitForResponse(
       (r) => r.url().includes('/two-factor/enable') && r.ok()
