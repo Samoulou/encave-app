@@ -39,9 +39,10 @@ export async function withCronMonitor<T>(
   return Sentry.withMonitor(slug, handler, {
     schedule: { type: 'crontab', value: CRON_SCHEDULES[slug] },
     timezone: 'Etc/UTC',
-    // One missed daily run is already an incident; margin absorbs Vercel
-    // cron jitter (minutes, not hours).
-    checkinMargin: 30,
+    // One missed daily run is already an incident, but Vercel's cron
+    // latency on the Hobby plan is documented up to ~1h — a tighter
+    // margin would page falsely every night (review #120 workflow).
+    checkinMargin: 65,
     maxRuntime: 10,
   });
 }

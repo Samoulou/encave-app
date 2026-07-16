@@ -2010,7 +2010,7 @@
         },
         "payments": {
           "title": "Zahlungen",
-          "content": "Alle Zahlungen werden sicher über Stripe, unseren Zahlungsanbieter, verarbeitet. Die Preise sind in Schweizer Franken (CHF) angegeben und beinhalten die anwendbare Mehrwertsteuer. Das Weingut erhält die Zahlung nach Abschluss des Erlebnisses."
+          "content": "Alle Zahlungen werden sicher über Stripe, unseren Zahlungsanbieter, verarbeitet. Die Preise sind in Schweizer Franken (CHF) angegeben. Mit einer Buchung ermächtigen Sie uns, Ihr Zahlungsmittel zu belasten."
         },
         "bookingFee": {
           "title": "Reservationsgebühr",
@@ -2087,20 +2087,20 @@
         },
         "clientPolicy": {
           "title": "Stornierungsrichtlinie für Gäste",
-          "content": "Gäste können ihre Buchungen mit den folgenden Rückerstattungsbedingungen basierend auf dem Zeitpunkt der Stornierung vor dem geplanten Erlebnis stornieren:",
+          "content": "Jedes Weingut wählt die für seine Erlebnisse geltende Stornierungsrichtlinie. Sie wird auf der Erlebnisseite angezeigt und vor der Zahlung zusammengefasst. Die Rückerstattung bezieht sich auf den gesamten bezahlten Betrag (Tickets und Reservationsgebühr); der mit Geschenkgutschein bezahlte Anteil wird dem Gutschein wieder gutgeschrieben, nie bar ausbezahlt.",
           "timeline": {
-            "title": "Zeitrahmen für Rückerstattungen",
-            "over24h": {
-              "time": "Mehr als 24 Stunden vor dem Erlebnis",
-              "refund": "Volle Rückerstattung"
+            "title": "Die drei Richtlinien im Überblick",
+            "flexible": {
+              "time": "Richtlinie Flexibel",
+              "refund": "Volle Rückerstattung bis 2 Stunden vor Beginn, danach keine Rückerstattung"
             },
-            "12to24h": {
-              "time": "12 bis 24 Stunden vor dem Erlebnis",
-              "refund": "50% Rückerstattung"
+            "standard": {
+              "time": "Richtlinie Standard",
+              "refund": "Volle Rückerstattung bis 24 Stunden vor Beginn, danach keine Rückerstattung"
             },
-            "under12h": {
-              "time": "Weniger als 12 Stunden vor dem Erlebnis",
-              "refund": "Keine Rückerstattung"
+            "strict": {
+              "time": "Richtlinie Strikt",
+              "refund": "Volle Rückerstattung bis 7 Tage vor Beginn, 50 % bis 48 Stunden, danach keine Rückerstattung"
             }
           }
         },
@@ -2110,7 +2110,7 @@
         },
         "noShow": {
           "title": "Nichterscheinen",
-          "content": "Wenn ein Gast ohne Vorankündigung nicht zu einer gebuchten Erfahrung erscheint, gilt die Buchung als Nichterscheinen und es wird keine Rückerstattung gewährt. Bitte kontaktieren Sie uns, wenn Sie zu spät kommen."
+          "content": "Wenn Sie ohne vorherige Stornierung nicht zu Ihrem gebuchten Erlebnis erscheinen, erfolgt keine Rückerstattung. Einige Weingüter erheben zudem eine No-Show-Gebühr (0 bis 50 CHF pro Person), die Sie bei der Buchung ausdrücklich akzeptieren — siehe Nutzungsbedingungen."
         },
         "modifications": {
           "title": "Buchungsänderungen",

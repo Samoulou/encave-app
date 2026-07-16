@@ -90,6 +90,30 @@ export async function settleGiftTransfer(
     // both calls into the SAME transfer — already recorded, nothing to do.
     if (current?.giftTransferId === transfer.id) return 'noop';
 
+    // Only a CANCELLATION claws the money back (review #120 workflow): a
+    // concurrent CHECK-IN (CONFIRMED→COMPLETED) or NO_SHOW mark also fails
+    // the conditional write, but the winery legitimately keeps the payout
+    // — record the transfer and move on instead of reversing it.
+    if (
+      current &&
+      current.giftTransferId === null &&
+      current.status !== BookingStatus.CANCELLED_BY_CLIENT &&
+      current.status !== BookingStatus.CANCELLED_BY_WINERY
+    ) {
+      await db.booking.update({
+        where: { id: bookingId },
+        data: { giftTransferId: transfer.id },
+      });
+      logInfo('gift_transfer.settled', {
+        action: 'settleGiftTransfer',
+        bookingId,
+        amount,
+        transferId: transfer.id,
+        note: 'recorded after concurrent non-cancellation status change',
+      });
+      return 'transferred';
+    }
+
     // Mid-flight cancellation. The DURABLE marker is written BEFORE the
     // reversal call (review #120 sweep): if the reversal fails and Stripe
     // redelivers past the 24h idempotency window, a retry would mint a

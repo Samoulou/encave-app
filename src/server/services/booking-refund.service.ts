@@ -227,7 +227,10 @@ export async function processCancellationRefund(
     });
     await appendRefundError(
       input.bookingId,
-      `GIFT_REVERSAL_FAILED: winery transfer not reversed after cancellation — reverse manually in Stripe (runbook incident-paiement)`
+      // "may or may not": the throw can also come from the DB write AFTER
+      // a successful Stripe reversal (review #120 workflow) — the operator
+      // must check Stripe before reversing manually, or risk doubling it.
+      `GIFT_REVERSAL_FAILED: winery transfer reversal errored after cancellation — the reversal may or may not have reached Stripe: VERIFY the transfer in Stripe before reversing manually (runbook incident-paiement)`
     );
   }
 

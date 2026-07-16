@@ -2087,20 +2087,20 @@
         },
         "clientPolicy": {
           "title": "Politique d'annulation client",
-          "content": "En tant que client, vous pouvez annuler votre réservation selon les conditions suivantes:",
+          "content": "Chaque domaine choisit la politique d'annulation applicable à ses expériences. Elle est affichée sur la fiche de l'expérience et récapitulée avant le paiement. Le remboursement porte sur le montant total payé (billets et frais de réservation) ; la part payée par bon cadeau est recréditée sur le bon, jamais remboursée en espèces.",
           "timeline": {
-            "title": "Délais d'annulation",
-            "over24h": {
-              "time": "Plus de 24 heures avant l'expérience",
-              "refund": "Remboursement intégral"
+            "title": "Barèmes des trois politiques",
+            "flexible": {
+              "time": "Politique Flexible",
+              "refund": "Remboursement intégral jusqu'à 2 heures avant le début, aucun remboursement ensuite"
             },
-            "12to24h": {
-              "time": "Entre 12 et 24 heures avant",
-              "refund": "Remboursement de 50%"
+            "standard": {
+              "time": "Politique Standard",
+              "refund": "Remboursement intégral jusqu'à 24 heures avant le début, aucun remboursement ensuite"
             },
-            "under12h": {
-              "time": "Moins de 12 heures avant",
-              "refund": "Aucun remboursement"
+            "strict": {
+              "time": "Politique Stricte",
+              "refund": "Remboursement intégral jusqu'à 7 jours avant le début, 50 % jusqu'à 48 heures, aucun remboursement ensuite"
             }
           }
         },
@@ -2110,7 +2110,7 @@
         },
         "noShow": {
           "title": "Politique de non-présentation",
-          "content": "Si vous ne vous présentez pas à votre expérience réservée sans annulation préalable, aucun remboursement ne sera accordé."
+          "content": "Si vous ne vous présentez pas à votre expérience réservée sans annulation préalable, aucun remboursement ne sera accordé. Certains domaines appliquent en outre des frais de non-présentation (0 à 50 CHF par personne), que vous acceptez explicitement lors de la réservation — voir les conditions d'utilisation."
         },
         "modifications": {
           "title": "Modifications de réservation",

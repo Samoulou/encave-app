@@ -2087,20 +2087,20 @@
         },
         "clientPolicy": {
           "title": "Client Cancellation Policy",
-          "content": "As a client, you may cancel your booking subject to the following conditions:",
+          "content": "Each winery chooses the cancellation policy applying to its experiences. It is displayed on the experience page and summarised before payment. Refunds cover the full amount paid (tickets and booking fee); the share paid with a gift card is re-credited to the card, never refunded in cash.",
           "timeline": {
-            "title": "Cancellation Timeline",
-            "over24h": {
-              "time": "More than 24 hours before the experience",
-              "refund": "Full refund"
+            "title": "The three policies at a glance",
+            "flexible": {
+              "time": "Flexible policy",
+              "refund": "Full refund until 2 hours before the start, no refund afterwards"
             },
-            "12to24h": {
-              "time": "Between 12 and 24 hours before",
-              "refund": "50% refund"
+            "standard": {
+              "time": "Standard policy",
+              "refund": "Full refund until 24 hours before the start, no refund afterwards"
             },
-            "under12h": {
-              "time": "Less than 12 hours before",
-              "refund": "No refund"
+            "strict": {
+              "time": "Strict policy",
+              "refund": "Full refund until 7 days before the start, 50% until 48 hours, no refund afterwards"
             }
           }
         },
@@ -2110,7 +2110,7 @@
         },
         "noShow": {
           "title": "No-Show Policy",
-          "content": "If you do not arrive for your booked experience without prior cancellation, no refund will be provided."
+          "content": "If you do not show up for your booked experience without prior cancellation, no refund will be granted. Some wineries additionally charge a no-show fee (CHF 0 to 50 per person), which you explicitly accept at booking time — see the terms of service."
         },
         "modifications": {
           "title": "Booking Modifications",

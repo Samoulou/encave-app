@@ -37,24 +37,27 @@ export default async function CancellationPolicyPage({ params }: Props) {
         <h3 className="mt-0">
           {t('cancellation.sections.clientPolicy.timeline.title')}
         </h3>
+        {/* P-16 review (#120): the page used to publish a tier grid that
+            never matched the code — it now mirrors the three per-winery
+            policies (POLICY_TIERS, same barèmes as the CGV). */}
         <ul>
           <li>
             <strong>
-              {t('cancellation.sections.clientPolicy.timeline.over24h.time')}
+              {t('cancellation.sections.clientPolicy.timeline.flexible.time')}
             </strong>
-            : {t('cancellation.sections.clientPolicy.timeline.over24h.refund')}
+            : {t('cancellation.sections.clientPolicy.timeline.flexible.refund')}
           </li>
           <li>
             <strong>
-              {t('cancellation.sections.clientPolicy.timeline.12to24h.time')}
+              {t('cancellation.sections.clientPolicy.timeline.standard.time')}
             </strong>
-            : {t('cancellation.sections.clientPolicy.timeline.12to24h.refund')}
+            : {t('cancellation.sections.clientPolicy.timeline.standard.refund')}
           </li>
           <li>
             <strong>
-              {t('cancellation.sections.clientPolicy.timeline.under12h.time')}
+              {t('cancellation.sections.clientPolicy.timeline.strict.time')}
             </strong>
-            : {t('cancellation.sections.clientPolicy.timeline.under12h.refund')}
+            : {t('cancellation.sections.clientPolicy.timeline.strict.refund')}
           </li>
         </ul>
       </div>
