@@ -29,6 +29,25 @@ function toDateOnly(daysFromNow: number): Date {
   return date;
 }
 
+/**
+ * Current Zurich wall-clock hour as an HH:00 slot — the scan-target
+ * session must sit inside the day-J check-in window (start − 2h → end +
+ * 2h, Zurich wall clock) whatever hour CI runs at.
+ */
+function zurichNowSlot(): string {
+  // formatToParts, NOT format(): fr-CH renders '06 h' which breaks the
+  // HH:mm timeSlot schema.
+  const hour = new Intl.DateTimeFormat('en-GB', {
+    hour: '2-digit',
+    hour12: false,
+    timeZone: 'Europe/Zurich',
+  })
+    .formatToParts(new Date())
+    .find((part) => part.type === 'hour')?.value;
+  if (!hour) throw new Error('Could not resolve the Zurich hour');
+  return `${hour.padStart(2, '0')}:00`;
+}
+
 const WINERY_COORDINATES: Record<
   string,
   { latitude: number; longitude: number }
@@ -319,9 +338,12 @@ async function main() {
   }
 
   // Experience owned by the auth wineryOwner so the scan spec can log in
-  // as that account and check the visitor in.
+  // as that account and check the visitor in. FIXED id, cuid-shaped: the
+  // fiche is ISR-cached with the id embedded (a reseed must not orphan
+  // it), and the gift preview schema validates experienceId as a cuid.
   const authExperience = await prisma.experience.create({
     data: {
+      id: 'ce2eauthwinerytasting00001',
       slug: 'auth-winery-tasting',
       title: 'Auth Winery Tasting',
       description:
@@ -344,18 +366,32 @@ async function main() {
     },
   });
 
-  // Scan target: CONFIRMED today on the auth winery (token-scan-target).
+  // Scan target: CONFIRMED today, slotted on the CURRENT Zurich hour so
+  // the check-in window is always open when the spec runs. The booking is
+  // attached to a real occurrence — legacy (occurrence-less) sessions
+  // render the sheet read-only (canEdit false).
+  const scanSlot = zurichNowSlot();
+  const scanOccurrence = await prisma.experienceOccurrence.create({
+    data: {
+      experienceId: authExperience.id,
+      date: toDateOnly(0),
+      startTime: scanSlot,
+      source: 'PUNCTUAL',
+    },
+  });
+  // No fixed id: the check-in actions validate bookingId as a cuid — the
+  // spec resolves this booking by its reference.
   await prisma.booking.create({
     data: {
-      id: 'test-booking-scan-target',
       reference: 'ENC-E2E101',
       visitorName: 'Scan Target Visitor',
       visitorEmail: 'scan-target@test.example.com',
       visitorPhone: '+41 79 000 00 01',
       experienceId: authExperience.id,
       wineryId: authWineryId,
+      occurrenceId: scanOccurrence.id,
       date: toDateOnly(0),
-      timeSlot: '10:00',
+      timeSlot: scanSlot,
       guestCount: 2,
       totalPrice: 9000,
       platformFee: 1080,

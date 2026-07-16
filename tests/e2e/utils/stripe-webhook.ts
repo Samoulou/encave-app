@@ -131,7 +131,7 @@ export async function mintGiftCardViaWebhook(
       recipientEmail: input.recipientEmail,
       purchaserName: input.purchaserName,
       deliverAt: (input.deliverAt ?? new Date()).toISOString(),
-      variant: 'classic',
+      variant: 'NEUTRE',
       locale: input.locale ?? 'fr',
       ...(input.recipientName ? { recipientName: input.recipientName } : {}),
       ...(input.message ? { message: input.message } : {}),

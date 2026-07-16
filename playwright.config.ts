@@ -57,7 +57,15 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        // Environments with a system Chromium (e.g. remote sandboxes that
+        // pre-install browsers) can point here instead of downloading the
+        // exact playwright build. Unset = default download resolution.
+        ...(process.env.E2E_CHROMIUM_PATH && {
+          launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH },
+        }),
+      },
     },
     // Décommenter pour tester sur d'autres navigateurs
     // {

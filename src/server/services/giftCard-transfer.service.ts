@@ -53,6 +53,18 @@ export async function settleGiftTransfer(
   const amount = booking.wineryPayout;
   if (amount <= 0) return 'noop';
 
+  // E2E (P-16): all guards above ran for real; the Stripe call itself is
+  // replaced by a synthetic transfer id (same convention as the fake
+  // checkout sessions). The real money routing is verified on staging
+  // (WS-A.2, blocking launch gate).
+  if (process.env.E2E_TEST === 'true') {
+    await db.booking.update({
+      where: { id: bookingId },
+      data: { giftTransferId: `tr_e2e_${bookingId}` },
+    });
+    return 'transferred';
+  }
+
   const transfer = await getStripe().transfers.create(
     {
       amount,
