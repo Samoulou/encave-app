@@ -3,8 +3,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const findUnique = vi.fn();
 const update = vi.fn(async () => ({}));
 const updateMany = vi.fn(async () => ({ count: 1 }));
+const executeRaw = vi.fn(async () => 1);
 vi.mock('@/server/db', () => ({
-  db: { booking: { findUnique, update, updateMany } },
+  db: {
+    booking: { findUnique, update, updateMany },
+    $executeRaw: (...args: unknown[]) => executeRaw(...args),
+  },
 }));
 
 vi.mock('@sentry/nextjs', () => ({
@@ -115,10 +119,11 @@ describe('settleGiftTransfer', () => {
     expect(transferId).toBe('tr_1');
     expect(params.metadata.reason).toBe('settle_cancellation_race');
     expect(opts.idempotencyKey).toBe('gift_payout_race_reversal_bk-1');
-    expect(update).toHaveBeenCalledWith({
-      where: { id: 'bk-1' },
-      data: { refundError: expect.stringContaining('GIFT_RACE_REVERSED') },
-    });
+    // Durable marker via the atomic append — written BEFORE the reversal
+    // call so a failed reversal still leaves tr_1 reconcilable.
+    const appended = executeRaw.mock.calls.map((c) => String(c[1])).join(' ');
+    expect(appended).toContain('GIFT_RACE_REVERSED');
+    expect(appended).toContain('tr_1');
   });
 
   it('noops (no reversal) when a concurrent settle already recorded the SAME transfer', async () => {

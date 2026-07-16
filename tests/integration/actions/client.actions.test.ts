@@ -16,6 +16,7 @@ vi.mock('@/server/db', () => ({
       updateMany: vi.fn(),
     },
     user: { update: vi.fn() },
+    $executeRaw: vi.fn(async () => 1),
   },
 }));
 

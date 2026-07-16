@@ -90,13 +90,19 @@ export async function settleGiftTransfer(
     // both calls into the SAME transfer — already recorded, nothing to do.
     if (current?.giftTransferId === transfer.id) return 'noop';
 
-    // Mid-flight cancellation. Reverse the whole transfer — platform-safe
-    // by default: on the rare 0%-refund cancellation the winery's payout
-    // is re-issued manually (refundError + runbook incident-paiement).
-    await getStripe().transfers.createReversal(
-      transfer.id,
-      { metadata: { bookingId, reason: 'settle_cancellation_race' } },
-      { idempotencyKey: `gift_payout_race_reversal_${bookingId}` }
+    // Mid-flight cancellation. The DURABLE marker is written BEFORE the
+    // reversal call (review #120 sweep): if the reversal fails and Stripe
+    // redelivers past the 24h idempotency window, a retry would mint a
+    // SECOND transfer — this trace is what keeps tr_1 reconcilable. Then
+    // reverse the whole transfer — platform-safe by default: on the rare
+    // 0%-refund cancellation the winery's payout is re-issued manually
+    // (runbook incident-paiement). Appended, never overwritten: the
+    // concurrent cancellation may have just written its own markers.
+    const { appendRefundError } =
+      await import('@/server/services/booking-refund.service');
+    await appendRefundError(
+      bookingId,
+      `GIFT_RACE_REVERSED: transfer ${transfer.id} settled against a mid-flight cancellation and is being fully reversed — VERIFY the reversal of ${transfer.id} in Stripe, and re-transfer manually if the policy left the payout to the winery (runbook incident-paiement)`
     );
     logError(
       'gift transfer settled against a mid-flight cancellation — fully reversed',
@@ -108,13 +114,10 @@ export async function settleGiftTransfer(
       tags: { area: 'gift-transfer' },
       extra: { bookingId, transferId: transfer.id },
     });
-    // Appended, never overwritten: the concurrent cancellation may have
-    // just written its own reconciliation markers (review #120).
-    const { appendRefundError } =
-      await import('@/server/services/booking-refund.service');
-    await appendRefundError(
-      bookingId,
-      `GIFT_RACE_REVERSED: transfer ${transfer.id} fully reversed after mid-flight cancellation — re-transfer manually if the policy left the payout to the winery (runbook incident-paiement)`
+    await getStripe().transfers.createReversal(
+      transfer.id,
+      { metadata: { bookingId, reason: 'settle_cancellation_race' } },
+      { idempotencyKey: `gift_payout_race_reversal_${bookingId}` }
     );
     return 'skipped';
   }

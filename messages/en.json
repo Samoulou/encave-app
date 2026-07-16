@@ -1006,7 +1006,7 @@
     "cancelling": "Cancelling...",
     "cancelled": "Booking Cancelled",
     "cancelledDescription": "Your booking has been successfully cancelled.",
-    "refundProcessed": "An amount of {amount} will be returned to you: to your payment method (5-10 business days) and, for the share paid with a gift card, re-credited to your card.",
+    "refundProcessed": "An amount of {amount} will be returned to you: to your payment method (5-10 business days) and, for the share paid with a gift card, re-credited to your gift card.",
     "cancelError": "Failed to cancel booking. Please try again."
   },
   "gallery": {

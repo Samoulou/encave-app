@@ -654,6 +654,24 @@ export async function cancelEventSession(
         continue;
       }
 
+      // Atomic claim FIRST (review #120 sweep, mirrors cancelBooking): the
+      // bookings were read once before the loop — a concurrent client
+      // cancellation must be neither double-refunded nor have its
+      // CANCELLED_BY_CLIENT overwritten (forbidden transition). Losing the
+      // claim = someone else already handled (and emailed) this booking.
+      // Unlike the client path there is no claim-release on refund error:
+      // the session IS cancelled — a failed refund leaves the booking
+      // CANCELLED with an appended refundError for reconciliation.
+      const claimed = await db.booking.updateMany({
+        where: { id: booking.id, status: booking.status },
+        data: {
+          status: BookingStatus.CANCELLED_BY_WINERY,
+          cancelledAt: new Date(),
+          cancellationReason: parsed.data.reason,
+        },
+      });
+      if (claimed.count === 0) continue;
+
       // Winery-initiated cancellation refunds everything the client paid
       // — tickets AND service fee (D2). Routed through the gift-aware
       // orchestrator (P-16 / ADR-0003, review #120): the old direct
@@ -662,9 +680,17 @@ export async function cancelEventSession(
       // charge) and never restored the gift nor reversed the transfer.
       let stripeRefundId: string | null = null;
       let totalReturnedCents = 0;
+      let freshRefundAmount: number | null = booking.refundAmount;
       if (booking.status === BookingStatus.CONFIRMED) {
+        // Fresh refund base — the pre-loop snapshot may predate a
+        // concurrent admin refund (review #120 sweep).
+        const fresh = await db.booking.findUnique({
+          where: { id: booking.id },
+          select: { refundAmount: true },
+        });
+        freshRefundAmount = fresh?.refundAmount ?? null;
+        const alreadyRefundedCents = freshRefundAmount ?? 0;
         const paidCents = booking.totalPrice + booking.serviceFeeCents;
-        const alreadyRefundedCents = booking.refundAmount ?? 0;
         const outcome = await processCancellationRefund({
           bookingId: booking.id,
           stripePaymentIntentId: booking.stripePaymentIntentId,
@@ -691,22 +717,25 @@ export async function cancelEventSession(
           .catch(() => undefined);
       }
 
-      await db.booking.update({
-        where: { id: booking.id },
-        data: {
-          status: BookingStatus.CANCELLED_BY_WINERY,
-          cancelledAt: new Date(),
-          cancellationReason: parsed.data.reason,
-          // Record what was actually returned (card + gift), never a claim.
-          refundIssued: totalReturnedCents > 0,
-          ...(totalReturnedCents > 0
-            ? {
-                refundAmount: (booking.refundAmount ?? 0) + totalReturnedCents,
-              }
-            : {}),
-          ...(stripeRefundId ? { stripeRefundId } : {}),
-        },
-      });
+      // Record what was actually returned (card + gift), never a claim —
+      // conditional on the refundAmount we READ (same ledger guard as the
+      // sibling cancellation actions).
+      if (totalReturnedCents > 0) {
+        const recorded = await db.booking.updateMany({
+          where: { id: booking.id, refundAmount: freshRefundAmount },
+          data: {
+            refundIssued: true,
+            refundAmount: (freshRefundAmount ?? 0) + totalReturnedCents,
+            ...(stripeRefundId ? { stripeRefundId } : {}),
+          },
+        });
+        if (recorded.count === 0) {
+          await appendRefundError(
+            booking.id,
+            `LEDGER_CONFLICT: session cancellation returned ${totalReturnedCents} (${stripeRefundId ?? 'gift only'}) concurrently with another refund writer — reconcile with Stripe`
+          );
+        }
+      }
 
       await sendBookingCancelledByWineryEmail(
         booking.visitorEmail,

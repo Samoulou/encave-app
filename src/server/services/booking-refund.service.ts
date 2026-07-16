@@ -65,7 +65,33 @@ export async function processCancellationRefund(
 
   // ── Classic booking: single refund on the destination charge. ──────────
   if (input.giftAppliedCents <= 0) {
-    if (!input.stripePaymentIntentId) return none;
+    if (!input.stripePaymentIntentId) {
+      // Money is owed but no charge is on file — same anomaly as the gift
+      // branch, same persisted marker (review #120 sweep: this return was
+      // the service's only silent one).
+      logError(
+        'Refund due but no payment intent on classic booking',
+        undefined,
+        {
+          action: input.actionName,
+          bookingId: input.bookingId,
+          refundDueCents: input.refundDueCents,
+        }
+      );
+      Sentry.captureMessage('card refund impossible: no payment intent', {
+        level: 'error',
+        tags: { area: 'gift-refund' },
+        extra: {
+          bookingId: input.bookingId,
+          refundDueCents: input.refundDueCents,
+        },
+      });
+      await appendRefundError(
+        input.bookingId,
+        `CARD_REFUND_IMPOSSIBLE: ${input.refundDueCents} cents of refund due but no payment intent on file — reconcile manually`
+      );
+      return none;
+    }
     const refund = await processRefund(
       input.stripePaymentIntentId,
       true,
@@ -225,17 +251,14 @@ export async function appendRefundError(
   message: string
 ): Promise<void> {
   try {
-    const current = await db.booking.findUnique({
-      where: { id: bookingId },
-      select: { refundError: true },
-    });
-    const next = current?.refundError
-      ? `${current.refundError} | ${message}`
-      : message;
-    await db.booking.update({
-      where: { id: bookingId },
-      data: { refundError: next },
-    });
+    // Atomic DB-side concatenation (review #120 sweep): a read-modify-write
+    // would re-introduce the lost-marker race between the webhook's race
+    // branch and a concurrent cancellation writer.
+    await db.$executeRaw`
+      UPDATE bookings
+      SET "refundError" = COALESCE("refundError" || ' | ', '') || ${message}
+      WHERE id = ${bookingId}
+    `;
   } catch (error) {
     // Last resort: the Pino log above is the only trace left.
     logError('failed to persist refundError', error, {

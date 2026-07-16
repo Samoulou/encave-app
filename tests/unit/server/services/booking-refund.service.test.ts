@@ -1,10 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const bookingUpdate = vi.fn(async () => ({}));
-const bookingFindUnique = vi.fn(async () => ({ refundError: null }));
+const executeRaw = vi.fn(async () => 1);
 vi.mock('@/server/db', () => ({
-  db: { booking: { update: bookingUpdate, findUnique: bookingFindUnique } },
+  db: {
+    booking: { update: bookingUpdate },
+    $executeRaw: (...args: unknown[]) => executeRaw(...args),
+  },
 }));
+
+/** appendRefundError writes via one atomic $executeRaw — message is arg 1. */
+function appendedMessages(): string[] {
+  return executeRaw.mock.calls.map((call) => String(call[1]));
+}
 
 const processRefund = vi.fn();
 vi.mock('@/server/services/payment.service', () => ({
@@ -180,12 +188,7 @@ describe('processCancellationRefund — gift-funded booking (ADR-0003)', () => {
     );
     const outcome = await processCancellationRefund(giftBookingInput);
     expect(outcome.totalReturnedCents).toBe(12000);
-    expect(bookingUpdate).toHaveBeenCalledWith({
-      where: { id: 'bk-1' },
-      data: {
-        refundError: expect.stringContaining('GIFT_REVERSAL_FAILED'),
-      },
-    });
+    expect(appendedMessages().join(' ')).toContain('GIFT_REVERSAL_FAILED');
   });
 
   it('a gift-restore failure never throws and does not count as returned', async () => {
@@ -193,12 +196,7 @@ describe('processCancellationRefund — gift-funded booking (ADR-0003)', () => {
     const outcome = await processCancellationRefund(giftBookingInput);
     expect(outcome.giftRestoredCents).toBe(0);
     expect(outcome.totalReturnedCents).toBe(7000);
-    expect(bookingUpdate).toHaveBeenCalledWith({
-      where: { id: 'bk-1' },
-      data: {
-        refundError: expect.stringContaining('GIFT_RESTORE_FAILED'),
-      },
-    });
+    expect(appendedMessages().join(' ')).toContain('GIFT_RESTORE_FAILED');
     // The reversal is still attempted — independent compensation.
     expect(reverseGiftTransferForCancellation).toHaveBeenCalled();
   });

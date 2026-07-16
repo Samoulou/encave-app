@@ -13,6 +13,7 @@ vi.mock('@/server/db', () => ({
       update: vi.fn(),
       updateMany: vi.fn(),
     },
+    $executeRaw: vi.fn(async () => 1),
   },
 }));
 
@@ -469,13 +470,13 @@ describe('Booking Cancellation Actions', () => {
       const result = await cancelBooking('booking-cancel-1', accessToken);
 
       expect(result.success).toBe(true);
-      // The DB value is kept; the conflict is flagged for reconciliation.
-      expect(db.booking.update).toHaveBeenCalledWith({
-        where: { id: 'booking-cancel-1' },
-        data: expect.objectContaining({
-          refundError: expect.stringContaining('LEDGER_CONFLICT'),
-        }),
-      });
+      // The DB value is kept; the conflict is flagged for reconciliation
+      // via the atomic refundError append ($executeRaw — message is arg 1).
+      const appended = vi
+        .mocked(db.$executeRaw)
+        .mock.calls.map((call) => String(call[1]))
+        .join(' ');
+      expect(appended).toContain('LEDGER_CONFLICT');
     });
 
     it('verifies token using SHA-256 hash', async () => {

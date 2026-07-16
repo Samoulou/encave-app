@@ -651,10 +651,16 @@ export async function cancelBooking(
             data: { status: BookingStatus.CONFIRMED, cancelledAt: null },
           });
         } else {
-          await db.booking.update({
-            where: { id: bookingId },
-            data: { refundError: String(refundError) },
-          });
+          // Appended, and with the pending GIFT movements named (review
+          // #120 sweep): the card refund is the FIRST movement — an
+          // ambiguous failure means the gift restore and the winery
+          // reversal never ran, and no cron retries a cancelled booking.
+          await appendRefundError(
+            bookingId,
+            booking.giftAppliedCents > 0
+              ? `CARD_REFUND_AMBIGUOUS on gift booking (gift restore + winery reversal NOT run — reconcile all three movements, runbook incident-paiement): ${String(refundError)}`
+              : String(refundError)
+          );
         }
         logError('Refund processing error', refundError, {
           action: 'cancelBooking',
