@@ -1,5 +1,5 @@
 import { UserRole } from '@prisma/client';
-import { auth } from '@/server/auth';
+import { auth, isCurrentAdminSessionExpired } from '@/server/auth';
 import type { ActionResult } from '@/types/actions';
 
 /**
@@ -22,6 +22,15 @@ export async function requireAdmin(): Promise<
     return {
       success: false,
       error: { code: 'FORBIDDEN', message: 'Admin access required' },
+    };
+  }
+  // P-16 (G-3): the layout gate only covers page renders — a stale tab's
+  // server actions land here directly, so the 7 d session-age cap must
+  // hold at the action boundary too (review finding).
+  if (await isCurrentAdminSessionExpired()) {
+    return {
+      success: false,
+      error: { code: 'UNAUTHORIZED', message: 'Session expired' },
     };
   }
   return { success: true, data: { adminId: session.user.id } };

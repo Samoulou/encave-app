@@ -10,6 +10,7 @@ export {
 } from './ManualRefundEmail';
 export { NoShowFeeChargedEmail } from './NoShowFeeChargedEmail';
 export { AccountDeletedEmail } from './AccountDeletedEmail';
+export { EmailChangedNoticeEmail } from './EmailChangedNoticeEmail';
 
 export { BookingReminderEmail } from './BookingReminderEmail';
 export type { BookingReminderEmailProps } from './BookingReminderEmail';

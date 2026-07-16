@@ -7,29 +7,12 @@ import {
   sendOtpEmail,
   sendEmailVerificationEmail,
 } from '@/server/services/email.service';
+// P-16 / WS-G: G-1 (TOTP on OTP/social paths) + G-2 (email-change notice)
+// hooks, and the per-role session windows (login stamp + G-3 boundary check).
+import { authHardening, sessionWindowMsForRole } from '@/server/auth-hardening';
 import type { Locale } from '@prisma/client';
 
 const SALT_ROUNDS = 10;
-
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-// P-14 (L-153): per-role session length applied at LOGIN via the session
-// create hook. NOTE: better-auth's cookie max-age comes from the GLOBAL
-// `session.expiresIn` and the updateAge refresh resets `expiresAt` to that
-// global value (session.mjs) — so these caps hold at login and for inactive
-// sessions; an active client/admin session may slide toward the 90d global on
-// refresh. Admin is additionally protected by mandatory TOTP (L-152) + the
-// live suspension re-check on every admin/protected request.
-function sessionWindowMsForRole(role: string | undefined): number {
-  switch (role) {
-    case 'WINEMAKER':
-      return 90 * DAY_MS;
-    case 'ADMIN':
-      return 7 * DAY_MS;
-    default:
-      return 30 * DAY_MS; // CLIENT
-  }
-}
 
 /**
  * Build trusted origins dynamically from environment
@@ -124,6 +107,10 @@ export const auth = betterAuth({
       issuer: 'EnCave',
       totpOptions: { digits: 6, period: 30 },
     }),
+    // P-16 / WS-G: the built-in twoFactor hook only covers /sign-in/email —
+    // this closes the OTP + OAuth-callback bypass (G-1) and posts the
+    // email-change security notice (G-2).
+    authHardening(),
   ],
 
   // Session configuration. Global expiresIn = the LONGEST role window (90d,
@@ -182,7 +169,8 @@ export const auth = betterAuth({
     },
     // P-14 (L-151): self-service email change. Confirmation is sent to the
     // CURRENT email only when it is verified (better-auth); unverified users
-    // change instantly (documented R-2).
+    // change instantly — the old address then gets a security notice via
+    // the authHardening after-hook (P-16 / G-2, closes R-2).
     changeEmail: {
       enabled: true,
       sendChangeEmailConfirmation: async ({ user, newEmail, url }) => {

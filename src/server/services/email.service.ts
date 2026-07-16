@@ -16,6 +16,7 @@ import {
   ManualRefundWinemakerEmail,
   NoShowFeeChargedEmail,
   AccountDeletedEmail,
+  EmailChangedNoticeEmail,
   PasswordResetEmail,
   OtpEmail,
   type OtpPurpose,
@@ -530,6 +531,31 @@ export async function sendEmailVerificationEmail(
   return sendEmail({
     to: email,
     subject: t(subjects.emailVerification, loc),
+    html,
+  });
+}
+
+/**
+ * Security notice to the OLD address after a self-service email change
+ * (P-16 / P-14 gap G-2). Fire-and-forget from the auth hook — a send
+ * failure must never fail the auth response.
+ */
+export async function sendEmailChangedNoticeEmail(
+  oldEmail: string,
+  newEmail: string,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const html = await render(
+    EmailChangedNoticeEmail({
+      locale: loc,
+      newEmail,
+    })
+  );
+
+  return sendEmail({
+    to: oldEmail,
+    subject: t(subjects.emailChangedNotice, loc),
     html,
   });
 }

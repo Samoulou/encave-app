@@ -77,6 +77,11 @@ export const subjects = {
     DE: 'Ihr EnCave-Konto wurde gelöscht',
     EN: 'Your EnCave account has been deleted',
   },
+  emailChangedNotice: {
+    FR: "L'adresse e-mail de votre compte EnCave a été modifiée",
+    DE: 'Die E-Mail-Adresse Ihres EnCave-Kontos wurde geändert',
+    EN: 'The email address of your EnCave account was changed',
+  },
   wineryNewBooking: {
     FR: 'Nouvelle reservation recue',
     DE: 'Neue Reservierung erhalten',
@@ -920,6 +925,26 @@ export const accountDeleted = {
     FR: "Conformément au droit suisse, nous conservons l'historique anonymisé de vos réservations pendant 10 ans pour des raisons comptables.",
     DE: 'Gemäss schweizerischem Recht bewahren wir den anonymisierten Verlauf Ihrer Reservierungen aus buchhalterischen Gründen während 10 Jahren auf.',
     EN: 'In accordance with Swiss law, we retain the anonymised history of your bookings for 10 years for accounting purposes.',
+  },
+} as const;
+
+// Email-changed security notice (P-16 / G-2): always sent to the OLD
+// address when a self-service email change applies instantly.
+export const emailChangedNotice = {
+  title: {
+    FR: 'Votre adresse e-mail a été modifiée',
+    DE: 'Ihre E-Mail-Adresse wurde geändert',
+    EN: 'Your email address was changed',
+  },
+  intro: {
+    FR: "Bonjour, l'adresse e-mail de votre compte EnCave vient d'être remplacée par {newEmail}.",
+    DE: 'Guten Tag, die E-Mail-Adresse Ihres EnCave-Kontos wurde soeben durch {newEmail} ersetzt.',
+    EN: 'Hello, the email address of your EnCave account was just replaced with {newEmail}.',
+  },
+  warning: {
+    FR: "Si vous n'êtes pas à l'origine de ce changement, répondez immédiatement à cet e-mail ou écrivez à support@encave.ch — votre compte est peut-être compromis.",
+    DE: 'Falls Sie diese Änderung nicht veranlasst haben, antworten Sie sofort auf diese E-Mail oder schreiben Sie an support@encave.ch — Ihr Konto könnte kompromittiert sein.',
+    EN: 'If you did not make this change, reply to this email immediately or write to support@encave.ch — your account may be compromised.',
   },
 } as const;
 

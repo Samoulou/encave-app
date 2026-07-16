@@ -11,6 +11,8 @@ vi.mock('@/server/db', () => ({
 
 vi.mock('@/server/auth', () => ({
   auth: vi.fn(),
+  // G-3 boundary check (P-16) — not expired by default in tests.
+  isCurrentAdminSessionExpired: vi.fn(async () => false),
 }));
 
 vi.mock('next/cache', () => ({
