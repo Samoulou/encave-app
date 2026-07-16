@@ -323,11 +323,14 @@ export const bookingCancellation = {
     DE: 'Falls Sie bereits bezahlt haben, wird Ihre Ruckerstattung innerhalb von 5-7 Werktagen bearbeitet.',
     EN: 'If you have already paid, your refund will be processed within 5-7 business days.',
   },
-  // {amount} is replaced with the exact refunded amount (policy-based).
+  // {amount} is replaced with the exact TOTAL returned (policy-based).
+  // Gift-aware wording (P-16 review #120): since ADR-0003 the amount can
+  // include a share re-credited to a gift card — never promise it all as
+  // a bank refund.
   refundExact: {
-    FR: 'Un remboursement de {amount} sera credite sur votre moyen de paiement sous 5-7 jours ouvrables.',
-    DE: 'Eine Ruckerstattung von {amount} wird Ihrem Zahlungsmittel innerhalb von 5-7 Werktagen gutgeschrieben.',
-    EN: 'A refund of {amount} will be credited to your payment method within 5-7 business days.',
+    FR: 'Un montant de {amount} vous sera restitué : sur votre moyen de paiement sous 5-7 jours ouvrables et, pour la part payée par bon cadeau, recréditée sur votre bon.',
+    DE: 'Ein Betrag von {amount} wird Ihnen zurückerstattet: auf Ihr Zahlungsmittel innerhalb von 5-7 Werktagen und, für den mit Gutschein bezahlten Anteil, als Wiedergutschrift auf Ihren Gutschein.',
+    EN: 'An amount of {amount} will be returned to you: to your payment method within 5-7 business days and, for the share paid with a gift card, re-credited to your gift card.',
   },
   noRefund: {
     FR: "Conformement a la politique d'annulation de la cave, cette annulation ne donne pas droit a un remboursement.",

@@ -245,6 +245,7 @@ describe('getPayoutDetail', () => {
         grossCents: 10000,
         commissionCents: 1200,
         netCents: 8800,
+        kind: 'charge',
       },
     ]);
     expect(result?.unmatchedLines).toEqual([
@@ -253,6 +254,122 @@ describe('getPayoutDetail', () => {
     expect(result?.totalGrossCents).toBe(10000);
     expect(result?.totalCommissionCents).toBe(1200);
     expect(result?.payout.amountCents).toBe(8800);
+  });
+
+  it('correlates a gift transfer via transfer.metadata.bookingId (P-16 / WS-A.1)', async () => {
+    stripeMock.payouts.retrieve.mockResolvedValue(stripePayout());
+    mockTransactions([
+      {
+        type: 'payment',
+        amount: 8800,
+        created: 2,
+        source: { source_transfer: 'tr_gift' },
+      },
+    ]);
+    // Gift transfer (separate charges): no source_transaction, only metadata.
+    stripeMock.transfers.retrieve.mockResolvedValue({
+      source_transaction: null,
+      metadata: { bookingId: 'bk_gift', bookingReference: 'ENC-GIFT0001' },
+    });
+    vi.mocked(db.booking.findMany).mockResolvedValue([
+      {
+        id: 'bk_gift',
+        reference: 'ENC-GIFT0001',
+        date: new Date('2026-06-20T00:00:00Z'),
+        totalPrice: 10000,
+        platformFee: 1200,
+        wineryPayout: 8800,
+        stripePaymentIntentId: null,
+        noShowFeeChargePaymentIntentId: null,
+        experience: { title: 'Dégustation cave' },
+      },
+    ] as never);
+
+    const result = await getPayoutDetail(ACCT, 'po_1');
+
+    // Correlated by booking id, still scoped to THIS winery's account.
+    expect(vi.mocked(db.booking.findMany).mock.calls[0]?.[0]?.where).toEqual({
+      OR: [{ id: { in: ['bk_gift'] } }],
+      winery: { stripeAccountId: ACCT },
+    });
+    expect(result?.bookings).toEqual([
+      {
+        bookingId: 'bk_gift',
+        reference: 'ENC-GIFT0001',
+        experienceTitle: 'Dégustation cave',
+        dateMs: new Date('2026-06-20T00:00:00Z').getTime(),
+        grossCents: 10000,
+        commissionCents: 1200,
+        netCents: 8800,
+        kind: 'gift',
+      },
+    ]);
+    expect(result?.unmatchedLines).toEqual([]);
+  });
+
+  it('also correlates a gift line delivered as a transfer-typed balance transaction', async () => {
+    stripeMock.payouts.retrieve.mockResolvedValue(stripePayout());
+    mockTransactions([
+      // Defensive shape (Codex #121): raw `transfer` line, expanded source
+      // IS the Transfer object.
+      {
+        type: 'transfer',
+        amount: 8800,
+        created: 3,
+        source: { id: 'tr_gift', object: 'transfer' },
+      },
+    ]);
+    stripeMock.transfers.retrieve.mockResolvedValue({
+      source_transaction: null,
+      metadata: { bookingId: 'bk_gift' },
+    });
+    vi.mocked(db.booking.findMany).mockResolvedValue([
+      {
+        id: 'bk_gift',
+        reference: 'ENC-GIFT0001',
+        date: new Date('2026-06-20T00:00:00Z'),
+        totalPrice: 10000,
+        platformFee: 1200,
+        wineryPayout: 8800,
+        stripePaymentIntentId: null,
+        noShowFeeChargePaymentIntentId: null,
+        experience: { title: 'Dégustation cave' },
+      },
+    ] as never);
+
+    const result = await getPayoutDetail(ACCT, 'po_1');
+
+    expect(stripeMock.transfers.retrieve).toHaveBeenCalledWith('tr_gift', {
+      expand: ['source_transaction'],
+    });
+    expect(result?.bookings).toHaveLength(1);
+    expect(result?.bookings[0]?.kind).toBe('gift');
+    expect(result?.unmatchedLines).toEqual([]);
+  });
+
+  it("keeps a gift transfer unmatched when the metadata bookingId is another winery's", async () => {
+    stripeMock.payouts.retrieve.mockResolvedValue(stripePayout());
+    mockTransactions([
+      {
+        type: 'payment',
+        amount: 4400,
+        created: 7,
+        source: { source_transfer: 'tr_forged' },
+      },
+    ]);
+    stripeMock.transfers.retrieve.mockResolvedValue({
+      source_transaction: null,
+      metadata: { bookingId: 'bk_other_winery' },
+    });
+    // The winery.stripeAccountId guard filters the foreign booking out.
+    vi.mocked(db.booking.findMany).mockResolvedValue([] as never);
+
+    const result = await getPayoutDetail(ACCT, 'po_1');
+
+    expect(result?.bookings).toEqual([]);
+    expect(result?.unmatchedLines).toEqual([
+      { type: 'payment', amountCents: 4400, createdMs: 7000 },
+    ]);
   });
 
   it('keeps a payment line as unmatched when the transfer cannot be resolved', async () => {

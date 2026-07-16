@@ -35,8 +35,16 @@ function redirectToLogin(
   return NextResponse.redirect(loginUrl);
 }
 
-// Production domain that should show "Coming Soon"
+// Production domain gated by the Coming Soon flag
 const COMING_SOON_DOMAIN = 'encave.ch';
+
+// P-16 (WS-I, L-189): the gate is env-based, NOT hardcoded — the launch
+// flip is a Vercel env change (COMING_SOON=false) + redeploy (~2 min),
+// and the rollback is the exact same operation. Env because the Edge
+// middleware cannot read the DB flag table; the only legitimately
+// env-based flag (documented in src/lib/flags.ts). Any value but the
+// string 'false' keeps the gate up — fail-closed pre-launch.
+const isComingSoonGateUp = process.env.COMING_SOON !== 'false';
 
 export default async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
@@ -51,11 +59,12 @@ export default async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Coming Soon: Redirect production domain to coming-soon page
-  // Remove this block when ready to launch
+  // Coming Soon: redirect the production domain to the coming-soon page
+  // until COMING_SOON=false flips the gate (launch bascule, WS-I).
   if (
-    hostname === COMING_SOON_DOMAIN ||
-    hostname === `www.${COMING_SOON_DOMAIN}`
+    isComingSoonGateUp &&
+    (hostname === COMING_SOON_DOMAIN ||
+      hostname === `www.${COMING_SOON_DOMAIN}`)
   ) {
     // Allow the coming-soon page itself
     if (pathname === '/coming-soon') {

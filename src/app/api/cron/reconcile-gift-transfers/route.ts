@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { verifyCronRequest } from '@/lib/cron-auth';
+import { withCronMonitor } from '@/lib/cron-monitor';
 import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
 import { reconcileGiftTransfers } from '@/server/services/giftCard-transfer.service';
 import { logError, logInfo } from '@/lib/logger';
@@ -18,15 +19,24 @@ export async function GET() {
   }
   const startedAt = Date.now();
   try {
-    if (!(await isFlagEnabled('GIFT_CARDS'))) {
-      return NextResponse.json({ skipped: 'flag_off', durationMs: 0 });
-    }
-    const stats = await reconcileGiftTransfers();
-    logInfo('gift_transfer.reconcile', {
-      action: 'reconcileGiftTransfersCron',
-      ...stats,
-    });
-    return NextResponse.json({ ...stats, durationMs: Date.now() - startedAt });
+    // P-16 (WS-E): Sentry check-in — a missed run = dead cron alert.
+    return await withCronMonitor(
+      'encave-reconcile-gift-transfers',
+      async () => {
+        if (!(await isFlagEnabled('GIFT_CARDS'))) {
+          return NextResponse.json({ skipped: 'flag_off', durationMs: 0 });
+        }
+        const stats = await reconcileGiftTransfers();
+        logInfo('gift_transfer.reconcile', {
+          action: 'reconcileGiftTransfersCron',
+          ...stats,
+        });
+        return NextResponse.json({
+          ...stats,
+          durationMs: Date.now() - startedAt,
+        });
+      }
+    );
   } catch (error) {
     logError('reconcile gift transfers cron failed', error, {
       action: 'reconcileGiftTransfersCron',

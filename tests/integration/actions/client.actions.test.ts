@@ -16,6 +16,7 @@ vi.mock('@/server/db', () => ({
       updateMany: vi.fn(),
     },
     user: { update: vi.fn() },
+    $executeRaw: vi.fn(async () => 1),
   },
 }));
 
@@ -85,6 +86,9 @@ describe('Client Actions', () => {
       timeSlot: '14:00',
       totalPrice: 10000,
       serviceFeeCents: 0,
+      // P-16 (ADR-0003): the classic (non-gift) refund path.
+      giftAppliedCents: 0,
+      wineryPayout: 17600,
       guestCount: 4,
       reference: 'REF-123',
       stripePaymentIntentId: 'pi_test123',

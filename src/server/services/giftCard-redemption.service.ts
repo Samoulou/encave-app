@@ -136,9 +136,16 @@ export async function redeemGiftCard(input: {
  * booking row is deleted. Idempotent: the card is locked FOR UPDATE, then
  * a REFUND is written only if none exists yet for this booking. The ledger
  * rows survive the booking deletion (no FK, intentional).
+ *
+ * P-16 (WS-A.3, ADR-0003): the cancellation of a CONFIRMED gift-funded
+ * booking reuses this mechanic with `options.amountCents` (the policy may
+ * owe less than the full redemption — e.g. STRICT 50%) and a distinct
+ * ledger note. The one-REFUND-per-booking guard is shared: an abandon
+ * release and a cancellation restore can never both apply.
  */
 export async function releaseGiftForBooking(
-  bookingId: string
+  bookingId: string,
+  options?: { amountCents?: number; note?: string }
 ): Promise<'refunded' | 'noop'> {
   return db.$transaction(async (tx) => {
     const redemption = await tx.giftCardTransaction.findFirst({
@@ -146,34 +153,57 @@ export async function releaseGiftForBooking(
         bookingId,
         type: GiftCardTransactionType.REDEMPTION,
       },
-      select: { giftCardId: true, amount: true },
+      select: { giftCardId: true },
     });
     if (!redemption) return 'noop';
 
-    // Lock the card BEFORE the duplicate check so two concurrent releases
-    // serialize: the loser sees the REFUND the winner just wrote.
+    // Lock the card BEFORE the outstanding computation so two concurrent
+    // releases serialize: the loser sees the REFUND the winner just wrote.
     await tx.$queryRaw`SELECT id FROM gift_cards WHERE id = ${redemption.giftCardId} FOR UPDATE`;
 
-    const alreadyRefunded = await tx.giftCardTransaction.findFirst({
-      where: { bookingId, type: GiftCardTransactionType.REFUND },
-      select: { id: true },
+    // Idempotency on the CUMULATIVE outstanding, not on "a REFUND row
+    // exists" (review #120 workflow, P1): a GIFT_CHANGED / card=0 retry
+    // legitimately leaves a booking with REDEMPTION#1 + REFUND#1 +
+    // REDEMPTION#2 — the old existence guard then noop'ed the
+    // cancellation restore and the client's balance was silently lost.
+    // outstanding = redeemed − already refunded; a double release still
+    // noops (outstanding 0 after the first one).
+    const movements = await tx.giftCardTransaction.findMany({
+      where: {
+        bookingId,
+        type: {
+          in: [
+            GiftCardTransactionType.REDEMPTION,
+            GiftCardTransactionType.REFUND,
+          ],
+        },
+      },
+      select: { type: true, amount: true },
     });
-    if (alreadyRefunded) return 'noop';
+    // REDEMPTION amounts are negative, REFUND positive (ledger sign
+    // convention) — the outstanding debt is minus their sum.
+    const outstanding = movements.reduce(
+      (sum, movement) => sum - movement.amount,
+      0
+    );
+    if (outstanding <= 0) return 'noop';
 
-    const applied = -redemption.amount; // REDEMPTION is negative → positive
-    if (applied <= 0) return 'noop';
+    // Never restore more than is outstanding; a partial cancellation
+    // restore (ADR-0003) passes the policy-derived share.
+    const restored = Math.min(outstanding, options?.amountCents ?? outstanding);
+    if (restored <= 0) return 'noop';
 
     await tx.giftCard.update({
       where: { id: redemption.giftCardId },
-      data: { balance: { increment: applied } },
+      data: { balance: { increment: restored } },
     });
     await tx.giftCardTransaction.create({
       data: {
         giftCardId: redemption.giftCardId,
         type: GiftCardTransactionType.REFUND,
-        amount: applied,
+        amount: restored,
         bookingId,
-        note: 'checkout_abandon',
+        note: options?.note ?? 'checkout_abandon',
       },
     });
     return 'refunded';

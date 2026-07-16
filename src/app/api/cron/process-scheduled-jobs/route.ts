@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { verifyCronRequest } from '@/lib/cron-auth';
+import { withCronMonitor } from '@/lib/cron-monitor';
 import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
 import type { FlagKey } from '@/lib/flags';
 import {
@@ -76,26 +77,29 @@ export async function GET() {
   const startedAt = Date.now();
 
   try {
-    const flags = await Promise.all(
-      JOB_REGISTRY.map((entry) => isFlagEnabled(entry.flag))
-    );
-    const enabled = JOB_REGISTRY.filter((_, index) => flags[index] === true);
-    const enabledTypes = enabled.map((entry) => entry.type);
-    const handlers = Object.fromEntries(
-      enabled.map((entry) => [entry.type, entry.handler])
-    );
+    // P-16 (WS-E): Sentry check-in — a missed run = dead cron alert.
+    return await withCronMonitor('encave-process-scheduled-jobs', async () => {
+      const flags = await Promise.all(
+        JOB_REGISTRY.map((entry) => isFlagEnabled(entry.flag))
+      );
+      const enabled = JOB_REGISTRY.filter((_, index) => flags[index] === true);
+      const enabledTypes = enabled.map((entry) => entry.type);
+      const handlers = Object.fromEntries(
+        enabled.map((entry) => [entry.type, entry.handler])
+      );
 
-    const stats = await runDueJobs({ enabledTypes, handlers });
+      const stats = await runDueJobs({ enabledTypes, handlers });
 
-    logInfo('scheduled_jobs.cron_drain', {
-      action: 'cronProcessScheduledJobs',
-      enabledTypes,
-      ...stats,
-    });
-    return NextResponse.json({
-      enabledTypes,
-      ...stats,
-      durationMs: Date.now() - startedAt,
+      logInfo('scheduled_jobs.cron_drain', {
+        action: 'cronProcessScheduledJobs',
+        enabledTypes,
+        ...stats,
+      });
+      return NextResponse.json({
+        enabledTypes,
+        ...stats,
+        durationMs: Date.now() - startedAt,
+      });
     });
   } catch (error) {
     logError('process-scheduled-jobs cron error', error, {

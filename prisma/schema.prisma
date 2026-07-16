@@ -472,6 +472,10 @@ model Booking {
   giftCardId                     String?
   giftAppliedCents               Int                   @default(0)
   giftTransferId                 String?
+  // P-16 (WS-A.3, ADR-0003): durable guard of the transfer reversal issued
+  // when a gift-funded CONFIRMED booking is cancelled — at most one per
+  // booking, resilient to retries beyond Stripe's 24h idempotency window.
+  giftTransferReversalId         String?
   // V3 (P-08, US-220): anti no-show card imprint + manual off-session charge
   // (flag NO_SHOW_FEES). The imprint (SetupIntent) is captured at checkout for
   // ON_SITE offers when the winery opts in — zero debit at booking. The fee is

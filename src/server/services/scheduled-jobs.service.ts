@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import { Prisma, ScheduledJobStatus } from '@prisma/client';
 import { db } from '@/server/db';
 import { logError, logInfo } from '@/lib/logger';
@@ -185,6 +186,13 @@ export async function runDueJobs(options: {
               jobId: job.id,
               type: job.type,
               attempts: attempt,
+            });
+            // Terminal FAILED is invisible otherwise (P-16 review #120):
+            // the cron returns 200 and its check-in stays green — e.g. a
+            // GIFT_CARD_DELIVERY dying here is a paid gift never delivered.
+            Sentry.captureException(error, {
+              tags: { area: 'scheduled-jobs', jobType: job.type },
+              extra: { jobId: job.id, attempts: attempt },
             });
           } else {
             stats.retried++;

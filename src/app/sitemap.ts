@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next';
 import { locales, defaultLocale } from '@/i18n/routing';
 import { getAllPublishedExperienceSlugs } from '@/server/queries/experience.queries';
 import { getPubliclyVisibleWinerySlugs } from '@/server/queries/winery.queries';
+import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
 import { logError } from '@/lib/logger';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://encave.ch';
@@ -60,6 +61,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // About page
   entries.push(...createEntry('/about', 'monthly', 0.7));
 
+  // V3 public surfaces (P-16 / WS-H): gift cards and sur-mesure are only
+  // listed while their kill-switch is ON — the pages notFound() when OFF,
+  // and advertising 404s to crawlers during an incident would pile up
+  // soft-404s on the launch surfaces (review #120).
+  try {
+    if (await isFlagEnabled('GIFT_CARDS')) {
+      entries.push(...createEntry('/cadeaux', 'weekly', 0.8));
+    }
+    if (await isFlagEnabled('REQUESTS')) {
+      entries.push(...createEntry('/sur-mesure', 'weekly', 0.7));
+    }
+  } catch (error) {
+    logError('Error reading feature flags for sitemap', error, {
+      action: 'sitemap',
+    });
+  }
+  entries.push(...createEntry('/contact', 'monthly', 0.5));
+
   // Auth pages (lower priority, but still indexed for discoverability)
   entries.push(...createEntry('/login', 'monthly', 0.3));
   entries.push(...createEntry('/register', 'monthly', 0.3));
@@ -68,6 +87,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   entries.push(...createEntry('/legal/privacy', 'monthly', 0.2));
   entries.push(...createEntry('/legal/terms', 'monthly', 0.2));
   entries.push(...createEntry('/legal/cancellation', 'monthly', 0.2));
+  entries.push(...createEntry('/mentions-legales', 'monthly', 0.2));
 
   // Dynamic pages - experiences
   try {

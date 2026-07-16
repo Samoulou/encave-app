@@ -6,6 +6,10 @@ import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { logError, logInfo } from '@/lib/logger';
 import { getStripe } from '@/server/stripe';
+import {
+  appendRefundError,
+  processCancellationRefund,
+} from '@/server/services/booking-refund.service';
 import { sendBookingCancelledByWineryEmail } from '@/server/services/email.service';
 import { getNearbyWineryAlternatives } from '@/server/queries/winery-alternatives.queries';
 import {
@@ -612,6 +616,11 @@ export async function cancelEventSession(
       locale: true,
       stripeCheckoutSessionId: true,
       stripePaymentIntentId: true,
+      // P-16 (ADR-0003, review #120): gift-funded bookings refund in three
+      // movements — this path must not pretend a card refund happened.
+      giftAppliedCents: true,
+      wineryPayout: true,
+      refundAmount: true,
     },
   });
 
@@ -645,32 +654,58 @@ export async function cancelEventSession(
         continue;
       }
 
-      let refundId: string | undefined;
-      if (
-        booking.status === BookingStatus.CONFIRMED &&
-        booking.stripePaymentIntentId?.startsWith('pi_')
-      ) {
-        // Winery-initiated cancellation refunds everything the client
-        // paid — tickets AND service fee (D2).
+      // Atomic claim FIRST (review #120 sweep, mirrors cancelBooking): the
+      // bookings were read once before the loop — a concurrent client
+      // cancellation must be neither double-refunded nor have its
+      // CANCELLED_BY_CLIENT overwritten (forbidden transition). Losing the
+      // claim = someone else already handled (and emailed) this booking.
+      // Unlike the client path there is no claim-release on refund error:
+      // the session IS cancelled — a failed refund leaves the booking
+      // CANCELLED with an appended refundError for reconciliation.
+      const claimed = await db.booking.updateMany({
+        where: { id: booking.id, status: booking.status },
+        data: {
+          status: BookingStatus.CANCELLED_BY_WINERY,
+          cancelledAt: new Date(),
+          cancellationReason: parsed.data.reason,
+        },
+      });
+      if (claimed.count === 0) continue;
+
+      // Winery-initiated cancellation refunds everything the client paid
+      // — tickets AND service fee (D2). Routed through the gift-aware
+      // orchestrator (P-16 / ADR-0003, review #120): the old direct
+      // refunds.create pretended a card refund on gift-funded bookings
+      // (card=0 → nothing moved; gift+card → Stripe 400 on the platform
+      // charge) and never restored the gift nor reversed the transfer.
+      let stripeRefundId: string | null = null;
+      let totalReturnedCents = 0;
+      let freshRefundAmount: number | null = booking.refundAmount;
+      if (booking.status === BookingStatus.CONFIRMED) {
+        // Fresh refund base — the pre-loop snapshot may predate a
+        // concurrent admin refund (review #120 sweep).
+        const fresh = await db.booking.findUnique({
+          where: { id: booking.id },
+          select: { refundAmount: true },
+        });
+        freshRefundAmount = fresh?.refundAmount ?? null;
+        const alreadyRefundedCents = freshRefundAmount ?? 0;
         const paidCents = booking.totalPrice + booking.serviceFeeCents;
-        const refund = await getStripe().refunds.create(
-          {
-            payment_intent: booking.stripePaymentIntentId,
-            amount: paidCents,
-            reverse_transfer: true,
-            refund_application_fee: true,
-            metadata: {
-              bookingId: booking.id,
-              bookingReference: booking.reference,
-              reason: parsed.data.reason,
-            },
-          },
-          {
-            idempotencyKey: `winery-session-cancel:${booking.id}:${paidCents}`,
-          }
-        );
-        refundId = refund.id;
-        refunded += paidCents;
+        const outcome = await processCancellationRefund({
+          bookingId: booking.id,
+          stripePaymentIntentId: booking.stripePaymentIntentId,
+          giftAppliedCents: booking.giftAppliedCents,
+          wineryPayout: booking.wineryPayout,
+          refundDueCents: Math.max(0, paidCents - alreadyRefundedCents),
+          alreadyRefundedCents,
+          paidCents,
+          // 100% refund → full winery clawback.
+          reversalCents: booking.wineryPayout,
+          actionName: 'cancelEventSession',
+        });
+        stripeRefundId = outcome.stripeRefundId;
+        totalReturnedCents = outcome.totalReturnedCents;
+        refunded += totalReturnedCents;
       }
 
       if (
@@ -682,22 +717,25 @@ export async function cancelEventSession(
           .catch(() => undefined);
       }
 
-      await db.booking.update({
-        where: { id: booking.id },
-        data: {
-          status: BookingStatus.CANCELLED_BY_WINERY,
-          cancelledAt: new Date(),
-          cancellationReason: parsed.data.reason,
-          refundIssued: booking.status === BookingStatus.CONFIRMED,
-          // Record what was actually refunded — tickets + service fee.
-          refundAmount:
-            booking.status === BookingStatus.CONFIRMED
-              ? booking.totalPrice + booking.serviceFeeCents
-              : undefined,
-          stripeRefundId: refundId,
-          refundError: null,
-        },
-      });
+      // Record what was actually returned (card + gift), never a claim —
+      // conditional on the refundAmount we READ (same ledger guard as the
+      // sibling cancellation actions).
+      if (totalReturnedCents > 0) {
+        const recorded = await db.booking.updateMany({
+          where: { id: booking.id, refundAmount: freshRefundAmount },
+          data: {
+            refundIssued: true,
+            refundAmount: (freshRefundAmount ?? 0) + totalReturnedCents,
+            ...(stripeRefundId ? { stripeRefundId } : {}),
+          },
+        });
+        if (recorded.count === 0) {
+          await appendRefundError(
+            booking.id,
+            `LEDGER_CONFLICT: session cancellation returned ${totalReturnedCents} (${stripeRefundId ?? 'gift only'}) concurrently with another refund writer — reconcile with Stripe`
+          );
+        }
+      }
 
       await sendBookingCancelledByWineryEmail(
         booking.visitorEmail,
@@ -706,10 +744,7 @@ export async function cancelEventSession(
           winemakerName: experience.winery.name,
           experienceTitle: experience.title,
           date: startsAt,
-          amountCents:
-            booking.status === BookingStatus.CONFIRMED
-              ? booking.totalPrice + booking.serviceFeeCents
-              : 0,
+          amountCents: totalReturnedCents,
           reason: parsed.data.reason,
           alternatives,
         },
@@ -719,10 +754,9 @@ export async function cancelEventSession(
       cancelled++;
     } catch (error) {
       failed++;
-      await db.booking.update({
-        where: { id: booking.id },
-        data: { refundError: String(error) },
-      });
+      // Appended, never overwritten — the orchestrator may have just
+      // written GIFT_* reconciliation markers (review #120).
+      await appendRefundError(booking.id, String(error));
       logError('cancelEventSession booking failed', error, {
         action: 'cancelEventSession',
         bookingId: booking.id,

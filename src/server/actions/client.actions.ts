@@ -8,8 +8,14 @@ import { auth } from '@/server/auth';
 import { BookingStatus, Locale } from '@prisma/client';
 import type { ActionResult } from '@/types/actions';
 import { logError, logWarn } from '@/lib/logger';
-import { processRefund } from '@/server/services/payment.service';
-import { computeBookingRefund } from '@/lib/business-rules/cancellation-policy';
+import {
+  appendRefundError,
+  processCancellationRefund,
+} from '@/server/services/booking-refund.service';
+import {
+  computeBookingRefund,
+  computeRefundCents,
+} from '@/lib/business-rules/cancellation-policy';
 import {
   sendBookingCancellationEmail,
   sendWinemakerCancellationEmail,
@@ -108,10 +114,12 @@ export async function cancelClientBooking(
     // Refund per the policy snapshotted at booking (fallback: winery's
     // current policy for legacy rows) on the full paid amount (D2),
     // minus anything already refunded (e.g. an admin partial refund).
-    const { paidCents, alreadyRefundedCents, refundDueCents, stripeAmountArg } =
+    const { policy, paidCents, alreadyRefundedCents, refundDueCents } =
       computeBookingRefund(booking, hoursUntilExperience);
     let refundAmount: number | null = null;
     let stripeRefundId: string | null = null;
+    let giftRestoredCents = 0;
+    let totalReturnedCents = 0;
 
     // Atomic claim — see cancelBooking: prevents two concurrent
     // cancellations from both obtaining a partial refund.
@@ -132,16 +140,30 @@ export async function cancelClientBooking(
       };
     }
 
-    if (refundDueCents > 0 && booking.stripePaymentIntentId) {
+    // Gift-aware refund since P-16 (ADR-0003) — see cancelBooking.
+    if (refundDueCents > 0) {
       try {
-        const refundResult = await processRefund(
-          booking.stripePaymentIntentId,
-          true,
-          stripeAmountArg,
-          `cancel-refund:${bookingId}:${refundDueCents}`
-        );
-        refundAmount = refundResult.amount;
-        stripeRefundId = refundResult.refundId;
+        const outcome = await processCancellationRefund({
+          bookingId,
+          stripePaymentIntentId: booking.stripePaymentIntentId,
+          giftAppliedCents: booking.giftAppliedCents,
+          wineryPayout: booking.wineryPayout,
+          refundDueCents,
+          alreadyRefundedCents,
+          paidCents,
+          // Same rounding rule as the client refund (computeRefundCents),
+          // applied to the winery payout for the clawback share.
+          reversalCents: computeRefundCents(
+            policy,
+            hoursUntilExperience,
+            booking.wineryPayout
+          ),
+          actionName: 'cancelClientBooking',
+        });
+        refundAmount = outcome.cardRefundCents;
+        stripeRefundId = outcome.stripeRefundId;
+        giftRestoredCents = outcome.giftRestoredCents;
+        totalReturnedCents = outcome.totalReturnedCents;
       } catch (refundError) {
         // Release the claim ONLY on a deterministic Stripe rejection —
         // after an ambiguous network error the refund may have succeeded,
@@ -162,10 +184,16 @@ export async function cancelClientBooking(
             data: { status: BookingStatus.CONFIRMED, cancelledAt: null },
           });
         } else {
-          await db.booking.update({
-            where: { id: bookingId },
-            data: { refundError: String(refundError) },
-          });
+          // Appended, and with the pending GIFT movements named (review
+          // #120 sweep): the card refund is the FIRST movement — an
+          // ambiguous failure means the gift restore and the winery
+          // reversal never ran, and no cron retries a cancelled booking.
+          await appendRefundError(
+            bookingId,
+            booking.giftAppliedCents > 0
+              ? `CARD_REFUND_AMBIGUOUS on gift booking (gift restore + winery reversal NOT run — reconcile all three movements, runbook incident-paiement): ${String(refundError)}`
+              : String(refundError)
+          );
         }
         logError('Refund processing error', refundError, {
           action: 'cancelClientBooking',
@@ -183,30 +211,32 @@ export async function cancelClientBooking(
     }
 
     // Record the refund outcome on the already-cancelled booking.
+    // refundAmount persists the TOTAL value returned — card + restored
+    // gift balance (ADR-0003, Codex review; see cancelBooking).
     // Conditional on the refundAmount we READ — a concurrent admin
     // refund must not be clobbered out of the ledger (see cancelBooking).
-    if (refundAmount !== null) {
+    if (totalReturnedCents > 0) {
       const recorded = await db.booking.updateMany({
         where: { id: bookingId, refundAmount: booking.refundAmount },
         data: {
           refundIssued: true,
-          refundAmount: alreadyRefundedCents + refundAmount,
-          stripeRefundId,
+          refundAmount: alreadyRefundedCents + totalReturnedCents,
+          // A gift-only restitution has no Stripe refund — never null out
+          // a re_ written by an earlier admin refund (review #120).
+          ...(stripeRefundId ? { stripeRefundId } : {}),
         },
       });
       if (recorded.count === 0) {
         logWarn('Refund ledger conflict — concurrent refund writer', {
           action: 'cancelClientBooking',
           bookingId,
-          cancelRefundCents: refundAmount,
+          cancelRefundCents: totalReturnedCents,
           stripeRefundId,
         });
-        await db.booking.update({
-          where: { id: bookingId },
-          data: {
-            refundError: `LEDGER_CONFLICT: cancellation refunded ${refundAmount} (${stripeRefundId}) concurrently with another refund writer — reconcile with Stripe`,
-          },
-        });
+        await appendRefundError(
+          bookingId,
+          `LEDGER_CONFLICT: cancellation returned ${totalReturnedCents} (${stripeRefundId ?? 'gift only'}) concurrently with another refund writer — reconcile with Stripe`
+        );
       }
     }
     const updatedBooking = await db.booking.findUniqueOrThrow({
@@ -220,7 +250,10 @@ export async function cancelClientBooking(
 
     // Send cancellation email to client (full paid total; refund exact,
     // or generic wording when due but unprocessable — see cancelBooking).
-    if (refundDueCents > 0 && refundAmount === null) {
+    // Restored gift balance counts as returned value (ADR-0003).
+    const refundUnprocessable =
+      refundDueCents > 0 && refundAmount === null && giftRestoredCents === 0;
+    if (refundUnprocessable) {
       logError(
         'Refund due but no Stripe payment intent on booking',
         undefined,
@@ -233,10 +266,7 @@ export async function cancelClientBooking(
       wineryName: booking.winery.name,
       date: bookingDateTime,
       totalPrice: paidCents,
-      refundAmountCents:
-        refundDueCents > 0 && refundAmount === null
-          ? null
-          : (refundAmount ?? 0),
+      refundAmountCents: refundUnprocessable ? null : totalReturnedCents,
       bookingRef: booking.reference,
     });
 
@@ -261,8 +291,9 @@ export async function cancelClientBooking(
       data: {
         bookingId: updatedBooking.id,
         status: updatedBooking.status,
-        refundIssued: refundAmount !== null,
-        refundAmount,
+        // Client-facing: card refund + restored gift balance (ADR-0003).
+        refundIssued: totalReturnedCents > 0,
+        refundAmount: totalReturnedCents > 0 ? totalReturnedCents : null,
       },
     };
   } catch (error) {

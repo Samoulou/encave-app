@@ -1006,7 +1006,7 @@
     "cancelling": "Wird storniert...",
     "cancelled": "Buchung storniert",
     "cancelledDescription": "Ihre Buchung wurde erfolgreich storniert.",
-    "refundProcessed": "Eine Ruckerstattung von {amount} wird innerhalb von 5-10 Werktagen bearbeitet.",
+    "refundProcessed": "Ein Betrag von {amount} wird Ihnen zurückerstattet: auf Ihre Zahlungsmethode (5-10 Werktage) und, für den mit Gutschein bezahlten Anteil, als Wiedergutschrift auf Ihren Gutschein.",
     "cancelError": "Stornierung fehlgeschlagen. Bitte versuchen Sie es erneut."
   },
   "gallery": {
@@ -1959,7 +1959,8 @@
             "rectification": "Recht auf Berichtigung unrichtiger Daten",
             "deletion": "Recht auf Löschung Ihrer Daten",
             "portability": "Recht auf Datenübertragbarkeit"
-          }
+          },
+          "selfService": "Sie können Ihre Daten jederzeit in Ihrem Bereich « Konto » exportieren oder die Löschung Ihres Kontos beantragen, oder uns an privacy@encave.ch schreiben."
         },
         "contact": {
           "title": "Kontakt",
@@ -1974,7 +1975,9 @@
             "neon": "Neon — Datenbank (Europa)",
             "stripe": "Stripe — Zahlungen (wir speichern keine Kartendaten)",
             "resend": "Resend — Versand von Transaktions-E-Mails",
-            "posthog": "PostHog — Reichweitenmessung (nur mit Ihrer Einwilligung aktiv)"
+            "posthog": "PostHog — Reichweitenmessung (nur mit Ihrer Einwilligung aktiv)",
+            "sentry": "Sentry — Überwachung von Anwendungsfehlern (technische Daten)",
+            "upstash": "Upstash — Ratenbegrenzung (IP-Adressen, kurze Aufbewahrung)"
           }
         }
       }
@@ -2007,7 +2010,43 @@
         },
         "payments": {
           "title": "Zahlungen",
-          "content": "Alle Zahlungen werden sicher über Stripe, unseren Zahlungsanbieter, verarbeitet. Die Preise sind in Schweizer Franken (CHF) angegeben und beinhalten die anwendbare Mehrwertsteuer. Das Weingut erhält die Zahlung nach Abschluss des Erlebnisses."
+          "content": "Alle Zahlungen werden sicher über Stripe, unseren Zahlungsanbieter, verarbeitet. Die Preise sind in Schweizer Franken (CHF) angegeben. Mit einer Buchung ermächtigen Sie uns, Ihr Zahlungsmittel zu belasten."
+        },
+        "bookingFee": {
+          "title": "Reservationsgebühr",
+          "content": "Bei der Online-Buchung wird ein Servicebeitrag von 2.50 CHF pro Ticket erhoben. Er erscheint beim Bezahlen stets als separate Position — nie in den Erlebnispreis eingerechnet — und folgt derselben Rückerstattungsregel wie das Ticket."
+        },
+        "cancellationPolicies": {
+          "title": "Stornierung und Rückerstattung",
+          "content": "Jedes Weingut wählt die für seine Erlebnisse geltende Stornierungsrichtlinie. Sie wird auf der Erlebnisseite angezeigt und vor der Zahlung zusammengefasst:",
+          "items": {
+            "flexible": "Flexibel — volle Rückerstattung bis 2 Stunden vor Beginn.",
+            "standard": "Standard — volle Rückerstattung bis 24 Stunden vor Beginn.",
+            "strict": "Strikt — volle Rückerstattung bis 7 Tage vor Beginn, 50 % bis 48 Stunden, danach keine Rückerstattung."
+          },
+          "snapshot": "Massgebend ist die bei der Buchung akzeptierte Richtlinie. Die Rückerstattung bezieht sich auf den gesamten bezahlten Betrag (Tickets und Reservationsgebühr). Der mit einem Geschenkgutschein bezahlte Anteil wird dem Gutschein wieder gutgeschrieben und nie bar ausbezahlt."
+        },
+        "giftCards": {
+          "title": "Geschenkgutscheine",
+          "content": "EnCave-Geschenkgutscheine sind für die auf der Plattform angebotenen Erlebnisse einlösbar, zu folgenden Bedingungen:",
+          "items": {
+            "validity": "Gültigkeit von 5 Jahren ab Kauf.",
+            "partial": "Einlösung in einem oder mehreren Schritten — das Restguthaben bleibt verfügbar.",
+            "noCash": "Weder rückerstattbar noch gegen Bargeld eintauschbar; beim Kauf eines Gutscheins fällt eine Servicegebühr von 2.50 CHF an.",
+            "cancellation": "Bei Stornierung einer mit Gutschein bezahlten Buchung wird der vom Gutschein gedeckte Anteil gemäss der geltenden Stornierungsrichtlinie wieder gutgeschrieben."
+          }
+        },
+        "noShow": {
+          "title": "No-Show-Gebühr",
+          "content": "Einige Weingüter machen kostenlose oder vor Ort zahlbare Reservationen von einer Kartenhinterlegung abhängig. Sie werden vor der Bestätigung darüber informiert und akzeptieren damit, dass das Weingut bei Nichterscheinen ohne Stornierung eine Gebühr pro Person in der bei der Buchung angegebenen Höhe (0 bis 50 CHF) belasten kann. Die Belastung wird vom Weingut ausgelöst, nie automatisch, und Sie werden per E-Mail unter Hinweis auf die akzeptierte Richtlinie benachrichtigt."
+        },
+        "surMesure": {
+          "title": "Massgeschneiderte Anfragen",
+          "content": "Bei einer massgeschneiderten Anfrage bemüht sich das Weingut, innert 48 Stunden mit einer Offerte zu antworten, die Inhalt, Gesamtpreis und Ablaufdatum nennt. Die Offerte ist bis zu ihrem Ablauf verbindlich; die Buchung ist mit Bezahlung des erhaltenen Links bestätigt. Es gilt die Stornierungsrichtlinie des Weinguts."
+        },
+        "collectiveEvents": {
+          "title": "Kollektive Veranstaltungen",
+          "content": "Bei Veranstaltungen mehrerer Weingüter übernimmt das organisierende Weingut den Ticketverkauf. Zur Organisation des Empfangs hat dieses Weingut Zugriff auf die Teilnehmerliste (Name und E-Mail-Adresse) und verpflichtet sich, sie ausschliesslich für die Durchführung der Veranstaltung zu verwenden, im Einklang mit dem DSG."
         },
         "winemakers": {
           "title": "Für Winzer",
@@ -2048,20 +2087,20 @@
         },
         "clientPolicy": {
           "title": "Stornierungsrichtlinie für Gäste",
-          "content": "Gäste können ihre Buchungen mit den folgenden Rückerstattungsbedingungen basierend auf dem Zeitpunkt der Stornierung vor dem geplanten Erlebnis stornieren:",
+          "content": "Jedes Weingut wählt die für seine Erlebnisse geltende Stornierungsrichtlinie. Sie wird auf der Erlebnisseite angezeigt und vor der Zahlung zusammengefasst. Die Rückerstattung bezieht sich auf den gesamten bezahlten Betrag (Tickets und Reservationsgebühr); der mit Geschenkgutschein bezahlte Anteil wird dem Gutschein wieder gutgeschrieben, nie bar ausbezahlt.",
           "timeline": {
-            "title": "Zeitrahmen für Rückerstattungen",
-            "over24h": {
-              "time": "Mehr als 24 Stunden vor dem Erlebnis",
-              "refund": "Volle Rückerstattung"
+            "title": "Die drei Richtlinien im Überblick",
+            "flexible": {
+              "time": "Richtlinie Flexibel",
+              "refund": "Volle Rückerstattung bis 2 Stunden vor Beginn, danach keine Rückerstattung"
             },
-            "12to24h": {
-              "time": "12 bis 24 Stunden vor dem Erlebnis",
-              "refund": "50% Rückerstattung"
+            "standard": {
+              "time": "Richtlinie Standard",
+              "refund": "Volle Rückerstattung bis 24 Stunden vor Beginn, danach keine Rückerstattung"
             },
-            "under12h": {
-              "time": "Weniger als 12 Stunden vor dem Erlebnis",
-              "refund": "Keine Rückerstattung"
+            "strict": {
+              "time": "Richtlinie Strikt",
+              "refund": "Volle Rückerstattung bis 7 Tage vor Beginn, 50 % bis 48 Stunden, danach keine Rückerstattung"
             }
           }
         },
@@ -2071,7 +2110,7 @@
         },
         "noShow": {
           "title": "Nichterscheinen",
-          "content": "Wenn ein Gast ohne Vorankündigung nicht zu einer gebuchten Erfahrung erscheint, gilt die Buchung als Nichterscheinen und es wird keine Rückerstattung gewährt. Bitte kontaktieren Sie uns, wenn Sie zu spät kommen."
+          "content": "Wenn Sie ohne vorherige Stornierung nicht zu Ihrem gebuchten Erlebnis erscheinen, erfolgt keine Rückerstattung. Einige Weingüter erheben zudem eine No-Show-Gebühr (0 bis 50 CHF pro Person), die Sie bei der Buchung ausdrücklich akzeptieren — siehe Nutzungsbedingungen."
         },
         "modifications": {
           "title": "Buchungsänderungen",
@@ -2297,7 +2336,7 @@
       "keepBooking": "Buchung behalten",
       "confirm": "Stornierung bestätigen",
       "cancelling": "Wird storniert...",
-      "successWithRefund": "Buchung storniert. Eine Rückerstattung von CHF {amount} wird innerhalb von 5-10 Werktagen bearbeitet.",
+      "successWithRefund": "Buchung storniert. Ein Betrag von CHF {amount} wird Ihnen zurückerstattet — Zahlungsmethode (5-10 Werktage) und/oder Wiedergutschrift auf Ihren Gutschein.",
       "successNoRefund": "Buchung storniert. Keine Rückerstattung möglich, da das Erlebnis innerhalb von 24 Stunden stattfindet.",
       "error": "Stornierung fehlgeschlagen. Bitte versuchen Sie es erneut."
     },
@@ -2682,7 +2721,9 @@
       "totalGross": "Brutto gesamt",
       "totalCommission": "EnCave-Kommission",
       "totalNet": "Netto ausgezahlt",
-      "otherLines": "Weitere Bewegungen (Erstattungen, Anpassungen)"
+      "otherLines": "Weitere Bewegungen (Erstattungen, Anpassungen)",
+      "giftBadge": "Gutschein",
+      "noShowBadge": "No-Show-Gebühr"
     }
   },
   "giftCards": {

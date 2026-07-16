@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { Link } from '@/i18n/navigation';
+import { Badge } from '@/components/ui/badge';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
 import { PayoutsErrorBanner } from '@/components/features/payouts/PayoutsErrorBanner';
 import { getPayoutDetail } from '@/server/queries/payouts.queries';
@@ -142,12 +143,22 @@ export default async function PayoutDetailPage({
             <ul className="mt-3 divide-y divide-stone-100">
               {detail.bookings.map((line) => (
                 <li
-                  key={line.bookingId}
+                  key={`${line.bookingId}-${line.kind}`}
                   className="flex items-center gap-4 py-3"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-foreground">
                       {line.experienceTitle}
+                      {line.kind === 'gift' && (
+                        <Badge variant="info" className="ml-2">
+                          {t('detail.giftBadge')}
+                        </Badge>
+                      )}
+                      {line.kind === 'noShowFee' && (
+                        <Badge variant="warning" className="ml-2">
+                          {t('detail.noShowBadge')}
+                        </Badge>
+                      )}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       <span className="font-mono">{line.reference}</span>
