@@ -10,6 +10,7 @@ import {
 } from '@/server/services/email-log.service';
 import { startOfWeek, endOfWeek, subWeeks, subMonths, format } from 'date-fns';
 import { BookingStatus, WineryStatus } from '@prisma/client';
+import { mapWithConcurrency } from '@/lib/utils/concurrency';
 import { listRecentPaidPayouts } from '@/server/queries/payouts.queries';
 import { formatDate } from '@/lib/i18n/formatters';
 import { logError, logWarn } from '@/lib/logger';
@@ -55,52 +56,72 @@ export async function GET() {
         },
       });
 
-      for (const winery of wineries) {
+      // P-16 (WS-F / L-211): ONE grouped query over both windows instead
+      // of 2 per winery, selecting only the 3 aggregated fields.
+      const windowBookings = await db.booking.findMany({
+        where: {
+          wineryId: { in: wineries.map((w) => w.id) },
+          OR: [
+            {
+              status: BookingStatus.COMPLETED,
+              date: { gte: lastWeekStart, lte: lastWeekEnd },
+            },
+            {
+              status: BookingStatus.CONFIRMED,
+              date: { gte: thisWeekStart, lte: thisWeekEnd },
+            },
+          ],
+        },
+        select: {
+          wineryId: true,
+          status: true,
+          guestCount: true,
+          wineryPayout: true,
+        },
+      });
+      const statsByWinery = new Map<
+        string,
+        {
+          lastWeek: { bookings: number; guests: number; revenue: number };
+          thisWeek: { bookings: number; guests: number };
+        }
+      >();
+      for (const booking of windowBookings) {
+        const stats = statsByWinery.get(booking.wineryId) ?? {
+          lastWeek: { bookings: 0, guests: 0, revenue: 0 },
+          thisWeek: { bookings: 0, guests: 0 },
+        };
+        if (booking.status === BookingStatus.COMPLETED) {
+          stats.lastWeek.bookings++;
+          stats.lastWeek.guests += booking.guestCount;
+          stats.lastWeek.revenue += booking.wineryPayout;
+        } else {
+          stats.thisWeek.bookings++;
+          stats.thisWeek.guests += booking.guestCount;
+        }
+        statsByWinery.set(booking.wineryId, stats);
+      }
+
+      // Bounded concurrency (L-211): each iteration also hits Stripe
+      // (payouts.list) — 4 keeps both Stripe and Resend comfortable.
+      await mapWithConcurrency(wineries, 4, async (winery) => {
         try {
-          // Get last week's and this week's bookings in parallel
-          const [lastWeekBookings, thisWeekBookings] = await Promise.all([
-            db.booking.findMany({
-              where: {
-                wineryId: winery.id,
-                status: BookingStatus.COMPLETED,
-                date: {
-                  gte: lastWeekStart,
-                  lte: lastWeekEnd,
-                },
-              },
-            }),
-            db.booking.findMany({
-              where: {
-                wineryId: winery.id,
-                status: BookingStatus.CONFIRMED,
-                date: {
-                  gte: thisWeekStart,
-                  lte: thisWeekEnd,
-                },
-              },
-            }),
-          ]);
-
-          // Calculate stats
-          const lastWeekStats = {
-            bookings: lastWeekBookings.length,
-            guests: lastWeekBookings.reduce((sum, b) => sum + b.guestCount, 0),
-            revenue: lastWeekBookings.reduce(
-              (sum, b) => sum + b.wineryPayout,
-              0
-            ),
+          const stats = statsByWinery.get(winery.id);
+          const lastWeekStats = stats?.lastWeek ?? {
+            bookings: 0,
+            guests: 0,
+            revenue: 0,
           };
-
-          const thisWeekPreview = {
-            bookings: thisWeekBookings.length,
-            guests: thisWeekBookings.reduce((sum, b) => sum + b.guestCount, 0),
+          const thisWeekPreview = stats?.thisWeek ?? {
+            bookings: 0,
+            guests: 0,
           };
 
           // Skip if no activity
           if (lastWeekStats.bookings === 0 && thisWeekPreview.bookings === 0) {
             await logEmailSkipped('weekly_summary', winery.id, 'No activity');
             results.skipped++;
-            continue;
+            return;
           }
 
           // Real Stripe payouts of the last 7 days (P-13 / email #17).
@@ -171,7 +192,7 @@ export async function GET() {
           );
           results.failed++;
         }
-      }
+      });
 
       return NextResponse.json({
         success: true,

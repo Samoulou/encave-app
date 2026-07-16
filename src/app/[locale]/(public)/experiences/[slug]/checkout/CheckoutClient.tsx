@@ -229,16 +229,39 @@ export function CheckoutClient({
   }, [validateAvailability, holdId]);
 
   // BUG-013: Periodic availability recheck — no-hold fallback path only.
+  // P-16 (WS-F / L-210): the recheck only ticks while the tab is visible —
+  // a checkout left in a background tab was hammering the server action
+  // every interval for nobody. One immediate recheck on return.
   useEffect(() => {
     if (holdId) return;
-    recheckIntervalRef.current = setInterval(() => {
-      validateAvailability(false);
-    }, AVAILABILITY_RECHECK_INTERVAL_MS);
 
-    return () => {
+    const start = () => {
+      if (recheckIntervalRef.current) return;
+      recheckIntervalRef.current = setInterval(() => {
+        validateAvailability(false);
+      }, AVAILABILITY_RECHECK_INTERVAL_MS);
+    };
+    const stop = () => {
       if (recheckIntervalRef.current) {
         clearInterval(recheckIntervalRef.current);
+        recheckIntervalRef.current = null;
       }
+    };
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        stop();
+      } else {
+        validateAvailability(false);
+        start();
+      }
+    };
+
+    if (!document.hidden) start();
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      stop();
     };
   }, [validateAvailability, holdId]);
 

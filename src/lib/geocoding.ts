@@ -45,6 +45,10 @@ export async function geocodeAddress(
           // Nominatim requires a valid User-Agent
           'User-Agent': 'EnCave/1.0 (https://encave.ch)',
         },
+        // P-16 (WS-F / L-210): Nominatim is a free community service with
+        // no latency SLA — without a bound, a slow upstream held the whole
+        // server action hostage. 3s, then the caller's null path applies.
+        signal: AbortSignal.timeout(3000),
       }
     );
 

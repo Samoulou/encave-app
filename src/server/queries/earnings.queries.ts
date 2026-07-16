@@ -170,32 +170,55 @@ export const getMonthlyEarnings = cache(async function getMonthlyEarnings(
   months: number = 6
 ): Promise<MonthlyEarning[]> {
   const now = new Date();
-  const results: MonthlyEarning[] = [];
 
+  // P-16 (WS-F / L-208): ONE query over the whole window, bucketed in JS —
+  // the old shape ran N sequential findMany (one per month).
+  const windowStart = startOfMonth(subMonths(now, months - 1));
+  const windowEnd = endOfMonth(now);
+  const bookings = await db.booking.findMany({
+    where: {
+      wineryId,
+      date: { gte: windowStart, lte: windowEnd },
+      status: { in: [BookingStatus.CONFIRMED, BookingStatus.COMPLETED] },
+      refundIssued: false,
+    },
+    select: {
+      date: true,
+      totalPrice: true,
+      wineryPayout: true,
+    },
+  });
+
+  const byMonth = new Map<
+    string,
+    { revenue: number; payout: number; bookingCount: number }
+  >();
+  for (const booking of bookings) {
+    const key = format(booking.date, 'yyyy-MM');
+    const bucket = byMonth.get(key) ?? {
+      revenue: 0,
+      payout: 0,
+      bookingCount: 0,
+    };
+    bucket.revenue += booking.totalPrice;
+    bucket.payout += booking.wineryPayout;
+    bucket.bookingCount += 1;
+    byMonth.set(key, bucket);
+  }
+
+  const results: MonthlyEarning[] = [];
   for (let i = months - 1; i >= 0; i--) {
     const targetMonth = subMonths(now, i);
-    const monthStart = startOfMonth(targetMonth);
-    const monthEnd = endOfMonth(targetMonth);
-
-    const bookings = await db.booking.findMany({
-      where: {
-        wineryId,
-        date: { gte: monthStart, lte: monthEnd },
-        status: { in: [BookingStatus.CONFIRMED, BookingStatus.COMPLETED] },
-        refundIssued: false,
-      },
-      select: {
-        totalPrice: true,
-        wineryPayout: true,
-      },
-    });
-
+    const key = format(targetMonth, 'yyyy-MM');
+    const bucket = byMonth.get(key) ?? {
+      revenue: 0,
+      payout: 0,
+      bookingCount: 0,
+    };
     results.push({
-      month: format(targetMonth, 'yyyy-MM'),
+      month: key,
       monthLabel: format(targetMonth, 'MMM'),
-      revenue: bookings.reduce((sum, b) => sum + b.totalPrice, 0),
-      payout: bookings.reduce((sum, b) => sum + b.wineryPayout, 0),
-      bookingCount: bookings.length,
+      ...bucket,
     });
   }
 
@@ -233,6 +256,10 @@ export const getTransactions = cache(async function getTransactions(
   const bookings = await db.booking.findMany({
     where,
     orderBy: { date: 'desc' },
+    // P-16 (WS-F / L-208): hard bound — the unfiltered "all time" view was
+    // unbounded. 500 rows ≫ anything the table renders; a winery that deep
+    // in history filters by month anyway.
+    take: 500,
     select: {
       id: true,
       reference: true,
