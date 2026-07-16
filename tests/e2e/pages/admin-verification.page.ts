@@ -1,6 +1,7 @@
 import { Page, expect } from '@playwright/test';
 // otplib v13 functional API (the v12 `authenticator` object is gone).
 import { generateSync } from 'otplib';
+import { acceptCookiesIfVisible } from '../utils/journeys';
 
 /**
  * POM — admin side of the onboarding journey (P-16 / L-181): mandatory
@@ -22,6 +23,9 @@ export class AdminVerificationPage {
     if (!this.page.url().includes('/fr/')) {
       await this.page.goto('/fr/admin-setup/2fa');
     }
+    // The consent banner overlays the bottom of the form and intercepts
+    // the submit clicks.
+    await acceptCookiesIfVisible(this.page);
     await this.page.locator('#totp-password').fill(password);
     const enableResponse = this.page.waitForResponse(
       (r) => r.url().includes('/two-factor/enable') && r.ok()

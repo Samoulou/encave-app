@@ -2,6 +2,8 @@ import { test, expect, Page } from '@playwright/test';
 import { LoginPage } from '../pages';
 import { TEST_USERS, localizedPath } from '../fixtures/auth.fixture';
 import { TEST_EXPERIENCES } from '../fixtures/test-data';
+import { AdminVerificationPage } from '../pages/admin-verification.page';
+import { testDb } from '../utils/db';
 
 const LOCALES = ['fr', 'de', 'en'] as const;
 const DEFAULT_LOCALE = process.env.E2E_LOCALE ?? 'en';
@@ -161,7 +163,6 @@ test.describe('Application regression matrix - admin journey', () => {
     // Retry-deterministic: a previous attempt may have enrolled TOTP (the
     // secret is lost across retries and the login would then challenge)
     // — reset the admin to the un-enrolled state first.
-    const { testDb } = await import('../utils/db');
     const adminUser = await testDb().user.findFirst({
       where: { email: TEST_USERS.admin.email },
     });
@@ -181,9 +182,12 @@ test.describe('Application regression matrix - admin journey', () => {
     // P-14 (L-152): TOTP is mandatory — a fresh admin is force-redirected
     // to the enrolment before any /admin surface renders.
     await page.goto(localizedPath('/admin'));
+    // The forced-setup redirect is a STREAMED RSC redirect — it lands
+    // after goto() resolves. Wait for it before deciding.
+    await page
+      .waitForURL(/admin-setup\/2fa/, { timeout: 5000 })
+      .catch(() => undefined);
     if (page.url().includes('/admin-setup/2fa')) {
-      const { AdminVerificationPage } =
-        await import('../pages/admin-verification.page');
       await new AdminVerificationPage(page).enrollTotp(
         TEST_USERS.admin.password
       );
