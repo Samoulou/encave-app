@@ -139,16 +139,27 @@ export async function getNextPayout(
  * Destination charges: the connected `py_` payment's only link back to
  * the platform is `source_transfer`. Single extraction point — the
  * collect pass and the render pass must never disagree.
+ *
+ * P-16 (WS-A.1, defensive — Codex review #121): incoming Connect
+ * transfers normally surface on the CONNECTED account as `py_` payments
+ * (source_transfer link, handled above), but we also accept a raw
+ * `transfer`-typed line whose expanded source is the Transfer itself, so
+ * the gift correlation holds regardless of which shape Stripe delivers.
+ * The A.2 staging campaign pins down the real one.
  */
 function getSourceTransferId(txn: Stripe.BalanceTransaction): string | null {
-  if (txn.type !== 'payment') return null;
   const source = txn.source;
-  return source !== null &&
-    typeof source === 'object' &&
-    'source_transfer' in source &&
-    typeof source.source_transfer === 'string'
-    ? source.source_transfer
-    : null;
+  if (source === null || typeof source !== 'object') return null;
+  if (txn.type === 'payment') {
+    return 'source_transfer' in source &&
+      typeof source.source_transfer === 'string'
+      ? source.source_transfer
+      : null;
+  }
+  if (txn.type === 'transfer') {
+    return 'id' in source && typeof source.id === 'string' ? source.id : null;
+  }
+  return null;
 }
 
 export interface PayoutBookingLineDTO {

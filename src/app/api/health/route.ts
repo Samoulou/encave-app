@@ -80,7 +80,11 @@ async function checkStripeEvents(): Promise<CheckStatus> {
         db.stripeEvent.count({
           where: {
             status: 'PROCESSING',
-            createdAt: {
+            // updatedAt, not createdAt (Codex review #121): a FAILED event
+            // Stripe redelivers flips back to PROCESSING on its ORIGINAL
+            // row — its creation time would flag every retry of an event
+            // older than 15 min as stuck the instant it restarts.
+            updatedAt: {
               lt: new Date(Date.now() - STUCK_PROCESSING_MINUTES * 60 * 1000),
             },
           },
