@@ -181,8 +181,16 @@ jobs:
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 
-      # prebuild migrates the service DB; the build's static pages then
-      # query it. Same URL the tests use (job env).
+      # Migrate + seed BEFORE the build: /cadeaux and /sur-mesure are ISR
+      # pages that notFound() when their flag rows are absent at prerender
+      # time — an unseeded build would cache 404s for the whole run
+      # (Codex review on the first CI run).
+      - name: Apply migrations
+        run: npx prisma migrate deploy
+
+      - name: Seed E2E data (flags ON before prerender)
+        run: npx tsx tests/e2e/scripts/setup-test-db.ts
+
       - name: Build application
         run: npm run build
 
@@ -241,11 +249,16 @@ jobs:
       - name: Generate Prisma Client
         run: npx prisma generate
 
-      - name: Build application
-        run: npm run build
+      # Seed BEFORE the build so the prerendered discovery pages carry
+      # real content (an empty prerender would measure blank pages).
+      - name: Apply migrations
+        run: npx prisma migrate deploy
 
       - name: Seed discovery pages
         run: npx tsx tests/e2e/scripts/setup-test-db.ts
+
+      - name: Build application
+        run: npm run build
 
       - name: Run Lighthouse CI
         run: npx lhci autorun --config=lighthouserc.local.cjs

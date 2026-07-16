@@ -30,7 +30,7 @@ module.exports = {
           deviceScaleFactor: 1.75,
           disabled: false,
         },
-        budgetsPath: './budgets.json',
+        budgetPath: './budgets.json',
       },
     },
     assert: {
