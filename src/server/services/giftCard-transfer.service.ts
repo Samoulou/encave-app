@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import { BookingStatus } from '@prisma/client';
 import { db } from '@/server/db';
 import { getStripe } from '@/server/stripe';
@@ -163,6 +164,12 @@ export async function reconcileGiftTransfers(): Promise<{
       logError('gift transfer reconciliation failed for booking', error, {
         action: 'reconcileGiftTransfers',
         bookingId: booking.id,
+      });
+      // P-16 (WS-E): a transfer that still fails on the reconcile sweep is
+      // a winery waiting for its money — alert, don't just count it.
+      Sentry.captureException(error, {
+        tags: { area: 'gift-transfer' },
+        extra: { bookingId: booking.id },
       });
     }
   }

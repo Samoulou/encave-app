@@ -1,4 +1,5 @@
 import type Stripe from 'stripe';
+import * as Sentry from '@sentry/nextjs';
 import { Prisma } from '@prisma/client';
 import { db } from '@/server/db';
 import { logInfo } from '@/lib/logger';
@@ -59,6 +60,15 @@ export async function markStripeEventFailed(
   eventId: string,
   error: unknown
 ): Promise<void> {
+  // P-16 (WS-E, L-184): every failed webhook event is a money-path
+  // incident — push it to Sentry (alert rule on area:stripe-webhook)
+  // instead of waiting for someone to read the StripeEvent table. Both
+  // webhook routes (checkout + connect) funnel their processing errors
+  // through here.
+  Sentry.captureException(error, {
+    tags: { area: 'stripe-webhook' },
+    extra: { stripeEventId: eventId },
+  });
   await db.stripeEvent.update({
     where: { stripeEventId: eventId },
     data: {

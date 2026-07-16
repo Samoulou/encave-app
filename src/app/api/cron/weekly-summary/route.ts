@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/server/db';
 import { verifyCronRequest } from '@/lib/cron-auth';
+import { withCronMonitor } from '@/lib/cron-monitor';
 import { sendWeeklySummaryEmail } from '@/server/services/email.service';
 import {
   logEmailSent,
@@ -37,137 +38,146 @@ export async function GET() {
   const results = { sent: 0, failed: 0, skipped: 0 };
 
   try {
-    // Get all verified wineries with weekly summary enabled
-    const wineries = await db.winery.findMany({
-      where: {
-        status: WineryStatus.VERIFIED,
-        OR: [
-          { notificationPreferences: null }, // Default to enabled
-          { notificationPreferences: { weeklySummary: true } },
-        ],
-      },
-      include: {
-        user: true,
-        notificationPreferences: true,
-      },
-    });
+    // P-16 (WS-E): Sentry check-in — a missed run = dead cron alert.
+    return await withCronMonitor('encave-weekly-summary', async () => {
+      // Get all verified wineries with weekly summary enabled
+      const wineries = await db.winery.findMany({
+        where: {
+          status: WineryStatus.VERIFIED,
+          OR: [
+            { notificationPreferences: null }, // Default to enabled
+            { notificationPreferences: { weeklySummary: true } },
+          ],
+        },
+        include: {
+          user: true,
+          notificationPreferences: true,
+        },
+      });
 
-    for (const winery of wineries) {
-      try {
-        // Get last week's and this week's bookings in parallel
-        const [lastWeekBookings, thisWeekBookings] = await Promise.all([
-          db.booking.findMany({
-            where: {
-              wineryId: winery.id,
-              status: BookingStatus.COMPLETED,
-              date: {
-                gte: lastWeekStart,
-                lte: lastWeekEnd,
+      for (const winery of wineries) {
+        try {
+          // Get last week's and this week's bookings in parallel
+          const [lastWeekBookings, thisWeekBookings] = await Promise.all([
+            db.booking.findMany({
+              where: {
+                wineryId: winery.id,
+                status: BookingStatus.COMPLETED,
+                date: {
+                  gte: lastWeekStart,
+                  lte: lastWeekEnd,
+                },
               },
-            },
-          }),
-          db.booking.findMany({
-            where: {
-              wineryId: winery.id,
-              status: BookingStatus.CONFIRMED,
-              date: {
-                gte: thisWeekStart,
-                lte: thisWeekEnd,
+            }),
+            db.booking.findMany({
+              where: {
+                wineryId: winery.id,
+                status: BookingStatus.CONFIRMED,
+                date: {
+                  gte: thisWeekStart,
+                  lte: thisWeekEnd,
+                },
               },
-            },
-          }),
-        ]);
+            }),
+          ]);
 
-        // Calculate stats
-        const lastWeekStats = {
-          bookings: lastWeekBookings.length,
-          guests: lastWeekBookings.reduce((sum, b) => sum + b.guestCount, 0),
-          revenue: lastWeekBookings.reduce((sum, b) => sum + b.wineryPayout, 0),
-        };
+          // Calculate stats
+          const lastWeekStats = {
+            bookings: lastWeekBookings.length,
+            guests: lastWeekBookings.reduce((sum, b) => sum + b.guestCount, 0),
+            revenue: lastWeekBookings.reduce(
+              (sum, b) => sum + b.wineryPayout,
+              0
+            ),
+          };
 
-        const thisWeekPreview = {
-          bookings: thisWeekBookings.length,
-          guests: thisWeekBookings.reduce((sum, b) => sum + b.guestCount, 0),
-        };
+          const thisWeekPreview = {
+            bookings: thisWeekBookings.length,
+            guests: thisWeekBookings.reduce((sum, b) => sum + b.guestCount, 0),
+          };
 
-        // Skip if no activity
-        if (lastWeekStats.bookings === 0 && thisWeekPreview.bookings === 0) {
-          await logEmailSkipped('weekly_summary', winery.id, 'No activity');
-          results.skipped++;
-          continue;
-        }
-
-        // Real Stripe payouts of the last 7 days (P-13 / email #17).
-        // Fail-safe: a Stripe hiccup must never block the summary itself.
-        let payouts: { totalCents: number; count: number } | null = null;
-        if (winery.stripeAccountId) {
-          try {
-            const paid = await listRecentPaidPayouts(winery.stripeAccountId, 7);
-            if (paid.length > 0) {
-              payouts = {
-                totalCents: paid.reduce((sum, p) => sum + p.amountCents, 0),
-                count: paid.length,
-              };
-            }
-          } catch (error) {
-            logWarn('Weekly summary: payouts lookup failed, sent without', {
-              action: 'cronWeeklySummary',
-              wineryId: winery.id,
-              error: error instanceof Error ? error.message : 'unknown',
-            });
+          // Skip if no activity
+          if (lastWeekStats.bookings === 0 && thisWeekPreview.bookings === 0) {
+            await logEmailSkipped('weekly_summary', winery.id, 'No activity');
+            results.skipped++;
+            continue;
           }
-        }
 
-        const appLocale = (
-          winery.user.preferredLocale ?? 'FR'
-        ).toLowerCase() as AppLocale;
-        const previousMonth = subMonths(now, 1);
-        const statement = {
-          monthKey: format(previousMonth, 'yyyy-MM'),
-          monthLabel: formatDate(previousMonth, appLocale, {
-            month: 'long',
-            year: 'numeric',
-          }),
-        };
+          // Real Stripe payouts of the last 7 days (P-13 / email #17).
+          // Fail-safe: a Stripe hiccup must never block the summary itself.
+          let payouts: { totalCents: number; count: number } | null = null;
+          if (winery.stripeAccountId) {
+            try {
+              const paid = await listRecentPaidPayouts(
+                winery.stripeAccountId,
+                7
+              );
+              if (paid.length > 0) {
+                payouts = {
+                  totalCents: paid.reduce((sum, p) => sum + p.amountCents, 0),
+                  count: paid.length,
+                };
+              }
+            } catch (error) {
+              logWarn('Weekly summary: payouts lookup failed, sent without', {
+                action: 'cronWeeklySummary',
+                wineryId: winery.id,
+                error: error instanceof Error ? error.message : 'unknown',
+              });
+            }
+          }
 
-        const success = await sendWeeklySummaryEmail(
-          winery.email,
-          {
-            winemakerName: winery.user.name || 'Winemaker',
-            wineryName: winery.name,
-            lastWeekStats,
-            thisWeekPreview,
-            payouts,
-            statement,
-          },
-          winery.user.preferredLocale
-        );
+          const appLocale = (
+            winery.user.preferredLocale ?? 'FR'
+          ).toLowerCase() as AppLocale;
+          const previousMonth = subMonths(now, 1);
+          const statement = {
+            monthKey: format(previousMonth, 'yyyy-MM'),
+            monthLabel: formatDate(previousMonth, appLocale, {
+              month: 'long',
+              year: 'numeric',
+            }),
+          };
 
-        if (success) {
-          await logEmailSent('weekly_summary', winery.id);
-          results.sent++;
-        } else {
-          await logEmailFailed('weekly_summary', winery.id, 'Failed to send');
+          const success = await sendWeeklySummaryEmail(
+            winery.email,
+            {
+              winemakerName: winery.user.name || 'Winemaker',
+              wineryName: winery.name,
+              lastWeekStats,
+              thisWeekPreview,
+              payouts,
+              statement,
+            },
+            winery.user.preferredLocale
+          );
+
+          if (success) {
+            await logEmailSent('weekly_summary', winery.id);
+            results.sent++;
+          } else {
+            await logEmailFailed('weekly_summary', winery.id, 'Failed to send');
+            results.failed++;
+          }
+        } catch (error) {
+          logError('WeeklySummary cron error for winery', error, {
+            action: 'cronWeeklySummary',
+            wineryId: winery.id,
+          });
+          await logEmailFailed(
+            'weekly_summary',
+            winery.id,
+            error instanceof Error ? error.message : 'Unknown error'
+          );
           results.failed++;
         }
-      } catch (error) {
-        logError('WeeklySummary cron error for winery', error, {
-          action: 'cronWeeklySummary',
-          wineryId: winery.id,
-        });
-        await logEmailFailed(
-          'weekly_summary',
-          winery.id,
-          error instanceof Error ? error.message : 'Unknown error'
-        );
-        results.failed++;
       }
-    }
 
-    return NextResponse.json({
-      success: true,
-      results,
-      timestamp: new Date().toISOString(),
+      return NextResponse.json({
+        success: true,
+        results,
+        timestamp: new Date().toISOString(),
+      });
     });
   } catch (error) {
     logError('WeeklySummary cron error', error, {

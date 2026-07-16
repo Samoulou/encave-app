@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { verifyCronRequest } from '@/lib/cron-auth';
+import { withCronMonitor } from '@/lib/cron-monitor';
 import { logError } from '@/lib/logger';
 import { expirePendingPaymentBookings } from '@/server/services/booking-expiration.service';
 
@@ -11,10 +12,13 @@ export async function GET() {
 
   const startedAt = Date.now();
   try {
-    const result = await expirePendingPaymentBookings();
-    return NextResponse.json({
-      ...result,
-      durationMs: Date.now() - startedAt,
+    // P-16 (WS-E): Sentry check-in — a missed run = dead cron alert.
+    return await withCronMonitor('encave-expire-pending-bookings', async () => {
+      const result = await expirePendingPaymentBookings();
+      return NextResponse.json({
+        ...result,
+        durationMs: Date.now() - startedAt,
+      });
     });
   } catch (error) {
     logError('expire pending bookings cron failed', error, {

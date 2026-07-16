@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { ExperienceStatus, WineryStatus } from '@prisma/client';
 import { verifyCronRequest } from '@/lib/cron-auth';
+import { withCronMonitor } from '@/lib/cron-monitor';
 import { db } from '@/server/db';
 import { logError, logInfo } from '@/lib/logger';
 import { generateOccurrences } from '@/server/services/occurrence.service';
@@ -28,49 +29,52 @@ export async function GET() {
 
   const startedAt = Date.now();
   try {
-    const experiences = await db.experience.findMany({
-      where: {
-        status: ExperienceStatus.PUBLISHED,
-        winery: { status: WineryStatus.VERIFIED },
-      },
-      select: { id: true },
-    });
-
-    let created = 0;
-    let failures = 0;
-    for (let i = 0; i < experiences.length; i += GENERATION_BATCH_SIZE) {
-      const batch = experiences.slice(i, i + GENERATION_BATCH_SIZE);
-      const results = await Promise.allSettled(
-        batch.map((experience) => generateOccurrences(experience.id))
-      );
-      results.forEach((result, index) => {
-        if (result.status === 'fulfilled') {
-          created += result.value.created;
-        } else {
-          failures++;
-          logError(
-            'generate-occurrences cron: experience failed',
-            result.reason,
-            {
-              action: 'generateOccurrencesCron',
-              experienceId: batch[index]?.id,
-            }
-          );
-        }
+    // P-16 (WS-E): Sentry check-in — a missed run = dead cron alert.
+    return await withCronMonitor('encave-generate-occurrences', async () => {
+      const experiences = await db.experience.findMany({
+        where: {
+          status: ExperienceStatus.PUBLISHED,
+          winery: { status: WineryStatus.VERIFIED },
+        },
+        select: { id: true },
       });
-    }
 
-    logInfo('occurrences.cron_roll', {
-      action: 'generateOccurrencesCron',
-      experiences: experiences.length,
-      created,
-      failures,
-    });
-    return NextResponse.json({
-      experiences: experiences.length,
-      created,
-      failures,
-      durationMs: Date.now() - startedAt,
+      let created = 0;
+      let failures = 0;
+      for (let i = 0; i < experiences.length; i += GENERATION_BATCH_SIZE) {
+        const batch = experiences.slice(i, i + GENERATION_BATCH_SIZE);
+        const results = await Promise.allSettled(
+          batch.map((experience) => generateOccurrences(experience.id))
+        );
+        results.forEach((result, index) => {
+          if (result.status === 'fulfilled') {
+            created += result.value.created;
+          } else {
+            failures++;
+            logError(
+              'generate-occurrences cron: experience failed',
+              result.reason,
+              {
+                action: 'generateOccurrencesCron',
+                experienceId: batch[index]?.id,
+              }
+            );
+          }
+        });
+      }
+
+      logInfo('occurrences.cron_roll', {
+        action: 'generateOccurrencesCron',
+        experiences: experiences.length,
+        created,
+        failures,
+      });
+      return NextResponse.json({
+        experiences: experiences.length,
+        created,
+        failures,
+        durationMs: Date.now() - startedAt,
+      });
     });
   } catch (error) {
     logError('generate occurrences cron failed', error, {

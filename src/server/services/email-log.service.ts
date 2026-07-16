@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import { db } from '@/server/db';
 import { logError } from '@/lib/logger';
 
@@ -49,6 +50,13 @@ export async function logEmailFailed(
   bookingId?: string,
   meta?: EmailLogMeta
 ): Promise<void> {
+  // P-16 (WS-E): failed sends surface in Sentry (area:email), not only in
+  // the email_logs table nobody polls.
+  Sentry.captureMessage(`email send failed: ${type}`, {
+    level: 'error',
+    tags: { area: 'email', emailType: type },
+    extra: { errorMessage, bookingId },
+  });
   try {
     await db.emailLog.create({
       data: {
