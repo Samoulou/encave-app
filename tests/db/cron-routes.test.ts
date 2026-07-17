@@ -528,6 +528,17 @@ describe.skipIf(!url)('cron routes (lot 2 P0 — auth, guards, flags)', () => {
           })
         ).toBe(1);
 
+        // Pin the summer row onto the FAKED timeline: EmailLog.createdAt is
+        // stamped by Prisma's engine with the REAL wall clock (immune to
+        // vi.setSystemTime), so from real date 2026-12-15 onward it would
+        // fall inside the winter branch's dedup window (createdAt >= faked
+        // todayUTC) and flip this test red. Backdating it to the faked
+        // summer instant keeps the dedup semantics under test, forever.
+        await db.emailLog.updateMany({
+          where: { type: 'tasting_sheet_reminder', wineryId: ids.wineryId },
+          data: { createdAt: new Date('2026-07-15T19:00:05.000Z') },
+        });
+
         // Winter session on the Zurich day 2026-12-15.
         await makeBooking({
           date: new Date('2026-12-15T00:00:00.000Z'),
