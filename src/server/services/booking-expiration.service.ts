@@ -39,6 +39,7 @@ export async function expirePendingPaymentBookings(now = new Date()): Promise<{
       reference: true,
       visitorEmail: true,
       visitorName: true,
+      locale: true,
       createdAt: true,
       expiresAt: true,
       stripeCheckoutSessionId: true,
@@ -100,41 +101,42 @@ export async function expirePendingPaymentBookings(now = new Date()): Promise<{
           });
           continue;
         }
-        if (checkoutSession.payment_status !== 'unpaid') {
+        if (
+          checkoutSession.payment_status !== 'unpaid' ||
+          checkoutSession.status === 'complete'
+        ) {
+          // Paid, or completed-and-settling (e.g. delayed TWINT): never cancel
+          // — let the webhook confirm it. NOTE: a genuinely FAILED async payment
+          // also reports status 'complete' + unpaid; when TWINT/async is enabled
+          // it will need an async_payment_failed reaper, otherwise such a row
+          // lingers PENDING. Card-only today, so complete ⟺ paid and this
+          // clause never diverges from the payment_status check.
           logWarn(
-            'Session paid but booking still pending — leaving to webhook',
+            'Session paid or settling but booking still pending — leaving to webhook',
             {
               action: 'expirePendingPaymentBookings',
               bookingId: candidate.id,
               paymentStatus: checkoutSession.payment_status,
+              sessionStatus: checkoutSession.status,
             }
           );
           continue;
         }
       }
 
-      const updated = await db.$transaction(async (tx) => {
-        const current = await tx.booking.findUnique({
-          where: { id: candidate.id },
-          select: { status: true },
-        });
-
-        if (!current || current.status !== BookingStatus.PENDING_PAYMENT) {
-          return false;
-        }
-
-        await tx.booking.update({
-          where: { id: candidate.id },
-          data: {
-            status: BookingStatus.CANCELLED_BY_CLIENT,
-            cancelledAt: now,
-            cancellationReason: 'PAYMENT_EXPIRED',
-          },
-        });
-        return true;
+      // Atomic CAS: only cancel a booking STILL pending payment — a webhook
+      // confirmation landing between the Stripe check and here must win the
+      // row instead of being clobbered back to CANCELLED.
+      const claimed = await db.booking.updateMany({
+        where: { id: candidate.id, status: BookingStatus.PENDING_PAYMENT },
+        data: {
+          status: BookingStatus.CANCELLED_BY_CLIENT,
+          cancelledAt: now,
+          cancellationReason: 'PAYMENT_EXPIRED',
+        },
       });
 
-      if (!updated) continue;
+      if (claimed.count === 0) continue;
 
       // Return any gift-card funds reserved on this now-cancelled booking
       // (P-09) — idempotent, no-op without a gift. The expiry webhook won't
@@ -157,12 +159,16 @@ export async function expirePendingPaymentBookings(now = new Date()): Promise<{
 
       // Never email a hold placeholder address (guaranteed bounce).
       if (!isHoldPlaceholderEmail(candidate.visitorEmail)) {
-        await sendBookingExpiredEmail(candidate.visitorEmail, {
-          guestName: candidate.visitorName,
-          experienceTitle: candidate.experience.title,
-          experienceSlug: candidate.experience.slug,
-          date: candidate.date,
-        });
+        await sendBookingExpiredEmail(
+          candidate.visitorEmail,
+          {
+            guestName: candidate.visitorName,
+            experienceTitle: candidate.experience.title,
+            experienceSlug: candidate.experience.slug,
+            date: candidate.date,
+          },
+          candidate.locale
+        );
       }
       expired++;
     } catch (error) {

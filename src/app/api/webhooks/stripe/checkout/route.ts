@@ -13,6 +13,7 @@ import { createGiftCardFromPayment } from '@/server/services/giftCard.service';
 import { settleGiftTransfer } from '@/server/services/giftCard-transfer.service';
 import { releaseGiftForBooking } from '@/server/services/giftCard-redemption.service';
 import { flipRequestOfferPaid } from '@/server/services/request.service';
+import { refundOrphanedCheckoutPayment } from '@/server/services/payment.service';
 import { logError, logInfo } from '@/lib/logger';
 import {
   claimStripeEvent,
@@ -133,6 +134,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       if (requestOfferId) {
         await flipRequestOfferPaid(requestOfferId);
       }
+    } else if (result === 'missing_booking') {
+      await refundOrphanedCheckoutPayment(session);
+    } else if (result === 'not_pending') {
+      await refundOrphanIfCancelledNeverConfirmed(session);
     }
     return;
   }
@@ -154,6 +159,20 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     throw new Error('Checkout session has no payment intent');
   }
 
+  // Orphaned paid session: the client PAID but the booking can no longer be
+  // fulfilled (deleted, or cancelled while pending and never confirmed — the
+  // settlement race). Refund the stranded charge instead of silently keeping
+  // the money. Guarded to genuine orphans only — a FULFILLED (COMPLETED /
+  // NO_SHOW) or confirmed-then-refunded booking is never clawed back.
+  if (result === 'missing_booking') {
+    await refundOrphanedCheckoutPayment(session);
+    return;
+  }
+  if (result === 'not_pending') {
+    await refundOrphanIfCancelledNeverConfirmed(session);
+    return;
+  }
+
   // Gift-redeemed booking (P-09): settle the platform→winery transfer of
   // the gift-covered part, INDEPENDENTLY of the confirmation result — it
   // runs on every delivery while giftTransferId is still null (Luca §2/§5),
@@ -165,6 +184,40 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       await settleGiftTransfer(bookingId);
     }
   }
+}
+
+/**
+ * A paid session whose booking is `not_pending`: refund ONLY when the booking
+ * is CANCELLED and was never confirmed (no stripePaymentIntentId) — a pure
+ * orphan from the cancel-while-pending settlement race. A COMPLETED / NO_SHOW
+ * booking was fulfilled, and a confirmed-then-cancelled booking already ran
+ * its own policy refund (and carries a stripePaymentIntentId), so neither is
+ * clawed back here.
+ */
+async function refundOrphanIfCancelledNeverConfirmed(
+  session: Stripe.Checkout.Session
+) {
+  const bookingId = session.metadata?.bookingId;
+  if (!bookingId) return;
+
+  const booking = await db.booking.findUnique({
+    where: { id: bookingId },
+    select: { status: true, stripePaymentIntentId: true, reference: true },
+  });
+
+  const isCancelled =
+    booking?.status === BookingStatus.CANCELLED_BY_CLIENT ||
+    booking?.status === BookingStatus.CANCELLED_BY_WINERY;
+
+  if (booking && isCancelled && booking.stripePaymentIntentId === null) {
+    await refundOrphanedCheckoutPayment(session);
+    return;
+  }
+
+  logInfo('Paid session on a terminal/served booking — no orphan refund', {
+    bookingId,
+    status: booking?.status,
+  });
 }
 
 /**
@@ -224,14 +277,36 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
     return;
   }
 
-  // Return any gift-card funds reserved on this booking BEFORE deleting it
-  // (P-09, Luca §4) — idempotent, no-op when no gift was applied.
-  await releaseGiftForBooking(bookingId);
-
-  // Delete the pending booking to free up capacity
-  await db.booking.delete({
-    where: { id: bookingId },
+  // Guarded delete (replaces a check-then-delete TOCTOU): only remove a
+  // booking STILL pending payment on THIS session (or one that hasn't had a
+  // session id attached yet). A concurrent confirmation (CAS → CONFIRMED) or a
+  // newer session must survive — never delete a booking being paid (P-04).
+  const deleted = await db.booking.deleteMany({
+    where: {
+      id: bookingId,
+      status: BookingStatus.PENDING_PAYMENT,
+      OR: [
+        { stripeCheckoutSessionId: session.id },
+        { stripeCheckoutSessionId: null },
+      ],
+    },
   });
+
+  if (deleted.count === 0) {
+    logInfo(
+      'Expired session — booking confirmed/paid or on a newer session, kept',
+      {
+        bookingRef: booking.reference,
+        expiredSessionId: session.id,
+      }
+    );
+    return;
+  }
+
+  // The row is gone; return any reserved gift funds. The gift ledger row
+  // survives the delete (keyed by bookingId, no FK), so this still works.
+  // Idempotent, no-op when no gift was applied (P-09, Luca §4).
+  await releaseGiftForBooking(bookingId);
 
   logInfo('Booking deleted due to checkout session expiry', {
     bookingRef: booking.reference,

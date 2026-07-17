@@ -624,6 +624,8 @@
     "updatedSuccess": "Expérience mise à jour",
     "updatedDescription": "Vos modifications ont été enregistrées.",
     "maxCapacityLabel": "Capacité max.",
+    "languagesLabel": "Langues parlées",
+    "languagesHelper": "Langues dans lesquelles vous pouvez accueillir vos visiteurs — utilisées par le filtre de langue du catalogue.",
     "address": "Adresse",
     "addressHelp": "Commencez à taper pour rechercher une adresse",
     "selectedAddress": "Adresse sélectionnée",
@@ -708,6 +710,14 @@
     "contactWinery": "Contactez le domaine directement pour réserver cette expérience.",
     "selectGuests": "Nombre de personnes",
     "guests": "{count, plural, =1 {# personne} other {# personnes}}",
+    "status": {
+      "PENDING_PAYMENT": "En attente de paiement",
+      "CONFIRMED": "Confirmée",
+      "COMPLETED": "Terminée",
+      "CANCELLED_BY_CLIENT": "Annulée",
+      "CANCELLED_BY_WINERY": "Annulée par le domaine",
+      "NO_SHOW": "Non présenté"
+    },
     "continueToPayment": "Continuer vers le paiement",
     "priceCalculation": "{price} x {guests} = {total}",
     "remainingCapacity": "{count} {count, plural, =1 {place restante} other {places restantes}}",
@@ -2316,7 +2326,8 @@
       "noUpcomingDescription": "Vous n'avez aucune expérience viticole prévue. Parcourez notre sélection pour trouver votre prochaine aventure.",
       "noPast": "Aucune réservation passée",
       "noPastDescription": "Vous n'avez encore visité aucun domaine. Réservez votre première expérience dès aujourd'hui !",
-      "browseExperiences": "Parcourir les expériences"
+      "browseExperiences": "Parcourir les expériences",
+      "verifyEmailBanner": "Veuillez vérifier votre adresse e-mail pour voir vos réservations — nous vous avons envoyé un lien de vérification."
     },
     "bookingCard": {
       "guests": "{count, plural, =1 {# invité} other {# invités}}",
@@ -2419,7 +2430,9 @@
         "revertWindowExpired": "Impossible d'annuler après 72h.",
         "sessionNotEnded": "Disponible après la fin de la session.",
         "noShowChargeFailed": "La carte a été refusée. Vous pouvez réessayer le prélèvement.",
-        "noShowAlreadyCharged": "Les frais de non-présentation ont déjà été prélevés."
+        "noShowAlreadyCharged": "Les frais de non-présentation ont déjà été prélevés.",
+        "noShowChargeInProgress": "Un prélèvement pour non-présentation est en cours. Réessayez une fois qu'il est finalisé.",
+        "bookingAlreadyTransitioned": "Cette réservation vient d'être mise à jour sur un autre appareil. Actualisez pour voir son statut actuel."
       },
       "toast": {
         "checkedIn": "Présence enregistrée.",
@@ -3100,5 +3113,43 @@
     "creating": "Création…",
     "passwordTooShort": "Le mot de passe doit contenir au moins {min} caractères.",
     "signInFailed": "Compte existant : mot de passe incorrect. Réessayez."
+  },
+  "receipt": {
+    "title": "Reçu de réservation",
+    "generatedOn": "Reçu généré le {date}",
+    "reference": "Référence",
+    "client": "Client",
+    "name": "Nom",
+    "email": "Email",
+    "winery": "Domaine",
+    "address": "Adresse",
+    "experience": "Expérience",
+    "date": "Date",
+    "time": "Heure",
+    "guests": "Invités",
+    "serviceFee": "Frais de service",
+    "totalPaid": "Total payé",
+    "vatNote": "Prix TTC. EnCave n'est pas assujettie à la TVA à ce jour.",
+    "footer": "Ce reçu confirme le paiement de votre réservation EnCave."
+  },
+  "unsubscribe": {
+    "successTitle": "Désinscription réussie",
+    "successDesc": "Vous avez été désinscrit de {type}.",
+    "manageHint": "Vous pouvez gérer vos préférences de notification à tout moment depuis les paramètres de votre tableau de bord.",
+    "managePreferences": "Gérer les préférences",
+    "goHome": "Aller à l'accueil",
+    "invalidTitle": "Lien invalide",
+    "invalidDesc": "Ce lien de désinscription est invalide ou a expiré. Utilisez le lien d'un email récent ou gérez vos préférences depuis votre tableau de bord.",
+    "loginManage": "Se connecter pour gérer",
+    "errorTitle": "Une erreur s'est produite",
+    "errorDesc": "Nous n'avons pas pu traiter votre demande de désinscription. Réessayez ou contactez le support si le problème persiste.",
+    "defaultTitle": "Préférences email",
+    "defaultDesc": "Pour gérer vos préférences email, connectez-vous à votre compte et accédez aux paramètres de notification.",
+    "login": "Se connecter",
+    "genericType": "les notifications par email",
+    "typeDaily": "le résumé quotidien",
+    "typeWeekly": "le résumé hebdomadaire",
+    "typeMarketing": "les emails marketing",
+    "typeAll": "tous les emails marketing"
   }
 }

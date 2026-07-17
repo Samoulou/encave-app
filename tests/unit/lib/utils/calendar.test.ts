@@ -103,7 +103,7 @@ describe('Calendar Utils', () => {
       wineryName: 'Domaine du Soleil',
       wineryAddress: 'Route des Vignes 45',
       wineryCommune: 'Sierre',
-      date: new Date(2026, 5, 20), // June 20, 2026
+      date: new Date(Date.UTC(2026, 5, 20)), // June 20, 2026 (UTC midnight, like @db.Date)
       timeSlot: '10:30',
       durationMinutes: 120,
       guestCount: 4,
@@ -123,11 +123,14 @@ describe('Calendar Utils', () => {
       expect(event.location).toBe('Route des Vignes 45, Sierre');
     });
 
-    it('parses time slot correctly', () => {
+    it('encodes the Zurich wall-clock as the correct UTC instant', () => {
       const event = createBookingCalendarEvent(bookingData);
 
-      expect(event.startDate.getHours()).toBe(10);
-      expect(event.startDate.getMinutes()).toBe(30);
+      // 10:30 Europe/Zurich on 2026-06-20 (CEST, UTC+2) === 08:30 UTC. The
+      // event carries the absolute instant so calendars render 10:30 for a
+      // Zurich guest regardless of the server/viewer timezone (was previously
+      // stamped as 10:30 UTC — 2h off).
+      expect(event.startDate.toISOString()).toBe('2026-06-20T08:30:00.000Z');
     });
 
     it('sets correct duration', () => {

@@ -4,7 +4,6 @@ import { z } from 'zod';
 import type Stripe from 'stripe';
 import { createId } from '@paralleldrive/cuid2';
 import { BookingStatus, WineryPlan, WineryStatus } from '@prisma/client';
-import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import {
   sendManualRefundClientEmail,
@@ -66,20 +65,8 @@ export async function approveWinery(
       };
     }
 
-    const session = await auth();
-    if (!session?.user) {
-      return {
-        success: false,
-        error: { code: 'UNAUTHORIZED', message: 'Please sign in' },
-      };
-    }
-
-    if (session.user.role !== 'ADMIN') {
-      return {
-        success: false,
-        error: { code: 'FORBIDDEN', message: 'Admin access required' },
-      };
-    }
+    const admin = await requireAdmin();
+    if (!admin.success) return admin;
 
     const winery = await db.winery.findUnique({
       where: { id: wineryId },
@@ -114,14 +101,14 @@ export async function approveWinery(
         data: {
           status: 'VERIFIED',
           verifiedAt: now,
-          verifiedBy: session.user.id,
+          verifiedBy: admin.data.adminId,
         },
       }),
       db.verificationLog.create({
         data: {
           wineryId,
           action: 'APPROVED',
-          adminId: session.user.id,
+          adminId: admin.data.adminId,
         },
       }),
     ]);
@@ -185,20 +172,8 @@ export async function rejectWinery(
       };
     }
 
-    const session = await auth();
-    if (!session?.user) {
-      return {
-        success: false,
-        error: { code: 'UNAUTHORIZED', message: 'Please sign in' },
-      };
-    }
-
-    if (session.user.role !== 'ADMIN') {
-      return {
-        success: false,
-        error: { code: 'FORBIDDEN', message: 'Admin access required' },
-      };
-    }
+    const admin = await requireAdmin();
+    if (!admin.success) return admin;
 
     const winery = await db.winery.findUnique({
       where: { id: wineryId },
@@ -240,7 +215,7 @@ export async function rejectWinery(
         data: {
           wineryId,
           action: 'REJECTED',
-          adminId: session.user.id,
+          adminId: admin.data.adminId,
           reason: trimmedReason,
         },
       }),
@@ -290,19 +265,8 @@ export async function refundBookingManually(
     };
   }
 
-  const session = await auth();
-  if (!session?.user) {
-    return {
-      success: false,
-      error: { code: 'UNAUTHORIZED', message: 'Please sign in' },
-    };
-  }
-  if (session.user.role !== 'ADMIN') {
-    return {
-      success: false,
-      error: { code: 'FORBIDDEN', message: 'Admin access required' },
-    };
-  }
+  const admin = await requireAdmin();
+  if (!admin.success) return admin;
 
   const { bookingId, amountCents, reason } = parsed.data;
 
@@ -413,7 +377,7 @@ export async function refundBookingManually(
         metadata: {
           bookingId: booking.id,
           bookingReference: booking.reference,
-          adminId: session.user.id,
+          adminId: admin.data.adminId,
           reason,
         },
       },
@@ -429,7 +393,7 @@ export async function refundBookingManually(
   } catch (error) {
     await db.adminAction.create({
       data: {
-        adminId: session.user.id,
+        adminId: admin.data.adminId,
         action: 'REFUND_BOOKING',
         targetType: 'Booking',
         targetId: booking.id,
@@ -503,7 +467,7 @@ export async function refundBookingManually(
       }),
       db.adminAction.create({
         data: {
-          adminId: session.user.id,
+          adminId: admin.data.adminId,
           action: 'REFUND_BOOKING',
           targetType: 'Booking',
           targetId: booking.id,

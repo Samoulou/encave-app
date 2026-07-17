@@ -80,6 +80,7 @@ export async function createExperience(
       maxCapacity,
       paymentMode,
       isCollective,
+      languages,
       location,
       availabilitySlots,
     } = validated.data;
@@ -130,6 +131,8 @@ export async function createExperience(
           paymentMode,
           // P-11 (L-100): additive — undefined keeps the @default(false).
           ...(isCollective !== undefined && { isCollective }),
+          // P-02 (L-115): additive — undefined keeps the @default([FR]).
+          ...(languages !== undefined && { languages }),
           coverPhoto: coverPhotoUrl,
           status: 'DRAFT',
           // Location fields
@@ -272,6 +275,7 @@ export async function updateExperience(
       maxCapacity,
       paymentMode,
       isCollective,
+      languages,
     } = validated.data;
 
     // Generate new slug if title changed
@@ -315,6 +319,8 @@ export async function updateExperience(
           paymentMode,
           // P-11 (L-100): additive — undefined leaves the stored flag untouched.
           ...(isCollective !== undefined && { isCollective }),
+          // P-02 (L-115): additive — undefined leaves stored languages untouched.
+          ...(languages !== undefined && { languages }),
           coverPhoto: coverPhotoUrl,
         },
       });

@@ -5,6 +5,7 @@ import {
   GiftCardStatus,
   GiftCardTransactionType,
   Locale,
+  type GiftCard,
 } from '@prisma/client';
 import { db } from '@/server/db';
 import { logError, logInfo } from '@/lib/logger';
@@ -22,6 +23,16 @@ import {
 } from '@/lib/constants/gift-card';
 import { generateGiftCardPDF } from '@/server/services/giftCard-pdf.service';
 import { sendGiftCardPurchaseEmail } from '@/server/services/email.service';
+
+/** Prisma unique-constraint (P2002) — the concurrent double-mint race. */
+function isUniqueGiftPaymentConflict(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    (error as { code?: unknown }).code === 'P2002'
+  );
+}
 
 /**
  * Gift card domain service (P-09). Creation flows through the append-only
@@ -176,49 +187,73 @@ export async function createGiftCardFromPayment(
   const expiresAt = addYears(new Date(), GIFT_CARD_VALIDITY_YEARS);
 
   // Card + opening ledger movement in ONE transaction (P-02 invariant).
-  const giftCard = await db.$transaction(async (tx) => {
-    const created = await tx.giftCard.create({
-      data: {
-        code,
-        status: GiftCardStatus.ACTIVE,
-        initialAmount: amountCents,
-        balance: amountCents,
-        purchaserEmail: purchaserEmail.toLowerCase(),
-        purchaserName: metadata.purchaserName,
-        recipientEmail: metadata.recipientEmail.toLowerCase(),
-        recipientName: metadata.recipientName ?? null,
-        message: metadata.message ?? null,
-        experienceId:
-          metadata.nature === 'EXPERIENCE'
-            ? (metadata.experienceId ?? null)
-            : null,
-        deliverAt,
-        expiresAt,
-        stripePaymentIntentId: paymentIntentId,
-        locale: prismaLocale,
-      },
+  // The @unique on stripePaymentIntentId is the real idempotency guard: two
+  // paid events for the same payment (checkout.session.completed +
+  // async_payment_succeeded) both pass the findFirst above, but only one
+  // create wins — the loser hits P2002 and returns the winner's card, so a
+  // single payment can never mint two cards (double platform liability).
+  let giftCard: GiftCard;
+  try {
+    giftCard = await db.$transaction(async (tx) => {
+      const created = await tx.giftCard.create({
+        data: {
+          code,
+          status: GiftCardStatus.ACTIVE,
+          initialAmount: amountCents,
+          balance: amountCents,
+          purchaserEmail: purchaserEmail.toLowerCase(),
+          purchaserName: metadata.purchaserName,
+          recipientEmail: metadata.recipientEmail.toLowerCase(),
+          recipientName: metadata.recipientName ?? null,
+          message: metadata.message ?? null,
+          experienceId:
+            metadata.nature === 'EXPERIENCE'
+              ? (metadata.experienceId ?? null)
+              : null,
+          deliverAt,
+          expiresAt,
+          stripePaymentIntentId: paymentIntentId,
+          locale: prismaLocale,
+        },
+      });
+      await tx.giftCardTransaction.create({
+        data: {
+          giftCardId: created.id,
+          type: GiftCardTransactionType.PURCHASE,
+          amount: amountCents,
+          note: 'purchase',
+        },
+      });
+      // Recipient delivery (#7) on the chosen date — a past date is drained
+      // on the next cron pass. Deterministic dedupeKey → one delivery per card.
+      await tx.scheduledJob.create({
+        data: {
+          type: GIFT_CARD_DELIVERY_JOB_TYPE,
+          dedupeKey: `${GIFT_CARD_DELIVERY_JOB_TYPE}:${created.id}`,
+          runAt: deliverAt,
+          // variant carried here (not on the card) so #7 keeps the chosen
+          // theme without a schema change.
+          payload: { giftCardId: created.id, variant: metadata.variant },
+        },
+      });
+      return created;
     });
-    await tx.giftCardTransaction.create({
-      data: {
-        giftCardId: created.id,
-        type: GiftCardTransactionType.PURCHASE,
-        amount: amountCents,
-        note: 'purchase',
-      },
-    });
-    // Recipient delivery (#7) on the chosen date — a past date is drained
-    // on the next cron pass. One job per card (dedup by deliveredAt).
-    await tx.scheduledJob.create({
-      data: {
-        type: GIFT_CARD_DELIVERY_JOB_TYPE,
-        runAt: deliverAt,
-        // variant carried here (not on the card) so #7 keeps the chosen
-        // theme without a schema change.
-        payload: { giftCardId: created.id, variant: metadata.variant },
-      },
-    });
-    return created;
-  });
+  } catch (error) {
+    if (isUniqueGiftPaymentConflict(error)) {
+      const already = await db.giftCard.findFirst({
+        where: { stripePaymentIntentId: paymentIntentId },
+        select: { id: true },
+      });
+      if (already) {
+        logInfo('gift_card.duplicate_payment_skipped', {
+          action: 'createGiftCardFromPayment',
+          giftCardId: already.id,
+        });
+        return { created: false, giftCardId: already.id };
+      }
+    }
+    throw error;
+  }
 
   logInfo('gift_card.created', {
     action: 'createGiftCardFromPayment',

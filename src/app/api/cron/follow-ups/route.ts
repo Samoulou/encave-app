@@ -9,6 +9,7 @@ import {
   logEmailSkipped,
 } from '@/server/services/email-log.service';
 import { startOfDay, subHours } from 'date-fns';
+import { zonedWallClockToUTC } from '@/lib/datetime/zurich';
 import { BookingStatus, ScheduledJobStatus } from '@prisma/client';
 import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
 import { tastingRecapDedupeKey } from '@/lib/constants/wine';
@@ -24,10 +25,8 @@ function toDateOnlyUTC(date: Date): Date {
 }
 
 function getBookingStartTime(date: Date, timeSlot: string): Date {
-  const [hours, minutes] = timeSlot.split(':').map(Number);
-  const bookingStartTime = new Date(date);
-  bookingStartTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
-  return bookingStartTime;
+  // @db.Date is UTC-midnight; timeSlot is a Europe/Zurich wall-clock.
+  return zonedWallClockToUTC(date, timeSlot);
 }
 
 export async function GET() {
@@ -41,19 +40,21 @@ export async function GET() {
   try {
     // P-16 (WS-E): Sentry check-in — a missed run = dead cron alert.
     return await withCronMonitor('encave-follow-ups', async () => {
-      // Find completed bookings that ended 22-26 hours ago
-      // (experience date + time slot was 22-26 hours ago)
-      // We check COMPLETED status which means the experience has occurred
-      const windowStart = subHours(now, 26);
-      const windowEnd = subHours(now, 22);
+      // Find completed bookings whose session ended at least ~22h ago. This is
+      // OPEN-ENDED below (no lower window bound): a booking missed on one daily
+      // run is caught on the next, with followUpSentAt as the idempotency guard
+      // — the old 4h band [now-26h, now-22h] on a once-daily cron skipped, then
+      // permanently aged out, every session ending outside that narrow slice.
+      const followUpCutoff = subHours(now, 22);
       const bookings = await db.booking.findMany({
         where: {
           status: BookingStatus.COMPLETED,
           followUpSentAt: null,
-          // Look for bookings that completed yesterday or earlier
+          // 72h floor recovers a fully-missed cron day (the previous 48h floor
+          // dropped bookings whose single eligible run was skipped).
           date: {
-            gte: toDateOnlyUTC(startOfDay(subHours(now, 48))),
-            lte: toDateOnlyUTC(startOfDay(windowEnd)),
+            gte: toDateOnlyUTC(startOfDay(subHours(now, 72))),
+            lte: toDateOnlyUTC(startOfDay(followUpCutoff)),
           },
         },
         include: {
@@ -103,15 +104,17 @@ export async function GET() {
             bookingStartTime.getTime() + booking.experience.duration * 60 * 1000
           );
 
-          if (
-            experienceEndTime < windowStart ||
-            experienceEndTime > windowEnd
-          ) {
+          // Only skip a session that is still too recent (< 22h). No lower
+          // bound → a session missed on one run is caught the next; the
+          // followUpSentAt guard (set on success) prevents a double send.
+          if (experienceEndTime > followUpCutoff) {
             continue;
           }
 
-          // D4 skip — deliberately WITHOUT setting followUpSentAt: nothing
-          // was sent, and the 22-26h window keeps it from re-matching.
+          // D4 skip — deliberately WITHOUT setting followUpSentAt: nothing was
+          // sent (the J+2 recap replaces it). This booking re-appears on later
+          // runs until its date passes the 72h floor, always hitting this skip
+          // (never a duplicate email — the branch below never sends).
           if (recapArmed.has(tastingRecapDedupeKey(booking.id))) {
             await logEmailSkipped(
               'follow_up',
@@ -130,7 +133,8 @@ export async function GET() {
               experienceTitle: booking.experience.title,
               wineryName: booking.winery.name,
               date: bookingStartTime,
-            }
+            },
+            booking.locale
           );
 
           if (success) {

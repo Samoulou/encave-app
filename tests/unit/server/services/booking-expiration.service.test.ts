@@ -7,6 +7,7 @@ vi.mock('@/server/db', () => ({
       findMany: vi.fn(),
       findUnique: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
       deleteMany: vi.fn(),
     },
     $transaction: vi.fn(
@@ -63,6 +64,9 @@ describe('expirePendingPaymentBookings', () => {
     vi.clearAllMocks();
     expireMock.mockResolvedValue({});
     retrieveMock.mockResolvedValue({ payment_status: 'unpaid' });
+    // The status-guarded CAS defaults to "no row matched" (e.g. a racing
+    // webhook already confirmed the booking); the cancel test overrides to 1.
+    vi.mocked(db.booking.updateMany).mockResolvedValue({ count: 0 } as never);
   });
 
   it('cancels expired pending bookings and sends an email', async () => {
@@ -73,6 +77,7 @@ describe('expirePendingPaymentBookings', () => {
         reference: 'ENC-ABC123',
         visitorEmail: 'client@test.ch',
         visitorName: 'Alice',
+        locale: 'FR',
         createdAt: new Date('2026-05-19T11:20:00Z'),
         stripeCheckoutSessionId: 'cs_test_123',
         date: new Date('2026-05-20T00:00:00Z'),
@@ -82,14 +87,17 @@ describe('expirePendingPaymentBookings', () => {
     vi.mocked(db.booking.findUnique).mockResolvedValue({
       status: BookingStatus.PENDING_PAYMENT,
     } as never);
-    vi.mocked(db.booking.update).mockResolvedValue({} as never);
+    vi.mocked(db.booking.updateMany).mockResolvedValue({ count: 1 } as never);
 
     const result = await expirePendingPaymentBookings(now);
 
     expect(result.expired).toBe(1);
-    expect(db.booking.update).toHaveBeenCalledWith(
+    expect(db.booking.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: 'booking-1' },
+        where: {
+          id: 'booking-1',
+          status: BookingStatus.PENDING_PAYMENT,
+        },
         data: expect.objectContaining({
           status: BookingStatus.CANCELLED_BY_CLIENT,
           cancellationReason: 'PAYMENT_EXPIRED',
@@ -99,7 +107,8 @@ describe('expirePendingPaymentBookings', () => {
     expect(expireMock).toHaveBeenCalledWith('cs_test_123');
     expect(sendBookingExpiredEmail).toHaveBeenCalledWith(
       'client@test.ch',
-      expect.objectContaining({ experienceSlug: 'atelier-pinot' })
+      expect.objectContaining({ experienceSlug: 'atelier-pinot' }),
+      'FR'
     );
   });
 
@@ -132,6 +141,7 @@ describe('expirePendingPaymentBookings', () => {
         reference: 'ENC-ABC123',
         visitorEmail: 'client@test.ch',
         visitorName: 'Alice',
+        locale: 'FR',
         createdAt: new Date('2026-05-19T11:20:00Z'), // 40 min ago
         expiresAt: new Date('2026-05-19T12:05:00Z'), // session still live
         stripeCheckoutSessionId: 'cs_test_123',
@@ -187,6 +197,7 @@ describe('expirePendingPaymentBookings', () => {
         reference: 'ENC-ABC123',
         visitorEmail: 'client@test.ch',
         visitorName: 'Alice',
+        locale: 'FR',
         createdAt: new Date('2026-05-19T11:20:00Z'),
         stripeCheckoutSessionId: 'cs_test_123',
         date: new Date('2026-05-20T00:00:00Z'),
@@ -214,6 +225,7 @@ describe('expirePendingPaymentBookings', () => {
         reference: 'ENC-ABC123',
         visitorEmail: 'client@test.ch',
         visitorName: 'Alice',
+        locale: 'FR',
         createdAt: new Date('2026-05-19T11:20:00Z'),
         stripeCheckoutSessionId: 'cs_test_123',
         date: new Date('2026-05-20T00:00:00Z'),
@@ -239,6 +251,7 @@ describe('expirePendingPaymentBookings', () => {
         reference: 'ENC-ABC123',
         visitorEmail: 'client@test.ch',
         visitorName: 'Alice',
+        locale: 'FR',
         createdAt: new Date('2026-05-19T11:20:00Z'),
         stripeCheckoutSessionId: 'cs_test_123',
         date: new Date('2026-05-20T00:00:00Z'),

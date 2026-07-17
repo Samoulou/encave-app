@@ -31,6 +31,7 @@ vi.mock('@/server/db', () => ({
   db: {
     booking: {
       delete: vi.fn(),
+      deleteMany: vi.fn(),
       findUnique: vi.fn(),
     },
     stripeEvent: {
@@ -124,6 +125,7 @@ describe('Stripe checkout webhook handler', () => {
       reference: 'ENC-ABC123',
       stripeCheckoutSessionId: 'cs_test_current',
     } as never);
+    vi.mocked(db.booking.deleteMany).mockResolvedValue({ count: 1 } as never);
     const event = {
       id: 'evt_checkout_expired',
       type: 'checkout.session.expired',
@@ -139,8 +141,16 @@ describe('Stripe checkout webhook handler', () => {
     const response = await POST(createMockRequest());
 
     expect(response.status).toBe(200);
-    expect(db.booking.delete).toHaveBeenCalledWith({
-      where: { id: 'booking-1' },
+    // Guarded delete: only removes a still-pending booking on THIS session.
+    expect(db.booking.deleteMany).toHaveBeenCalledWith({
+      where: {
+        id: 'booking-1',
+        status: 'PENDING_PAYMENT',
+        OR: [
+          { stripeCheckoutSessionId: 'cs_test_current' },
+          { stripeCheckoutSessionId: null },
+        ],
+      },
     });
   });
 

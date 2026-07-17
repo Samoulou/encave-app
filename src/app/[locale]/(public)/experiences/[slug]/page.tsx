@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { addDays, addMonths } from 'date-fns';
+import { zonedWallClockToUTC } from '@/lib/datetime/zurich';
 import {
   getExperienceBySlug,
   getAllPublishedExperienceSlugs,
@@ -542,14 +543,21 @@ function getNextAvailableDate(
         (candidate) => candidate.dayOfWeek === dayOfWeek && candidate.isActive
       );
       if (slot) {
-        const [hoursStr, minutesStr] = slot.startTime.split(':');
-        checkDate.setHours(
-          parseInt(hoursStr ?? '10', 10),
-          parseInt(minutesStr ?? '0', 10),
-          0,
-          0
-        );
-        return checkDate;
+        // Combine the checked calendar day (server runs UTC) with the slot's
+        // Europe/Zurich wall-clock start into a real instant. Guard against a
+        // malformed slot time so this public render never throws.
+        try {
+          const dateOnly = new Date(
+            Date.UTC(
+              checkDate.getUTCFullYear(),
+              checkDate.getUTCMonth(),
+              checkDate.getUTCDate()
+            )
+          );
+          return zonedWallClockToUTC(dateOnly, slot.startTime);
+        } catch {
+          continue;
+        }
       }
     }
   }

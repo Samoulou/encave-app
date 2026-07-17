@@ -18,8 +18,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { SectionHeader } from './SectionHeader';
 import { CollectiveEventToggle } from './CollectiveEventToggle';
+
+// Language endonyms are locale-invariant (a language's own name doesn't change
+// with the UI locale), so they are rendered directly rather than translated.
+const LANGUAGE_ENDONYMS = [
+  { code: 'FR' as const, label: 'Français' },
+  { code: 'DE' as const, label: 'Deutsch' },
+  { code: 'EN' as const, label: 'English' },
+];
 
 interface DetailsSectionProps {
   form: UseFormReturn<CreateExperienceInput>;
@@ -173,6 +182,51 @@ export function DetailsSection({
               <FormMessage />
             </FormItem>
           )}
+        />
+      </div>
+
+      {/* Spoken languages (P-02 / L-115) — powers the catalogue language
+          filter (previously this had no write path, so the filter matched
+          nothing). Endonyms are locale-invariant, hence not translated. */}
+      <div className="mt-6 border-t border-stone-200 pt-6">
+        <FormField
+          control={form.control}
+          name="languages"
+          render={({ field }) => {
+            const selected = field.value ?? ['FR'];
+            const toggle = (code: 'FR' | 'DE' | 'EN') => {
+              field.onChange(
+                selected.includes(code)
+                  ? selected.filter((c) => c !== code)
+                  : [...selected, code]
+              );
+            };
+            return (
+              <FormItem>
+                <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  {t('languagesLabel')}
+                </FormLabel>
+                <p className="mb-2 text-sm text-muted-foreground">
+                  {t('languagesHelper')}
+                </p>
+                <div className="flex flex-wrap gap-4">
+                  {LANGUAGE_ENDONYMS.map(({ code, label }) => (
+                    <label
+                      key={code}
+                      className="flex cursor-pointer items-center gap-2 text-sm"
+                    >
+                      <Checkbox
+                        checked={selected.includes(code)}
+                        onCheckedChange={() => toggle(code)}
+                      />
+                      {label}
+                    </label>
+                  ))}
+                </div>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
         />
       </div>
 

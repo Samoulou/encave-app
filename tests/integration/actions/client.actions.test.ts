@@ -61,6 +61,7 @@ describe('Client Actions', () => {
       name: 'Test Client',
       role: 'CLIENT',
       preferredLocale: 'FR',
+      emailVerified: true,
     },
   };
 
@@ -110,6 +111,22 @@ describe('Client Actions', () => {
       if (!result.success) {
         expect(result.error.code).toBe('UNAUTHORIZED');
       }
+    });
+
+    it('returns FORBIDDEN when the email is unverified (guest-booking takeover guard)', async () => {
+      mockAuth.mockResolvedValueOnce({
+        user: { ...mockSession.user, emailVerified: false },
+      });
+
+      const result = await cancelClientBooking('booking-123');
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe('FORBIDDEN');
+        expect(result.error.message).toBe('EMAIL_NOT_VERIFIED');
+      }
+      // Must bail before matching any booking by email.
+      expect(mockDb.booking.findFirst).not.toHaveBeenCalled();
     });
 
     it('returns NOT_FOUND when booking not found', async () => {

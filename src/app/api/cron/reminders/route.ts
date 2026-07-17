@@ -13,7 +13,7 @@ import {
 import { addHours, startOfDay } from 'date-fns';
 import { BookingStatus } from '@prisma/client';
 import { logError } from '@/lib/logger';
-import { zonedHourOf } from '@/lib/datetime/zurich';
+import { zonedHourOf, zonedWallClockToUTC } from '@/lib/datetime/zurich';
 import { zurichTodayAsUTCDate } from '@/lib/business-rules/occurrence-expansion';
 
 export const dynamic = 'force-dynamic';
@@ -31,10 +31,8 @@ function toDateOnlyUTC(date: Date): Date {
 }
 
 function getBookingDateTime(date: Date, timeSlot: string): Date {
-  const [hours, minutes] = timeSlot.split(':').map(Number);
-  const bookingDateTime = new Date(date);
-  bookingDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
-  return bookingDateTime;
+  // @db.Date is UTC-midnight; timeSlot is a Europe/Zurich wall-clock.
+  return zonedWallClockToUTC(date, timeSlot);
 }
 
 export async function GET() {

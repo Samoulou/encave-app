@@ -694,6 +694,15 @@ export async function createBookingAndCheckout(
             });
           }
         }
+        // Return any gift redemption carried over from the aborted attempt and
+        // clear the gift fields, so the re-redemption below cannot double-debit
+        // the card and a dropped-code retry can't strand giftAppliedCents that
+        // reconcileGiftTransfers would later pay the winery for (P-09 retry).
+        await releaseGiftForBooking(claimedBooking.id);
+        await db.booking.update({
+          where: { id: claimedBooking.id },
+          data: { giftCardId: null, giftAppliedCents: 0, giftTransferId: null },
+        });
       }
     }
 

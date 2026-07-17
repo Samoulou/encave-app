@@ -21,6 +21,10 @@ export interface Session {
     // up to the cookieCache window (5 min). For the admin enforcement GATE use
     // getCurrentUserTwoFactorEnabled() (fresh) to avoid a setup redirect loop.
     twoFactorEnabled: boolean;
+    // Native better-auth field. Gates the guest-booking-by-email paths so an
+    // unverified sign-up can't claim someone else's guest bookings. May lag the
+    // DB by the cookieCache window (5 min) after the link is clicked.
+    emailVerified: boolean;
   };
 }
 
@@ -58,6 +62,7 @@ export const auth = cache(async function auth(): Promise<Session | null> {
       role: UserRole;
       preferredLocale: Locale;
       twoFactorEnabled?: boolean;
+      emailVerified?: boolean;
     };
 
     return {
@@ -68,6 +73,7 @@ export const auth = cache(async function auth(): Promise<Session | null> {
         role: user.role,
         preferredLocale: user.preferredLocale,
         twoFactorEnabled: user.twoFactorEnabled ?? false,
+        emailVerified: user.emailVerified ?? false,
       },
     };
   } catch (error) {

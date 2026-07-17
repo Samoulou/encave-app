@@ -14,6 +14,7 @@ vi.mock('@/server/db', () => ({
       findUnique: vi.fn(),
       findMany: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
     },
   },
 }));
@@ -97,6 +98,7 @@ interface DtoBookingShape {
 const findUniqueMock = vi.mocked(db.booking.findUnique);
 const findManyMock = vi.mocked(db.booking.findMany);
 const updateMock = vi.mocked(db.booking.update);
+const updateManyMock = vi.mocked(db.booking.updateMany);
 const findExperienceMock = vi.mocked(db.experience.findFirst);
 
 function mockCtxBooking(overrides: Partial<CtxBookingShape> = {}): void {
@@ -149,6 +151,13 @@ function mockFindUniqueNull(): void {
 function mockUpdateNoop(): void {
   updateMock.mockResolvedValueOnce(
     {} as unknown as Awaited<ReturnType<typeof db.booking.update>>
+  );
+}
+
+// Status-guarded CAS (updateMany) succeeded — one row transitioned.
+function mockUpdateManyOk(): void {
+  updateManyMock.mockResolvedValueOnce(
+    { count: 1 } as Awaited<ReturnType<typeof db.booking.updateMany>>
   );
 }
 
@@ -225,15 +234,15 @@ describe('markBookingCheckedIn', () => {
   it('happy path: updates status, invalidates caches, returns DTO', async () => {
     vi.mocked(auth).mockResolvedValue(mockSession);
     mockCtxBooking({ status: BookingStatus.CONFIRMED });
-    mockUpdateNoop();
+    mockUpdateManyOk();
     mockUpdatedDto();
 
     const result = await markBookingCheckedIn({ bookingId: VALID_BOOKING_ID });
 
     expect(result.success).toBe(true);
-    expect(db.booking.update).toHaveBeenCalledWith(
+    expect(db.booking.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: VALID_BOOKING_ID },
+        where: { id: VALID_BOOKING_ID, status: BookingStatus.CONFIRMED },
         data: expect.objectContaining({
           status: BookingStatus.COMPLETED,
         }),
@@ -329,14 +338,14 @@ describe('markBookingNoShow', () => {
   it('happy path: transitions CONFIRMED → NO_SHOW once the session has ended', async () => {
     vi.mocked(auth).mockResolvedValue(mockSession);
     mockCtxBooking({ status: BookingStatus.CONFIRMED });
-    mockUpdateNoop();
+    mockUpdateManyOk();
     mockUpdatedDto({ status: BookingStatus.NO_SHOW, checkedInAt: null });
 
     const result = await markBookingNoShow({ bookingId: VALID_BOOKING_ID });
 
     expect(result.success).toBe(true);
-    expect(db.booking.update).toHaveBeenCalledWith({
-      where: { id: VALID_BOOKING_ID },
+    expect(db.booking.updateMany).toHaveBeenCalledWith({
+      where: { id: VALID_BOOKING_ID, status: BookingStatus.CONFIRMED },
       data: { status: BookingStatus.NO_SHOW },
     });
   });
@@ -548,7 +557,7 @@ describe('revertBookingNoShow', () => {
   it('happy path: reverts NO_SHOW → CONFIRMED and logs the action', async () => {
     vi.mocked(auth).mockResolvedValue(mockSession);
     mockCtxBooking({ status: BookingStatus.NO_SHOW });
-    mockUpdateNoop();
+    mockUpdateManyOk();
     mockUpdatedDto({ status: BookingStatus.CONFIRMED, checkedInAt: null });
 
     const result = await revertBookingNoShow({ bookingId: VALID_BOOKING_ID });

@@ -7,6 +7,7 @@ import {
 } from '@prisma/client';
 import { db } from '@/server/db';
 import { getStripe } from '@/server/stripe';
+import { zonedWallClockToUTC } from '@/lib/datetime/zurich';
 import {
   sendBookingConfirmationEmail,
   sendWinemakerNewBookingEmail,
@@ -214,9 +215,7 @@ async function sendBookingConfirmationNotifications(
     await posthogServer.flush();
   }
 
-  const [hours, minutes] = booking.timeSlot.split(':').map(Number);
-  const bookingDateTime = new Date(booking.date);
-  bookingDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
+  const bookingDateTime = zonedWallClockToUTC(booking.date, booking.timeSlot);
 
   try {
     await sendBookingConfirmationEmail(

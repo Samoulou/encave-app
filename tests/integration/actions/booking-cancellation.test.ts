@@ -60,6 +60,7 @@ describe('Booking Cancellation Actions', () => {
     status: BookingStatus.CONFIRMED,
     visitorName: 'Cancel Test User',
     visitorEmail: 'cancel@example.com',
+    locale: 'EN',
     visitorPhone: '+41791234567',
     date: futureDate,
     timeSlot: '14:00',
@@ -184,7 +185,9 @@ describe('Booking Cancellation Actions', () => {
       const bookingAt24h = {
         ...mockConfirmedBooking,
         date: new Date('2026-01-12'), // Tomorrow
-        timeSlot: '10:00', // Exactly 24 hours from 2026-01-11T10:00
+        // 11:00 Europe/Zurich (CET, +1) === 10:00 UTC — exactly 24h from the
+        // mocked now (2026-01-11T10:00:00Z) under the Zurich wall-clock helper.
+        timeSlot: '11:00',
       };
       vi.mocked(db.booking.findFirst).mockResolvedValue(bookingAt24h as never);
       vi.mocked(db.booking.update).mockResolvedValue({
@@ -365,7 +368,8 @@ describe('Booking Cancellation Actions', () => {
           experienceTitle: 'Cancellable Wine Tasting',
           wineryName: 'Test Winery',
           bookingRef: 'ENC-CAN001',
-        })
+        }),
+        'EN'
       );
     });
 

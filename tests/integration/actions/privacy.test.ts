@@ -37,7 +37,7 @@ describe('requestAccountDeletion', () => {
 
   it('rejects when the confirmation email does not match the session', async () => {
     mockAuth.mockResolvedValue({
-      user: { id: 'user-1', email: 'real@encave.ch' },
+      user: { id: 'user-1', email: 'real@encave.ch', emailVerified: true },
     });
 
     const result = await requestAccountDeletion({ email: 'other@encave.ch' });
@@ -51,7 +51,7 @@ describe('requestAccountDeletion', () => {
 
   it('anonymizes the user on matching confirmation', async () => {
     mockAuth.mockResolvedValue({
-      user: { id: 'user-1', email: 'real@encave.ch' },
+      user: { id: 'user-1', email: 'real@encave.ch', emailVerified: true },
     });
     mockAnonymizeUser.mockResolvedValue({ alreadyAnonymized: false });
 
@@ -63,7 +63,7 @@ describe('requestAccountDeletion', () => {
 
   it('surfaces FUTURE_WINERY_BOOKINGS as a validation error', async () => {
     mockAuth.mockResolvedValue({
-      user: { id: 'user-1', email: 'real@encave.ch' },
+      user: { id: 'user-1', email: 'real@encave.ch', emailVerified: true },
     });
     mockAnonymizeUser.mockRejectedValue(new Error('FUTURE_WINERY_BOOKINGS:2'));
 

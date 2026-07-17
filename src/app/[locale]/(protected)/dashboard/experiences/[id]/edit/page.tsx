@@ -132,6 +132,7 @@ export default async function EditExperiencePage({ params }: PageProps) {
     maxCapacity: experience.maxCapacity,
     paymentMode: experience.paymentMode,
     isCollective: experience.isCollective,
+    languages: experience.languages,
     coverPhoto: experience.coverPhoto,
     galleryImages: experience.galleryImages.map((img) => ({
       id: img.id,

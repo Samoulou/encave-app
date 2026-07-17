@@ -48,6 +48,7 @@ import {
 } from '@/components/ui/select';
 import { ImageUpload } from '@/components/shared/ImageUpload';
 import { CollectiveEventToggle } from './form-sections/CollectiveEventToggle';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Tooltip,
   TooltipContent,
@@ -56,6 +57,13 @@ import {
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import type { ExperienceType, ExperiencePaymentMode } from '@prisma/client';
+
+// Language endonyms are locale-invariant, so they are rendered as-is.
+const LANGUAGE_ENDONYMS = [
+  { code: 'FR' as const, label: 'Français' },
+  { code: 'DE' as const, label: 'Deutsch' },
+  { code: 'EN' as const, label: 'English' },
+];
 
 interface GalleryImage {
   id: string;
@@ -75,6 +83,7 @@ interface EditExperienceFormProps {
     maxCapacity: number;
     paymentMode: ExperiencePaymentMode;
     isCollective: boolean;
+    languages: ('FR' | 'DE' | 'EN')[];
     coverPhoto: string;
     galleryImages: GalleryImage[];
   };
@@ -142,6 +151,7 @@ export function EditExperienceForm({
       maxCapacity: experience.maxCapacity,
       paymentMode: experience.paymentMode,
       isCollective: experience.isCollective,
+      languages: experience.languages,
     },
   });
 
@@ -715,6 +725,50 @@ export function EditExperienceForm({
                 )}
               />
             )}
+          </section>
+
+          {/* Spoken languages (P-02 / L-115) — powers the catalogue language
+              filter. Endonyms are locale-invariant, hence not translated. */}
+          <section className="space-y-6">
+            <FormField
+              control={form.control}
+              name="languages"
+              render={({ field }) => {
+                const selected = field.value ?? ['FR'];
+                const toggle = (code: 'FR' | 'DE' | 'EN') => {
+                  field.onChange(
+                    selected.includes(code)
+                      ? selected.filter((c) => c !== code)
+                      : [...selected, code]
+                  );
+                };
+                return (
+                  <FormItem>
+                    <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                      {t('languagesLabel')}
+                    </FormLabel>
+                    <p className="mb-2 text-sm text-muted-foreground">
+                      {t('languagesHelper')}
+                    </p>
+                    <div className="flex flex-wrap gap-4">
+                      {LANGUAGE_ENDONYMS.map(({ code, label }) => (
+                        <label
+                          key={code}
+                          className="flex cursor-pointer items-center gap-2 text-sm"
+                        >
+                          <Checkbox
+                            checked={selected.includes(code)}
+                            onCheckedChange={() => toggle(code)}
+                          />
+                          {label}
+                        </label>
+                      ))}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
+            />
           </section>
 
           {/* Collective event (P-11 / L-100) — flag-gated. Manage the

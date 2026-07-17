@@ -155,6 +155,25 @@ export const auth = betterAuth({
     },
   },
 
+  // Email verification (security): send a verification link on sign-up so the
+  // guest-booking-by-email paths can require a verified address, closing the
+  // account-takeover-by-email vector. `requireEmailVerification` is NOT set —
+  // sign-in / auto-login stay unchanged; only the sensitive guest-booking
+  // read/cancel/delete paths gate on `emailVerified`. Pre-existing accounts are
+  // backfilled to verified in the accompanying migration so they are unaffected.
+  emailVerification: {
+    sendOnSignUp: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      await sendEmailVerificationEmail(
+        user.email,
+        user.name ?? user.email,
+        url,
+        ((user as { preferredLocale?: Locale }).preferredLocale ??
+          'FR') as Locale
+      );
+    },
+  },
+
   // Custom user fields - included in session automatically
   user: {
     additionalFields: {

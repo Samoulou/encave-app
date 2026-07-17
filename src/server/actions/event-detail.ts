@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { BookingStatus } from '@prisma/client';
+import { BookingStatus, NoShowChargeStatus } from '@prisma/client';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { logError, logInfo } from '@/lib/logger';
@@ -20,6 +20,8 @@ import { parseTimeSlot, timeSlotSchema } from '@/lib/validators/booking';
 import { isHoldPlaceholderEmail } from '@/lib/constants/booking-hold';
 import { cancelOccurrenceForSlot } from '@/server/services/occurrence.service';
 import { refundNoShowFeeIfCharged } from '@/server/services/no-show.service';
+import { releaseGiftForBooking } from '@/server/services/giftCard-redemption.service';
+import { invalidateExperienceCaches } from '@/server/actions/experience-helpers';
 import type { ActionResult } from '@/types/actions';
 import type { BookingDTO } from '@/types/event-detail';
 import { z } from 'zod';
@@ -57,6 +59,7 @@ interface AuthorizedBooking {
   guestCount: number;
   date: Date;
   timeSlot: string;
+  noShowFeeChargeStatus: NoShowChargeStatus | null;
   experience: {
     id: string;
     slug: string;
@@ -143,6 +146,7 @@ async function resolveContext(
       guestCount: true,
       date: true,
       timeSlot: true,
+      noShowFeeChargeStatus: true,
       experience: {
         select: {
           id: true,
@@ -232,13 +236,25 @@ export async function markBookingCheckedIn(
   }
 
   try {
-    await db.booking.update({
-      where: { id: booking.id },
+    // Atomic CAS: only check in a booking STILL confirmed. A concurrent
+    // no-show mark or scan from another device must not be clobbered.
+    const claimed = await db.booking.updateMany({
+      where: { id: booking.id, status: BookingStatus.CONFIRMED },
       data: {
         status: BookingStatus.COMPLETED,
         checkedInAt: new Date(),
       },
     });
+
+    if (claimed.count === 0) {
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'BOOKING_ALREADY_TRANSITIONED',
+        },
+      };
+    }
 
     invalidate(booking.experience.slug);
 
@@ -305,10 +321,22 @@ export async function markBookingNoShow(
   }
 
   try {
-    await db.booking.update({
-      where: { id: booking.id },
+    // Atomic CAS: only mark no-show a booking STILL confirmed. A concurrent
+    // check-in (CONFIRMED → COMPLETED) from another device must win.
+    const claimed = await db.booking.updateMany({
+      where: { id: booking.id, status: BookingStatus.CONFIRMED },
       data: { status: BookingStatus.NO_SHOW },
     });
+
+    if (claimed.count === 0) {
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'BOOKING_ALREADY_TRANSITIONED',
+        },
+      };
+    }
 
     invalidate(booking.experience.slug);
 
@@ -473,6 +501,20 @@ export async function revertBookingNoShow(
   const windowCheck = checkRevertWindow(booking);
   if (!windowCheck.success) return windowCheck;
 
+  // A no-show fee charge in flight (PENDING) is invisible to the refund helper
+  // below (it only refunds CHARGED). Block the revert until the charge settles
+  // to CHARGED/FAILED, so we never confirm a booking whose card is about to be
+  // debited with no refund path left (the exact charge/revert race).
+  if (booking.noShowFeeChargeStatus === NoShowChargeStatus.PENDING) {
+    return {
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: 'NO_SHOW_FEE_CHARGE_IN_PROGRESS',
+      },
+    };
+  }
+
   // P-08 (D2): a reverted no-show is no longer a no-show — if the fee was
   // charged, refund it BEFORE flipping the status. If Stripe can't return the
   // money, abort the revert so the client isn't left charged for a non-no-show.
@@ -494,10 +536,21 @@ export async function revertBookingNoShow(
   }
 
   try {
-    await db.booking.update({
-      where: { id: booking.id },
+    // CAS: only revert a booking STILL marked NO_SHOW.
+    const reverted = await db.booking.updateMany({
+      where: { id: booking.id, status: BookingStatus.NO_SHOW },
       data: { status: BookingStatus.CONFIRMED },
     });
+
+    if (reverted.count === 0) {
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'BOOKING_ALREADY_TRANSITIONED',
+        },
+      };
+    }
 
     logInfo('booking.revert.noshow', {
       bookingId: booking.id,
@@ -717,6 +770,14 @@ export async function cancelEventSession(
           .catch(() => undefined);
       }
 
+      // Return any gift-card funds reserved on a pending booking we just
+      // cancelled. Neither the expiry webhook nor the expire-cron will (the
+      // claim above already moved the booking off PENDING_PAYMENT), so this
+      // is the only path left. Idempotent, no-op without a gift.
+      if (booking.status === BookingStatus.PENDING_PAYMENT) {
+        await releaseGiftForBooking(booking.id);
+      }
+
       // Record what was actually returned (card + gift), never a claim —
       // conditional on the refundAmount we READ (same ledger guard as the
       // sibling cancellation actions).
@@ -786,6 +847,10 @@ export async function cancelEventSession(
     failed,
   });
   invalidate(experience.slug);
+  // The cancelled session must also drop out of the PUBLIC ISR surfaces
+  // (catalogue/fiche via the 'experiences' tag), not just the dashboard
+  // router cache — otherwise search/fiche keep advertising it until the TTL.
+  invalidateExperienceCaches();
 
   return {
     success: true,

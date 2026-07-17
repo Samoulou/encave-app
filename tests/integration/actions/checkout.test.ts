@@ -50,6 +50,9 @@ vi.mock('@/server/db', () => ({
     availabilitySlot: {
       findFirst: vi.fn(),
     },
+    giftCardTransaction: {
+      findFirst: vi.fn(),
+    },
     // $transaction executes the callback with the same db object (simplified mock)
     $transaction: vi.fn(async (callback: (tx: unknown) => Promise<unknown>) => {
       // Create a transaction-like object that delegates to the mocked methods
@@ -58,6 +61,7 @@ vi.mock('@/server/db', () => ({
         booking: db.booking,
         experience: db.experience,
         experienceOccurrence: db.experienceOccurrence,
+        giftCardTransaction: db.giftCardTransaction,
       });
     }),
   },

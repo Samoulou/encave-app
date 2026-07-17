@@ -5,9 +5,20 @@ import { db } from '@/server/db';
 import { logInfo } from '@/lib/logger';
 
 /**
+ * A PROCESSING StripeEvent older than this was abandoned mid-handler (function
+ * timeout / OOM / kill between claim and mark) — reclaim it so Stripe
+ * redeliveries aren't dropped forever. MUST stay strictly greater than the
+ * webhook routes' max run duration, or a live run could be reclaimed and
+ * double-processed.
+ */
+export const STALE_STRIPE_EVENT_MINUTES = 15;
+
+/**
  * Idempotency guard shared by all Stripe webhook routes (checkout + connect).
  * An event is processed at most once; FAILED events are eligible for retry
- * when Stripe redelivers them.
+ * when Stripe redelivers them, and a PROCESSING row abandoned mid-handler is
+ * reclaimed after STALE_STRIPE_EVENT_MINUTES so a timed-out mint/confirm still
+ * completes on a redelivery instead of being lost.
  */
 export async function claimStripeEvent(event: Stripe.Event): Promise<boolean> {
   try {
@@ -35,6 +46,32 @@ export async function claimStripeEvent(event: Stripe.Event): Promise<boolean> {
           data: { status: 'PROCESSING', errorMessage: null },
         });
         return retry.count === 1;
+      }
+
+      // Stale PROCESSING reclaim: a handler killed between claim and mark
+      // (function timeout / OOM) leaves the row PROCESSING forever, so every
+      // Stripe redelivery is dropped and the paid gift/booking is never
+      // processed. Reclaim via a CAS on updatedAt (the @updatedAt bump makes a
+      // concurrent second reclaim lose), then let this delivery retry.
+      if (existing?.status === 'PROCESSING') {
+        const staleBefore = new Date(
+          Date.now() - STALE_STRIPE_EVENT_MINUTES * 60 * 1000
+        );
+        const reclaimed = await db.stripeEvent.updateMany({
+          where: {
+            stripeEventId: event.id,
+            status: 'PROCESSING',
+            updatedAt: { lt: staleBefore },
+          },
+          data: { errorMessage: 'reclaimed_stale_processing' },
+        });
+        if (reclaimed.count === 1) {
+          logInfo('Reclaimed stale PROCESSING Stripe event', {
+            eventId: event.id,
+            eventType: event.type,
+          });
+          return true;
+        }
       }
 
       logInfo('Duplicate Stripe event skipped', {

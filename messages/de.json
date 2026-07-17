@@ -624,6 +624,8 @@
     "updatedSuccess": "Erlebnis aktualisiert",
     "updatedDescription": "Ihre Änderungen wurden gespeichert.",
     "maxCapacityLabel": "Max. Kapazität",
+    "languagesLabel": "Gesprochene Sprachen",
+    "languagesHelper": "Sprachen, in denen Sie Ihre Gäste empfangen können — für den Sprachfilter im Katalog.",
     "address": "Adresse",
     "addressHelp": "Beginnen Sie zu tippen, um eine Adresse zu suchen",
     "selectedAddress": "Ausgewählte Adresse",
@@ -708,6 +710,14 @@
     "contactWinery": "Kontaktieren Sie das Weingut direkt, um dieses Erlebnis zu buchen.",
     "selectGuests": "Anzahl der Personen",
     "guests": "{count, plural, =1 {# Person} other {# Personen}}",
+    "status": {
+      "PENDING_PAYMENT": "Zahlung ausstehend",
+      "CONFIRMED": "Bestätigt",
+      "COMPLETED": "Abgeschlossen",
+      "CANCELLED_BY_CLIENT": "Storniert",
+      "CANCELLED_BY_WINERY": "Vom Weingut storniert",
+      "NO_SHOW": "Nicht erschienen"
+    },
     "continueToPayment": "Weiter zur Zahlung",
     "priceCalculation": "{price} x {guests} = {total}",
     "remainingCapacity": "{count} {count, plural, =1 {Platz ubrig} other {Platze ubrig}}",
@@ -2316,7 +2326,8 @@
       "noUpcomingDescription": "Sie haben keine geplanten Weinerlebnisse. Durchstöbern Sie unsere Auswahl für Ihr nächstes Abenteuer.",
       "noPast": "Keine vergangenen Buchungen",
       "noPastDescription": "Sie haben noch kein Weingut besucht. Buchen Sie noch heute Ihr erstes Erlebnis!",
-      "browseExperiences": "Erlebnisse durchsuchen"
+      "browseExperiences": "Erlebnisse durchsuchen",
+      "verifyEmailBanner": "Bitte bestätigen Sie Ihre E-Mail-Adresse, um Ihre Buchungen zu sehen — wir haben Ihnen einen Bestätigungslink gesendet."
     },
     "bookingCard": {
       "guests": "{count, plural, =1 {# Gast} other {# Gäste}}",
@@ -2419,7 +2430,9 @@
         "revertWindowExpired": "Nach 72 Stunden nicht mehr rückgängig zu machen.",
         "sessionNotEnded": "Nach Ende der Session verfügbar.",
         "noShowChargeFailed": "Die Karte wurde abgelehnt. Sie können die Belastung erneut versuchen.",
-        "noShowAlreadyCharged": "Die Nichterscheinungsgebühr wurde bereits belastet."
+        "noShowAlreadyCharged": "Die Nichterscheinungsgebühr wurde bereits belastet.",
+        "noShowChargeInProgress": "Eine Nichterscheinungsgebühr wird gerade belastet. Versuchen Sie es erneut, sobald sie abgeschlossen ist.",
+        "bookingAlreadyTransitioned": "Diese Buchung wurde soeben auf einem anderen Gerät aktualisiert. Aktualisieren Sie, um den aktuellen Status zu sehen."
       },
       "toast": {
         "checkedIn": "Anwesenheit gespeichert.",
@@ -3100,5 +3113,43 @@
     "creating": "Wird erstellt…",
     "passwordTooShort": "Das Passwort muss mindestens {min} Zeichen lang sein.",
     "signInFailed": "Konto existiert bereits: falsches Passwort. Versuchen Sie es erneut."
+  },
+  "receipt": {
+    "title": "Buchungsbeleg",
+    "generatedOn": "Beleg erstellt am {date}",
+    "reference": "Referenz",
+    "client": "Kunde",
+    "name": "Name",
+    "email": "E-Mail",
+    "winery": "Weingut",
+    "address": "Adresse",
+    "experience": "Erlebnis",
+    "date": "Datum",
+    "time": "Uhrzeit",
+    "guests": "Gäste",
+    "serviceFee": "Servicegebühr",
+    "totalPaid": "Gesamtbetrag",
+    "vatNote": "Preise inkl. Steuern. EnCave ist derzeit nicht mehrwertsteuerpflichtig.",
+    "footer": "Dieser Beleg bestätigt die Zahlung Ihrer EnCave-Buchung."
+  },
+  "unsubscribe": {
+    "successTitle": "Erfolgreich abgemeldet",
+    "successDesc": "Sie wurden von {type} abgemeldet.",
+    "manageHint": "Sie können Ihre Benachrichtigungseinstellungen jederzeit in den Einstellungen Ihres Dashboards verwalten.",
+    "managePreferences": "Einstellungen verwalten",
+    "goHome": "Zur Startseite",
+    "invalidTitle": "Ungültiger Link",
+    "invalidDesc": "Dieser Abmeldelink ist ungültig oder abgelaufen. Bitte verwenden Sie den Link aus einer aktuellen E-Mail oder verwalten Sie Ihre Einstellungen im Dashboard.",
+    "loginManage": "Zum Verwalten anmelden",
+    "errorTitle": "Etwas ist schiefgelaufen",
+    "errorDesc": "Wir konnten Ihre Abmeldeanfrage nicht verarbeiten. Bitte versuchen Sie es erneut oder kontaktieren Sie den Support, falls das Problem weiterhin besteht.",
+    "defaultTitle": "E-Mail-Einstellungen",
+    "defaultDesc": "Um Ihre E-Mail-Einstellungen zu verwalten, melden Sie sich bei Ihrem Konto an und öffnen Sie die Benachrichtigungseinstellungen.",
+    "login": "Anmelden",
+    "genericType": "E-Mail-Benachrichtigungen",
+    "typeDaily": "die tägliche Zusammenfassung",
+    "typeWeekly": "die wöchentliche Zusammenfassung",
+    "typeMarketing": "Marketing-E-Mails",
+    "typeAll": "alle Marketing-E-Mails"
   }
 }

@@ -124,6 +124,14 @@ export const createExperienceSchema = z
     // .default) for the same zodResolver symmetry reason as paymentMode —
     // undefined ⇒ false (@default(false) preserved on create).
     isCollective: z.boolean().optional(),
+    // V3 (P-02 / L-115): spoken languages, wired to the catalogue language
+    // filter. Optional (not .default) for the same zodResolver input/output
+    // symmetry reason as paymentMode/isCollective; the forms seed ['FR'], and
+    // an omitted value keeps the DB @default([FR]).
+    languages: z
+      .array(z.enum(['FR', 'DE', 'EN']))
+      .min(1)
+      .optional(),
     // Location fields (optional)
     location: locationSchema.optional(),
     // Availability slots
