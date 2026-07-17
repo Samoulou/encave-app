@@ -4,7 +4,7 @@
  * empty occurrence in the denominator, CANCELLED excluded, straggler
  * ignored) and the upcoming winery sessions gauges.
  *
- * Run with:  INVARIANTS_DATABASE_URL=postgresql://... npx vitest run tests/db
+ * Run with:  INVARIANTS_DATABASE_URL=postgresql://... npm run test:db:invariants
  */
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { PrismaClient, BookingStatus, OccurrenceStatus } from '@prisma/client';

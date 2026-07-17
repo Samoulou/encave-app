@@ -4,7 +4,7 @@
  * `SELECT … FOR UPDATE` in redeemGiftCardInTx was previously exercised only
  * through mocked `$queryRaw` — a mock cannot prove serialization.
  *
- * Run with:  INVARIANTS_DATABASE_URL=postgresql://... npx vitest run tests/db
+ * Run with:  INVARIANTS_DATABASE_URL=postgresql://... npm run test:db:invariants
  * Skipped when the env var is absent.
  *
  * The ledger is append-only (DB trigger: no UPDATE/DELETE) and gift cards

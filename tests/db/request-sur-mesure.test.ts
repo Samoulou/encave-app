@@ -5,7 +5,7 @@
  * updateMany claims. Uses winery-less requests (wineryId is nullable) so no
  * winery/user graph needs seeding.
  *
- * Run with:  INVARIANTS_DATABASE_URL=postgresql://... npx vitest run tests/db
+ * Run with:  INVARIANTS_DATABASE_URL=postgresql://... npm run test:db:invariants
  */
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { PrismaClient, ScheduledJobStatus } from '@prisma/client';

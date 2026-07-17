@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 import { db } from '@/server/db';
 import { BookingStatus, ExperienceStatus, WineryStatus } from '@prisma/client';
 
@@ -111,6 +111,14 @@ function requireCaptured(
 }
 
 describe('Checkout Server Actions', () => {
+  // The checkout action drags a large module graph (Stripe SDK, services):
+  // warm it here so the transform cost lands on the 10s hook budget, not on
+  // the 5s budget of whichever test happens to import it first (flaky on
+  // loaded machines).
+  beforeAll(async () => {
+    await import('@/server/actions/checkout');
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     sessionCreateMock.mockResolvedValue({
