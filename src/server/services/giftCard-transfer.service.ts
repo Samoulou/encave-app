@@ -199,6 +199,24 @@ export async function reverseGiftTransferForCancellation(
   const amount = Math.min(reversalCents, booking.wineryPayout);
   if (amount <= 0) return 'noop';
 
+  // E2E (P-16): all guards above ran for real; the Stripe reversal itself
+  // is replaced by a synthetic id (same convention as settleGiftTransfer's
+  // tr_e2e_ transfers, which this path unwinds). Gated on the synthetic
+  // prefix too (Codex review): a REAL transfer id must always reach Stripe
+  // — recording a fake reversal would permanently satisfy the durable
+  // guard while the winery keeps the money. Real routing is verified on
+  // staging (WS-A.2, blocking launch gate).
+  if (
+    process.env.E2E_TEST === 'true' &&
+    booking.giftTransferId.startsWith('tr_e2e_')
+  ) {
+    await db.booking.update({
+      where: { id: bookingId },
+      data: { giftTransferReversalId: `trr_e2e_${bookingId}` },
+    });
+    return 'reversed';
+  }
+
   const reversal = await getStripe().transfers.createReversal(
     booking.giftTransferId,
     { amount, metadata: { bookingId, reason: 'booking_cancellation' } },
