@@ -191,8 +191,14 @@ jobs:
       - name: Seed E2E data (flags ON before prerender)
         run: npx tsx tests/e2e/scripts/setup-test-db.ts
 
+      # 6 GB heap: the default (~4 GB) OOMed this job's build on dev
+      # (run 29562389962, exit 134) — this job shares the runner's RAM
+      # with the postgres service container; the standalone Build job
+      # never hit it.
       - name: Build application
         run: npm run build
+        env:
+          NODE_OPTIONS: '--max-old-space-size=6144'
 
       - name: Run E2E tests
         run: npm run test:e2e
