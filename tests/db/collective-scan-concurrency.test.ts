@@ -6,7 +6,7 @@
  * design the organizer runs every scan point on its own account, so this
  * fires two concurrent check-ins of the SAME ticket by the SAME owner.
  *
- * Run with:  INVARIANTS_DATABASE_URL=postgresql://... npx vitest run tests/db
+ * Run with:  INVARIANTS_DATABASE_URL=postgresql://... npm run test:db:invariants
  * Skipped when the env var is absent (the GitHub CI has no Postgres service).
  */
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';

@@ -3,7 +3,7 @@
  * (Serializable isolation + P2034 retry are invisible to mocked tests).
  * This is the seed of the future k6 load scenario (plan P-04 §5).
  *
- * Run with:  INVARIANTS_DATABASE_URL=postgresql://... npx vitest run tests/db
+ * Run with:  INVARIANTS_DATABASE_URL=postgresql://... npm run test:db:invariants
  * Skipped when the env var is absent (the GitHub CI has no Postgres service).
  */
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';

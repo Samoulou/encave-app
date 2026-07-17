@@ -11,7 +11,7 @@
  * signature guards, unknown event types, and the gift settle dispatch.
  *
  * Run with:
- *   INVARIANTS_DATABASE_URL=postgresql://... npx vitest run tests/db
+ *   INVARIANTS_DATABASE_URL=postgresql://... npm run test:db:invariants
  */
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { addHours } from 'date-fns';
@@ -45,6 +45,11 @@ if (url) {
 // BEFORE any dynamic import of app code, and sign with the SAME value.
 const WEBHOOK_SECRET = 'whsec_dbtest_0123456789abcdef';
 process.env.STRIPE_WEBHOOK_SECRET = WEBHOOK_SECRET;
+
+// settleGiftTransfer short-circuits the Stripe call entirely under E2E_TEST
+// (records a synthetic tr_e2e_ id) — the gift-dispatch test asserts the REAL
+// call surface, so force the bypass off (same guard as the lifecycle suite).
+delete process.env.E2E_TEST;
 
 // Real signature crypto + vi.fn network surface (no Stripe network access).
 const stripeStub = makeStripeStub();
@@ -616,25 +621,12 @@ describe.skipIf(!url)('checkout webhook route (P0 lot 1)', () => {
   });
 
   it('an unknown event type is acknowledged 200 and marked PROCESSED (log-only)', async () => {
-    // buildSignedCheckoutEvent is typed on the 3 checkout types — build the
-    // envelope by hand and sign it with the stub's real webhook crypto.
-    const eventId = `evt_dbtest_${Math.random().toString(36).slice(2, 12)}`;
-    const payload = JSON.stringify({
-      id: eventId,
-      object: 'event',
-      api_version: '2025-12-15.clover',
-      created: Math.floor(Date.now() / 1000),
+    const event = buildSignedCheckoutEvent({
       type: 'charge.refunded',
-      data: { object: { id: `ch_dbtest_${eventId}`, object: 'charge' } },
-      livemode: false,
-      pending_webhooks: 1,
-      request: { id: null, idempotency_key: null },
-    });
-    const signature = stripeStub.client.webhooks.generateTestHeaderString({
-      payload,
+      dataObject: { id: 'ch_dbtest_unknown_type', object: 'charge' },
       secret: WEBHOOK_SECRET,
     });
-    const event: SignedEvent = { payload, signature, eventId };
+    const { eventId } = event;
     eventIds.push(eventId);
 
     const { status, body } = await post(event);

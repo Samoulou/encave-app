@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 
 // Mock auth
 vi.mock('@/server/auth', () => ({
@@ -28,6 +28,12 @@ import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 
 describe('Blocked Date Server Actions', () => {
+  // Warm the availability action's module graph (better-auth, occurrence
+  // service) on the 10s hook budget — same rationale as checkout.test.ts.
+  beforeAll(async () => {
+    await import('@/server/actions/availability');
+  });
+
   const mockSession = {
     user: { id: 'user-123', email: 'winemaker@example.com' },
   };

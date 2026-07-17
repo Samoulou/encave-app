@@ -204,6 +204,25 @@ describe.skipIf(!url)('cron routes (lot 2 P0 — auth, guards, flags)', () => {
 
   beforeAll(async () => {
     db = new PrismaClient({ datasourceUrl: url });
+
+    // The invariants DB persists across local runs: a run killed before a
+    // sibling suite's afterAll can leave due PENDING GIFT_CARD_DELIVERY jobs
+    // or CONFIRMED gift bookings awaiting settle, and this suite's runner /
+    // reconcile assertions are exact DB-WIDE counts. Neutralize leftovers
+    // (safe under --no-file-parallelism — nothing else is in flight).
+    await db.scheduledJob.updateMany({
+      where: { type: 'GIFT_CARD_DELIVERY', status: 'PENDING' },
+      data: { status: 'CANCELLED', lastError: 'stale_neutralized_by_test' },
+    });
+    await db.booking.updateMany({
+      where: {
+        status: 'CONFIRMED',
+        giftAppliedCents: { gt: 0 },
+        giftTransferId: null,
+      },
+      data: { giftTransferId: 'tr_stale_neutralized_by_test' },
+    });
+
     const user = await db.user.create({
       data: {
         email: `${RUN_TAG}-owner@test.encave.ch`,

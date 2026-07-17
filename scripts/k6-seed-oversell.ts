@@ -8,6 +8,12 @@
  */
 import { PrismaClient } from '@prisma/client';
 
+import { assertLocalDbUrl } from '../tests/helpers/assert-local-db';
+
+// Writes a VERIFIED winery + PUBLISHED bookable experience — local DBs only
+// (a stray staging DATABASE_URL would publish a fake experience there).
+assertLocalDbUrl(process.env.DATABASE_URL || '');
+
 const db = new PrismaClient();
 
 const CAPACITY = 3;

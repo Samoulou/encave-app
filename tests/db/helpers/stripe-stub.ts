@@ -50,10 +50,6 @@ export function makeStripeStub() {
       id: nextId('pi'),
       status: 'succeeded',
     })),
-    paymentIntentsRetrieve: vi.fn(async (id: string) => ({
-      id,
-      status: 'succeeded',
-    })),
     setupIntentsRetrieve: vi.fn(async (id: string) => ({
       id,
       status: 'succeeded',
@@ -76,10 +72,9 @@ export function makeStripeStub() {
       createReversal: fns.transfersCreateReversal,
     },
     refunds: { create: fns.refundsCreate },
-    paymentIntents: {
-      create: fns.paymentIntentsCreate,
-      retrieve: fns.paymentIntentsRetrieve,
-    },
+    // paymentIntents.retrieve is deliberately absent: the app never calls
+    // it — an undefined member is a louder failure than a silent stub.
+    paymentIntents: { create: fns.paymentIntentsCreate },
     setupIntents: { retrieve: fns.setupIntentsRetrieve },
   };
 

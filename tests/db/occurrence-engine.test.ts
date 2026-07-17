@@ -4,7 +4,7 @@
  * (close/override DO affect booking), the D3 blackout gate and the
  * kill-switch parity (flag OFF = P-04 behavior).
  *
- * Run with:  INVARIANTS_DATABASE_URL=postgresql://... npx vitest run tests/db
+ * Run with:  INVARIANTS_DATABASE_URL=postgresql://... npm run test:db:invariants
  */
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { PrismaClient, OccurrenceStatus } from '@prisma/client';

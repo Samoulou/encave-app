@@ -4,7 +4,7 @@
  * (one TASTING_RECAP job per booking, re-arm semantics), the D2 late-fill
  * rule (runAt ≈ now when filled > J+2) and the flag OFF gate.
  *
- * Run with:  INVARIANTS_DATABASE_URL=postgresql://... npx vitest run tests/db
+ * Run with:  INVARIANTS_DATABASE_URL=postgresql://... npm run test:db:invariants
  */
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import {

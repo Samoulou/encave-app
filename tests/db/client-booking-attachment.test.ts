@@ -5,7 +5,7 @@
  * a booking made as a guest with a mixed-case email must show up for the
  * lowercase session email of the freshly created account.
  *
- * Run with:  INVARIANTS_DATABASE_URL=postgresql://... npx vitest run tests/db
+ * Run with:  INVARIANTS_DATABASE_URL=postgresql://... npm run test:db:invariants
  * Skipped when the env var is absent (the GitHub CI has no Postgres service).
  */
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';

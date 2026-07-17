@@ -2,7 +2,7 @@
  * V3 money invariants — verified against a REAL migrated database
  * (CHECK constraints + triggers live in migrations, not in Prisma).
  *
- * Run with:  INVARIANTS_DATABASE_URL=postgresql://... npx vitest run tests/db
+ * Run with:  INVARIANTS_DATABASE_URL=postgresql://... npm run test:db:invariants
  * The target database MUST have been created via `prisma migrate deploy`
  * (a `db push` database has no triggers). Skipped when the env var is
  * absent (the GitHub CI has no Postgres service).

@@ -11,7 +11,7 @@
  * seed scripts, and Vitest tests/db suites alike.
  */
 
-const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '::1', '[::1]']);
+const LOCAL_HOSTS = ['localhost', '127.0.0.1', '::1', '[::1]'];
 
 /**
  * Throws unless `url` targets a local host. Never bypassed by CI: CI jobs
@@ -27,13 +27,13 @@ export function assertLocalDbUrl(url: string, label = 'DATABASE_URL'): void {
     );
   }
 
-  if (!LOCAL_HOSTS.has(host)) {
+  if (!LOCAL_HOSTS.includes(host)) {
     throw new Error(
       [
         `${label} points at "${host}", which is not a local database host.`,
         `Test setup wipes and reseeds the target database — running it against`,
         `a remote host (Neon, staging, prod) would destroy shared data.`,
-        `Allowed hosts: ${[...LOCAL_HOSTS].join(', ')}.`,
+        `Allowed hosts: ${LOCAL_HOSTS.join(', ')}.`,
         `Expected something like: postgresql://postgres:postgres@localhost:5433/encave_test`,
       ].join('\n')
     );

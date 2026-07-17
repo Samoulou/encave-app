@@ -11,7 +11,7 @@
  * ANALYZE force the planner to reveal whether the index is USABLE,
  * which is what these tests pin down.
  *
- * Run with:  INVARIANTS_DATABASE_URL=postgresql://... npx vitest run tests/db
+ * Run with:  INVARIANTS_DATABASE_URL=postgresql://... npm run test:db:invariants
  * (base created via `prisma migrate deploy` — db push lacks the raw objects)
  */
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';

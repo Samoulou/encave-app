@@ -1,4 +1,12 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import {
+  describe,
+  it,
+  expect,
+  vi,
+  beforeAll,
+  beforeEach,
+  afterEach,
+} from 'vitest';
 import crypto from 'crypto';
 import { db } from '@/server/db';
 import { BookingStatus } from '@prisma/client';
@@ -35,6 +43,13 @@ import {
 } from '@/server/services/email.service';
 
 describe('Booking Cancellation Actions', () => {
+  // The booking action drags a large module graph (Stripe SDK, refund/gift
+  // services, email): warm it on the 10s hook budget instead of the 5s
+  // budget of whichever test imports it first (flaky on loaded machines).
+  beforeAll(async () => {
+    await import('@/server/actions/booking');
+  });
+
   const accessToken = 'test-cancel-token-abc123';
   const tokenHash = crypto
     .createHash('sha256')

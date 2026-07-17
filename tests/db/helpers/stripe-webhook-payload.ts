@@ -61,14 +61,19 @@ export interface SignedEvent {
 /**
  * Builds a signed webhook delivery. Pass the same `eventId` twice to
  * simulate a Stripe redelivery of the SAME event (idempotence tests);
- * omit it for a fresh event.
+ * omit it for a fresh event. Non-checkout event types (`string & {}`
+ * keeps autocomplete on the three checkout literals) carry `dataObject`
+ * instead of a session — e.g. a `charge.refunded` the route ignores.
  */
-export function buildSignedCheckoutEvent(input: {
-  type: CheckoutEventType;
-  session: SyntheticSession;
-  secret: string;
-  eventId?: string;
-}): SignedEvent {
+export function buildSignedCheckoutEvent(
+  input: {
+    secret: string;
+    eventId?: string;
+  } & (
+    | { type: CheckoutEventType; session: SyntheticSession }
+    | { type: string & {}; dataObject: Record<string, unknown> }
+  )
+): SignedEvent {
   const eventId =
     input.eventId ?? `evt_dbtest_${Math.random().toString(36).slice(2, 12)}`;
   const payload = JSON.stringify({
@@ -77,7 +82,10 @@ export function buildSignedCheckoutEvent(input: {
     api_version: '2025-12-15.clover',
     created: Math.floor(Date.now() / 1000),
     type: input.type,
-    data: { object: sessionObject(input.session) },
+    data: {
+      object:
+        'session' in input ? sessionObject(input.session) : input.dataObject,
+    },
     livemode: false,
     pending_webhooks: 1,
     request: { id: null, idempotency_key: null },
