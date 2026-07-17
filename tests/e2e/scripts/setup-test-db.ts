@@ -15,6 +15,11 @@ import {
   TEST_USERS,
 } from '../fixtures/test-data';
 import { TEST_USERS as AUTH_TEST_USERS } from '../fixtures/auth.fixture';
+import { assertLocalDbUrl } from '../../helpers/assert-local-db';
+
+// This script wipes the target database — local hosts only, no exceptions
+// (also runs standalone via `npm run test:e2e:setup`, not just global-setup).
+assertLocalDbUrl(process.env.DATABASE_URL || '', 'DATABASE_URL');
 
 const prisma = new PrismaClient();
 

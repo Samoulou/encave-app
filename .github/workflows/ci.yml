@@ -52,6 +52,9 @@ jobs:
       - name: Check formatting
         run: npm run format:check
 
+      - name: Check translations (3 locales in sync)
+        run: npm run i18n:check
+
   test:
     name: Test
     runs-on: ubuntu-latest

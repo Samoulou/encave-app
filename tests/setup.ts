@@ -3,6 +3,8 @@ import { createElement } from 'react';
 import type { ReactNode } from 'react';
 import { vi } from 'vitest';
 
+import { assertLocalDbUrl } from './helpers/assert-local-db';
+
 // Pin the timezone to UTC so date-boundary tests are deterministic and
 // match production (Vercel functions run in UTC) and CI. Without this,
 // code that builds a Date via setHours() (local) drifts by the machine's
@@ -15,6 +17,16 @@ process.env.DATABASE_URL ||=
   'postgresql://user:password@localhost:5432/encave_test';
 process.env.BETTER_AUTH_SECRET ||= 'test-secret-at-least-32-characters-long';
 process.env.NODE_ENV ||= 'test';
+
+// The tests/db suites create/delete rows against INVARIANTS_DATABASE_URL —
+// refuse anything that is not a local host BEFORE any suite runs. Single
+// choke point: covers every current and future tests/db file.
+if (process.env.INVARIANTS_DATABASE_URL) {
+  assertLocalDbUrl(
+    process.env.INVARIANTS_DATABASE_URL,
+    'INVARIANTS_DATABASE_URL'
+  );
+}
 
 vi.mock('react', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react')>();
