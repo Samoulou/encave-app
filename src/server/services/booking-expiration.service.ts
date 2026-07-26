@@ -106,11 +106,12 @@ export async function expirePendingPaymentBookings(now = new Date()): Promise<{
           checkoutSession.status === 'complete'
         ) {
           // Paid, or completed-and-settling (e.g. delayed TWINT): never cancel
-          // — let the webhook confirm it. NOTE: a genuinely FAILED async payment
-          // also reports status 'complete' + unpaid; when TWINT/async is enabled
-          // it will need an async_payment_failed reaper, otherwise such a row
-          // lingers PENDING. Card-only today, so complete ⟺ paid and this
-          // clause never diverges from the payment_status check.
+          // here — a genuinely FAILED async payment also reports status
+          // 'complete' + unpaid, indistinguishable from "still settling" by
+          // session state alone, so this cron intentionally leaves BOTH cases
+          // alone. The checkout webhook's `async_payment_failed` handler is
+          // the one that resolves the failed case (P-16 review finding) —
+          // without it, this clause would strand the booking PENDING forever.
           logWarn(
             'Session paid or settling but booking still pending — leaving to webhook',
             {

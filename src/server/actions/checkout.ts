@@ -679,21 +679,62 @@ export async function createBookingAndCheckout(
         // A re-claim (retry after payment abort) must kill the previous
         // Stripe session: two live sessions on one booking let a stale
         // session's expiry webhook delete a booking being paid on the
-        // newer one. Best-effort — an already-expired session throws.
+        // newer one. expire() only throws when the session is no longer
+        // 'open' — that covers BOTH "already expired" (safe to proceed)
+        // and "already paid" (NOT safe: the old completed-webhook may still
+        // be in flight, and releasing the gift + starting a second charge
+        // here would let the customer keep the gift value while the winery
+        // goes unpaid for it — P-16 review finding). Retrieve to tell them
+        // apart before touching money.
+        let previousSessionIsDead = true;
         if (claimedBooking.stripeCheckoutSessionId) {
           try {
             await getStripe().checkout.sessions.expire(
               claimedBooking.stripeCheckoutSessionId
             );
           } catch (expireError) {
-            logWarn('Could not expire previous checkout session', {
-              action: 'createBookingAndCheckout',
-              bookingId: claimedBooking.id,
-              sessionId: claimedBooking.stripeCheckoutSessionId,
-              error: String(expireError),
-            });
+            try {
+              const previousSession =
+                await getStripe().checkout.sessions.retrieve(
+                  claimedBooking.stripeCheckoutSessionId
+                );
+              previousSessionIsDead = previousSession.status !== 'complete';
+            } catch (retrieveError) {
+              // Can't confirm the old session's fate — fail closed rather
+              // than risk a double charge / stranding the gift release.
+              previousSessionIsDead = false;
+              logError(
+                'Could not verify previous checkout session status',
+                retrieveError,
+                {
+                  action: 'createBookingAndCheckout',
+                  bookingId: claimedBooking.id,
+                  sessionId: claimedBooking.stripeCheckoutSessionId,
+                }
+              );
+            }
+            if (previousSessionIsDead) {
+              logWarn('Could not expire previous checkout session', {
+                action: 'createBookingAndCheckout',
+                bookingId: claimedBooking.id,
+                sessionId: claimedBooking.stripeCheckoutSessionId,
+                error: String(expireError),
+              });
+            }
           }
         }
+
+        if (!previousSessionIsDead) {
+          return {
+            success: false,
+            error: {
+              code: 'CONFLICT',
+              message:
+                'This booking may already be paid. Please refresh the page before retrying.',
+            },
+          };
+        }
+
         // Return any gift redemption carried over from the aborted attempt and
         // clear the gift fields, so the re-redemption below cannot double-debit
         // the card and a dropped-code retry can't strand giftAppliedCents that

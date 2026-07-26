@@ -33,6 +33,7 @@ vi.mock('@/server/db', () => ({
       delete: vi.fn(),
       deleteMany: vi.fn(),
       findUnique: vi.fn(),
+      updateMany: vi.fn(),
     },
     stripeEvent: {
       create: vi.fn(),
@@ -180,6 +181,76 @@ describe('Stripe checkout webhook handler', () => {
 
     expect(response.status).toBe(200);
     expect(db.booking.delete).not.toHaveBeenCalled();
+  });
+
+  it('cancels the pending booking when its async payment fails (delayed TWINT)', async () => {
+    const { db } = await import('@/server/db');
+    const { releaseGiftForBooking } =
+      await import('@/server/services/giftCard-redemption.service');
+    vi.mocked(db.booking.findUnique).mockResolvedValue({
+      id: 'booking-1',
+      status: 'PENDING_PAYMENT',
+      reference: 'ENC-ABC123',
+      stripeCheckoutSessionId: 'cs_test_current',
+    } as never);
+    vi.mocked(db.booking.updateMany).mockResolvedValue({ count: 1 } as never);
+    const event = {
+      id: 'evt_checkout_async_failed',
+      type: 'checkout.session.async_payment_failed',
+      data: {
+        object: {
+          id: 'cs_test_current',
+          metadata: { bookingId: 'booking-1' },
+        },
+      },
+    } as unknown as Stripe.Event;
+    mockConstructEvent.mockReturnValue(event);
+
+    const response = await POST(createMockRequest());
+
+    expect(response.status).toBe(200);
+    expect(db.booking.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: 'booking-1',
+        status: 'PENDING_PAYMENT',
+        OR: [
+          { stripeCheckoutSessionId: 'cs_test_current' },
+          { stripeCheckoutSessionId: null },
+        ],
+      },
+      data: {
+        status: 'CANCELLED_BY_CLIENT',
+        cancelledAt: expect.any(Date),
+        cancellationReason: 'PAYMENT_FAILED',
+      },
+    });
+    expect(releaseGiftForBooking).toHaveBeenCalledWith('booking-1');
+  });
+
+  it('keeps the booking when a STALE session fails async payment (retry created a newer one)', async () => {
+    const { db } = await import('@/server/db');
+    vi.mocked(db.booking.findUnique).mockResolvedValue({
+      id: 'booking-1',
+      status: 'PENDING_PAYMENT',
+      reference: 'ENC-ABC123',
+      stripeCheckoutSessionId: 'cs_test_newer',
+    } as never);
+    const event = {
+      id: 'evt_checkout_async_failed_stale',
+      type: 'checkout.session.async_payment_failed',
+      data: {
+        object: {
+          id: 'cs_test_stale',
+          metadata: { bookingId: 'booking-1' },
+        },
+      },
+    } as unknown as Stripe.Event;
+    mockConstructEvent.mockReturnValue(event);
+
+    const response = await POST(createMockRequest());
+
+    expect(response.status).toBe(200);
+    expect(db.booking.updateMany).not.toHaveBeenCalled();
   });
 
   it('returns 400 when the Stripe signature is missing', async () => {

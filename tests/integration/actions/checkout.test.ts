@@ -3,10 +3,12 @@ import { db } from '@/server/db';
 import { BookingStatus, ExperienceStatus, WineryStatus } from '@prisma/client';
 
 // Mock Stripe (hoisted spies so tests can assert on session payloads)
-const { sessionCreateMock, sessionExpireMock } = vi.hoisted(() => ({
-  sessionCreateMock: vi.fn(),
-  sessionExpireMock: vi.fn(),
-}));
+const { sessionCreateMock, sessionExpireMock, sessionRetrieveMock } =
+  vi.hoisted(() => ({
+    sessionCreateMock: vi.fn(),
+    sessionExpireMock: vi.fn(),
+    sessionRetrieveMock: vi.fn(),
+  }));
 vi.mock('stripe', () => {
   return {
     default: vi.fn().mockImplementation(() => ({
@@ -14,6 +16,7 @@ vi.mock('stripe', () => {
         sessions: {
           create: sessionCreateMock,
           expire: sessionExpireMock,
+          retrieve: sessionRetrieveMock,
         },
       },
     })),
@@ -726,6 +729,44 @@ describe('Checkout Server Actions', () => {
 
       expect(result.success).toBe(true);
       expect(sessionExpireMock).toHaveBeenCalledWith('cs_stale_111');
+    });
+
+    it('refuses the retry when the previous session already completed (payment race)', async () => {
+      vi.mocked(db.experience.findUnique).mockResolvedValue(
+        mockExperienceForClaim as never
+      );
+      vi.mocked(db.booking.updateMany).mockResolvedValue({
+        count: 1,
+      } as never);
+      vi.mocked(db.booking.findUniqueOrThrow).mockResolvedValue({
+        id: 'hold-1',
+        reference: 'ENC-HOLD1234',
+        stripeCheckoutSessionId: 'cs_stale_paid',
+      } as never);
+      // expire() throws for any non-'open' session — already-paid and
+      // already-expired look identical from here, so retrieve() is what
+      // tells them apart (P-16 review finding).
+      sessionExpireMock.mockRejectedValueOnce(
+        new Error('Session is no longer open')
+      );
+      sessionRetrieveMock.mockResolvedValueOnce({ status: 'complete' });
+
+      const { createBookingAndCheckout } =
+        await import('@/server/actions/checkout');
+      const result = await createBookingAndCheckout({
+        ...validInputForClaim,
+        holdId: 'ckvhold00000000000000000w',
+        holdToken: 'hold-token-0123456789abcdef',
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe('CONFLICT');
+      }
+      // Must NOT release the gift or start a second Stripe session — the
+      // old (possibly already-paid) session might still settle.
+      expect(db.booking.update).not.toHaveBeenCalled();
+      expect(sessionCreateMock).not.toHaveBeenCalled();
     });
 
     it('ignores a holdId without its ownership token (degrades to create)', async () => {

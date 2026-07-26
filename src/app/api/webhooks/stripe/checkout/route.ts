@@ -87,6 +87,19 @@ export async function POST(req: Request) {
         break;
       }
 
+      // A delayed-settlement method (TWINT) can fail after `completed` already
+      // fired unpaid — Stripe's authoritative "it's dead" signal, since the
+      // session itself stays `status: 'complete'` / `payment_status: 'unpaid'`
+      // forever (indistinguishable from "still settling" — the expiration cron
+      // treats any 'complete' session as unsafe to touch for that reason).
+      // Without this handler the booking would stay PENDING_PAYMENT forever
+      // (P-16 review finding).
+      case 'checkout.session.async_payment_failed': {
+        const session = event.data.object as Stripe.Checkout.Session;
+        await handleCheckoutAsyncPaymentFailed(session);
+        break;
+      }
+
       default:
         // Log unhandled events but don't fail
         logInfo('Unhandled checkout event type', { eventType: event.type });
@@ -309,6 +322,98 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
   await releaseGiftForBooking(bookingId);
 
   logInfo('Booking deleted due to checkout session expiry', {
+    bookingRef: booking.reference,
+  });
+}
+
+/**
+ * Handle checkout.session.async_payment_failed event.
+ *
+ * Unlike an expired session (customer never acted), this is a real payment
+ * attempt that Stripe has now definitively failed — cancel rather than
+ * delete, so the attempt stays visible for support.
+ */
+async function handleCheckoutAsyncPaymentFailed(
+  session: Stripe.Checkout.Session
+) {
+  // Gift-card sessions create no pre-payment row — nothing to clean up.
+  if (session.metadata?.kind === 'gift_card') {
+    return;
+  }
+
+  const bookingId = session.metadata?.bookingId;
+
+  if (!bookingId) {
+    logError('No bookingId in session metadata');
+    return;
+  }
+
+  const booking = await db.booking.findUnique({
+    where: { id: bookingId },
+    select: {
+      id: true,
+      status: true,
+      reference: true,
+      stripeCheckoutSessionId: true,
+    },
+  });
+
+  if (!booking) {
+    logError('Booking not found', undefined, { bookingId });
+    return;
+  }
+
+  if (booking.status !== BookingStatus.PENDING_PAYMENT) {
+    logInfo('Booking not pending payment, ignoring async payment failure', {
+      bookingRef: booking.reference,
+      status: booking.status,
+    });
+    return;
+  }
+
+  // Same staleness guard as the expired-session handler: a retry attaches a
+  // NEWER session to the booking, so a stale session's failure must never
+  // cancel a booking being paid on the newer one.
+  if (
+    booking.stripeCheckoutSessionId &&
+    booking.stripeCheckoutSessionId !== session.id
+  ) {
+    logInfo('Stale session failed — booking has a newer session, keeping', {
+      bookingRef: booking.reference,
+      failedSessionId: session.id,
+      currentSessionId: booking.stripeCheckoutSessionId,
+    });
+    return;
+  }
+
+  const cancelled = await db.booking.updateMany({
+    where: {
+      id: bookingId,
+      status: BookingStatus.PENDING_PAYMENT,
+      OR: [
+        { stripeCheckoutSessionId: session.id },
+        { stripeCheckoutSessionId: null },
+      ],
+    },
+    data: {
+      status: BookingStatus.CANCELLED_BY_CLIENT,
+      cancelledAt: new Date(),
+      cancellationReason: 'PAYMENT_FAILED',
+    },
+  });
+
+  if (cancelled.count === 0) {
+    logInfo(
+      'Async payment failed — booking confirmed/paid or on a newer session, kept',
+      { bookingRef: booking.reference, failedSessionId: session.id }
+    );
+    return;
+  }
+
+  // Idempotent, no-op when no gift was applied (P-09, Luca §4).
+  await releaseGiftForBooking(bookingId);
+
+  logInfo('Booking cancelled due to async payment failure', {
     bookingRef: booking.reference,
   });
 }
