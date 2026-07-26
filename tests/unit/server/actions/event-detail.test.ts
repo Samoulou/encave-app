@@ -156,9 +156,9 @@ function mockUpdateNoop(): void {
 
 // Status-guarded CAS (updateMany) succeeded — one row transitioned.
 function mockUpdateManyOk(): void {
-  updateManyMock.mockResolvedValueOnce(
-    { count: 1 } as Awaited<ReturnType<typeof db.booking.updateMany>>
-  );
+  updateManyMock.mockResolvedValueOnce({ count: 1 } as Awaited<
+    ReturnType<typeof db.booking.updateMany>
+  >);
 }
 
 beforeEach(() => {
