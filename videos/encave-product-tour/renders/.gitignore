@@ -1,0 +1,4 @@
+# hyperframes render scratch: per-run work dirs and transaction staging.
+# Only the finished MP4 in this directory is worth keeping.
+work-*/
+.video.hf-transaction-*/
