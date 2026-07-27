@@ -12,10 +12,8 @@
     #root { position:relative; width:1920px; height:1080px; overflow:hidden;
       font-family:'Nunito',sans-serif; }
     .f03-reservation-ground { position:absolute; inset:0; background:#FBF8F4; }
-    .f03-reservation-ground::after {
-      content:''; position:absolute; inset:0;
-      background:radial-gradient(1200px 700px at 88% 18%, rgba(122,27,59,0.055), transparent 70%);
-    }
+    .f03-reservation-ground::after { content:''; position:absolute; inset:0;
+      background:radial-gradient(1200px 700px at 88% 18%, rgba(122,27,59,0.055), transparent 70%); }
 
     .f03-reservation-col { position:absolute; left:112px; top:212px; width:556px; }
     .f03-reservation-kicker { display:flex; align-items:center; gap:14px;
@@ -25,7 +23,7 @@
     .f03-reservation-display { margin-top:26px; font-family:'Averia Serif Libre',serif;
       font-weight:400; font-size:78px; line-height:1.04; letter-spacing:-0.02em;
       color:#1A0F12; text-wrap:balance; }
-    .f03-reservation-display .em { color:#7A1B3B; }
+    .f03-reservation-display .f03-reservation-em { color:#7A1B3B; }
     .f03-reservation-sub { margin-top:26px; font-size:29px; line-height:1.5; color:#6B4F56;
       max-width:500px; }
     .f03-reservation-chips { margin-top:38px; display:flex; flex-direction:column; gap:14px; }
@@ -36,10 +34,21 @@
     .f03-reservation-chip .dot { width:10px; height:10px; border-radius:50%; background:#7A1B3B;
       flex:none; }
 
-    .f03-reservation-screen { position:absolute; left:748px; top:224px; width:1064px; height:632px;
+    .f03-reservation-screen { position:absolute; left:748px; top:224px;
+      width:1064px; height:632px;
       border:1px solid rgba(26,15,18,0.14); border-radius:14px; overflow:hidden;
-      background:#fff; box-shadow:0 1px 3px rgba(26,15,18,0.08), 0 18px 48px rgba(26,15,18,0.10); }
-    .f03-reservation-screen img { position:absolute; display:block; }
+      background:#FBF8F4;
+      box-shadow:0 1px 3px rgba(26,15,18,0.08), 0 18px 48px rgba(26,15,18,0.10); }
+    .f03-reservation-shot { position:absolute; left:0; top:0; width:1064px; height:632px;
+      display:block; transform-origin:0 0; }
+
+    .f03-reservation-ring { position:absolute; border:3px solid #7A1B3B; border-radius:10px;
+      box-shadow:0 0 0 4px rgba(122,27,59,0.14), 0 0 26px rgba(122,27,59,0.22);
+      pointer-events:none; opacity:0; }
+
+    .f03-reservation-cursor { position:absolute; left:0; top:0; width:98px; height:98px; z-index:20;
+      filter:drop-shadow(0 4px 6px rgba(0,0,0,0.3)); pointer-events:none;
+      will-change:transform; opacity:0; }
   </style>
 
   <div
@@ -67,7 +76,12 @@
     </div>
 
     <div class="f03-reservation-screen clip" id="f03-reservation-screen" data-layout-allow-overflow data-start="0" data-duration="12" data-track-index="2">
-      <img id="f03-reservation-shot" src="assets/ui-booking-panel-zoom.png" alt="" style="width:1064px; height:632px; left:0; top:0px;" />
+      <img class="f03-reservation-shot" id="f03-reservation-shot" src="assets/ui-booking-panel-zoom.png" alt="" />
+      <div class="f03-reservation-ring" id="f03-reservation-ring-0" style="left:367px; top:232px; width:667px; height:168px;"></div>
+      <div class="f03-reservation-ring" id="f03-reservation-ring-1" style="left:367px; top:232px; width:667px; height:168px;"></div>
+      <div class="f03-reservation-ring" id="f03-reservation-ring-2" style="left:367px; top:256px; width:667px; height:120px;"></div>
+      <div class="f03-reservation-ring" id="f03-reservation-ring-3" style="left:367px; top:232px; width:667px; height:168px;"></div>
+      <div class="f03-reservation-cursor" id="f03-reservation-cursor"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.5 2.2 L5.5 19.4 L9.9 15.3 L12.7 21.6 L15.6 20.3 L12.8 14.1 L18.9 14.0 Z" fill="#FBF8F4" stroke="#1A0F12" stroke-width="1.4" stroke-linejoin="round"/></svg></div>
     </div>
   </div>
 
@@ -76,15 +90,38 @@
     (function () {
       window.__timelines = window.__timelines || {};
       var tl = gsap.timeline({ paused: true });
-      tl.fromTo('#f03-reservation-screen', { opacity:0, x:56, scale:0.985 }, { opacity:1, x:0, scale:1, duration:0.85, ease:'power3.out' }, 0.1);
-      tl.fromTo('#f03-reservation-shot', { scale:1.05 }, { scale:1, duration:12, ease:'none' }, 0);
+      tl.fromTo('#f03-reservation-screen', { opacity:0, x:56 }, { opacity:1, x:0, duration:0.85, ease:'power3.out' }, 0.1);
       tl.fromTo('#f03-reservation-kicker', { opacity:0, y:16 }, { opacity:1, y:0, duration:0.55, ease:'power2.out' }, 0.25);
       tl.fromTo('#f03-reservation-display', { opacity:0, y:32 }, { opacity:1, y:0, duration:0.75, ease:'power3.out' }, 0.5);
       tl.fromTo('#f03-reservation-sub', { opacity:0, y:22 }, { opacity:1, y:0, duration:0.6, ease:'power2.out' }, 1.0);
-      tl.fromTo('#f03-reservation-chip-0', { opacity:0, x:-22 }, { opacity:1, x:0, duration:0.5, ease:'power2.out' }, 3.84);
-      tl.fromTo('#f03-reservation-chip-1', { opacity:0, x:-22 }, { opacity:1, x:0, duration:0.5, ease:'power2.out' }, 5.84);
-      tl.fromTo('#f03-reservation-chip-2', { opacity:0, x:-22 }, { opacity:1, x:0, duration:0.5, ease:'power2.out' }, 7.84);
-      tl.fromTo('#f03-reservation-chip-3', { opacity:0, x:-22 }, { opacity:1, x:0, duration:0.5, ease:'power2.out' }, 9.84);
+      gsap.set('#f03-reservation-shot', { x:0, y:0, scale:1, transformOrigin:'0 0' });
+      tl.to('#f03-reservation-shot', { x:-957.6, y:-8.2, scale:1.9, duration:1.05, ease:'power2.inOut' }, 2.57);
+      tl.fromTo('#f03-reservation-chip-0', { opacity:0, x:-22 }, { opacity:1, x:0, duration:0.5, ease:'power2.out' }, 3.12);
+      tl.fromTo('#f03-reservation-cursor', { opacity:1, x:680, y:762 }, { x:680, y:302, duration:0.9, ease:'power3.out', immediateRender:false }, 2.62);
+      tl.to('#f03-reservation-cursor', { scale:0.84, duration:0.1, ease:'power2.in', transformOrigin:'21% 14%', overwrite:'auto' }, 3.17);
+      tl.to('#f03-reservation-cursor', { scale:1, duration:0.22, ease:'power2.out', transformOrigin:'21% 14%', overwrite:'auto' }, 3.27);
+      tl.fromTo('#f03-reservation-ring-0', { opacity:0, scale:1.06, transformOrigin:'50% 50%' }, { opacity:1, scale:1, duration:0.4, ease:'power2.out' }, 3.20);
+      tl.to('#f03-reservation-ring-0', { opacity:0, duration:0.35, ease:'power1.in' }, 4.74);
+      tl.to('#f03-reservation-shot', { x:-957.6, y:-200.3, scale:1.9, duration:0.9, ease:'power2.inOut' }, 4.89);
+      tl.fromTo('#f03-reservation-chip-1', { opacity:0, x:-22 }, { opacity:1, x:0, duration:0.5, ease:'power2.out' }, 5.44);
+      tl.to('#f03-reservation-cursor', { x:680, y:302, duration:0.75, ease:'power2.inOut' }, 4.94);
+      tl.to('#f03-reservation-cursor', { scale:0.84, duration:0.1, ease:'power2.in', transformOrigin:'21% 14%', overwrite:'auto' }, 5.49);
+      tl.to('#f03-reservation-cursor', { scale:1, duration:0.22, ease:'power2.out', transformOrigin:'21% 14%', overwrite:'auto' }, 5.59);
+      tl.fromTo('#f03-reservation-ring-1', { opacity:0, scale:1.06, transformOrigin:'50% 50%' }, { opacity:1, scale:1, duration:0.4, ease:'power2.out' }, 5.52);
+      tl.to('#f03-reservation-ring-1', { opacity:0, duration:0.35, ease:'power1.in' }, 7.06);
+      tl.to('#f03-reservation-shot', { x:-957.6, y:-380.5, scale:1.9, duration:0.9, ease:'power2.inOut' }, 7.21);
+      tl.fromTo('#f03-reservation-chip-2', { opacity:0, x:-22 }, { opacity:1, x:0, duration:0.5, ease:'power2.out' }, 7.76);
+      tl.to('#f03-reservation-cursor', { x:680, y:302, duration:0.75, ease:'power2.inOut' }, 7.26);
+      tl.to('#f03-reservation-cursor', { scale:0.84, duration:0.1, ease:'power2.in', transformOrigin:'21% 14%', overwrite:'auto' }, 7.81);
+      tl.to('#f03-reservation-cursor', { scale:1, duration:0.22, ease:'power2.out', transformOrigin:'21% 14%', overwrite:'auto' }, 7.91);
+      tl.fromTo('#f03-reservation-ring-2', { opacity:0, scale:1.06, transformOrigin:'50% 50%' }, { opacity:1, scale:1, duration:0.4, ease:'power2.out' }, 7.84);
+      tl.to('#f03-reservation-ring-2', { opacity:0, duration:0.35, ease:'power1.in' }, 9.38);
+      tl.to('#f03-reservation-shot', { x:-957.6, y:-536.6, scale:1.9, duration:0.9, ease:'power2.inOut' }, 9.53);
+      tl.fromTo('#f03-reservation-chip-3', { opacity:0, x:-22 }, { opacity:1, x:0, duration:0.5, ease:'power2.out' }, 10.08);
+      tl.to('#f03-reservation-cursor', { x:680, y:302, duration:0.75, ease:'power2.inOut' }, 9.58);
+      tl.to('#f03-reservation-cursor', { scale:0.84, duration:0.1, ease:'power2.in', transformOrigin:'21% 14%', overwrite:'auto' }, 10.13);
+      tl.to('#f03-reservation-cursor', { scale:1, duration:0.22, ease:'power2.out', transformOrigin:'21% 14%', overwrite:'auto' }, 10.23);
+      tl.fromTo('#f03-reservation-ring-3', { opacity:0, scale:1.06, transformOrigin:'50% 50%' }, { opacity:1, scale:1, duration:0.4, ease:'power2.out' }, 10.16);
       window.__timelines['03-reservation'] = tl;
     })();
   </script>

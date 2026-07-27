@@ -12,10 +12,8 @@
     #root { position:relative; width:1920px; height:1080px; overflow:hidden;
       font-family:'Nunito',sans-serif; }
     .f01-hook-ground { position:absolute; inset:0; background:#FBF8F4; }
-    .f01-hook-ground::after {
-      content:''; position:absolute; inset:0;
-      background:radial-gradient(1200px 700px at 88% 18%, rgba(122,27,59,0.055), transparent 70%);
-    }
+    .f01-hook-ground::after { content:''; position:absolute; inset:0;
+      background:radial-gradient(1200px 700px at 88% 18%, rgba(122,27,59,0.055), transparent 70%); }
 
     .f01-hook-col { position:absolute; left:112px; top:212px; width:556px; }
     .f01-hook-kicker { display:flex; align-items:center; gap:14px;
@@ -25,7 +23,7 @@
     .f01-hook-display { margin-top:26px; font-family:'Averia Serif Libre',serif;
       font-weight:400; font-size:78px; line-height:1.04; letter-spacing:-0.02em;
       color:#1A0F12; text-wrap:balance; }
-    .f01-hook-display .em { color:#7A1B3B; }
+    .f01-hook-display .f01-hook-em { color:#7A1B3B; }
     .f01-hook-sub { margin-top:26px; font-size:29px; line-height:1.5; color:#6B4F56;
       max-width:500px; }
     .f01-hook-chips { margin-top:38px; display:flex; flex-direction:column; gap:14px; }
@@ -36,10 +34,21 @@
     .f01-hook-chip .dot { width:10px; height:10px; border-radius:50%; background:#7A1B3B;
       flex:none; }
 
-    .f01-hook-screen { position:absolute; left:748px; top:224px; width:1064px; height:632px;
+    .f01-hook-screen { position:absolute; left:748px; top:241px;
+      width:1064px; height:599px;
       border:1px solid rgba(26,15,18,0.14); border-radius:14px; overflow:hidden;
-      background:#fff; box-shadow:0 1px 3px rgba(26,15,18,0.08), 0 18px 48px rgba(26,15,18,0.10); }
-    .f01-hook-screen img { position:absolute; display:block; }
+      background:#FBF8F4;
+      box-shadow:0 1px 3px rgba(26,15,18,0.08), 0 18px 48px rgba(26,15,18,0.10); }
+    .f01-hook-shot { position:absolute; left:0; top:0; width:1064px; height:599px;
+      display:block; transform-origin:0 0; }
+
+    .f01-hook-ring { position:absolute; border:3px solid #7A1B3B; border-radius:10px;
+      box-shadow:0 0 0 4px rgba(122,27,59,0.14), 0 0 26px rgba(122,27,59,0.22);
+      pointer-events:none; opacity:0; }
+
+    .f01-hook-cursor { position:absolute; left:0; top:0; width:98px; height:98px; z-index:20;
+      filter:drop-shadow(0 4px 6px rgba(0,0,0,0.3)); pointer-events:none;
+      will-change:transform; opacity:0; }
     .f01-hook-stats { margin-top:44px; display:flex; gap:0; }
     .f01-hook-stat { padding-right:40px; margin-right:40px;
       border-right:1px solid rgba(26,15,18,0.16); }
@@ -77,7 +86,9 @@
     </div>
 
     <div class="f01-hook-screen clip" id="f01-hook-screen" data-layout-allow-overflow data-start="0" data-duration="7" data-track-index="2">
-      <img id="f01-hook-shot" src="assets/ui-home-hero.png" alt="" style="width:1064px; height:599px; left:0; top:17px;" />
+      <img class="f01-hook-shot" id="f01-hook-shot" src="assets/ui-home-hero.png" alt="" />
+
+
     </div>
   </div>
 
@@ -86,13 +97,11 @@
     (function () {
       window.__timelines = window.__timelines || {};
       var tl = gsap.timeline({ paused: true });
-      tl.fromTo('#f01-hook-screen', { opacity:0, x:56, scale:0.985 }, { opacity:1, x:0, scale:1, duration:0.85, ease:'power3.out' }, 0.1);
-      tl.fromTo('#f01-hook-shot', { scale:1.05 }, { scale:1, duration:7, ease:'none' }, 0);
+      tl.fromTo('#f01-hook-screen', { opacity:0, x:56 }, { opacity:1, x:0, duration:0.85, ease:'power3.out' }, 0.1);
       tl.fromTo('#f01-hook-kicker', { opacity:0, y:16 }, { opacity:1, y:0, duration:0.55, ease:'power2.out' }, 0.25);
       tl.fromTo('#f01-hook-display', { opacity:0, y:32 }, { opacity:1, y:0, duration:0.75, ease:'power3.out' }, 0.5);
       tl.fromTo('#f01-hook-sub', { opacity:0, y:22 }, { opacity:1, y:0, duration:0.6, ease:'power2.out' }, 1.0);
-      tl.fromTo('#f01-hook-stat-0', { opacity:0, x:-22 }, { opacity:1, x:0, duration:0.5, ease:'power2.out' }, 2.24);
-      tl.fromTo('#f01-hook-stat-1', { opacity:0, x:-22 }, { opacity:1, x:0, duration:0.5, ease:'power2.out' }, 4.06);
+      tl.fromTo('#f01-hook-shot', { x:-37.2, y:-21.0, scale:1.07 }, { x:0, y:0, scale:1, duration:7, ease:'none' }, 0);
       window.__timelines['01-hook'] = tl;
     })();
   </script>

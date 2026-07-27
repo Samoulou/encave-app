@@ -12,10 +12,8 @@
     #root { position:relative; width:1920px; height:1080px; overflow:hidden;
       font-family:'Nunito',sans-serif; }
     .f02-catalogue-ground { position:absolute; inset:0; background:#FBF8F4; }
-    .f02-catalogue-ground::after {
-      content:''; position:absolute; inset:0;
-      background:radial-gradient(1200px 700px at 88% 18%, rgba(122,27,59,0.055), transparent 70%);
-    }
+    .f02-catalogue-ground::after { content:''; position:absolute; inset:0;
+      background:radial-gradient(1200px 700px at 88% 18%, rgba(122,27,59,0.055), transparent 70%); }
 
     .f02-catalogue-col { position:absolute; left:112px; top:212px; width:556px; }
     .f02-catalogue-kicker { display:flex; align-items:center; gap:14px;
@@ -25,7 +23,7 @@
     .f02-catalogue-display { margin-top:26px; font-family:'Averia Serif Libre',serif;
       font-weight:400; font-size:78px; line-height:1.04; letter-spacing:-0.02em;
       color:#1A0F12; text-wrap:balance; }
-    .f02-catalogue-display .em { color:#7A1B3B; }
+    .f02-catalogue-display .f02-catalogue-em { color:#7A1B3B; }
     .f02-catalogue-sub { margin-top:26px; font-size:29px; line-height:1.5; color:#6B4F56;
       max-width:500px; }
     .f02-catalogue-chips { margin-top:38px; display:flex; flex-direction:column; gap:14px; }
@@ -36,10 +34,21 @@
     .f02-catalogue-chip .dot { width:10px; height:10px; border-radius:50%; background:#7A1B3B;
       flex:none; }
 
-    .f02-catalogue-screen { position:absolute; left:748px; top:224px; width:1064px; height:632px;
+    .f02-catalogue-screen { position:absolute; left:748px; top:241px;
+      width:1064px; height:599px;
       border:1px solid rgba(26,15,18,0.14); border-radius:14px; overflow:hidden;
-      background:#fff; box-shadow:0 1px 3px rgba(26,15,18,0.08), 0 18px 48px rgba(26,15,18,0.10); }
-    .f02-catalogue-screen img { position:absolute; display:block; }
+      background:#FBF8F4;
+      box-shadow:0 1px 3px rgba(26,15,18,0.08), 0 18px 48px rgba(26,15,18,0.10); }
+    .f02-catalogue-shot { position:absolute; left:0; top:0; width:1064px; height:599px;
+      display:block; transform-origin:0 0; }
+
+    .f02-catalogue-ring { position:absolute; border:3px solid #7A1B3B; border-radius:10px;
+      box-shadow:0 0 0 4px rgba(122,27,59,0.14), 0 0 26px rgba(122,27,59,0.22);
+      pointer-events:none; opacity:0; }
+
+    .f02-catalogue-cursor { position:absolute; left:0; top:0; width:98px; height:98px; z-index:20;
+      filter:drop-shadow(0 4px 6px rgba(0,0,0,0.3)); pointer-events:none;
+      will-change:transform; opacity:0; }
   </style>
 
   <div
@@ -58,16 +67,19 @@
       <div class="f02-catalogue-display" id="f02-catalogue-display">Chercher <span class="f02-catalogue-em">par envie.</span></div>
       <div class="f02-catalogue-sub" id="f02-catalogue-sub">Le catalogue se filtre comme on choisit une sortie, pas comme on fouille un annuaire.</div>
       <div class="f02-catalogue-chips" id="f02-catalogue-chips">
-      <div class="f02-catalogue-chip" id="f02-catalogue-chip-0"><span class="dot"></span>Par type d’expérience</div>
-      <div class="f02-catalogue-chip" id="f02-catalogue-chip-1"><span class="dot"></span>Par commune</div>
-      <div class="f02-catalogue-chip" id="f02-catalogue-chip-2"><span class="dot"></span>Par date</div>
-      <div class="f02-catalogue-chip" id="f02-catalogue-chip-3"><span class="dot"></span>Par budget</div>
+      <div class="f02-catalogue-chip" id="f02-catalogue-chip-0"><span class="dot"></span>Filtrer par type</div>
+      <div class="f02-catalogue-chip" id="f02-catalogue-chip-1"><span class="dot"></span>Par commune, par date</div>
+      <div class="f02-catalogue-chip" id="f02-catalogue-chip-2"><span class="dot"></span>Les résultats suivent</div>
       </div>
 
     </div>
 
     <div class="f02-catalogue-screen clip" id="f02-catalogue-screen" data-layout-allow-overflow data-start="0" data-duration="9" data-track-index="2">
-      <img id="f02-catalogue-shot" src="assets/ui-catalogue-grid.png" alt="" style="width:1064px; height:599px; left:0; top:17px;" />
+      <img class="f02-catalogue-shot" id="f02-catalogue-shot" src="assets/ui-catalogue-grid.png" alt="" />
+      <div class="f02-catalogue-ring" id="f02-catalogue-ring-0" style="left:384px; top:171px; width:290px; height:257px;"></div>
+      <div class="f02-catalogue-ring" id="f02-catalogue-ring-1" style="left:384px; top:113px; width:290px; height:327px;"></div>
+      <div class="f02-catalogue-ring" id="f02-catalogue-ring-2" style="left:137px; top:35px; width:692px; height:405px;"></div>
+      <div class="f02-catalogue-cursor" id="f02-catalogue-cursor"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.5 2.2 L5.5 19.4 L9.9 15.3 L12.7 21.6 L15.6 20.3 L12.8 14.1 L18.9 14.0 Z" fill="#FBF8F4" stroke="#1A0F12" stroke-width="1.4" stroke-linejoin="round"/></svg></div>
     </div>
   </div>
 
@@ -76,15 +88,31 @@
     (function () {
       window.__timelines = window.__timelines || {};
       var tl = gsap.timeline({ paused: true });
-      tl.fromTo('#f02-catalogue-screen', { opacity:0, x:56, scale:0.985 }, { opacity:1, x:0, scale:1, duration:0.85, ease:'power3.out' }, 0.1);
-      tl.fromTo('#f02-catalogue-shot', { scale:1.05 }, { scale:1, duration:9, ease:'none' }, 0);
+      tl.fromTo('#f02-catalogue-screen', { opacity:0, x:56 }, { opacity:1, x:0, duration:0.85, ease:'power3.out' }, 0.1);
       tl.fromTo('#f02-catalogue-kicker', { opacity:0, y:16 }, { opacity:1, y:0, duration:0.55, ease:'power2.out' }, 0.25);
       tl.fromTo('#f02-catalogue-display', { opacity:0, y:32 }, { opacity:1, y:0, duration:0.75, ease:'power3.out' }, 0.5);
       tl.fromTo('#f02-catalogue-sub', { opacity:0, y:22 }, { opacity:1, y:0, duration:0.6, ease:'power2.out' }, 1.0);
-      tl.fromTo('#f02-catalogue-chip-0', { opacity:0, x:-22 }, { opacity:1, x:0, duration:0.5, ease:'power2.out' }, 2.88);
-      tl.fromTo('#f02-catalogue-chip-1', { opacity:0, x:-22 }, { opacity:1, x:0, duration:0.5, ease:'power2.out' }, 4.38);
-      tl.fromTo('#f02-catalogue-chip-2', { opacity:0, x:-22 }, { opacity:1, x:0, duration:0.5, ease:'power2.out' }, 5.88);
-      tl.fromTo('#f02-catalogue-chip-3', { opacity:0, x:-22 }, { opacity:1, x:0, duration:0.5, ease:'power2.out' }, 7.38);
+      gsap.set('#f02-catalogue-shot', { x:0, y:0, scale:1, transformOrigin:'0 0' });
+      tl.to('#f02-catalogue-shot', { x:0.0, y:-80.1, scale:1.95, duration:1.05, ease:'power2.inOut' }, 1.79);
+      tl.fromTo('#f02-catalogue-chip-0', { opacity:0, x:-22 }, { opacity:1, x:0, duration:0.5, ease:'power2.out' }, 2.34);
+      tl.fromTo('#f02-catalogue-cursor', { opacity:1, x:508, y:729 }, { x:508, y:286, duration:0.9, ease:'power3.out', immediateRender:false }, 1.84);
+      tl.to('#f02-catalogue-cursor', { scale:0.84, duration:0.1, ease:'power2.in', transformOrigin:'21% 14%', overwrite:'auto' }, 2.39);
+      tl.to('#f02-catalogue-cursor', { scale:1, duration:0.22, ease:'power2.out', transformOrigin:'21% 14%', overwrite:'auto' }, 2.49);
+      tl.fromTo('#f02-catalogue-ring-0', { opacity:0, scale:1.06, transformOrigin:'50% 50%' }, { opacity:1, scale:1, duration:0.4, ease:'power2.out' }, 2.42);
+      tl.to('#f02-catalogue-ring-0', { opacity:0, duration:0.35, ease:'power1.in' }, 4.25);
+      tl.to('#f02-catalogue-shot', { x:0.0, y:-401.3, scale:1.95, duration:0.9, ease:'power2.inOut' }, 4.40);
+      tl.fromTo('#f02-catalogue-chip-1', { opacity:0, x:-22 }, { opacity:1, x:0, duration:0.5, ease:'power2.out' }, 4.95);
+      tl.to('#f02-catalogue-cursor', { x:508, y:262, duration:0.75, ease:'power2.inOut' }, 4.45);
+      tl.to('#f02-catalogue-cursor', { scale:0.84, duration:0.1, ease:'power2.in', transformOrigin:'21% 14%', overwrite:'auto' }, 5.00);
+      tl.to('#f02-catalogue-cursor', { scale:1, duration:0.22, ease:'power2.out', transformOrigin:'21% 14%', overwrite:'auto' }, 5.10);
+      tl.fromTo('#f02-catalogue-ring-1', { opacity:0, scale:1.06, transformOrigin:'50% 50%' }, { opacity:1, scale:1, duration:0.4, ease:'power2.out' }, 5.03);
+      tl.to('#f02-catalogue-ring-1', { opacity:0, duration:0.35, ease:'power1.in' }, 6.86);
+      tl.to('#f02-catalogue-shot', { x:-319.2, y:-12.0, scale:1.3, duration:0.9, ease:'power2.inOut' }, 7.01);
+      tl.fromTo('#f02-catalogue-chip-2', { opacity:0, x:-22 }, { opacity:1, x:0, duration:0.5, ease:'power2.out' }, 7.56);
+      tl.to('#f02-catalogue-cursor', { x:462, y:223, duration:0.75, ease:'power2.inOut' }, 7.06);
+      tl.to('#f02-catalogue-cursor', { scale:0.84, duration:0.1, ease:'power2.in', transformOrigin:'21% 14%', overwrite:'auto' }, 7.61);
+      tl.to('#f02-catalogue-cursor', { scale:1, duration:0.22, ease:'power2.out', transformOrigin:'21% 14%', overwrite:'auto' }, 7.71);
+      tl.fromTo('#f02-catalogue-ring-2', { opacity:0, scale:1.06, transformOrigin:'50% 50%' }, { opacity:1, scale:1, duration:0.4, ease:'power2.out' }, 7.64);
       window.__timelines['02-catalogue'] = tl;
     })();
   </script>
