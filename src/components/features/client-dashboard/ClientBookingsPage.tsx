@@ -25,6 +25,16 @@ export async function ClientBookingsPage({
     redirect(`/${locale}/login`);
   }
 
+  // Guest bookings are attached by email alone — never expose them to an
+  // account whose email is unverified (it would leak another guest's PII).
+  if (!session.user.emailVerified) {
+    return (
+      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
+        {t('verifyEmailBanner')}
+      </div>
+    );
+  }
+
   const [upcoming, past] = await Promise.all([
     getClientUpcomingBookings(session.user.email),
     getClientPastBookings(session.user.email),

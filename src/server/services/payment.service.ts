@@ -2,6 +2,7 @@ import type Stripe from 'stripe';
 import { getStripe } from '@/server/stripe';
 import { db } from '@/server/db';
 import { env, getBaseUrl } from '@/lib/env';
+import { logError, logInfo } from '@/lib/logger';
 
 /**
  * Creates a Stripe Connect Express account for a winery
@@ -233,4 +234,80 @@ export async function processRefund(
     refundId: refund.id,
     amount: refund.amount,
   };
+}
+
+function isAlreadyRefundedError(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null) return false;
+  const code = (error as { code?: unknown }).code;
+  return code === 'charge_already_refunded';
+}
+
+/**
+ * Refund a captured Checkout payment that can no longer be fulfilled — the
+ * booking was deleted, or cancelled while still pending and never confirmed
+ * (a settlement race: the client pays just as the expire-cron / a winery
+ * rejection / a session cancellation lands). Without this the charge is
+ * stranded on a cancelled/absent booking with no reservation and no refund.
+ *
+ * Caller MUST have established that the booking is a genuine orphan (missing,
+ * or CANCELLED with no `stripePaymentIntentId` — i.e. never confirmed) so a
+ * FULFILLED (COMPLETED / NO_SHOW) or already-refunded booking is never clawed
+ * back here.
+ *
+ * Idempotent: keyed on the session id so Stripe collapses redeliveries into a
+ * single refund, and an already-refunded charge resolves to `null` instead of
+ * throwing — the webhook event must not get stuck FAILED retrying forever.
+ * `reverse_transfer` is derived from the session: a gift-funded card charge is
+ * a PLATFORM charge with no transfer (ADR-0003) and Stripe rejects
+ * reverse_transfer on it.
+ */
+export async function refundOrphanedCheckoutPayment(
+  session: Stripe.Checkout.Session
+): Promise<{ refundId: string; amount: number } | null> {
+  const paymentIntentId =
+    typeof session.payment_intent === 'string'
+      ? session.payment_intent
+      : (session.payment_intent?.id ?? null);
+
+  if (!paymentIntentId) {
+    // A 'paid' session should always carry a PaymentIntent; surface the
+    // anomaly distinctly rather than asserting a refund that never happened.
+    logError(
+      'Orphaned paid session has no PaymentIntent to refund',
+      undefined,
+      {
+        sessionId: session.id,
+      }
+    );
+    return null;
+  }
+
+  const giftApplied = Number(session.metadata?.giftAppliedCents ?? '0');
+  const isGiftFunded = Number.isFinite(giftApplied) && giftApplied > 0;
+
+  try {
+    const refund = await processRefund(
+      paymentIntentId,
+      true,
+      undefined,
+      `orphan-refund-${session.id}`,
+      { reverseTransfer: !isGiftFunded }
+    );
+    logError('Refunded orphaned paid checkout session', undefined, {
+      sessionId: session.id,
+      paymentIntentId,
+      refundId: refund.refundId,
+      amount: refund.amount,
+    });
+    return refund;
+  } catch (error) {
+    if (isAlreadyRefundedError(error)) {
+      logInfo('Orphaned session already refunded — no action', {
+        sessionId: session.id,
+        paymentIntentId,
+      });
+      return null;
+    }
+    throw error;
+  }
 }

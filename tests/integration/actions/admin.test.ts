@@ -4,6 +4,7 @@ import type { Session } from '@/server/auth';
 // Mock next-auth
 vi.mock('@/server/auth', () => ({
   auth: vi.fn(),
+  isCurrentAdminSessionExpired: vi.fn().mockResolvedValue(false),
 }));
 
 // Mock Prisma

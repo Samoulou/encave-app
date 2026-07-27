@@ -130,6 +130,7 @@ export function CreateExperienceForm({
       maxCapacity: 12,
       paymentMode: 'ONLINE',
       isCollective: false,
+      languages: ['FR'],
     },
   });
 

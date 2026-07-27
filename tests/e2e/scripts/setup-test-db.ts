@@ -104,6 +104,11 @@ async function main() {
         email: user.email,
         name: user.name,
         role: 'WINEMAKER',
+        // Pre-seeded fixtures stand in for existing, already-onboarded
+        // accounts (like the emailVerified backfill migration does for
+        // real pre-existing users) — never for the unverified state a
+        // fresh sign-up starts in, which no E2E flow here exercises.
+        emailVerified: true,
       },
     });
   }
@@ -125,6 +130,9 @@ async function main() {
         email: user.email,
         name: user.name,
         role,
+        // See the WINEMAKER seed above — these fixtures represent
+        // already-existing verified accounts, not fresh sign-ups.
+        emailVerified: true,
       },
     });
 

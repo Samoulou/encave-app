@@ -69,7 +69,7 @@ export function ExportEarningsButton({
         toast.error(result.error?.message || t('toast.exportFailed'));
       }
     } catch {
-      toast.error(t('export.failed'));
+      toast.error(t('toast.exportFailed'));
     } finally {
       setIsExporting(false);
     }

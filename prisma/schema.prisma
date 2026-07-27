@@ -772,7 +772,9 @@ model GiftCard {
   deliverAt             DateTime? // scheduled recipient delivery
   deliveredAt           DateTime?
   expiresAt             DateTime // 5-year legal validity
-  stripePaymentIntentId String?
+  // @unique is the idempotency guard against a double mint from two paid
+  // Stripe events for one payment (completed + async_payment_succeeded).
+  stripePaymentIntentId String?        @unique
   locale                Locale         @default(FR)
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt

@@ -62,6 +62,27 @@ async function main() {
     return;
   }
 
+  // `prisma migrate deploy` uses the DIRECT (non-pooled) connection and loads
+  // the datasource config, so it hard-fails (P1012) when DIRECT_URL is unset —
+  // e.g. a Vercel preview build whose env only carries the pooled DATABASE_URL.
+  // Migrations cannot run without a direct connection, so skip them there
+  // (`next build` itself only needs DATABASE_URL). Production MUST have
+  // DIRECT_URL configured — fail loud rather than silently shipping unmigrated.
+  if (!process.env.DIRECT_URL) {
+    if (process.env.VERCEL_ENV === 'production') {
+      console.error(
+        '[deploy-migrations] DIRECT_URL is required in production — refusing to skip migrations.'
+      );
+      process.exit(1);
+    }
+    console.warn(
+      '[deploy-migrations] DIRECT_URL not set — skipping prisma migrate deploy ' +
+        '(no direct connection; preview/DB-less build). Apply migrations from an ' +
+        'environment where DIRECT_URL is configured.'
+    );
+    return;
+  }
+
   const deploy = runPrisma(['migrate', 'deploy']);
   printResult(deploy);
 

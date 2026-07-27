@@ -140,6 +140,10 @@ export function BookingActionsSheet({
           toast.error(t('errors.noShowChargeFailed'));
         } else if (result.error.message === 'ALREADY_CHARGED') {
           toast.error(t('errors.noShowAlreadyCharged'));
+        } else if (result.error.message === 'NO_SHOW_FEE_CHARGE_IN_PROGRESS') {
+          toast.error(t('errors.noShowChargeInProgress'));
+        } else if (result.error.message === 'BOOKING_ALREADY_TRANSITIONED') {
+          toast.error(t('errors.bookingAlreadyTransitioned'));
         } else {
           toast.error(t('toast.error'));
         }

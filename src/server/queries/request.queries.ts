@@ -24,13 +24,20 @@ export interface RequestableWinery {
  * prefills its own, so it does not need this list.
  */
 export const getRequestableWineries = cache(
-  async (): Promise<RequestableWinery[]> => {
-    return db.winery.findMany({
-      where: { status: 'VERIFIED' },
-      select: { id: true, name: true },
-      orderBy: { name: 'asc' },
-    });
-  }
+  unstable_cache(
+    async (): Promise<RequestableWinery[]> => {
+      return db.winery.findMany({
+        where: { status: 'VERIFIED' },
+        select: { id: true, name: true },
+        orderBy: { name: 'asc' },
+      });
+    },
+    ['requestable-wineries'],
+    // Tag 'wineries' so admin verify/suspend (invalidateWineryCaches) purges
+    // this immediately; the TTL is the backstop. Without this the /sur-mesure
+    // picker was baked into the static page and frozen until a redeploy.
+    { tags: ['wineries'], revalidate: 300 }
+  )
 );
 
 export interface RequestListItem {

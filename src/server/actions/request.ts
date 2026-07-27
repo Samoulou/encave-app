@@ -516,6 +516,12 @@ export async function createRequestOfferCheckout(
     const wineryPayout = totalPrice - platformFee;
 
     // Reuse a single booking per offer — never mint a second (double-charge).
+    // BUT `offer.bookingId` may point at a CANCELLED/expired booking from a
+    // previous abandoned attempt (the expire-cron cancels it and never clears
+    // the link). Re-link a fresh booking in that case instead of reusing the
+    // dead one — reusing it would mint a Stripe session against a cancelled
+    // booking that can never be confirmed (paid, no ticket, no refund).
+    const priorBookingId = offer.bookingId;
     let bookingId = offer.bookingId;
     let bookingReference = '';
     if (bookingId) {
@@ -530,6 +536,7 @@ export async function createRequestOfferCheckout(
         };
       }
       if (!existing || existing.status !== BookingStatus.PENDING_PAYMENT) {
+        // Stale link (cancelled / expired / missing) — mint + re-link below.
         bookingId = null;
       } else {
         bookingReference = existing.reference;
@@ -562,34 +569,42 @@ export async function createRequestOfferCheckout(
         },
         select: { id: true, reference: true },
       });
-      // Link the booking to the offer atomically; on a lost race reuse the
-      // winner's booking and drop ours (no orphan double booking).
+      // Link the booking to the offer atomically. Match the linkage we READ
+      // (null on the first attempt, or the stale cancelled id on a retry) so a
+      // dead prior link is re-pointed to this fresh booking, while a genuine
+      // concurrent writer that already linked a fresh PENDING booking wins.
       const linked = await db.requestOffer.updateMany({
-        where: { id: offer.id, bookingId: null },
+        where: { id: offer.id, bookingId: priorBookingId },
         data: { bookingId: created.id },
       });
       if (linked.count === 0) {
-        // Lost the race: drop our booking and reuse the winner's (rare — one
-        // extra read only here, `bookingId` is a loose string, no relation).
+        // Lost the race: drop our booking and reuse the winner's — but ONLY if
+        // the winner is genuinely still PENDING_PAYMENT (never mint a Stripe
+        // session against a cancelled/absent booking). Otherwise ask to retry;
+        // the retry re-links fresh via the priorBookingId match above.
         await db.booking.delete({ where: { id: created.id } });
         const winner = await db.requestOffer.findUnique({
           where: { id: offer.id },
           select: { bookingId: true },
         });
-        if (!winner?.bookingId) {
+        const winnerBooking = winner?.bookingId
+          ? await db.booking.findUnique({
+              where: { id: winner.bookingId },
+              select: { status: true, reference: true },
+            })
+          : null;
+        if (
+          !winner?.bookingId ||
+          !winnerBooking ||
+          winnerBooking.status !== BookingStatus.PENDING_PAYMENT
+        ) {
           return {
             success: false,
             error: { code: 'CONFLICT', message: 'Please retry' },
           };
         }
         bookingId = winner.bookingId;
-        bookingReference =
-          (
-            await db.booking.findUnique({
-              where: { id: bookingId },
-              select: { reference: true },
-            })
-          )?.reference ?? '';
+        bookingReference = winnerBooking.reference;
       } else {
         bookingId = created.id;
         bookingReference = created.reference;

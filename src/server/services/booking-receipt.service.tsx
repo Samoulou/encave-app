@@ -7,7 +7,9 @@ import {
   StyleSheet,
   renderToBuffer,
 } from '@react-pdf/renderer';
-import { format } from 'date-fns';
+import { getTranslations } from 'next-intl/server';
+import { formatDateShort } from '@/lib/i18n/formatters';
+import type { Locale } from '@/i18n/routing';
 
 const styles = StyleSheet.create({
   page: {
@@ -173,8 +175,34 @@ export interface BookingReceiptData {
   generatedAt: Date;
 }
 
-function BookingReceipt({ receipt }: { receipt: BookingReceiptData }) {
-  const formattedDate = format(receipt.date, 'MMMM d, yyyy');
+interface ReceiptLabels {
+  title: string;
+  generatedOn: string;
+  reference: string;
+  client: string;
+  name: string;
+  email: string;
+  winery: string;
+  address: string;
+  experience: string;
+  date: string;
+  time: string;
+  guests: string;
+  serviceFee: string;
+  totalPaid: string;
+  vatNote: string;
+  footer: string;
+}
+
+function BookingReceipt({
+  receipt,
+  labels,
+  formattedDate,
+}: {
+  receipt: BookingReceiptData;
+  labels: ReceiptLabels;
+  formattedDate: string;
+}) {
   const formattedTime = `${formatTime(receipt.timeSlot)} - ${formatEndTime(
     receipt.timeSlot,
     receipt.durationMinutes
@@ -185,12 +213,10 @@ function BookingReceipt({ receipt }: { receipt: BookingReceiptData }) {
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
           <Text style={styles.brand}>EnCave</Text>
-          <Text style={styles.title}>Reçu de réservation</Text>
-          <Text style={styles.muted}>
-            Reçu généré le {format(receipt.generatedAt, 'MMMM d, yyyy')}
-          </Text>
+          <Text style={styles.title}>{labels.title}</Text>
+          <Text style={styles.muted}>{labels.generatedOn}</Text>
           <View style={styles.reference}>
-            <Text style={styles.referenceLabel}>Référence</Text>
+            <Text style={styles.referenceLabel}>{labels.reference}</Text>
             <Text style={styles.referenceValue}>{receipt.reference}</Text>
           </View>
         </View>
@@ -198,13 +224,13 @@ function BookingReceipt({ receipt }: { receipt: BookingReceiptData }) {
         <View style={styles.grid}>
           <View style={styles.column}>
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Client</Text>
+              <Text style={styles.sectionTitle}>{labels.client}</Text>
               <View style={styles.row}>
-                <Text style={styles.label}>Nom</Text>
+                <Text style={styles.label}>{labels.name}</Text>
                 <Text style={styles.value}>{receipt.visitorName}</Text>
               </View>
               <View style={styles.row}>
-                <Text style={styles.label}>Email</Text>
+                <Text style={styles.label}>{labels.email}</Text>
                 <Text style={styles.value}>{receipt.visitorEmail}</Text>
               </View>
             </View>
@@ -212,13 +238,13 @@ function BookingReceipt({ receipt }: { receipt: BookingReceiptData }) {
 
           <View style={styles.column}>
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Domaine</Text>
+              <Text style={styles.sectionTitle}>{labels.winery}</Text>
               <View style={styles.row}>
-                <Text style={styles.label}>Nom</Text>
+                <Text style={styles.label}>{labels.name}</Text>
                 <Text style={styles.value}>{receipt.wineryName}</Text>
               </View>
               <View style={styles.row}>
-                <Text style={styles.label}>Adresse</Text>
+                <Text style={styles.label}>{labels.address}</Text>
                 <Text style={styles.value}>
                   {receipt.wineryAddress}, {receipt.wineryCommune}
                 </Text>
@@ -228,25 +254,25 @@ function BookingReceipt({ receipt }: { receipt: BookingReceiptData }) {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Expérience</Text>
+          <Text style={styles.sectionTitle}>{labels.experience}</Text>
           <View style={styles.grid}>
             <View style={styles.column}>
               <View style={styles.row}>
-                <Text style={styles.label}>Expérience</Text>
+                <Text style={styles.label}>{labels.experience}</Text>
                 <Text style={styles.value}>{receipt.experienceTitle}</Text>
               </View>
               <View style={styles.row}>
-                <Text style={styles.label}>Date</Text>
+                <Text style={styles.label}>{labels.date}</Text>
                 <Text style={styles.value}>{formattedDate}</Text>
               </View>
             </View>
             <View style={styles.column}>
               <View style={styles.row}>
-                <Text style={styles.label}>Heure</Text>
+                <Text style={styles.label}>{labels.time}</Text>
                 <Text style={styles.value}>{formattedTime}</Text>
               </View>
               <View style={styles.row}>
-                <Text style={styles.label}>Invités</Text>
+                <Text style={styles.label}>{labels.guests}</Text>
                 <Text style={styles.value}>{receipt.guestCount}</Text>
               </View>
             </View>
@@ -257,13 +283,13 @@ function BookingReceipt({ receipt }: { receipt: BookingReceiptData }) {
           {receipt.serviceFeeCents > 0 && (
             <>
               <View style={styles.feeRow}>
-                <Text style={styles.totalLabel}>Expérience</Text>
+                <Text style={styles.totalLabel}>{labels.experience}</Text>
                 <Text style={styles.feeValue}>
                   {formatCHF(receipt.totalPrice)}
                 </Text>
               </View>
               <View style={styles.feeRow}>
-                <Text style={styles.totalLabel}>Frais de service</Text>
+                <Text style={styles.totalLabel}>{labels.serviceFee}</Text>
                 <Text style={styles.feeValue}>
                   {formatCHF(receipt.serviceFeeCents)}
                 </Text>
@@ -271,20 +297,16 @@ function BookingReceipt({ receipt }: { receipt: BookingReceiptData }) {
             </>
           )}
           <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Total payé</Text>
+            <Text style={styles.totalLabel}>{labels.totalPaid}</Text>
             <Text style={styles.totalValue}>
               {formatCHF(receipt.totalPrice + receipt.serviceFeeCents)}
             </Text>
           </View>
-          <Text style={styles.note}>
-            Prix TTC. EnCave n&apos;est pas assujettie à la TVA à ce jour.
-          </Text>
+          <Text style={styles.note}>{labels.vatNote}</Text>
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            Ce reçu confirme le paiement de votre réservation EnCave.
-          </Text>
+          <Text style={styles.footerText}>{labels.footer}</Text>
         </View>
       </Page>
     </Document>
@@ -292,7 +314,35 @@ function BookingReceipt({ receipt }: { receipt: BookingReceiptData }) {
 }
 
 export async function generateBookingReceiptPDF(
-  receipt: BookingReceiptData
+  receipt: BookingReceiptData,
+  locale: Locale = 'fr'
 ): Promise<Buffer> {
-  return renderToBuffer(<BookingReceipt receipt={receipt} />);
+  const t = await getTranslations({ locale, namespace: 'receipt' });
+  const labels: ReceiptLabels = {
+    title: t('title'),
+    generatedOn: t('generatedOn', {
+      date: formatDateShort(receipt.generatedAt, locale),
+    }),
+    reference: t('reference'),
+    client: t('client'),
+    name: t('name'),
+    email: t('email'),
+    winery: t('winery'),
+    address: t('address'),
+    experience: t('experience'),
+    date: t('date'),
+    time: t('time'),
+    guests: t('guests'),
+    serviceFee: t('serviceFee'),
+    totalPaid: t('totalPaid'),
+    vatNote: t('vatNote'),
+    footer: t('footer'),
+  };
+  return renderToBuffer(
+    <BookingReceipt
+      receipt={receipt}
+      labels={labels}
+      formattedDate={formatDateShort(receipt.date, locale)}
+    />
+  );
 }

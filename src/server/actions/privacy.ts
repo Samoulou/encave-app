@@ -20,6 +20,14 @@ export async function requestAccountDeletion(
       error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
     };
   }
+  // Account deletion anonymizes guest bookings matched by email — require a
+  // VERIFIED email so an unverified sign-up can't destroy another guest's data.
+  if (!session.user.emailVerified) {
+    return {
+      success: false,
+      error: { code: 'FORBIDDEN', message: 'EMAIL_NOT_VERIFIED' },
+    };
+  }
 
   const parsed = DeleteAccountSchema.safeParse(input);
   if (!parsed.success || parsed.data.email !== session.user.email) {

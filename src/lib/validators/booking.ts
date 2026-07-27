@@ -35,8 +35,11 @@ export function parseTimeSlot(timeSlot: string): {
   minutes: number;
 } {
   const [hoursStr, minutesStr] = timeSlot.split(':');
-  const hours = parseInt(hoursStr!, 10);
-  const minutes = parseInt(minutesStr!, 10);
+  if (hoursStr === undefined || minutesStr === undefined) {
+    throw new Error(`Invalid time slot format: ${timeSlot}`);
+  }
+  const hours = parseInt(hoursStr, 10);
+  const minutes = parseInt(minutesStr, 10);
 
   // Double-check for safety (should never happen if timeSlotSchema was used)
   if (isNaN(hours) || isNaN(minutes)) {

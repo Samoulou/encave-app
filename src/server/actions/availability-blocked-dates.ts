@@ -5,6 +5,7 @@ import { db } from '@/server/db';
 import type { ActionResult } from '@/types/actions';
 import { logError } from '@/lib/logger';
 import { revalidateTag } from 'next/cache';
+import { invalidateExperienceCaches } from './experience-helpers';
 import { generateOccurrences } from '@/server/services/occurrence.service';
 
 /**
@@ -92,6 +93,10 @@ export async function blockDate(
     // refresh the occurrence-backed views. Occurrences themselves are
     // never mutated (bookings on the date survive untouched).
     revalidateTag(`occurrences:${experienceId}`);
+    // Also purge the public 'experiences' ISR tag: the fiche/catalogue bake
+    // blocked dates at read time, and the 'occurrences:*' tag has no cache
+    // subscriber, so on its own it refreshes nothing the public pages read.
+    invalidateExperienceCaches();
 
     return {
       success: true,
@@ -169,6 +174,10 @@ export async function unblockDate(
       });
     }
     revalidateTag(`occurrences:${experienceId}`);
+    // Also purge the public 'experiences' ISR tag: the fiche/catalogue bake
+    // blocked dates at read time, and the 'occurrences:*' tag has no cache
+    // subscriber, so on its own it refreshes nothing the public pages read.
+    invalidateExperienceCaches();
 
     return { success: true, data: { success: true } };
   } catch (error) {
@@ -230,6 +239,8 @@ export async function blockDateForAllExperiences(
       skipDuplicates: true,
     });
 
+    // Bulk block touches every published experience's public reads.
+    invalidateExperienceCaches();
     return { success: true, data: { blockedCount: result.count } };
   } catch (error) {
     logError('blockDateForAllExperiences error', error, {
@@ -281,6 +292,7 @@ export async function unblockDateForAllExperiences(
       },
     });
 
+    invalidateExperienceCaches();
     return { success: true, data: { unblockedCount: result.count } };
   } catch (error) {
     logError('unblockDateForAllExperiences error', error, {

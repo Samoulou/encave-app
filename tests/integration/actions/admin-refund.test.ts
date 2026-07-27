@@ -26,6 +26,7 @@ vi.mock('@/server/db', () => ({
 
 vi.mock('@/server/auth', () => ({
   auth: vi.fn(),
+  isCurrentAdminSessionExpired: vi.fn().mockResolvedValue(false),
 }));
 
 vi.mock('@/server/stripe', () => ({

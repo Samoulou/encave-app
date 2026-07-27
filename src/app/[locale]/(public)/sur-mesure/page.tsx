@@ -9,6 +9,11 @@ import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
 import { getRequestableWineries } from '@/server/queries/request.queries';
 import { SurMesureForm } from '@/components/features/requests/SurMesureForm';
 
+// ISR: the winery picker (getRequestableWineries, tagged 'wineries') must not
+// be frozen into a static prerender until redeploy — revalidate on a TTL and
+// on any admin winery mutation.
+export const revalidate = 300;
+
 interface Props {
   params: Promise<{ locale: string }>;
 }

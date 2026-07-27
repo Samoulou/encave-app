@@ -7,6 +7,7 @@ import { BookingStatus, NoShowChargeStatus } from '@prisma/client';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { getStripe } from '@/server/stripe';
+import { zonedWallClockToUTC } from '@/lib/datetime/zurich';
 import { bookingIdSchema } from '@/lib/validators/eventDetail';
 import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
 import {
@@ -270,9 +271,7 @@ export async function chargeNoShowFee(
   });
 
   // Email #13 (client locale) — best-effort, the money already moved.
-  const [hours, minutes] = booking.timeSlot.split(':').map(Number);
-  const sessionDate = new Date(booking.date);
-  sessionDate.setHours(hours ?? 0, minutes ?? 0, 0, 0);
+  const sessionDate = zonedWallClockToUTC(booking.date, booking.timeSlot);
   try {
     await sendNoShowFeeChargedEmail(
       booking.visitorEmail,

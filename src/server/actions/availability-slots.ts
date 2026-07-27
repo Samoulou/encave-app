@@ -6,6 +6,7 @@ import { hasOverlappingSlots } from '@/lib/constants/time-slots';
 import type { ActionResult } from '@/types/actions';
 import { logError } from '@/lib/logger';
 import { revalidateTag } from 'next/cache';
+import { invalidateExperienceCaches } from './experience-helpers';
 import {
   closeOrphanedRecurringOccurrences,
   generateOccurrences,
@@ -239,6 +240,10 @@ export async function updateAvailabilitySlots(
       });
     }
     revalidateTag(`occurrences:${experienceId}`);
+    // The weekly slots are baked into the public fiche (cached under the
+    // 'experiences' tag) — purge it so a removed/changed slot stops being
+    // offered ('occurrences:*' alone has no cache subscriber).
+    invalidateExperienceCaches();
 
     return {
       success: true,
@@ -321,6 +326,8 @@ export async function toggleSlotActive(
       });
     }
     revalidateTag(`occurrences:${slot.experienceId}`);
+    // Purge the public 'experiences' tag (see updateAvailabilitySlots).
+    invalidateExperienceCaches();
 
     return {
       success: true,

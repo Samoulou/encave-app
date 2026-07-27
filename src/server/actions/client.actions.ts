@@ -2,6 +2,7 @@
 
 import { z } from 'zod';
 import { differenceInHours } from 'date-fns';
+import { zonedWallClockToUTC } from '@/lib/datetime/zurich';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/server/db';
 import { auth } from '@/server/auth';
@@ -42,6 +43,14 @@ export async function cancelClientBooking(
       return {
         success: false,
         error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
+      };
+    }
+    // Guest bookings are matched by email alone; require a VERIFIED email so an
+    // unverified sign-up can't cancel/refund someone else's guest booking.
+    if (!session.user.emailVerified) {
+      return {
+        success: false,
+        error: { code: 'FORBIDDEN', message: 'EMAIL_NOT_VERIFIED' },
       };
     }
 
@@ -91,10 +100,11 @@ export async function cancelClientBooking(
       };
     }
 
-    // Calculate hours until experience
-    const [hours, minutes] = booking.timeSlot.split(':').map(Number);
-    const experienceDateTime = new Date(booking.date);
-    experienceDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
+    // Calculate hours until experience (Zurich wall-clock → UTC instant)
+    const experienceDateTime = zonedWallClockToUTC(
+      booking.date,
+      booking.timeSlot
+    );
 
     const hoursUntilExperience = differenceInHours(
       experienceDateTime,
@@ -244,9 +254,8 @@ export async function cancelClientBooking(
       select: { id: true, status: true },
     });
 
-    // Combine date and timeSlot for email formatting
-    const bookingDateTime = new Date(booking.date);
-    bookingDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
+    // Combine date and timeSlot for email formatting (Zurich → UTC)
+    const bookingDateTime = zonedWallClockToUTC(booking.date, booking.timeSlot);
 
     // Send cancellation email to client (full paid total; refund exact,
     // or generic wording when due but unprocessable — see cancelBooking).
@@ -260,15 +269,19 @@ export async function cancelClientBooking(
         { action: 'cancelClientBooking', bookingId, refundDueCents }
       );
     }
-    await sendBookingCancellationEmail(booking.visitorEmail, {
-      guestName: booking.visitorName,
-      experienceTitle: booking.experience.title,
-      wineryName: booking.winery.name,
-      date: bookingDateTime,
-      totalPrice: paidCents,
-      refundAmountCents: refundUnprocessable ? null : totalReturnedCents,
-      bookingRef: booking.reference,
-    });
+    await sendBookingCancellationEmail(
+      booking.visitorEmail,
+      {
+        guestName: booking.visitorName,
+        experienceTitle: booking.experience.title,
+        wineryName: booking.winery.name,
+        date: bookingDateTime,
+        totalPrice: paidCents,
+        refundAmountCents: refundUnprocessable ? null : totalReturnedCents,
+        bookingRef: booking.reference,
+      },
+      booking.locale
+    );
 
     // Send notification to winemaker
     await sendWinemakerCancellationEmail(
@@ -325,6 +338,12 @@ export async function updateClientProfile(
       return {
         success: false,
         error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
+      };
+    }
+    if (!session.user.emailVerified) {
+      return {
+        success: false,
+        error: { code: 'FORBIDDEN', message: 'EMAIL_NOT_VERIFIED' },
       };
     }
 

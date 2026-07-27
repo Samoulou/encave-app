@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
-import { format } from 'date-fns';
+import { formatDateShort } from '@/lib/i18n/formatters';
 import type Stripe from 'stripe';
 import { ArrowLeft, CalendarCheck, Clock } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -169,7 +169,10 @@ export default async function ConfirmationPage({
   ]);
   const showOneTapAccount = !session && !accountExists;
 
-  const formattedDate = format(new Date(booking.date), 'MMM d, yyyy');
+  const formattedDate = formatDateShort(
+    new Date(booking.date),
+    locale as Locale
+  );
   const formattedTime = `${formatTime(booking.timeSlot)} - ${formatEndTime(booking.timeSlot, booking.experience.duration)}`;
 
   // Pending Payment State

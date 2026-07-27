@@ -1,6 +1,7 @@
-import Link from 'next/link';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Link } from '@/i18n/navigation';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
@@ -18,23 +19,30 @@ export async function generateMetadata({
 }
 
 interface PageProps {
+  params: Promise<{ locale: string }>;
   searchParams: Promise<{
     status?: string;
     type?: string;
   }>;
 }
 
-export default async function UnsubscribePage({ searchParams }: PageProps) {
-  const params = await searchParams;
-  const status = params.status;
-  const type = params.type;
+export default async function UnsubscribePage({
+  params,
+  searchParams,
+}: PageProps) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations('unsubscribe');
+
+  const { status, type } = await searchParams;
 
   const typeLabels: Record<string, string> = {
-    daily_digest: 'Daily Digest',
-    weekly_summary: 'Weekly Summary',
-    marketing: 'Marketing emails',
-    all: 'all marketing emails',
+    daily_digest: t('typeDaily'),
+    weekly_summary: t('typeWeekly'),
+    marketing: t('typeMarketing'),
+    all: t('typeAll'),
   };
+  const typeLabel = type ? (typeLabels[type] ?? type) : t('genericType');
 
   if (status === 'success') {
     return (
@@ -46,24 +54,22 @@ export default async function UnsubscribePage({ searchParams }: PageProps) {
             </div>
           </div>
           <h1 className="mb-2 font-display text-2xl font-bold text-foreground">
-            Unsubscribed Successfully
+            {t('successTitle')}
           </h1>
           <p className="mb-6 text-muted-foreground">
-            You have been unsubscribed from{' '}
-            {type ? typeLabels[type] || type : 'email notifications'}.
+            {t('successDesc', { type: typeLabel })}
           </p>
           <p className="mb-8 text-sm text-muted-foreground">
-            You can manage your notification preferences anytime from your
-            dashboard settings.
+            {t('manageHint')}
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Button asChild variant="outline">
               <Link href="/dashboard/settings/notifications">
-                Manage Preferences
+                {t('managePreferences')}
               </Link>
             </Button>
             <Button asChild>
-              <Link href="/">Go to Homepage</Link>
+              <Link href="/">{t('goHome')}</Link>
             </Button>
           </div>
         </div>
@@ -81,18 +87,15 @@ export default async function UnsubscribePage({ searchParams }: PageProps) {
             </div>
           </div>
           <h1 className="mb-2 font-display text-2xl font-bold text-foreground">
-            Invalid Link
+            {t('invalidTitle')}
           </h1>
-          <p className="mb-8 text-muted-foreground">
-            This unsubscribe link is invalid or has expired. Please use the link
-            from a recent email or manage your preferences from your dashboard.
-          </p>
+          <p className="mb-8 text-muted-foreground">{t('invalidDesc')}</p>
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Button asChild variant="outline">
-              <Link href="/login">Login to Manage</Link>
+              <Link href="/login">{t('loginManage')}</Link>
             </Button>
             <Button asChild>
-              <Link href="/">Go to Homepage</Link>
+              <Link href="/">{t('goHome')}</Link>
             </Button>
           </div>
         </div>
@@ -110,14 +113,11 @@ export default async function UnsubscribePage({ searchParams }: PageProps) {
             </div>
           </div>
           <h1 className="mb-2 font-display text-2xl font-bold text-foreground">
-            Something Went Wrong
+            {t('errorTitle')}
           </h1>
-          <p className="mb-8 text-muted-foreground">
-            We couldn&apos;t process your unsubscribe request. Please try again
-            or contact support if the problem persists.
-          </p>
+          <p className="mb-8 text-muted-foreground">{t('errorDesc')}</p>
           <Button asChild>
-            <Link href="/">Go to Homepage</Link>
+            <Link href="/">{t('goHome')}</Link>
           </Button>
         </div>
       </div>
@@ -129,18 +129,15 @@ export default async function UnsubscribePage({ searchParams }: PageProps) {
     <div className="flex min-h-[60vh] flex-col items-center justify-center px-4">
       <div className="mx-auto max-w-md text-center">
         <h1 className="mb-2 font-display text-2xl font-bold text-foreground">
-          Email Preferences
+          {t('defaultTitle')}
         </h1>
-        <p className="mb-8 text-muted-foreground">
-          To manage your email preferences, please log in to your account and
-          visit the notification settings.
-        </p>
+        <p className="mb-8 text-muted-foreground">{t('defaultDesc')}</p>
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Button asChild variant="outline">
-            <Link href="/login">Login</Link>
+            <Link href="/login">{t('login')}</Link>
           </Button>
           <Button asChild>
-            <Link href="/">Go to Homepage</Link>
+            <Link href="/">{t('goHome')}</Link>
           </Button>
         </div>
       </div>

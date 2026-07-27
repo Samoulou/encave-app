@@ -265,7 +265,7 @@ export function MobileBookingDrawer({
           )}
 
           {/* Step 3: Guests + Summary */}
-          {mobileStep === 3 && time && (
+          {mobileStep === 3 && time && date && (
             <div className="space-y-5">
               {/* Context: selected date + time */}
               <div className="flex flex-col gap-1.5 rounded-lg bg-stone-50 px-3 py-2.5">
@@ -274,7 +274,7 @@ export function MobileBookingDrawer({
                     className="h-4 w-4 text-primary"
                     aria-hidden="true"
                   />
-                  <span>{formatDateLabel(date!)}</span>
+                  <span>{formatDateLabel(date)}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Clock className="h-4 w-4 text-primary" aria-hidden="true" />

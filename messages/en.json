@@ -624,6 +624,8 @@
     "updatedSuccess": "Experience updated successfully",
     "updatedDescription": "Your changes have been saved.",
     "maxCapacityLabel": "Max Capacity",
+    "languagesLabel": "Spoken languages",
+    "languagesHelper": "Languages your guests can be hosted in — used by the catalogue language filter.",
     "address": "Address",
     "addressHelp": "Start typing to search for an address",
     "selectedAddress": "Selected Address",
@@ -708,6 +710,14 @@
     "contactWinery": "Contact the winery directly to book this experience.",
     "selectGuests": "Number of guests",
     "guests": "{count, plural, =1 {# guest} other {# guests}}",
+    "status": {
+      "PENDING_PAYMENT": "Pending payment",
+      "CONFIRMED": "Confirmed",
+      "COMPLETED": "Completed",
+      "CANCELLED_BY_CLIENT": "Cancelled",
+      "CANCELLED_BY_WINERY": "Cancelled by the winery",
+      "NO_SHOW": "No-show"
+    },
     "continueToPayment": "Continue to Payment",
     "priceCalculation": "{price} × {guests} = {total}",
     "remainingCapacity": "{count} {count, plural, =1 {spot} other {spots}} left",
@@ -2316,7 +2326,8 @@
       "noUpcomingDescription": "You don't have any upcoming wine experiences. Browse our selection to find your next adventure.",
       "noPast": "No past bookings",
       "noPastDescription": "You haven't visited any wineries yet. Book your first experience today!",
-      "browseExperiences": "Browse Experiences"
+      "browseExperiences": "Browse Experiences",
+      "verifyEmailBanner": "Please verify your email address to see your bookings — we've sent a verification link to your inbox."
     },
     "bookingCard": {
       "guests": "{count, plural, =1 {# guest} other {# guests}}",
@@ -2419,7 +2430,9 @@
         "revertWindowExpired": "Cannot revert after 72h.",
         "sessionNotEnded": "Available after the session ends.",
         "noShowChargeFailed": "The card was declined. You can retry the charge.",
-        "noShowAlreadyCharged": "The no-show fee has already been charged."
+        "noShowAlreadyCharged": "The no-show fee has already been charged.",
+        "noShowChargeInProgress": "A no-show fee charge is in progress. Try again once it settles.",
+        "bookingAlreadyTransitioned": "This booking was just updated on another device. Refresh to see its current status."
       },
       "toast": {
         "checkedIn": "Attendance saved.",
@@ -3100,5 +3113,43 @@
     "creating": "Creating…",
     "passwordTooShort": "Password must be at least {min} characters.",
     "signInFailed": "Account exists: wrong password. Please try again."
+  },
+  "receipt": {
+    "title": "Booking receipt",
+    "generatedOn": "Receipt generated on {date}",
+    "reference": "Reference",
+    "client": "Customer",
+    "name": "Name",
+    "email": "Email",
+    "winery": "Winery",
+    "address": "Address",
+    "experience": "Experience",
+    "date": "Date",
+    "time": "Time",
+    "guests": "Guests",
+    "serviceFee": "Service fee",
+    "totalPaid": "Total paid",
+    "vatNote": "Prices incl. tax. EnCave is not currently VAT-registered.",
+    "footer": "This receipt confirms payment of your EnCave booking."
+  },
+  "unsubscribe": {
+    "successTitle": "Unsubscribed successfully",
+    "successDesc": "You have been unsubscribed from {type}.",
+    "manageHint": "You can manage your notification preferences anytime from your dashboard settings.",
+    "managePreferences": "Manage preferences",
+    "goHome": "Go to homepage",
+    "invalidTitle": "Invalid link",
+    "invalidDesc": "This unsubscribe link is invalid or has expired. Please use the link from a recent email or manage your preferences from your dashboard.",
+    "loginManage": "Log in to manage",
+    "errorTitle": "Something went wrong",
+    "errorDesc": "We couldn't process your unsubscribe request. Please try again or contact support if the problem persists.",
+    "defaultTitle": "Email preferences",
+    "defaultDesc": "To manage your email preferences, please log in to your account and visit the notification settings.",
+    "login": "Log in",
+    "genericType": "email notifications",
+    "typeDaily": "the daily digest",
+    "typeWeekly": "the weekly summary",
+    "typeMarketing": "marketing emails",
+    "typeAll": "all marketing emails"
   }
 }

@@ -2,6 +2,7 @@
 
 import { db } from '@/server/db';
 import { auth } from '@/server/auth';
+import { getStripe } from '@/server/stripe';
 import { BookingStatus } from '@prisma/client';
 import { format } from 'date-fns';
 import type { ActionResult } from '@/types/actions';
@@ -11,6 +12,7 @@ import {
   type BookingFilters,
 } from '@/server/queries/booking.queries';
 import { sendBookingCancellationEmail } from '@/server/services/email.service';
+import { releaseGiftForBooking } from '@/server/services/giftCard-redemption.service';
 
 /**
  * Reject a pending booking (change status to CANCELLED_BY_WINERY)
@@ -67,24 +69,53 @@ export async function rejectBooking(
       };
     }
 
-    // Update status to CANCELLED_BY_WINERY
-    await db.booking.update({
-      where: { id: bookingId },
+    // Expire the still-open Stripe Checkout session so the guest can no
+    // longer pay a booking we are rejecting (mirrors the expire cron and
+    // cancelEventSession). A completed/paid session rejects .expire() — the
+    // CAS below then matches 0 rows and we keep the confirmed booking.
+    if (booking.stripeCheckoutSessionId?.startsWith('cs_')) {
+      await getStripe()
+        .checkout.sessions.expire(booking.stripeCheckoutSessionId)
+        .catch(() => undefined);
+    }
+
+    // Atomic CAS: only reject a booking that is STILL pending — a concurrent
+    // webhook confirmation (PENDING_PAYMENT → CONFIRMED) must not be clobbered.
+    const rejected = await db.booking.updateMany({
+      where: { id: bookingId, status: BookingStatus.PENDING_PAYMENT },
       data: {
         status: BookingStatus.CANCELLED_BY_WINERY,
         cancelledAt: new Date(),
       },
     });
 
-    // Send cancellation email to client (non-blocking)
-    sendBookingCancellationEmail(booking.visitorEmail, {
-      guestName: booking.visitorName,
-      experienceTitle: booking.experience.title,
-      wineryName: booking.winery.name,
-      date: booking.date,
-      totalPrice: booking.totalPrice,
-      bookingRef: booking.reference,
-    }).catch((error) => {
+    if (rejected.count === 0) {
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Only pending bookings can be rejected',
+        },
+      };
+    }
+
+    // Return any gift-card funds reserved on this pending booking, matching
+    // the expire-cron and expired-webhook cancel paths (no stranded balance).
+    await releaseGiftForBooking(bookingId);
+
+    // Send cancellation email to client in their booking locale (non-blocking)
+    sendBookingCancellationEmail(
+      booking.visitorEmail,
+      {
+        guestName: booking.visitorName,
+        experienceTitle: booking.experience.title,
+        wineryName: booking.winery.name,
+        date: booking.date,
+        totalPrice: booking.totalPrice,
+        bookingRef: booking.reference,
+      },
+      booking.locale
+    ).catch((error) => {
       logError('Failed to send booking rejection email', error, {
         bookingId,
       });

@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import Image from 'next/image';
 import Link from 'next/link';
-import { format } from 'date-fns';
+import { formatDate } from '@/lib/i18n/formatters';
 import {
   Calendar,
   Clock,
@@ -97,7 +97,7 @@ export default async function BookingPage({
   params,
   searchParams,
 }: BookingPageProps) {
-  const { id } = await params;
+  const { id, locale } = await params;
   const { token } = await searchParams;
   const t = await getTranslations('booking');
   const tConfirmation = await getTranslations('confirmation');
@@ -128,7 +128,7 @@ export default async function BookingPage({
               getStatusColor(booking.status)
             )}
           >
-            {booking.status.replace(/_/g, ' ')}
+            {t(`status.${booking.status}`)}
           </span>
         </div>
       </div>
@@ -165,7 +165,12 @@ export default async function BookingPage({
               <div className="flex items-center gap-3 text-muted-foreground">
                 <Calendar className="h-5 w-5 text-burgundy-600" />
                 <span>
-                  {format(new Date(booking.date), 'EEEE, MMMM d, yyyy')}
+                  {formatDate(new Date(booking.date), locale as Locale, {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                  })}
                 </span>
               </div>
 
@@ -179,10 +184,7 @@ export default async function BookingPage({
 
               <div className="flex items-center gap-3 text-muted-foreground">
                 <Users className="h-5 w-5 text-burgundy-600" />
-                <span>
-                  {booking.guestCount}{' '}
-                  {booking.guestCount === 1 ? 'guest' : 'guests'}
-                </span>
+                <span>{t('guests', { count: booking.guestCount })}</span>
               </div>
             </div>
 

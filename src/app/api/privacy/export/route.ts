@@ -8,6 +8,11 @@ export async function GET() {
   if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+  // The export dumps guest bookings matched by email alone — require a VERIFIED
+  // email so an unverified sign-up can't export another guest's PII.
+  if (!session.user.emailVerified) {
+    return NextResponse.json({ error: 'Email not verified' }, { status: 403 });
+  }
 
   try {
     const user = await db.user.findUnique({

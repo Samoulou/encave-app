@@ -3,6 +3,7 @@
 import { z } from 'zod';
 import crypto from 'crypto';
 import { differenceInHours } from 'date-fns';
+import { zonedWallClockToUTC } from '@/lib/datetime/zurich';
 import { db } from '@/server/db';
 import type { ActionResult } from '@/types/actions';
 import { BookingStatus } from '@prisma/client';
@@ -553,10 +554,11 @@ export async function cancelBooking(
       };
     }
 
-    // Calculate hours until experience
-    const [hours, minutes] = booking.timeSlot.split(':').map(Number);
-    const experienceDateTime = new Date(booking.date);
-    experienceDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
+    // Calculate hours until experience (Zurich wall-clock → UTC instant)
+    const experienceDateTime = zonedWallClockToUTC(
+      booking.date,
+      booking.timeSlot
+    );
 
     const hoursUntilExperience = differenceInHours(
       experienceDateTime,
@@ -715,9 +717,8 @@ export async function cancelBooking(
       select: { id: true, status: true },
     });
 
-    // Combine date and timeSlot for email formatting
-    const bookingDateTime = new Date(booking.date);
-    bookingDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
+    // Combine date and timeSlot for email formatting (Zurich → UTC)
+    const bookingDateTime = zonedWallClockToUTC(booking.date, booking.timeSlot);
 
     // Send cancellation email to client. Price row shows the full paid
     // amount; refund line shows the exact processed amount — or the
@@ -734,15 +735,19 @@ export async function cancelBooking(
         { action: 'cancelBooking', bookingId, refundDueCents }
       );
     }
-    await sendBookingCancellationEmail(booking.visitorEmail, {
-      guestName: booking.visitorName,
-      experienceTitle: booking.experience.title,
-      wineryName: booking.winery.name,
-      date: bookingDateTime,
-      totalPrice: paidCents,
-      refundAmountCents: refundUnprocessable ? null : totalReturnedCents,
-      bookingRef: booking.reference,
-    });
+    await sendBookingCancellationEmail(
+      booking.visitorEmail,
+      {
+        guestName: booking.visitorName,
+        experienceTitle: booking.experience.title,
+        wineryName: booking.winery.name,
+        date: bookingDateTime,
+        totalPrice: paidCents,
+        refundAmountCents: refundUnprocessable ? null : totalReturnedCents,
+        bookingRef: booking.reference,
+      },
+      booking.locale
+    );
 
     // Send notification to winemaker
     await sendWinemakerCancellationEmail(
@@ -833,10 +838,11 @@ export async function getCancellationInfo(
       };
     }
 
-    // Calculate hours until experience
-    const [hours, minutes] = booking.timeSlot.split(':').map(Number);
-    const experienceDateTime = new Date(booking.date);
-    experienceDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
+    // Calculate hours until experience (Zurich wall-clock → UTC instant)
+    const experienceDateTime = zonedWallClockToUTC(
+      booking.date,
+      booking.timeSlot
+    );
 
     const hoursUntilExperience = differenceInHours(
       experienceDateTime,
