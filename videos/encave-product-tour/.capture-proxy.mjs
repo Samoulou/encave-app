@@ -25,14 +25,61 @@ const HOP_BY_HOP = new Set([
   'content-security-policy-report-only',
 ]);
 
+// Third-party origins the page pulls media from. Chrome can't reach these
+// directly here (TLS through the sandbox egress proxy fails), so they are
+// routed back through this relay under /__ext/<host>/... and rewritten in
+// text bodies. Analytics/feedback widgets are deliberately NOT listed — they
+// aren't needed for a screen capture.
+const EXTERNAL_HOSTS = ['images.unsplash.com'];
+const EXT_PREFIX = '/__ext/';
+
 function rewriteBody(buf, contentType) {
   if (!contentType || !/text|html|javascript|json|css/.test(contentType)) return buf;
-  const str = buf.toString('utf-8');
-  const rewritten = str.split(TARGET_ORIGIN).join(LOCAL_ORIGIN);
-  return Buffer.from(rewritten, 'utf-8');
+  let str = buf.toString('utf-8');
+  str = str.split(TARGET_ORIGIN).join(LOCAL_ORIGIN);
+  for (const host of EXTERNAL_HOSTS) {
+    str = str.split(`https://${host}/`).join(`${LOCAL_ORIGIN}${EXT_PREFIX}${host}/`);
+    // Next.js image URLs embed the upstream URL percent-encoded
+    str = str
+      .split(encodeURIComponent(`https://${host}/`))
+      .join(encodeURIComponent(`https://${host}/`));
+  }
+  return Buffer.from(str, 'utf-8');
 }
 
 const server = http.createServer((req, res) => {
+  // External-host passthrough: /__ext/<host>/<path> -> https://<host>/<path>
+  if (req.url.startsWith(EXT_PREFIX)) {
+    const rest = req.url.slice(EXT_PREFIX.length);
+    const slash = rest.indexOf('/');
+    const extHost = slash === -1 ? rest : rest.slice(0, slash);
+    const extPath = slash === -1 ? '/' : rest.slice(slash);
+    if (!EXTERNAL_HOSTS.includes(extHost)) {
+      res.writeHead(403, { 'content-type': 'text/plain' });
+      res.end('Host not allowed');
+      return;
+    }
+    const extReq = https.request(
+      `https://${extHost}${extPath}`,
+      { method: 'GET', headers: { accept: req.headers.accept || '*/*', 'user-agent': req.headers['user-agent'] || '' } },
+      (extRes) => {
+        const out = {};
+        for (const [k, v] of Object.entries(extRes.headers)) {
+          if (HOP_BY_HOP.has(k.toLowerCase())) continue;
+          out[k] = v;
+        }
+        res.writeHead(extRes.statusCode || 200, out);
+        extRes.pipe(res);
+      }
+    );
+    extReq.on('error', (e) => {
+      res.writeHead(502, { 'content-type': 'text/plain' });
+      res.end('External fetch error: ' + e.message);
+    });
+    extReq.end();
+    return;
+  }
+
   const targetUrl = TARGET_ORIGIN + req.url;
   const chunks = [];
   req.on('data', (c) => chunks.push(c));

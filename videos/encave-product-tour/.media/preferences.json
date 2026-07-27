@@ -35,6 +35,13 @@
         "encave-product-tour"
       ],
       "updated_at": "2026-07-27T09:20:27.025Z"
+    },
+    "style_preset.product-launch-video": {
+      "value": "code-editorial",
+      "confirmed_in": [
+        "encave-product-tour"
+      ],
+      "updated_at": "2026-07-27T11:26:22.790Z"
     }
   },
   "sightings": {}
