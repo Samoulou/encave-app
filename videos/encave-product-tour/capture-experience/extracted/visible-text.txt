@@ -1,0 +1,128 @@
+[a] Skip to main content
+[a] EnCave
+[span] Expériences
+[span] Domaines
+[span] À propos
+[span] Offrir un bon
+[button] · CHF
+[a] Connexion
+[a] Commencer
+[span] Explorer
+[span] Accord mets-vins
+[strong] Raclette AOP & Fendant sur la Terrasse
+[span] Expériences
+[span] Raclette AOP & Fendant sur la Terrasse
+[button] Partager
+[a] Enregistrer
+[span] 18 places max
+[h1] Raclette AOP & Fendant sur la Terrasse
+[a] Cave de la Brunière
+[span] Conthey
+[span] Valais
+[div] Durée
+[div] 2h 15
+[div] Groupe
+[div] 4-18 pers.
+[div] Format
+[div] Accord mets-vins
+[div] Lieu
+[div] Conthey
+[div] Votre domaine
+[div] Cave de la Brunière
+[div] Route des Bans 25
+[div] Conthey
+[a] Voir le profil
+[h2] L'expérience
+[p] Le mariage le plus célèbre du Valais servi dans les règles de l'art : fromage de Bagnes raclé à la flamme et trois Fendants de terroirs différents. Vue imprenable sur la vallée du Rhône comprise.
+[h2] Infos pratiques
+[div] 2h 15 indiqué par le domaine
+[div] Groupe de 4 à 18 personnes
+[div] Rendez-vous à Conthey
+[div] Accord mets-vins proposé par Cave de la Brunière
+[div] Paiement sécurisé activé
+[span] Politique d'annulation :
+[span] Flexible
+[li] Remboursement à 100 % jusqu'à 2 h avant l'expérience
+[li] Passé ce délai, aucun remboursement.
+[h3] Où vous serez
+[p] Route des Bans 25, Conthey, Valais, Switzerland
+[div] © OpenStreetMap contributors © CARTO
+[span] Cave de la Brunière
+[a] Itinéraire
+[h2] Vous aimerez aussi
+[span] Dégustation
+[p] Cave de la Brunière
+[h3] Découverte des Cépages de Conthey
+[span] Conthey
+[span] 1h 15min
+[span] Jusqu'à 12
+[span] CHF 39.00
+[span] par personne
+[span] Visite de cave
+[p] Cave de la Brunière
+[h3] Visite de Cave & Dégustation sur Fût
+[span] Conthey
+[span] 1h 30min
+[span] Jusqu'à 14
+[span] CHF 41.00
+[span] par personne
+[span] Visite du vignoble
+[p] Cave de la Brunière
+[h3] Les Terrasses au Coucher du Soleil
+[span] Conthey
+[span] 2 heures
+[span] Jusqu'à 16
+[span] CHF 59.00
+[span] par personne
+[span] CHF 82.00
+[span] par personne
+[span] DISPONIBLE
+[div] Annulation gratuite jusqu'à 2 h avant.
+[div] Choisissez un jour
+[div] lun
+[div] mar
+[div] mer
+[div] jeu
+[div] ven
+[div] sam
+[div] Horaire
+[p] Sélectionnez d'abord une date
+[div] Participants
+[div] 18 places maximum
+[span] CHF 82.00
+[span] CHF 328.00
+[span] Frais de service
+[span] CHF 10.00
+[span] Total
+[span] CHF 338.00
+[span] Choisissez une date
+[p] Paiement Stripe · vous ne serez débité qu’à la confirmation
+[a] Offrir cette expérience
+[span] CHF 82.00
+[span] par personne
+[button] Réserver cette expérience
+[p] Plateforme de réservation d'expériences viticoles en Valais, Suisse.
+[span] Valais, Suisse
+[span] Paiement sécurisé
+[h3] Navigation
+[a] Expériences
+[a] Domaines
+[a] Offrir un bon
+[a] À propos
+[h3] Découvrir
+[a] Dégustation en Valais
+[a] Cépages Valaisans
+[h3] Mentions légales
+[a] Politique de confidentialité
+[a] Conditions d'utilisation
+[a] Politique d'annulation
+[a] Mentions légales
+[p] Copyright
+[p] Tous droits réservés.
+[span] Expériences viticoles valaisannes
+[a] samuel@encave.ch
+[h2] Vos préférences cookies
+[p] Nous utilisons des cookies pour faire fonctionner le site et, avec votre accord, pour comprendre comment il est utilisé.
+[button] Personnaliser
+[button] Continuer sans accepter
+[button] Tout accepter

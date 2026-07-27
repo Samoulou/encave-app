@@ -1,0 +1,421 @@
+[a] Skip to main content
+[a] EnCave
+[span] Expériences
+[span] Domaines
+[span] À propos
+[span] Offrir un bon
+[button] · CHF
+[a] Connexion
+[a] Commencer
+[a] Retour à l'accueil
+[h1] Expériences viticoles
+[p] Découvrez des expériences viticoles uniques en Valais
+[div] Discovery
+[h2] Affiner
+[span] Filtres
+[label] Type d'expérience
+[label] Dégustation
+[label] Visite de cave
+[label] Atelier
+[label] Visite du vignoble
+[label] Accord mets-vins
+[label] Repas au domaine
+[label] Événement
+[label] Localisation
+[span] Toutes les communes
+[label] Langue
+[span] Toutes les langues
+[label] Date
+[span] N'importe quand
+[label] Fourchette de prix (CHF)
+[button] < 50
+[button] 50–100
+[button] 100+
+[label] Taille du groupe (minimum)
+[div] © OpenStreetMap contributors © CARTO
+[button] Ma position
+[div] Domaines
+[div] lieux
+[p] Valais · 36 expériences
+[h2] Expériences disponibles
+[button] Liste
+[button] Carte
+[button] Prochaine disponibilité
+[button] Pertinence
+[button] Prix : croissant
+[button] Prix : décroissant
+[button] Plus récents
+[span] Repas au domaine
+[p] Cave Saint-Georges
+[h3] Repas Vigneron au Mazot
+[span] Chamoson
+[span] 2h 30min
+[span] Jusqu'à 20
+[p] Prochaine dispo : jeu. 30 juil. 2026 · 14:00
+[span] CHF 88.00
+[span] par personne
+[span] Accord mets-vins
+[p] Cave de la Brunière
+[h3] Raclette AOP & Fendant sur la Terrasse
+[span] Conthey
+[span] 2h 15min
+[span] Jusqu'à 18
+[span] CHF 82.00
+[span] par personne
+[span] Visite du vignoble
+[p] Cave de la Brunière
+[h3] Les Terrasses au Coucher du Soleil
+[span] Conthey
+[span] 2 heures
+[span] Jusqu'à 16
+[span] CHF 59.00
+[span] par personne
+[span] Visite de cave
+[p] Cave de la Brunière
+[h3] Visite de Cave & Dégustation sur Fût
+[span] Conthey
+[span] 1h 30min
+[span] Jusqu'à 14
+[span] CHF 41.00
+[span] par personne
+[span] Dégustation
+[p] Cave de la Brunière
+[h3] Découverte des Cépages de Conthey
+[span] Conthey
+[span] 1h 15min
+[span] Jusqu'à 12
+[span] CHF 39.00
+[span] par personne
+[span] Atelier
+[p] Cave du Vieux-Pressoir
+[h3] Atelier Taille de la Vigne en Hiver
+[span] Leytron
+[span] 3 heures
+[span] Jusqu'à 10
+[span] CHF 98.00
+[span] par personne
+[span] Accord mets-vins
+[p] Cave du Vieux-Pressoir
+[h3] Planchette Valaisanne & Vieux Millésimes
+[span] Leytron
+[span] 1h 30min
+[span] Jusqu'à 12
+[span] CHF 56.00
+[span] par personne
+[span] Visite de cave
+[p] Cave du Vieux-Pressoir
+[h3] Du Pressoir Ancestral à la Cuve Inox
+[span] Leytron
+[span] 1 heure
+[span] Jusqu'à 16
+[span] CHF 28.00
+[span] par personne
+[span] Dégustation
+[p] Cave du Vieux-Pressoir
+[h3] L'Humagne dans Tous ses États
+[span] Leytron
+[span] 1h 30min
+[span] Jusqu'à 10
+[span] CHF 44.00
+[span] par personne
+[span] Repas au domaine
+[p] Cave La Romaine
+[h3] Brunch Vigneron du Dimanche
+[span] Flanthey
+[span] 2h 30min
+[span] Jusqu'à 20
+[span] CHF 72.00
+[span] par personne
+[span] Atelier
+[p] Cave La Romaine
+[h3] Atelier Œnologie — Les Bases de la Dégustation
+[span] Flanthey
+[span] 2h 30min
+[span] Jusqu'à 10
+[span] CHF 85.00
+[span] par personne
+[span] Visite du vignoble
+[p] Cave La Romaine
+[h3] Balade des Bisses et des Vignes
+[span] Flanthey
+[span] 2h 30min
+[span] Jusqu'à 12
+[span] CHF 68.00
+[span] par personne
+[span] Dégustation
+[p] Cave La Romaine
+[h3] Cornalin & Humagne — Les Rouges du Valais
+[span] Flanthey
+[span] 1h 30min
+[span] Jusqu'à 10
+[span] CHF 46.00
+[span] par personne
+[span] Événement
+[p] Domaine du Mont d'Or
+[h3] Nuit des Épicuriens dans les Vignes
+[span] Sion
+[span] 4h 30min
+[span] Jusqu'à 60
+[span] CHF 99.00
+[span] par personne
+[span] Accord mets-vins
+[p] Domaine du Mont d'Or
+[h3] Vins Doux & Desserts — Accords Sucrés
+[span] Sion
+[span] 1h 45min
+[span] Jusqu'à 12
+[span] CHF 64.00
+[span] par personne
+[span] Visite de cave
+[p] Domaine du Mont d'Or
+[h3] Les Caves Centenaires du Mont d'Or
+[span] Sion
+[span] 1h 15min
+[span] Jusqu'à 18
+[span] CHF 36.00
+[span] par personne
+[span] Dégustation
+[p] Domaine du Mont d'Or
+[h3] Johannisberg Prestige — Dégustation au Domaine
+[span] Sion
+[span] 1h 30min
+[span] Jusqu'à 12
+[span] CHF 58.00
+[span] par personne
+[span] Visite du vignoble
+[p] Cave Saint-Georges
+[h3] Sentier Viticole des Coteaux de Chamoson
+[span] Chamoson
+[span] 2h 30min
+[span] Jusqu'à 14
+[span] CHF 55.00
+[span] par personne
+[span] Visite de cave
+[p] Cave Saint-Georges
+[h3] Sous les Hauts de Cry — Visite de la Cave
+[span] Chamoson
+[span] 1h 15min
+[span] Jusqu'à 15
+[span] CHF 32.00
+[span] par personne
+[span] Dégustation
+[p] Cave Saint-Georges
+[h3] Les Crus de Chamoson en 6 Verres
+[span] Chamoson
+[span] 1h 30min
+[span] Jusqu'à 12
+[span] CHF 42.00
+[span] par personne
+[button] Filtres
+[span] Filtres
+[label] Type d'expérience
+[label] Dégustation
+[label] Visite de cave
+[label] Atelier
+[label] Visite du vignoble
+[label] Accord mets-vins
+[label] Repas au domaine
+[label] Événement
+[label] Localisation
+[span] Toutes les communes
+[label] Langue
+[span] Toutes les langues
+[label] Date
+[span] N'importe quand
+[label] Fourchette de prix (CHF)
+[button] < 50
+[button] 50–100
+[button] 100+
+[label] Taille du groupe (minimum)
+[button] Liste
+[button] Carte
+[p] expériences trouvées
+[span] page 1 sur 2
+[span] Trier par
+[span] Prochaine disponibilité
+[span] Repas au domaine
+[p] Cave Saint-Georges
+[h3] Repas Vigneron au Mazot
+[span] Chamoson
+[span] 2h 30min
+[span] Jusqu'à 20
+[p] Prochaine dispo : jeu. 30 juil. 2026 · 14:00
+[span] CHF 88.00
+[span] par personne
+[span] Accord mets-vins
+[p] Cave de la Brunière
+[h3] Raclette AOP & Fendant sur la Terrasse
+[span] Conthey
+[span] 2h 15min
+[span] Jusqu'à 18
+[span] CHF 82.00
+[span] par personne
+[span] Visite du vignoble
+[p] Cave de la Brunière
+[h3] Les Terrasses au Coucher du Soleil
+[span] Conthey
+[span] 2 heures
+[span] Jusqu'à 16
+[span] CHF 59.00
+[span] par personne
+[span] Visite de cave
+[p] Cave de la Brunière
+[h3] Visite de Cave & Dégustation sur Fût
+[span] Conthey
+[span] 1h 30min
+[span] Jusqu'à 14
+[span] CHF 41.00
+[span] par personne
+[span] Dégustation
+[p] Cave de la Brunière
+[h3] Découverte des Cépages de Conthey
+[span] Conthey
+[span] 1h 15min
+[span] Jusqu'à 12
+[span] CHF 39.00
+[span] par personne
+[span] Atelier
+[p] Cave du Vieux-Pressoir
+[h3] Atelier Taille de la Vigne en Hiver
+[span] Leytron
+[span] 3 heures
+[span] Jusqu'à 10
+[span] CHF 98.00
+[span] par personne
+[span] Accord mets-vins
+[p] Cave du Vieux-Pressoir
+[h3] Planchette Valaisanne & Vieux Millésimes
+[span] Leytron
+[span] 1h 30min
+[span] Jusqu'à 12
+[span] CHF 56.00
+[span] par personne
+[span] Visite de cave
+[p] Cave du Vieux-Pressoir
+[h3] Du Pressoir Ancestral à la Cuve Inox
+[span] Leytron
+[span] 1 heure
+[span] Jusqu'à 16
+[span] CHF 28.00
+[span] par personne
+[span] Dégustation
+[p] Cave du Vieux-Pressoir
+[h3] L'Humagne dans Tous ses États
+[span] Leytron
+[span] 1h 30min
+[span] Jusqu'à 10
+[span] CHF 44.00
+[span] par personne
+[span] Repas au domaine
+[p] Cave La Romaine
+[h3] Brunch Vigneron du Dimanche
+[span] Flanthey
+[span] 2h 30min
+[span] Jusqu'à 20
+[span] CHF 72.00
+[span] par personne
+[span] Atelier
+[p] Cave La Romaine
+[h3] Atelier Œnologie — Les Bases de la Dégustation
+[span] Flanthey
+[span] 2h 30min
+[span] Jusqu'à 10
+[span] CHF 85.00
+[span] par personne
+[span] Visite du vignoble
+[p] Cave La Romaine
+[h3] Balade des Bisses et des Vignes
+[span] Flanthey
+[span] 2h 30min
+[span] Jusqu'à 12
+[span] CHF 68.00
+[span] par personne
+[span] Dégustation
+[p] Cave La Romaine
+[h3] Cornalin & Humagne — Les Rouges du Valais
+[span] Flanthey
+[span] 1h 30min
+[span] Jusqu'à 10
+[span] CHF 46.00
+[span] par personne
+[span] Événement
+[p] Domaine du Mont d'Or
+[h3] Nuit des Épicuriens dans les Vignes
+[span] Sion
+[span] 4h 30min
+[span] Jusqu'à 60
+[span] CHF 99.00
+[span] par personne
+[span] Accord mets-vins
+[p] Domaine du Mont d'Or
+[h3] Vins Doux & Desserts — Accords Sucrés
+[span] Sion
+[span] 1h 45min
+[span] Jusqu'à 12
+[span] CHF 64.00
+[span] par personne
+[span] Visite de cave
+[p] Domaine du Mont d'Or
+[h3] Les Caves Centenaires du Mont d'Or
+[span] Sion
+[span] 1h 15min
+[span] Jusqu'à 18
+[span] CHF 36.00
+[span] par personne
+[span] Dégustation
+[p] Domaine du Mont d'Or
+[h3] Johannisberg Prestige — Dégustation au Domaine
+[span] Sion
+[span] 1h 30min
+[span] Jusqu'à 12
+[span] CHF 58.00
+[span] par personne
+[span] Visite du vignoble
+[p] Cave Saint-Georges
+[h3] Sentier Viticole des Coteaux de Chamoson
+[span] Chamoson
+[span] 2h 30min
+[span] Jusqu'à 14
+[span] CHF 55.00
+[span] par personne
+[span] Visite de cave
+[p] Cave Saint-Georges
+[h3] Sous les Hauts de Cry — Visite de la Cave
+[span] Chamoson
+[span] 1h 15min
+[span] Jusqu'à 15
+[span] CHF 32.00
+[span] par personne
+[span] Dégustation
+[p] Cave Saint-Georges
+[h3] Les Crus de Chamoson en 6 Verres
+[span] Chamoson
+[span] 1h 30min
+[span] Jusqu'à 12
+[span] CHF 42.00
+[span] par personne
+[p] Plateforme de réservation d'expériences viticoles en Valais, Suisse.
+[span] Valais, Suisse
+[span] Paiement sécurisé
+[h3] Navigation
+[a] Expériences
+[a] Domaines
+[a] Offrir un bon
+[a] À propos
+[h3] Découvrir
+[a] Dégustation en Valais
+[a] Cépages Valaisans
+[h3] Mentions légales
+[a] Politique de confidentialité
+[a] Conditions d'utilisation
+[a] Politique d'annulation
+[a] Mentions légales
+[p] Copyright
+[p] Tous droits réservés.
+[span] Expériences viticoles valaisannes
+[a] samuel@encave.ch
+[h2] Vos préférences cookies
+[p] Nous utilisons des cookies pour faire fonctionner le site et, avec votre accord, pour comprendre comment il est utilisé.
+[button] Personnaliser
+[button] Continuer sans accepter
+[button] Tout accepter

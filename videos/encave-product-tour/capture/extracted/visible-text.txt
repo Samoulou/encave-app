@@ -1,0 +1,160 @@
+[a] Skip to main content
+[a] EnCave
+[span] Expériences
+[span] Domaines
+[span] À propos
+[span] Offrir un bon
+[button] · CHF
+[a] Connexion
+[a] Commencer
+[span] EnCave
+[span] Valais · expériences vérifiées
+[h1] Le vin,
+[em] chez ceux qui le font
+[p] Dégustations, ateliers et vendanges réservés directement avec le vigneron.
+[div] Quand
+[span] N'importe quand
+[div] Pour
+[span] 2 personnes
+[button] Explorer
+[a] Ce week-end
+[a] Dégustations
+[a] Avec repas
+[h2] Par envie
+[a] Voir tout →
+[span] Dégustation
+[span] Visite cave
+[span] Balade vigne
+[span] Atelier
+[span] Accords
+[h2] À l'affiche
+[p] Une expérience disponible sur EnCave.
+[span] Conthey
+[p] Cave de la Brunière
+[p] Conthey
+[h3] Raclette AOP & Fendant sur la Terrasse
+[span] 2h 15
+[span] max
+[span] CHF 82.00
+[span] / pers.
+[a] Réserver →
+[h2] Près de vous
+[p] Cave de la Brunière
+[h3] Les Terrasses au Coucher du Soleil
+[span] CHF 59.00
+[span] / pers.
+[span] Conthey
+[p] Cave de la Brunière
+[h3] Visite de Cave & Dégustation sur Fût
+[span] CHF 41.00
+[span] / pers.
+[span] Conthey
+[p] Cave de la Brunière
+[h3] Découverte des Cépages de Conthey
+[span] CHF 39.00
+[span] / pers.
+[span] Conthey
+[a] Explorer
+[a] Réservations
+[div] • Expériences disponibles en Valais
+[h1] Le Valais,
+[h1] une
+[em] cave
+[h1] à ciel ouvert.
+[p] Dégustations privées, visites de cave et ateliers proposés par les domaines valaisans disponibles sur EnCave.
+[div] Quand
+[span] N'importe quand
+[div] Pour
+[span] 2 personnes
+[button] Explorer
+[a] Ce week-end
+[a] Dégustations
+[a] Avec repas
+[div] • Expériences disponibles
+[h2] Réservez maintenant, partez selon vos disponibilités.
+[a] Voir les expériences
+[span] 2h 15
+[h3] Raclette AOP & Fendant sur la Terrasse
+[p] Cave de la Brunière
+[p] Conthey
+[span] CHF 82.00
+[span] Réserver →
+[h3] Les Terrasses au Coucher du Soleil
+[p] Cave de la Brunière
+[p] Conthey
+[span] CHF 59.00
+[span] Réserver →
+[span] 1h 30
+[h3] Visite de Cave & Dégustation sur Fût
+[p] Cave de la Brunière
+[p] Conthey
+[span] CHF 41.00
+[span] Réserver →
+[span] 1h 15
+[h3] Découverte des Cépages de Conthey
+[p] Cave de la Brunière
+[p] Conthey
+[span] CHF 39.00
+[span] Réserver →
+[div] © OpenStreetMap contributors © CARTO
+[button] Ma position
+[div] • Valais
+[div] domaines
+[a] Voir la carte
+[h2] Par envie
+[span] Dégustations
+[span] Expériences œnologiques
+[span] Visites de cave
+[span] Dans les domaines
+[span] Balades
+[span] Dans les vignes
+[span] Ateliers
+[span] Savoir-faire
+[span] Accords mets-vins
+[span] Tables locales
+[span] Annulation selon politique du domaine
+[span] Paiement sécurisé Stripe
+[span] Durées et horaires affichés par expérience
+[span] Capacités indiquées par les domaines
+[span] Expériences viticoles en Valais
+[h2] Comment fonctionne EnCave
+[p] Votre voyage vers les meilleurs vins suisses n'est qu'à trois étapes.
+[h3] Découvrez
+[p] Parcourez une sélection de perles cachées et de domaines primés à travers la vallée du Valais.
+[h3] Réservez
+[p] Choisissez vos dates, personnalisez la taille de votre groupe et réservez instantanément en ligne.
+[h3] Savourez
+[p] Arrivez au vignoble, rencontrez le vigneron et profitez d'une expérience de dégustation inoubliable.
+[span] Bon cadeau
+[h3] Offrez une expérience, pas un objet
+[p] Un bon cadeau EnCave, valable 5 ans, utilisable sur toutes nos expériences.
+[a] Offrir un bon cadeau
+[span] Sur-mesure
+[h3] Une envie particulière ?
+[p] Décrivez votre moment idéal — un encaveur vous répond avec une offre personnalisée sous 48 h.
+[a] Faire une demande
+[p] Plateforme de réservation d'expériences viticoles en Valais, Suisse.
+[span] Valais, Suisse
+[span] Paiement sécurisé
+[h3] Navigation
+[a] Expériences
+[a] Domaines
+[a] Offrir un bon
+[a] À propos
+[h3] Découvrir
+[a] Dégustation en Valais
+[a] Cépages Valaisans
+[h3] Mentions légales
+[a] Politique de confidentialité
+[a] Conditions d'utilisation
+[a] Politique d'annulation
+[a] Mentions légales
+[p] Copyright
+[p] Tous droits réservés.
+[span] Expériences viticoles valaisannes
+[a] samuel@encave.ch
+[h2] Vos préférences cookies
+[p] Nous utilisons des cookies pour faire fonctionner le site et, avec votre accord, pour comprendre comment il est utilisé.
+[button] Personnaliser
+[button] Continuer sans accepter
+[button] Tout accepter

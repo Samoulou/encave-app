@@ -1,0 +1,304 @@
+{
+  "typography": [
+    {
+      "role": "display",
+      "fontFamily": "__Nunito_ba5569",
+      "fontSize": "80px",
+      "fontWeight": "300",
+      "lineHeight": "78.4px",
+      "letterSpacing": "-2px",
+      "color": "#FFFFFF",
+      "sampleText": "Le Valais,une caveà ciel ouvert."
+    },
+    {
+      "role": "heading",
+      "fontFamily": "__Nunito_ba5569",
+      "fontSize": "34px",
+      "fontWeight": "500",
+      "lineHeight": "51px",
+      "letterSpacing": "-0.34px",
+      "color": "#1A0F12",
+      "sampleText": "Réservez maintenant, partez selon vos disponibilités."
+    },
+    {
+      "role": "heading-2",
+      "fontFamily": "__Nunito_ba5569",
+      "fontSize": "24px",
+      "fontWeight": "600",
+      "lineHeight": "32px",
+      "letterSpacing": "normal",
+      "color": "#1A0F12",
+      "sampleText": "Par envie"
+    },
+    {
+      "role": "heading-3",
+      "fontFamily": "__Nunito_ba5569",
+      "fontSize": "17px",
+      "fontWeight": "600",
+      "lineHeight": "20.4px",
+      "letterSpacing": "normal",
+      "color": "#1A0F12",
+      "sampleText": "Raclette AOP & Fendant sur la Terrasse"
+    },
+    {
+      "role": "body",
+      "fontFamily": "__Mukta_Vaani_ebcb76",
+      "fontSize": "17px",
+      "fontWeight": "400",
+      "lineHeight": "26.35px",
+      "letterSpacing": "normal",
+      "color": "#FFFFFF",
+      "sampleText": "Dégustations privées, visites de cave et ateliers proposés p"
+    },
+    {
+      "role": "link",
+      "fontFamily": "__Mukta_Vaani_ebcb76",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "24px",
+      "letterSpacing": "normal",
+      "color": "#1A0F12",
+      "sampleText": "Skip to main content"
+    },
+    {
+      "role": "code",
+      "fontFamily": "__JetBrains_Mono_b32614",
+      "fontSize": "11px",
+      "fontWeight": "500",
+      "lineHeight": "16.5px",
+      "letterSpacing": "0.88px",
+      "color": "#915564",
+      "sampleText": "FR · CHF"
+    }
+  ],
+  "spacing": {
+    "observed": [
+      4,
+      6,
+      8,
+      10,
+      12,
+      14,
+      16,
+      18,
+      23,
+      24,
+      32,
+      40,
+      56
+    ],
+    "baseUnit": 8
+  },
+  "radius": [
+    "8px",
+    "12px",
+    "14px",
+    "9999px"
+  ],
+  "shadows": [
+    {
+      "value": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(146, 42, 68, 0.2) 0px 10px 15px -3px, rgba(146, 42, 68, 0.2) 0px 4px 6px -4px",
+      "count": 2
+    },
+    {
+      "value": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(122, 27, 59, 0.08) 0px 1px 3px 0px, rgba(122, 27, 59, 0.04) 0px 1px 2px 0px",
+      "count": 1
+    }
+  ],
+  "buttons": [
+    {
+      "label": "FR · CHF",
+      "background": "transparent",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#915564",
+      "padding": "0px 8px",
+      "borderRadius": "9999px",
+      "border": "0px solid rgb(229, 210, 214)",
+      "boxShadow": "none",
+      "fontSize": "11px",
+      "fontWeight": "500",
+      "height": "36px"
+    },
+    {
+      "label": "N'importe quand",
+      "background": "transparent",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#1A0F12",
+      "padding": "0px",
+      "borderRadius": "0px",
+      "border": "0px solid rgb(229, 210, 214)",
+      "boxShadow": "none",
+      "fontSize": "15px",
+      "fontWeight": "600",
+      "height": "22.5px"
+    },
+    {
+      "label": "button",
+      "background": "transparent",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#3A2429",
+      "padding": "0px",
+      "borderRadius": "9999px",
+      "border": "1px solid rgb(229, 210, 215)",
+      "boxShadow": "none",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "height": "28px"
+    },
+    {
+      "label": "Explorer",
+      "background": "#962A48",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#FFFFFF",
+      "padding": "10px 28px",
+      "borderRadius": "14px",
+      "border": "0px solid rgb(229, 210, 214)",
+      "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(146, 42, 68, 0.2) 0px 10px 15px -3px, rgba(146, 42, 68, 0.2) 0px 4px 6px -4px",
+      "fontSize": "14px",
+      "fontWeight": "600",
+      "height": "62px"
+    },
+    {
+      "label": "button",
+      "background": "transparent",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#1A0F12",
+      "padding": "0px",
+      "borderRadius": "0px",
+      "border": "0px none rgb(26, 15, 18)",
+      "boxShadow": "none",
+      "fontSize": "12px",
+      "fontWeight": "400",
+      "height": "29px"
+    },
+    {
+      "label": "button",
+      "background": "transparent",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#1A0F12",
+      "padding": "0px",
+      "borderRadius": "0px",
+      "border": "",
+      "boxShadow": "none",
+      "fontSize": "12px",
+      "fontWeight": "400",
+      "height": "29px"
+    }
+  ],
+  "cards": [
+    {
+      "label": "card",
+      "background": "#FFFFFF",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#1A0F12",
+      "padding": "0px",
+      "borderRadius": "14px",
+      "border": "1px solid rgb(229, 210, 215)",
+      "boxShadow": "none",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "height": "313.891px"
+    }
+  ],
+  "nav": {
+    "label": "navigation",
+    "background": "#FAF6F0",
+    "backgroundImage": "",
+    "backdropFilter": "blur(14px)",
+    "color": "#1A0F12",
+    "padding": "0px",
+    "borderRadius": "0px",
+    "border": "",
+    "boxShadow": "none",
+    "fontSize": "16px",
+    "fontWeight": "400",
+    "height": "65px"
+  },
+  "chips": [
+    {
+      "label": "Connexion",
+      "background": "transparent",
+      "color": "#1A0F12",
+      "padding": "10px 16px",
+      "borderRadius": "9999px",
+      "border": "2px solid rgb(229, 210, 215)",
+      "boxShadow": "none",
+      "fontSize": "12.5px",
+      "fontWeight": "600",
+      "height": "36px"
+    },
+    {
+      "label": "Commencer",
+      "background": "#962A48",
+      "color": "#FFFFFF",
+      "padding": "10px 16px",
+      "borderRadius": "9999px",
+      "border": "0px solid rgb(229, 210, 214)",
+      "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(146, 42, 68, 0.2) 0px 10px 15px -3px, rgba(146, 42, 68, 0.2) 0px 4px 6px -4px",
+      "fontSize": "12.5px",
+      "fontWeight": "600",
+      "height": "36px"
+    },
+    {
+      "label": "Ce week-end",
+      "background": "#FFFFFF",
+      "color": "#FFFFFF",
+      "padding": "6px 14px",
+      "borderRadius": "9999px",
+      "border": "1px solid rgba(255, 255, 255, 0.25)",
+      "boxShadow": "none",
+      "fontSize": "13px",
+      "fontWeight": "600",
+      "height": "33.5px"
+    },
+    {
+      "label": "Voir la carte",
+      "background": "#1A0F12",
+      "color": "#FFFFFF",
+      "padding": "0px 18px",
+      "borderRadius": "9999px",
+      "border": "0px solid rgb(229, 210, 214)",
+      "boxShadow": "none",
+      "fontSize": "13px",
+      "fontWeight": "600",
+      "height": "40px"
+    }
+  ],
+  "statCells": [],
+  "tabs": [],
+  "backgrounds": [
+    {
+      "value": "linear-gradient(to right, rgba(0, 0, 0, 0.75), rgba(69, 10, 28, 0.55), rgba(0, 0, 0, 0.25))",
+      "area": 1190130
+    },
+    {
+      "value": "linear-gradient(to right bottom, rgba(58, 14, 31, 0.45), rgba(150, 42, 72, 0.2), rgba(220, 201, 132, 0.2))",
+      "area": 349200
+    },
+    {
+      "value": "radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.52) 1px, rgba(0, 0, 0, 0) 0px)",
+      "area": 349200
+    },
+    {
+      "value": "linear-gradient(to right bottom, rgb(248, 241, 224), rgb(250, 247, 241))",
+      "area": 136371
+    }
+  ],
+  "glass": [
+    {
+      "backdropFilter": "blur(14px)",
+      "background": "rgba(250, 246, 240, 0.7)",
+      "border": "",
+      "borderRadius": "0px",
+      "boxShadow": "",
+      "area": 124800
+    }
+  ]
+}

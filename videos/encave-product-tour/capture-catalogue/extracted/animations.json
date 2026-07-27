@@ -1,0 +1,14 @@
+{
+  "summary": {
+    "webAnimations": 0,
+    "cssDeclarations": 181,
+    "scrollTargets": 62,
+    "cdpAnimations": 94,
+    "canvases": 1
+  },
+  "namedAnimations": [
+    "skeleton-shimmer"
+  ],
+  "scrollTriggeredElements": 62,
+  "representativeAnimations": []
+}

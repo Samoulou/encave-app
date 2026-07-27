@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "preferences": {
+    "destination": {
+      "value": "youtube",
+      "confirmed_in": [
+        "encave-product-tour"
+      ],
+      "updated_at": "2026-07-27T09:20:26.845Z"
+    },
+    "aspect": {
+      "value": "1920x1080",
+      "confirmed_in": [
+        "encave-product-tour"
+      ],
+      "updated_at": "2026-07-27T09:20:26.892Z"
+    },
+    "language": {
+      "value": "fr",
+      "confirmed_in": [
+        "encave-product-tour"
+      ],
+      "updated_at": "2026-07-27T09:20:26.940Z"
+    },
+    "flow": {
+      "value": "automation",
+      "confirmed_in": [
+        "encave-product-tour"
+      ],
+      "updated_at": "2026-07-27T09:20:26.983Z"
+    },
+    "storyboard": {
+      "value": "yes",
+      "confirmed_in": [
+        "encave-product-tour"
+      ],
+      "updated_at": "2026-07-27T09:20:27.025Z"
+    }
+  },
+  "sightings": {}
+}

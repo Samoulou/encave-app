@@ -1,0 +1,340 @@
+{
+  "typography": [
+    {
+      "role": "display",
+      "fontFamily": "__Nunito_ba5569",
+      "fontSize": "46.4px",
+      "fontWeight": "500",
+      "lineHeight": "48.72px",
+      "letterSpacing": "-0.696px",
+      "color": "#1A0F12",
+      "sampleText": "Raclette AOP & Fendant sur la Terrasse"
+    },
+    {
+      "role": "heading",
+      "fontFamily": "__Nunito_ba5569",
+      "fontSize": "24px",
+      "fontWeight": "600",
+      "lineHeight": "32px",
+      "letterSpacing": "normal",
+      "color": "#1A0F12",
+      "sampleText": "L'expérience"
+    },
+    {
+      "role": "heading-3",
+      "fontFamily": "__Mukta_Vaani_ebcb76",
+      "fontSize": "24px",
+      "fontWeight": "700",
+      "lineHeight": "32px",
+      "letterSpacing": "normal",
+      "color": "#1A0F12",
+      "sampleText": "Où vous serez"
+    },
+    {
+      "role": "heading-3",
+      "fontFamily": "__Nunito_ba5569",
+      "fontSize": "18px",
+      "fontWeight": "600",
+      "lineHeight": "28px",
+      "letterSpacing": "normal",
+      "color": "#1A0F12",
+      "sampleText": "Découverte des Cépages de Conthey"
+    },
+    {
+      "role": "heading-2",
+      "fontFamily": "__Mukta_Vaani_ebcb76",
+      "fontSize": "16px",
+      "fontWeight": "600",
+      "lineHeight": "24px",
+      "letterSpacing": "normal",
+      "color": "#1A0F12",
+      "sampleText": "Vos préférences cookies"
+    },
+    {
+      "role": "body",
+      "fontFamily": "__Mukta_Vaani_ebcb76",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "24px",
+      "letterSpacing": "normal",
+      "color": "#915564",
+      "sampleText": "Route des Bans 25, Conthey, Valais, Switzerland"
+    },
+    {
+      "role": "link",
+      "fontFamily": "__Mukta_Vaani_ebcb76",
+      "fontSize": "13.5px",
+      "fontWeight": "500",
+      "lineHeight": "20.25px",
+      "letterSpacing": "normal",
+      "color": "#1A0F12",
+      "sampleText": "Expériences"
+    },
+    {
+      "role": "heading-3",
+      "fontFamily": "__JetBrains_Mono_b32614",
+      "fontSize": "11px",
+      "fontWeight": "600",
+      "lineHeight": "16.5px",
+      "letterSpacing": "1.54px",
+      "color": "#7A1B3B",
+      "sampleText": "Navigation"
+    },
+    {
+      "role": "code",
+      "fontFamily": "__JetBrains_Mono_b32614",
+      "fontSize": "11px",
+      "fontWeight": "500",
+      "lineHeight": "16.5px",
+      "letterSpacing": "0.88px",
+      "color": "#915564",
+      "sampleText": "FR · CHF"
+    }
+  ],
+  "spacing": {
+    "observed": [
+      2,
+      4,
+      6,
+      8,
+      10,
+      12,
+      14,
+      16,
+      20,
+      23,
+      24,
+      32,
+      40,
+      48
+    ],
+    "baseUnit": 8
+  },
+  "radius": [
+    "8px",
+    "10px",
+    "12px",
+    "14px",
+    "9999px"
+  ],
+  "shadows": [
+    {
+      "value": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(255, 255, 255) 0px 4px 20px 0px",
+      "count": 3
+    },
+    {
+      "value": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(60, 15, 25, 0.05) 0px 2px 10px 0px",
+      "count": 2
+    },
+    {
+      "value": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(146, 42, 68) 0px 4px 14px 0px",
+      "count": 1
+    },
+    {
+      "value": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(146, 42, 68, 0.2) 0px 10px 15px -3px, rgba(146, 42, 68, 0.2) 0px 4px 6px -4px",
+      "count": 1
+    }
+  ],
+  "buttons": [
+    {
+      "label": "FR · CHF",
+      "background": "transparent",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#915564",
+      "padding": "0px 8px",
+      "borderRadius": "9999px",
+      "border": "0px solid rgb(229, 210, 214)",
+      "boxShadow": "none",
+      "fontSize": "11px",
+      "fontWeight": "500",
+      "height": "36px"
+    },
+    {
+      "label": "Partager",
+      "background": "#FFFFFF",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#3A2429",
+      "padding": "0px 16px",
+      "borderRadius": "9999px",
+      "border": "1px solid rgb(229, 210, 215)",
+      "boxShadow": "none",
+      "fontSize": "12px",
+      "fontWeight": "600",
+      "height": "36px"
+    },
+    {
+      "label": "button",
+      "background": "transparent",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#1A0F12",
+      "padding": "0px",
+      "borderRadius": "14px 4px 4px 14px",
+      "border": "0px solid rgb(229, 210, 214)",
+      "boxShadow": "none",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "height": "386px"
+    },
+    {
+      "label": "button",
+      "background": "transparent",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#1A0F12",
+      "padding": "0px",
+      "borderRadius": "0px",
+      "border": "0px none rgb(26, 15, 18)",
+      "boxShadow": "none",
+      "fontSize": "12px",
+      "fontWeight": "400",
+      "height": "29px"
+    },
+    {
+      "label": "button",
+      "background": "transparent",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#1A0F12",
+      "padding": "0px",
+      "borderRadius": "0px",
+      "border": "",
+      "boxShadow": "none",
+      "fontSize": "12px",
+      "fontWeight": "400",
+      "height": "29px"
+    },
+    {
+      "label": "lun27",
+      "background": "#FFFFFF",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#C2A8AF",
+      "padding": "0px",
+      "borderRadius": "10px",
+      "border": "1px solid rgb(229, 210, 215)",
+      "boxShadow": "none",
+      "fontSize": "11px",
+      "fontWeight": "400",
+      "height": "62px"
+    }
+  ],
+  "cards": [
+    {
+      "label": "card",
+      "background": "#FFFFFF",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#1A0F12",
+      "padding": "16px",
+      "borderRadius": "14px",
+      "border": "1px solid rgb(229, 210, 215)",
+      "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(60, 15, 25, 0.05) 0px 2px 10px 0px",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "height": "98px"
+    },
+    {
+      "label": "card",
+      "background": "#FFFFFF",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#1A0F12",
+      "padding": "0px",
+      "borderRadius": "12px",
+      "border": "1px solid rgb(229, 210, 214)",
+      "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(255, 255, 255) 0px 4px 20px 0px",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "height": "440.5px"
+    }
+  ],
+  "nav": {
+    "label": "navigation",
+    "background": "#FAF6F0",
+    "backgroundImage": "",
+    "backdropFilter": "blur(14px)",
+    "color": "#1A0F12",
+    "padding": "0px",
+    "borderRadius": "0px",
+    "border": "",
+    "boxShadow": "none",
+    "fontSize": "16px",
+    "fontWeight": "400",
+    "height": "65px"
+  },
+  "chips": [
+    {
+      "label": "Connexion",
+      "background": "transparent",
+      "color": "#1A0F12",
+      "padding": "10px 16px",
+      "borderRadius": "9999px",
+      "border": "2px solid rgb(229, 210, 215)",
+      "boxShadow": "none",
+      "fontSize": "12.5px",
+      "fontWeight": "600",
+      "height": "36px"
+    },
+    {
+      "label": "Commencer",
+      "background": "#962A48",
+      "color": "#FFFFFF",
+      "padding": "10px 16px",
+      "borderRadius": "9999px",
+      "border": "0px solid rgb(229, 210, 214)",
+      "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(146, 42, 68, 0.2) 0px 10px 15px -3px, rgba(146, 42, 68, 0.2) 0px 4px 6px -4px",
+      "fontSize": "12.5px",
+      "fontWeight": "600",
+      "height": "36px"
+    },
+    {
+      "label": "Enregistrer",
+      "background": "#FFFFFF",
+      "color": "#3A2429",
+      "padding": "0px 16px",
+      "borderRadius": "9999px",
+      "border": "1px solid rgb(229, 210, 215)",
+      "boxShadow": "none",
+      "fontSize": "12px",
+      "fontWeight": "600",
+      "height": "36px"
+    },
+    {
+      "label": "18 places max",
+      "background": "#FDF2F4",
+      "color": "#7A1B3B",
+      "padding": "4px 12px",
+      "borderRadius": "9999px",
+      "border": "0px solid rgb(229, 210, 214)",
+      "boxShadow": "none",
+      "fontSize": "10px",
+      "fontWeight": "600",
+      "height": "23px"
+    }
+  ],
+  "statCells": [],
+  "tabs": [],
+  "backgrounds": [
+    {
+      "value": "linear-gradient(to right bottom, rgb(251, 230, 234), rgb(245, 197, 207))",
+      "area": 260164
+    },
+    {
+      "value": "linear-gradient(to top, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0), rgba(0, 0, 0, 0))",
+      "area": 184041
+    }
+  ],
+  "glass": [
+    {
+      "backdropFilter": "blur(14px)",
+      "background": "rgba(250, 246, 240, 0.7)",
+      "border": "",
+      "borderRadius": "0px",
+      "boxShadow": "",
+      "area": 124800
+    }
+  ]
+}
