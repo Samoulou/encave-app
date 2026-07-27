@@ -66,14 +66,14 @@ export function HomeSearchPanel({ variant = 'desktop' }: HomeSearchPanelProps) {
       className={cn(
         'relative z-50 bg-white shadow-[0_18px_50px_-12px_rgba(58,14,31,.25),0_0_0_1px_rgba(154,42,72,.08)]',
         variant === 'desktop'
-          ? 'flex max-w-[720px] items-center rounded-[18px] p-1.5'
+          ? 'flex max-w-[820px] items-center rounded-[18px] p-1.5'
           : 'grid grid-cols-2 overflow-visible rounded-[18px]'
       )}
     >
       <div
         className={cn(
           variant === 'desktop'
-            ? 'relative z-50 min-w-0 flex-[1.2] border-r border-stone-200 px-[18px] py-2'
+            ? 'relative z-50 min-w-[200px] flex-[2] border-r border-stone-200 px-[18px] py-2'
             : 'col-span-2 border-b border-[#efe4e6] px-3.5 py-3'
         )}
       >
@@ -84,7 +84,7 @@ export function HomeSearchPanel({ variant = 'desktop' }: HomeSearchPanelProps) {
           value={selectedLocation}
           onChange={setSelectedLocation}
           placeholder={t('allValais')}
-          className="mt-1 [&_input]:h-9 [&_input]:border-0 [&_input]:bg-transparent [&_input]:px-8 [&_input]:text-sm [&_input]:font-semibold [&_input]:text-ink-900 [&_input]:shadow-none [&_input]:placeholder:text-ink-900 [&_input]:focus-visible:ring-0"
+          className="mt-1 [&_input]:h-9 [&_input]:overflow-hidden [&_input]:text-ellipsis [&_input]:border-0 [&_input]:bg-transparent [&_input]:px-8 [&_input]:text-[15px] [&_input]:font-semibold [&_input]:text-ink-900 [&_input]:shadow-none [&_input]:placeholder:text-ink-900 [&_input]:focus-visible:ring-0"
         />
       </div>
 
@@ -104,7 +104,7 @@ export function HomeSearchPanel({ variant = 'desktop' }: HomeSearchPanelProps) {
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="flex min-w-0 flex-1 items-center gap-2 text-left text-sm font-semibold text-ink-900"
+                className="flex min-w-0 flex-1 items-center gap-2 text-left text-[15px] font-semibold text-ink-900"
               >
                 <CalendarDays
                   className="h-4 w-4 shrink-0 text-ink-500"
@@ -154,7 +154,7 @@ export function HomeSearchPanel({ variant = 'desktop' }: HomeSearchPanelProps) {
         </div>
         <div className="mt-1 flex h-9 items-center gap-2">
           <Users className="h-4 w-4 text-ink-500" aria-hidden="true" />
-          <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink-900">
+          <span className="min-w-0 flex-1 truncate text-[15px] font-semibold text-ink-900">
             {t('personCount', { count: capacity })}
           </span>
           <div className="flex shrink-0 items-center gap-1">

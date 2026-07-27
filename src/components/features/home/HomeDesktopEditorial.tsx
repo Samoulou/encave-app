@@ -116,7 +116,7 @@ export function HomeDesktopEditorial({
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-burgundy-950/55 to-black/25" />
 
-        <div className="relative z-30 flex min-h-[600px] max-w-[760px] flex-col justify-between px-14 py-[72px]">
+        <div className="relative z-30 flex min-h-[600px] max-w-[880px] flex-col justify-between px-14 py-[72px]">
           <div>
             <div className="font-mono text-[11px] uppercase tracking-[0.16em] text-burgundy-700">
               • Expériences disponibles en Valais
