@@ -1,0 +1,99 @@
+<template>
+  <style>
+    
+    @font-face { font-family:'Averia Serif Libre'; font-style:normal; font-weight:400;
+      src:url('assets/fonts/averia-serif-libre-400.woff2') format('woff2'); }
+    @font-face { font-family:'Averia Serif Libre'; font-style:normal; font-weight:700;
+      src:url('assets/fonts/averia-serif-libre-700.woff2') format('woff2'); }
+    @font-face { font-family:'Nunito'; font-style:normal; font-weight:400 800;
+      src:url('assets/fonts/nunito-400.woff2') format('woff2'); }
+    @font-face { font-family:'JetBrains Mono'; font-style:normal; font-weight:400 700;
+      src:url('assets/fonts/jetbrains-mono-400.woff2') format('woff2'); }
+    #root { position:relative; width:1920px; height:1080px; overflow:hidden;
+      font-family:'Nunito',sans-serif; }
+    .f01-hook-ground { position:absolute; inset:0; background:#FBF8F4; }
+    .f01-hook-ground::after {
+      content:''; position:absolute; inset:0;
+      background:radial-gradient(1200px 700px at 88% 18%, rgba(122,27,59,0.055), transparent 70%);
+    }
+
+    .f01-hook-col { position:absolute; left:112px; top:212px; width:556px; }
+    .f01-hook-kicker { display:flex; align-items:center; gap:14px;
+      font-family:'JetBrains Mono',monospace; font-weight:500; font-size:26px;
+      letter-spacing:0.16em; text-transform:uppercase; color:#7A1B3B; }
+    .f01-hook-kicker .spike { font-size:30px; line-height:1; }
+    .f01-hook-display { margin-top:26px; font-family:'Averia Serif Libre',serif;
+      font-weight:400; font-size:78px; line-height:1.04; letter-spacing:-0.02em;
+      color:#1A0F12; text-wrap:balance; }
+    .f01-hook-display .em { color:#7A1B3B; }
+    .f01-hook-sub { margin-top:26px; font-size:29px; line-height:1.5; color:#6B4F56;
+      max-width:500px; }
+    .f01-hook-chips { margin-top:38px; display:flex; flex-direction:column; gap:14px; }
+    .f01-hook-chip { display:inline-flex; align-items:center; gap:14px;
+      background:#F3ECE0; border:1px solid rgba(26,15,18,0.12); border-radius:9999px;
+      padding:14px 26px; font-size:26px; font-weight:600; color:#1A0F12;
+      align-self:flex-start; }
+    .f01-hook-chip .dot { width:10px; height:10px; border-radius:50%; background:#7A1B3B;
+      flex:none; }
+
+    .f01-hook-screen { position:absolute; left:748px; top:224px; width:1064px; height:632px;
+      border:1px solid rgba(26,15,18,0.14); border-radius:14px; overflow:hidden;
+      background:#fff; box-shadow:0 1px 3px rgba(26,15,18,0.08), 0 18px 48px rgba(26,15,18,0.10); }
+    .f01-hook-screen img { position:absolute; display:block; }
+    .f01-hook-stats { margin-top:44px; display:flex; gap:0; }
+    .f01-hook-stat { padding-right:40px; margin-right:40px;
+      border-right:1px solid rgba(26,15,18,0.16); }
+    .f01-hook-stat:last-child { border-right:none; margin-right:0; padding-right:0; }
+    .f01-hook-stat .fig { font-family:'Averia Serif Libre',serif; font-size:82px;
+      line-height:1; color:#7A1B3B; letter-spacing:-0.025em; }
+    .f01-hook-stat .lab { margin-top:8px; font-size:25px; color:#6B4F56; max-width:230px;
+      line-height:1.35; }
+  </style>
+
+  <div
+    id="root"
+    data-composition-id="01-hook"
+    data-start="0"
+    data-duration="7"
+    data-width="1920"
+    data-height="1080"
+  >
+
+    <div class="f01-hook-ground clip" id="f01-hook-ground" data-start="0" data-duration="7" data-track-index="0"></div>
+
+    <div class="f01-hook-col clip" id="f01-hook-col" data-start="0" data-duration="7" data-track-index="1">
+      <div class="f01-hook-kicker" id="f01-hook-kicker"><span class="spike">✱</span><span>Valais · Suisse</span></div>
+      <div class="f01-hook-display" id="f01-hook-display">Le vin, <span class="f01-hook-em">chez ceux qui le font.</span></div>
+      <div class="f01-hook-sub" id="f01-hook-sub">Dégustations, ateliers et visites de cave, réservés directement avec le vigneron.</div>
+
+      <div class="f01-hook-stats" id="f01-hook-stats">
+      <div class="f01-hook-stat" id="f01-hook-stat-0">
+        <div class="fig">600</div><div class="lab">caves valaisannes</div>
+      </div>
+      <div class="f01-hook-stat" id="f01-hook-stat-1">
+        <div class="fig">1</div><div class="lab">plateforme pour les réserver</div>
+      </div>
+      </div>
+    </div>
+
+    <div class="f01-hook-screen clip" id="f01-hook-screen" data-layout-allow-overflow data-start="0" data-duration="7" data-track-index="2">
+      <img id="f01-hook-shot" src="assets/ui-home-hero.png" alt="" style="width:1064px; height:599px; left:0; top:17px;" />
+    </div>
+  </div>
+
+  <script src="vendor/gsap.min.js"></script>
+  <script>
+    (function () {
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+      tl.fromTo('#f01-hook-screen', { opacity:0, x:56, scale:0.985 }, { opacity:1, x:0, scale:1, duration:0.85, ease:'power3.out' }, 0.1);
+      tl.fromTo('#f01-hook-shot', { scale:1.05 }, { scale:1, duration:7, ease:'none' }, 0);
+      tl.fromTo('#f01-hook-kicker', { opacity:0, y:16 }, { opacity:1, y:0, duration:0.55, ease:'power2.out' }, 0.25);
+      tl.fromTo('#f01-hook-display', { opacity:0, y:32 }, { opacity:1, y:0, duration:0.75, ease:'power3.out' }, 0.5);
+      tl.fromTo('#f01-hook-sub', { opacity:0, y:22 }, { opacity:1, y:0, duration:0.6, ease:'power2.out' }, 1.0);
+      tl.fromTo('#f01-hook-stat-0', { opacity:0, x:-22 }, { opacity:1, x:0, duration:0.5, ease:'power2.out' }, 2.24);
+      tl.fromTo('#f01-hook-stat-1', { opacity:0, x:-22 }, { opacity:1, x:0, duration:0.5, ease:'power2.out' }, 4.06);
+      window.__timelines['01-hook'] = tl;
+    })();
+  </script>
+</template>

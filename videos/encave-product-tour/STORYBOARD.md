@@ -14,7 +14,7 @@ music: none
 - duration: 7s
 - poster: 5s
 - transition_in: cut
-- status: outline
+- status: animated
 - voiceover: ""
 - src: compositions/frames/01-hook.html
 - type: hook
@@ -34,7 +34,7 @@ Callout à l'écran : « Le Valais, une cave à ciel ouvert. » puis, en second 
 - duration: 9s
 - poster: 6s
 - transition_in: zoom-through
-- status: outline
+- status: animated
 - voiceover: ""
 - src: compositions/frames/02-catalogue.html
 - type: key_feature
@@ -54,7 +54,7 @@ Callouts séquencés sur les filtres : « Par type » → « Par commune » → 
 - duration: 12s
 - poster: 8s
 - transition_in: push-slide LEFT
-- status: outline
+- status: animated
 - voiceover: ""
 - src: compositions/frames/03-reservation.html
 - type: key_feature
@@ -76,7 +76,7 @@ La politique d'annulation flexible reste visible dans le cadre.
 - duration: 5s
 - poster: 3s
 - transition_in: squeeze
-- status: outline
+- status: animated
 - voiceover: ""
 - src: compositions/frames/04-bascule.html
 - type: product_intro
@@ -96,7 +96,7 @@ Un seul callout, plein cadre : « Et côté cave ? »
 - duration: 11s
 - poster: 7s
 - transition_in: crossfade
-- status: outline
+- status: animated
 - voiceover: ""
 - src: compositions/frames/05-dashboard.html
 - type: key_feature
@@ -117,7 +117,7 @@ Le bandeau « Votre cave est en ligne » ouvre le plan.
 - duration: 10s
 - poster: 6s
 - transition_in: push-slide LEFT
-- status: outline
+- status: animated
 - voiceover: ""
 - src: compositions/frames/06-experiences.html
 - type: key_feature
@@ -137,7 +137,7 @@ Callout sur la carte pointillée : « Une nouvelle offre en ligne en quelques mi
 - duration: 8s
 - poster: 5s
 - transition_in: crossfade
-- status: outline
+- status: animated
 - voiceover: ""
 - src: compositions/frames/07-suivi.html
 - type: benefit_highlight
@@ -157,7 +157,7 @@ Callout discret sur « Exporter CSV » : « Vos données restent les vôtres. »
 - duration: 6s
 - poster: 4s
 - transition_in: zoom-through
-- status: outline
+- status: animated
 - voiceover: ""
 - src: compositions/frames/08-cta.html
 - type: cta

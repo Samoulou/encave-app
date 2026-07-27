@@ -1,0 +1,89 @@
+<template>
+  <style>
+    
+    @font-face { font-family:'Averia Serif Libre'; font-style:normal; font-weight:400;
+      src:url('assets/fonts/averia-serif-libre-400.woff2') format('woff2'); }
+    @font-face { font-family:'Averia Serif Libre'; font-style:normal; font-weight:700;
+      src:url('assets/fonts/averia-serif-libre-700.woff2') format('woff2'); }
+    @font-face { font-family:'Nunito'; font-style:normal; font-weight:400 800;
+      src:url('assets/fonts/nunito-400.woff2') format('woff2'); }
+    @font-face { font-family:'JetBrains Mono'; font-style:normal; font-weight:400 700;
+      src:url('assets/fonts/jetbrains-mono-400.woff2') format('woff2'); }
+    #root { position:relative; width:1920px; height:1080px; overflow:hidden;
+      font-family:'Nunito',sans-serif; }
+    .f06-experiences-ground { position:absolute; inset:0; background:#FBF8F4; }
+    .f06-experiences-ground::after {
+      content:''; position:absolute; inset:0;
+      background:radial-gradient(1200px 700px at 88% 18%, rgba(122,27,59,0.055), transparent 70%);
+    }
+
+    .f06-experiences-col { position:absolute; left:112px; top:212px; width:556px; }
+    .f06-experiences-kicker { display:flex; align-items:center; gap:14px;
+      font-family:'JetBrains Mono',monospace; font-weight:500; font-size:26px;
+      letter-spacing:0.16em; text-transform:uppercase; color:#7A1B3B; }
+    .f06-experiences-kicker .spike { font-size:30px; line-height:1; }
+    .f06-experiences-display { margin-top:26px; font-family:'Averia Serif Libre',serif;
+      font-weight:400; font-size:78px; line-height:1.04; letter-spacing:-0.02em;
+      color:#1A0F12; text-wrap:balance; }
+    .f06-experiences-display .em { color:#7A1B3B; }
+    .f06-experiences-sub { margin-top:26px; font-size:29px; line-height:1.5; color:#6B4F56;
+      max-width:500px; }
+    .f06-experiences-chips { margin-top:38px; display:flex; flex-direction:column; gap:14px; }
+    .f06-experiences-chip { display:inline-flex; align-items:center; gap:14px;
+      background:#F3ECE0; border:1px solid rgba(26,15,18,0.12); border-radius:9999px;
+      padding:14px 26px; font-size:26px; font-weight:600; color:#1A0F12;
+      align-self:flex-start; }
+    .f06-experiences-chip .dot { width:10px; height:10px; border-radius:50%; background:#7A1B3B;
+      flex:none; }
+
+    .f06-experiences-screen { position:absolute; left:748px; top:224px; width:1064px; height:632px;
+      border:1px solid rgba(26,15,18,0.14); border-radius:14px; overflow:hidden;
+      background:#fff; box-shadow:0 1px 3px rgba(26,15,18,0.08), 0 18px 48px rgba(26,15,18,0.10); }
+    .f06-experiences-screen img { position:absolute; display:block; }
+  </style>
+
+  <div
+    id="root"
+    data-composition-id="06-experiences"
+    data-start="0"
+    data-duration="10"
+    data-width="1920"
+    data-height="1080"
+  >
+
+    <div class="f06-experiences-ground clip" id="f06-experiences-ground" data-start="0" data-duration="10" data-track-index="0"></div>
+
+    <div class="f06-experiences-col clip" id="f06-experiences-col" data-start="0" data-duration="10" data-track-index="1">
+      <div class="f06-experiences-kicker" id="f06-experiences-kicker"><span class="spike">✱</span><span>04 — Publier</span></div>
+      <div class="f06-experiences-display" id="f06-experiences-display">Vos expériences, <span class="f06-experiences-em">vos prix.</span></div>
+      <div class="f06-experiences-sub" id="f06-experiences-sub">La cave publie, modifie et duplique son offre elle-même.</div>
+      <div class="f06-experiences-chips" id="f06-experiences-chips">
+      <div class="f06-experiences-chip" id="f06-experiences-chip-0"><span class="dot"></span>Créer une expérience</div>
+      <div class="f06-experiences-chip" id="f06-experiences-chip-1"><span class="dot"></span>Modifier le prix</div>
+      <div class="f06-experiences-chip" id="f06-experiences-chip-2"><span class="dot"></span>Dupliquer</div>
+      </div>
+
+    </div>
+
+    <div class="f06-experiences-screen clip" id="f06-experiences-screen" data-layout-allow-overflow data-start="0" data-duration="10" data-track-index="2">
+      <img id="f06-experiences-shot" src="assets/ui-dashboard-experiences.png" alt="" style="width:1064px; height:599px; left:0; top:17px;" />
+    </div>
+  </div>
+
+  <script src="vendor/gsap.min.js"></script>
+  <script>
+    (function () {
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+      tl.fromTo('#f06-experiences-screen', { opacity:0, x:56, scale:0.985 }, { opacity:1, x:0, scale:1, duration:0.85, ease:'power3.out' }, 0.1);
+      tl.fromTo('#f06-experiences-shot', { scale:1.05 }, { scale:1, duration:10, ease:'none' }, 0);
+      tl.fromTo('#f06-experiences-kicker', { opacity:0, y:16 }, { opacity:1, y:0, duration:0.55, ease:'power2.out' }, 0.25);
+      tl.fromTo('#f06-experiences-display', { opacity:0, y:32 }, { opacity:1, y:0, duration:0.75, ease:'power3.out' }, 0.5);
+      tl.fromTo('#f06-experiences-sub', { opacity:0, y:22 }, { opacity:1, y:0, duration:0.6, ease:'power2.out' }, 1.0);
+      tl.fromTo('#f06-experiences-chip-0', { opacity:0, x:-22 }, { opacity:1, x:0, duration:0.5, ease:'power2.out' }, 3.20);
+      tl.fromTo('#f06-experiences-chip-1', { opacity:0, x:-22 }, { opacity:1, x:0, duration:0.5, ease:'power2.out' }, 5.70);
+      tl.fromTo('#f06-experiences-chip-2', { opacity:0, x:-22 }, { opacity:1, x:0, duration:0.5, ease:'power2.out' }, 8.20);
+      window.__timelines['06-experiences'] = tl;
+    })();
+  </script>
+</template>
