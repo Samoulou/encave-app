@@ -63,6 +63,15 @@ export async function POST(request: NextRequest) {
     });
 
     if (existing) {
+      // Upgrade a B2C subscriber to an encaveur lead when the same email
+      // comes through the encaveur waitlist — never downgrade (a cave that
+      // also subscribes as a client keeps its B2B classification).
+      if (source === 'encaveur' && existing.source !== 'encaveur') {
+        await db.newsletterSubscription.update({
+          where: { email: email.toLowerCase() },
+          data: { source },
+        });
+      }
       // Return success even if already subscribed (don't reveal if email exists)
       return NextResponse.json(
         { success: true, message: 'Inscription réussie' },
