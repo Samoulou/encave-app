@@ -5,7 +5,13 @@ import { db } from '@/server/db';
 import { generateSlug, ensureUniqueSlug } from '@/lib/utils/slug';
 import type { ActionResult } from '@/types/actions';
 import { logError } from '@/lib/logger';
-import { invalidateExperienceCaches, createExperienceSlugChecker } from './experience-helpers';
+import { revalidateTag } from 'next/cache';
+import { generateOccurrences } from '@/server/services/occurrence.service';
+import {
+  invalidateExperienceCaches,
+  createExperienceSlugChecker,
+} from './experience-helpers';
+import { invalidateWineryCaches } from './winery-helpers';
 
 /**
  * Publish an experience (DRAFT -> PUBLISHED)
@@ -94,15 +100,34 @@ export async function publishExperience(
       data: { status: 'PUBLISHED' },
     });
 
+    // Materialize the booking window (P-05 / L-024): occurrences over the
+    // rolling horizon, idempotent. Never blocks the publish on failure —
+    // the booking path's defensive resolve is the backstop.
+    try {
+      await generateOccurrences(experienceId);
+    } catch (generationError) {
+      logError('Occurrence generation failed at publish', generationError, {
+        action: 'publishExperience',
+        experienceId,
+      });
+    }
+
     // Invalidate caches after publishing
     invalidateExperienceCaches(wineryData?.slug, experience.slug);
+    revalidateTag(`occurrences:${experienceId}`);
+    // Publishing the first experience can flip the winery's public
+    // visibility (criterion 6 of ENC-027).
+    invalidateWineryCaches(wineryData?.slug);
 
     return {
       success: true,
       data: { status: 'PUBLISHED' },
     };
   } catch (error) {
-    logError('publishExperience error', error, { action: 'publishExperience', experienceId });
+    logError('publishExperience error', error, {
+      action: 'publishExperience',
+      experienceId,
+    });
     return {
       success: false,
       error: {
@@ -174,13 +199,19 @@ export async function unpublishExperience(
 
     // Invalidate caches after unpublishing
     invalidateExperienceCaches(wineryData?.slug, experience.slug);
+    // Unpublishing the last published experience flips the winery
+    // off visibility (criterion 6 of ENC-027).
+    invalidateWineryCaches(wineryData?.slug);
 
     return {
       success: true,
       data: { status: 'DRAFT' },
     };
   } catch (error) {
-    logError('unpublishExperience error', error, { action: 'unpublishExperience', experienceId });
+    logError('unpublishExperience error', error, {
+      action: 'unpublishExperience',
+      experienceId,
+    });
     return {
       success: false,
       error: {
@@ -252,13 +283,19 @@ export async function archiveExperience(
 
     // Invalidate caches after archiving
     invalidateExperienceCaches(wineryData?.slug, experience.slug);
+    // Archiving the last published experience flips the winery off
+    // visibility (criterion 6 of ENC-027).
+    invalidateWineryCaches(wineryData?.slug);
 
     return {
       success: true,
       data: { status: 'ARCHIVED' },
     };
   } catch (error) {
-    logError('archiveExperience error', error, { action: 'archiveExperience', experienceId });
+    logError('archiveExperience error', error, {
+      action: 'archiveExperience',
+      experienceId,
+    });
     return {
       success: false,
       error: {
@@ -313,7 +350,10 @@ export async function duplicateExperience(
 
     // Generate new unique slug
     const baseSlug = generateSlug(`${experience.title} copy`);
-    const slug = await ensureUniqueSlug(baseSlug, createExperienceSlugChecker(winery.id));
+    const slug = await ensureUniqueSlug(
+      baseSlug,
+      createExperienceSlugChecker(winery.id)
+    );
 
     // Get winery slug for cache invalidation
     const wineryData = await db.winery.findUnique({
@@ -340,9 +380,12 @@ export async function duplicateExperience(
       });
 
       // Copy gallery images
-      if (experience.galleryImages.length > 0) {
+      const galleryImages = experience.galleryImages ?? [];
+      const availabilitySlots = experience.availabilitySlots ?? [];
+
+      if (galleryImages.length > 0) {
         await tx.experienceGalleryImage.createMany({
-          data: experience.galleryImages.map((img, index) => ({
+          data: galleryImages.map((img, index) => ({
             experienceId: newExperience.id,
             url: img.url,
             order: index,
@@ -351,9 +394,9 @@ export async function duplicateExperience(
       }
 
       // Copy availability slots (AC8)
-      if (experience.availabilitySlots.length > 0) {
+      if (availabilitySlots.length > 0) {
         await tx.availabilitySlot.createMany({
-          data: experience.availabilitySlots.map((slot) => ({
+          data: availabilitySlots.map((slot) => ({
             experienceId: newExperience.id,
             dayOfWeek: slot.dayOfWeek,
             startTime: slot.startTime,
@@ -374,7 +417,10 @@ export async function duplicateExperience(
       data: { experienceId: duplicate.id, slug: duplicate.slug },
     };
   } catch (error) {
-    logError('duplicateExperience error', error, { action: 'duplicateExperience', experienceId });
+    logError('duplicateExperience error', error, {
+      action: 'duplicateExperience',
+      experienceId,
+    });
     return {
       success: false,
       error: {

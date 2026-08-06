@@ -43,7 +43,10 @@ export async function GET(
     }
 
     // SEC-004: Check token expiration
-    if (preferences.unsubscribeTokenExpiresAt && preferences.unsubscribeTokenExpiresAt < new Date()) {
+    if (
+      preferences.unsubscribeTokenExpiresAt &&
+      preferences.unsubscribeTokenExpiresAt < new Date()
+    ) {
       // Token expired - regenerate and redirect to expired page
       const { token: newToken, expiresAt } = generateNewToken();
       await db.notificationPreferences.update({

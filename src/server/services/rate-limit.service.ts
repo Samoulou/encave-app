@@ -21,7 +21,10 @@ const isProduction = env.NODE_ENV === 'production';
 
 // SEC-006: Enforce Redis in production
 if (isProduction && !isRedisConfigured) {
-  logWarn('UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are required in production for scalable rate limiting', { action: 'rateLimitInit' });
+  logWarn(
+    'UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are required in production for scalable rate limiting',
+    { action: 'rateLimitInit' }
+  );
 }
 
 // In-memory store (fallback for development)
@@ -71,26 +74,23 @@ async function checkRateLimitRedis(
 
   try {
     // Use Upstash REST API for atomic operations
-    const response = await fetch(
-      `${env.UPSTASH_REDIS_REST_URL}/pipeline`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${env.UPSTASH_REDIS_REST_TOKEN}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify([
-          // Remove expired entries
-          ['ZREMRANGEBYSCORE', key, '0', windowStart.toString()],
-          // Add current request
-          ['ZADD', key, now.toString(), `${now}-${Math.random()}`],
-          // Count requests in window
-          ['ZCOUNT', key, windowStart.toString(), now.toString()],
-          // Set expiry on the key
-          ['PEXPIRE', key, config.windowMs.toString()],
-        ]),
-      }
-    );
+    const response = await fetch(`${env.UPSTASH_REDIS_REST_URL}/pipeline`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${env.UPSTASH_REDIS_REST_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify([
+        // Remove expired entries
+        ['ZREMRANGEBYSCORE', key, '0', windowStart.toString()],
+        // Add current request
+        ['ZADD', key, now.toString(), `${now}-${Math.random()}`],
+        // Count requests in window
+        ['ZCOUNT', key, windowStart.toString(), now.toString()],
+        // Set expiry on the key
+        ['PEXPIRE', key, config.windowMs.toString()],
+      ]),
+    });
 
     if (!response.ok) {
       throw new Error(`Redis request failed: ${response.status}`);
@@ -114,7 +114,9 @@ async function checkRateLimitRedis(
       resetAt,
     };
   } catch (error) {
-    logError('Redis error, falling back to in-memory', error, { action: 'checkRateLimitRedis' });
+    logError('Redis error, falling back to in-memory', error, {
+      action: 'checkRateLimitRedis',
+    });
     // Fallback to in-memory on Redis error
     return checkRateLimitInMemory(identifier, config);
   }
@@ -173,6 +175,18 @@ export async function checkRateLimit(
   identifier: string,
   config: RateLimitConfig
 ): Promise<RateLimitResult> {
+  // E2E (P-16): the whole Playwright suite shares one client IP, so the
+  // per-IP budgets serialize/starve unrelated specs. Same convention as
+  // the better-auth rateLimit (P-14: enabled unless E2E_TEST). The rate
+  // limiting logic itself keeps its own unit tests.
+  if (process.env.E2E_TEST === 'true') {
+    return {
+      success: true,
+      remaining: config.maxRequests,
+      resetAt: Date.now() + config.windowMs,
+    };
+  }
+
   // Use Redis in production if configured
   if (isRedisConfigured) {
     return checkRateLimitRedis(identifier, config);
@@ -195,10 +209,27 @@ export async function resetRateLimit(identifier: string): Promise<void> {
         },
       });
     } catch (error) {
-      logError('Failed to reset rate limit in Redis', error, { action: 'resetRateLimit' });
+      logError('Failed to reset rate limit in Redis', error, {
+        action: 'resetRateLimit',
+      });
     }
   }
   rateLimitStore.delete(identifier);
+}
+
+/**
+ * Client IP for rate-limit keys, from proxy headers. Single copy — the
+ * geocode/newsletter routes and the hold action all key on this; keep
+ * the x-real-ip fallback so a proxy that only sets it doesn't collapse
+ * every caller into one shared "unknown" bucket.
+ */
+export function getClientIp(headerList: Headers): string {
+  const forwarded = headerList.get('x-forwarded-for');
+  if (forwarded) {
+    const first = forwarded.split(',')[0]?.trim();
+    if (first) return first;
+  }
+  return headerList.get('x-real-ip')?.trim() || 'unknown';
 }
 
 // Pre-configured rate limiters for common use cases
@@ -222,7 +253,35 @@ export const BOOKING_RATE_LIMIT: RateLimitConfig = {
   windowMs: 60 * 60 * 1000, // per hour
 };
 
+// Booking holds are unauthenticated and reserve capacity for 10 min —
+// keep the per-IP budget tight to bound griefing (P-04 / L-050).
+export const HOLD_RATE_LIMIT: RateLimitConfig = {
+  maxRequests: 12,
+  windowMs: 10 * 60 * 1000, // per 10 minutes
+};
+
 export const API_RATE_LIMIT: RateLimitConfig = {
   maxRequests: 60,
   windowMs: 60 * 1000, // per minute
+};
+
+// Wine-order requests from the J+2 recap email (P-07) — public and
+// email-driven; one request per booking is enforced in DB, the limit
+// only bounds enumeration/spam attempts.
+export const WINE_ORDER_RATE_LIMIT: RateLimitConfig = {
+  maxRequests: 5,
+  windowMs: 60 * 60 * 1000, // per hour
+};
+
+// Public sur-mesure request form (P-10 / L-090) — unauthenticated; keep the
+// per-IP budget tight to bound spam without blocking a genuine second try.
+export const REQUEST_RATE_LIMIT: RateLimitConfig = {
+  maxRequests: 5,
+  windowMs: 60 * 60 * 1000, // per hour
+};
+
+// Public contact form (P-12 / L-114) — abuse guard on an unauthenticated write.
+export const CONTACT_RATE_LIMIT: RateLimitConfig = {
+  maxRequests: 5,
+  windowMs: 60 * 60 * 1000, // per hour
 };

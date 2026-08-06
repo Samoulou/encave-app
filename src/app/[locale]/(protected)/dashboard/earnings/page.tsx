@@ -1,19 +1,25 @@
-import { Fragment, Suspense } from 'react';
+import { Suspense } from 'react';
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { redirect } from 'next/navigation';
-import { getLocale, getTranslations } from 'next-intl/server';
-import { AlertTriangle } from 'lucide-react';
+import { getLocale } from 'next-intl/server';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
+import { StripeKycBanner } from '@/components/features/dashboard/StripeKycBanner';
 import { EarningsPageHeader } from '@/components/features/earnings/EarningsPageHeader';
+import { MonthlyStatementsCard } from '@/components/features/earnings/MonthlyStatementsCard';
 import { Skeleton, SkeletonContainer } from '@/components/shared/Skeleton';
 import { EarningsSummary } from './EarningsSummary';
+import { EarningsGmvSection } from './EarningsGmvSection';
 import { EarningsChartsSection } from './EarningsChartsSection';
 import { EarningsTransactionsSection } from './EarningsTransactionsSection';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
   return generatePageMetadata({
     locale: locale as Locale,
@@ -50,34 +56,25 @@ export default async function EarningsPage({ searchParams }: PageProps) {
     redirect(`/${locale}/onboarding/winery`);
   }
 
-  const t = await getTranslations('stripe.onboarding');
-
   return (
     <WineryAccessGuard>
       <div className="space-y-8">
         {/* Page Header - renders immediately */}
         <EarningsPageHeader />
 
-        {/* Stripe Onboarding Warning - renders immediately */}
-        {!winery.stripeOnboardingComplete && (
-          <div className="flex items-start gap-3 rounded-xl bg-amber-50 p-4 border border-amber-200">
-            <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-600" />
-            <div className="text-sm text-amber-900">
-              <p className="font-medium">{t('completeSetupTitle')}</p>
-              <p className="mt-1 text-amber-700">
-                {t('completeSetupDescription', { wineryProfileLink: '__LINK__' }).split('__LINK__').map((part, i, arr) =>
-                  i < arr.length - 1 ? (
-                    <Fragment key={i}>{part}<a href="/dashboard/winery/profile" className="underline">{t('wineryProfileLink')}</a></Fragment>
-                  ) : part
-                )}
-              </p>
-            </div>
-          </div>
-        )}
+        {/* Stripe Onboarding Warning - renders immediately (shared, P-13) */}
+        <StripeKycBanner
+          stripeOnboardingComplete={winery.stripeOnboardingComplete}
+        />
 
         {/* Stream 1: Summary Cards (fast query) - 3 KPI cards matching mockup */}
         <Suspense fallback={<SummarySkeleton />}>
           <EarningsSummary wineryId={winery.id} />
+        </Suspense>
+
+        {/* GMV highlight — "EnCave vous a apporté X CHF" (P-03 / L-044) */}
+        <Suspense fallback={<GmvSkeleton />}>
+          <EarningsGmvSection wineryId={winery.id} />
         </Suspense>
 
         {/* Stream 2: Chart Section (medium query) - Revenue Evolution chart */}
@@ -89,6 +86,9 @@ export default async function EarningsPage({ searchParams }: PageProps) {
         <Suspense fallback={<TransactionsSkeleton />}>
           <EarningsTransactionsSection wineryId={winery.id} params={params} />
         </Suspense>
+
+        {/* Monthly statement PDFs (P-13 / L-142) — static month list */}
+        <MonthlyStatementsCard />
       </div>
     </WineryAccessGuard>
   );
@@ -97,19 +97,38 @@ export default async function EarningsPage({ searchParams }: PageProps) {
 /** Skeleton for summary cards - matches mockup 3-card layout */
 function SummarySkeleton() {
   return (
-    <SkeletonContainer label="Loading summary..." className="grid gap-4 grid-cols-1 md:grid-cols-3">
+    <SkeletonContainer
+      label="Loading summary..."
+      className="grid grid-cols-1 gap-4 md:grid-cols-3"
+    >
       {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} className="rounded-xl border border-border bg-white p-6 shadow-sm h-40">
+        <div
+          key={i}
+          className="h-40 rounded-xl border border-border bg-white p-6 shadow-sm"
+        >
           <div className="flex items-center justify-between">
             <Skeleton className="h-4 w-28" />
             <Skeleton className="h-10 w-10 rounded-lg" />
           </div>
           <div className="mt-4">
             <Skeleton className="h-9 w-36" />
-            <Skeleton className="h-4 w-24 mt-2" />
+            <Skeleton className="mt-2 h-4 w-24" />
           </div>
         </div>
       ))}
+    </SkeletonContainer>
+  );
+}
+
+/** Skeleton for the GMV highlight card */
+function GmvSkeleton() {
+  return (
+    <SkeletonContainer label="Loading GMV...">
+      <div className="rounded-xl border border-border bg-white p-6 shadow-sm">
+        <Skeleton className="h-4 w-48" />
+        <Skeleton className="mt-2 h-10 w-40" />
+        <Skeleton className="mt-2 h-4 w-64" />
+      </div>
     </SkeletonContainer>
   );
 }
@@ -118,11 +137,11 @@ function SummarySkeleton() {
 function ChartsSkeleton() {
   return (
     <SkeletonContainer label="Loading chart...">
-      <div className="rounded-xl border border-border bg-white p-6 lg:p-8 shadow-sm">
-        <div className="flex items-center justify-between mb-8">
+      <div className="rounded-xl border border-border bg-white p-6 shadow-sm lg:p-8">
+        <div className="mb-8 flex items-center justify-between">
           <div>
             <Skeleton className="h-5 w-40" />
-            <Skeleton className="h-4 w-64 mt-2" />
+            <Skeleton className="mt-2 h-4 w-64" />
           </div>
           <div className="flex items-center gap-4">
             <Skeleton className="h-4 w-16" />
@@ -143,7 +162,7 @@ function TransactionsSkeleton() {
         <Skeleton className="h-6 w-44" />
         <Skeleton className="h-4 w-16" />
       </div>
-      <div className="rounded-xl border border-border bg-white shadow-sm overflow-hidden">
+      <div className="overflow-hidden rounded-xl border border-border bg-white shadow-sm">
         {/* Table Header */}
         <div className="border-b border-border bg-gray-50 px-6 py-4">
           <div className="grid grid-cols-7 gap-4">
@@ -158,8 +177,8 @@ function TransactionsSkeleton() {
         </div>
         {/* Table Rows */}
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="px-6 py-4 border-b border-[#f2e9eb]">
-            <div className="grid grid-cols-7 gap-4 items-center">
+          <div key={i} className="border-b border-[#f2e9eb] px-6 py-4">
+            <div className="grid grid-cols-7 items-center gap-4">
               <Skeleton className="h-4 w-24" />
               <Skeleton className="h-4 w-20" />
               <Skeleton className="h-4 w-32" />

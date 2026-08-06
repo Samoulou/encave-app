@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs';
 import { db } from '@/server/db';
 import { logError } from '@/lib/logger';
 
@@ -6,14 +7,25 @@ type EmailLogType =
   | 'reminder_2h'
   | 'daily_digest'
   | 'follow_up'
-  | 'weekly_summary';
+  | 'weekly_summary'
+  | 'tasting_recap'
+  | 'tasting_sheet_reminder'
+  | 'wine_order_request'
+  | 'stripe_action_required'
+  | 'admin_new_winery';
 
-type EmailLogStatus = 'sent' | 'failed' | 'skipped';
+// P-07: optional tracking metadata. resendMessageId links the row to
+// Resend open/click webhook events; wineryId powers per-winery stats.
+interface EmailLogMeta {
+  resendMessageId?: string;
+  wineryId?: string;
+}
 
 export async function logEmailSent(
   type: EmailLogType,
   recipientId: string,
-  bookingId?: string
+  bookingId?: string,
+  meta?: EmailLogMeta
 ): Promise<void> {
   try {
     await db.emailLog.create({
@@ -22,6 +34,8 @@ export async function logEmailSent(
         recipientId,
         bookingId,
         status: 'sent',
+        resendMessageId: meta?.resendMessageId,
+        wineryId: meta?.wineryId,
       },
     });
   } catch (error) {
@@ -33,8 +47,16 @@ export async function logEmailFailed(
   type: EmailLogType,
   recipientId: string,
   errorMessage: string,
-  bookingId?: string
+  bookingId?: string,
+  meta?: EmailLogMeta
 ): Promise<void> {
+  // P-16 (WS-E): failed sends surface in Sentry (area:email), not only in
+  // the email_logs table nobody polls.
+  Sentry.captureMessage(`email send failed: ${type}`, {
+    level: 'error',
+    tags: { area: 'email', emailType: type },
+    extra: { errorMessage, bookingId },
+  });
   try {
     await db.emailLog.create({
       data: {
@@ -43,6 +65,7 @@ export async function logEmailFailed(
         bookingId,
         status: 'failed',
         errorMessage,
+        wineryId: meta?.wineryId,
       },
     });
   } catch (error) {
@@ -54,7 +77,8 @@ export async function logEmailSkipped(
   type: EmailLogType,
   recipientId: string,
   reason: string,
-  bookingId?: string
+  bookingId?: string,
+  meta?: EmailLogMeta
 ): Promise<void> {
   try {
     await db.emailLog.create({
@@ -64,24 +88,12 @@ export async function logEmailSkipped(
         bookingId,
         status: 'skipped',
         errorMessage: reason,
+        wineryId: meta?.wineryId,
       },
     });
   } catch (error) {
-    logError('Failed to log skipped email', error, { action: 'logEmailSkipped' });
+    logError('Failed to log skipped email', error, {
+      action: 'logEmailSkipped',
+    });
   }
-}
-
-export async function getRecentEmailLogs(
-  type?: EmailLogType,
-  status?: EmailLogStatus,
-  limit = 100
-) {
-  return db.emailLog.findMany({
-    where: {
-      ...(type && { type }),
-      ...(status && { status }),
-    },
-    orderBy: { createdAt: 'desc' },
-    take: limit,
-  });
 }

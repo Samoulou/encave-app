@@ -57,7 +57,15 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        // Environments with a system Chromium (e.g. remote sandboxes that
+        // pre-install browsers) can point here instead of downloading the
+        // exact playwright build. Unset = default download resolution.
+        ...(process.env.E2E_CHROMIUM_PATH && {
+          launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH },
+        }),
+      },
     },
     // Décommenter pour tester sur d'autres navigateurs
     // {
@@ -78,12 +86,25 @@ export default defineConfig({
     env: {
       // Passer explicitement les variables d'environnement de test
       NODE_ENV: 'production',
-      ...(process.env.DATABASE_URL && { DATABASE_URL: process.env.DATABASE_URL }),
-      ...(process.env.BETTER_AUTH_SECRET && { BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET }),
-      ...(process.env.BETTER_AUTH_URL && { BETTER_AUTH_URL: process.env.BETTER_AUTH_URL }),
-      ...(process.env.STRIPE_SECRET_KEY && { STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY }),
-      ...(process.env.STRIPE_PUBLISHABLE_KEY && { STRIPE_PUBLISHABLE_KEY: process.env.STRIPE_PUBLISHABLE_KEY }),
-      ...(process.env.STRIPE_WEBHOOK_SECRET && { STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET }),
+      ...(process.env.DATABASE_URL && {
+        DATABASE_URL: process.env.DATABASE_URL,
+      }),
+      ...(process.env.BETTER_AUTH_SECRET && {
+        BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
+      }),
+      ...(process.env.BETTER_AUTH_URL && {
+        BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
+      }),
+      ...(process.env.STRIPE_SECRET_KEY && {
+        STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+      }),
+      ...(process.env.STRIPE_PUBLISHABLE_KEY && {
+        STRIPE_PUBLISHABLE_KEY: process.env.STRIPE_PUBLISHABLE_KEY,
+      }),
+      ...(process.env.STRIPE_WEBHOOK_SECRET && {
+        STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+      }),
+      E2E_TEST: 'true',
     },
   },
 });

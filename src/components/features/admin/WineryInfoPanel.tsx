@@ -52,34 +52,48 @@ export function WineryInfoPanel({ winery, locale }: WineryInfoPanelProps) {
           </CardHeader>
           <CardContent className="space-y-5 pt-5">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{t('description')}</p>
-              <p className="mt-2 text-slate-700 leading-relaxed">{winery.description}</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                {t('description')}
+              </p>
+              <p className="mt-2 leading-relaxed text-muted-foreground">
+                {winery.description}
+              </p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="rounded-lg bg-stone-50 p-4">
-                <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   <MapPin className="h-3.5 w-3.5" />
                   {t('address')}
                 </p>
-                <p className="mt-2 font-medium text-slate-900">{winery.address}</p>
-                <p className="text-slate-600">{winery.commune}, Valais</p>
+                <p className="mt-2 font-medium text-foreground">
+                  {winery.address}
+                </p>
+                <p className="text-muted-foreground">
+                  {winery.commune}, Valais
+                </p>
               </div>
               <div className="rounded-lg bg-stone-50 p-4">
-                <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   <Phone className="h-3.5 w-3.5" />
                   {t('phone')}
                 </p>
-                <a href={`tel:${winery.phone}`} className="mt-2 block font-medium text-burgundy-700 hover:underline">
+                <a
+                  href={`tel:${winery.phone}`}
+                  className="mt-2 block font-medium text-burgundy-700 hover:underline"
+                >
                   {winery.phone}
                 </a>
               </div>
             </div>
             <div className="rounded-lg bg-stone-50 p-4">
-              <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 <Mail className="h-3.5 w-3.5" />
                 {t('wineryEmail')}
               </p>
-              <a href={`mailto:${winery.email}`} className="mt-2 block font-medium text-burgundy-700 hover:underline">
+              <a
+                href={`mailto:${winery.email}`}
+                className="mt-2 block font-medium text-burgundy-700 hover:underline"
+              >
                 {winery.email}
               </a>
             </div>
@@ -90,27 +104,35 @@ export function WineryInfoPanel({ winery, locale }: WineryInfoPanelProps) {
         <Card className="shadow-warm">
           <CardHeader className="border-b border-stone-100">
             <CardTitle className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100">
-                <User className="h-4 w-4 text-slate-600" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-stone-100">
+                <User className="h-4 w-4 text-stone-600" />
               </div>
               <span className="font-display">{t('applicantInformation')}</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 pt-5">
             <div className="rounded-lg bg-stone-50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{t('name')}</p>
-              <p className="mt-2 font-medium text-slate-900">{winery.user.name || t('notProvided')}</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                {t('name')}
+              </p>
+              <p className="mt-2 font-medium text-foreground">
+                {winery.user.name || t('notProvided')}
+              </p>
             </div>
             <div className="rounded-lg bg-stone-50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{t('accountEmail')}</p>
-              <p className="mt-2 font-medium text-slate-900">{winery.user.email}</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                {t('accountEmail')}
+              </p>
+              <p className="mt-2 font-medium text-foreground">
+                {winery.user.email}
+              </p>
             </div>
             <div className="rounded-lg bg-stone-50 p-4">
-              <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 <Calendar className="h-3.5 w-3.5" />
                 {t('registrationDate')}
               </p>
-              <p className="mt-2 font-medium text-slate-900">
+              <p className="mt-2 font-medium text-foreground">
                 {formatDateTime(new Date(winery.createdAt), locale as Locale)}
               </p>
             </div>
@@ -121,7 +143,10 @@ export function WineryInfoPanel({ winery, locale }: WineryInfoPanelProps) {
                   {t('verifiedAt')}
                 </p>
                 <p className="mt-2 font-medium text-green-900">
-                  {formatDateTime(new Date(winery.verifiedAt), locale as Locale)}
+                  {formatDateTime(
+                    new Date(winery.verifiedAt),
+                    locale as Locale
+                  )}
                 </p>
               </div>
             )}
@@ -138,8 +163,11 @@ export function WineryInfoPanel({ winery, locale }: WineryInfoPanelProps) {
                 <ImageIcon className="h-4 w-4 text-gold-700" />
               </div>
               <span className="font-display">{t('photos')}</span>
-              <span className="ml-auto text-sm font-normal text-slate-500">
-                {t('imageCount', { count: (winery.coverPhoto ? 1 : 0) + winery.galleryImages.length })}
+              <span className="ml-auto text-sm font-normal text-muted-foreground">
+                {t('imageCount', {
+                  count:
+                    (winery.coverPhoto ? 1 : 0) + winery.galleryImages.length,
+                })}
               </span>
             </CardTitle>
           </CardHeader>

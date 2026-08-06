@@ -1,4 +1,5 @@
 import { SlidersHorizontal, Users } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { UseFormReturn } from 'react-hook-form';
 import type { CreateExperienceInput } from '@/lib/validators/experience';
 import { DURATION_OPTIONS } from '@/lib/validators/experience';
@@ -17,43 +18,67 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { SectionHeader } from './SectionHeader';
+import { CollectiveEventToggle } from './CollectiveEventToggle';
+
+// Language endonyms are locale-invariant (a language's own name doesn't change
+// with the UI locale), so they are rendered directly rather than translated.
+const LANGUAGE_ENDONYMS = [
+  { code: 'FR' as const, label: 'Français' },
+  { code: 'DE' as const, label: 'Deutsch' },
+  { code: 'EN' as const, label: 'English' },
+];
 
 interface DetailsSectionProps {
   form: UseFormReturn<CreateExperienceInput>;
   sectionRef: (_el: HTMLElement | null) => void;
+  /** P-08: show the ONLINE / ON_SITE payment-mode picker (NO_SHOW_FEES flag). */
+  showPaymentMode?: boolean;
+  /** P-11: show the « Événement collectif » toggle (COLLECTIVE_EVENTS flag). */
+  showCollective?: boolean;
 }
 
-export function DetailsSection({ form, sectionRef }: DetailsSectionProps) {
+export function DetailsSection({
+  form,
+  sectionRef,
+  showPaymentMode = false,
+  showCollective = false,
+}: DetailsSectionProps) {
+  const t = useTranslations('experience');
+
   return (
     <section
       ref={sectionRef}
       id="details"
-      className="bg-white border border-stone-200 rounded-xl p-6 md:p-8 scroll-mt-24 shadow-sm"
+      className="scroll-mt-24 rounded-xl border border-stone-200 bg-white p-6 shadow-sm md:p-8"
     >
-      <SectionHeader icon={SlidersHorizontal} title="Details" />
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <SectionHeader icon={SlidersHorizontal} title={t('details')} />
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {/* Duration */}
         <FormField
           control={form.control}
           name="duration"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                Duration
+              <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                {t('duration')}
               </FormLabel>
               <FormControl>
                 <Select
                   onValueChange={(value) => field.onChange(parseInt(value))}
                   value={field.value?.toString()}
                 >
-                  <SelectTrigger className="bg-slate-50 border-stone-200 h-12">
-                    <SelectValue placeholder="Select duration" />
+                  <SelectTrigger className="h-12 border-stone-200 bg-muted">
+                    <SelectValue placeholder={t('selectDuration')} />
                   </SelectTrigger>
                   <SelectContent>
                     {DURATION_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value.toString()}>
-                        {option.label}
+                      <SelectItem
+                        key={option.value}
+                        value={option.value.toString()}
+                      >
+                        {t(`durationOptions.${option.value}`)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -70,20 +95,22 @@ export function DetailsSection({ form, sectionRef }: DetailsSectionProps) {
           name="price"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                Price per Person
+              <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                {t('pricePerPersonLabel')}
               </FormLabel>
               <FormControl>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 font-medium">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">
                     CHF
                   </span>
                   <Input
                     type="number"
                     placeholder="45.00"
-                    className="bg-slate-50 border-stone-200 h-12 pl-12"
+                    className="h-12 border-stone-200 bg-muted pl-12"
                     {...field}
-                    onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)}
+                    onChange={(e) =>
+                      field.onChange(parseFloat(e.target.value) || undefined)
+                    }
                   />
                 </div>
               </FormControl>
@@ -92,25 +119,64 @@ export function DetailsSection({ form, sectionRef }: DetailsSectionProps) {
           )}
         />
 
+        {/* Payment mode (P-08 / L-070) — flag-gated */}
+        {showPaymentMode && (
+          <FormField
+            control={form.control}
+            name="paymentMode"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  {t('paymentMode.label')}
+                </FormLabel>
+                <FormControl>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value ?? 'ONLINE'}
+                  >
+                    <SelectTrigger className="h-12 border-stone-200 bg-muted">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ONLINE">
+                        {t('paymentMode.online')}
+                      </SelectItem>
+                      <SelectItem value="ON_SITE">
+                        {t('paymentMode.onSite')}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
         {/* Max Capacity */}
         <FormField
           control={form.control}
           name="maxCapacity"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                Max Capacity
+              <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                {t('maxCapacityLabel')}
               </FormLabel>
               <FormControl>
                 <div className="relative">
                   <Input
                     type="number"
                     placeholder="12"
-                    className="bg-slate-50 border-stone-200 h-12 pr-10"
+                    className="h-12 border-stone-200 bg-muted pr-10"
                     {...field}
-                    onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                    onChange={(e) =>
+                      field.onChange(parseInt(e.target.value) || 1)
+                    }
                   />
-                  <Users className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" aria-hidden="true" />
+                  <Users
+                    className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground"
+                    aria-hidden="true"
+                  />
                 </div>
               </FormControl>
               <FormMessage />
@@ -118,6 +184,59 @@ export function DetailsSection({ form, sectionRef }: DetailsSectionProps) {
           )}
         />
       </div>
+
+      {/* Spoken languages (P-02 / L-115) — powers the catalogue language
+          filter (previously this had no write path, so the filter matched
+          nothing). Endonyms are locale-invariant, hence not translated. */}
+      <div className="mt-6 border-t border-stone-200 pt-6">
+        <FormField
+          control={form.control}
+          name="languages"
+          render={({ field }) => {
+            const selected = field.value ?? ['FR'];
+            const toggle = (code: 'FR' | 'DE' | 'EN') => {
+              field.onChange(
+                selected.includes(code)
+                  ? selected.filter((c) => c !== code)
+                  : [...selected, code]
+              );
+            };
+            return (
+              <FormItem>
+                <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  {t('languagesLabel')}
+                </FormLabel>
+                <p className="mb-2 text-sm text-muted-foreground">
+                  {t('languagesHelper')}
+                </p>
+                <div className="flex flex-wrap gap-4">
+                  {LANGUAGE_ENDONYMS.map(({ code, label }) => (
+                    <label
+                      key={code}
+                      className="flex cursor-pointer items-center gap-2 text-sm"
+                    >
+                      <Checkbox
+                        checked={selected.includes(code)}
+                        onCheckedChange={() => toggle(code)}
+                      />
+                      {label}
+                    </label>
+                  ))}
+                </div>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
+        />
+      </div>
+
+      {/* Collective event (P-11 / L-100) — flag-gated. Participants are
+          managed after creation, on the experience edit page. */}
+      {showCollective && (
+        <div className="mt-6 border-t border-stone-200 pt-6">
+          <CollectiveEventToggle form={form} />
+        </div>
+      )}
     </section>
   );
 }

@@ -11,11 +11,11 @@
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
   /* shadcn/ui CSS variables for components */
-  /* Background: #f8f6f6 */
-  --background: 0 14% 97%;
+  /* Background: warm ivory #fbf7f0 — lets white cards/surfaces lift off the canvas */
+  --background: 36 45% 97%;
   --foreground: 345 26% 8%;
-  /* Muted: slightly darker background */
-  --muted: 345 12% 93%;
+  /* Muted: #faf7f1 */
+  --muted: 38 47% 96%;
   --muted-foreground: 345 26% 45%;
   /* Popover: white */
   --popover: 0 0% 100%;
@@ -32,10 +32,10 @@
   /* Primary hover: #732040 */
   --primary-hover: 345 55% 29%;
   /* Secondary */
-  --secondary: 345 12% 95%;
+  --secondary: 38 47% 96%;
   --secondary-foreground: 345 26% 8%;
   /* Accent */
-  --accent: 345 12% 95%;
+  --accent: 38 47% 96%;
   --accent-foreground: 345 26% 8%;
   /* Destructive */
   --destructive: 0 72% 51%;
@@ -50,6 +50,13 @@
   /* Text: #1a0f12 main, #915564 secondary */
   --text-main: 345 26% 8%;
   --text-secondary: 345 26% 45%;
+  --ink-main: #1a0f12;
+  --ink-body: #3a2429;
+  --ink-meta: #915564;
+  --ink-disabled: #c2a8af;
+  --cream-app: #fdfcfa;
+  --cream-section: #faf7f1;
+  --cream-tag: #f3ece0;
   /* Surface: #ffffff light, #2a1a20 dark */
   --surface: 0 0% 100%;
   --surface-dark: 345 24% 13%;
@@ -92,7 +99,7 @@ body {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background font-sans text-foreground;
   }
 
   /* Premium focus ring - primary accent */
@@ -187,18 +194,41 @@ body {
   }
 }
 
+/* Mapbox popup overrides — strip default chrome */
+.maplibregl-popup-content {
+  padding: 0 !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 4px 20px rgba(122, 27, 59, 0.12) !important;
+  overflow: hidden;
+}
+
+.maplibregl-popup-close-button {
+  font-size: 18px;
+  padding: 4px 8px;
+  color: #64748b;
+  right: 4px;
+  top: 4px;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 4px;
+}
+
+.maplibregl-popup-close-button:hover {
+  color: #1e293b;
+  background-color: #f1f5f9;
+}
+
+.maplibregl-popup-tip {
+  border-top-color: #fff !important;
+}
+
 /* NProgress Navigation Progress Bar */
 #nprogress {
   pointer-events: none;
 }
 
 #nprogress .bar {
-  background: linear-gradient(
-    90deg,
-    #962a48 0%,
-    #732040 50%,
-    #962a48 100%
-  );
+  background: linear-gradient(90deg, #962a48 0%, #732040 50%, #962a48 100%);
   position: fixed;
   z-index: 9999;
   top: 0;
@@ -214,7 +244,9 @@ body {
   right: 0;
   width: 100px;
   height: 100%;
-  box-shadow: 0 0 10px #962a48, 0 0 5px #962a48;
+  box-shadow:
+    0 0 10px #962a48,
+    0 0 5px #962a48;
   opacity: 1;
   transform: rotate(3deg) translate(0px, -4px);
 }

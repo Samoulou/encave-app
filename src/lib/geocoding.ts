@@ -45,18 +45,28 @@ export async function geocodeAddress(
           // Nominatim requires a valid User-Agent
           'User-Agent': 'EnCave/1.0 (https://encave.ch)',
         },
+        // P-16 (WS-F / L-210): Nominatim is a free community service with
+        // no latency SLA — without a bound, a slow upstream held the whole
+        // server action hostage. 3s, then the caller's null path applies.
+        signal: AbortSignal.timeout(3000),
       }
     );
 
     if (!response.ok) {
-      logError(`Geocoding API error: ${response.status} ${response.statusText}`, undefined, { action: 'geocodeAddress' });
+      logError(
+        `Geocoding API error: ${response.status} ${response.statusText}`,
+        undefined,
+        { action: 'geocodeAddress' }
+      );
       return null;
     }
 
     const data = (await response.json()) as NominatimResponse[];
 
     if (data.length === 0) {
-      logWarn(`No geocoding results for address: ${address}`, { action: 'geocodeAddress' });
+      logWarn(`No geocoding results for address: ${address}`, {
+        action: 'geocodeAddress',
+      });
       return null;
     }
 
@@ -97,10 +107,15 @@ export async function geocodeWineryAddress(
   }
 
   // Fallback: try with just commune if full address fails
-  const fallbackResult = await geocodeAddress(`${commune}, Valais, Switzerland`);
+  const fallbackResult = await geocodeAddress(
+    `${commune}, Valais, Switzerland`
+  );
 
   if (fallbackResult) {
-    logWarn(`Full address geocoding failed, using commune center for: ${address}, ${commune}`, { action: 'geocodeWineryAddress' });
+    logWarn(
+      `Full address geocoding failed, using commune center for: ${address}, ${commune}`,
+      { action: 'geocodeWineryAddress' }
+    );
     return {
       latitude: fallbackResult.latitude,
       longitude: fallbackResult.longitude,

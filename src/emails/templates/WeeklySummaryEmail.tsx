@@ -19,6 +19,10 @@ export interface WeeklySummaryEmailProps {
     bookings: number;
     guests: number;
   };
+  /** Real Stripe payouts received last 7 days (P-13 / email #17). */
+  payouts?: { totalCents: number; count: number } | null;
+  /** Previous-month statement PDF link (P-13 / email #17). */
+  statement?: { url: string; monthLabel: string } | null;
   dashboardUrl: string;
   unsubscribeUrl?: string;
 }
@@ -29,6 +33,8 @@ export function WeeklySummaryEmail({
   wineryName: _wineryName,
   lastWeekStats,
   thisWeekPreview,
+  payouts,
+  statement,
   dashboardUrl,
 }: WeeklySummaryEmailProps) {
   const greeting = t(common.greeting, locale);
@@ -46,12 +52,33 @@ export function WeeklySummaryEmail({
   const viewDashboard = t(weeklySummary.viewDashboard, locale);
   const noActivity = t(weeklySummary.noActivity, locale);
 
+  const payoutsReceivedLabel = t(weeklySummary.payoutsReceived, locale);
+  const payoutsLine =
+    payouts && payouts.count > 0
+      ? t(weeklySummary.payoutsLine, locale)
+          .replace('{amount}', formatEmailPrice(payouts.totalCents))
+          .replace('{count}', String(payouts.count))
+      : null;
+  const statementLabel = statement
+    ? t(weeklySummary.downloadStatement, locale).replace(
+        '{month}',
+        statement.monthLabel
+      )
+    : null;
+
   const hasLastWeekActivity = lastWeekStats.bookings > 0;
   const hasThisWeekActivity = thisWeekPreview.bookings > 0;
 
   return (
     <EmailLayout locale={locale} preview={t(subjects.weeklySummary, locale)}>
-      <Text style={{ fontSize: '24px', fontWeight: 'bold', color: '#7c2d12', margin: '0 0 16px 0' }}>
+      <Text
+        style={{
+          fontSize: '24px',
+          fontWeight: 'bold',
+          color: '#7c2d12',
+          margin: '0 0 16px 0',
+        }}
+      >
         {title}
       </Text>
 
@@ -59,9 +86,7 @@ export function WeeklySummaryEmail({
         {greeting} {winemakerName},
       </Text>
 
-      <Text style={{ margin: '0 0 24px 0' }}>
-        {intro}
-      </Text>
+      <Text style={{ margin: '0 0 24px 0' }}>{intro}</Text>
 
       {/* Last Week Stats */}
       <Section
@@ -72,7 +97,14 @@ export function WeeklySummaryEmail({
           margin: '0 0 16px 0',
         }}
       >
-        <Text style={{ margin: '0 0 16px 0', fontWeight: 'bold', fontSize: '16px', color: '#7c2d12' }}>
+        <Text
+          style={{
+            margin: '0 0 16px 0',
+            fontWeight: 'bold',
+            fontSize: '16px',
+            color: '#7c2d12',
+          }}
+        >
           {lastWeekSection}
         </Text>
 
@@ -80,37 +112,86 @@ export function WeeklySummaryEmail({
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <tbody>
               <tr>
-                <td style={{ padding: '12px 0', borderBottom: '1px solid #fde8d4' }}>
-                  <Text style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>
+                <td
+                  style={{
+                    padding: '12px 0',
+                    borderBottom: '1px solid #fde8d4',
+                  }}
+                >
+                  <Text
+                    style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}
+                  >
                     {bookingsLabel}
                   </Text>
                 </td>
-                <td style={{ padding: '12px 0', borderBottom: '1px solid #fde8d4', textAlign: 'right' }}>
-                  <Text style={{ margin: 0, fontWeight: 'bold', fontSize: '20px', color: '#7c2d12' }}>
+                <td
+                  style={{
+                    padding: '12px 0',
+                    borderBottom: '1px solid #fde8d4',
+                    textAlign: 'right',
+                  }}
+                >
+                  <Text
+                    style={{
+                      margin: 0,
+                      fontWeight: 'bold',
+                      fontSize: '20px',
+                      color: '#7c2d12',
+                    }}
+                  >
                     {lastWeekStats.bookings}
                   </Text>
                 </td>
               </tr>
               <tr>
-                <td style={{ padding: '12px 0', borderBottom: '1px solid #fde8d4' }}>
-                  <Text style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>
+                <td
+                  style={{
+                    padding: '12px 0',
+                    borderBottom: '1px solid #fde8d4',
+                  }}
+                >
+                  <Text
+                    style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}
+                  >
                     {guestsLabel}
                   </Text>
                 </td>
-                <td style={{ padding: '12px 0', borderBottom: '1px solid #fde8d4', textAlign: 'right' }}>
-                  <Text style={{ margin: 0, fontWeight: 'bold', fontSize: '20px', color: '#7c2d12' }}>
+                <td
+                  style={{
+                    padding: '12px 0',
+                    borderBottom: '1px solid #fde8d4',
+                    textAlign: 'right',
+                  }}
+                >
+                  <Text
+                    style={{
+                      margin: 0,
+                      fontWeight: 'bold',
+                      fontSize: '20px',
+                      color: '#7c2d12',
+                    }}
+                  >
                     {lastWeekStats.guests}
                   </Text>
                 </td>
               </tr>
               <tr>
                 <td style={{ padding: '12px 0' }}>
-                  <Text style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>
+                  <Text
+                    style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}
+                  >
                     {revenueLabel}
                   </Text>
                 </td>
                 <td style={{ padding: '12px 0', textAlign: 'right' }}>
-                  <Text style={{ margin: 0, fontWeight: 'bold', fontSize: '20px', color: '#16a34a' }}>
+                  <Text
+                    style={{
+                      margin: 0,
+                      fontWeight: 'bold',
+                      fontSize: '20px',
+                      color: '#16a34a',
+                    }}
+                  >
                     {formatEmailPrice(lastWeekStats.revenue)}
                   </Text>
                 </td>
@@ -124,6 +205,39 @@ export function WeeklySummaryEmail({
         )}
       </Section>
 
+      {/* Real Stripe payouts of the week (P-13 / email #17) */}
+      {payoutsLine && (
+        <Section
+          style={{
+            backgroundColor: '#f0fdf4',
+            borderRadius: '8px',
+            padding: '24px',
+            margin: '0 0 16px 0',
+          }}
+        >
+          <Text
+            style={{
+              margin: '0 0 8px 0',
+              fontWeight: 'bold',
+              fontSize: '16px',
+              color: '#166534',
+            }}
+          >
+            {payoutsReceivedLabel}
+          </Text>
+          <Text
+            style={{
+              margin: 0,
+              fontWeight: 'bold',
+              fontSize: '20px',
+              color: '#16a34a',
+            }}
+          >
+            {payoutsLine}
+          </Text>
+        </Section>
+      )}
+
       {/* This Week Preview */}
       <Section
         style={{
@@ -133,7 +247,14 @@ export function WeeklySummaryEmail({
           margin: '0 0 24px 0',
         }}
       >
-        <Text style={{ margin: '0 0 16px 0', fontWeight: 'bold', fontSize: '16px', color: '#374151' }}>
+        <Text
+          style={{
+            margin: '0 0 16px 0',
+            fontWeight: 'bold',
+            fontSize: '16px',
+            color: '#374151',
+          }}
+        >
           {thisWeekSection}
         </Text>
 
@@ -141,25 +262,54 @@ export function WeeklySummaryEmail({
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <tbody>
               <tr>
-                <td style={{ padding: '12px 0', borderBottom: '1px solid #e5e7eb' }}>
-                  <Text style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>
+                <td
+                  style={{
+                    padding: '12px 0',
+                    borderBottom: '1px solid #e5e7eb',
+                  }}
+                >
+                  <Text
+                    style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}
+                  >
                     {upcomingLabel}
                   </Text>
                 </td>
-                <td style={{ padding: '12px 0', borderBottom: '1px solid #e5e7eb', textAlign: 'right' }}>
-                  <Text style={{ margin: 0, fontWeight: 'bold', fontSize: '20px', color: '#374151' }}>
+                <td
+                  style={{
+                    padding: '12px 0',
+                    borderBottom: '1px solid #e5e7eb',
+                    textAlign: 'right',
+                  }}
+                >
+                  <Text
+                    style={{
+                      margin: 0,
+                      fontWeight: 'bold',
+                      fontSize: '20px',
+                      color: '#374151',
+                    }}
+                  >
                     {thisWeekPreview.bookings}
                   </Text>
                 </td>
               </tr>
               <tr>
                 <td style={{ padding: '12px 0' }}>
-                  <Text style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>
+                  <Text
+                    style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}
+                  >
                     {guestsLabel}
                   </Text>
                 </td>
                 <td style={{ padding: '12px 0', textAlign: 'right' }}>
-                  <Text style={{ margin: 0, fontWeight: 'bold', fontSize: '20px', color: '#374151' }}>
+                  <Text
+                    style={{
+                      margin: 0,
+                      fontWeight: 'bold',
+                      fontSize: '20px',
+                      color: '#374151',
+                    }}
+                  >
                     {thisWeekPreview.guests}
                   </Text>
                 </td>
@@ -173,11 +323,28 @@ export function WeeklySummaryEmail({
         )}
       </Section>
 
-      <Hr style={{ border: 'none', borderTop: '1px solid #e5e7eb', margin: '24px 0' }} />
+      <Hr
+        style={{
+          border: 'none',
+          borderTop: '1px solid #e5e7eb',
+          margin: '24px 0',
+        }}
+      />
 
       <div style={{ textAlign: 'center', margin: '0 0 24px 0' }}>
         <EmailButton href={dashboardUrl}>{viewDashboard}</EmailButton>
       </div>
+
+      {statement && statementLabel && (
+        <Text style={{ margin: '0 0 24px 0', textAlign: 'center' }}>
+          <a
+            href={statement.url}
+            style={{ color: '#7c2d12', textDecoration: 'underline' }}
+          >
+            {statementLabel}
+          </a>
+        </Text>
+      )}
 
       <Text style={{ margin: '24px 0 0 0' }}>
         {regards},

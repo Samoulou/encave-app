@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
-import { ExperienceCard } from '@/components/features/search/ExperienceCard';
+import { ExperienceCard } from '@/components/features/experience/ExperienceCard';
 
 const mockExperience = {
   id: 'exp-1',
@@ -69,7 +69,9 @@ describe('ExperienceCard', () => {
   it('links to experience detail page', () => {
     render(<ExperienceCard experience={mockExperience} />);
     const link = screen.getByRole('link');
-    expect(link.getAttribute('href')).toBe('/experiences/wine-tasting-experience');
+    expect(link.getAttribute('href')).toBe(
+      '/experiences/wine-tasting-experience'
+    );
   });
 
   it('renders cover photo image', () => {

@@ -8,9 +8,9 @@ interface EmptyStateProps {
 
 export function EmptyState({ title, description, icon }: EmptyStateProps) {
   return (
-    <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-cream-50 via-stone-50 to-burgundy-50/30 py-16 px-8 text-center">
+    <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-cream-50 via-stone-50 to-burgundy-50/30 px-8 py-16 text-center">
       {/* Decorative dot pattern */}
-      <div className="absolute inset-0 pattern-dots" aria-hidden="true" />
+      <div className="pattern-dots absolute inset-0" aria-hidden="true" />
 
       <div className="relative">
         {/* Icon with decorative ring */}
@@ -18,13 +18,17 @@ export function EmptyState({ title, description, icon }: EmptyStateProps) {
           {icon ?? <Wine className="h-10 w-10 text-burgundy-400" />}
         </div>
 
-        <h3 className="font-display text-xl font-semibold text-slate-900">{title}</h3>
+        <h3 className="font-display text-xl font-semibold text-foreground">
+          {title}
+        </h3>
         {description && (
-          <p className="mx-auto mt-3 max-w-md text-slate-600">{description}</p>
+          <p className="mx-auto mt-3 max-w-md text-muted-foreground">
+            {description}
+          </p>
         )}
 
         {/* Decorative vine ornament */}
-        <div className="mx-auto mt-6 w-32 ornament-vine" aria-hidden="true" />
+        <div className="ornament-vine mx-auto mt-6 w-32" aria-hidden="true" />
       </div>
     </div>
   );

@@ -29,7 +29,14 @@ export function WineryApprovedEmail({
 
   return (
     <EmailLayout locale={locale} preview={t(subjects.wineryApproved, locale)}>
-      <Text style={{ fontSize: '24px', fontWeight: 'bold', color: '#7c2d12', margin: '0 0 16px 0' }}>
+      <Text
+        style={{
+          fontSize: '24px',
+          fontWeight: 'bold',
+          color: '#7c2d12',
+          margin: '0 0 16px 0',
+        }}
+      >
         {title}
       </Text>
 

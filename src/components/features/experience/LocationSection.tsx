@@ -1,16 +1,17 @@
 'use client';
 
-import { MapPin } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import {
-  getMapEmbedUrl,
-  VALAIS_FALLBACK_MAP_URL,
-} from '@/lib/geocoding';
+import { DynamicMap } from '@/components/features/map/DynamicMap';
+import { LazyOnVisible } from '@/components/shared/LazyOnVisible';
+import { Skeleton } from '@/components/shared/Skeleton';
+import type { MapWinery } from '@/components/features/map/types';
 
 interface LocationSectionProps {
   address: string;
   commune: string;
   wineryName: string;
+  winerySlug: string;
   latitude?: number | null;
   longitude?: number | null;
 }
@@ -19,56 +20,70 @@ export function LocationSection({
   address,
   commune,
   wineryName,
+  winerySlug,
   latitude,
   longitude,
 }: LocationSectionProps) {
   const t = useTranslations('experience');
+  const tMap = useTranslations('wineries');
 
   const fullAddress = `${address}, ${commune}, Valais, Switzerland`;
   const hasCoordinates = latitude != null && longitude != null;
 
-  // Google Maps link - use coordinates if available, otherwise address
-  const googleMapsUrl = hasCoordinates
+  const directionsUrl = hasCoordinates
     ? `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`
     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
 
-  // Map embed URL - use coordinates with marker if available, otherwise fallback
-  const mapEmbedUrl = hasCoordinates
-    ? getMapEmbedUrl(latitude, longitude, 15)
-    : VALAIS_FALLBACK_MAP_URL;
+  const mapWinery: MapWinery = {
+    id: winerySlug,
+    name: wineryName,
+    slug: winerySlug,
+    commune,
+    coverPhoto: null,
+    latitude: latitude ?? null,
+    longitude: longitude ?? null,
+    _count: { experiences: 0 },
+  };
 
   return (
     <section data-testid="location-section">
-      <h3 className="text-2xl font-bold mb-4 text-foreground">
+      <h3 className="mb-4 text-2xl font-bold text-foreground">
         {t('whereYoullBe')}
       </h3>
-      <p className="text-gray-600 mb-4" data-testid="winery-address">
+      <p className="mb-4 text-muted-foreground" data-testid="winery-address">
         {fullAddress}
       </p>
 
-      {/* Map Embed */}
-      <a
-        href={googleMapsUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="block w-full h-80 rounded-xl overflow-hidden shadow-sm relative group"
-      >
-        <iframe
-          title={`Map showing location of ${wineryName}`}
-          src={mapEmbedUrl}
-          className="w-full h-full border-0 pointer-events-none"
-          loading="lazy"
-          referrerPolicy="no-referrer"
-        />
-        {/* Map Marker Overlay */}
-        {hasCoordinates && (
-          <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-            <div className="bg-white p-2 rounded-full shadow-xl">
-              <MapPin className="h-7 w-7 text-primary" />
-            </div>
+      {/* Map */}
+      {hasCoordinates ? (
+        <div className="overflow-hidden rounded-xl shadow-sm">
+          {/* Below the fold on mobile — the maplibre chunk only loads
+              when the visitor scrolls near the map (P-06 / L-201). */}
+          <LazyOnVisible fallback={<Skeleton className="h-80 w-full" />}>
+            <DynamicMap
+              wineries={[mapWinery]}
+              singleWinery
+              className="h-80 w-full"
+            />
+          </LazyOnVisible>
+          <div className="flex items-center justify-between bg-white px-4 py-3">
+            <span className="text-sm text-muted-foreground">{wineryName}</span>
+            <a
+              href={directionsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-burgundy-600 transition-colors hover:text-burgundy-700"
+            >
+              {tMap('getDirections')}
+              <ExternalLink className="h-3.5 w-3.5" />
+            </a>
           </div>
-        )}
-      </a>
+        </div>
+      ) : (
+        <div className="flex h-80 items-center justify-center rounded-xl bg-stone-100 text-sm text-muted-foreground">
+          {tMap('mapLoadError')}
+        </div>
+      )}
     </section>
   );
 }

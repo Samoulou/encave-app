@@ -141,7 +141,9 @@ export async function generateHomeMetadata(locale: Locale): Promise<Metadata> {
 /**
  * Generate metadata for the experiences listing page
  */
-export async function generateExperiencesMetadata(locale: Locale): Promise<Metadata> {
+export async function generateExperiencesMetadata(
+  locale: Locale
+): Promise<Metadata> {
   return generatePageMetadata({
     locale,
     path: '/experiences',
@@ -167,9 +169,10 @@ export async function generateExperienceDetailMetadata(
   ]);
 
   // Truncate description to 160 characters for meta description
-  const metaDescription = description.length > 160
-    ? description.substring(0, 157) + '...'
-    : description;
+  const metaDescription =
+    description.length > 160
+      ? description.substring(0, 157) + '...'
+      : description;
 
   const canonicalUrl = generateCanonicalUrl(locale, `/experiences/${slug}`);
   const alternates = generateAlternateLinks(`/experiences/${slug}`);
@@ -204,7 +207,9 @@ export async function generateExperienceDetailMetadata(
 /**
  * Generate metadata for the wineries listing page
  */
-export async function generateWineriesMetadata(locale: Locale): Promise<Metadata> {
+export async function generateWineriesMetadata(
+  locale: Locale
+): Promise<Metadata> {
   return generatePageMetadata({
     locale,
     path: '/wineries',
@@ -230,9 +235,10 @@ export async function generateWineryDetailMetadata(
   ]);
 
   // Truncate description to 160 characters for meta description
-  const metaDescription = description.length > 160
-    ? description.substring(0, 157) + '...'
-    : description;
+  const metaDescription =
+    description.length > 160
+      ? description.substring(0, 157) + '...'
+      : description;
 
   const canonicalUrl = generateCanonicalUrl(locale, `/wineries/${slug}`);
   const alternates = generateAlternateLinks(`/wineries/${slug}`);
@@ -281,7 +287,9 @@ export async function generateLoginMetadata(locale: Locale): Promise<Metadata> {
 /**
  * Generate metadata for register page
  */
-export async function generateRegisterMetadata(locale: Locale): Promise<Metadata> {
+export async function generateRegisterMetadata(
+  locale: Locale
+): Promise<Metadata> {
   return generatePageMetadata({
     locale,
     path: '/register',

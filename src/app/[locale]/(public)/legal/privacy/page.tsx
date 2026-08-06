@@ -49,6 +49,18 @@ export default async function PrivacyPolicyPage({ params }: Props) {
       <h2>{t('privacy.sections.dataSharing.title')}</h2>
       <p>{t('privacy.sections.dataSharing.content')}</p>
 
+      <h2>{t('privacy.sections.subprocessors.title')}</h2>
+      <p>{t('privacy.sections.subprocessors.content')}</p>
+      <ul>
+        <li>{t('privacy.sections.subprocessors.items.vercel')}</li>
+        <li>{t('privacy.sections.subprocessors.items.neon')}</li>
+        <li>{t('privacy.sections.subprocessors.items.stripe')}</li>
+        <li>{t('privacy.sections.subprocessors.items.resend')}</li>
+        <li>{t('privacy.sections.subprocessors.items.posthog')}</li>
+        <li>{t('privacy.sections.subprocessors.items.sentry')}</li>
+        <li>{t('privacy.sections.subprocessors.items.upstash')}</li>
+      </ul>
+
       <h2>{t('privacy.sections.security.title')}</h2>
       <p>{t('privacy.sections.security.content')}</p>
 
@@ -60,6 +72,9 @@ export default async function PrivacyPolicyPage({ params }: Props) {
         <li>{t('privacy.sections.rights.items.deletion')}</li>
         <li>{t('privacy.sections.rights.items.portability')}</li>
       </ul>
+      {/* P-16 (WS-H): the self-service export (/api/privacy/export) and
+          account deletion both exist — point to them explicitly. */}
+      <p>{t('privacy.sections.rights.selfService')}</p>
 
       <h2>{t('privacy.sections.contact.title')}</h2>
       <p>{t('privacy.sections.contact.content')}</p>

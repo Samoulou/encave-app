@@ -36,17 +36,14 @@ describe('Breadcrumb', () => {
 
     const links = screen.getAllByRole('link');
     expect(links).toHaveLength(2);
-    expect(links[0]?.getAttribute('href')).toBe('/');
-    expect(links[1]?.getAttribute('href')).toBe('/experiences');
+    expect(links[0]?.getAttribute('href')).toBe('/fr');
+    expect(links[1]?.getAttribute('href')).toBe('/fr/experiences');
   });
 
   it('does not render link for last item', () => {
     render(
       <Breadcrumb
-        items={[
-          { label: 'Home', href: '/' },
-          { label: 'Current Page' },
-        ]}
+        items={[{ label: 'Home', href: '/' }, { label: 'Current Page' }]}
       />
     );
 
@@ -57,24 +54,18 @@ describe('Breadcrumb', () => {
 
   it('has aria-label for navigation', () => {
     render(
-      <Breadcrumb
-        items={[
-          { label: 'Home', href: '/' },
-          { label: 'Page' },
-        ]}
-      />
+      <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Page' }]} />
     );
 
-    expect(screen.getByRole('navigation', { name: 'Breadcrumb' })).toBeDefined();
+    expect(
+      screen.getByRole('navigation', { name: 'Breadcrumb' })
+    ).toBeDefined();
   });
 
   it('marks last item as current page', () => {
     render(
       <Breadcrumb
-        items={[
-          { label: 'Home', href: '/' },
-          { label: 'Current Page' },
-        ]}
+        items={[{ label: 'Home', href: '/' }, { label: 'Current Page' }]}
       />
     );
 

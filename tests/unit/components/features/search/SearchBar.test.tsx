@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
-import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
+import {
+  render,
+  screen,
+  cleanup,
+  fireEvent,
+  waitFor,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NextIntlClientProvider } from 'next-intl';
 import { SearchBar } from '@/components/features/search/SearchBar';
@@ -39,11 +45,7 @@ describe('SearchBar', () => {
 
   it('renders with custom placeholder', () => {
     renderWithProviders(
-      <SearchBar
-        value=""
-        onChange={vi.fn()}
-        placeholder="Custom placeholder"
-      />
+      <SearchBar value="" onChange={vi.fn()} placeholder="Custom placeholder" />
     );
     expect(screen.getByPlaceholderText('Custom placeholder')).toBeDefined();
   });
@@ -96,6 +98,8 @@ describe('SearchBar', () => {
 
   it('has proper aria-label for accessibility', () => {
     renderWithProviders(<SearchBar value="" onChange={vi.fn()} />);
-    expect(screen.getByRole('textbox', { name: /search experiences/i })).toBeDefined();
+    expect(
+      screen.getByRole('textbox', { name: /search experiences/i })
+    ).toBeDefined();
   });
 });

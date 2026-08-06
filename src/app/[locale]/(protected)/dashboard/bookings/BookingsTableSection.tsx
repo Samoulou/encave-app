@@ -14,6 +14,9 @@ import {
 } from '@/server/queries/calendar.queries';
 import { CalendarViewWrapper } from './CalendarViewWrapper';
 import { getTranslations } from 'next-intl/server';
+import { zurichTodayAsUTCDate } from '@/lib/business-rules/occurrence-expansion';
+
+const DEFAULT_BOOKING_DATE_TO = new Date(Date.UTC(9999, 11, 31));
 
 interface BookingsTableSectionProps {
   wineryId: string;
@@ -34,10 +37,14 @@ interface BookingsTableSectionProps {
  * Async server component for booking table/calendar content.
  * This is the heaviest query, designed to stream after summary and filters.
  */
-export async function BookingsTableSection({ wineryId, params }: BookingsTableSectionProps) {
+export async function BookingsTableSection({
+  wineryId,
+  params,
+}: BookingsTableSectionProps) {
   const t = await getTranslations('bookings');
   // Parse filters from URL params
   const filters: BookingFiltersType = {};
+  const hasExplicitDateFilter = Boolean(params.from || params.to);
 
   if (params.status) {
     filters.status = params.status.split(',') as BookingStatus[];
@@ -53,6 +60,14 @@ export async function BookingsTableSection({ wineryId, params }: BookingsTableSe
 
   if (params.to) {
     filters.dateTo = new Date(params.to);
+  }
+
+  if (!hasExplicitDateFilter) {
+    // Same Zurich day anchor as getBookingSummary (P-13 / A4): the KPI
+    // header and the default "upcoming" list must agree on what "today"
+    // is — the server runs in UTC, the wineries live in Zurich.
+    filters.dateFrom = zurichTodayAsUTCDate();
+    filters.dateTo = DEFAULT_BOOKING_DATE_TO;
   }
 
   if (params.search) {
@@ -75,9 +90,8 @@ export async function BookingsTableSection({ wineryId, params }: BookingsTableSe
     : new Date();
 
   // Status filter for calendar
-  const statusFilter = filters.status && filters.status.length > 0
-    ? filters.status
-    : undefined;
+  const statusFilter =
+    filters.status && filters.status.length > 0 ? filters.status : undefined;
 
   // Fetch bookings and calendar data in parallel
   const [bookings, summary, calendarData] = await Promise.all([
@@ -102,10 +116,8 @@ export async function BookingsTableSection({ wineryId, params }: BookingsTableSe
         bookings.length > 0 ? (
           <BookingsTable bookings={bookings} />
         ) : (
-          <div className="bg-white rounded-xl border border-border p-8 text-center">
-            <p className="text-[#915564]">
-              {t('filters.noResults')}
-            </p>
+          <div className="rounded-xl border border-border bg-white p-8 text-center">
+            <p className="text-[#915564]">{t('filters.noResults')}</p>
           </div>
         )
       ) : (

@@ -21,16 +21,18 @@ vi.mock('@/server/db', () => ({
       createMany: vi.fn(),
       deleteMany: vi.fn(),
     },
-    $transaction: vi.fn((fn) => fn({
-      experience: {
-        create: vi.fn(),
-        update: vi.fn(),
-      },
-      experienceGalleryImage: {
-        createMany: vi.fn(),
-        deleteMany: vi.fn(),
-      },
-    })),
+    $transaction: vi.fn((fn) =>
+      fn({
+        experience: {
+          create: vi.fn(),
+          update: vi.fn(),
+        },
+        experienceGalleryImage: {
+          createMany: vi.fn(),
+          deleteMany: vi.fn(),
+        },
+      })
+    ),
   },
 }));
 

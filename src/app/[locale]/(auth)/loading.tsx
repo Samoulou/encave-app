@@ -12,8 +12,8 @@ export default function AuthLoading() {
         {/* Quote skeleton at bottom */}
         <div className="absolute bottom-12 left-8 right-8">
           <Skeleton className="h-8 w-3/4 bg-white/20" />
-          <Skeleton className="h-8 w-1/2 mt-2 bg-white/20" />
-          <Skeleton className="h-4 w-24 mt-4 bg-white/20" />
+          <Skeleton className="mt-2 h-8 w-1/2 bg-white/20" />
+          <Skeleton className="mt-4 h-4 w-24 bg-white/20" />
         </div>
       </div>
 
@@ -21,7 +21,7 @@ export default function AuthLoading() {
       <div className="flex w-full flex-col justify-center bg-cream-50 px-6 py-12 md:w-1/2 md:px-12 lg:px-16">
         {/* Logo */}
         <div className="mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 group">
+          <Link href="/" className="group inline-flex items-center gap-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-burgundy-600 text-white">
               <Wine className="h-5 w-5" />
             </div>
@@ -36,7 +36,7 @@ export default function AuthLoading() {
           {/* Heading */}
           <div className="mb-8">
             <Skeleton className="h-9 w-48" />
-            <Skeleton className="h-5 w-64 mt-2" />
+            <Skeleton className="mt-2 h-5 w-64" />
           </div>
 
           {/* Form fields */}
@@ -54,7 +54,7 @@ export default function AuthLoading() {
             <Skeleton className="h-11 w-full" />
 
             {/* Link */}
-            <Skeleton className="h-4 w-48 mx-auto" />
+            <Skeleton className="mx-auto h-4 w-48" />
           </div>
         </div>
       </div>

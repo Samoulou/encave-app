@@ -10,7 +10,9 @@ interface NotFoundSearchProps {
   placeholder?: string;
 }
 
-export function NotFoundSearch({ placeholder = 'Search experiences...' }: NotFoundSearchProps) {
+export function NotFoundSearch({
+  placeholder = 'Search experiences...',
+}: NotFoundSearchProps) {
   const [query, setQuery] = useState('');
   const router = useRouter();
 
@@ -25,7 +27,7 @@ export function NotFoundSearch({ placeholder = 'Search experiences...' }: NotFou
     <form onSubmit={handleSubmit} className="flex gap-2">
       <div className="relative flex-1">
         <Search
-          className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+          className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground"
           aria-hidden="true"
         />
         <Input

@@ -6,21 +6,25 @@ interface ConfirmationSuccessProps {
   visitorEmail: string;
 }
 
-export function ConfirmationSuccess({ visitorEmail }: ConfirmationSuccessProps) {
+export function ConfirmationSuccess({
+  visitorEmail,
+}: ConfirmationSuccessProps) {
   const t = useTranslations('confirmation');
 
   return (
     <Card className="hover:translate-y-0 hover:shadow-card">
-      <CardContent className="p-8 text-center flex flex-col items-center">
-        <div className="mb-6">
+      <CardContent className="flex flex-col items-center px-5 py-8 text-center sm:p-8">
+        <div className="mb-5 sm:mb-6">
           <AnimatedCheckmark size="lg" />
         </div>
-        <h1 className="font-display text-foreground tracking-tight text-3xl md:text-4xl font-bold leading-tight mb-3">
+        <h1 className="mb-3 max-w-2xl text-balance font-display text-2xl font-bold leading-tight tracking-tight text-foreground sm:text-3xl md:text-4xl">
           {t('successTitle')}
         </h1>
-        <p className="text-muted-foreground text-lg font-normal leading-relaxed max-w-lg">
+        <p className="max-w-xl text-base font-normal leading-relaxed text-muted-foreground sm:text-lg">
           {t('emailSentTo')}{' '}
-          <span className="font-semibold text-foreground">{visitorEmail}</span>{' '}
+          <span className="inline-block max-w-full break-all font-semibold text-foreground">
+            {visitorEmail}
+          </span>{' '}
           {t('withAllDetails')}
         </p>
       </CardContent>

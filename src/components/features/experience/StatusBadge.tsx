@@ -1,42 +1,32 @@
-import { cn } from '@/lib/utils';
+'use client';
+
+import { useTranslations } from 'next-intl';
 import type { ExperienceStatus } from '@prisma/client';
+import { Badge, type BadgeProps } from '@/components/ui/badge';
+
+type BadgeVariant = NonNullable<BadgeProps['variant']>;
 
 interface StatusBadgeProps {
   status: ExperienceStatus;
   className?: string;
 }
 
-const STATUS_CONFIG = {
-  DRAFT: {
-    label: 'Draft',
-    badge: 'bg-gray-100 text-gray-600 border-gray-200',
-    dot: 'bg-gray-400',
-  },
-  PUBLISHED: {
-    label: 'Published',
-    badge: 'bg-green-100 text-green-700 border-green-200',
-    dot: 'bg-green-500',
-  },
-  ARCHIVED: {
-    label: 'Archived',
-    badge: 'bg-amber-100 text-amber-700 border-amber-200',
-    dot: 'bg-amber-500',
-  },
-} as const;
+const STATUS_CONFIG: Record<
+  ExperienceStatus,
+  { variant: BadgeVariant; labelKey: string }
+> = {
+  DRAFT: { variant: 'neutral', labelKey: 'draft' },
+  PUBLISHED: { variant: 'success', labelKey: 'published' },
+  ARCHIVED: { variant: 'warning', labelKey: 'archived' },
+};
 
 export function StatusBadge({ status, className }: StatusBadgeProps) {
+  const t = useTranslations('common.status');
   const config = STATUS_CONFIG[status];
 
   return (
-    <span
-      className={cn(
-        'inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold border backdrop-blur-sm',
-        config.badge,
-        className
-      )}
-    >
-      <span className={cn('w-1.5 h-1.5 rounded-full mr-1.5', config.dot)} />
-      {config.label}
-    </span>
+    <Badge variant={config.variant} className={className}>
+      {t(config.labelKey)}
+    </Badge>
   );
 }

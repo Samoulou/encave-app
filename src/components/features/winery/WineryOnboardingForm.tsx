@@ -80,7 +80,7 @@ export function WineryOnboardingForm() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         {error && (
-          <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-600">
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600">
             {error}
           </div>
         )}
@@ -89,7 +89,9 @@ export function WineryOnboardingForm() {
         <section className="space-y-6">
           <div className="flex items-center gap-3 rounded-lg bg-burgundy-50 px-4 py-3">
             <span className="text-xl">🍷</span>
-            <h2 className="font-semibold text-burgundy-900">{t('wineryInformation')}</h2>
+            <h2 className="font-semibold text-burgundy-900">
+              {t('wineryInformation')}
+            </h2>
           </div>
 
           <div className="space-y-6 pl-1">
@@ -100,7 +102,10 @@ export function WineryOnboardingForm() {
                 <FormItem>
                   <FormLabel>{t('wineryName')}</FormLabel>
                   <FormControl>
-                    <Input placeholder={t('wineryNamePlaceholder')} {...field} />
+                    <Input
+                      placeholder={t('wineryNamePlaceholder')}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -122,9 +127,7 @@ export function WineryOnboardingForm() {
                     />
                   </FormControl>
                   <div className="flex items-center justify-between">
-                    <FormDescription>
-                      {t('descriptionHelp')}
-                    </FormDescription>
+                    <FormDescription>{t('descriptionHelp')}</FormDescription>
                     <span
                       className={cn(
                         'text-xs font-medium tabular-nums',
@@ -132,7 +135,7 @@ export function WineryOnboardingForm() {
                           ? 'text-amber-600'
                           : descriptionLength > MAX_DESCRIPTION_LENGTH - 50
                             ? 'text-red-500'
-                            : 'text-slate-400'
+                            : 'text-muted-foreground'
                       )}
                     >
                       {descriptionLength}/{MAX_DESCRIPTION_LENGTH}
@@ -205,9 +208,9 @@ export function WineryOnboardingForm() {
 
         {/* Section: Contact */}
         <section className="space-y-6">
-          <div className="flex items-center gap-3 rounded-lg bg-slate-100 px-4 py-3">
+          <div className="flex items-center gap-3 rounded-lg bg-cream-100 px-4 py-3">
             <span className="text-xl">📞</span>
-            <h2 className="font-semibold text-slate-900">{t('contact')}</h2>
+            <h2 className="font-semibold text-foreground">{t('contact')}</h2>
           </div>
 
           <div className="space-y-6 pl-1">
@@ -220,9 +223,7 @@ export function WineryOnboardingForm() {
                   <FormControl>
                     <Input placeholder={t('phonePlaceholder')} {...field} />
                   </FormControl>
-                  <FormDescription>
-                    {t('phoneHelp')}
-                  </FormDescription>
+                  <FormDescription>{t('phoneHelp')}</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -234,7 +235,7 @@ export function WineryOnboardingForm() {
         <div className="pt-4">
           <Button
             type="submit"
-            className="w-full sm:w-auto sm:min-w-[200px] sm:mx-auto sm:block"
+            className="w-full sm:mx-auto sm:block sm:w-auto sm:min-w-[200px]"
             isLoading={isLoading}
             loadingText={t('submitting')}
           >

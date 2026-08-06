@@ -5,6 +5,9 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
 import { WineryProfileForm } from '@/components/features/winery/WineryProfileForm';
+import { CancellationPolicySection } from '@/components/features/winery/CancellationPolicySection';
+import { NoShowFeeSection } from '@/components/features/winery/NoShowFeeSection';
+import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
 import { StripeOnboarding } from '@/components/features/winery/StripeOnboarding';
 import { PaymentStatus } from '@/components/features/winery/PaymentStatus';
 import { getPaymentStatusType } from '@/lib/utils/payment-status';
@@ -15,7 +18,11 @@ import { generatePageMetadata } from '@/lib/seo/metadata';
 import { formatDate } from '@/lib/i18n/formatters';
 import type { Locale } from '@/i18n/routing';
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
   return generatePageMetadata({
     locale: locale as Locale,
@@ -24,7 +31,11 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   });
 }
 
-export default async function WineryProfilePage({ params }: { params: Promise<{ locale: string }> }) {
+export default async function WineryProfilePage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
   const session = await auth();
 
@@ -48,9 +59,10 @@ export default async function WineryProfilePage({ params }: { params: Promise<{ 
     redirect(`/${locale}/onboarding/winery`);
   }
 
-  const [t, tNav] = await Promise.all([
+  const [t, tNav, noShowFeesEnabled] = await Promise.all([
     getTranslations('winery'),
     getTranslations('nav'),
+    isFlagEnabled('NO_SHOW_FEES'),
   ]);
   const isVerified = winery.status === 'VERIFIED';
 
@@ -71,16 +83,14 @@ export default async function WineryProfilePage({ params }: { params: Promise<{ 
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="space-y-3">
               <div className="flex items-center gap-3">
-                <h1 className="font-display text-display-md text-slate-900">
+                <h1 className="font-display text-display-md text-foreground">
                   {winery.name}
                 </h1>
                 {isVerified && <VerifiedBadge size="md" />}
               </div>
-              <p className="text-slate-600">
-                {t('manageProfile')}
-              </p>
+              <p className="text-muted-foreground">{t('manageProfile')}</p>
               {winery.updatedAt && (
-                <p className="flex items-center gap-1.5 text-sm text-slate-500">
+                <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
                   <svg
                     className="h-4 w-4"
                     fill="none"
@@ -95,7 +105,12 @@ export default async function WineryProfilePage({ params }: { params: Promise<{ 
                       d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  {t('lastUpdatedDate', { date: formatDate(new Date(winery.updatedAt), locale as Locale) })}
+                  {t('lastUpdatedDate', {
+                    date: formatDate(
+                      new Date(winery.updatedAt),
+                      locale as Locale
+                    ),
+                  })}
                 </p>
               )}
             </div>
@@ -134,12 +149,12 @@ export default async function WineryProfilePage({ params }: { params: Promise<{ 
 
         {/* Payment Status Section */}
         {isVerified && (
-          <div className="mb-8">
+          <div id="payment" className="mb-8 scroll-mt-24">
             {!winery.stripeAccountId ? (
               <StripeOnboarding wineryId={winery.id} />
             ) : (
               <div className="space-y-3">
-                <h2 className="text-sm font-medium text-slate-700">
+                <h2 className="text-sm font-medium text-foreground">
                   {t('paymentStatusLabel')}
                 </h2>
                 <PaymentStatus
@@ -165,8 +180,32 @@ export default async function WineryProfilePage({ params }: { params: Promise<{ 
             phone: winery.phone,
             coverPhoto: winery.coverPhoto,
             galleryImages: winery.galleryImages,
+            openingHours: winery.openingHours,
+            altitude: winery.altitude,
+            hectares: winery.hectares,
+            familyName: winery.familyName,
+            signatureGrapes: winery.signatureGrapes,
           }}
         />
+
+        {/* Cancellation Policy Section (P-03 / L-043) */}
+        <div id="cancellation-policy" className="mt-8 scroll-mt-24">
+          <CancellationPolicySection
+            wineryId={winery.id}
+            currentPolicy={winery.cancellationPolicy}
+          />
+        </div>
+
+        {/* No-show fee opt-in (P-08 / L-070) — flag-gated */}
+        {noShowFeesEnabled && (
+          <div id="no-show-fee" className="mt-8 scroll-mt-24">
+            <NoShowFeeSection
+              wineryId={winery.id}
+              currentEnabled={winery.noShowFeeEnabled}
+              currentFeeCents={winery.noShowFeeCents}
+            />
+          </div>
+        )}
       </div>
     </WineryAccessGuard>
   );

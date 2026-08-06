@@ -22,7 +22,11 @@ export function WineryCard({ winery }: WineryCardProps) {
   const isVerified = winery.status === 'VERIFIED';
 
   return (
-    <Link href={`/wineries/${winery.slug}`} className="group block h-full" data-testid="winery-card">
+    <Link
+      href={`/wineries/${winery.slug}`}
+      className="group block h-full"
+      data-testid="winery-card"
+    >
       <article className="h-full overflow-hidden rounded-xl border border-stone-200/60 bg-white shadow-warm transition-all duration-300 ease-premium hover:-translate-y-1 hover:shadow-card-hover">
         {/* Image Container */}
         <div className="relative aspect-[4/3] w-full overflow-hidden">
@@ -46,16 +50,16 @@ export function WineryCard({ winery }: WineryCardProps) {
 
         {/* Content */}
         <div className="p-5 sm:p-6">
-          <h3 className="font-display text-lg font-semibold text-slate-900 transition-colors group-hover:text-burgundy-700">
+          <h3 className="font-display text-lg font-semibold text-foreground transition-colors group-hover:text-burgundy-700">
             {winery.name}
           </h3>
 
-          <p className="mt-1.5 flex items-center gap-1.5 text-sm text-slate-500">
+          <p className="mt-1.5 flex items-center gap-1.5 text-sm text-muted-foreground">
             <MapPin className="h-3.5 w-3.5" />
             {winery.commune}, Valais
           </p>
 
-          <p className="mt-3 line-clamp-2 text-sm text-slate-600">
+          <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">
             {winery.description}
           </p>
 

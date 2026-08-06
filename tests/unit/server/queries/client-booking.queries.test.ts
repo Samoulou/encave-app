@@ -109,7 +109,10 @@ describe('Client Booking Queries', () => {
         date: new Date('2025-07-20'),
         timeSlot: '10:00',
       };
-      mockDb.booking.findMany.mockResolvedValueOnce([mockBooking, booking2] as never);
+      mockDb.booking.findMany.mockResolvedValueOnce([
+        mockBooking,
+        booking2,
+      ] as never);
 
       const result = await getClientUpcomingBookings('john@test.com');
 
@@ -221,7 +224,9 @@ describe('Client Booking Queries', () => {
         refundIssued: true,
         refundAmount: 20000,
       };
-      mockDb.booking.findMany.mockResolvedValueOnce([cancelledBooking] as never);
+      mockDb.booking.findMany.mockResolvedValueOnce([
+        cancelledBooking,
+      ] as never);
 
       const result = await getClientPastBookings('john@test.com');
 

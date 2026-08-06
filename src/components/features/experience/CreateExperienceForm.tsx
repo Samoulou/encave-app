@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
@@ -44,30 +45,51 @@ import {
   AvailabilitySection,
   LocationSection,
 } from './form-sections';
-import type { GalleryImage, AddressData, AvailabilitySlot, DayOfWeek } from './form-sections';
+import type {
+  GalleryImage,
+  AddressData,
+  AvailabilitySlot,
+  DayOfWeek,
+} from './form-sections';
 
 // Form sections for navigation
 const FORM_SECTIONS = [
-  { id: 'general', label: 'General Info', icon: Info },
-  { id: 'details', label: 'Details', icon: SlidersHorizontal },
-  { id: 'media', label: 'Media', icon: ImageIcon },
-  { id: 'availability', label: 'Availability', icon: CalendarClock },
-  { id: 'location', label: 'Location', icon: MapPin },
+  { id: 'general', labelKey: 'generalInfo', icon: Info },
+  { id: 'details', labelKey: 'details', icon: SlidersHorizontal },
+  { id: 'media', labelKey: 'media', icon: ImageIcon },
+  { id: 'availability', labelKey: 'availability.title', icon: CalendarClock },
+  { id: 'location', labelKey: 'location', icon: MapPin },
 ] as const;
 
-export function CreateExperienceForm() {
+interface CreateExperienceFormProps {
+  /** P-08: expose the ONLINE / ON_SITE payment-mode picker (NO_SHOW_FEES flag). */
+  noShowFeesEnabled?: boolean;
+  /** P-11: expose the « Événement collectif » toggle (COLLECTIVE_EVENTS flag). */
+  collectiveEventsEnabled?: boolean;
+}
+
+export function CreateExperienceForm({
+  noShowFeesEnabled = false,
+  collectiveEventsEnabled = false,
+}: CreateExperienceFormProps = {}) {
+  const t = useTranslations('experience');
+  const tCommon = useTranslations('common');
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showPublishDialog, setShowPublishDialog] = useState(false);
-  const [createdExperienceId, setCreatedExperienceId] = useState<string | null>(null);
+  const [createdExperienceId, setCreatedExperienceId] = useState<string | null>(
+    null
+  );
   const [isPublishing, setIsPublishing] = useState(false);
   const [isPublishEnabled, setIsPublishEnabled] = useState(false);
   const [activeSection, setActiveSection] = useState('general');
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlot[]>([
+  const [availabilitySlots, setAvailabilitySlots] = useState<
+    AvailabilitySlot[]
+  >([
     {
       id: '1',
       days: ['MON', 'WED', 'FRI'],
@@ -106,6 +128,9 @@ export function CreateExperienceForm() {
       price: undefined,
       minCapacity: 1,
       maxCapacity: 12,
+      paymentMode: 'ONLINE',
+      isCollective: false,
+      languages: ['FR'],
     },
   });
 
@@ -163,23 +188,34 @@ export function CreateExperienceForm() {
     return result.data.url;
   };
 
-  const handleGalleryUpload = async (file: File, index: number): Promise<void> => {
+  const handleGalleryUpload = async (
+    file: File,
+    index: number
+  ): Promise<void> => {
     setUploadingIndex(index);
     try {
       const url = await handleImageUpload(file);
       setGalleryImages((prev) => [
         ...prev,
-        { id: `temp-${Date.now()}`, url, order: prev.length, isCover: prev.length === 0 },
+        {
+          id: `temp-${Date.now()}`,
+          url,
+          order: prev.length,
+          isCover: prev.length === 0,
+        },
       ]);
       setHasUnsavedChanges(true);
     } catch {
-      toast.error('Failed to upload image');
+      toast.error(t('toast.uploadImageFailed'));
     } finally {
       setUploadingIndex(null);
     }
   };
 
-  const handleRemoveGalleryImage = async (imageId: string, imageUrl: string) => {
+  const handleRemoveGalleryImage = async (
+    imageId: string,
+    imageUrl: string
+  ) => {
     await deleteUploadedImage(imageUrl);
     setGalleryImages((prev) => {
       const filtered = prev.filter((img) => img.id !== imageId);
@@ -198,18 +234,21 @@ export function CreateExperienceForm() {
 
     // Basic validation for draft
     if (!data.title) {
-      toast.error('Please enter a title');
+      toast.error(t('toast.titleRequired'));
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const coverPhoto = galleryImages.find((img) => img.isCover)?.url || galleryImages[0]?.url;
-      const galleryUrls = galleryImages.filter((img) => !img.isCover).map((img) => img.url);
+      const coverPhoto =
+        galleryImages.find((img) => img.isCover)?.url || galleryImages[0]?.url;
+      const galleryUrls = galleryImages
+        .filter((img) => !img.isCover)
+        .map((img) => img.url);
 
       if (!coverPhoto) {
-        toast.error('Please upload at least one image');
+        toast.error(t('toast.imageRequired'));
         setIsSubmitting(false);
         return;
       }
@@ -229,36 +268,43 @@ export function CreateExperienceForm() {
           .map(({ days, timeSlots }) => ({ days, timeSlots })),
       };
 
-      const result = await createExperience(dataWithExtras, coverPhoto, galleryUrls);
+      const result = await createExperience(
+        dataWithExtras,
+        coverPhoto,
+        galleryUrls
+      );
 
       if (result.success) {
         setLastSaved(new Date());
         setHasUnsavedChanges(false);
         setCreatedExperienceId(result.data.experienceId);
-        toast.success('Draft saved');
+        toast.success(t('toast.draftSaved'));
       } else {
         toast.error(result.error.message);
       }
     } catch {
-      toast.error('Something went wrong. Please try again.');
+      toast.error(tCommon('errors.somethingWentWrong'));
     } finally {
       setIsSubmitting(false);
     }
-  }, [form, galleryImages, location, availabilitySlots]);
+  }, [form, galleryImages, location, availabilitySlots, t, tCommon]);
 
   const onSubmit = useCallback(
     async (data: CreateExperienceInput) => {
-      const coverPhoto = galleryImages.find((img) => img.isCover)?.url || galleryImages[0]?.url;
+      const coverPhoto =
+        galleryImages.find((img) => img.isCover)?.url || galleryImages[0]?.url;
 
       if (!coverPhoto) {
-        toast.error('Please upload at least one image');
+        toast.error(t('toast.imageRequired'));
         return;
       }
 
       setIsSubmitting(true);
 
       try {
-        const galleryUrls = galleryImages.filter((img) => !img.isCover).map((img) => img.url);
+        const galleryUrls = galleryImages
+          .filter((img) => !img.isCover)
+          .map((img) => img.url);
 
         // Add location and availability to the data
         const dataWithExtras = {
@@ -275,18 +321,24 @@ export function CreateExperienceForm() {
             .map(({ days, timeSlots }) => ({ days, timeSlots })),
         };
 
-        const result = await createExperience(dataWithExtras, coverPhoto, galleryUrls);
+        const result = await createExperience(
+          dataWithExtras,
+          coverPhoto,
+          galleryUrls
+        );
 
         if (result.success) {
-          toast.success('Experience created successfully');
+          toast.success(t('toast.createdSuccess'));
           setHasUnsavedChanges(false);
           setCreatedExperienceId(result.data.experienceId);
 
           if (isPublishEnabled) {
             // Auto-publish if toggle is on
-            const publishResult = await publishExperience(result.data.experienceId);
+            const publishResult = await publishExperience(
+              result.data.experienceId
+            );
             if (publishResult.success) {
-              toast.success('Experience published!');
+              toast.success(t('publishedSuccess'));
               router.push('/dashboard/experiences');
             } else {
               setShowPublishDialog(true);
@@ -298,12 +350,20 @@ export function CreateExperienceForm() {
           toast.error(result.error.message);
         }
       } catch {
-        toast.error('Something went wrong. Please try again.');
+        toast.error(tCommon('errors.somethingWentWrong'));
       } finally {
         setIsSubmitting(false);
       }
     },
-    [galleryImages, isPublishEnabled, router, location, availabilitySlots]
+    [
+      galleryImages,
+      isPublishEnabled,
+      router,
+      location,
+      availabilitySlots,
+      t,
+      tCommon,
+    ]
   );
 
   const handlePublishNow = async () => {
@@ -313,12 +373,12 @@ export function CreateExperienceForm() {
     try {
       const result = await publishExperience(createdExperienceId);
       if (result.success) {
-        toast.success('Experience published!');
+        toast.success(t('publishedSuccess'));
       } else {
         toast.error(result.error.message);
       }
     } catch {
-      toast.error('Failed to publish.');
+      toast.error(t('toast.publishFailed'));
     } finally {
       setIsPublishing(false);
       setShowPublishDialog(false);
@@ -335,7 +395,11 @@ export function CreateExperienceForm() {
 
   // ===== Availability Handlers =====
 
-  const handleDayToggle = (slotId: string, dayValue: string, isSelected: boolean) => {
+  const handleDayToggle = (
+    slotId: string,
+    dayValue: string,
+    isSelected: boolean
+  ) => {
     setAvailabilitySlots((prev) =>
       prev.map((s) =>
         s.id === slotId
@@ -387,7 +451,7 @@ export function CreateExperienceForm() {
       if (slot.timeSlots.length === 1) {
         // If this is the last pattern, show warning and keep it
         if (prev.length === 1) {
-          toast.error('At least one schedule pattern is required');
+          toast.error(t('toast.schedulePatternRequired'));
           return prev;
         }
         return prev.filter((s) => s.id !== slotId);
@@ -396,7 +460,10 @@ export function CreateExperienceForm() {
       // Otherwise, just remove the time slot
       return prev.map((s) =>
         s.id === slotId
-          ? { ...s, timeSlots: s.timeSlots.filter((_, idx) => idx !== timeSlotIndex) }
+          ? {
+              ...s,
+              timeSlots: s.timeSlots.filter((_, idx) => idx !== timeSlotIndex),
+            }
           : s
       );
     });
@@ -460,21 +527,21 @@ export function CreateExperienceForm() {
   return (
     <div className="min-h-screen bg-stone-50">
       {/* Page Header */}
-      <div className="max-w-[1200px] mx-auto px-6 md:px-10 py-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+      <div className="mx-auto max-w-[1200px] px-6 py-8 md:px-10">
+        <div className="mb-10 flex flex-col justify-between gap-6 md:flex-row md:items-end">
           <div className="max-w-xl">
-            <h1 className="font-display text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight mb-2">
-              Create New Experience
+            <h1 className="mb-2 font-display text-3xl font-extrabold tracking-tight text-foreground md:text-4xl">
+              {t('createNewExperience')}
             </h1>
-            <p className="text-slate-500 text-base">
-              Fill in the details to list your wine experience on the marketplace.
+            <p className="text-base text-muted-foreground">
+              {t('createFormSubtitle')}
             </p>
           </div>
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex shrink-0 items-center gap-3">
             {lastSaved && (
-              <div className="hidden sm:flex text-xs text-slate-400 font-medium items-center gap-1.5 bg-stone-100 px-3 py-1.5 rounded-full">
+              <div className="hidden items-center gap-1.5 rounded-full bg-stone-100 px-3 py-1.5 text-xs font-medium text-muted-foreground sm:flex">
                 <span className="block size-2 rounded-full bg-emerald-500" />
-                Draft Auto-Saved
+                {t('draftAutoSaved')}
               </div>
             )}
             <Button
@@ -485,7 +552,7 @@ export function CreateExperienceForm() {
               className="h-10 gap-2"
             >
               <Save className="h-4 w-4" />
-              Save Draft
+              {t('saveDraft')}
             </Button>
             <Button
               type="button"
@@ -494,25 +561,34 @@ export function CreateExperienceForm() {
               className="h-10 gap-2"
             >
               <Send className="h-4 w-4" />
-              Publish
+              {t('publish')}
             </Button>
           </div>
         </div>
 
         {/* Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12">
           {/* Left Column: Form Sections */}
-          <div className="lg:col-span-8 flex flex-col gap-8">
+          <div className="flex flex-col gap-8 lg:col-span-8">
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-8"
+              >
                 <BasicInfoSection
                   form={form}
-                  sectionRef={(el) => { sectionRefs.current['general'] = el; }}
+                  sectionRef={(el) => {
+                    sectionRefs.current['general'] = el;
+                  }}
                 />
 
                 <DetailsSection
                   form={form}
-                  sectionRef={(el) => { sectionRefs.current['details'] = el; }}
+                  showPaymentMode={noShowFeesEnabled}
+                  showCollective={collectiveEventsEnabled}
+                  sectionRef={(el) => {
+                    sectionRefs.current['details'] = el;
+                  }}
                 />
 
                 <MediaSection
@@ -521,7 +597,9 @@ export function CreateExperienceForm() {
                   uploadingIndex={uploadingIndex}
                   onGalleryUpload={handleGalleryUpload}
                   onRemoveGalleryImage={handleRemoveGalleryImage}
-                  sectionRef={(el) => { sectionRefs.current['media'] = el; }}
+                  sectionRef={(el) => {
+                    sectionRefs.current['media'] = el;
+                  }}
                 />
 
                 <AvailabilitySection
@@ -535,46 +613,52 @@ export function CreateExperienceForm() {
                   onAddTimeSlot={handleAddTimeSlot}
                   onDeletePattern={handleDeletePattern}
                   onAddPattern={handleAddPattern}
-                  sectionRef={(el) => { sectionRefs.current['availability'] = el; }}
+                  sectionRef={(el) => {
+                    sectionRefs.current['availability'] = el;
+                  }}
                 />
 
                 <LocationSection
                   location={location}
                   onLocationChange={setLocation}
-                  sectionRef={(el) => { sectionRefs.current['location'] = el; }}
+                  sectionRef={(el) => {
+                    sectionRefs.current['location'] = el;
+                  }}
                 />
               </form>
             </Form>
           </div>
 
           {/* Right Column: Sticky Sidebar */}
-          <div className="lg:col-span-4 lg:sticky lg:top-24 space-y-6">
+          <div className="space-y-6 lg:sticky lg:top-24 lg:col-span-4">
             {/* Publish Status Card */}
-            <div className="bg-white border border-stone-200 rounded-xl p-6 shadow-sm">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4">
-                Publish Status
+            <div className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
+              <h3 className="mb-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                {t('publishStatus')}
               </h3>
-              <div className="flex items-center justify-between mb-4">
-                <span className="font-medium text-slate-900">Visible on marketplace</span>
+              <div className="mb-4 flex items-center justify-between">
+                <span className="font-medium text-foreground">
+                  {t('visibleOnMarketplace')}
+                </span>
                 <Switch
                   checked={isPublishEnabled}
                   onCheckedChange={setIsPublishEnabled}
                 />
               </div>
-              <div className="p-3 bg-amber-50 border border-amber-100 rounded text-amber-800 text-xs leading-relaxed flex items-start gap-2">
-                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" aria-hidden="true" />
-                <span>
-                  Your experience is currently in <strong>Draft</strong> mode. Publish to start
-                  accepting bookings.
-                </span>
+              <div className="flex items-start gap-2 rounded border border-amber-100 bg-amber-50 p-3 text-xs leading-relaxed text-amber-800">
+                <AlertTriangle
+                  className="mt-0.5 h-4 w-4 shrink-0"
+                  aria-hidden="true"
+                />
+                <span>{t('draftModeNotice')}</span>
               </div>
             </div>
 
             {/* Section Navigation */}
-            <div className="bg-white border border-stone-200 rounded-xl overflow-hidden shadow-sm">
-              <div className="p-4 border-b border-stone-100 bg-stone-50/50">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                  Form Sections
+            <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
+              <div className="border-b border-stone-100 bg-stone-50/50 p-4">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  {t('formSections')}
                 </h3>
               </div>
               <div className="flex flex-col">
@@ -587,14 +671,17 @@ export function CreateExperienceForm() {
                       type="button"
                       onClick={() => scrollToSection(section.id)}
                       className={cn(
-                        'flex items-center gap-3 px-4 py-3 text-sm font-medium border-l-2 transition-colors text-left',
+                        'flex items-center gap-3 border-l-2 px-4 py-3 text-left text-sm font-medium transition-colors',
                         isActive
-                          ? 'text-slate-700 bg-stone-50 border-primary'
-                          : 'text-slate-500 hover:bg-stone-50 hover:text-slate-900 border-transparent'
+                          ? 'border-primary bg-stone-50 text-foreground'
+                          : 'border-transparent text-muted-foreground hover:bg-stone-50 hover:text-foreground'
                       )}
                     >
-                      <Icon className={cn('h-4 w-4', isActive && 'text-primary')} aria-hidden="true" />
-                      {section.label}
+                      <Icon
+                        className={cn('h-4 w-4', isActive && 'text-primary')}
+                        aria-hidden="true"
+                      />
+                      {t(section.labelKey)}
                     </button>
                   );
                 })}
@@ -602,13 +689,15 @@ export function CreateExperienceForm() {
             </div>
 
             {/* Help Widget */}
-            <div className="rounded-xl p-5 bg-indigo-900 text-white relative overflow-hidden group cursor-pointer">
-              <div className="absolute -right-4 -top-4 bg-white/10 size-24 rounded-full group-hover:scale-110 transition-transform" />
-              <h3 className="font-bold relative z-10 mb-1">Need Help?</h3>
-              <p className="text-indigo-200 text-sm relative z-10 mb-3">
-                Check our guide on how to create the perfect wine experience listing.
+            <div className="group relative cursor-pointer overflow-hidden rounded-xl bg-indigo-900 p-5 text-white">
+              <div className="absolute -right-4 -top-4 size-24 rounded-full bg-white/10 transition-transform group-hover:scale-110" />
+              <h3 className="relative z-10 mb-1 font-bold">{t('needHelp')}</h3>
+              <p className="relative z-10 mb-3 text-sm text-indigo-200">
+                {t('helpText')}
               </p>
-              <span className="text-xs font-bold underline relative z-10">Read Guide →</span>
+              <span className="relative z-10 text-xs font-bold underline">
+                {t('readGuide')} →
+              </span>
             </div>
           </div>
         </div>
@@ -618,10 +707,9 @@ export function CreateExperienceForm() {
       <Dialog open={showPublishDialog} onOpenChange={setShowPublishDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Experience Created!</DialogTitle>
+            <DialogTitle>{t('publishDialog.title')}</DialogTitle>
             <DialogDescription>
-              Your experience has been saved as a draft. Would you like to publish it now so
-              visitors can see it?
+              {t('publishDialog.description')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-col gap-2 sm:flex-row">
@@ -634,10 +722,16 @@ export function CreateExperienceForm() {
               disabled={isPublishing}
               className="w-full sm:w-auto"
             >
-              Keep as Draft
+              {t('publishDialog.keepAsDraft')}
             </Button>
-            <Button onClick={handlePublishNow} disabled={isPublishing} className="w-full sm:w-auto">
-              {isPublishing ? 'Publishing...' : 'Publish Now'}
+            <Button
+              onClick={handlePublishNow}
+              disabled={isPublishing}
+              className="w-full sm:w-auto"
+            >
+              {isPublishing
+                ? t('publishDialog.publishing')
+                : t('publishDialog.publishNow')}
             </Button>
           </DialogFooter>
         </DialogContent>

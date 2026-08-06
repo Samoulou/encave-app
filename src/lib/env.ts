@@ -9,13 +9,11 @@ const envSchema = z.object({
   // BETTER_AUTH_SECRET is required in production
   BETTER_AUTH_SECRET: z.string().min(32).optional(),
   BETTER_AUTH_URL: z.string().url().optional(),
-  NEXT_PUBLIC_BETTER_AUTH_URL: z.string().url().optional(),
 
   // OAuth Providers
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
-  APPLE_CLIENT_ID: z.string().optional(),
-  APPLE_CLIENT_SECRET: z.string().optional(),
+  // P-14 (D5): Apple OAuth removed — Google + email OTP suffice at launch.
 
   // Vercel automatic environment variables
   VERCEL: z.string().optional(),
@@ -27,6 +25,12 @@ const envSchema = z.object({
 
   // Email (Resend)
   RESEND_API_KEY: z.string().optional(),
+  // Svix signing secret of the Resend webhook (open/click tracking, P-07).
+  // Unset = webhook route rejects everything; sending is unaffected.
+  RESEND_WEBHOOK_SECRET: z.string().optional(),
+  // Internal escalation inbox (P-10): a sur-mesure request unanswered > 48h
+  // emails Sam here. Unset = escalation job skips cleanly (no throw).
+  ADMIN_ALERT_EMAIL: z.string().email().optional(),
 
   // Storage (Vercel Blob)
   BLOB_READ_WRITE_TOKEN: z.string().optional(),
@@ -45,11 +49,27 @@ const envSchema = z.object({
   // Cron Jobs
   CRON_SECRET: z.string().min(32).optional(),
 
+  // Launch gate (P-16 / WS-I, L-189). The ONLY env-based feature flag:
+  // the Edge middleware cannot read the DB flag table. Anything but the
+  // string 'false' keeps encave.ch on the Coming Soon page (fail-closed).
+  // Read directly via process.env in src/middleware.ts (Edge runtime);
+  // declared here so the variable is documented and validated.
+  COMING_SOON: z.string().optional(),
+
   // Sentry (Error Tracking)
   NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
   SENTRY_AUTH_TOKEN: z.string().optional(),
+  SENTRY_ORG: z.string().optional(),
+  SENTRY_PROJECT: z.string().optional(),
 
-  // Analytics
+  // Analytics (PostHog)
+  NEXT_PUBLIC_POSTHOG_KEY: z.string().optional(),
+  NEXT_PUBLIC_POSTHOG_HOST: z.string().url().optional(),
+
+  // Mapbox
+  NEXT_PUBLIC_MAPBOX_TOKEN: z.string().optional(),
+
+  // Analytics (Vercel)
   NEXT_PUBLIC_VERCEL_ANALYTICS_ID: z.string().optional(),
 
   // SEO / Site URL

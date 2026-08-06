@@ -20,7 +20,6 @@ import {
   logEmailSent,
   logEmailFailed,
   logEmailSkipped,
-  getRecentEmailLogs,
 } from '@/server/services/email-log.service';
 
 const mockDb = vi.mocked(db);
@@ -67,7 +66,9 @@ describe('Email Log Service', () => {
     it('does not throw when db fails', async () => {
       mockDb.emailLog.create.mockRejectedValueOnce(new Error('DB error'));
 
-      await expect(logEmailSent('reminder_24h', 'user-123')).resolves.toBeUndefined();
+      await expect(
+        logEmailSent('reminder_24h', 'user-123')
+      ).resolves.toBeUndefined();
     });
 
     it('logs error when db fails', async () => {
@@ -91,7 +92,12 @@ describe('Email Log Service', () => {
     it('creates a failed email log entry', async () => {
       mockDb.emailLog.create.mockResolvedValueOnce({} as never);
 
-      await logEmailFailed('reminder_2h', 'user-123', 'SMTP timeout', 'booking-456');
+      await logEmailFailed(
+        'reminder_2h',
+        'user-123',
+        'SMTP timeout',
+        'booking-456'
+      );
 
       expect(mockDb.emailLog.create).toHaveBeenCalledWith({
         data: {
@@ -139,76 +145,6 @@ describe('Email Log Service', () => {
       await expect(
         logEmailSkipped('follow_up', 'user-123', 'reason')
       ).resolves.toBeUndefined();
-    });
-  });
-
-  // ========================================
-  // getRecentEmailLogs
-  // ========================================
-  describe('getRecentEmailLogs', () => {
-    it('returns recent logs with default limit', async () => {
-      const mockLogs = [
-        { id: '1', type: 'reminder_24h', status: 'sent', createdAt: new Date() },
-        { id: '2', type: 'follow_up', status: 'failed', createdAt: new Date() },
-      ];
-      mockDb.emailLog.findMany.mockResolvedValueOnce(mockLogs as never);
-
-      const result = await getRecentEmailLogs();
-
-      expect(result).toEqual(mockLogs);
-      expect(mockDb.emailLog.findMany).toHaveBeenCalledWith({
-        where: {},
-        orderBy: { createdAt: 'desc' },
-        take: 100,
-      });
-    });
-
-    it('filters by type', async () => {
-      mockDb.emailLog.findMany.mockResolvedValueOnce([] as never);
-
-      await getRecentEmailLogs('reminder_24h');
-
-      expect(mockDb.emailLog.findMany).toHaveBeenCalledWith({
-        where: { type: 'reminder_24h' },
-        orderBy: { createdAt: 'desc' },
-        take: 100,
-      });
-    });
-
-    it('filters by status', async () => {
-      mockDb.emailLog.findMany.mockResolvedValueOnce([] as never);
-
-      await getRecentEmailLogs(undefined, 'failed');
-
-      expect(mockDb.emailLog.findMany).toHaveBeenCalledWith({
-        where: { status: 'failed' },
-        orderBy: { createdAt: 'desc' },
-        take: 100,
-      });
-    });
-
-    it('filters by both type and status', async () => {
-      mockDb.emailLog.findMany.mockResolvedValueOnce([] as never);
-
-      await getRecentEmailLogs('daily_digest', 'sent');
-
-      expect(mockDb.emailLog.findMany).toHaveBeenCalledWith({
-        where: { type: 'daily_digest', status: 'sent' },
-        orderBy: { createdAt: 'desc' },
-        take: 100,
-      });
-    });
-
-    it('respects custom limit', async () => {
-      mockDb.emailLog.findMany.mockResolvedValueOnce([] as never);
-
-      await getRecentEmailLogs(undefined, undefined, 10);
-
-      expect(mockDb.emailLog.findMany).toHaveBeenCalledWith({
-        where: {},
-        orderBy: { createdAt: 'desc' },
-        take: 10,
-      });
     });
   });
 });

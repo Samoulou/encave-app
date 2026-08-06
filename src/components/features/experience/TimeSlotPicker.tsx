@@ -69,7 +69,10 @@ export function TimeSlotPicker({
 
         // Auto-calculate end time if start time changed
         if (updates.startTime && !updates.endTime) {
-          updated.endTime = calculateEndTime(updates.startTime, experienceDuration);
+          updated.endTime = calculateEndTime(
+            updates.startTime,
+            experienceDuration
+          );
         }
 
         return updated;
@@ -84,7 +87,7 @@ export function TimeSlotPicker({
   if (slots.length === 0) {
     return (
       <div className="flex flex-col items-center gap-3 py-4">
-        <p className="text-sm text-slate-500">{t('noConfigured')}</p>
+        <p className="text-sm text-muted-foreground">{t('noConfigured')}</p>
         <Button
           type="button"
           variant="outline"
@@ -120,9 +123,11 @@ export function TimeSlotPicker({
           {/* Start Time */}
           <Select
             value={slot.startTime}
-            onValueChange={(value) => handleUpdateSlot(slot.id, { startTime: value })}
+            onValueChange={(value) =>
+              handleUpdateSlot(slot.id, { startTime: value })
+            }
           >
-            <SelectTrigger className="w-[110px] h-9">
+            <SelectTrigger className="h-9 w-[110px]">
               <SelectValue placeholder={t('startPlaceholder')} />
             </SelectTrigger>
             <SelectContent>
@@ -134,22 +139,26 @@ export function TimeSlotPicker({
             </SelectContent>
           </Select>
 
-          <span className="text-slate-400">{t('to')}</span>
+          <span className="text-muted-foreground">{t('to')}</span>
 
           {/* End Time */}
           <Select
             value={slot.endTime}
-            onValueChange={(value) => handleUpdateSlot(slot.id, { endTime: value })}
+            onValueChange={(value) =>
+              handleUpdateSlot(slot.id, { endTime: value })
+            }
           >
-            <SelectTrigger className="w-[110px] h-9">
+            <SelectTrigger className="h-9 w-[110px]">
               <SelectValue placeholder={t('endPlaceholder')} />
             </SelectTrigger>
             <SelectContent>
-              {TIME_SLOTS.filter((time) => time > slot.startTime).map((time) => (
-                <SelectItem key={time} value={time}>
-                  {time}
-                </SelectItem>
-              ))}
+              {TIME_SLOTS.filter((time) => time > slot.startTime).map(
+                (time) => (
+                  <SelectItem key={time} value={time}>
+                    {time}
+                  </SelectItem>
+                )
+              )}
               {/* Allow times past 20:00 for end time */}
               <SelectItem value="20:30">20:30</SelectItem>
               <SelectItem value="21:00">21:00</SelectItem>
@@ -164,7 +173,7 @@ export function TimeSlotPicker({
             variant="ghost"
             size="icon"
             onClick={() => handleRemoveSlot(slot.id)}
-            className="h-9 w-9 text-slate-400 hover:text-red-600"
+            className="h-9 w-9 text-muted-foreground hover:text-destructive"
             aria-label={t('removeSlot', { index: index + 1 })}
           >
             <Trash2 className="h-4 w-4" />
@@ -178,7 +187,7 @@ export function TimeSlotPicker({
         variant="outline"
         size="sm"
         onClick={handleAddSlot}
-        className="gap-2 mt-2"
+        className="mt-2 gap-2"
       >
         <Plus className="h-4 w-4" />
         {t('addAnotherSlot')}

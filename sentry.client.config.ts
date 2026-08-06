@@ -1,49 +1,51 @@
-// This file configures the initialization of Sentry on the client.
-// The config you add here will be used whenever a users loads a page in their browser.
-// https://docs.sentry.io/platforms/javascript/guides/nextjs/
-
 import * as Sentry from '@sentry/nextjs';
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
-  // Adjust this value in production, or use tracesSampler for greater control
-  tracesSampleRate: 1,
+  // Only enable Sentry when DSN is configured
+  enabled: !!process.env.NEXT_PUBLIC_SENTRY_DSN,
 
-  // Setting this option to true will print useful information to the console while you're setting up Sentry.
-  debug: false,
+  // Environment: use Vercel env if available, fallback to NODE_ENV
+  environment: process.env.NEXT_PUBLIC_VERCEL_ENV || process.env.NODE_ENV,
 
+  // Performance: sample 20% of transactions in production
+  tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.2 : 1.0,
+
+  // Session Replay: capture 10% of sessions, 100% of sessions with errors.
+  // The Replay integration itself is lazy-loaded below (L-205).
+  replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
 
-  // This sets the sample rate to be 10%. You may want this to be 100% while
-  // in development and sample at a lower rate in production
-  replaysSessionSampleRate: 0.1,
-
-  // You can remove this option if you're not planning to use the Sentry Session Replay feature:
-  integrations: [
-    Sentry.replayIntegration({
-      // Additional Replay configuration goes in here, for example:
-      maskAllText: true,
-      blockAllMedia: true,
-    }),
-  ],
-
-  // Only enable Sentry in production
-  enabled: process.env.NODE_ENV === 'production',
-
-  // Environment
-  environment: process.env.NODE_ENV,
+  integrations: [Sentry.browserTracingIntegration()],
 
   // Filter out common non-actionable errors
   ignoreErrors: [
-    // Network errors
     'Failed to fetch',
     'NetworkError',
     'Load failed',
-    // Browser extensions
     /^chrome-extension:\/\//,
-    // User actions
     'ResizeObserver loop',
     'Non-Error promise rejection',
   ],
+
+  debug: false,
 });
+
+// L-205: Session Replay is loaded lazily (fetched from the Sentry CDN after
+// startup) so its ~50-60 kB gz never ship in the initial bundle. The sample
+// rates configured in init() above still apply once the integration is added.
+if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
+  Sentry.lazyLoadIntegration('replayIntegration')
+    .then((replayIntegration) => {
+      Sentry.getClient()?.addIntegration(
+        replayIntegration({
+          maskAllText: true,
+          blockAllMedia: true,
+        })
+      );
+    })
+    .catch(() => {
+      // Replay is best-effort — ignore load failures (offline, ad-blocker).
+    });
+}

@@ -12,7 +12,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
-import { exportEarningsCSV, exportEarningsPDF } from '@/server/actions/earnings';
+import {
+  exportEarningsCSV,
+  exportEarningsPDF,
+} from '@/server/actions/earnings';
 import { getStripeDashboardLink } from '@/server/actions/stripe';
 import type { TransactionFilters } from '@/server/queries/earnings.queries';
 import { cn } from '@/lib/utils';
@@ -21,12 +24,15 @@ interface ExportEarningsButtonProps {
   variant?: 'outline' | 'primary';
 }
 
-export function ExportEarningsButton({ variant = 'outline' }: ExportEarningsButtonProps) {
+export function ExportEarningsButton({
+  variant = 'outline',
+}: ExportEarningsButtonProps) {
   const t = useTranslations('earnings');
   const [isExporting, setIsExporting] = useState(false);
   const [isExportingPDF, setIsExportingPDF] = useState(false);
   const [isOpeningStripe, setIsOpeningStripe] = useState(false);
   const searchParams = useSearchParams();
+  const currentSearchParams = searchParams ?? new URLSearchParams();
 
   const isLoading = isExporting || isExportingPDF || isOpeningStripe;
 
@@ -35,13 +41,13 @@ export function ExportEarningsButton({ variant = 'outline' }: ExportEarningsButt
     try {
       const filters: TransactionFilters = {};
 
-      const month = searchParams.get('month');
+      const month = currentSearchParams.get('month');
       if (month) filters.month = month;
 
-      const experience = searchParams.get('experience');
+      const experience = currentSearchParams.get('experience');
       if (experience) filters.experienceId = experience;
 
-      const status = searchParams.get('status');
+      const status = currentSearchParams.get('status');
       if (status) filters.status = status as TransactionFilters['status'];
 
       const result = await exportEarningsCSV(filters);
@@ -63,7 +69,7 @@ export function ExportEarningsButton({ variant = 'outline' }: ExportEarningsButt
         toast.error(result.error?.message || t('toast.exportFailed'));
       }
     } catch {
-      toast.error(t('export.failed'));
+      toast.error(t('toast.exportFailed'));
     } finally {
       setIsExporting(false);
     }
@@ -132,16 +138,20 @@ export function ExportEarningsButton({ variant = 'outline' }: ExportEarningsButt
           disabled={isLoading}
           className={
             isPrimary
-              ? 'gap-2 bg-primary hover:bg-primary/90 text-white font-bold shadow-md hover:shadow-lg active:scale-95 transition-all'
+              ? 'gap-2 bg-primary font-bold text-white shadow-md transition-all hover:bg-primary/90 hover:shadow-lg active:scale-95'
               : ''
           }
         >
           {isLoading ? (
-            <Loader2 className={cn('h-4 w-4 animate-spin', !isPrimary && 'mr-2')} />
+            <Loader2
+              className={cn('h-4 w-4 animate-spin', !isPrimary && 'mr-2')}
+            />
           ) : (
             <Download className={cn('h-4 w-4', !isPrimary && 'mr-2')} />
           )}
-          <span className="text-sm">{isPrimary ? t('export.exportReport') : t('export.export')}</span>
+          <span className="text-sm">
+            {isPrimary ? t('export.exportReport') : t('export.export')}
+          </span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

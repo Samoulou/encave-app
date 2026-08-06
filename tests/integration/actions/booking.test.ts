@@ -11,6 +11,16 @@ vi.mock('@/server/db', () => ({
       aggregate: vi.fn(),
       groupBy: vi.fn(),
     },
+    featureFlag: {
+      findMany: vi.fn(),
+    },
+    experienceOccurrence: {
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+    },
+    blockedDate: {
+      findUnique: vi.fn(),
+    },
   },
 }));
 
@@ -24,6 +34,14 @@ const { checkAvailability, getTimeSlotsForDate, getExperienceForBooking } =
 describe('Booking Server Actions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // OCCURRENCE_CAPACITY defaults ON (P-05): the occurrence world's
+    // defaults are "nothing materialized yet" — no blackout, no
+    // occurrence rows — which must behave exactly like the legacy path
+    // (defensive union, ADR-0002).
+    vi.mocked(db.featureFlag.findMany).mockResolvedValue([] as never);
+    vi.mocked(db.blockedDate.findUnique).mockResolvedValue(null);
+    vi.mocked(db.experienceOccurrence.findUnique).mockResolvedValue(null);
+    vi.mocked(db.experienceOccurrence.findMany).mockResolvedValue([] as never);
   });
 
   describe('checkAvailability', () => {
@@ -122,7 +140,7 @@ describe('Booking Server Actions', () => {
       }
     });
 
-    it('only counts PENDING_PAYMENT and CONFIRMED bookings', async () => {
+    it('counts CONFIRMED plus non-expired PENDING_PAYMENT holds (L-050)', async () => {
       vi.mocked(db.experience.findUnique).mockResolvedValue({
         maxCapacity: 10,
       } as never);
@@ -139,9 +157,13 @@ describe('Booking Server Actions', () => {
       expect(db.booking.aggregate).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            status: {
-              in: [BookingStatus.PENDING_PAYMENT, BookingStatus.CONFIRMED],
-            },
+            OR: [
+              { status: BookingStatus.CONFIRMED },
+              {
+                status: BookingStatus.PENDING_PAYMENT,
+                expiresAt: { gt: expect.any(Date) },
+              },
+            ],
           }),
         })
       );
@@ -181,8 +203,8 @@ describe('Booking Server Actions', () => {
         id: 'exp-123',
         maxCapacity: 10,
         availabilitySlots: [
-          { startTime: '10:00', dayOfWeek: 6 },
-          { startTime: '14:00', dayOfWeek: 6 },
+          { startTime: '10:00', endTime: '11:00', dayOfWeek: 6 },
+          { startTime: '14:00', endTime: '15:00', dayOfWeek: 6 },
         ],
       } as never);
       vi.mocked(db.booking.groupBy).mockResolvedValue([
@@ -196,12 +218,16 @@ describe('Booking Server Actions', () => {
         expect(result.data).toHaveLength(2);
         expect(result.data[0]).toEqual({
           timeSlot: '10:00',
+          endTime: '11:00',
           remainingCapacity: 4,
+          maxCapacity: 10,
           available: true,
         });
         expect(result.data[1]).toEqual({
           timeSlot: '14:00',
+          endTime: '15:00',
           remainingCapacity: 10,
+          maxCapacity: 10,
           available: true,
         });
       }

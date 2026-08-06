@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import type { Session } from 'next-auth';
+import type { Session } from '@/server/auth';
 
 // Mock next-auth
 vi.mock('@/server/auth', () => ({
@@ -48,9 +48,10 @@ describe('Winery Profile Actions Integration Tests', () => {
     user: {
       id: 'user-123',
       email: 'winemaker@test.com',
+      name: 'Winemaker',
       role: 'WINEMAKER',
+      preferredLocale: 'FR',
     },
-    expires: new Date(Date.now() + 86400000).toISOString(),
   };
 
   const mockWinery = {
@@ -58,7 +59,8 @@ describe('Winery Profile Actions Integration Tests', () => {
     userId: 'user-123',
     name: 'Test Winery',
     slug: 'test-winery',
-    description: 'A beautiful winery in the heart of Valais with exceptional wines.',
+    description:
+      'A beautiful winery in the heart of Valais with exceptional wines.',
     address: 'Rue du Vignoble 12',
     commune: 'Sion',
     phone: '+41 27 123 45 67',
@@ -159,17 +161,13 @@ describe('Winery Profile Actions Integration Tests', () => {
       }
       expect(mockDb.winery.update).toHaveBeenCalledWith({
         where: { id: mockWinery.id },
-        data: validProfileInput,
+        data: expect.objectContaining(validProfileInput),
       });
     });
   });
 
   describe('uploadWineryImage', () => {
-    function createMockFile(
-      name: string,
-      size: number,
-      type: string
-    ): File {
+    function createMockFile(name: string, size: number, type: string): File {
       const buffer = new ArrayBuffer(size);
       const blob = new Blob([buffer], { type });
       return new File([blob], name, { type });
@@ -203,7 +201,11 @@ describe('Winery Profile Actions Integration Tests', () => {
     it('returns VALIDATION_ERROR for file exceeding 5MB', async () => {
       mockAuth.mockResolvedValueOnce(mockSession);
       const formData = new FormData();
-      const largeFile = createMockFile('large.jpg', 6 * 1024 * 1024, 'image/jpeg');
+      const largeFile = createMockFile(
+        'large.jpg',
+        6 * 1024 * 1024,
+        'image/jpeg'
+      );
       formData.append('file', largeFile);
 
       const result = await uploadWineryImage(formData);
@@ -289,7 +291,9 @@ describe('Winery Profile Actions Integration Tests', () => {
     it('returns UNAUTHORIZED when not authenticated', async () => {
       mockAuth.mockResolvedValueOnce(null);
 
-      const result = await updateWineryCoverPhoto('https://example.com/photo.jpg');
+      const result = await updateWineryCoverPhoto(
+        'https://example.com/photo.jpg'
+      );
 
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -301,7 +305,9 @@ describe('Winery Profile Actions Integration Tests', () => {
       mockAuth.mockResolvedValueOnce(mockSession);
       mockDb.winery.findUnique.mockResolvedValueOnce(null);
 
-      const result = await updateWineryCoverPhoto('https://example.com/photo.jpg');
+      const result = await updateWineryCoverPhoto(
+        'https://example.com/photo.jpg'
+      );
 
       expect(result.success).toBe(false);
       if (!result.success) {

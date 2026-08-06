@@ -35,7 +35,9 @@ export function FadeIn({
     const el = ref.current;
     if (!el) return;
 
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const prefersReducedMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)'
+    ).matches;
     if (prefersReducedMotion) {
       setIsVisible(true);
       return;
@@ -69,7 +71,7 @@ export function FadeIn({
       ref={ref}
       className={cn(
         isVisible
-          ? 'opacity-100 translate-y-0 translate-x-0'
+          ? 'translate-x-0 translate-y-0 opacity-100'
           : `opacity-0 ${translateClass}`,
         className
       )}

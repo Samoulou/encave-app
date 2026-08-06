@@ -44,7 +44,8 @@
       "archived": "Archivé",
       "pending": "En attente",
       "verified": "Vérifié",
-      "rejected": "Rejeté"
+      "rejected": "Rejeté",
+      "suspended": "Suspendu"
     },
     "days": {
       "full": {
@@ -119,7 +120,19 @@
     "myProfile": "Mon profil",
     "roleWinemaker": "Vigneron",
     "roleClient": "Client",
-    "roleAdmin": "Administrateur"
+    "roleAdmin": "Administrateur",
+    "searchPill": {
+      "aria": "Rechercher des expériences dans le Valais pour au moins 2 personnes",
+      "region": "Tout le Valais",
+      "subject": "Expériences disponibles",
+      "spots": "2+ places"
+    },
+    "wines": "Vins",
+    "payouts": "Reversements",
+    "giftCards": "Offrir un bon",
+    "requests": "Demandes",
+    "requestsBadge": "{count, plural, one {# demande en attente} other {# demandes en attente}}",
+    "collectiveEvents": "Événements"
   },
   "locale": {
     "fr": "Français",
@@ -147,6 +160,7 @@
       "forgotPassword": "Mot de passe oublié?",
       "forgotPasswordContactSupport": "Contactez le support pour réinitialiser votre mot de passe",
       "passwordPlaceholder": "Entrez votre mot de passe",
+      "invalidCredentials": "Adresse e-mail ou mot de passe incorrect.",
       "signingIn": "Connexion en cours...",
       "logIn": "Se connecter",
       "noAccount": "Nouveau sur EnCave?",
@@ -155,7 +169,8 @@
       "rememberMe": "Se souvenir pendant 30 jours",
       "orContinueWith": "Ou continuer avec",
       "showPassword": "Afficher le mot de passe",
-      "hidePassword": "Masquer le mot de passe"
+      "hidePassword": "Masquer le mot de passe",
+      "useOtp": "Recevoir un code par e-mail"
     },
     "register": {
       "title": "Créer un compte",
@@ -171,7 +186,54 @@
       "winemakerDescription": "Cochez cette case si vous souhaitez enregistrer votre domaine et proposer des expériences",
       "creatingAccount": "Création du compte...",
       "createAccount": "Créer le compte",
-      "haveAccount": "Vous avez déjà un compte?"
+      "haveAccount": "Vous avez déjà un compte?",
+      "emailExists": "Un compte existe déjà avec cet email"
+    },
+    "otpLogin": {
+      "sendCode": "Recevoir un code",
+      "sending": "Envoi…",
+      "codeSentTo": "Code envoyé à {email}",
+      "codeLabel": "Code à 6 chiffres",
+      "verify": "Se connecter",
+      "verifying": "Connexion…",
+      "resend": "Renvoyer le code",
+      "usePassword": "Utiliser un mot de passe",
+      "invalidCode": "Code invalide ou expiré."
+    },
+    "forgotPassword": {
+      "imageAlt": "Cave en Valais",
+      "heroTitle": "Réinitialisez votre accès",
+      "heroSubtitle": "Recevez un code par e-mail pour définir un nouveau mot de passe.",
+      "title": "Mot de passe oublié",
+      "subtitle": "Entrez votre e-mail pour recevoir un code de réinitialisation.",
+      "sendCode": "Recevoir un code",
+      "sending": "Envoi…",
+      "codeSentTo": "Code envoyé à {email}",
+      "codeLabel": "Code à 6 chiffres",
+      "newPassword": "Nouveau mot de passe",
+      "confirmPassword": "Confirmer le mot de passe",
+      "resetPassword": "Réinitialiser",
+      "resetting": "Réinitialisation…",
+      "successMessage": "Votre mot de passe a été réinitialisé.",
+      "backToLogin": "Retour à la connexion",
+      "passwordTooShort": "Le mot de passe doit contenir au moins {min} caractères.",
+      "passwordMismatch": "Les mots de passe ne correspondent pas.",
+      "resetFailed": "Échec de la réinitialisation. Vérifiez le code."
+    },
+    "twoFactor": {
+      "imageAlt": "Cave en Valais",
+      "heroTitle": "Vérification en deux étapes",
+      "heroSubtitle": "Saisissez le code de votre application d'authentification.",
+      "title": "Vérification 2FA",
+      "subtitle": "Entrez le code à 6 chiffres de votre application.",
+      "backupSubtitle": "Entrez l'un de vos codes de secours.",
+      "codeLabel": "Code à 6 chiffres",
+      "backupLabel": "Code de secours",
+      "verify": "Vérifier",
+      "verifying": "Vérification…",
+      "useBackup": "Utiliser un code de secours",
+      "useTotp": "Utiliser l'application d'authentification",
+      "invalid": "Code invalide."
     }
   },
   "home": {
@@ -218,7 +280,19 @@
     "meetWinemakers": "Rencontrer nos vignerons",
     "readyToExplore": "Prêt à explorer?",
     "startJourney": "Commencez votre voyage à travers le monde des vins suisses aujourd'hui.",
-    "searchPlaceholder": "Rechercher des expériences viticoles..."
+    "searchPlaceholder": "Rechercher des expériences viticoles...",
+    "giftCard": {
+      "eyebrow": "Bon cadeau",
+      "title": "Offrez une expérience, pas un objet",
+      "subtitle": "Un bon cadeau EnCave, valable 5 ans, utilisable sur toutes nos expériences.",
+      "cta": "Offrir un bon cadeau"
+    },
+    "surMesure": {
+      "eyebrow": "Sur-mesure",
+      "title": "Une envie particulière ?",
+      "subtitle": "Décrivez votre moment idéal — un encaveur vous répond avec une offre personnalisée sous 48 h.",
+      "cta": "Faire une demande"
+    }
   },
   "experience": {
     "aboutTitle": "À propos de cette expérience",
@@ -234,7 +308,22 @@
     "nearStation": "Proche de la gare de {commune}",
     "pricePerPersonLabel": "Prix par personne",
     "available": "DISPONIBLE",
-    "freeCancellation": "Annulation gratuite jusqu'à 24h avant.",
+    "noShowPolicy": {
+      "title": "Frais de non-présentation :",
+      "amountPerPerson": "{amount} par personne",
+      "explainer": "Cette expérience est gratuite ou payable sur place : votre carte est enregistrée à la réservation (empreinte, sans débit). En cas de non-présentation sans annulation dans les délais, le domaine peut prélever ces frais."
+    },
+    "cancellationPolicy": {
+      "title": "Politique d'annulation :",
+      "labels": {
+        "FLEXIBLE": "Flexible",
+        "STANDARD": "Standard",
+        "STRICT": "Stricte"
+      },
+      "tierHours": "Remboursement à {percent} % jusqu'à {hours} h avant l'expérience",
+      "tierDays": "Remboursement à {percent} % jusqu'à {days, plural, =1 {# jour} other {# jours}} avant l'expérience",
+      "noRefundAfter": "Passé ce délai, aucun remboursement."
+    },
     "inclusions": {
       "TASTING": {
         "guidedTasting": "Dégustation guidée",
@@ -265,21 +354,27 @@
         "localPlatter": "Plateau de fromages et charcuteries locales",
         "pairingGuidance": "Conseils d'accord expert",
         "tastingNotes": "Notes de dégustation"
-      }
+      },
+      "MEAL": "Repas complet accompagné des vins du domaine",
+      "EVENT": "Accès à l’événement et animations"
     },
     "types": {
       "TASTING": "Dégustation",
       "CELLAR_VISIT": "Visite de cave",
       "WORKSHOP": "Atelier",
       "VINEYARD_TOUR": "Visite du vignoble",
-      "FOOD_PAIRING": "Accord mets-vins"
+      "FOOD_PAIRING": "Accord mets-vins",
+      "MEAL": "Repas au domaine",
+      "EVENT": "Événement"
     },
     "typesDetailed": {
       "TASTING": "Dégustation de vin",
       "CELLAR_VISIT": "Visite guidée",
       "WORKSHOP": "Atelier",
       "VINEYARD_TOUR": "Visite du vignoble",
-      "FOOD_PAIRING": "Accord mets-vins"
+      "FOOD_PAIRING": "Accord mets-vins",
+      "MEAL": "Repas accord mets-vins au domaine",
+      "EVENT": "Événement ponctuel ou collectif"
     },
     "duration": "Durée",
     "durationFormat": "{count, plural, =1 {# heure} other {# heures}}",
@@ -316,6 +411,12 @@
     "pricing": "Tarification",
     "pricingDescription": "Définissez le prix par personne pour votre expérience",
     "priceMustBePositive": "Le prix doit être supérieur à 0",
+    "paymentMode": {
+      "label": "Paiement",
+      "online": "Payé en ligne au checkout",
+      "onSite": "Gratuit ou payé au domaine",
+      "description": "Les offres payées sur place peuvent prendre une empreinte de carte anti no-show (aucun débit à la réservation)."
+    },
     "creating": "Création...",
     "createExperience": "Créer l'expérience",
     "updating": "Mise à jour...",
@@ -373,7 +474,9 @@
       "endPlaceholder": "Fin",
       "to": "à",
       "toggleActive": "Activer/désactiver le créneau {index}",
-      "removeSlot": "Supprimer le créneau {index}"
+      "removeSlot": "Supprimer le créneau {index}",
+      "endAfterStart": "L'heure de fin doit être après l'heure de début",
+      "minDuration": "La durée minimale est de 30 minutes"
     },
     "filters": {
       "all": "Tous",
@@ -460,7 +563,138 @@
       "allSlotsDisabled": "Tous les créneaux sont désactivés - les visiteurs ne peuvent pas réserver",
       "noSlotsPreview": "Aucune disponibilité configurée. Ajoutez des créneaux horaires ci-dessus pour prévisualiser votre planning hebdomadaire.",
       "active": "Actif",
-      "disabled": "Désactivé"
+      "disabled": "Désactivé",
+      "addTime": "Ajouter un horaire",
+      "addSchedulePattern": "Ajouter un créneau récurrent",
+      "modes": {
+        "label": "Mode de disponibilité",
+        "recurring": "Récurrent",
+        "punctual": "Ponctuel"
+      },
+      "punctual": {
+        "description": "Choisissez des dates précises et leurs heures de début — idéal pour les événements et les créneaux hors horaire hebdomadaire.",
+        "selectDates": "Choisissez les dates",
+        "selectTimes": "Choisissez les heures",
+        "noPicks": "Sélectionnez au moins une date et une heure pour composer vos créneaux.",
+        "picksTitle": "{count, plural, =1 {1 créneau à créer} other {# créneaux à créer}}",
+        "removePick": "Retirer {pick}",
+        "tooMany": "Maximum {max} créneaux à la fois — retirez-en quelques-uns.",
+        "submit": "Ajouter ces créneaux",
+        "submitting": "Ajout en cours...",
+        "added": "{count, plural, =0 {Aucun nouveau créneau — ils existaient déjà} =1 {1 créneau ajouté} other {# créneaux ajoutés}}",
+        "availableAfterCreation": "Les créneaux ponctuels (dates précises) se configurent après la création, depuis la page de modification de l'expérience.",
+        "errors": {
+          "notFound": "Expérience introuvable.",
+          "validation": "Créneaux invalides — vérifiez les dates et les heures.",
+          "generic": "Impossible d'ajouter les créneaux. Réessayez dans un instant."
+        }
+      },
+      "preview": {
+        "title": "Prochains créneaux",
+        "subtitle": "Aperçu des 8 prochaines occurrences visibles par vos clients",
+        "manageLink": "Gérer le calendrier",
+        "empty": "Aucun créneau à venir — configurez la disponibilité ci-dessus pour en générer.",
+        "capacity": "{count, plural, =1 {1 place} other {# places}}",
+        "punctualBadge": "Ponctuel",
+        "blockedBadge": "Date bloquée",
+        "status": {
+          "open": "Ouvert",
+          "closed": "Fermé",
+          "cancelled": "Annulé"
+        }
+      }
+    },
+    "ageGate": {
+      "badge": "Reserve aux 18+"
+    },
+    "createNewExperience": "Créer une nouvelle expérience",
+    "createFormSubtitle": "Remplissez les détails pour publier votre expérience viticole sur la marketplace.",
+    "createCardSubtitle": "Proposez une nouvelle dégustation, visite ou atelier.",
+    "draftAutoSaved": "Brouillon enregistré automatiquement",
+    "saveDraft": "Enregistrer le brouillon",
+    "publishStatus": "Statut de publication",
+    "visibleOnMarketplace": "Visible sur la marketplace",
+    "draftModeNotice": "Votre expérience est actuellement en mode brouillon. Publiez-la pour commencer à accepter des réservations.",
+    "formSections": "Sections du formulaire",
+    "needHelp": "Besoin d'aide ?",
+    "helpText": "Consultez notre guide pour créer la fiche d'expérience viticole parfaite.",
+    "readGuide": "Lire le guide",
+    "uploadCoverPhoto": "Télécharger une photo de couverture",
+    "coverPhotoRecommended": "Recommandé : 1920 x 1080 pixels (format 16:9). Max 5 Mo, JPEG ou PNG.",
+    "updatedSuccess": "Expérience mise à jour",
+    "updatedDescription": "Vos modifications ont été enregistrées.",
+    "maxCapacityLabel": "Capacité max.",
+    "languagesLabel": "Langues parlées",
+    "languagesHelper": "Langues dans lesquelles vous pouvez accueillir vos visiteurs — utilisées par le filtre de langue du catalogue.",
+    "address": "Adresse",
+    "addressHelp": "Commencez à taper pour rechercher une adresse",
+    "selectedAddress": "Adresse sélectionnée",
+    "coordinates": "Coordonnées",
+    "maxFileSize": "5 Mo max par fichier",
+    "uploadDropzone": "Cliquez pour télécharger ou glissez-déposez",
+    "uploadFormats": "SVG, PNG, JPG ou GIF (max. 800x400px)",
+    "coverBadge": "COUVERTURE",
+    "cancelEditing": "Annuler la modification",
+    "share": "Partager",
+    "linkCopied": "Lien copié",
+    "saveToWishlist": "Enregistrer",
+    "durationOptions": {
+      "60": "1 heure",
+      "90": "1,5 heure",
+      "120": "2 heures",
+      "180": "3 heures",
+      "240": "Demi-journée"
+    },
+    "detail": {
+      "explore": "Explorer",
+      "placesMax": "{count} places max",
+      "group": "Groupe",
+      "format": "Format",
+      "place": "Lieu",
+      "groupValue": "{min}-{max} pers.",
+      "viewProfile": "Voir le profil",
+      "theExperience": "L'expérience",
+      "practicalInfo": "Infos pratiques",
+      "durationIndicated": "{duration} indiqué par le domaine",
+      "groupSize": "Groupe de {min} à {max} personnes",
+      "meetingPoint": "Rendez-vous à {commune}",
+      "proposedBy": "{type} proposé par {winery}",
+      "securePaymentActive": "Paiement sécurisé activé",
+      "bookingToConfirm": "Réservation à confirmer avec le domaine",
+      "giftCta": "Offrir cette expérience",
+      "collective": {
+        "banner": "Événement collectif",
+        "organizedBy": "Organisé par {winery}",
+        "programTitle": "Les caves participantes",
+        "programSubtitle": "Découvrez les domaines réunis pour cet événement."
+      }
+    },
+    "freeCancellationUntilHours": "Annulation gratuite jusqu'à {hours} h avant.",
+    "freeCancellationUntilDays": "Annulation gratuite jusqu'à {days, plural, =1 {# jour} other {# jours}} avant.",
+    "nextAvailability": "Prochaine dispo : {date} · {time}",
+    "collective": {
+      "sectionTitle": "Événement collectif",
+      "sectionDescription": "Réunissez plusieurs caves autour d’un même événement. Vous encaissez la billetterie ; les caves participantes suivent l’affluence.",
+      "toggleLabel": "Événement collectif",
+      "toggleDescription": "Affiche un bandeau et la grille des caves participantes sur la fiche publique.",
+      "panel": {
+        "subtitle": "Ajoutez les caves participantes (logo + descriptif) affichées sur la fiche.",
+        "selectWineryFirst": "Choisissez d’abord une cave.",
+        "added": "Cave ajoutée.",
+        "removed": "Cave retirée.",
+        "empty": "Aucune cave participante pour l’instant.",
+        "hiddenWarning": "Cette cave n’est plus visible (suspendue ou non vérifiée) — masquée sur la fiche.",
+        "moveUp": "Monter",
+        "moveDown": "Descendre",
+        "remove": "Retirer",
+        "addTitle": "Ajouter une cave participante",
+        "noWineriesLeft": "Toutes les caves disponibles sont déjà ajoutées.",
+        "selectWinery": "Sélectionner une cave",
+        "logo": "Logo",
+        "descriptionPlaceholder": "Descriptif court (ce que propose la cave à l’événement)…",
+        "adding": "Ajout…",
+        "add": "Ajouter"
+      }
     }
   },
   "booking": {
@@ -476,6 +710,14 @@
     "contactWinery": "Contactez le domaine directement pour réserver cette expérience.",
     "selectGuests": "Nombre de personnes",
     "guests": "{count, plural, =1 {# personne} other {# personnes}}",
+    "status": {
+      "PENDING_PAYMENT": "En attente de paiement",
+      "CONFIRMED": "Confirmée",
+      "COMPLETED": "Terminée",
+      "CANCELLED_BY_CLIENT": "Annulée",
+      "CANCELLED_BY_WINERY": "Annulée par le domaine",
+      "NO_SHOW": "Non présenté"
+    },
     "continueToPayment": "Continuer vers le paiement",
     "priceCalculation": "{price} x {guests} = {total}",
     "remainingCapacity": "{count} {count, plural, =1 {place restante} other {places restantes}}",
@@ -509,7 +751,21 @@
     "sessionFull": "Complet",
     "spotsLeft": "{count} {count, plural, =1 {place restante} other {places restantes}}",
     "whenVisit": "Quand souhaitez-vous nous rendre visite ?",
-    "back": "Retour"
+    "back": "Retour",
+    "chooseDay": "Choisissez un jour",
+    "calendarLabel": "Calendrier",
+    "participants": "Participants",
+    "placesRemaining": "{count} places encore disponibles",
+    "placesMax": "{count} places maximum",
+    "serviceFee": "Frais de service",
+    "total": "Total",
+    "securePaymentNotice": "Paiement Stripe · vous ne serez débité qu’à la confirmation",
+    "loadSlotsError": "Échec du chargement des créneaux. Veuillez réessayer.",
+    "sunsetSlot": "coucher",
+    "holdSlotTaken": "Ce créneau vient tout juste d'être réservé par quelqu'un d'autre. Choisissez un autre horaire.",
+    "holdDateBlocked": "Cette date n'est pas ouverte à la réservation. Choisissez une autre date.",
+    "holdSlotUnavailable": "Cet horaire n'est plus proposé pour cette date. Choisissez un autre horaire.",
+    "holdSlotClosed": "Ce créneau a été fermé par l'encaveur. Choisissez un autre horaire."
   },
   "bookings": {
     "title": "Réservations",
@@ -522,8 +778,7 @@
     "summary": {
       "totalBookings": "Total des réservations",
       "upcoming": "À venir (7 jours)",
-      "occupancyRate": "Taux d'occupation",
-      "avgThisMonth": "Moy. ce mois"
+      "weekGuests": "Couverts (7 jours)"
     },
     "columns": {
       "bookingInfo": "Info réservation",
@@ -539,7 +794,7 @@
       "cancelledByClient": "Annulé par le client",
       "cancelledByWinery": "Annulé par le domaine",
       "noShow": "Absent",
-      "pending": "En attente"
+      "pending": "Paiement en attente"
     },
     "guestCount": "{count, plural, =1 {# personne} other {# personnes}}",
     "actions": {
@@ -619,8 +874,6 @@
     "backToBooking": "Retour à la réservation",
     "experienceNotFound": "Expérience non trouvée",
     "invalidBookingParams": "Paramètres de réservation invalides. Veuillez recommencer.",
-    "paymentCancelled": "Paiement annulé. Vous pouvez réessayer.",
-    "paymentFailed": "Échec du paiement. Veuillez réessayer ou utiliser un autre moyen de paiement.",
     "verifyingAvailability": "Vérification de la disponibilité...",
     "capacityExceeded": "Capacité dépassée",
     "capacityExceededMessage": "Vous avez demandé {requested} personnes, mais seulement {available} places sont disponibles pour ce créneau.",
@@ -645,14 +898,46 @@
     "viewOnMap": "Voir sur la carte",
     "serviceFee": "Frais de service",
     "totalCHF": "Total (CHF)",
-    "freeCancellation": "Annulation gratuite",
-    "cancellationPolicy": "jusqu'à 24 heures avant l'expérience. Après, des frais de 50% s'appliquent.",
     "orderSummary": "Récapitulatif",
     "sslEncrypted": "CHIFFRÉ SSL",
     "support247": "SUPPORT 24/7",
     "expiryPlaceholder": "MM/AA",
     "cvcPlaceholder": "CVC",
-    "availabilityCheckFailed": "Échec de la vérification de disponibilité. Veuillez réessayer."
+    "availabilityCheckFailed": "Échec de la vérification de disponibilité. Veuillez réessayer.",
+    "ageGate": {
+      "checkboxLabel": "Je certifie avoir 18 ans revolus.",
+      "helper": "Une pièce d'identité pourra être demandée par l'encaveur à votre arrivée.",
+      "errors": {
+        "required": "Merci de confirmer votre age avant de poursuivre le paiement."
+      }
+    },
+    "noShow": {
+      "title": "Frais de non-présentation : {amount} par personne",
+      "explainer": "Cette expérience est gratuite ou payable sur place. Nous enregistrons seulement votre carte maintenant — aucun débit n'est effectué. Si vous ne vous présentez pas et n'annulez pas dans les délais, le domaine peut prélever les frais.",
+      "checkboxLabel": "J'accepte les frais de non-présentation de {amount} par personne et j'autorise l'enregistrement de ma carte à cette fin.",
+      "required": "Veuillez accepter la politique de non-présentation pour continuer."
+    },
+    "acceptance": {
+      "label": "J'accepte les <cgv>conditions générales de vente</cgv> et la <policy>politique d'annulation</policy>.",
+      "required": "Merci d'accepter les CGV et la politique d'annulation pour continuer."
+    },
+    "hold": {
+      "remaining": "Créneau réservé pendant {time}",
+      "remainingUrgent": "Plus que {time} pour finaliser votre réservation",
+      "expired": "Créneau expiré, redirection…"
+    },
+    "giftApplied": "Bon cadeau",
+    "giftCodeLabel": "Bon cadeau",
+    "giftCodePlaceholder": "Votre code",
+    "giftApply": "Appliquer",
+    "giftRemove": "Retirer",
+    "giftAppliedNote": "{amount} appliqués sur ce paiement.",
+    "giftErrorNOT_FOUND": "Code introuvable.",
+    "giftErrorDISABLED": "Ce bon a été désactivé.",
+    "giftErrorEXPIRED": "Ce bon a expiré.",
+    "giftErrorDEPLETED": "Ce bon est épuisé.",
+    "giftErrorWRONG_EXPERIENCE": "Ce bon n’est valable que pour une autre expérience.",
+    "giftErrorGeneric": "Impossible d’appliquer ce code."
   },
   "confirmation": {
     "bookingConfirmed": "Réservation confirmée !",
@@ -661,6 +946,7 @@
     "paymentPendingDescription": "Votre paiement est en cours de traitement. Veuillez patienter...",
     "bookingStatus": "Statut de la réservation",
     "bookingReference": "Référence de réservation",
+    "serviceFee": "Frais de service",
     "totalPaid": "Total payé",
     "wineryDetails": "Informations du domaine",
     "yourDetails": "Vos informations",
@@ -692,6 +978,7 @@
     "valaisSwitzerland": "Valais, Suisse",
     "checkInTicket": "Billet d'enregistrement",
     "presentQRCode": "Présentez ce code QR à votre arrivée à la réception du domaine.",
+    "qrCodeInEmail": "Votre code QR de billet vous a été envoyé par email — présentez-le à votre arrivée au domaine.",
     "wineryInformation": "Informations du domaine",
     "address": "Adresse",
     "downloadReceipt": "Télécharger le reçu",
@@ -699,7 +986,14 @@
     "modifyDescription": "Vous pouvez annuler ou reporter votre réservation jusqu'à 24 heures avant l'expérience.",
     "manageBooking": "Gérer la réservation",
     "returnToExperiences": "Retour aux expériences",
-    "viewMyBookings": "Voir mes réservations"
+    "viewMyBookings": "Voir mes réservations",
+    "oneTap": {
+      "title": "Retrouvez vos billets en un clic",
+      "description": "Choisissez simplement un mot de passe : votre compte sera créé avec l'email de la réservation et tous vos billets y seront rattachés automatiquement.",
+      "createCta": "Créer mon compte",
+      "successTitle": "Compte créé !",
+      "successDescription": "Vos réservations sont désormais rattachées à votre compte."
+    }
   },
   "cancellation": {
     "title": "Conditions d'annulation",
@@ -722,7 +1016,7 @@
     "cancelling": "Annulation en cours...",
     "cancelled": "Réservation annulée",
     "cancelledDescription": "Votre réservation a été annulée avec succès.",
-    "refundProcessed": "Un remboursement de {amount} sera traité sous 5-10 jours ouvrables.",
+    "refundProcessed": "Un montant de {amount} vous sera restitué : sur votre moyen de paiement (5-10 jours ouvrables) et, pour la part payée par bon cadeau, recréditée sur votre bon.",
     "cancelError": "Échec de l'annulation. Veuillez réessayer."
   },
   "gallery": {
@@ -736,6 +1030,31 @@
     "goToImage": "Voir l'image {index}"
   },
   "winery": {
+    "familyLabel": "Famille",
+    "altitudeLabel": "Altitude",
+    "altitudeValue": "{value} m",
+    "hectaresLabel": "Surface",
+    "hectaresValue": "{value} ha",
+    "signatureGrapesLabel": "Cépages signature",
+    "openingHoursLabel": "Horaires",
+    "domaineDetails": {
+      "title": "Le domaine",
+      "description": "Ces informations enrichissent votre fiche publique — laissez vide ce que vous ne souhaitez pas afficher.",
+      "openingHours": "Horaires d'ouverture",
+      "openingHoursPlaceholder": "Lun–Ven 9h–18h · Sam 10h–17h · Dim fermé",
+      "openingHoursHint": "Une ligne par jour ou une plage libre. Affiché tel quel.",
+      "familyName": "Famille",
+      "familyNamePlaceholder": "Famille Dupont",
+      "signatureGrapes": "Cépages signature",
+      "signatureGrapesPlaceholder": "Fendant, Petite Arvine, Cornalin",
+      "signatureGrapesHint": "Séparez par des virgules (8 max).",
+      "altitude": "Altitude (m)",
+      "altitudePlaceholder": "650",
+      "altitudeHint": "En mètres.",
+      "hectares": "Surface (ha)",
+      "hectaresPlaceholder": "4.5",
+      "hectaresHint": "En hectares."
+    },
     "verified": "Vérifié",
     "coverPhoto": "Photo de couverture",
     "coverPhotoDescription": "Cette image apparaît en haut de votre profil public",
@@ -824,7 +1143,30 @@
     "manageProfile": "Gérez le profil et les photos de votre domaine",
     "lastUpdatedDate": "Dernière mise à jour {date}",
     "viewPublicProfile": "Voir le profil public",
-    "paymentStatusLabel": "Statut du paiement"
+    "paymentStatusLabel": "Statut du paiement",
+    "cancellationPolicy": {
+      "title": "Politique d'annulation",
+      "description": "Choisissez les conditions de remboursement appliquées lorsqu'un client annule une réservation. Elles sont affichées sur vos expériences et au moment du paiement.",
+      "save": "Enregistrer la politique",
+      "saving": "Enregistrement...",
+      "updated": "Politique d'annulation mise à jour",
+      "updateError": "Impossible d'enregistrer la politique d'annulation. Veuillez réessayer."
+    },
+    "noShowFee": {
+      "title": "Frais de non-présentation",
+      "description": "Pour les offres gratuites ou payables sur place, prenez une empreinte de carte à la réservation et prélevez des frais si le client ne se présente pas. Aucun montant n'est débité tant que vous ne le déclenchez pas manuellement.",
+      "enableLabel": "Prélever des frais de non-présentation",
+      "amountLabel": "Frais par personne",
+      "perGuest": "CHF / personne",
+      "invalidAmount": "Les frais doivent être compris entre 0 et 50 CHF.",
+      "note": "La politique est affichée au client avant la réservation et doit être acceptée. Vous prélevez les frais manuellement, uniquement en cas de non-présentation.",
+      "save": "Enregistrer",
+      "saving": "Enregistrement...",
+      "updated": "Réglage de non-présentation mis à jour",
+      "updateError": "Impossible d'enregistrer le réglage de non-présentation. Veuillez réessayer."
+    },
+    "winesSectionTitle": "Ses vins",
+    "winesSectionSubtitle": "Les vins du domaine, à déguster sur place."
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -855,6 +1197,10 @@
       "language": {
         "title": "Langue",
         "description": "Changez votre langue préférée"
+      },
+      "account": {
+        "title": "Sécurité du compte",
+        "description": "Mot de passe et adresse e-mail"
       }
     },
     "notifications": {
@@ -868,7 +1214,11 @@
       "savePreferences": "Enregistrer les préférences",
       "updated": "Préférences de notifications mises à jour",
       "updateFailed": "Échec de la mise à jour des préférences",
-      "unexpectedError": "Une erreur inattendue s'est produite"
+      "unexpectedError": "Une erreur inattendue s'est produite",
+      "emailNotifications": "Notifications par email",
+      "emailNotificationsDescription": "Choisissez les emails que vous souhaitez recevoir",
+      "transactionalTitle": "Emails transactionnels",
+      "transactionalDescription": "Les confirmations de réservation, annulations et reçus de paiement ne peuvent pas être désactivés car ils contiennent des informations importantes sur vos réservations."
     }
   },
   "stripe": {
@@ -918,6 +1268,10 @@
   },
   "earnings": {
     "title": "Revenus",
+    "gmv": {
+      "title": "EnCave vous a apporté",
+      "description": "Valeur totale des réservations confirmées et réalisées via EnCave."
+    },
     "period": {
       "selectPeriod": "Sélectionner la période",
       "thisMonth": "Ce mois-ci",
@@ -928,10 +1282,14 @@
     "summary": {
       "totalEarnings": "Revenus totaux",
       "grossRevenue": "Revenu brut",
-      "pendingPayouts": "Paiements en attente",
       "vsLastMonth": "vs mois dernier",
       "estArrival": "Arrivée prévue:",
-      "yearToDate": "Depuis le début de l'année"
+      "yearToDate": "Depuis le début de l'année",
+      "nextPayout": "Prochain virement",
+      "nextPayoutUnavailable": "Donnée Stripe indisponible",
+      "nextPayoutAccruing": "En préparation chez Stripe",
+      "nextPayoutNone": "Aucun virement en attente",
+      "nextPayoutLink": "Voir tout"
     },
     "transactions": {
       "title": "Transactions",
@@ -999,10 +1357,13 @@
       "description": "Les paiements sont traités automatiquement 7 jours après la date de l'expérience. Les fonds sont transférés directement sur votre compte bancaire connecté via Stripe."
     },
     "transactionStatus": {
-      "paid": "Payé",
-      "processing": "En cours",
-      "pending": "En attente",
-      "refunded": "Remboursé"
+      "refunded": "Remboursé",
+      "completed": "Réalisée",
+      "upcoming": "À venir"
+    },
+    "statements": {
+      "title": "Relevés mensuels",
+      "subtitle": "Téléchargez le relevé PDF d'un mois : brut, commission, remboursements et net reversé."
     }
   },
   "calendar": {
@@ -1026,6 +1387,112 @@
   "admin": {
     "title": "Tableau de bord Admin",
     "subtitle": "Gérez les vérifications des domaines et les paramètres de la plateforme",
+    "featureFlags": {
+      "title": "Feature flags",
+      "description": "Interrupteurs des fonctionnalités monétaires — effet immédiat, sans déploiement.",
+      "enabledToast": "{flag} : activé",
+      "disabledToast": "{flag} : désactivé",
+      "flags": {
+        "BOOKING_FEE": "Frais de service (2.50 CHF/billet)",
+        "GIFT_CARDS": "Bons cadeaux",
+        "NO_SHOW_FEES": "Frais de no-show",
+        "REQUESTS": "Demandes sur-mesure",
+        "TASTING_SHEET": "Fiche de dégustation",
+        "COLLECTIVE_EVENTS": "Événements collectifs"
+      }
+    },
+    "monetization": {
+      "title": "Plan et commission",
+      "description": "Plan tarifaire et taux de commission appliqués à cette cave.",
+      "planLabel": "Plan",
+      "plans": {
+        "STANDARD": "Standard",
+        "FOUNDER": "Fondateur"
+      },
+      "commissionLabel": "Commission (%)",
+      "commissionPlaceholder": "Taux plateforme par défaut",
+      "commissionHelp": "Laisser vide pour appliquer le taux plateforme par défaut.",
+      "save": "Enregistrer",
+      "saving": "Enregistrement…",
+      "saved": "Plan et commission mis à jour.",
+      "invalidRate": "Le taux doit être compris entre 0 et 100."
+    },
+    "businessKpis": {
+      "title": "KPIs business",
+      "gmv": "GMV totale",
+      "ticketsThisMonth": "Billets ce mois-ci",
+      "takeRate": "Take rate blended",
+      "giftCardRevenue": "CA bons cadeaux",
+      "giftCardLiability": "Passif bons cadeaux"
+    },
+    "today": {
+      "title": "Aujourd'hui",
+      "bookedToday": "CA réservé aujourd'hui",
+      "bookingsToday": "Réservations du jour",
+      "tastingsToday": "Dégustations du jour",
+      "guestsToday": "Convives du jour"
+    },
+    "systemHealth": {
+      "title": "Santé du système",
+      "webhooks": "Webhooks Stripe",
+      "failedEvents": "{count} en échec",
+      "stuckEvents": "{count} bloqué(s)",
+      "webhooksOk": "OK",
+      "lastEvent": "Dernier événement",
+      "avgLag": "Latence moy.",
+      "maxLag": "Latence max",
+      "failedEmails": "Emails en échec",
+      "noFailedEmails": "Aucun email en échec",
+      "failedJobs": "Tâches en échec",
+      "noFailedJobs": "Aucune tâche en échec",
+      "attempts": "{count} tentative(s)"
+    },
+    "wineriesList": {
+      "title": "Domaines",
+      "subtitle": "Rechercher et gérer tous les domaines, tous statuts.",
+      "filters": "Filtres de recherche",
+      "searchPlaceholder": "Nom, commune, email",
+      "allStatuses": "Tous les statuts",
+      "filter": "Filtrer",
+      "status": "Statut",
+      "plan": "Formule",
+      "suspended": "Suspendu",
+      "ownerSuspended": "Compte suspendu",
+      "empty": "Aucun domaine trouvé."
+    },
+    "history": {
+      "title": "Historique de validation",
+      "empty": "Aucune action enregistrée.",
+      "by": "par"
+    },
+    "users": {
+      "title": "Utilisateurs",
+      "subtitle": "Rechercher clients et encaveurs ; gérer rôles, suspensions et anonymisation nLPD.",
+      "searchPlaceholder": "Nom ou email",
+      "allRoles": "Tous les rôles",
+      "empty": "Aucun utilisateur trouvé.",
+      "user": "Utilisateur",
+      "role": "Rôle",
+      "status": "Statut",
+      "active": "Actif",
+      "suspendedBadge": "Suspendu",
+      "anonymizedBadge": "Anonymisé",
+      "anonymizedNote": "Compte anonymisé — aucune action possible.",
+      "suspendAccount": "Suspendre le compte",
+      "reinstateAccount": "Réactiver le compte",
+      "adminRoleManaged": "Rôle admin géré manuellement",
+      "roleChanged": "Rôle mis à jour.",
+      "changeRole": "Changer",
+      "saving": "Enregistrement…",
+      "anonymize": "Anonymiser (nLPD)",
+      "anonymizeWarning": "Action irréversible : les données personnelles seront effacées.",
+      "reasonPlaceholder": "Motif (visible dans les journaux admin)",
+      "reasonTooShort": "Le motif doit faire au moins 10 caractères.",
+      "notifyUser": "Notifier l'utilisateur par email",
+      "confirmAnonymize": "Confirmer l'anonymisation",
+      "anonymized": "Utilisateur anonymisé.",
+      "cancel": "Annuler"
+    },
     "pendingReview": "En attente de validation",
     "verified": "Vérifié",
     "rejected": "Rejeté",
@@ -1079,7 +1546,43 @@
     "yesReject": "Oui, Refuser",
     "wineryApprovedSuccess": "Domaine approuvé avec succès",
     "wineryRejectedSuccess": "Domaine refusé",
-    "pleaseProvideRejectionReason": "Veuillez fournir un motif de refus"
+    "pleaseProvideRejectionReason": "Veuillez fournir un motif de refus",
+    "events": {
+      "title": "Événements",
+      "subtitle": "Recherchez et supervisez les expériences ; filtrez les événements collectifs et leurs caves participantes.",
+      "filters": {
+        "title": "Filtres",
+        "searchPlaceholder": "Titre, cave, commune",
+        "allStatuses": "Tous les statuts",
+        "allTypes": "Tous les types",
+        "collectiveOnly": "Événements collectifs uniquement",
+        "apply": "Filtrer"
+      },
+      "status": {
+        "DRAFT": "Brouillon",
+        "PUBLISHED": "Publié",
+        "ARCHIVED": "Archivé"
+      },
+      "table": {
+        "event": "Événement",
+        "winery": "Cave",
+        "status": "Statut",
+        "type": "Type",
+        "participants": "Participants",
+        "activity": "Activité",
+        "activityValue": "{sold} vendus · {scanned} scannés",
+        "collectiveBadge": "Collectif",
+        "noResults": "Aucun résultat."
+      }
+    },
+    "invitations": {
+      "title": "Invitations fondateurs",
+      "subtitle": "Générez un lien d'invitation qui crée un domaine vérifié sans file d'attente.",
+      "wineryName": "Nom du domaine",
+      "generate": "Générer le lien",
+      "linkReady": "Lien d’invitation prêt — copiez-le et envoyez-le à la cave.",
+      "linkHint": "Valable 7 jours. Utilisable une seule fois."
+    }
   },
   "search": {
     "placeholder": "Rechercher des expériences, domaines...",
@@ -1114,9 +1617,51 @@
       "relevance": "Pertinence",
       "priceLowToHigh": "Prix : croissant",
       "priceHighToLow": "Prix : décroissant",
-      "newestFirst": "Plus récents"
+      "newestFirst": "Plus récents",
+      "nextAvailability": "Prochaine disponibilité"
     },
-    "loadingExperiences": "Chargement des expériences viticoles..."
+    "loadingExperiences": "Chargement des expériences viticoles...",
+    "date": "Date",
+    "anyDate": "N'importe quand",
+    "dateRange": "Du {from} au {to}",
+    "clearDate": "Effacer la date",
+    "shortcuts": {
+      "thisWeekend": "Ce week-end",
+      "tastings": "Dégustations",
+      "withMeal": "Avec repas"
+    },
+    "homePanel": {
+      "where": "Où",
+      "when": "Quand",
+      "guests": "Pour",
+      "allValais": "Tout le Valais",
+      "anyDate": "N'importe quand",
+      "clearDate": "Effacer la date",
+      "personCount": "{count, plural, =1 {1 personne} other {# personnes}}",
+      "addPerson": "Ajouter une personne",
+      "removePerson": "Retirer une personne",
+      "explore": "Explorer"
+    },
+    "resultsCount": "Valais · {count, plural, =0 {aucune expérience} one {# expérience} other {# expériences}}",
+    "budget": {
+      "label": "Budget",
+      "under50": "< 50",
+      "50to100": "50–100",
+      "over100": "100+"
+    },
+    "language": "Langue",
+    "languageAll": "Toutes les langues",
+    "languages": {
+      "FR": "Français",
+      "DE": "Deutsch",
+      "EN": "English"
+    },
+    "activeFilters": "Filtres actifs",
+    "removeFilter": "Retirer le filtre {filter}",
+    "clearAll": "Tout effacer",
+    "capacityPill": "{count, plural, one {# personne} other {# personnes}}",
+    "viewList": "Liste",
+    "viewMap": "Carte"
   },
   "errors": {
     "somethingWentWrong": "Une erreur s'est produite!",
@@ -1144,7 +1689,8 @@
     "invalidPhone": "Numéro de téléphone invalide",
     "fileTooLarge": "Le fichier est trop volumineux",
     "invalidFileType": "Type de fichier non valide",
-    "uploadFailed": "Échec du téléchargement"
+    "uploadFailed": "Échec du téléchargement",
+    "errorId": "Identifiant d'erreur : {id}"
   },
   "empty": {
     "noExperiences": "Aucune expérience trouvée",
@@ -1154,6 +1700,8 @@
   },
   "wineries": {
     "comingSoon": "Vignerons bientôt disponibles...",
+    "areYouWinemaker": "Vous êtes encaveur ?",
+    "joinEncave": "Rejoignez EnCave",
     "filterByCommune": "Filtrer par commune",
     "title": "Domaines en Valais",
     "subtitle": "Découvrez des vignerons d'exception dans la première région viticole de Suisse. Chaque domaine propose des expériences uniques ancrées dans des siècles de tradition.",
@@ -1161,10 +1709,25 @@
     "discover": "Découvrir",
     "allCommunes": "Toutes les communes",
     "emptyDescription": "Nous travaillons avec les vignerons locaux pour vous proposer des expériences incroyables. Revenez bientôt !",
-    "heroImageAlt": "Vignobles en Valais, Suisse"
+    "heroImageAlt": "Vignobles en Valais, Suisse",
+    "mapView": "Carte",
+    "gridView": "Grille",
+    "myLocation": "Ma position",
+    "viewWinery": "Voir le domaine",
+    "experienceCount": "{count} {count, plural, =1 {expérience} other {expériences}}",
+    "clusterCount": "{count} domaines",
+    "locationOnMap": "Localisation sur la carte",
+    "getDirections": "Itinéraire",
+    "mapLoadError": "Impossible de charger la carte",
+    "locationDenied": "L'accès à la localisation a été refusé",
+    "locating": "Localisation..."
   },
   "onboarding": {
-    "step": "Étape {current} sur {total}"
+    "step": "Étape {current} sur {total}",
+    "winery": {
+      "title": "Enregistrez votre domaine",
+      "subtitle": "Parlez-nous de votre domaine pour commencer sur EnCave et entrer en contact avec les amateurs de vin."
+    }
   },
   "metadata": {
     "siteName": "EnCave",
@@ -1248,6 +1811,26 @@
       "wineryProfile": {
         "title": "Profil du domaine | EnCave",
         "description": "Gérez le profil de votre domaine"
+      },
+      "wines": {
+        "title": "Mes vins | EnCave",
+        "description": "Gérez votre carte des vins"
+      },
+      "payouts": {
+        "title": "Reversements | EnCave",
+        "description": "Vos versements Stripe en clair"
+      },
+      "requests": {
+        "title": "Demandes | EnCave",
+        "description": "Gérez les demandes sur-mesure de vos clients."
+      },
+      "myRequests": {
+        "title": "Mes demandes | EnCave",
+        "description": "Suivez vos demandes sur-mesure."
+      },
+      "collectiveEvents": {
+        "title": "Événements collectifs",
+        "description": "Événements collectifs auxquels votre cave participe."
       }
     },
     "onboarding": {
@@ -1291,6 +1874,26 @@
     "unsubscribe": {
       "title": "Désabonnement | EnCave",
       "description": "Gérez vos préférences de messagerie"
+    },
+    "bookingError": {
+      "title": "Réservation interrompue | EnCave",
+      "description": "Reprenez votre réservation là où vous l'avez laissée"
+    },
+    "wineOrder": {
+      "title": "Commander vos coups de cœur | EnCave",
+      "description": "Demandez vos vins préférés directement à la cave"
+    },
+    "giftCards": {
+      "title": "Bon cadeau | EnCave",
+      "description": "Offrez une expérience de dégustation chez un vigneron suisse — bon cadeau valable 5 ans."
+    },
+    "bon": {
+      "title": "Votre bon cadeau | EnCave",
+      "description": "Consultez le solde et la validité de votre bon cadeau EnCave."
+    },
+    "surMesure": {
+      "title": "Demande sur-mesure | EnCave",
+      "description": "Demandez une expérience sur-mesure à un domaine viticole suisse : groupe, événement privé, occasion spéciale."
     }
   },
   "about": {
@@ -1328,7 +1931,7 @@
       "sections": {
         "introduction": {
           "title": "Introduction",
-          "content": "EnCave SA (\"nous\", \"notre\" ou \"nos\") s'engage à protéger votre vie privée. Cette politique de confidentialité explique comment nous collectons, utilisons, divulguons et protégeons vos informations lorsque vous utilisez notre plateforme."
+          "content": "EnCave SA (\"nous\", \"notre\" ou \"nos\") s’engage à protéger votre vie privée. Cette politique explique comment nous collectons, utilisons et protégeons vos données lorsque vous utilisez notre plateforme. Le traitement de vos données personnelles est régi par la Loi fédérale suisse sur la protection des données (nLPD)."
         },
         "dataCollection": {
           "title": "Informations que nous collectons",
@@ -1360,18 +1963,32 @@
         },
         "rights": {
           "title": "Vos droits",
-          "content": "En vertu des lois applicables sur la protection des données, vous avez le droit de:",
+          "content": "En vertu de la Loi fédérale sur la protection des données (nLPD), vous disposez des droits suivants :",
           "items": {
             "access": "Accéder à vos données personnelles",
             "rectification": "Corriger les données inexactes",
             "deletion": "Demander la suppression de vos données",
             "portability": "Recevoir vos données dans un format portable"
-          }
+          },
+          "selfService": "Vous pouvez exporter vos données ou demander la suppression de votre compte à tout moment depuis votre espace « Compte », ou en nous écrivant à privacy@encave.ch."
         },
         "contact": {
           "title": "Nous contacter",
           "content": "Si vous avez des questions concernant cette politique de confidentialité, veuillez nous contacter à:",
           "address": "Rue du Vin 1, 1950 Sion, Suisse"
+        },
+        "subprocessors": {
+          "title": "Sous-traitants",
+          "content": "Nous faisons appel à des sous-traitants pour exploiter la plateforme. Chacun ne traite vos données que pour les finalités décrites ci-dessus :",
+          "items": {
+            "vercel": "Vercel — hébergement du site (États-Unis)",
+            "neon": "Neon — base de données (Europe)",
+            "stripe": "Stripe — paiements (nous ne stockons aucune donnée de carte)",
+            "resend": "Resend — envoi d’e-mails transactionnels",
+            "posthog": "PostHog — mesure d’audience (activée uniquement avec votre consentement)",
+            "sentry": "Sentry — suivi des erreurs applicatives (données techniques)",
+            "upstash": "Upstash — limitation de débit (adresses IP, conservation brève)"
+          }
         }
       }
     },
@@ -1404,6 +2021,42 @@
         "payments": {
           "title": "Paiements",
           "content": "Tous les paiements sont traités de manière sécurisée via Stripe. Les prix sont affichés en francs suisses (CHF). En effectuant une réservation, vous nous autorisez à débiter votre moyen de paiement."
+        },
+        "bookingFee": {
+          "title": "Frais de réservation",
+          "content": "Une contribution de service de 2.50 CHF par billet est facturée lors de la réservation en ligne. Elle apparaît toujours comme une ligne distincte au moment du paiement — jamais fondue dans le prix de l'expérience — et suit la même règle de remboursement que le billet."
+        },
+        "cancellationPolicies": {
+          "title": "Annulation et remboursement",
+          "content": "Chaque domaine choisit la politique d'annulation applicable à ses expériences. Elle est affichée sur la fiche de l'expérience et récapitulée avant le paiement :",
+          "items": {
+            "flexible": "Flexible — remboursement intégral jusqu'à 2 heures avant le début.",
+            "standard": "Standard — remboursement intégral jusqu'à 24 heures avant le début.",
+            "strict": "Stricte — remboursement intégral jusqu'à 7 jours avant le début, 50 % jusqu'à 48 heures, aucun remboursement ensuite."
+          },
+          "snapshot": "La politique applicable est celle acceptée au moment de la réservation. Le remboursement porte sur le montant total payé (billets et frais de réservation). La part réglée par bon cadeau est recréditée sur le bon, jamais remboursée en espèces."
+        },
+        "giftCards": {
+          "title": "Bons cadeaux",
+          "content": "Les bons cadeaux EnCave sont utilisables sur les expériences proposées sur la plateforme, aux conditions suivantes :",
+          "items": {
+            "validity": "Validité de 5 ans à compter de l'achat.",
+            "partial": "Utilisation en une ou plusieurs fois — le solde restant demeure disponible.",
+            "noCash": "Ni remboursables ni échangeables contre des espèces ; l'achat d'un bon comporte des frais de service de 2.50 CHF.",
+            "cancellation": "En cas d'annulation d'une réservation payée avec un bon, la part couverte par le bon est recréditée sur celui-ci, selon la politique d'annulation applicable."
+          }
+        },
+        "noShow": {
+          "title": "Frais de non-présentation (no-show)",
+          "content": "Certains domaines conditionnent les réservations gratuites ou payables sur place à une empreinte de carte bancaire. Vous en êtes informé avant de confirmer votre réservation et acceptez qu'en cas de non-présentation sans annulation, le domaine puisse prélever des frais par personne du montant annoncé lors de la réservation (de 0 à 50 CHF). Le prélèvement est déclenché par le domaine, jamais automatiquement, et vous en êtes notifié par e-mail avec rappel de la politique que vous avez acceptée."
+        },
+        "surMesure": {
+          "title": "Demandes sur mesure",
+          "content": "Pour une demande sur mesure, le domaine s'efforce de répondre sous 48 heures par une offre précisant le contenu, le prix total et sa date d'expiration. L'offre est ferme jusqu'à son expiration ; la réservation est confirmée au paiement du lien reçu. La politique d'annulation du domaine s'applique."
+        },
+        "collectiveEvents": {
+          "title": "Événements collectifs",
+          "content": "Pour les événements réunissant plusieurs domaines, la billetterie est assurée par le domaine organisateur. Afin d'organiser l'accueil, la liste des participants (nom et adresse e-mail) est accessible à ce domaine organisateur, qui s'engage à ne l'utiliser que pour la gestion de l'événement, conformément à la nLPD."
         },
         "winemakers": {
           "title": "Obligations des vignerons",
@@ -1444,20 +2097,20 @@
         },
         "clientPolicy": {
           "title": "Politique d'annulation client",
-          "content": "En tant que client, vous pouvez annuler votre réservation selon les conditions suivantes:",
+          "content": "Chaque domaine choisit la politique d'annulation applicable à ses expériences. Elle est affichée sur la fiche de l'expérience et récapitulée avant le paiement. Le remboursement porte sur le montant total payé (billets et frais de réservation) ; la part payée par bon cadeau est recréditée sur le bon, jamais remboursée en espèces.",
           "timeline": {
-            "title": "Délais d'annulation",
-            "over24h": {
-              "time": "Plus de 24 heures avant l'expérience",
-              "refund": "Remboursement intégral"
+            "title": "Barèmes des trois politiques",
+            "flexible": {
+              "time": "Politique Flexible",
+              "refund": "Remboursement intégral jusqu'à 2 heures avant le début, aucun remboursement ensuite"
             },
-            "12to24h": {
-              "time": "Entre 12 et 24 heures avant",
-              "refund": "Remboursement de 50%"
+            "standard": {
+              "time": "Politique Standard",
+              "refund": "Remboursement intégral jusqu'à 24 heures avant le début, aucun remboursement ensuite"
             },
-            "under12h": {
-              "time": "Moins de 12 heures avant",
-              "refund": "Aucun remboursement"
+            "strict": {
+              "time": "Politique Stricte",
+              "refund": "Remboursement intégral jusqu'à 7 jours avant le début, 50 % jusqu'à 48 heures, aucun remboursement ensuite"
             }
           }
         },
@@ -1467,7 +2120,7 @@
         },
         "noShow": {
           "title": "Politique de non-présentation",
-          "content": "Si vous ne vous présentez pas à votre expérience réservée sans annulation préalable, aucun remboursement ne sera accordé."
+          "content": "Si vous ne vous présentez pas à votre expérience réservée sans annulation préalable, aucun remboursement ne sera accordé. Certains domaines appliquent en outre des frais de non-présentation (0 à 50 CHF par personne), que vous acceptez explicitement lors de la réservation — voir les conditions d'utilisation."
         },
         "modifications": {
           "title": "Modifications de réservation",
@@ -1486,7 +2139,32 @@
           "content": "Pour les demandes d'annulation ou les questions concernant cette politique, veuillez nous contacter à:"
         }
       }
-    }
+    },
+    "cookies": {
+      "banner": {
+        "title": "Vos préférences cookies",
+        "body": "Nous utilisons des cookies pour faire fonctionner le site et, avec votre accord, pour comprendre comment il est utilisé.",
+        "policyLink": "Lire notre politique de confidentialité",
+        "acceptAll": "Tout accepter",
+        "rejectAll": "Continuer sans accepter",
+        "customize": "Personnaliser"
+      },
+      "modal": {
+        "title": "Choisir mes cookies",
+        "save": "Enregistrer mes choix"
+      },
+      "category": {
+        "necessary": {
+          "title": "Strictement nécessaires",
+          "description": "Indispensables au fonctionnement du site. Ils ne peuvent pas être désactivés."
+        },
+        "analytics": {
+          "title": "Mesure d'audience",
+          "description": "Nous aident à comprendre quelles pages sont utiles. Outil utilisé : PostHog."
+        }
+      }
+    },
+    "mentionsLegalesLink": "Mentions légales"
   },
   "landing": {
     "degustation": {
@@ -1624,19 +2302,21 @@
     "allRightsReserved": "Tous droits réservés.",
     "navigation": "Navigation",
     "legal": "Mentions légales",
-    "brandDescription": "Plateforme de réservation d'expériences viticoles en Valais, Suisse."
-  },
-  "healthStatus": {
-    "serviceUnavailable": "Service indisponible",
-    "checkingStatus": "Vérification en cours...",
-    "allSystemsOperational": "Tous les systèmes opérationnels"
+    "brandDescription": "Plateforme de réservation d'expériences viticoles en Valais, Suisse.",
+    "region": "Valais, Suisse",
+    "securePayment": "Paiement sécurisé",
+    "wineExperiences": "Expériences viticoles valaisannes",
+    "contact": "Contact",
+    "mentionsLegales": "Mentions légales"
   },
   "clientDashboard": {
     "nav": {
       "myBookings": "Mes réservations",
       "myProfile": "Mon profil",
       "openMenu": "Ouvrir le menu",
-      "closeMenu": "Fermer le menu"
+      "closeMenu": "Fermer le menu",
+      "myGiftCards": "Mes bons cadeaux",
+      "myRequests": "Mes demandes"
     },
     "bookings": {
       "title": "Mes réservations",
@@ -1646,7 +2326,8 @@
       "noUpcomingDescription": "Vous n'avez aucune expérience viticole prévue. Parcourez notre sélection pour trouver votre prochaine aventure.",
       "noPast": "Aucune réservation passée",
       "noPastDescription": "Vous n'avez encore visité aucun domaine. Réservez votre première expérience dès aujourd'hui !",
-      "browseExperiences": "Parcourir les expériences"
+      "browseExperiences": "Parcourir les expériences",
+      "verifyEmailBanner": "Veuillez vérifier votre adresse e-mail pour voir vos réservations — nous vous avons envoyé un lien de vérification."
     },
     "bookingCard": {
       "guests": "{count, plural, =1 {# invité} other {# invités}}",
@@ -1662,11 +2343,11 @@
       "title": "Annuler la réservation",
       "confirmMessage": "Êtes-vous sûr de vouloir annuler votre réservation pour \"{title}\" ?",
       "refundPolicy": "Politique d'annulation",
-      "refundPolicyDetail": "Remboursement intégral si annulé plus de 24 heures avant l'expérience. Aucun remboursement dans les 24 heures.",
+      "refundPolicyDetail": "Le remboursement est calculé selon la politique d'annulation de la cave (affichée sur la fiche de l'expérience). Le montant exact vous sera confirmé par email.",
       "keepBooking": "Garder la réservation",
       "confirm": "Confirmer l'annulation",
       "cancelling": "Annulation en cours...",
-      "successWithRefund": "Réservation annulée. Un remboursement de CHF {amount} sera traité dans les 5 à 10 jours ouvrables.",
+      "successWithRefund": "Réservation annulée. Un montant de CHF {amount} vous sera restitué — moyen de paiement (5-10 jours ouvrables) et/ou recrédit de votre bon cadeau.",
       "successNoRefund": "Réservation annulée. Aucun remboursement n'est disponible car l'expérience est dans moins de 24 heures.",
       "error": "Échec de l'annulation. Veuillez réessayer."
     },
@@ -1679,7 +2360,796 @@
       "save": "Enregistrer les modifications",
       "saving": "Enregistrement...",
       "saved": "Profil mis à jour avec succès",
-      "error": "Échec de la mise à jour du profil. Veuillez réessayer."
+      "error": "Échec de la mise à jour du profil. Veuillez réessayer.",
+      "deleteAccount": {
+        "title": "Supprimer mon compte",
+        "description": "La suppression anonymise définitivement vos données personnelles (nLPD) : identité, coordonnées et historique de réservations. Cette action est irréversible.",
+        "cta": "Supprimer mon compte",
+        "confirmTitle": "Confirmer la suppression",
+        "confirmDescription": "Vos données personnelles seront anonymisées de façon irréversible et vous serez déconnecté. Les réservations passées sont conservées sous forme anonyme à des fins comptables.",
+        "confirmLabel": "Saisissez votre email ({email}) pour confirmer :",
+        "cancel": "Annuler",
+        "confirmCta": "Supprimer définitivement",
+        "deleting": "Suppression…",
+        "errorFutureBookings": "Impossible de supprimer le compte : des réservations confirmées à venir existent. Annulez-les d'abord ou contactez le support.",
+        "errorGeneric": "La suppression a échoué. Réessayez ou contactez support@encave.ch."
+      }
     }
+  },
+  "Dashboard": {
+    "eventDetail": {
+      "breadcrumb": {
+        "dashboard": "Tableau de bord",
+        "events": "Événements"
+      },
+      "actions": {
+        "scanQr": "Scanner les QR codes",
+        "scanDisabled": "Disponible le jour de l'événement",
+        "contactAll": "Contacter les inscrits",
+        "contactAllLoading": "Préparation...",
+        "contactAllEmpty": "Aucun inscrit à contacter pour le moment.",
+        "contactAllError": "Impossible de récupérer la liste. Réessaie.",
+        "contactAllFallbackTitle": "Trop d'inscrits pour ton client mail",
+        "contactAllFallbackBody": "Le lien mail est trop long pour s'ouvrir directement. Copie la liste d'emails ci-dessous et colle-la dans le champ BCC de ton mail.",
+        "contactAllCopy": "Copier la liste d'emails",
+        "contactAllCopied": "Emails copiés. Colle-les dans le BCC de ton mail.",
+        "cancelSession": "Annuler la session",
+        "cancelSessionError": "Impossible d'annuler la session. Vérifiez le motif (10 caractères minimum) et réessayez.",
+        "cancelSessionDone": "Session annulée. Les participants ont été prévenus et remboursés.",
+        "cancelSessionPartial": "{count, plural, =1 {1 réservation n'a pas pu être annulée} other {# réservations n'ont pas pu être annulées}}. Réessayez ou contactez le support.",
+        "revertCheckIn": "Annuler le check-in",
+        "revertNoShow": "Annuler le no-show",
+        "markPresent": "Marquer présent",
+        "markNoShow": "Marquer no-show",
+        "markNoShowDisabled": "Disponible après la fin de la session",
+        "chargeNoShowFee": "Prélever les frais de non-présentation ({amount})",
+        "retryNoShowFee": "Réessayer le prélèvement",
+        "noShowFeeCharged": "Frais de non-présentation prélevés",
+        "openMenu": "Ouvrir le menu d'actions",
+        "cancelSessionTitle": "Annuler la session ?",
+        "cancelSessionDescription": "Toutes les réservations confirmées seront annulées et intégralement remboursées ; chaque client recevra un email avec votre motif.",
+        "cancelSessionReasonLabel": "Motif de l'annulation",
+        "cancelSessionReasonPlaceholder": "Ex. : vendanges anticipées, impossible d'assurer la session…",
+        "cancelSessionReasonHint": "Minimum {min} caractères — le motif est transmis aux clients.",
+        "cancelSessionBack": "Retour",
+        "cancelSessionConfirm": "Annuler la session"
+      },
+      "bookingStatus": {
+        "confirmed": "Confirmée",
+        "completed": "Présent",
+        "noShow": "Absent (no-show)",
+        "cancelledByClient": "Annulée par le client",
+        "cancelledByWinery": "Annulée par vos soins",
+        "pending": "Paiement en attente"
+      },
+      "partySize": {
+        "inline": "{count, plural, =1 {1 personne} other {# personnes}}"
+      },
+      "errors": {
+        "loadFailed": "Impossible de charger l'événement. Réessayez dans un instant.",
+        "revertWindowExpired": "Impossible d'annuler après 72h.",
+        "sessionNotEnded": "Disponible après la fin de la session.",
+        "noShowChargeFailed": "La carte a été refusée. Vous pouvez réessayer le prélèvement.",
+        "noShowAlreadyCharged": "Les frais de non-présentation ont déjà été prélevés.",
+        "noShowChargeInProgress": "Un prélèvement pour non-présentation est en cours. Réessayez une fois qu'il est finalisé.",
+        "bookingAlreadyTransitioned": "Cette réservation vient d'être mise à jour sur un autre appareil. Actualisez pour voir son statut actuel."
+      },
+      "toast": {
+        "checkedIn": "Présence enregistrée.",
+        "noShow": "No-show enregistré.",
+        "revertedCheckIn": "Check-in annulé.",
+        "revertedNoShow": "No-show annulé.",
+        "noShowCharged": "Frais de non-présentation prélevés.",
+        "error": "Action impossible pour le moment."
+      },
+      "confirm": {
+        "markNoShowTitle": "Marquer ce client comme absent ?",
+        "markNoShowDescription": "Le statut passera à No-show. Vous pourrez annuler cette action depuis la même page.",
+        "revertCheckInTitle": "Annuler le check-in ?",
+        "revertCheckInDescription": "Le statut repassera à Confirmée. L'action est tracée.",
+        "revertNoShowTitle": "Annuler le no-show ?",
+        "revertNoShowDescription": "Le statut repassera à Confirmée. L'action est tracée. Si des frais de non-présentation ont été prélevés, ils sont remboursés automatiquement.",
+        "chargeNoShowTitle": "Prélever les frais de non-présentation ?",
+        "chargeNoShowDescription": "{amount} seront prélevés sur la carte enregistrée du client, conformément à la politique qu'il a acceptée à la réservation. Il sera notifié par e-mail.",
+        "confirmCta": "Confirmer",
+        "cancelCta": "Retour"
+      },
+      "occurrences": {
+        "subtitle": "Calendrier des créneaux · capacité par défaut : {count, plural, =1 {1 place} other {# places}}",
+        "editAvailability": "Modifier les disponibilités",
+        "loading": "Chargement du calendrier des créneaux",
+        "previousMonth": "Mois précédent",
+        "nextMonth": "Mois suivant",
+        "blockedDay": "Date bloquée",
+        "empty": {
+          "title": "Aucun créneau ce mois-ci",
+          "description": "Les créneaux générés par vos disponibilités apparaîtront ici.",
+          "cta": "Configurer les disponibilités"
+        },
+        "legend": {
+          "open": "Ouvert",
+          "full": "Complet",
+          "closed": "Fermé",
+          "blocked": "Date bloquée"
+        },
+        "status": {
+          "open": "Ouvert",
+          "closed": "Fermé",
+          "cancelled": "Annulé"
+        },
+        "sheet": {
+          "gauge": "{booked} / {capacity} places",
+          "overrideActive": "Capacité ajustée pour ce créneau ({count} au lieu du réglage de l'expérience).",
+          "legacyNote": "Session issue d'anciennes réservations — la gestion à l'occurrence n'est pas disponible pour ce créneau.",
+          "cancelledNote": "Ce créneau est annulé — il ne peut plus être modifié.",
+          "close": "Fermer le créneau",
+          "reopen": "Rouvrir le créneau",
+          "capacityLabel": "Ajuster la capacité",
+          "capacityPlaceholder": "Places",
+          "apply": "Appliquer",
+          "reset": "Réinitialiser",
+          "capacityHint": "Entre 1 et 50 places. Réinitialiser revient à la capacité de l'expérience.",
+          "capacityInvalid": "Saisissez un nombre entre {min} et {max}.",
+          "attendees": "{count, plural, =0 {Inscrits} =1 {1 inscrit} other {# inscrits}}",
+          "noAttendees": "Aucun inscrit pour ce créneau pour le moment.",
+          "checkedInAt": "Scanné à {time}"
+        },
+        "toasts": {
+          "closed": "Créneau fermé — il n'est plus réservable.",
+          "reopened": "Créneau rouvert.",
+          "capacityUpdated": "Capacité ajustée à {count, plural, =1 {1 place} other {# places}}.",
+          "capacityReset": "Capacité réinitialisée sur celle de l'expérience."
+        },
+        "errors": {
+          "notFound": "Créneau introuvable.",
+          "conflict": "Action impossible sur un créneau annulé.",
+          "validation": "Valeur invalide.",
+          "generic": "Une erreur est survenue. Réessayez dans un instant."
+        }
+      }
+    },
+    "visibility": {
+      "banner": {
+        "title": "Votre cave n'est pas encore visible publiquement",
+        "subtitle": "Complétez les éléments ci-dessous pour apparaître sur encave.ch.",
+        "cta": "Compléter mon profil",
+        "success": {
+          "title": "Votre cave est en ligne",
+          "subtitle": "Les clients peuvent la trouver et réserver vos expériences.",
+          "viewPublic": "Voir ma page publique"
+        },
+        "error": {
+          "title": "Impossible de vérifier le statut de votre cave",
+          "subtitle": "Veuillez réessayer dans un instant.",
+          "retry": "Réessayer"
+        }
+      },
+      "criteria": {
+        "verified": "Validation par l'équipe EnCave (en cours)",
+        "kyc": "Finaliser les informations bancaires (Stripe)",
+        "address": "Renseigner l'adresse exacte de votre cave",
+        "description": "Rédiger une description de votre cave",
+        "photos": "Ajouter au moins une photo de votre cave",
+        "experience": "Publier au moins une expérience",
+        "done": "Fait",
+        "srValidated": "Critère validé :",
+        "srToComplete": "Critère à compléter :",
+        "srInProgress": "Critère en cours :"
+      }
+    },
+    "wines": {
+      "title": "Mes vins",
+      "subtitle": "Votre carte des vins — cochez-les sur la fiche dégustation après chaque visite.",
+      "shopTeaser": "Bientôt : vendez en ligne",
+      "loading": "Chargement des vins…",
+      "statsTitle": "Emails coups de cœur",
+      "statsSent": "Récaps envoyés",
+      "statsOpened": "Ouverts",
+      "statsClicked": "Cliqués",
+      "addTitle": "Ajouter un vin",
+      "fieldName": "Nom",
+      "fieldNamePlaceholder": "Fendant Les Murettes",
+      "fieldGrape": "Cépage",
+      "fieldGrapePlaceholder": "Chasselas",
+      "fieldVintage": "Millésime",
+      "fieldPrice": "Prix (CHF)",
+      "addButton": "Ajouter",
+      "added": "{name} ajouté à votre carte",
+      "updated": "{name} mis à jour",
+      "deleted": "{name} supprimé",
+      "saveFailed": "Impossible d'enregistrer. Réessayez.",
+      "deleteConflict": "Ce vin a été servi en dégustation — il garde l'historique. Passez-le en indisponible plutôt.",
+      "emptyTitle": "Aucun vin pour l'instant",
+      "emptyDescription": "Ajoutez vos vins pour les cocher sur la fiche dégustation et les présenter sur votre page.",
+      "available": "Disponible",
+      "unavailable": "Indisponible",
+      "availabilityToggle": "Disponibilité de {name}",
+      "edit": "Modifier {name}",
+      "delete": "Supprimer {name}",
+      "deleteConfirmTitle": "Supprimer {name} ?",
+      "deleteConfirmDescription": "Le vin sera retiré de votre carte. Cette action est définitive.",
+      "deleteConfirmButton": "Supprimer",
+      "cancel": "Annuler",
+      "saveButton": "Enregistrer"
+    },
+    "tastingSheet": {
+      "title": "Fiche dégustation",
+      "subtitle": "Cochez les vins servis — vos hôtes recevront leurs coups de cœur par email.",
+      "noWines": "Ajoutez d'abord vos vins pour remplir la fiche dégustation.",
+      "manageWines": "Gérer mes vins",
+      "toggleWine": "Servi : {name}",
+      "checkedCount": "{count, plural, =0 {Aucun vin coché} one {# vin coché} other {# vins cochés}}",
+      "sendButton": "Envoyer le récap",
+      "clearButton": "Vider la fiche",
+      "saveFailed": "Impossible d'enregistrer la fiche. Réessayez.",
+      "cleared": "Fiche vidée — aucun récap ne partira.",
+      "armedNote": "{count, plural, one {Le récap partira à # hôte} other {Le récap partira à # hôtes}} — envoi prévu {date}.",
+      "alreadyFilled": "Fiche enregistrée — le récap partira automatiquement à J+2.",
+      "alertTitle": "Fiche dégustation à remplir",
+      "alertDescription": "{count, plural, one {# session d'aujourd'hui attend sa fiche} other {# sessions d'aujourd'hui attendent leur fiche}} — cochez les vins servis pour déclencher les coups de cœur.",
+      "alertCta": "Remplir la fiche"
+    },
+    "today": {
+      "title": "Aujourd'hui",
+      "loading": "Chargement du tableau de bord…",
+      "scanButton": "Scanner les billets",
+      "kpis": {
+        "sectionLabel": "Indicateurs du jour",
+        "todayBookings": "Résas aujourd'hui",
+        "todayGuests": "{count, plural, =0 {aucun couvert} one {# couvert} other {# couverts}}",
+        "weekGuests": "Couverts 7 jours",
+        "weekBookings": "{count, plural, one {# réservation} other {# réservations}}",
+        "monthGross": "CA du mois",
+        "monthBookings": "{count, plural, one {# réservation} other {# réservations}}",
+        "fillRate": "Remplissage 30 j",
+        "fillRateHint": "{sold} places vendues / {offered} offertes",
+        "fillRateEmpty": "Aucun créneau sur les 30 derniers jours"
+      },
+      "upcoming": {
+        "title": "Prochains créneaux",
+        "manageLink": "Gérer",
+        "empty": "Aucun créneau ouvert ces 7 prochains jours.",
+        "emptyCta": "Ouvrir des créneaux",
+        "seats": "{sold}/{capacity}"
+      }
+    }
+  },
+  "Public": {
+    "winery": {
+      "notFound": {
+        "title": "Cette cave n'est pas (encore) disponible",
+        "body": "Revenez bientôt — de nouveaux encaveurs rejoignent EnCave chaque semaine.",
+        "cta": "Découvrir les autres caves"
+      }
+    }
+  },
+  "scan": {
+    "title": "Scanner les QR codes",
+    "freeSubtitle": "Mode libre - toutes vos sessions du jour",
+    "start": "Activer la camera",
+    "stop": "Arreter",
+    "manual": "Faire un check-in manuel",
+    "resultOk": "Bienvenue",
+    "resultError": "Scan refuse",
+    "unknown": "QR non reconnu",
+    "already": "Deja enregistre",
+    "counter": "{checkedIn} / {total} clients enregistres",
+    "loadError": "Impossible de charger le scan",
+    "online": "En ligne",
+    "offline": "Hors ligne — les scans seront synchronisés",
+    "pendingSync": "{count} scan(s) à synchroniser",
+    "syncRejected": "{count} scan(s) refusé(s) par le serveur",
+    "notToday": "Billet inconnu pour aujourd'hui"
+  },
+  "imageUpload": {
+    "clickToUpload": "Cliquez pour télécharger une image",
+    "selectImageFile": "Sélectionner un fichier image",
+    "changePhoto": "Changer la photo",
+    "uploading": "Téléchargement...",
+    "formatHint": "JPEG ou PNG, 5 Mo max",
+    "addPhotoToGallery": "Ajouter une photo à la galerie",
+    "addPhoto": "Ajouter une photo",
+    "replace": "Remplacer",
+    "remove": "Supprimer",
+    "replaceImage": "Remplacer l'image",
+    "removeImage": "Supprimer l'image",
+    "uploadedImageAlt": "Image téléchargée",
+    "errorTooLarge": "L'image doit faire moins de 5 Mo",
+    "errorInvalidType": "Seules les images JPEG et PNG sont autorisées",
+    "errorUploadFailed": "Échec du téléchargement de l'image. Veuillez réessayer."
+  },
+  "bookingError": {
+    "payment": {
+      "title": "Le paiement n'a pas abouti",
+      "description": "Aucun montant n'a été débité et votre créneau est toujours réservé. Vous pouvez reprendre le paiement là où vous l'avez laissé.",
+      "descriptionHoldGone": "Aucun montant n'a été débité, mais votre créneau a été remis en vente entre-temps. Vérifiez les disponibilités — il est peut-être encore libre.",
+      "retryCta": "Réessayer le paiement"
+    },
+    "holdExpired": {
+      "title": "Votre créneau a été libéré",
+      "description": "Les 10 minutes de réservation sont écoulées, le créneau a donc été remis en vente — et personne n'a été débité. Bonne nouvelle : il est peut-être encore libre."
+    },
+    "generic": {
+      "title": "Petit couac dans la réservation",
+      "description": "Nous n'avons pas retrouvé les détails de votre réservation, mais rassurez-vous : aucun montant n'a été débité.",
+      "cta": "Découvrir les expériences"
+    },
+    "reselectCta": "Revoir les disponibilités",
+    "selectionRecap": "{date} · {time} · {guests, plural, one {# personne} other {# personnes}}"
+  },
+  "wineOrder": {
+    "title": "Vos coups de cœur chez {wineryName}",
+    "subtitle": "Ajustez les quantités et envoyez votre demande — la cave vous recontacte pour la livraison et le paiement.",
+    "loading": "Chargement de votre sélection…",
+    "toggleWine": "Commander {name}",
+    "decreaseQuantity": "Réduire la quantité de {name}",
+    "increaseQuantity": "Augmenter la quantité de {name}",
+    "total": "Total indicatif",
+    "submit": "Envoyer la demande",
+    "note": "Votre demande part directement chez {wineryName} avec vos coordonnées de réservation.",
+    "errorGeneric": "Impossible d'envoyer la demande. Réessayez dans un instant.",
+    "sentTitle": "Demande envoyée !",
+    "sentDescription": "{wineryName} a reçu votre sélection et vous recontacte très vite.",
+    "alreadyTitle": "Demande déjà envoyée",
+    "alreadyDescription": "{wineryName} a déjà reçu votre demande pour cette dégustation."
+  },
+  "Payouts": {
+    "title": "Reversements",
+    "subtitle": "Les versements EnCave arrivent automatiquement sur votre compte selon le calendrier Stripe.",
+    "loading": "Chargement des reversements…",
+    "openInStripe": "Ouvrir dans Stripe",
+    "status": {
+      "paid": "Versé",
+      "pending": "En préparation",
+      "in_transit": "En transit",
+      "failed": "Échec",
+      "canceled": "Annulé"
+    },
+    "next": {
+      "title": "Prochain virement",
+      "arrival": "Arrivée prévue le {date}",
+      "accruing": "En préparation chez Stripe — versé selon votre calendrier",
+      "none": "Aucun virement en attente"
+    },
+    "empty": {
+      "title": "Pas encore de versement",
+      "body": "Vos versements arrivent automatiquement selon le calendrier Stripe configuré sur votre compte. Le premier intervient généralement quelques jours après votre première réservation confirmée.",
+      "stripeNotReady": {
+        "title": "Finalisez votre compte Stripe",
+        "body": "Pour recevoir vos versements, complétez la configuration de votre compte Stripe Connect.",
+        "cta": "Finaliser mon compte Stripe"
+      }
+    },
+    "error": {
+      "fetch": "Impossible de récupérer l'historique Stripe. Réessayez dans un instant.",
+      "retry": "Réessayer"
+    },
+    "detail": {
+      "back": "Tous les reversements",
+      "title": "Détail du versement",
+      "bookings": "Réservations incluses",
+      "noBookings": "Aucune réservation corrélée à ce versement.",
+      "gross": "Brut",
+      "commission": "Commission",
+      "totalGross": "Total brut",
+      "totalCommission": "Commission EnCave",
+      "totalNet": "Total net versé",
+      "otherLines": "Autres mouvements (remboursements, ajustements)",
+      "giftBadge": "Bon cadeau",
+      "noShowBadge": "Frais no-show"
+    }
+  },
+  "giftCards": {
+    "pageTitle": "Offrez une expérience du vin",
+    "pageSubtitle": "Un bon cadeau EnCave, à utiliser chez nos vignerons — en une ou plusieurs fois, valable 5 ans.",
+    "checkoutLineItem": "Bon cadeau EnCave",
+    "checkoutFee": "Frais de service",
+    "natureLabel": "Type de cadeau",
+    "natureAmount": "Un montant libre",
+    "natureExperience": "Une expérience précise",
+    "amountLabel": "Montant du bon",
+    "amountUnit": "CHF",
+    "experienceLabel": "Expérience offerte",
+    "experiencePlaceholder": "Choisissez une expérience",
+    "purchaserSection": "Vos coordonnées",
+    "purchaserName": "Votre nom",
+    "purchaserNamePlaceholder": "Jean Dupont",
+    "purchaserEmail": "Votre email",
+    "purchaserEmailPlaceholder": "vous@exemple.com",
+    "recipientSection": "Le ou la destinataire",
+    "recipientName": "Nom du destinataire",
+    "recipientNamePlaceholder": "Marie Martin",
+    "recipientEmail": "Email du destinataire",
+    "recipientEmailPlaceholder": "marie@exemple.com",
+    "messageLabel": "Message personnel (facultatif)",
+    "messagePlaceholder": "Joyeux anniversaire ! Profite bien de cette dégustation.",
+    "deliverAtLabel": "Date d'envoi au destinataire",
+    "deliverAtHelp": "Le bon lui sera envoyé par email à cette date.",
+    "variantLabel": "Style de la carte",
+    "variantNOEL": "Noël",
+    "variantANNIVERSAIRE": "Anniversaire",
+    "variantNEUTRE": "Neutre",
+    "feeNotice": "Frais de service de {fee} ajoutés au paiement.",
+    "totalLabel": "Total : {total}",
+    "submit": "Payer et offrir",
+    "submitting": "Redirection vers le paiement…",
+    "previewEyebrow": "Bon cadeau",
+    "previewFrom": "De la part de",
+    "previewValidity": "Valable 5 ans",
+    "successTitle": "Merci ! Votre bon cadeau est confirmé.",
+    "successBody": "Vous recevez une copie par email ; le destinataire le recevra à la date choisie.",
+    "cancelledTitle": "Paiement annulé",
+    "cancelledBody": "Aucun montant n’a été débité. Vous pouvez réessayer.",
+    "errorGeneric": "Impossible de démarrer le paiement. Veuillez réessayer.",
+    "faqTitle": "Questions fréquentes",
+    "faqValidityQ": "Combien de temps le bon est-il valable ?",
+    "faqValidityA": "Cinq ans à compter de l’achat.",
+    "faqPartialQ": "Peut-on l’utiliser en plusieurs fois ?",
+    "faqPartialA": "Oui. Le solde restant est conservé et réutilisable jusqu’à épuisement.",
+    "faqUseQ": "Comment l’utiliser ?",
+    "faqUseA": "Au moment de payer une réservation, saisissez le code du bon cadeau.",
+    "giftHeroTitle": "Vous avez reçu un bon cadeau",
+    "giftFrom": "De la part de {name}",
+    "balanceLabel": "Solde disponible",
+    "initialLabel": "Montant initial",
+    "validUntilLabel": "Valable jusqu’au",
+    "useCta": "Utiliser mon bon",
+    "statusExpired": "Ce bon cadeau a expiré.",
+    "statusDisabled": "Ce bon cadeau a été désactivé.",
+    "statusUsedUp": "Ce bon cadeau a été entièrement utilisé.",
+    "notFoundTitle": "Bon cadeau introuvable",
+    "notFoundBody": "Vérifiez le code ou le lien reçu par email.",
+    "adminTitle": "Bons cadeaux",
+    "adminLiability": "Passif total",
+    "adminLiabilityHelp": "Somme des soldes actifs — le chiffre comptable.",
+    "adminCode": "Code",
+    "adminStatus": "Statut",
+    "adminBalance": "Solde",
+    "adminInitial": "Initial",
+    "adminBuyer": "Acheteur",
+    "adminRecipient": "Destinataire",
+    "adminCreated": "Créé le",
+    "adminExpires": "Expire le",
+    "adminDisable": "Désactiver",
+    "adminConfirmDisable": "Désactiver ce bon (fraude) ? Le solde est conservé mais le code devient inutilisable.",
+    "adminLedger": "Historique",
+    "adminEmpty": "Aucun bon cadeau pour l’instant.",
+    "statusActiveLabel": "Actif",
+    "statusDisabledLabel": "Désactivé",
+    "statusExpiredLabel": "Expiré",
+    "txPURCHASE": "Achat",
+    "txREDEMPTION": "Utilisation",
+    "txREFUND": "Remboursement",
+    "txADJUSTMENT": "Ajustement",
+    "compteTitle": "Mes bons cadeaux",
+    "compteEmpty": "Vous n’avez aucun bon cadeau.",
+    "compteRolePurchased": "Acheté",
+    "compteRoleReceived": "Reçu",
+    "compteResend": "Renvoyer au destinataire",
+    "compteResending": "Envoi…",
+    "compteResent": "Bon renvoyé.",
+    "compteResendError": "Échec de l’envoi. Réessayez."
+  },
+  "surMesure": {
+    "pageTitle": "Demande sur-mesure",
+    "pageSubtitle": "Groupe, événement privé, occasion spéciale : décrivez votre projet et un domaine vous fera une offre rien que pour vous.",
+    "wineryLabel": "Domaine",
+    "wineryPlaceholder": "Choisissez un domaine",
+    "clientNameLabel": "Votre nom",
+    "clientNamePlaceholder": "Prénom et nom",
+    "clientEmailLabel": "Email",
+    "clientEmailPlaceholder": "vous@exemple.ch",
+    "clientPhoneLabel": "Téléphone (optionnel)",
+    "clientPhonePlaceholder": "+41 79 000 00 00",
+    "desiredDateLabel": "Date souhaitée (optionnel)",
+    "guestCountLabel": "Nombre de personnes",
+    "budgetLabel": "Budget indicatif en CHF (optionnel)",
+    "budgetPlaceholder": "Ex. 500",
+    "descriptionLabel": "Votre projet",
+    "descriptionPlaceholder": "Racontez-nous l'occasion, vos envies, le type de dégustation…",
+    "submit": "Envoyer ma demande",
+    "submitting": "Envoi…",
+    "errorWineryRequired": "Choisissez un domaine.",
+    "errorNameRequired": "Indiquez votre nom.",
+    "errorEmailInvalid": "Indiquez un email valide.",
+    "errorGuestCount": "Indiquez le nombre de personnes.",
+    "errorDescriptionShort": "Décrivez votre projet en quelques mots.",
+    "errorRateLimited": "Trop de tentatives. Patientez quelques minutes avant de réessayer.",
+    "errorNotFound": "Ce domaine n'est plus disponible.",
+    "errorGeneric": "Votre demande n'a pas pu être envoyée. Réessayez.",
+    "successTitle": "Demande envoyée !",
+    "successBody": "Le domaine vous répondra sous 48 h, directement par email.",
+    "successRefLabel": "Votre référence",
+    "successAgain": "Faire une autre demande",
+    "blockTitle": "Une envie sur-mesure ?",
+    "blockSubtitle": "Groupe, événement privé ou occasion spéciale : {winery} peut vous préparer une offre rien que pour vous.",
+    "offerTitle": "Votre offre sur-mesure",
+    "offerFrom": "Proposée par {winery}",
+    "offerMessageLabel": "Message du domaine",
+    "offerDateLabel": "Date proposée",
+    "offerGuestsLabel": "Nombre de personnes",
+    "offerPriceLabel": "Prix total",
+    "offerPriceNote": "Prix tout compris, TVA incluse.",
+    "offerExpiryLabel": "Valable jusqu'au {date}",
+    "offerPayCta": "Payer et confirmer",
+    "offerPaying": "Redirection vers le paiement…",
+    "offerPayError": "Le paiement n'a pas pu démarrer. Réessayez.",
+    "offerCancelledTitle": "Paiement annulé",
+    "offerCancelledBody": "Votre paiement a été annulé. Vous pouvez réessayer quand vous le souhaitez.",
+    "offerPaidTitle": "Offre déjà réglée",
+    "offerPaidBody": "Cette offre a déjà été payée. Vos billets vous ont été envoyés par email.",
+    "offerExpiredTitle": "Offre expirée",
+    "offerExpiredBody": "Cette offre n'est plus valable. Contactez le domaine pour une nouvelle proposition.",
+    "offerWithdrawnTitle": "Offre retirée",
+    "offerWithdrawnBody": "Le domaine a retiré cette offre.",
+    "guests": "{count, plural, one {# personne} other {# personnes}}",
+    "myRequestsTitle": "Mes demandes",
+    "myRequestsSubtitle": "Suivez vos demandes sur-mesure et réglez les offres reçues.",
+    "myRequestsEmptyTitle": "Aucune demande",
+    "myRequestsEmptyBody": "Vous n'avez pas encore envoyé de demande sur-mesure.",
+    "myRequestsEmptyCta": "Faire une demande",
+    "requestedOn": "Demandé le {date}",
+    "desiredDate": "Souhaitée le {date}",
+    "desiredDateFlexible": "Date flexible",
+    "offerAmount": "Offre : {amount}",
+    "offerValidUntil": "Valable jusqu'au {date}",
+    "payCta": "Payer",
+    "statusPending": "En attente",
+    "statusOffered": "Offre reçue",
+    "statusPaid": "Payée",
+    "statusExpired": "Expirée",
+    "stripeLineItem": "Offre sur-mesure"
+  },
+  "requests": {
+    "inboxTitle": "Demandes sur-mesure",
+    "inboxSubtitle": "Les demandes de vos clients pour des expériences sur-mesure.",
+    "emptyTitle": "Aucune demande",
+    "emptyBody": "Quand un client vous enverra une demande sur-mesure, elle apparaîtra ici.",
+    "guests": "{count, plural, one {# personne} other {# personnes}}",
+    "desiredDate": "Souhaitée le {date}",
+    "desiredDateNone": "Date flexible",
+    "budget": "Budget indicatif : {amount}",
+    "budgetNone": "Budget non précisé",
+    "receivedOn": "Reçue le {date}",
+    "statusPending": "À traiter",
+    "statusOffered": "Offre envoyée",
+    "statusPaid": "Payée",
+    "statusExpired": "Expirée",
+    "statusClosed": "Fermée",
+    "offerStatusSent": "Envoyée",
+    "offerStatusPaid": "Payée",
+    "offerStatusExpired": "Expirée",
+    "offerStatusWithdrawn": "Retirée",
+    "detailTitle": "Demande {reference}",
+    "backToInbox": "Retour aux demandes",
+    "clientSection": "Client",
+    "clientName": "Nom",
+    "clientEmail": "Email",
+    "clientPhone": "Téléphone",
+    "projectSection": "Le projet",
+    "guestsLabel": "Personnes",
+    "desiredDateLabel": "Date souhaitée",
+    "budgetLabel": "Budget indicatif",
+    "descriptionLabel": "Description",
+    "notProvided": "Non précisé",
+    "flexibleDate": "Flexible",
+    "composeTitle": "Composer une offre",
+    "composeSubtitle": "Proposez un prix tout compris et une date. Le client règle en ligne.",
+    "messageLabel": "Message au client",
+    "messagePlaceholder": "Décrivez ce que vous proposez…",
+    "priceLabel": "Prix total (CHF)",
+    "pricePlaceholder": "0.00",
+    "priceHelp": "Prix tout compris — la commission EnCave s'applique au paiement.",
+    "dateLabel": "Date",
+    "timeLabel": "Heure",
+    "validityLabel": "Validité de l'offre (jours)",
+    "validityHelp": "Passé ce délai, l'offre expire automatiquement.",
+    "send": "Envoyer l'offre",
+    "sending": "Envoi…",
+    "errorGeneric": "L'offre n'a pas pu être envoyée. Réessayez.",
+    "errorValidation": "Vérifiez les champs du formulaire.",
+    "errorConflict": "Cette demande a déjà une offre ou est fermée.",
+    "errorMessageShort": "Rédigez un message pour le client.",
+    "errorPriceInvalid": "Indiquez un prix valide.",
+    "errorDateRequired": "Choisissez une date.",
+    "errorTimeInvalid": "Indiquez une heure (HH:mm).",
+    "offerSectionTitle": "Offre envoyée",
+    "offerPrice": "Prix",
+    "offerDate": "Date proposée",
+    "offerExpiry": "Expire le",
+    "offerMessage": "Message",
+    "offerSentOn": "Envoyée le {date}",
+    "alertTitle": "Demandes en attente",
+    "alertDescription": "{count, plural, one {# demande attend une réponse depuis plus de 24 h} other {# demandes attendent une réponse depuis plus de 24 h}}.",
+    "alertCta": "Voir les demandes"
+  },
+  "contact": {
+    "metadata": {
+      "title": "Contact | EnCave",
+      "description": "Une question ? Contactez l'équipe EnCave."
+    },
+    "hero": {
+      "title": "Contactez-nous",
+      "subtitle": "Une question sur une expérience, une réservation ou un partenariat ? Écrivez-nous, nous répondons vite."
+    },
+    "form": {
+      "name": "Nom",
+      "namePlaceholder": "Votre nom",
+      "nameError": "Merci d'indiquer votre nom.",
+      "email": "E-mail",
+      "emailPlaceholder": "vous@exemple.ch",
+      "emailError": "Adresse e-mail invalide.",
+      "subject": "Sujet",
+      "subjectPlaceholder": "L'objet de votre message",
+      "subjectError": "Merci d'indiquer un sujet.",
+      "message": "Message",
+      "messagePlaceholder": "Votre message…",
+      "messageError": "Votre message est un peu court.",
+      "submit": "Envoyer",
+      "submitting": "Envoi…",
+      "successTitle": "Message envoyé",
+      "successBody": "Merci ! Nous revenons vers vous au plus vite.",
+      "errorGeneric": "Une erreur est survenue. Merci de réessayer."
+    }
+  },
+  "maintenance": {
+    "metadata": {
+      "title": "Maintenance | EnCave",
+      "description": "EnCave est en maintenance."
+    },
+    "title": "Nous revenons très vite",
+    "message": "EnCave est momentanément en maintenance. Merci de votre patience — réessayez dans quelques instants."
+  },
+  "mentionsLegales": {
+    "metadata": {
+      "title": "Mentions légales | EnCave",
+      "description": "Mentions légales et informations sur l'éditeur d'EnCave."
+    },
+    "title": "Mentions légales",
+    "intro": "Informations légales relatives au site EnCave (encave.ch).",
+    "editor": {
+      "title": "Éditeur",
+      "body": "Raison sociale : [À COMPLÉTER]\nForme juridique : [À COMPLÉTER]\nAdresse : [À COMPLÉTER]\nN° IDE / CHE : [À COMPLÉTER]"
+    },
+    "publication": {
+      "title": "Responsable de la publication",
+      "body": "[À COMPLÉTER]"
+    },
+    "contact": {
+      "title": "Contact",
+      "body": "E-mail : samuel@encave.ch"
+    },
+    "hosting": {
+      "title": "Hébergement",
+      "body": "Le site est hébergé par Vercel Inc. (340 S Lemon Ave #4133, Walnut, CA 91789, USA). La base de données est hébergée par Neon (données en Europe)."
+    },
+    "ip": {
+      "title": "Propriété intellectuelle",
+      "body": "L'ensemble des contenus du site (textes, images, logos, marques) est protégé. Toute reproduction sans autorisation est interdite."
+    },
+    "data": {
+      "title": "Données personnelles",
+      "body": "Le traitement des données personnelles est décrit dans notre politique de confidentialité, conforme à la nLPD.",
+      "privacyLink": "Lire la politique de confidentialité"
+    }
+  },
+  "collectiveEvents": {
+    "title": "Événements collectifs",
+    "subtitle": "Les événements auxquels votre cave participe. Vue en lecture seule.",
+    "empty": {
+      "title": "Aucun événement collectif",
+      "description": "Vous ne participez à aucun événement collectif publié pour l’instant."
+    },
+    "organizedBy": "Organisé par {winery}",
+    "sold": "Vendus",
+    "scanned": "Scannés",
+    "attendees": {
+      "name": "Nom",
+      "contact": "Contact",
+      "date": "Date",
+      "guests": "Pers.",
+      "status": "Statut",
+      "checkedIn": "Scanné",
+      "noShow": "Absent",
+      "expected": "Attendu"
+    }
+  },
+  "accountSecurity": {
+    "title": "Sécurité du compte",
+    "password": {
+      "title": "Mot de passe",
+      "description": "Modifiez votre mot de passe. Vos autres sessions seront déconnectées.",
+      "current": "Mot de passe actuel",
+      "new": "Nouveau mot de passe",
+      "confirm": "Confirmer",
+      "cta": "Modifier le mot de passe",
+      "success": "Mot de passe modifié.",
+      "tooShort": "Au moins {min} caractères.",
+      "mismatch": "Les mots de passe ne correspondent pas."
+    },
+    "email": {
+      "title": "Adresse e-mail",
+      "description": "Adresse actuelle : {email}. Un e-mail de confirmation peut être requis.",
+      "newEmail": "Nouvelle adresse e-mail",
+      "cta": "Modifier l'e-mail",
+      "success": "Demande enregistrée. Vérifiez votre boîte mail si une confirmation est requise.",
+      "sameEmail": "C'est déjà votre adresse actuelle."
+    },
+    "totp": {
+      "title": "Authentification à deux facteurs (TOTP)",
+      "description": "Ajoutez une couche de sécurité avec une application d'authentification.",
+      "confirmPassword": "Confirmez votre mot de passe",
+      "start": "Activer",
+      "scan": "Scannez ce QR code avec votre application d'authentification.",
+      "backupTitle": "Codes de secours",
+      "backupDescription": "Conservez ces codes en lieu sûr. Chacun est utilisable une seule fois.",
+      "enterCode": "Entrez le code affiché",
+      "verify": "Vérifier et activer",
+      "enabled": "Authentification à deux facteurs activée.",
+      "enableFailed": "Impossible d'activer. Vérifiez votre mot de passe.",
+      "invalidCode": "Code invalide.",
+      "forcedTitle": "Sécurisez votre compte administrateur",
+      "forcedSubtitle": "L'authentification à deux facteurs est obligatoire pour les administrateurs."
+    },
+    "setPassword": {
+      "title": "Définir un mot de passe",
+      "description": "Votre compte utilise Google. Définissez d’abord un mot de passe (par e-mail) pour activer la double authentification.",
+      "sendCode": "Recevoir un code par e-mail",
+      "codeLabel": "Code à 6 chiffres",
+      "newPassword": "Nouveau mot de passe",
+      "submit": "Définir le mot de passe",
+      "tooShort": "Au moins {min} caractères.",
+      "failed": "Échec. Vérifiez le code."
+    }
+  },
+  "invitation": {
+    "title": "Rejoignez EnCave en tant que cave fondatrice",
+    "subtitle": "Créez votre compte pour activer votre domaine, sans file d'attente.",
+    "invalidTitle": "Invitation invalide",
+    "invalidDescription": "Ce lien d’invitation est invalide, expiré ou déjà utilisé.",
+    "nameLabel": "Votre nom",
+    "wineryNameLabel": "Nom du domaine",
+    "cta": "Créer mon compte",
+    "creating": "Création…",
+    "passwordTooShort": "Le mot de passe doit contenir au moins {min} caractères.",
+    "signInFailed": "Compte existant : mot de passe incorrect. Réessayez."
+  },
+  "receipt": {
+    "title": "Reçu de réservation",
+    "generatedOn": "Reçu généré le {date}",
+    "reference": "Référence",
+    "client": "Client",
+    "name": "Nom",
+    "email": "Email",
+    "winery": "Domaine",
+    "address": "Adresse",
+    "experience": "Expérience",
+    "date": "Date",
+    "time": "Heure",
+    "guests": "Invités",
+    "serviceFee": "Frais de service",
+    "totalPaid": "Total payé",
+    "vatNote": "Prix TTC. EnCave n'est pas assujettie à la TVA à ce jour.",
+    "footer": "Ce reçu confirme le paiement de votre réservation EnCave."
+  },
+  "unsubscribe": {
+    "successTitle": "Désinscription réussie",
+    "successDesc": "Vous avez été désinscrit de {type}.",
+    "manageHint": "Vous pouvez gérer vos préférences de notification à tout moment depuis les paramètres de votre tableau de bord.",
+    "managePreferences": "Gérer les préférences",
+    "goHome": "Aller à l'accueil",
+    "invalidTitle": "Lien invalide",
+    "invalidDesc": "Ce lien de désinscription est invalide ou a expiré. Utilisez le lien d'un email récent ou gérez vos préférences depuis votre tableau de bord.",
+    "loginManage": "Se connecter pour gérer",
+    "errorTitle": "Une erreur s'est produite",
+    "errorDesc": "Nous n'avons pas pu traiter votre demande de désinscription. Réessayez ou contactez le support si le problème persiste.",
+    "defaultTitle": "Préférences email",
+    "defaultDesc": "Pour gérer vos préférences email, connectez-vous à votre compte et accédez aux paramètres de notification.",
+    "login": "Se connecter",
+    "genericType": "les notifications par email",
+    "typeDaily": "le résumé quotidien",
+    "typeWeekly": "le résumé hebdomadaire",
+    "typeMarketing": "les emails marketing",
+    "typeAll": "tous les emails marketing"
   }
 }

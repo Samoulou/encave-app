@@ -2,11 +2,20 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import Image from 'next/image';
-import { X, Camera, Wine, Clock, Users, Banknote, HelpCircle } from 'lucide-react';
+import {
+  X,
+  Camera,
+  Wine,
+  Clock,
+  Users,
+  Banknote,
+  HelpCircle,
+} from 'lucide-react';
 import {
   createExperienceSchema,
   type CreateExperienceInput,
@@ -38,6 +47,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ImageUpload } from '@/components/shared/ImageUpload';
+import { CollectiveEventToggle } from './form-sections/CollectiveEventToggle';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Tooltip,
   TooltipContent,
@@ -45,7 +56,14 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import type { ExperienceType } from '@prisma/client';
+import type { ExperienceType, ExperiencePaymentMode } from '@prisma/client';
+
+// Language endonyms are locale-invariant, so they are rendered as-is.
+const LANGUAGE_ENDONYMS = [
+  { code: 'FR' as const, label: 'Français' },
+  { code: 'DE' as const, label: 'Deutsch' },
+  { code: 'EN' as const, label: 'English' },
+];
 
 interface GalleryImage {
   id: string;
@@ -63,9 +81,16 @@ interface EditExperienceFormProps {
     price: number;
     minCapacity: number;
     maxCapacity: number;
+    paymentMode: ExperiencePaymentMode;
+    isCollective: boolean;
+    languages: ('FR' | 'DE' | 'EN')[];
     coverPhoto: string;
     galleryImages: GalleryImage[];
   };
+  /** P-08: expose the ONLINE / ON_SITE payment-mode picker (NO_SHOW_FEES flag). */
+  noShowFeesEnabled?: boolean;
+  /** P-11: expose the « Événement collectif » toggle (COLLECTIVE_EVENTS flag). */
+  collectiveEventsEnabled?: boolean;
 }
 
 // Section Header Component
@@ -79,23 +104,29 @@ function SectionHeader({
   description?: string;
 }) {
   return (
-    <div className="flex items-start gap-4 pb-6 border-b border-stone-200">
+    <div className="flex items-start gap-4 border-b border-stone-200 pb-6">
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-burgundy-100 text-burgundy-600">
         {icon}
       </div>
       <div>
-        <h2 className="font-display text-xl font-semibold text-slate-900">
+        <h2 className="font-display text-xl font-semibold text-foreground">
           {title}
         </h2>
         {description && (
-          <p className="mt-1 text-sm text-slate-600">{description}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
         )}
       </div>
     </div>
   );
 }
 
-export function EditExperienceForm({ experience }: EditExperienceFormProps) {
+export function EditExperienceForm({
+  experience,
+  noShowFeesEnabled = false,
+  collectiveEventsEnabled = false,
+}: EditExperienceFormProps) {
+  const t = useTranslations('experience');
+  const tCommon = useTranslations('common');
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [coverPhoto, setCoverPhoto] = useState<string>(experience.coverPhoto);
@@ -103,9 +134,9 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
     experience.galleryImages
   );
   const [isUploadingCover, setIsUploadingCover] = useState(false);
-  const [uploadingGalleryIndex, setUploadingGalleryIndex] = useState<number | null>(
-    null
-  );
+  const [uploadingGalleryIndex, setUploadingGalleryIndex] = useState<
+    number | null
+  >(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const form = useForm<CreateExperienceInput>({
@@ -118,6 +149,9 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
       price: experience.price,
       minCapacity: experience.minCapacity,
       maxCapacity: experience.maxCapacity,
+      paymentMode: experience.paymentMode,
+      isCollective: experience.isCollective,
+      languages: experience.languages,
     },
   });
 
@@ -155,15 +189,12 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
     return result.data.url;
   };
 
-  const handleCoverPhotoChange = useCallback(
-    async (url: string | null) => {
-      if (url) {
-        setCoverPhoto(url);
-        setHasUnsavedChanges(true);
-      }
-    },
-    []
-  );
+  const handleCoverPhotoChange = useCallback(async (url: string | null) => {
+    if (url) {
+      setCoverPhoto(url);
+      setHasUnsavedChanges(true);
+    }
+  }, []);
 
   const handleGalleryUpload = async (
     file: File,
@@ -182,7 +213,10 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
     return url;
   };
 
-  const handleRemoveGalleryImage = async (imageId: string, imageUrl: string) => {
+  const handleRemoveGalleryImage = async (
+    imageId: string,
+    imageUrl: string
+  ) => {
     // Only delete from storage if it's a new upload (temp id)
     if (imageId.startsWith('temp-')) {
       await deleteUploadedImage(imageUrl);
@@ -194,7 +228,7 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
   const onSubmit = useCallback(
     async (data: CreateExperienceInput) => {
       if (!coverPhoto) {
-        toast.error('Please upload a cover photo');
+        toast.error(t('pleaseUploadCover'));
         return;
       }
 
@@ -210,8 +244,8 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
         );
 
         if (result.success) {
-          toast.success('Experience updated successfully', {
-            description: 'Your changes have been saved.',
+          toast.success(t('updatedSuccess'), {
+            description: t('updatedDescription'),
             className: 'bg-cream-50 border-gold-200',
           });
           setHasUnsavedChanges(false);
@@ -221,12 +255,12 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
           toast.error(result.error.message);
         }
       } catch {
-        toast.error('Something went wrong. Please try again.');
+        toast.error(tCommon('errors.somethingWentWrong'));
       } finally {
         setIsSubmitting(false);
       }
     },
-    [coverPhoto, galleryImages, experience.id, router]
+    [coverPhoto, galleryImages, experience.id, router, t, tCommon]
   );
 
   // Calculate description character count
@@ -243,8 +277,8 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
       <section className="space-y-6">
         <SectionHeader
           icon={<Camera className="h-5 w-5" />}
-          title="Cover Photo"
-          description="This image will be the main visual for your experience"
+          title={t('coverPhoto')}
+          description={t('coverPhotoDescription')}
         />
 
         <div className="relative">
@@ -260,7 +294,7 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
               <>
                 <Image
                   src={coverPhoto}
-                  alt="Cover photo"
+                  alt={t('coverPhoto')}
                   fill
                   className="object-cover"
                   sizes="(max-width: 768px) 100vw, 896px"
@@ -300,14 +334,14 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
                   return url;
                 }}
                 aspectRatio="16/9"
-                placeholder="Upload cover photo"
+                placeholder={t('uploadCoverPhoto')}
                 variant="empty"
                 className="h-full w-full"
               />
             )}
           </div>
 
-          <p className="mt-3 flex items-center gap-2 text-sm text-slate-500">
+          <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
             <svg
               className="h-4 w-4"
               fill="none"
@@ -321,7 +355,7 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
                 d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            Recommended: 1920 x 1080 pixels (16:9 aspect ratio). Max 5MB, JPEG or PNG.
+            {t('coverPhotoRecommended')}
           </p>
         </div>
       </section>
@@ -344,19 +378,22 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
               />
             </svg>
           }
-          title="Gallery Photos"
-          description={`Add more photos to showcase your experience (${galleryImages.length}/${maxGalleryImages})`}
+          title={t('galleryPhotos')}
+          description={t('galleryPhotosDescription', {
+            count: galleryImages.length,
+            max: maxGalleryImages,
+          })}
         />
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-6">
           {galleryImages.map((image, index) => (
             <div
               key={image.id}
-              className="group relative aspect-square overflow-hidden rounded-xl border-2 border-stone-200 bg-slate-100 transition-all duration-300 hover:border-burgundy-300 hover:shadow-lg"
+              className="group relative aspect-square overflow-hidden rounded-xl border-2 border-stone-200 bg-muted transition-all duration-300 hover:border-burgundy-300 hover:shadow-lg"
             >
               <Image
                 src={image.url}
-                alt={`Gallery image ${index + 1}`}
+                alt={t('galleryImageAlt', { index: index + 1 })}
                 fill
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                 sizes="(max-width: 640px) 50vw, (max-width: 768px) 25vw, 200px"
@@ -366,7 +403,7 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
                   type="button"
                   className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-red-600 shadow-lg transition-colors hover:bg-red-50"
                   onClick={() => handleRemoveGalleryImage(image.id, image.url)}
-                  aria-label={`Remove gallery image ${index + 1}`}
+                  aria-label={t('removeGalleryImage', { index: index + 1 })}
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -389,7 +426,7 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
                   <div className="flex h-full w-full flex-col items-center justify-center">
                     <div className="h-8 w-8 animate-spin rounded-full border-4 border-burgundy-600 border-t-transparent" />
                     <p className="mt-3 text-sm font-medium text-burgundy-600">
-                      Uploading...
+                      {t('uploading')}
                     </p>
                   </div>
                 ) : (
@@ -409,9 +446,7 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
             ))}
         </div>
 
-        <p className="text-sm text-slate-500">
-          Optional. Square images work best. Up to 8 photos allowed.
-        </p>
+        <p className="text-sm text-muted-foreground">{t('galleryHelp')}</p>
       </section>
 
       {/* Experience Details Form */}
@@ -421,8 +456,8 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
           <section className="space-y-6">
             <SectionHeader
               icon={<Wine className="h-5 w-5" />}
-              title="Experience Details"
-              description="Tell visitors about your wine experience"
+              title={t('experienceDetails')}
+              description={t('tellVisitors')}
             />
 
             <div className="space-y-6">
@@ -431,17 +466,17 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium">Title</FormLabel>
+                    <FormLabel className="text-base font-medium">
+                      {t('title')}
+                    </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="e.g., Grand Cru Wine Tasting Experience"
+                        placeholder={t('titlePlaceholder')}
                         maxLength={100}
                         {...field}
                       />
                     </FormControl>
-                    <FormDescription>
-                      Maximum 100 characters. Make it descriptive and appealing.
-                    </FormDescription>
+                    <FormDescription>{t('titleHelp')}</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -453,18 +488,18 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-base font-medium">
-                      Experience Type
+                      {t('experienceType')}
                     </FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select experience type" />
+                          <SelectValue placeholder={t('selectType')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {EXPERIENCE_TYPE_OPTIONS.map((option) => (
                           <SelectItem key={option.value} value={option.value}>
-                            {option.label}
+                            {t(`types.${option.value}`)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -480,17 +515,17 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-base font-medium">
-                      Description
+                      {t('description')}
                     </FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Describe your experience in detail. What will visitors see, taste, and learn? What makes this experience special?"
+                        placeholder={t('descriptionPlaceholder')}
                         className="min-h-[180px] resize-none"
                         {...field}
                       />
                     </FormControl>
                     <FormDescription className="flex justify-between">
-                      <span>Minimum 20 characters recommended</span>
+                      <span>{t('descriptionMinRecommended')}</span>
                       <span
                         className={cn(
                           descriptionLength < 20
@@ -498,7 +533,7 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
                             : 'text-green-600'
                         )}
                       >
-                        {descriptionLength} characters
+                        {t('characters', { count: descriptionLength })}
                       </span>
                     </FormDescription>
                     <FormMessage />
@@ -512,8 +547,8 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
           <section className="space-y-6">
             <SectionHeader
               icon={<Clock className="h-5 w-5" />}
-              title="Duration & Capacity"
-              description="Set the timing and group size for your experience"
+              title={t('durationAndCapacity')}
+              description={t('durationCapacityDescription')}
             />
 
             <div className="grid gap-6 sm:grid-cols-3">
@@ -522,14 +557,16 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
                 name="duration"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium">Duration</FormLabel>
+                    <FormLabel className="text-base font-medium">
+                      {t('duration')}
+                    </FormLabel>
                     <Select
                       onValueChange={(value) => field.onChange(parseInt(value))}
                       value={field.value?.toString()}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select duration" />
+                          <SelectValue placeholder={t('selectDuration')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -538,7 +575,7 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
                             key={option.value}
                             value={option.value.toString()}
                           >
-                            {option.label}
+                            {t(`durationOptions.${option.value}`)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -553,16 +590,16 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
                 name="minCapacity"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium flex items-center gap-2">
+                    <FormLabel className="flex items-center gap-2 text-base font-medium">
                       <Users className="h-4 w-4" />
-                      Min Booking Size
+                      {t('minBookingSize')}
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <HelpCircle className="h-4 w-4 text-slate-400 cursor-help" />
+                            <HelpCircle className="h-4 w-4 cursor-help text-muted-foreground" />
                           </TooltipTrigger>
                           <TooltipContent className="max-w-xs">
-                            <p>The minimum number of guests required per booking. Visitors cannot book for fewer than this number.</p>
+                            <p>{t('minBookingSizeTooltip')}</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -588,9 +625,9 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
                 name="maxCapacity"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium flex items-center gap-2">
+                    <FormLabel className="flex items-center gap-2 text-base font-medium">
                       <Users className="h-4 w-4" />
-                      Max Guests
+                      {t('maxGuestsLabel')}
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -614,8 +651,8 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
           <section className="space-y-6">
             <SectionHeader
               icon={<Banknote className="h-5 w-5" />}
-              title="Pricing"
-              description="Set the price per person for your experience"
+              title={t('pricing')}
+              description={t('pricingDescription')}
             />
 
             <FormField
@@ -624,7 +661,7 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
               render={({ field }) => (
                 <FormItem className="max-w-xs">
                   <FormLabel className="text-base font-medium">
-                    Price per Person (CHF)
+                    {t('pricePerPerson')}
                   </FormLabel>
                   <FormControl>
                     <div className="relative">
@@ -639,25 +676,121 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
                         className="pl-14"
                         {...field}
                         onChange={(e) =>
-                          field.onChange(parseFloat(e.target.value) || undefined)
+                          field.onChange(
+                            parseFloat(e.target.value) || undefined
+                          )
                         }
                       />
                     </div>
                   </FormControl>
-                  <FormDescription>Price must be greater than 0</FormDescription>
+                  <FormDescription>{t('priceMustBePositive')}</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            {/* Payment mode (P-08 / L-070) — flag-gated */}
+            {noShowFeesEnabled && (
+              <FormField
+                control={form.control}
+                name="paymentMode"
+                render={({ field }) => (
+                  <FormItem className="mt-6 max-w-xs">
+                    <FormLabel className="text-base font-medium">
+                      {t('paymentMode.label')}
+                    </FormLabel>
+                    <FormControl>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value ?? 'ONLINE'}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="ONLINE">
+                            {t('paymentMode.online')}
+                          </SelectItem>
+                          <SelectItem value="ON_SITE">
+                            {t('paymentMode.onSite')}
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormDescription>
+                      {t('paymentMode.description')}
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
           </section>
+
+          {/* Spoken languages (P-02 / L-115) — powers the catalogue language
+              filter. Endonyms are locale-invariant, hence not translated. */}
+          <section className="space-y-6">
+            <FormField
+              control={form.control}
+              name="languages"
+              render={({ field }) => {
+                const selected = field.value ?? ['FR'];
+                const toggle = (code: 'FR' | 'DE' | 'EN') => {
+                  field.onChange(
+                    selected.includes(code)
+                      ? selected.filter((c) => c !== code)
+                      : [...selected, code]
+                  );
+                };
+                return (
+                  <FormItem>
+                    <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                      {t('languagesLabel')}
+                    </FormLabel>
+                    <p className="mb-2 text-sm text-muted-foreground">
+                      {t('languagesHelper')}
+                    </p>
+                    <div className="flex flex-wrap gap-4">
+                      {LANGUAGE_ENDONYMS.map(({ code, label }) => (
+                        <label
+                          key={code}
+                          className="flex cursor-pointer items-center gap-2 text-sm"
+                        >
+                          <Checkbox
+                            checked={selected.includes(code)}
+                            onCheckedChange={() => toggle(code)}
+                          />
+                          {label}
+                        </label>
+                      ))}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
+            />
+          </section>
+
+          {/* Collective event (P-11 / L-100) — flag-gated. Manage the
+              participating wineries in the panel below the form. */}
+          {collectiveEventsEnabled && (
+            <section className="space-y-6">
+              <SectionHeader
+                icon={<Users className="h-5 w-5" />}
+                title={t('collective.sectionTitle')}
+                description={t('collective.sectionDescription')}
+              />
+              <CollectiveEventToggle form={form} />
+            </section>
+          )}
 
           {/* Form Actions */}
           <div className="flex items-center justify-between border-t border-stone-200 pt-8">
-            <div className="text-sm text-slate-500">
+            <div className="text-sm text-muted-foreground">
               {hasUnsavedChanges && (
                 <span className="flex items-center gap-2 text-amber-600">
                   <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500" />
-                  Unsaved changes
+                  {t('unsavedChanges')}
                 </span>
               )}
             </div>
@@ -668,7 +801,7 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
                 onClick={() => router.back()}
                 disabled={isSubmitting}
               >
-                Cancel
+                {tCommon('buttons.cancel')}
               </Button>
               <Button
                 type="submit"
@@ -679,10 +812,10 @@ export function EditExperienceForm({ experience }: EditExperienceFormProps) {
                 {isSubmitting ? (
                   <>
                     <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                    Saving...
+                    {tCommon('saving')}
                   </>
                 ) : (
-                  'Save Changes'
+                  tCommon('buttons.saveChanges')
                 )}
               </Button>
             </div>

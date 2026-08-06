@@ -1,23 +1,9 @@
 import { cache } from 'react';
 import { db } from '@/server/db';
 import { BookingStatus, Prisma } from '@prisma/client';
-import {
-  startOfWeek,
-  endOfWeek,
-  startOfMonth,
-  endOfMonth,
-  addDays,
-} from 'date-fns';
-
-/**
- * Convert a local date to UTC date, preserving the local date components.
- * This ensures that "today" in local time maps to the correct database date.
- * The database stores dates as @db.Date (date-only), so we need to
- * ensure our queries use UTC-normalized dates to avoid timezone issues.
- */
-function localDateToUTC(date: Date): Date {
-  return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-}
+import { HOLD_EMAIL_DOMAIN } from '@/lib/constants/booking-hold';
+import { addDays } from 'date-fns';
+import { zurichTodayAsUTCDate } from '@/lib/business-rules/occurrence-expansion';
 
 export interface BookingFilters {
   status?: BookingStatus[];
@@ -81,6 +67,10 @@ export const getWineryBookings = cache(async function getWineryBookings(
 ): Promise<BookingWithExperience[]> {
   const where: Prisma.BookingWhereInput = {
     wineryId,
+    // Unclaimed slot holds (P-04 / L-050) are internal capacity rows with
+    // placeholder visitors — never a booking the winery should see,
+    // approve, or export.
+    NOT: { visitorEmail: { endsWith: `@${HOLD_EMAIL_DOMAIN}` } },
   };
 
   // Apply status filter
@@ -109,14 +99,22 @@ export const getWineryBookings = cache(async function getWineryBookings(
     const searchTerm = filters.search.trim();
     where.OR = [
       { visitorName: { contains: searchTerm, mode: 'insensitive' } },
-      { reference: { contains: searchTerm.toUpperCase(), mode: 'insensitive' } },
+      {
+        reference: { contains: searchTerm.toUpperCase(), mode: 'insensitive' },
+      },
     ];
   }
 
   // Determine sort order
   const orderBy: Prisma.BookingOrderByWithRelationInput = {};
   if (sort) {
-    orderBy[sort.field === 'totalPrice' ? 'totalPrice' : sort.field === 'guestCount' ? 'guestCount' : 'date'] = sort.direction;
+    orderBy[
+      sort.field === 'totalPrice'
+        ? 'totalPrice'
+        : sort.field === 'guestCount'
+          ? 'guestCount'
+          : 'date'
+    ] = sort.direction;
   } else {
     // Default: upcoming first (date asc), but show past at bottom
     orderBy.date = 'asc';
@@ -158,26 +156,27 @@ export const getWineryBookings = cache(async function getWineryBookings(
  * Get summary statistics for dashboard cards.
  * Wrapped with React.cache for request-level deduplication.
  */
-export const getBookingSummary = cache(async function getBookingSummary(wineryId: string): Promise<BookingSummary> {
+export const getBookingSummary = cache(async function getBookingSummary(
+  wineryId: string
+): Promise<BookingSummary> {
   const now = new Date();
 
-  // Use local-to-UTC conversion for database comparison
-  // The database uses @db.Date which stores date-only values
-  // We convert local dates to UTC to match database storage format
-  const todayUTC = localDateToUTC(now);
-  const tomorrowUTC = localDateToUTC(addDays(now, 1));
+  // P-13 (A4): "today" = the Europe/Zurich calendar day (UTC midnight),
+  // the SAME reference as the occurrence engine — the Aujourd'hui KPIs
+  // and the calendar can no longer drift a day apart with the server tz.
+  const todayUTC = zurichTodayAsUTCDate(now);
+  const tomorrowUTC = addDays(todayUTC, 1);
 
-  // Week boundaries (Monday start)
-  const weekStartLocal = startOfWeek(now, { weekStartsOn: 1 });
-  const weekEndLocal = endOfWeek(now, { weekStartsOn: 1 });
-  const weekStartUTC = localDateToUTC(weekStartLocal);
-  const weekEndUTC = localDateToUTC(addDays(weekEndLocal, 1)); // Day after to include full end day
+  // Rolling upcoming window: today through the next 7 calendar days.
+  const upcomingWindowEndUTC = addDays(todayUTC, 8);
 
-  // Month boundaries
-  const monthStartLocal = startOfMonth(now);
-  const monthEndLocal = endOfMonth(now);
-  const monthStartUTC = localDateToUTC(monthStartLocal);
-  const monthEndUTC = localDateToUTC(addDays(monthEndLocal, 1)); // Day after to include full end day
+  // Month boundaries (Zurich calendar month, UTC-midnight bounds)
+  const monthStartUTC = new Date(
+    Date.UTC(todayUTC.getUTCFullYear(), todayUTC.getUTCMonth(), 1)
+  );
+  const monthEndUTC = new Date(
+    Date.UTC(todayUTC.getUTCFullYear(), todayUTC.getUTCMonth() + 1, 1)
+  );
 
   // Active statuses for counting (exclude pending payment and cancelled)
   const activeStatuses = [BookingStatus.CONFIRMED, BookingStatus.COMPLETED];
@@ -193,11 +192,11 @@ export const getBookingSummary = cache(async function getBookingSummary(wineryId
       _count: true,
       _sum: { guestCount: true },
     }),
-    // This week's bookings
+    // Upcoming bookings for the next 7 days
     db.booking.aggregate({
       where: {
         wineryId,
-        date: { gte: weekStartUTC, lt: weekEndUTC },
+        date: { gte: todayUTC, lt: upcomingWindowEndUTC },
         status: { in: activeStatuses },
       },
       _count: true,
@@ -238,102 +237,22 @@ export const getBookingSummary = cache(async function getBookingSummary(wineryId
  * Get distinct experiences for filter dropdown.
  * Wrapped with React.cache for request-level deduplication.
  */
-export const getWineryExperiencesForFilter = cache(async function getWineryExperiencesForFilter(
-  wineryId: string
-): Promise<ExperienceOption[]> {
-  const experiences = await db.experience.findMany({
-    where: { wineryId },
-    select: {
-      id: true,
-      title: true,
-    },
-    orderBy: { title: 'asc' },
-  });
-
-  return experiences;
-});
-
-/**
- * Get booking history for a specific client with a winery.
- * Wrapped with React.cache for request-level deduplication.
- */
-export const getClientHistoryWithWinery = cache(async function getClientHistoryWithWinery(
-  wineryId: string,
-  visitorEmail: string
-): Promise<BookingWithExperience[]> {
-  const bookings = await db.booking.findMany({
-    where: {
-      wineryId,
-      visitorEmail: { equals: visitorEmail, mode: 'insensitive' },
-    },
-    orderBy: { date: 'desc' },
-    select: {
-      id: true,
-      reference: true,
-      visitorEmail: true,
-      visitorName: true,
-      visitorPhone: true,
-      date: true,
-      timeSlot: true,
-      guestCount: true,
-      totalPrice: true,
-      wineryPayout: true,
-      status: true,
-      cancelledAt: true,
-      refundIssued: true,
-      refundAmount: true,
-      createdAt: true,
-      experience: {
-        select: {
-          id: true,
-          title: true,
-          slug: true,
-        },
+export const getWineryExperiencesForFilter = cache(
+  async function getWineryExperiencesForFilter(
+    wineryId: string
+  ): Promise<ExperienceOption[]> {
+    // `isCustom: false` drops the P-10 sur-mesure holder from the filter
+    // dropdown (a stray entry for the wineries that never use it); those
+    // bookings still appear in the unfiltered list.
+    const experiences = await db.experience.findMany({
+      where: { wineryId, isCustom: false },
+      select: {
+        id: true,
+        title: true,
       },
-    },
-  });
+      orderBy: { title: 'asc' },
+    });
 
-  return bookings;
-});
-
-/**
- * Get a single booking with full details for the winery owner.
- * Wrapped with React.cache for request-level deduplication.
- */
-export const getBookingForWinery = cache(async function getBookingForWinery(
-  bookingId: string,
-  wineryId: string
-): Promise<BookingWithExperience | null> {
-  const booking = await db.booking.findFirst({
-    where: {
-      id: bookingId,
-      wineryId,
-    },
-    select: {
-      id: true,
-      reference: true,
-      visitorEmail: true,
-      visitorName: true,
-      visitorPhone: true,
-      date: true,
-      timeSlot: true,
-      guestCount: true,
-      totalPrice: true,
-      wineryPayout: true,
-      status: true,
-      cancelledAt: true,
-      refundIssued: true,
-      refundAmount: true,
-      createdAt: true,
-      experience: {
-        select: {
-          id: true,
-          title: true,
-          slug: true,
-        },
-      },
-    },
-  });
-
-  return booking;
-});
+    return experiences;
+  }
+);

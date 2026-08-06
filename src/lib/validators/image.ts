@@ -5,7 +5,11 @@ import { z } from 'zod';
  */
 export const IMAGE_MAX_SIZE = 5 * 1024 * 1024; // 5MB
 export const WINERY_ALLOWED_TYPES = ['image/jpeg', 'image/png'] as const;
-export const EXPERIENCE_ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
+export const EXPERIENCE_ALLOWED_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+] as const;
 
 /**
  * Create an image file validation schema with configurable allowed types
@@ -32,7 +36,9 @@ export const wineryImageSchema = createImageFileSchema(WINERY_ALLOWED_TYPES);
 /**
  * Image file validation schema for experiences (JPEG, PNG, and WebP)
  */
-export const experienceImageSchema = createImageFileSchema(EXPERIENCE_ALLOWED_TYPES);
+export const experienceImageSchema = createImageFileSchema(
+  EXPERIENCE_ALLOWED_TYPES
+);
 
 export type WineryImageFile = z.infer<typeof wineryImageSchema>;
 export type ExperienceImageFile = z.infer<typeof experienceImageSchema>;

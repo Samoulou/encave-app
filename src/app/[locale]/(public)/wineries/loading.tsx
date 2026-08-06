@@ -1,4 +1,8 @@
-import { SkeletonCard, Skeleton, SkeletonContainer } from '@/components/shared/Skeleton';
+import {
+  SkeletonCard,
+  Skeleton,
+  SkeletonContainer,
+} from '@/components/shared/Skeleton';
 
 export default function WineriesLoading() {
   return (

@@ -53,11 +53,18 @@ export async function uploadExperienceImage(
     if (file.size > IMAGE_MAX_SIZE) {
       return {
         success: false,
-        error: { code: 'VALIDATION_ERROR', message: 'Image must be less than 5MB' },
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Image must be less than 5MB',
+        },
       };
     }
 
-    if (!EXPERIENCE_ALLOWED_TYPES.includes(file.type as typeof EXPERIENCE_ALLOWED_TYPES[number])) {
+    if (
+      !EXPERIENCE_ALLOWED_TYPES.includes(
+        file.type as (typeof EXPERIENCE_ALLOWED_TYPES)[number]
+      )
+    ) {
       return {
         success: false,
         error: {
@@ -79,7 +86,9 @@ export async function uploadExperienceImage(
       data: { url: blob.url },
     };
   } catch (error) {
-    logError('uploadExperienceImage error', error, { action: 'uploadExperienceImage' });
+    logError('uploadExperienceImage error', error, {
+      action: 'uploadExperienceImage',
+    });
     return {
       success: false,
       error: {
@@ -137,7 +146,9 @@ export async function deleteUploadedImage(
       data: { deleted: true },
     };
   } catch (error) {
-    logError('deleteUploadedImage error', error, { action: 'deleteUploadedImage' });
+    logError('deleteUploadedImage error', error, {
+      action: 'deleteUploadedImage',
+    });
     return {
       success: false,
       error: {

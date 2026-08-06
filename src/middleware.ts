@@ -25,8 +25,26 @@ function getLocaleFromPathname(pathname: string): string {
   return match?.[1] ?? routing.defaultLocale;
 }
 
-// Production domain that should show "Coming Soon"
+function redirectToLogin(
+  request: NextRequest,
+  locale: string,
+  pathname: string
+): NextResponse {
+  const loginUrl = new URL(`/${locale}/login`, request.url);
+  loginUrl.searchParams.set('callbackUrl', pathname);
+  return NextResponse.redirect(loginUrl);
+}
+
+// Production domain gated by the Coming Soon flag
 const COMING_SOON_DOMAIN = 'encave.ch';
+
+// P-16 (WS-I, L-189): the gate is env-based, NOT hardcoded — the launch
+// flip is a Vercel env change (COMING_SOON=false) + redeploy (~2 min),
+// and the rollback is the exact same operation. Env because the Edge
+// middleware cannot read the DB flag table; the only legitimately
+// env-based flag (documented in src/lib/flags.ts). Any value but the
+// string 'false' keeps the gate up — fail-closed pre-launch.
+const isComingSoonGateUp = process.env.COMING_SOON !== 'false';
 
 export default async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
@@ -41,21 +59,39 @@ export default async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Coming Soon: Redirect production domain to coming-soon page
-  // Remove this block when ready to launch
-  if (
-    hostname === COMING_SOON_DOMAIN ||
-    hostname === `www.${COMING_SOON_DOMAIN}`
-  ) {
-    // Allow the coming-soon page itself
-    if (pathname === '/coming-soon') {
+  // The coming-soon page lives outside [locale] (locale-less) — without a
+  // pass-through here, the intl middleware 307s it to /fr/coming-soon (404).
+  // While the gate is up it is served on ANY host (encave.ch + previews +
+  // localhost, so the page stays reviewable). Once the gate is down
+  // (post-launch), production redirects home — pre-launch links must not
+  // keep advertising the founder offer — while non-prod hosts keep it
+  // viewable for review.
+  if (pathname === '/coming-soon') {
+    const isProductionHost =
+      hostname === COMING_SOON_DOMAIN ||
+      hostname === `www.${COMING_SOON_DOMAIN}`;
+    if (isComingSoonGateUp || !isProductionHost) {
       return NextResponse.next();
     }
+    return NextResponse.redirect(new URL('/', request.url));
+  }
 
+  // Coming Soon: redirect the production domain to the coming-soon page
+  // until COMING_SOON=false flips the gate (launch bascule, WS-I).
+  if (
+    isComingSoonGateUp &&
+    (hostname === COMING_SOON_DOMAIN ||
+      hostname === `www.${COMING_SOON_DOMAIN}`)
+  ) {
     // Allow article pages (accessible from coming-soon footer)
     const pathnameNoLocale = getPathnameWithoutLocale(pathname);
     const allowedPaths = ['/degustation-vin-valais', '/cepages-valaisans'];
     if (allowedPaths.some((p) => pathnameNoLocale === p)) {
+      return intlMiddleware(request);
+    }
+    // Founder invitation links must work pre-launch (P-14 / L-154) — onboard
+    // the first wineries before the gate is lifted.
+    if (pathnameNoLocale.startsWith('/invitation/')) {
       return intlMiddleware(request);
     }
 
@@ -67,7 +103,10 @@ export default async function middleware(request: NextRequest) {
   const intlResponse = intlMiddleware(request);
 
   // If intl middleware returned a redirect (e.g., for locale detection), honor it
-  if (intlResponse.headers.get('x-middleware-rewrite') || intlResponse.status === 307) {
+  if (
+    intlResponse.headers.get('x-middleware-rewrite') ||
+    intlResponse.status === 307
+  ) {
     return intlResponse;
   }
 
@@ -75,12 +114,10 @@ export default async function middleware(request: NextRequest) {
   // Since next-auth middleware doesn't easily chain, we'll use a different approach
   // We'll check for the session token in cookies
 
-
   // Better Auth session cookie names
-  const sessionToken = request.cookies.get('better-auth.session_token')?.value ||
+  const sessionToken =
+    request.cookies.get('better-auth.session_token')?.value ||
     request.cookies.get('__Secure-better-auth.session_token')?.value;
-
-
 
   const isLoggedIn = !!sessionToken;
   const pathnameWithoutLocale = getPathnameWithoutLocale(pathname);
@@ -94,17 +131,17 @@ export default async function middleware(request: NextRequest) {
   );
   // Redirect unauthenticated users from protected routes to login
   if ((isProtectedRoute || isAdminRoute) && !isLoggedIn) {
-    const loginUrl = new URL(`/${locale}/login`, request.url);
-    loginUrl.searchParams.set('callbackUrl', pathname);
-    return NextResponse.redirect(loginUrl);
+    return redirectToLogin(request, locale, pathname);
   }
 
   // Note: Auth route access control (redirect if already logged in) is handled
   // server-side in (auth)/layout.tsx via session validation, not cookie presence.
   // This avoids redirect loops when session cookies are expired but still present.
 
-  // Note: Admin role check requires session data which needs server-side check
-  // This will be handled in the admin layout for now
+  // /admin role enforcement lives in admin/layout.tsx (auth() + role +
+  // suspension → notFound()). The middleware used to duplicate it with an
+  // Edge→Node fetch per navigation — removed in P-06 (L-212): the cookie
+  // presence check above still short-circuits anonymous visitors.
 
   return intlResponse;
 }

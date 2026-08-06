@@ -8,12 +8,13 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
+        // /coming-soon: pre-launch gate page — never index (P-16 / WS-H)
         disallow: [
           '/api/',
           '/dashboard/',
           '/admin/',
           '/_next/',
-          '/checkout/',
+          '/coming-soon',
         ],
       },
     ],

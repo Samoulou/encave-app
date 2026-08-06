@@ -134,8 +134,10 @@ describe('Payment Service', () => {
       expect(mockAccountsCreate).not.toHaveBeenCalled();
       expect(mockAccountLinksCreate).toHaveBeenCalledWith({
         account: 'acct_existing',
-        refresh_url: 'https://test.example.com/dashboard/stripe/callback?refresh=true',
-        return_url: 'https://test.example.com/dashboard/stripe/callback?success=true',
+        refresh_url:
+          'https://test.example.com/dashboard/stripe/callback?refresh=true',
+        return_url:
+          'https://test.example.com/dashboard/stripe/callback?success=true',
         type: 'account_onboarding',
       });
     });
@@ -307,7 +309,8 @@ describe('Payment Service', () => {
 
       expect(result).toEqual({
         canPublish: false,
-        reason: 'Payment setup required. Connect your Stripe account to publish.',
+        reason:
+          'Payment setup required. Connect your Stripe account to publish.',
       });
     });
 
@@ -368,10 +371,38 @@ describe('Payment Service', () => {
         amount: 20000,
       });
       expect(mockCheckoutSessionsRetrieve).toHaveBeenCalledWith('cs_test123');
-      expect(mockRefundsCreate).toHaveBeenCalledWith({
-        payment_intent: 'pi_test456',
-        refund_application_fee: true,
+      expect(mockRefundsCreate).toHaveBeenCalledWith(
+        {
+          payment_intent: 'pi_test456',
+          reverse_transfer: true,
+          refund_application_fee: true,
+        },
+        undefined
+      );
+    });
+
+    it('processes refund directly from a payment intent ID', async () => {
+      mockRefundsCreate.mockResolvedValue({
+        id: 're_test789',
+        amount: 20000,
+        status: 'succeeded',
       });
+
+      const result = await processRefund('pi_test456', true);
+
+      expect(result).toEqual({
+        refundId: 're_test789',
+        amount: 20000,
+      });
+      expect(mockCheckoutSessionsRetrieve).not.toHaveBeenCalled();
+      expect(mockRefundsCreate).toHaveBeenCalledWith(
+        {
+          payment_intent: 'pi_test456',
+          reverse_transfer: true,
+          refund_application_fee: true,
+        },
+        undefined
+      );
     });
 
     it('processes refund without application fee refund', async () => {
@@ -386,10 +417,14 @@ describe('Payment Service', () => {
 
       await processRefund('cs_test123', false);
 
-      expect(mockRefundsCreate).toHaveBeenCalledWith({
-        payment_intent: 'pi_test456',
-        refund_application_fee: false,
-      });
+      expect(mockRefundsCreate).toHaveBeenCalledWith(
+        {
+          payment_intent: 'pi_test456',
+          reverse_transfer: true,
+          refund_application_fee: false,
+        },
+        undefined
+      );
     });
 
     it('defaults to refunding application fee', async () => {
@@ -404,10 +439,14 @@ describe('Payment Service', () => {
 
       await processRefund('cs_test123');
 
-      expect(mockRefundsCreate).toHaveBeenCalledWith({
-        payment_intent: 'pi_test456',
-        refund_application_fee: true,
-      });
+      expect(mockRefundsCreate).toHaveBeenCalledWith(
+        {
+          payment_intent: 'pi_test456',
+          reverse_transfer: true,
+          refund_application_fee: true,
+        },
+        undefined
+      );
     });
 
     it('throws error when session has no payment intent', async () => {
@@ -439,13 +478,25 @@ describe('Payment Service', () => {
       });
       mockRefundsCreate.mockRejectedValue(new Error('Insufficient funds'));
 
-      await expect(processRefund('cs_test123')).rejects.toThrow('Insufficient funds');
+      await expect(processRefund('cs_test123')).rejects.toThrow(
+        'Insufficient funds'
+      );
     });
 
     it('propagates Stripe session retrieve errors', async () => {
-      mockCheckoutSessionsRetrieve.mockRejectedValue(new Error('Session not found'));
+      mockCheckoutSessionsRetrieve.mockRejectedValue(
+        new Error('Session not found')
+      );
 
-      await expect(processRefund('cs_invalid')).rejects.toThrow('Session not found');
+      await expect(processRefund('cs_invalid')).rejects.toThrow(
+        'Session not found'
+      );
+    });
+
+    it('rejects unsupported Stripe identifiers', async () => {
+      await expect(processRefund('ch_invalid')).rejects.toThrow(
+        'Invalid Stripe payment intent ID'
+      );
     });
   });
 });

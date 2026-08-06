@@ -1,0 +1,50 @@
+[
+  {
+    "name": "minScore",
+    "expected": 0.95,
+    "actual": 0.61,
+    "values": [
+      0.61,
+      0.61,
+      0.6
+    ],
+    "operator": ">=",
+    "passed": false,
+    "auditProperty": "performance",
+    "auditId": "categories",
+    "level": "warn",
+    "url": "http://localhost:3000/fr"
+  },
+  {
+    "name": "minScore",
+    "expected": 0.95,
+    "actual": 0.65,
+    "values": [
+      0.63,
+      0.65,
+      0.63
+    ],
+    "operator": ">=",
+    "passed": false,
+    "auditProperty": "performance",
+    "auditId": "categories",
+    "level": "warn",
+    "url": "http://localhost:3000/fr/experiences"
+  },
+  {
+    "name": "minScore",
+    "expected": 0.95,
+    "actual": 0.5,
+    "values": [
+      0.46,
+      0.5,
+      0.5
+    ],
+    "operator": ">=",
+    "passed": false,
+    "auditProperty": "performance",
+    "auditId": "categories",
+    "level": "warn",
+    "url": "http://localhost:3000/fr/experiences/wine-tasting-test"
+  }
+]

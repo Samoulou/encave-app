@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { formatCHF } from '@/lib/utils/currency';
+import { cn } from '@/lib/utils';
 import { MobileBookingDrawer } from './MobileBookingDrawer';
 
 interface AvailabilitySlot {
@@ -22,6 +23,13 @@ interface MobileBookingBarProps {
   maxCapacity: number;
   duration: number;
   availabilitySlots?: AvailabilitySlot[];
+  /**
+   * "YYYY-MM-DD" keys of bookable occurrences (P-05) — enables punctual
+   * dates that no weekly slot covers. Server-computed with dateKeyOf.
+   */
+  occurrenceDateKeys?: string[];
+  /** Client booking fee per ticket in cents — 0 when BOOKING_FEE is OFF. */
+  serviceFeeCentsPerGuest?: number;
 }
 
 export function MobileBookingBar({
@@ -33,33 +41,68 @@ export function MobileBookingBar({
   maxCapacity,
   duration,
   availabilitySlots = [],
+  occurrenceDateKeys = [],
+  serviceFeeCentsPerGuest = 0,
 }: MobileBookingBarProps) {
   const t = useTranslations('booking');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const [hasFocusedInput, setHasFocusedInput] = useState(false);
   const isBookingEnabled = stripeConnected;
+
+  useEffect(() => {
+    const updateVisibility = () => {
+      setIsVisible(window.scrollY > 420);
+      const activeElement = document.activeElement;
+      setHasFocusedInput(
+        activeElement instanceof HTMLInputElement ||
+          activeElement instanceof HTMLTextAreaElement ||
+          activeElement instanceof HTMLSelectElement
+      );
+    };
+
+    updateVisibility();
+    window.addEventListener('scroll', updateVisibility, { passive: true });
+    window.addEventListener('resize', updateVisibility);
+    window.addEventListener('focusin', updateVisibility);
+    window.addEventListener('focusout', updateVisibility);
+    return () => {
+      window.removeEventListener('scroll', updateVisibility);
+      window.removeEventListener('resize', updateVisibility);
+      window.removeEventListener('focusin', updateVisibility);
+      window.removeEventListener('focusout', updateVisibility);
+    };
+  }, []);
 
   return (
     <>
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-warm-xl z-40">
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
+      <div
+        className={cn(
+          'fixed bottom-0 left-0 right-0 z-40 translate-y-full border-t border-border bg-white p-4 opacity-0 shadow-warm-xl transition duration-200 ease-out lg:hidden',
+          'pb-[calc(1rem+env(safe-area-inset-bottom))]',
+          isVisible && !hasFocusedInput && 'translate-y-0 opacity-100'
+        )}
+        aria-hidden={!isVisible || hasFocusedInput}
+      >
+        <div className="mx-auto flex max-w-7xl items-center justify-between">
           <div>
             <span className="text-lg font-bold text-foreground">
               {formatCHF(price)}
             </span>
-            <span className="text-sm text-gray-500 ml-1">
+            <span className="ml-1 text-sm text-muted-foreground">
               / {t('perPerson')}
             </span>
           </div>
           {isBookingEnabled ? (
             <Button
-              className="bg-primary hover:bg-primary-hover text-white font-bold px-6"
+              className="hover:bg-primary-hover bg-primary px-6 font-bold text-white"
               onClick={() => setIsDrawerOpen(true)}
             >
               {t('bookNow')}
             </Button>
           ) : (
             <Button
-              className="bg-primary text-white font-bold px-6 opacity-90"
+              className="bg-primary px-6 font-bold text-white opacity-90"
               disabled
             >
               {t('bookNow')}
@@ -73,12 +116,14 @@ export function MobileBookingBar({
           isOpen={isDrawerOpen}
           onOpenChange={setIsDrawerOpen}
           price={price}
+          serviceFeeCentsPerGuest={serviceFeeCentsPerGuest}
           experienceSlug={experienceSlug}
           experienceId={experienceId}
           minCapacity={minCapacity}
           maxCapacity={maxCapacity}
           duration={duration}
           availabilitySlots={availabilitySlots}
+          occurrenceDateKeys={occurrenceDateKeys}
         />
       )}
     </>

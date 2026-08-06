@@ -9,8 +9,14 @@ vi.mock('@/server/auth', () => ({
 // Mock db
 vi.mock('@/server/db', () => ({
   db: {
-    booking: { findFirst: vi.fn(), update: vi.fn() },
+    booking: {
+      findFirst: vi.fn(),
+      findUniqueOrThrow: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+    },
     user: { update: vi.fn() },
+    $executeRaw: vi.fn(async () => 1),
   },
 }));
 
@@ -55,11 +61,14 @@ describe('Client Actions', () => {
       name: 'Test Client',
       role: 'CLIENT',
       preferredLocale: 'FR',
+      emailVerified: true,
     },
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // The atomic cancellation claim succeeds by default.
+    vi.mocked(db.booking.updateMany).mockResolvedValue({ count: 1 } as never);
   });
 
   // ========================================
@@ -77,6 +86,10 @@ describe('Client Actions', () => {
       date: futureDate,
       timeSlot: '14:00',
       totalPrice: 10000,
+      serviceFeeCents: 0,
+      // P-16 (ADR-0003): the classic (non-gift) refund path.
+      giftAppliedCents: 0,
+      wineryPayout: 17600,
       guestCount: 4,
       reference: 'REF-123',
       stripePaymentIntentId: 'pi_test123',
@@ -84,6 +97,7 @@ describe('Client Actions', () => {
       winery: {
         name: 'Test Winery',
         email: 'winery@test.com',
+        cancellationPolicy: 'STANDARD',
         user: { name: 'Winemaker', preferredLocale: 'FR' },
       },
     };
@@ -97,6 +111,22 @@ describe('Client Actions', () => {
       if (!result.success) {
         expect(result.error.code).toBe('UNAUTHORIZED');
       }
+    });
+
+    it('returns FORBIDDEN when the email is unverified (guest-booking takeover guard)', async () => {
+      mockAuth.mockResolvedValueOnce({
+        user: { ...mockSession.user, emailVerified: false },
+      });
+
+      const result = await cancelClientBooking('booking-123');
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe('FORBIDDEN');
+        expect(result.error.message).toBe('EMAIL_NOT_VERIFIED');
+      }
+      // Must bail before matching any booking by email.
+      expect(mockDb.booking.findFirst).not.toHaveBeenCalled();
     });
 
     it('returns NOT_FOUND when booking not found', async () => {
@@ -150,8 +180,11 @@ describe('Client Actions', () => {
     it('successfully cancels with refund when >24h before', async () => {
       mockAuth.mockResolvedValueOnce(mockSession);
       mockDb.booking.findFirst.mockResolvedValueOnce(mockBooking as never);
-      mockProcessRefund.mockResolvedValueOnce({ refundId: 're_123', amount: 10000 });
-      mockDb.booking.update.mockResolvedValueOnce({
+      mockProcessRefund.mockResolvedValueOnce({
+        refundId: 're_123',
+        amount: 10000,
+      });
+      mockDb.booking.findUniqueOrThrow.mockResolvedValueOnce({
         id: 'booking-123',
         status: 'CANCELLED_BY_CLIENT',
       } as never);
@@ -198,7 +231,10 @@ describe('Client Actions', () => {
     it('returns UNAUTHORIZED when not authenticated', async () => {
       mockAuth.mockResolvedValueOnce(null);
 
-      const result = await updateClientProfile({ name: 'New Name', preferredLocale: 'EN' });
+      const result = await updateClientProfile({
+        name: 'New Name',
+        preferredLocale: 'EN',
+      });
 
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -209,7 +245,10 @@ describe('Client Actions', () => {
     it('returns VALIDATION_ERROR for empty name', async () => {
       mockAuth.mockResolvedValueOnce(mockSession);
 
-      const result = await updateClientProfile({ name: '', preferredLocale: 'FR' });
+      const result = await updateClientProfile({
+        name: '',
+        preferredLocale: 'FR',
+      });
 
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -235,7 +274,10 @@ describe('Client Actions', () => {
       mockAuth.mockResolvedValueOnce(mockSession);
       mockDb.user.update.mockResolvedValueOnce({} as never);
 
-      const result = await updateClientProfile({ name: 'New Name', preferredLocale: 'EN' });
+      const result = await updateClientProfile({
+        name: 'New Name',
+        preferredLocale: 'EN',
+      });
 
       expect(result.success).toBe(true);
       if (result.success) {
@@ -252,7 +294,10 @@ describe('Client Actions', () => {
       mockAuth.mockResolvedValueOnce(mockSession);
       mockDb.user.update.mockRejectedValueOnce(new Error('DB error'));
 
-      const result = await updateClientProfile({ name: 'New Name', preferredLocale: 'FR' });
+      const result = await updateClientProfile({
+        name: 'New Name',
+        preferredLocale: 'FR',
+      });
 
       expect(result.success).toBe(false);
       if (!result.success) {

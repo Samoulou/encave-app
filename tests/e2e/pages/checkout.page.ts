@@ -29,6 +29,8 @@ export class CheckoutPage extends BasePage {
   readonly lastNameInput: Locator;
   readonly emailInput: Locator;
   readonly phoneInput: Locator;
+  readonly ageConfirmationCheckbox: Locator;
+  readonly ageConfirmationError: Locator;
 
   // Validation errors
   readonly firstNameError: Locator;
@@ -57,8 +59,6 @@ export class CheckoutPage extends BasePage {
   // Error states
   readonly errorAlert: Locator;
   readonly missingParamsError: Locator;
-  readonly paymentCancelledAlert: Locator;
-  readonly paymentFailedAlert: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -67,8 +67,12 @@ export class CheckoutPage extends BasePage {
     this.availabilityAlert = page.getByTestId('availability-alert');
     this.availabilityVerifying = page.getByText(/verifying availability/i);
     this.availabilityError = page.getByTestId('availability-error');
-    this.capacityExceededAlert = page.getByRole('alert').filter({ hasText: /capacity.*exceeded/i });
-    this.adjustBookingLink = page.getByRole('link', { name: /adjust|change|modify/i });
+    this.capacityExceededAlert = page
+      .getByRole('alert')
+      .filter({ hasText: /capacity.*exceeded/i });
+    this.adjustBookingLink = page.getByRole('link', {
+      name: /adjust|change|modify/i,
+    });
 
     // Form
     this.form = page.getByTestId('checkout-form');
@@ -76,6 +80,8 @@ export class CheckoutPage extends BasePage {
     this.lastNameInput = page.getByLabel(/last name/i);
     this.emailInput = page.getByLabel(/email/i);
     this.phoneInput = page.getByLabel(/phone/i);
+    this.ageConfirmationCheckbox = page.getByLabel(/18 or older/i);
+    this.ageConfirmationError = page.locator('#age-confirmed-error');
 
     // Validation errors - locate by adjacent error elements
     this.firstNameError = page.locator('#firstName').locator('~ p');
@@ -103,9 +109,7 @@ export class CheckoutPage extends BasePage {
 
     // Errors
     this.errorAlert = page.getByRole('alert').filter({ hasText: /error/i });
-    this.missingParamsError = page.getByText(/missing.*required|parameters.*missing/i);
-    this.paymentCancelledAlert = page.getByRole('alert').filter({ hasText: /cancel/i });
-    this.paymentFailedAlert = page.getByRole('alert').filter({ hasText: /fail/i });
+    this.missingParamsError = page.getByTestId('missing-params-error');
   }
 
   /**
@@ -141,7 +145,9 @@ export class CheckoutPage extends BasePage {
    */
   async waitForAvailabilityCheck() {
     // Wait for verifying message to disappear
-    await this.availabilityVerifying.waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {});
+    await this.availabilityVerifying
+      .waitFor({ state: 'hidden', timeout: 15000 })
+      .catch(() => {});
   }
 
   // === FORM INTERACTIONS ===
@@ -182,6 +188,10 @@ export class CheckoutPage extends BasePage {
     await this.fillLastName(data.lastName);
     await this.fillEmail(data.email);
     await this.fillPhone(data.phone);
+  }
+
+  async confirmAge() {
+    await this.ageConfirmationCheckbox.check();
   }
 
   /**
@@ -272,8 +282,13 @@ export class CheckoutPage extends BasePage {
       (await this.hasFirstNameError()) ||
       (await this.hasLastNameError()) ||
       (await this.hasEmailError()) ||
-      (await this.hasPhoneError())
+      (await this.hasPhoneError()) ||
+      (await this.ageConfirmationError.isVisible())
     );
+  }
+
+  async hasAgeConfirmationError(): Promise<boolean> {
+    return this.ageConfirmationError.isVisible();
   }
 
   /**
@@ -285,9 +300,16 @@ export class CheckoutPage extends BasePage {
     email?: string;
     phone?: string;
   }> {
-    const errors: { firstName?: string; lastName?: string; email?: string; phone?: string } = {};
-    if (await this.hasFirstNameError()) errors.firstName = await this.getFirstNameError();
-    if (await this.hasLastNameError()) errors.lastName = await this.getLastNameError();
+    const errors: {
+      firstName?: string;
+      lastName?: string;
+      email?: string;
+      phone?: string;
+    } = {};
+    if (await this.hasFirstNameError())
+      errors.firstName = await this.getFirstNameError();
+    if (await this.hasLastNameError())
+      errors.lastName = await this.getLastNameError();
     if (await this.hasEmailError()) errors.email = await this.getEmailError();
     if (await this.hasPhoneError()) errors.phone = await this.getPhoneError();
     return errors;
@@ -373,7 +395,10 @@ export class CheckoutPage extends BasePage {
    */
   async submitPayment() {
     await this.clickPay();
-    await this.page.waitForURL(/checkout\.stripe\.com/, { timeout: 30000 });
+    await this.page.waitForURL(
+      /checkout\.stripe\.com|\/booking\/[^/]+\/confirmation/,
+      { timeout: 30000 }
+    );
   }
 
   /**
@@ -390,20 +415,6 @@ export class CheckoutPage extends BasePage {
    */
   async hasMissingParamsError(): Promise<boolean> {
     return this.missingParamsError.isVisible();
-  }
-
-  /**
-   * Check if payment cancelled alert is shown
-   */
-  async hasPaymentCancelledAlert(): Promise<boolean> {
-    return this.paymentCancelledAlert.isVisible();
-  }
-
-  /**
-   * Check if payment failed alert is shown
-   */
-  async hasPaymentFailedAlert(): Promise<boolean> {
-    return this.paymentFailedAlert.isVisible();
   }
 
   // === COMPLETE CHECKOUT FLOW ===

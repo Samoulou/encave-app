@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type Stripe from 'stripe';
+import { Prisma } from '@prisma/client';
 
 // Mock next/headers
 vi.mock('next/headers', () => ({
@@ -12,6 +13,12 @@ vi.mock('@/server/db', () => ({
     winery: {
       findUnique: vi.fn(),
       update: vi.fn(),
+    },
+    stripeEvent: {
+      create: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
     },
   },
 }));
@@ -47,13 +54,22 @@ vi.mock('stripe', () => ({
   default: vi.fn(() => mockStripeInstance),
 }));
 
+// Mock email side-effects (email #18)
+const mockSendStripeActionRequiredEmail = vi.fn();
+vi.mock('@/server/services/email.service', () => ({
+  sendStripeActionRequiredEmail: (...args: unknown[]) =>
+    mockSendStripeActionRequiredEmail(...args),
+}));
+vi.mock('@/server/services/email-log.service', () => ({
+  logEmailSent: vi.fn(),
+  logEmailFailed: vi.fn(),
+}));
+
 import { headers } from 'next/headers';
 import { db } from '@/server/db';
 
 // Import the route handler after mocks
-const { POST } = await import(
-  '@/app/api/webhooks/stripe/connect/route'
-);
+const { POST } = await import('@/app/api/webhooks/stripe/connect/route');
 
 const mockHeaders = vi.mocked(headers);
 const mockDb = vi.mocked(db);
@@ -112,6 +128,83 @@ describe('Stripe Connect Webhook Handler', () => {
     expect(data.error).toContain('Webhook Error');
   });
 
+  describe('idempotency (StripeEvent guard)', () => {
+    const duplicateEvent: Partial<Stripe.Event> = {
+      id: 'evt_dup_123',
+      type: 'account.updated',
+      data: {
+        object: {
+          id: 'acct_123',
+          details_submitted: true,
+          charges_enabled: true,
+        } as Stripe.Account,
+      },
+    };
+
+    it('skips a replayed event without touching the winery', async () => {
+      const req = createMockRequest('{}', 'valid_signature');
+      mockHeaders.mockResolvedValue(
+        createMockHeaders('valid_signature') as never
+      );
+      mockConstructEvent.mockReturnValue(duplicateEvent);
+      mockDb.stripeEvent.create.mockRejectedValue(
+        new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+          code: 'P2002',
+          clientVersion: '5.22.0',
+        })
+      );
+      mockDb.stripeEvent.findUnique.mockResolvedValue({
+        status: 'PROCESSED',
+      } as never);
+
+      const response = await POST(req);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.duplicate).toBe(true);
+      expect(mockDb.winery.findUnique).not.toHaveBeenCalled();
+      expect(mockDb.winery.update).not.toHaveBeenCalled();
+    });
+
+    it('retries an event whose previous attempt FAILED', async () => {
+      const req = createMockRequest('{}', 'valid_signature');
+      mockHeaders.mockResolvedValue(
+        createMockHeaders('valid_signature') as never
+      );
+      mockConstructEvent.mockReturnValue(duplicateEvent);
+      mockDb.stripeEvent.create.mockRejectedValue(
+        new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+          code: 'P2002',
+          clientVersion: '5.22.0',
+        })
+      );
+      mockDb.stripeEvent.findUnique.mockResolvedValue({
+        status: 'FAILED',
+      } as never);
+      mockDb.stripeEvent.updateMany.mockResolvedValue({ count: 1 } as never);
+      mockDb.winery.findUnique.mockResolvedValue({
+        id: 'winery-123',
+        slug: 'winery-slug',
+        email: 'cave@test.ch',
+        stripeActionDueHash: null,
+        stripeActionEmailAt: null,
+        user: { name: 'Vigneron Test', preferredLocale: 'FR' },
+      } as never);
+      mockDb.winery.update.mockResolvedValue({} as never);
+
+      const response = await POST(req);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.received).toBe(true);
+      expect(mockDb.winery.update).toHaveBeenCalled();
+      expect(mockDb.stripeEvent.update).toHaveBeenCalledWith({
+        where: { stripeEventId: 'evt_dup_123' },
+        data: { status: 'PROCESSED', errorMessage: null },
+      });
+    });
+  });
+
   describe('account.updated event', () => {
     const mockAccountUpdatedEvent: Partial<Stripe.Event> = {
       type: 'account.updated',
@@ -132,6 +225,11 @@ describe('Stripe Connect Webhook Handler', () => {
       mockConstructEvent.mockReturnValue(mockAccountUpdatedEvent);
       mockDb.winery.findUnique.mockResolvedValue({
         id: 'winery-123',
+        slug: 'winery-slug',
+        email: 'cave@test.ch',
+        stripeActionDueHash: null,
+        stripeActionEmailAt: null,
+        user: { name: 'Vigneron Test', preferredLocale: 'FR' },
       } as never);
       mockDb.winery.update.mockResolvedValue({} as never);
 
@@ -188,6 +286,11 @@ describe('Stripe Connect Webhook Handler', () => {
       mockConstructEvent.mockReturnValue(partialEvent);
       mockDb.winery.findUnique.mockResolvedValue({
         id: 'winery-123',
+        slug: 'winery-slug',
+        email: 'cave@test.ch',
+        stripeActionDueHash: null,
+        stripeActionEmailAt: null,
+        user: { name: 'Vigneron Test', preferredLocale: 'FR' },
       } as never);
       mockDb.winery.update.mockResolvedValue({} as never);
 
@@ -201,6 +304,108 @@ describe('Stripe Connect Webhook Handler', () => {
           stripeOnboardingComplete: false,
         },
       });
+    });
+  });
+
+  describe('email #18 — action required (P-13)', () => {
+    function eventWithDue(due: string[]): Partial<Stripe.Event> {
+      return {
+        type: 'account.updated',
+        data: {
+          object: {
+            id: 'acct_123',
+            details_submitted: true,
+            charges_enabled: false,
+            requirements: { currently_due: due },
+          } as unknown as Stripe.Account,
+        },
+      };
+    }
+
+    it('sends the email and stamps the anti-spam columns on new requirements', async () => {
+      const req = createMockRequest('{}', 'valid_signature');
+      mockHeaders.mockResolvedValue(
+        createMockHeaders('valid_signature') as never
+      );
+      mockConstructEvent.mockReturnValue(eventWithDue(['external_account']));
+      mockDb.winery.findUnique.mockResolvedValue({
+        id: 'winery-123',
+        slug: 'winery-slug',
+        email: 'cave@test.ch',
+        stripeActionDueHash: null,
+        stripeActionEmailAt: null,
+        user: { name: 'Vigneron Test', preferredLocale: 'FR' },
+      } as never);
+      mockDb.winery.update.mockResolvedValue({} as never);
+      mockSendStripeActionRequiredEmail.mockResolvedValue(true);
+
+      const response = await POST(req);
+
+      expect(response.status).toBe(200);
+      expect(mockSendStripeActionRequiredEmail).toHaveBeenCalledWith(
+        'cave@test.ch',
+        { firstName: 'Vigneron Test', currentlyDue: ['external_account'] },
+        'FR'
+      );
+      expect(mockDb.winery.update).toHaveBeenCalledWith({
+        where: { id: 'winery-123' },
+        data: {
+          stripeActionDueHash: expect.any(String),
+          stripeActionEmailAt: expect.any(Date),
+        },
+      });
+    });
+
+    it('does NOT resend for an identical list emailed recently (anti-spam)', async () => {
+      const { computeStripeDueHash } =
+        await import('@/lib/business-rules/stripe-action-email');
+      const req = createMockRequest('{}', 'valid_signature');
+      mockHeaders.mockResolvedValue(
+        createMockHeaders('valid_signature') as never
+      );
+      mockConstructEvent.mockReturnValue(eventWithDue(['external_account']));
+      mockDb.winery.findUnique.mockResolvedValue({
+        id: 'winery-123',
+        slug: 'winery-slug',
+        email: 'cave@test.ch',
+        stripeActionDueHash: computeStripeDueHash(['external_account']),
+        stripeActionEmailAt: new Date(), // just emailed
+        user: { name: 'Vigneron Test', preferredLocale: 'FR' },
+      } as never);
+      mockDb.winery.update.mockResolvedValue({} as never);
+
+      const response = await POST(req);
+
+      expect(response.status).toBe(200);
+      expect(mockSendStripeActionRequiredEmail).not.toHaveBeenCalled();
+    });
+
+    it('an email failure never fails the webhook event', async () => {
+      const req = createMockRequest('{}', 'valid_signature');
+      mockHeaders.mockResolvedValue(
+        createMockHeaders('valid_signature') as never
+      );
+      mockConstructEvent.mockReturnValue(eventWithDue(['external_account']));
+      mockDb.winery.findUnique.mockResolvedValue({
+        id: 'winery-123',
+        slug: 'winery-slug',
+        email: 'cave@test.ch',
+        stripeActionDueHash: null,
+        stripeActionEmailAt: null,
+        user: { name: 'Vigneron Test', preferredLocale: 'FR' },
+      } as never);
+      mockDb.winery.update.mockResolvedValue({} as never);
+      mockSendStripeActionRequiredEmail.mockRejectedValue(
+        new Error('resend down')
+      );
+
+      const response = await POST(req);
+
+      expect(response.status).toBe(200);
+      // Anti-spam columns untouched: next event retries the send.
+      expect(mockDb.winery.update).not.toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 'winery-123' } })
+      );
     });
   });
 
@@ -221,6 +426,11 @@ describe('Stripe Connect Webhook Handler', () => {
       mockConstructEvent.mockReturnValue(mockDeauthorizedEvent);
       mockDb.winery.findUnique.mockResolvedValue({
         id: 'winery-123',
+        slug: 'winery-slug',
+        email: 'cave@test.ch',
+        stripeActionDueHash: null,
+        stripeActionEmailAt: null,
+        user: { name: 'Vigneron Test', preferredLocale: 'FR' },
       } as never);
       mockDb.winery.update.mockResolvedValue({} as never);
 
@@ -301,6 +511,11 @@ describe('Stripe Connect Webhook Handler', () => {
       mockConstructEvent.mockReturnValue(mockEvent);
       mockDb.winery.findUnique.mockResolvedValue({
         id: 'winery-123',
+        slug: 'winery-slug',
+        email: 'cave@test.ch',
+        stripeActionDueHash: null,
+        stripeActionEmailAt: null,
+        user: { name: 'Vigneron Test', preferredLocale: 'FR' },
       } as never);
       mockDb.winery.update.mockRejectedValue(new Error('Database error'));
 

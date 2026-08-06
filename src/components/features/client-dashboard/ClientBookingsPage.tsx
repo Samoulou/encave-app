@@ -5,10 +5,16 @@ import {
   getClientUpcomingBookings,
   getClientPastBookings,
 } from '@/server/queries/client-booking.queries';
-import { ClientBookingCard } from './ClientBookingCard';
-import { ClientBookingEmptyState } from './ClientBookingEmptyState';
+import { ClientBookingsTabs } from './ClientBookingsTabs';
+import { Link } from '@/i18n/navigation';
 
-export async function ClientBookingsPage() {
+interface ClientBookingsPageProps {
+  tab?: 'upcoming' | 'past';
+}
+
+export async function ClientBookingsPage({
+  tab = 'upcoming',
+}: ClientBookingsPageProps) {
   const [session, locale, t] = await Promise.all([
     auth(),
     getLocale(),
@@ -19,6 +25,16 @@ export async function ClientBookingsPage() {
     redirect(`/${locale}/login`);
   }
 
+  // Guest bookings are attached by email alone — never expose them to an
+  // account whose email is unverified (it would leak another guest's PII).
+  if (!session.user.emailVerified) {
+    return (
+      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
+        {t('verifyEmailBanner')}
+      </div>
+    );
+  }
+
   const [upcoming, past] = await Promise.all([
     getClientUpcomingBookings(session.user.email),
     getClientPastBookings(session.user.email),
@@ -26,49 +42,28 @@ export async function ClientBookingsPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="font-display text-2xl sm:text-3xl font-bold text-foreground">
-        {t('title')}
-      </h1>
-
-      {/* Upcoming Bookings */}
-      <section>
-        <h2 className="font-display text-lg font-bold text-foreground mb-4">
-          {t('upcoming')} ({upcoming.length})
-        </h2>
-        {upcoming.length > 0 ? (
-          <div className="space-y-4">
-            {upcoming.map((booking) => (
-              <ClientBookingCard
-                key={booking.id}
-                booking={booking}
-                variant="upcoming"
-              />
-            ))}
+      <div className="flex items-end justify-between">
+        <div>
+          <div className="font-mono text-[11px] uppercase tracking-[0.16em] text-burgundy-700">
+            Compte client
           </div>
-        ) : (
-          <ClientBookingEmptyState variant="upcoming" />
-        )}
-      </section>
+          <h1 className="mt-2 font-display text-4xl font-semibold tracking-[-0.02em] text-ink-900">
+            {t('title')}
+          </h1>
+          <p className="mt-2 text-sm text-ink-500">
+            Gérez vos prochaines visites, retrouvez l’historique et repartez en
+            un clic.
+          </p>
+        </div>
+        <Link
+          href="/experiences"
+          className="hidden h-11 items-center rounded-full bg-burgundy-600 px-5 text-sm font-bold text-white lg:inline-flex"
+        >
+          Découvrir
+        </Link>
+      </div>
 
-      {/* Past Bookings */}
-      <section>
-        <h2 className="font-display text-lg font-bold text-foreground mb-4">
-          {t('past')} ({past.length})
-        </h2>
-        {past.length > 0 ? (
-          <div className="space-y-4">
-            {past.map((booking) => (
-              <ClientBookingCard
-                key={booking.id}
-                booking={booking}
-                variant="past"
-              />
-            ))}
-          </div>
-        ) : (
-          <ClientBookingEmptyState variant="past" />
-        )}
-      </section>
+      <ClientBookingsTabs upcoming={upcoming} past={past} initialTab={tab} />
     </div>
   );
 }

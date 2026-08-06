@@ -1,8 +1,11 @@
 import { useTranslations } from 'next-intl';
 import { MapPin, Phone, Mail } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { DynamicMap } from '@/components/features/map/DynamicMap';
+import type { MapWinery } from '@/components/features/map/types';
 
 interface WineryInfoCardProps {
+  winery: MapWinery;
   address: string;
   commune: string;
   phone: string;
@@ -10,40 +13,38 @@ interface WineryInfoCardProps {
 }
 
 export function WineryInfoCard({
+  winery,
   address,
   commune,
   phone,
   email,
 }: WineryInfoCardProps) {
   const t = useTranslations('confirmation');
-  const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${address}, ${commune}, Switzerland`)}`;
+  const hasCoordinates = winery.latitude != null && winery.longitude != null;
+  const googleMapsUrl = hasCoordinates
+    ? `https://www.google.com/maps/dir/?api=1&destination=${winery.latitude},${winery.longitude}`
+    : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${address}, ${commune}, Switzerland`)}`;
 
   return (
     <Card className="hover:translate-y-0 hover:shadow-card">
       <CardContent className="p-6">
-        <h3 className="text-lg font-bold text-foreground mb-4">
+        <h3 className="mb-4 text-lg font-bold text-foreground">
           {t('wineryInformation')}
         </h3>
 
-        {/* Map Placeholder */}
-        <div className="w-full aspect-[4/3] rounded-lg bg-muted overflow-hidden mb-4 relative">
-          <div
-            className="absolute inset-0 bg-cover bg-center grayscale-[20%]"
-            style={{
-              backgroundImage: `url('https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(`${address}, ${commune}, Switzerland`)}&zoom=14&size=400x300&maptype=roadmap&key=placeholder')`,
-              backgroundColor: '#e5e7eb',
-            }}
-          />
-          <div className="absolute inset-0 flex items-center justify-center bg-muted/30">
-            <div className="size-8 rounded-full bg-primary text-white flex items-center justify-center shadow-lg transform -translate-y-2">
-              <MapPin className="size-4" />
-            </div>
+        {hasCoordinates && (
+          <div className="mb-4 h-48 overflow-hidden rounded-lg border border-border">
+            <DynamicMap
+              wineries={[winery]}
+              singleWinery
+              className="h-full w-full rounded-none"
+            />
           </div>
-        </div>
+        )}
 
         <div className="space-y-4">
-          <div className="flex gap-3 items-start">
-            <MapPin className="size-5 text-primary mt-0.5 shrink-0" />
+          <div className="flex items-start gap-3">
+            <MapPin className="mt-0.5 size-5 shrink-0 text-primary" />
             <div>
               <p className="text-sm font-semibold text-foreground">
                 {t('address')}
@@ -56,30 +57,30 @@ export function WineryInfoCard({
             </div>
           </div>
 
-          <div className="flex gap-3 items-center">
-            <Phone className="size-5 text-primary shrink-0" />
+          <div className="flex items-center gap-3">
+            <Phone className="size-5 shrink-0 text-primary" />
             <div>
               <p className="text-sm font-semibold text-foreground">
                 {t('phone')}
               </p>
               <a
                 href={`tel:${phone}`}
-                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                className="text-sm text-muted-foreground transition-colors hover:text-primary"
               >
                 {phone}
               </a>
             </div>
           </div>
 
-          <div className="flex gap-3 items-center">
-            <Mail className="size-5 text-primary shrink-0" />
+          <div className="flex items-center gap-3">
+            <Mail className="size-5 shrink-0 text-primary" />
             <div>
               <p className="text-sm font-semibold text-foreground">
                 {t('email')}
               </p>
               <a
                 href={`mailto:${email}`}
-                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                className="break-all text-sm text-muted-foreground transition-colors hover:text-primary"
               >
                 {email}
               </a>
@@ -87,12 +88,12 @@ export function WineryInfoCard({
           </div>
         </div>
 
-        <div className="mt-6 pt-6 border-t border-border">
+        <div className="mt-6 border-t border-border pt-6">
           <a
             href={googleMapsUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full text-center text-sm font-semibold text-primary hover:text-[hsl(var(--primary-hover))] transition-colors block"
+            className="block w-full text-center text-sm font-semibold text-primary transition-colors hover:text-[hsl(var(--primary-hover))]"
           >
             {t('getDirections')}
           </a>

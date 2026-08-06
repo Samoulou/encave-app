@@ -8,7 +8,10 @@ import {
   renderToBuffer,
 } from '@react-pdf/renderer';
 import { format } from 'date-fns';
-import type { YearToDateSummary, Transaction } from '@/server/queries/earnings.queries';
+import type {
+  YearToDateSummary,
+  Transaction,
+} from '@/server/queries/earnings.queries';
 
 // PDF Styles
 const styles = StyleSheet.create({
@@ -248,7 +251,11 @@ function EarningsStatement({
                   {formatCHF(t.netPayout)}
                 </Text>
                 <Text style={[styles.tableCell, styles.colStatus]}>
-                  {t.status === 'paid' ? 'P' : t.status === 'pending' ? '...' : 'R'}
+                  {t.status === 'completed'
+                    ? 'C'
+                    : t.status === 'upcoming'
+                      ? '...'
+                      : 'R'}
                 </Text>
               </View>
             ))}

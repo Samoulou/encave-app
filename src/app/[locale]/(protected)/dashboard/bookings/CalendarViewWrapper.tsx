@@ -59,7 +59,7 @@ export function CalendarViewWrapper({
 
   const handleDateChange = useCallback(
     (date: Date) => {
-      const params = new URLSearchParams(searchParams.toString());
+      const params = new URLSearchParams(searchParams?.toString() ?? '');
       params.set('month', format(date, 'yyyy-MM'));
       router.push(`${pathname}?${params.toString()}`);
     },

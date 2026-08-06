@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import Image from 'next/image';
 import Link from 'next/link';
-import { format } from 'date-fns';
+import { formatDate } from '@/lib/i18n/formatters';
 import {
   Calendar,
   Clock,
@@ -17,7 +17,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { db } from '@/server/db';
 import { getBookingByToken } from '@/server/actions/booking';
 import { BookingStatus } from '@prisma/client';
 import { AddToCalendar } from '@/components/features/booking/AddToCalendar';
@@ -28,7 +27,11 @@ import { cn } from '@/lib/utils';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
   return generatePageMetadata({
     locale: locale as Locale,
@@ -43,40 +46,14 @@ interface BookingPageProps {
 }
 
 async function getBooking(id: string, token?: string) {
-  // If token provided, use token-based access
-  if (token) {
-    const result = await getBookingByToken(token);
-    if (result.success && result.data.id === id) {
-      return result.data;
-    }
+  if (!token) return null;
+
+  const result = await getBookingByToken(token);
+  if (result.success && result.data.id === id) {
+    return result.data;
   }
 
-  // Otherwise, try to get booking by ID (for logged-in users or public reference lookup)
-  const booking = await db.booking.findUnique({
-    where: { id },
-    include: {
-      experience: {
-        select: {
-          title: true,
-          slug: true,
-          duration: true,
-          coverPhoto: true,
-        },
-      },
-      winery: {
-        select: {
-          name: true,
-          slug: true,
-          address: true,
-          commune: true,
-          phone: true,
-          email: true,
-        },
-      },
-    },
-  });
-
-  return booking;
+  return null;
 }
 
 function formatTime(time: string): string {
@@ -116,8 +93,11 @@ function getStatusColor(status: BookingStatus) {
   }
 }
 
-export default async function BookingPage({ params, searchParams }: BookingPageProps) {
-  const { id } = await params;
+export default async function BookingPage({
+  params,
+  searchParams,
+}: BookingPageProps) {
+  const { id, locale } = await params;
   const { token } = await searchParams;
   const t = await getTranslations('booking');
   const tConfirmation = await getTranslations('confirmation');
@@ -136,16 +116,19 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
   return (
     <div className="container mx-auto max-w-3xl px-4 py-12">
       {/* Status Header */}
-      <div className="flex items-center gap-3 mb-8">
+      <div className="mb-8 flex items-center gap-3">
         {getStatusIcon(booking.status)}
         <div>
-          <h1 className="font-display text-2xl font-bold text-slate-900">
+          <h1 className="font-display text-2xl font-bold text-foreground">
             {t('bookingDetails')}
           </h1>
           <span
-            className={cn('inline-block mt-1 px-2 py-1 rounded-full text-xs font-medium', getStatusColor(booking.status))}
+            className={cn(
+              'mt-1 inline-block rounded-full px-2 py-1 text-xs font-medium',
+              getStatusColor(booking.status)
+            )}
           >
-            {booking.status.replace(/_/g, ' ')}
+            {t(`status.${booking.status}`)}
           </span>
         </div>
       </div>
@@ -153,15 +136,19 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
       {/* Booking Reference */}
       <Card className="mb-6">
         <CardContent className="p-6 text-center">
-          <p className="text-sm text-slate-500 mb-1">{tConfirmation('bookingReference')}</p>
-          <p className="text-2xl font-mono font-bold text-burgundy-600">{booking.reference}</p>
+          <p className="mb-1 text-sm text-muted-foreground">
+            {tConfirmation('bookingReference')}
+          </p>
+          <p className="font-mono text-2xl font-bold text-burgundy-600">
+            {booking.reference}
+          </p>
         </CardContent>
       </Card>
 
       {/* Experience Details */}
       <Card className="mb-6 overflow-hidden">
         <div className="flex flex-col sm:flex-row">
-          <div className="relative h-48 sm:h-auto sm:w-48 flex-shrink-0">
+          <div className="relative h-48 flex-shrink-0 sm:h-auto sm:w-48">
             <Image
               src={booking.experience.coverPhoto}
               alt={booking.experience.title}
@@ -170,36 +157,54 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
             />
           </div>
           <CardContent className="flex-1 p-6">
-            <h2 className="font-display text-xl font-bold text-slate-900 mb-4">
+            <h2 className="mb-4 font-display text-xl font-bold text-foreground">
               {booking.experience.title}
             </h2>
 
             <div className="space-y-3">
-              <div className="flex items-center gap-3 text-slate-600">
+              <div className="flex items-center gap-3 text-muted-foreground">
                 <Calendar className="h-5 w-5 text-burgundy-600" />
-                <span>{format(new Date(booking.date), 'EEEE, MMMM d, yyyy')}</span>
+                <span>
+                  {formatDate(new Date(booking.date), locale as Locale, {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                  })}
+                </span>
               </div>
 
-              <div className="flex items-center gap-3 text-slate-600">
+              <div className="flex items-center gap-3 text-muted-foreground">
                 <Clock className="h-5 w-5 text-burgundy-600" />
                 <span>
-                  {formatTime(booking.timeSlot)} ({booking.experience.duration} min)
+                  {formatTime(booking.timeSlot)} ({booking.experience.duration}{' '}
+                  min)
                 </span>
               </div>
 
-              <div className="flex items-center gap-3 text-slate-600">
+              <div className="flex items-center gap-3 text-muted-foreground">
                 <Users className="h-5 w-5 text-burgundy-600" />
-                <span>
-                  {booking.guestCount} {booking.guestCount === 1 ? 'guest' : 'guests'}
-                </span>
+                <span>{t('guests', { count: booking.guestCount })}</span>
               </div>
             </div>
 
-            <div className="mt-4 pt-4 border-t border-stone-200">
+            <div className="mt-4 border-t border-stone-200 pt-4">
+              {booking.serviceFeeCents > 0 && (
+                <div className="mb-2 flex items-baseline justify-between text-sm">
+                  <span className="text-slate-600">
+                    {tConfirmation('serviceFee')}
+                  </span>
+                  <span className="text-slate-600">
+                    {formatCHF(booking.serviceFeeCents)}
+                  </span>
+                </div>
+              )}
               <div className="flex items-baseline justify-between">
-                <span className="text-slate-600">{tConfirmation('totalPaid')}</span>
+                <span className="text-muted-foreground">
+                  {tConfirmation('totalPaid')}
+                </span>
                 <span className="text-xl font-bold text-burgundy-600">
-                  {formatCHF(booking.totalPrice)}
+                  {formatCHF(booking.totalPrice + booking.serviceFeeCents)}
                 </span>
               </div>
             </div>
@@ -211,7 +216,7 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
       {isConfirmed && (
         <Card className="mb-6">
           <CardContent className="p-6">
-            <h3 className="font-semibold text-slate-900 mb-4">
+            <h3 className="mb-4 font-semibold text-foreground">
               {tConfirmation('addToCalendar')}
             </h3>
             <AddToCalendar
@@ -234,13 +239,15 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
       {/* Winery Details */}
       <Card className="mb-6">
         <CardContent className="p-6">
-          <h3 className="font-semibold text-slate-900 mb-4">{tConfirmation('wineryDetails')}</h3>
+          <h3 className="mb-4 font-semibold text-foreground">
+            {tConfirmation('wineryDetails')}
+          </h3>
 
           <div className="space-y-3">
-            <p className="font-medium text-slate-900">{booking.winery.name}</p>
+            <p className="font-medium text-foreground">{booking.winery.name}</p>
 
-            <div className="flex items-start gap-3 text-slate-600">
-              <MapPin className="h-5 w-5 text-burgundy-600 flex-shrink-0 mt-0.5" />
+            <div className="flex items-start gap-3 text-muted-foreground">
+              <MapPin className="mt-0.5 h-5 w-5 flex-shrink-0 text-burgundy-600" />
               <div>
                 <p>{booking.winery.address}</p>
                 <p>{booking.winery.commune}</p>
@@ -248,7 +255,7 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
                   href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${booking.winery.address}, ${booking.winery.commune}, Switzerland`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-sm text-burgundy-600 hover:text-burgundy-700 mt-1"
+                  className="mt-1 inline-flex items-center gap-1 text-sm text-burgundy-600 hover:text-burgundy-700"
                 >
                   {tConfirmation('getDirections')}
                   <ExternalLink className="h-3 w-3" />
@@ -256,16 +263,22 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
               </div>
             </div>
 
-            <div className="flex items-center gap-3 text-slate-600">
+            <div className="flex items-center gap-3 text-muted-foreground">
               <Phone className="h-5 w-5 text-burgundy-600" />
-              <a href={`tel:${booking.winery.phone}`} className="hover:text-burgundy-600">
+              <a
+                href={`tel:${booking.winery.phone}`}
+                className="hover:text-burgundy-600"
+              >
                 {booking.winery.phone}
               </a>
             </div>
 
-            <div className="flex items-center gap-3 text-slate-600">
+            <div className="flex items-center gap-3 text-muted-foreground">
               <Mail className="h-5 w-5 text-burgundy-600" />
-              <a href={`mailto:${booking.winery.email}`} className="hover:text-burgundy-600">
+              <a
+                href={`mailto:${booking.winery.email}`}
+                className="hover:text-burgundy-600"
+              >
                 {booking.winery.email}
               </a>
             </div>
@@ -278,11 +291,7 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
         <div className="mb-8 space-y-4">
           <CancellationPolicy />
           <div className="flex justify-center">
-            <CancelBookingButton
-              bookingId={booking.id}
-              accessToken={token}
-              totalPrice={booking.totalPrice}
-            />
+            <CancelBookingButton bookingId={booking.id} accessToken={token} />
           </div>
         </div>
       )}
@@ -290,23 +299,28 @@ export default async function BookingPage({ params, searchParams }: BookingPageP
       {/* Visitor Details */}
       <Card className="mb-8">
         <CardContent className="p-6">
-          <h3 className="font-semibold text-slate-900 mb-4">{tConfirmation('yourDetails')}</h3>
-          <div className="space-y-2 text-slate-600">
+          <h3 className="mb-4 font-semibold text-foreground">
+            {tConfirmation('yourDetails')}
+          </h3>
+          <div className="space-y-2 text-muted-foreground">
             <p>
-              <span className="font-medium">{tConfirmation('name')}:</span> {booking.visitorName}
+              <span className="font-medium">{tConfirmation('name')}:</span>{' '}
+              {booking.visitorName}
             </p>
             <p>
-              <span className="font-medium">{tConfirmation('email')}:</span> {booking.visitorEmail}
+              <span className="font-medium">{tConfirmation('email')}:</span>{' '}
+              {booking.visitorEmail}
             </p>
             <p>
-              <span className="font-medium">{tConfirmation('phone')}:</span> {booking.visitorPhone}
+              <span className="font-medium">{tConfirmation('phone')}:</span>{' '}
+              {booking.visitorPhone}
             </p>
           </div>
         </CardContent>
       </Card>
 
       {/* Actions */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-center">
+      <div className="flex flex-col justify-center gap-4 sm:flex-row">
         <Button asChild variant="outline">
           <Link href={`/experiences/${booking.experience.slug}`}>
             {tConfirmation('viewExperience')}

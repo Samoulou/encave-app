@@ -22,6 +22,7 @@ import { useTranslations } from 'next-intl';
 import { WineryMediaSection } from './WineryMediaSection';
 import { WineryBasicInfoSection } from './WineryBasicInfoSection';
 import { WineryContactSection } from './WineryContactSection';
+import { WineryDomaineDetailsSection } from './WineryDomaineDetailsSection';
 
 interface GalleryImage {
   id: string;
@@ -40,6 +41,12 @@ interface WineryProfileFormProps {
     phone: string;
     coverPhoto: string | null;
     galleryImages: GalleryImage[];
+    // P-12 / L-117 — public-fiche enrichment (all optional).
+    openingHours: string | null;
+    altitude: number | null;
+    hectares: number | null;
+    familyName: string | null;
+    signatureGrapes: string[];
   };
 }
 
@@ -48,12 +55,16 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
   const t = useTranslations('winery');
   const tCommon = useTranslations('common');
   const [isSaving, setIsSaving] = useState(false);
-  const [coverPhoto, setCoverPhoto] = useState<string | null>(winery.coverPhoto);
+  const [coverPhoto, setCoverPhoto] = useState<string | null>(
+    winery.coverPhoto
+  );
   const [galleryImages, setGalleryImages] = useState<GalleryImage[]>(
     winery.galleryImages
   );
   const [isUploadingCover, setIsUploadingCover] = useState(false);
-  const [uploadingGalleryIndex, setUploadingGalleryIndex] = useState<number | null>(null);
+  const [uploadingGalleryIndex, setUploadingGalleryIndex] = useState<
+    number | null
+  >(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const form = useForm<WineryProfileInput>({
@@ -63,6 +74,11 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
       address: winery.address,
       commune: winery.commune,
       phone: winery.phone,
+      openingHours: winery.openingHours ?? '',
+      altitude: winery.altitude != null ? String(winery.altitude) : '',
+      hectares: winery.hectares != null ? String(winery.hectares) : '',
+      familyName: winery.familyName ?? '',
+      signatureGrapes: winery.signatureGrapes.join(', '),
     },
   });
 
@@ -87,28 +103,31 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [hasUnsavedChanges]);
 
-  const onSubmit = useCallback(async (data: WineryProfileInput) => {
-    setIsSaving(true);
+  const onSubmit = useCallback(
+    async (data: WineryProfileInput) => {
+      setIsSaving(true);
 
-    try {
-      const result = await updateWineryProfile(data);
+      try {
+        const result = await updateWineryProfile(data);
 
-      if (result.success) {
-        toast.success(t('profileUpdated'), {
-          description: t('changesSaved'),
-          className: 'bg-cream-50 border-gold-200',
-        });
-        setHasUnsavedChanges(false);
-        router.refresh();
-      } else {
-        toast.error(result.error.message);
+        if (result.success) {
+          toast.success(t('profileUpdated'), {
+            description: t('changesSaved'),
+            className: 'bg-cream-50 border-gold-200',
+          });
+          setHasUnsavedChanges(false);
+          router.refresh();
+        } else {
+          toast.error(result.error.message);
+        }
+      } catch {
+        toast.error(tCommon('errors.somethingWentWrong'));
+      } finally {
+        setIsSaving(false);
       }
-    } catch {
-      toast.error(tCommon('errors.somethingWentWrong'));
-    } finally {
-      setIsSaving(false);
-    }
-  }, [router, t, tCommon]);
+    },
+    [router, t, tCommon]
+  );
 
   async function handleImageUpload(file: File): Promise<string> {
     const formData = new FormData();
@@ -140,7 +159,10 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
     setIsUploadingCover(false);
   }
 
-  async function handleGalleryUpload(file: File, index: number): Promise<string> {
+  async function handleGalleryUpload(
+    file: File,
+    index: number
+  ): Promise<string> {
     setUploadingGalleryIndex(index);
     const url = await handleImageUpload(file);
 
@@ -182,30 +204,44 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
 
   return (
     <div className="space-y-10">
-      <WineryMediaSection
-        coverPhoto={coverPhoto}
-        galleryImages={galleryImages}
-        isUploadingCover={isUploadingCover}
-        uploadingGalleryIndex={uploadingGalleryIndex}
-        maxGalleryImages={maxGalleryImages}
-        onImageUpload={handleImageUpload}
-        onCoverPhotoChange={handleCoverPhotoChange}
-        onGalleryUpload={handleGalleryUpload}
-        onRemoveGalleryImage={handleRemoveGalleryImage}
-      />
+      {/* ENC-027: deep-link target for "Add photos" criterion */}
+      <div id="media" className="scroll-mt-24">
+        <WineryMediaSection
+          coverPhoto={coverPhoto}
+          galleryImages={galleryImages}
+          isUploadingCover={isUploadingCover}
+          uploadingGalleryIndex={uploadingGalleryIndex}
+          maxGalleryImages={maxGalleryImages}
+          onImageUpload={handleImageUpload}
+          onCoverPhotoChange={handleCoverPhotoChange}
+          onGalleryUpload={handleGalleryUpload}
+          onRemoveGalleryImage={handleRemoveGalleryImage}
+        />
+      </div>
 
       {/* Winery Information Section */}
       <section className="space-y-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <WineryBasicInfoSection control={form.control} />
+            {/* ENC-027: deep-link target for "Add description" criterion */}
+            <div id="description" className="scroll-mt-24">
+              <WineryBasicInfoSection control={form.control} />
+            </div>
 
             {/* Contact Details Section */}
-            <WineryContactSection control={form.control} />
+            {/* ENC-027: deep-link target for "Add address" criterion */}
+            <div id="location" className="scroll-mt-24">
+              <WineryContactSection control={form.control} />
+            </div>
+
+            {/* Domaine details — public-fiche enrichment (P-12 / L-117) */}
+            <div id="domaine-details" className="scroll-mt-24">
+              <WineryDomaineDetailsSection control={form.control} />
+            </div>
 
             {/* Save Actions */}
             <div className="flex items-center justify-between border-t border-stone-200 pt-8">
-              <div className="text-sm text-slate-500">
+              <div className="text-sm text-muted-foreground">
                 {hasUnsavedChanges && (
                   <span className="flex items-center gap-2 text-amber-600">
                     <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500" />

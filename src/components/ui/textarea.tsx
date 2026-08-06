@@ -13,7 +13,7 @@ const Textarea = React.forwardRef<
         'placeholder:text-muted-foreground',
         'hover:border-primary/50',
         'focus:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20',
-        'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-muted',
+        'disabled:cursor-not-allowed disabled:bg-muted disabled:opacity-50',
         className
       )}
       ref={ref}

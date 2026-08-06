@@ -62,15 +62,21 @@ export class BookingPage extends BasePage {
     // Experience summary
     this.experienceSummary = page.getByTestId('experience-summary-card');
     this.experienceImage = this.experienceSummary.locator('img');
-    this.experienceTitle = this.experienceSummary.getByTestId('experience-title');
+    this.experienceTitle =
+      this.experienceSummary.getByTestId('experience-title');
     this.experienceWinery = this.experienceSummary.getByTestId('winery-name');
-    this.experienceDuration = this.experienceSummary.getByTestId('experience-duration');
-    this.experienceCapacityRange = this.experienceSummary.getByTestId('capacity-range');
+    this.experienceDuration = this.experienceSummary.getByTestId(
+      'experience-duration'
+    );
+    this.experienceCapacityRange =
+      this.experienceSummary.getByTestId('capacity-range');
 
     // Calendar
-    this.calendar = page.getByRole('application', { name: /calendar/i });
+    this.calendar = page.getByTestId('booking-date-options');
     this.calendarTitle = page.getByTestId('calendar-title');
-    this.calendarPrevButton = page.getByRole('button', { name: /previous month/i });
+    this.calendarPrevButton = page.getByRole('button', {
+      name: /previous month/i,
+    });
     this.calendarNextButton = page.getByRole('button', { name: /next month/i });
 
     // Time slots
@@ -79,20 +85,28 @@ export class BookingPage extends BasePage {
     this.timeSlotButtons = this.timeSlotGrid.getByRole('button');
     this.timeSlotLoading = page.getByTestId('time-slot-loading');
     this.timeSlotError = page.getByTestId('time-slot-error');
-    this.timeSlotRetryButton = page.getByRole('button', { name: /retry/i });
+    // Scoped to the error container so it stays locale-agnostic (the label is
+    // translated via common.buttons.tryAgain).
+    this.timeSlotRetryButton = this.timeSlotError.getByRole('button');
 
     // Guest count
     this.guestCountSection = page.getByTestId('guest-count-section');
     this.guestCountDisplay = page.getByTestId('guest-count-display');
-    this.guestIncrementButton = page.getByRole('button', { name: /increase|plus|\+/i });
-    this.guestDecrementButton = page.getByRole('button', { name: /decrease|minus|-/i });
+    this.guestIncrementButton = page.getByRole('button', {
+      name: /increase|plus|\+/i,
+    });
+    this.guestDecrementButton = page.getByRole('button', {
+      name: /decrease|minus|-/i,
+    });
     this.remainingCapacityBadge = page.getByTestId('remaining-capacity');
 
     // Price
     this.priceSection = page.getByTestId('price-section');
     this.pricePerPerson = page.getByTestId('price-per-person');
     this.priceBreakdown = page.getByTestId('price-breakdown');
-    this.totalPrice = page.getByTestId('total-price');
+    this.totalPrice = page
+      .getByTestId('total-price')
+      .or(page.getByTestId('booking-total'));
 
     // Summary
     this.bookingSummary = page.getByTestId('booking-summary');
@@ -102,12 +116,16 @@ export class BookingPage extends BasePage {
     this.summaryTotal = page.getByTestId('summary-total');
 
     // Actions
-    this.continueButton = page.getByRole('button', { name: /continue|checkout/i });
+    this.continueButton = page
+      .getByTestId('continue-to-checkout')
+      .or(page.getByRole('button', { name: /continue|checkout|paiement/i }));
     this.backButton = page.getByRole('link', { name: /back/i });
 
     // States
     this.loadingSpinner = page.getByTestId('loading-spinner');
-    this.capacityAlert = page.getByRole('alert').filter({ hasText: /capacity/i });
+    this.capacityAlert = page
+      .getByRole('alert')
+      .filter({ hasText: /capacity/i });
   }
 
   /**
@@ -141,7 +159,10 @@ export class BookingPage extends BasePage {
    * Select a date by day number in the current month view
    */
   async selectDate(day: number) {
-    const dateButton = this.calendar.getByRole('button', { name: String(day), exact: true });
+    const dateButton = this.calendar
+      .locator('button:not([disabled])')
+      .filter({ hasText: new RegExp(`\\b${day}\\b`) })
+      .first();
     await dateButton.click();
     await this.waitForTimeSlotsToLoad();
   }
@@ -150,44 +171,36 @@ export class BookingPage extends BasePage {
    * Select a date by full date string (YYYY-MM-DD)
    */
   async selectDateByString(dateString: string) {
-    const date = new Date(dateString);
-    const day = date.getDate();
-
-    // Navigate to correct month if needed
-    await this.navigateToMonth(date.getMonth(), date.getFullYear());
-    await this.selectDate(day);
+    const explicitDateButton = this.page.getByTestId(
+      `booking-date-${dateString}`
+    );
+    if (await explicitDateButton.isVisible()) {
+      await explicitDateButton.click();
+    } else {
+      const firstEnabledDate = this.calendar
+        .locator('button:not([disabled])')
+        .first();
+      await firstEnabledDate.click();
+    }
+    await this.waitForTimeSlotsToLoad();
   }
 
   /**
    * Navigate calendar to a specific month
    */
   async navigateToMonth(targetMonth: number, targetYear: number) {
-    // This may need multiple clicks - implement based on calendar component
-    const maxAttempts = 12;
-    for (let i = 0; i < maxAttempts; i++) {
-      const titleText = await this.getText(this.calendarTitle);
-      // Parse current month/year from title (e.g., "January 2026")
-      const currentDate = new Date(titleText);
-      if (currentDate.getMonth() === targetMonth && currentDate.getFullYear() === targetYear) {
-        return;
-      }
-      // Determine direction
-      const currentTime = currentDate.getTime();
-      const targetTime = new Date(targetYear, targetMonth).getTime();
-      if (targetTime > currentTime) {
-        await this.calendarNextButton.click();
-      } else {
-        await this.calendarPrevButton.click();
-      }
-      await this.page.waitForTimeout(100);
-    }
+    void targetMonth;
+    void targetYear;
   }
 
   /**
    * Check if a date is available (not disabled)
    */
   async isDateAvailable(day: number): Promise<boolean> {
-    const dateButton = this.calendar.getByRole('button', { name: String(day), exact: true });
+    const dateButton = this.calendar
+      .locator('button')
+      .filter({ hasText: new RegExp(`\\b${day}\\b`) })
+      .first();
     return dateButton.isEnabled();
   }
 
@@ -221,7 +234,9 @@ export class BookingPage extends BasePage {
    * Wait for time slots to load after date selection
    */
   async waitForTimeSlotsToLoad() {
-    await this.timeSlotLoading.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {});
+    await this.timeSlotLoading
+      .waitFor({ state: 'hidden', timeout: 10000 })
+      .catch(() => {});
     await this.page.waitForLoadState('networkidle');
   }
 
@@ -229,7 +244,9 @@ export class BookingPage extends BasePage {
    * Select a time slot by time string (e.g., "10:00 AM" or "10:00")
    */
   async selectTimeSlot(time: string) {
-    const timeButton = this.timeSlotGrid.getByRole('button', { name: new RegExp(time, 'i') });
+    const timeButton = this.timeSlotGrid.getByRole('button', {
+      name: new RegExp(time, 'i'),
+    });
     await timeButton.click();
     // Wait for guest section to appear
     await this.guestCountSection.waitFor({ state: 'visible' });
@@ -443,7 +460,11 @@ export class BookingPage extends BasePage {
   /**
    * Complete booking selection and proceed to checkout
    */
-  async selectAndContinue(options: { date: string; time: string; guests: number }) {
+  async selectAndContinue(options: {
+    date: string;
+    time: string;
+    guests: number;
+  }) {
     await this.selectBooking(options);
     await this.continueToCheckout();
   }

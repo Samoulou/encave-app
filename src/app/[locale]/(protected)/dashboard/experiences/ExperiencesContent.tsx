@@ -1,5 +1,8 @@
 import { db } from '@/server/db';
-import { ExperienceFilters, type FilterStatus } from '@/components/features/experience/ExperienceFilters';
+import {
+  ExperienceFilters,
+  type FilterStatus,
+} from '@/components/features/experience/ExperienceFilters';
 import { ExperienceManagementCard } from '@/components/features/experience/ExperienceManagementCard';
 import { CreateExperienceCard } from '@/components/features/experience/CreateExperienceCard';
 import { ExperiencesPagination } from '@/components/features/experience/ExperiencesPagination';
@@ -39,9 +42,12 @@ export async function ExperiencesContent({
 }: ExperiencesContentProps) {
   const statusFilter = getStatusFilter(filter);
 
-  // Build where clause
+  // Build where clause. `isCustom: false` hides the P-10 sur-mesure holder
+  // experience — a real DRAFT row that must never appear in this management
+  // grid nor inflate the "Brouillons"/"Tous" counters.
   const where: Prisma.ExperienceWhereInput = {
     wineryId,
+    isCustom: false,
     ...(statusFilter && { status: statusFilter }),
     ...(search && {
       title: { contains: search, mode: 'insensitive' },
@@ -67,9 +73,15 @@ export async function ExperiencesContent({
         },
       }),
       db.experience.count({ where }),
-      db.experience.count({ where: { wineryId, status: 'PUBLISHED' } }),
-      db.experience.count({ where: { wineryId, status: 'DRAFT' } }),
-      db.experience.count({ where: { wineryId, status: 'ARCHIVED' } }),
+      db.experience.count({
+        where: { wineryId, isCustom: false, status: 'PUBLISHED' },
+      }),
+      db.experience.count({
+        where: { wineryId, isCustom: false, status: 'DRAFT' },
+      }),
+      db.experience.count({
+        where: { wineryId, isCustom: false, status: 'ARCHIVED' },
+      }),
     ]);
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
@@ -84,9 +96,12 @@ export async function ExperiencesContent({
       />
 
       {/* Card Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
         {experiences.map((experience) => (
-          <ExperienceManagementCard key={experience.id} experience={experience} />
+          <ExperienceManagementCard
+            key={experience.id}
+            experience={experience}
+          />
         ))}
 
         {/* Always show create card on first page when not filtering */}

@@ -1,0 +1,926 @@
+'use server';
+
+import { revalidatePath } from 'next/cache';
+import { BookingStatus, NoShowChargeStatus } from '@prisma/client';
+import { auth } from '@/server/auth';
+import { db } from '@/server/db';
+import { logError, logInfo } from '@/lib/logger';
+import { getStripe } from '@/server/stripe';
+import {
+  appendRefundError,
+  processCancellationRefund,
+} from '@/server/services/booking-refund.service';
+import { sendBookingCancelledByWineryEmail } from '@/server/services/email.service';
+import { getNearbyWineryAlternatives } from '@/server/queries/winery-alternatives.queries';
+import {
+  attendeeEmailsSchema,
+  bookingIdSchema,
+} from '@/lib/validators/eventDetail';
+import { parseTimeSlot, timeSlotSchema } from '@/lib/validators/booking';
+import { isHoldPlaceholderEmail } from '@/lib/constants/booking-hold';
+import { cancelOccurrenceForSlot } from '@/server/services/occurrence.service';
+import { refundNoShowFeeIfCharged } from '@/server/services/no-show.service';
+import { releaseGiftForBooking } from '@/server/services/giftCard-redemption.service';
+import { invalidateExperienceCaches } from '@/server/actions/experience-helpers';
+import type { ActionResult } from '@/types/actions';
+import type { BookingDTO } from '@/types/event-detail';
+import { z } from 'zod';
+
+/**
+ * Server actions for the winemaker event detail page (ENC-096).
+ *
+ * Distinct from src/server/actions/booking-dashboard.ts:
+ *  - `markBookingNoShow` here requires the session to have ENDED (defense in
+ *    depth — UI also disables it before that);
+ *  - the revert actions are the ONLY place where the booking state machine
+ *    is allowed to step backwards. Every revert is logged via Pino as
+ *    decided by Margot (2026-05-12).
+ *  - reverts are bounded to a 72h window after `session.endsAt` (Margot
+ *    decision, no Luca solicitation). Past that window we surface a typed
+ *    error code so the client can show a localised explanation.
+ */
+
+const SESSION_TIMEZONE = 'Europe/Zurich';
+const REVERT_WINDOW_MS = 72 * 60 * 60 * 1000;
+
+type BookingActionData = { booking: BookingDTO };
+
+const cancelSessionSchema = z.object({
+  experienceId: z.string().cuid(),
+  sessionId: z.string().min(6),
+  reason: z.string().trim().min(10).max(500),
+});
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+interface AuthorizedBooking {
+  id: string;
+  status: BookingStatus;
+  guestCount: number;
+  date: Date;
+  timeSlot: string;
+  noShowFeeChargeStatus: NoShowChargeStatus | null;
+  experience: {
+    id: string;
+    slug: string;
+    duration: number;
+    winery: { id: string; userId: string };
+  };
+}
+
+interface ResolvedContext {
+  userId: string;
+  booking: AuthorizedBooking;
+}
+
+/**
+ * Mirror of zonedWallClockToUTC in event-detail.queries.ts — kept local to the
+ * action layer to avoid coupling queries → actions. If this helper grows
+ * a third caller, hoist it to `src/lib/i18n/formatters.ts`.
+ */
+function zonedWallClockToUTC(date: Date, timeSlot: string): Date {
+  const { hours, minutes } = parseTimeSlot(timeSlot);
+  const wallUTC = new Date(
+    Date.UTC(
+      date.getUTCFullYear(),
+      date.getUTCMonth(),
+      date.getUTCDate(),
+      hours,
+      minutes,
+      0,
+      0
+    )
+  );
+  const fmt = new Intl.DateTimeFormat('en-CA', {
+    timeZone: SESSION_TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+    hourCycle: 'h23',
+  });
+  const parts = fmt.formatToParts(wallUTC);
+  const lookup: Record<string, string> = {};
+  for (const part of parts) {
+    if (part.type !== 'literal') {
+      lookup[part.type] = part.value;
+    }
+  }
+  const zoneAsUTC = Date.UTC(
+    Number(lookup.year),
+    Number(lookup.month) - 1,
+    Number(lookup.day),
+    Number(lookup.hour === '24' ? '0' : lookup.hour),
+    Number(lookup.minute),
+    Number(lookup.second)
+  );
+  const offsetMs = zoneAsUTC - wallUTC.getTime();
+  return new Date(wallUTC.getTime() - offsetMs);
+}
+
+function getSessionEndsAt(booking: AuthorizedBooking): Date | null {
+  if (!timeSlotSchema.safeParse(booking.timeSlot).success) return null;
+  const startsAt = zonedWallClockToUTC(booking.date, booking.timeSlot);
+  return new Date(startsAt.getTime() + booking.experience.duration * 60_000);
+}
+
+async function resolveContext(
+  bookingId: string
+): Promise<ActionResult<ResolvedContext>> {
+  const session = await auth();
+  if (!session?.user) {
+    return {
+      success: false,
+      error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
+    };
+  }
+
+  const booking = await db.booking.findUnique({
+    where: { id: bookingId },
+    select: {
+      id: true,
+      status: true,
+      guestCount: true,
+      date: true,
+      timeSlot: true,
+      noShowFeeChargeStatus: true,
+      experience: {
+        select: {
+          id: true,
+          slug: true,
+          duration: true,
+          winery: { select: { id: true, userId: true } },
+        },
+      },
+    },
+  });
+
+  if (!booking) {
+    return {
+      success: false,
+      error: { code: 'NOT_FOUND', message: 'Booking not found' },
+    };
+  }
+
+  if (booking.experience.winery.userId !== session.user.id) {
+    return {
+      success: false,
+      error: { code: 'FORBIDDEN', message: 'Not the owner of this booking' },
+    };
+  }
+
+  return {
+    success: true,
+    data: { userId: session.user.id, booking },
+  };
+}
+
+/**
+ * Cache invalidation after a booking mutation on the event-detail page.
+ *
+ * The event-detail query uses React.cache only (request-level dedup), so no
+ * persistent tag to invalidate here. We still bump the Next router cache for
+ * the bookings dashboard so list + calendar views refresh on next navigation.
+ */
+function invalidate(_experienceSlug: string): void {
+  revalidatePath('/dashboard/bookings');
+}
+
+async function loadBookingDTO(bookingId: string): Promise<BookingDTO | null> {
+  const fresh = await db.booking.findUnique({
+    where: { id: bookingId },
+    select: {
+      id: true,
+      reference: true,
+      visitorName: true,
+      visitorEmail: true,
+      guestCount: true,
+      status: true,
+      checkedInAt: true,
+      createdAt: true,
+    },
+  });
+  return fresh satisfies BookingDTO | null;
+}
+
+/**
+ * Manually mark a CONFIRMED booking as checked-in (COMPLETED).
+ * Used when the encaveur scans nothing and ticks the guest off the list.
+ */
+export async function markBookingCheckedIn(
+  input: unknown
+): Promise<ActionResult<BookingActionData>> {
+  const parsed = bookingIdSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: 'Invalid booking id' },
+    };
+  }
+
+  const ctx = await resolveContext(parsed.data.bookingId);
+  if (!ctx.success) return ctx;
+  const { booking, userId } = ctx.data;
+
+  if (booking.status !== BookingStatus.CONFIRMED) {
+    return {
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: 'Only confirmed bookings can be checked in',
+      },
+    };
+  }
+
+  try {
+    // Atomic CAS: only check in a booking STILL confirmed. A concurrent
+    // no-show mark or scan from another device must not be clobbered.
+    const claimed = await db.booking.updateMany({
+      where: { id: booking.id, status: BookingStatus.CONFIRMED },
+      data: {
+        status: BookingStatus.COMPLETED,
+        checkedInAt: new Date(),
+      },
+    });
+
+    if (claimed.count === 0) {
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'BOOKING_ALREADY_TRANSITIONED',
+        },
+      };
+    }
+
+    invalidate(booking.experience.slug);
+
+    const dto = await loadBookingDTO(booking.id);
+    if (!dto) {
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Booking not found after update' },
+      };
+    }
+
+    return { success: true, data: { booking: dto } };
+  } catch (error) {
+    logError('markBookingCheckedIn failed', error, {
+      action: 'markBookingCheckedIn',
+      bookingId: booking.id,
+      userId,
+    });
+    return {
+      success: false,
+      error: { code: 'INTERNAL_ERROR', message: 'Failed to check in booking' },
+    };
+  }
+}
+
+/**
+ * Mark a CONFIRMED booking as NO_SHOW. Requires the session to have ended
+ * (defense in depth: the UI also disables the action until `endsAt <= now`).
+ */
+export async function markBookingNoShow(
+  input: unknown
+): Promise<ActionResult<BookingActionData>> {
+  const parsed = bookingIdSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: 'Invalid booking id' },
+    };
+  }
+
+  const ctx = await resolveContext(parsed.data.bookingId);
+  if (!ctx.success) return ctx;
+  const { booking, userId } = ctx.data;
+
+  if (booking.status !== BookingStatus.CONFIRMED) {
+    return {
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: 'Only confirmed bookings can be marked as no-show',
+      },
+    };
+  }
+
+  const endsAt = getSessionEndsAt(booking);
+  if (!endsAt || endsAt.getTime() > Date.now()) {
+    return {
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: 'SESSION_NOT_ENDED',
+      },
+    };
+  }
+
+  try {
+    // Atomic CAS: only mark no-show a booking STILL confirmed. A concurrent
+    // check-in (CONFIRMED → COMPLETED) from another device must win.
+    const claimed = await db.booking.updateMany({
+      where: { id: booking.id, status: BookingStatus.CONFIRMED },
+      data: { status: BookingStatus.NO_SHOW },
+    });
+
+    if (claimed.count === 0) {
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'BOOKING_ALREADY_TRANSITIONED',
+        },
+      };
+    }
+
+    invalidate(booking.experience.slug);
+
+    const dto = await loadBookingDTO(booking.id);
+    if (!dto) {
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Booking not found after update' },
+      };
+    }
+
+    return { success: true, data: { booking: dto } };
+  } catch (error) {
+    logError('markBookingNoShow failed', error, {
+      action: 'markBookingNoShow',
+      bookingId: booking.id,
+      userId,
+    });
+    return {
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to mark booking as no-show',
+      },
+    };
+  }
+}
+
+/**
+ * Reject a revert request issued more than 72h after the session ended.
+ * Margot decision (2026-05-12): no operational latitude past this window.
+ */
+function checkRevertWindow(
+  booking: AuthorizedBooking
+): ActionResult<undefined> {
+  const endsAt = getSessionEndsAt(booking);
+  if (!endsAt) {
+    return {
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: 'REVERT_WINDOW_EXPIRED',
+      },
+    };
+  }
+  if (endsAt.getTime() + REVERT_WINDOW_MS < Date.now()) {
+    return {
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: 'REVERT_WINDOW_EXPIRED',
+      },
+    };
+  }
+  return { success: true, data: undefined };
+}
+
+/**
+ * Revert a COMPLETED booking back to CONFIRMED (operational fix).
+ * Logged with Pino as decided by Margot (2026-05-12).
+ */
+export async function revertBookingCheckIn(
+  input: unknown
+): Promise<ActionResult<BookingActionData>> {
+  const parsed = bookingIdSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: 'Invalid booking id' },
+    };
+  }
+
+  const ctx = await resolveContext(parsed.data.bookingId);
+  if (!ctx.success) return ctx;
+  const { booking, userId } = ctx.data;
+
+  if (booking.status !== BookingStatus.COMPLETED) {
+    return {
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: 'Only completed bookings can have their check-in reverted',
+      },
+    };
+  }
+
+  const windowCheck = checkRevertWindow(booking);
+  if (!windowCheck.success) return windowCheck;
+
+  try {
+    await db.booking.update({
+      where: { id: booking.id },
+      data: {
+        status: BookingStatus.CONFIRMED,
+        checkedInAt: null,
+      },
+    });
+
+    logInfo('booking.revert.checkin', {
+      bookingId: booking.id,
+      actorId: userId,
+      from: BookingStatus.COMPLETED,
+      to: BookingStatus.CONFIRMED,
+    });
+
+    invalidate(booking.experience.slug);
+
+    const dto = await loadBookingDTO(booking.id);
+    if (!dto) {
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Booking not found after update' },
+      };
+    }
+
+    return { success: true, data: { booking: dto } };
+  } catch (error) {
+    logError('revertBookingCheckIn failed', error, {
+      action: 'revertBookingCheckIn',
+      bookingId: booking.id,
+      userId,
+    });
+    return {
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to revert check-in',
+      },
+    };
+  }
+}
+
+/**
+ * Revert a NO_SHOW booking back to CONFIRMED (operational fix).
+ * Logged with Pino as decided by Margot (2026-05-12).
+ */
+export async function revertBookingNoShow(
+  input: unknown
+): Promise<ActionResult<BookingActionData>> {
+  const parsed = bookingIdSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: 'Invalid booking id' },
+    };
+  }
+
+  const ctx = await resolveContext(parsed.data.bookingId);
+  if (!ctx.success) return ctx;
+  const { booking, userId } = ctx.data;
+
+  if (booking.status !== BookingStatus.NO_SHOW) {
+    return {
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: 'Only no-show bookings can have their no-show reverted',
+      },
+    };
+  }
+
+  const windowCheck = checkRevertWindow(booking);
+  if (!windowCheck.success) return windowCheck;
+
+  // A no-show fee charge in flight (PENDING) is invisible to the refund helper
+  // below (it only refunds CHARGED). Block the revert until the charge settles
+  // to CHARGED/FAILED, so we never confirm a booking whose card is about to be
+  // debited with no refund path left (the exact charge/revert race).
+  if (booking.noShowFeeChargeStatus === NoShowChargeStatus.PENDING) {
+    return {
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: 'NO_SHOW_FEE_CHARGE_IN_PROGRESS',
+      },
+    };
+  }
+
+  // P-08 (D2): a reverted no-show is no longer a no-show — if the fee was
+  // charged, refund it BEFORE flipping the status. If Stripe can't return the
+  // money, abort the revert so the client isn't left charged for a non-no-show.
+  try {
+    await refundNoShowFeeIfCharged(booking.id);
+  } catch (error) {
+    logError('revertBookingNoShow: no-show fee refund failed', error, {
+      action: 'revertBookingNoShow',
+      bookingId: booking.id,
+      userId,
+    });
+    return {
+      success: false,
+      error: {
+        code: 'STRIPE_ERROR',
+        message: 'Could not refund the no-show fee — revert aborted',
+      },
+    };
+  }
+
+  try {
+    // CAS: only revert a booking STILL marked NO_SHOW.
+    const reverted = await db.booking.updateMany({
+      where: { id: booking.id, status: BookingStatus.NO_SHOW },
+      data: { status: BookingStatus.CONFIRMED },
+    });
+
+    if (reverted.count === 0) {
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'BOOKING_ALREADY_TRANSITIONED',
+        },
+      };
+    }
+
+    logInfo('booking.revert.noshow', {
+      bookingId: booking.id,
+      actorId: userId,
+      from: BookingStatus.NO_SHOW,
+      to: BookingStatus.CONFIRMED,
+    });
+
+    invalidate(booking.experience.slug);
+
+    const dto = await loadBookingDTO(booking.id);
+    if (!dto) {
+      return {
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Booking not found after update' },
+      };
+    }
+
+    return { success: true, data: { booking: dto } };
+  } catch (error) {
+    logError('revertBookingNoShow failed', error, {
+      action: 'revertBookingNoShow',
+      bookingId: booking.id,
+      userId,
+    });
+    return {
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to revert no-show',
+      },
+    };
+  }
+}
+
+export async function cancelEventSession(
+  input: unknown
+): Promise<
+  ActionResult<{ cancelled: number; refunded: number; failed: number }>
+> {
+  const parsed = cancelSessionSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: 'Invalid cancellation input',
+      },
+    };
+  }
+
+  const session = await auth();
+  if (!session?.user) {
+    return {
+      success: false,
+      error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
+    };
+  }
+
+  const [dateKey, timeSlot] = parsed.data.sessionId.split('|');
+  if (!dateKey || !timeSlot || !timeSlotSchema.safeParse(timeSlot).success) {
+    return {
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: 'Invalid session id' },
+    };
+  }
+
+  const experience = await db.experience.findUnique({
+    where: { id: parsed.data.experienceId },
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      duration: true,
+      winery: {
+        select: {
+          id: true,
+          userId: true,
+          name: true,
+          user: { select: { preferredLocale: true } },
+        },
+      },
+    },
+  });
+
+  if (!experience) {
+    return {
+      success: false,
+      error: { code: 'NOT_FOUND', message: 'Experience not found' },
+    };
+  }
+  if (experience.winery.userId !== session.user.id) {
+    return {
+      success: false,
+      error: { code: 'FORBIDDEN', message: 'Not the owner of this session' },
+    };
+  }
+
+  const date = new Date(`${dateKey}T00:00:00.000Z`);
+  const bookings = await db.booking.findMany({
+    where: {
+      experienceId: experience.id,
+      date,
+      timeSlot,
+      status: { in: [BookingStatus.CONFIRMED, BookingStatus.PENDING_PAYMENT] },
+    },
+    select: {
+      id: true,
+      reference: true,
+      visitorEmail: true,
+      visitorName: true,
+      guestCount: true,
+      totalPrice: true,
+      serviceFeeCents: true,
+      status: true,
+      locale: true,
+      stripeCheckoutSessionId: true,
+      stripePaymentIntentId: true,
+      // P-16 (ADR-0003, review #120): gift-funded bookings refund in three
+      // movements — this path must not pretend a card refund happened.
+      giftAppliedCents: true,
+      wineryPayout: true,
+      refundAmount: true,
+    },
+  });
+
+  let cancelled = 0;
+  let refunded = 0;
+  let failed = 0;
+  const startsAt = zonedWallClockToUTC(date, timeSlot);
+  // 3 nearby publicly-visible wineries to offer as alternatives (#5); the
+  // list is locale-agnostic, the email builds each URL with the guest locale.
+  const alternatives = await getNearbyWineryAlternatives(experience.winery.id, {
+    limit: 3,
+  });
+
+  for (const booking of bookings) {
+    try {
+      // Unclaimed hold (P-04 / L-050): placeholder visitor, no Stripe
+      // session — not a real booking. Delete it silently; emailing the
+      // sentinel address would bounce, and a CANCELLED_BY_WINERY row
+      // would pollute the winery's cancellation history.
+      if (
+        isHoldPlaceholderEmail(booking.visitorEmail) &&
+        !booking.stripeCheckoutSessionId
+      ) {
+        await db.booking.deleteMany({
+          where: {
+            id: booking.id,
+            status: BookingStatus.PENDING_PAYMENT,
+            stripeCheckoutSessionId: null,
+          },
+        });
+        continue;
+      }
+
+      // Atomic claim FIRST (review #120 sweep, mirrors cancelBooking): the
+      // bookings were read once before the loop — a concurrent client
+      // cancellation must be neither double-refunded nor have its
+      // CANCELLED_BY_CLIENT overwritten (forbidden transition). Losing the
+      // claim = someone else already handled (and emailed) this booking.
+      // Unlike the client path there is no claim-release on refund error:
+      // the session IS cancelled — a failed refund leaves the booking
+      // CANCELLED with an appended refundError for reconciliation.
+      const claimed = await db.booking.updateMany({
+        where: { id: booking.id, status: booking.status },
+        data: {
+          status: BookingStatus.CANCELLED_BY_WINERY,
+          cancelledAt: new Date(),
+          cancellationReason: parsed.data.reason,
+        },
+      });
+      if (claimed.count === 0) continue;
+
+      // Winery-initiated cancellation refunds everything the client paid
+      // — tickets AND service fee (D2). Routed through the gift-aware
+      // orchestrator (P-16 / ADR-0003, review #120): the old direct
+      // refunds.create pretended a card refund on gift-funded bookings
+      // (card=0 → nothing moved; gift+card → Stripe 400 on the platform
+      // charge) and never restored the gift nor reversed the transfer.
+      let stripeRefundId: string | null = null;
+      let totalReturnedCents = 0;
+      let freshRefundAmount: number | null = booking.refundAmount;
+      if (booking.status === BookingStatus.CONFIRMED) {
+        // Fresh refund base — the pre-loop snapshot may predate a
+        // concurrent admin refund (review #120 sweep).
+        const fresh = await db.booking.findUnique({
+          where: { id: booking.id },
+          select: { refundAmount: true },
+        });
+        freshRefundAmount = fresh?.refundAmount ?? null;
+        const alreadyRefundedCents = freshRefundAmount ?? 0;
+        const paidCents = booking.totalPrice + booking.serviceFeeCents;
+        const outcome = await processCancellationRefund({
+          bookingId: booking.id,
+          stripePaymentIntentId: booking.stripePaymentIntentId,
+          giftAppliedCents: booking.giftAppliedCents,
+          wineryPayout: booking.wineryPayout,
+          refundDueCents: Math.max(0, paidCents - alreadyRefundedCents),
+          alreadyRefundedCents,
+          paidCents,
+          // 100% refund → full winery clawback.
+          reversalCents: booking.wineryPayout,
+          actionName: 'cancelEventSession',
+        });
+        stripeRefundId = outcome.stripeRefundId;
+        totalReturnedCents = outcome.totalReturnedCents;
+        refunded += totalReturnedCents;
+      }
+
+      if (
+        booking.status === BookingStatus.PENDING_PAYMENT &&
+        booking.stripeCheckoutSessionId?.startsWith('cs_')
+      ) {
+        await getStripe()
+          .checkout.sessions.expire(booking.stripeCheckoutSessionId)
+          .catch(() => undefined);
+      }
+
+      // Return any gift-card funds reserved on a pending booking we just
+      // cancelled. Neither the expiry webhook nor the expire-cron will (the
+      // claim above already moved the booking off PENDING_PAYMENT), so this
+      // is the only path left. Idempotent, no-op without a gift.
+      if (booking.status === BookingStatus.PENDING_PAYMENT) {
+        await releaseGiftForBooking(booking.id);
+      }
+
+      // Record what was actually returned (card + gift), never a claim —
+      // conditional on the refundAmount we READ (same ledger guard as the
+      // sibling cancellation actions).
+      if (totalReturnedCents > 0) {
+        const recorded = await db.booking.updateMany({
+          where: { id: booking.id, refundAmount: freshRefundAmount },
+          data: {
+            refundIssued: true,
+            refundAmount: (freshRefundAmount ?? 0) + totalReturnedCents,
+            ...(stripeRefundId ? { stripeRefundId } : {}),
+          },
+        });
+        if (recorded.count === 0) {
+          await appendRefundError(
+            booking.id,
+            `LEDGER_CONFLICT: session cancellation returned ${totalReturnedCents} (${stripeRefundId ?? 'gift only'}) concurrently with another refund writer — reconcile with Stripe`
+          );
+        }
+      }
+
+      await sendBookingCancelledByWineryEmail(
+        booking.visitorEmail,
+        {
+          guestName: booking.visitorName,
+          winemakerName: experience.winery.name,
+          experienceTitle: experience.title,
+          date: startsAt,
+          amountCents: totalReturnedCents,
+          reason: parsed.data.reason,
+          alternatives,
+        },
+        // Client email in the guest's own locale, not the winemaker's.
+        booking.locale
+      );
+      cancelled++;
+    } catch (error) {
+      failed++;
+      // Appended, never overwritten — the orchestrator may have just
+      // written GIFT_* reconciliation markers (review #120).
+      await appendRefundError(booking.id, String(error));
+      logError('cancelEventSession booking failed', error, {
+        action: 'cancelEventSession',
+        bookingId: booking.id,
+      });
+    }
+  }
+
+  // The cancelled session must stop selling instantly (P-05): mark the
+  // backing occurrence CANCELLED (terminal — an active weekly slot would
+  // otherwise re-materialize an OPEN row at the next hold). Best-effort:
+  // refunds already ran, a failure here must not flip the result.
+  try {
+    await cancelOccurrenceForSlot(experience.id, date, timeSlot);
+  } catch (error) {
+    logError('cancelEventSession: occurrence cancel failed', error, {
+      action: 'cancelEventSession',
+      experienceId: experience.id,
+      sessionId: parsed.data.sessionId,
+    });
+  }
+
+  logInfo('winery.session.cancelled', {
+    experienceId: experience.id,
+    sessionId: parsed.data.sessionId,
+    bookingsCount: bookings.length,
+    totalRefundedCents: refunded,
+    failed,
+  });
+  invalidate(experience.slug);
+  // The cancelled session must also drop out of the PUBLIC ISR surfaces
+  // (catalogue/fiche via the 'experiences' tag), not just the dashboard
+  // router cache — otherwise search/fiche keep advertising it until the TTL.
+  invalidateExperienceCaches();
+
+  return {
+    success: true,
+    data: { cancelled, refunded, failed },
+  };
+}
+
+export async function getAttendeeEmailsForSession(
+  input: unknown
+): Promise<ActionResult<{ emails: string[]; to: string }>> {
+  const parsed = attendeeEmailsSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: 'Invalid session input' },
+    };
+  }
+
+  const session = await auth();
+  if (!session?.user) {
+    return {
+      success: false,
+      error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
+    };
+  }
+
+  const [dateKey, timeSlot] = parsed.data.sessionId.split('|');
+  if (!dateKey || !timeSlot || !timeSlotSchema.safeParse(timeSlot).success) {
+    return {
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: 'Invalid session id' },
+    };
+  }
+
+  const experience = await db.experience.findFirst({
+    where: {
+      id: parsed.data.experienceId,
+      winery: { userId: session.user.id },
+    },
+    select: { id: true },
+  });
+
+  if (!experience) {
+    return {
+      success: false,
+      error: { code: 'NOT_FOUND', message: 'Experience not found' },
+    };
+  }
+
+  const bookings = await db.booking.findMany({
+    where: {
+      experienceId: parsed.data.experienceId,
+      date: new Date(`${dateKey}T00:00:00.000Z`),
+      timeSlot,
+      status: BookingStatus.CONFIRMED,
+    },
+    select: { visitorEmail: true },
+    orderBy: { visitorEmail: 'asc' },
+  });
+
+  const emails = Array.from(
+    new Set(
+      bookings
+        .map((booking) => booking.visitorEmail.trim().toLowerCase())
+        .filter((email) => EMAIL_PATTERN.test(email))
+    )
+  );
+
+  return {
+    success: true,
+    data: { emails, to: session.user.email },
+  };
+}

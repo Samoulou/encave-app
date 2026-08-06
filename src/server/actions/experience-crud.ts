@@ -7,9 +7,13 @@ import {
   type CreateExperienceInput,
 } from '@/lib/validators/experience';
 import { generateSlug, ensureUniqueSlug } from '@/lib/utils/slug';
+import { activeCapacityBookingWhere } from '@/lib/business-rules/capacity';
 import type { ActionResult } from '@/types/actions';
 import { logError } from '@/lib/logger';
-import { invalidateExperienceCaches, createExperienceSlugChecker } from './experience-helpers';
+import {
+  invalidateExperienceCaches,
+  createExperienceSlugChecker,
+} from './experience-helpers';
 
 /**
  * Create a new experience for the current user's winery
@@ -66,12 +70,27 @@ export async function createExperience(
       };
     }
 
-    const { title, type, description, duration, price, minCapacity, maxCapacity, location, availabilitySlots } =
-      validated.data;
+    const {
+      title,
+      type,
+      description,
+      duration,
+      price,
+      minCapacity,
+      maxCapacity,
+      paymentMode,
+      isCollective,
+      languages,
+      location,
+      availabilitySlots,
+    } = validated.data;
 
     // 4. Generate unique slug within winery (AC 9)
     const baseSlug = generateSlug(title);
-    const slug = await ensureUniqueSlug(baseSlug, createExperienceSlugChecker(winery.id));
+    const slug = await ensureUniqueSlug(
+      baseSlug,
+      createExperienceSlugChecker(winery.id)
+    );
 
     // 5. Convert price to cents for storage
     const priceInCents = Math.round(price * 100);
@@ -85,7 +104,15 @@ export async function createExperience(
 
     // Helper to convert day string to number (0 = Sunday, 6 = Saturday)
     const dayToNumber = (day: string): number => {
-      const days: Record<string, number> = { SUN: 0, MON: 1, TUE: 2, WED: 3, THU: 4, FRI: 5, SAT: 6 };
+      const days: Record<string, number> = {
+        SUN: 0,
+        MON: 1,
+        TUE: 2,
+        WED: 3,
+        THU: 4,
+        FRI: 5,
+        SAT: 6,
+      };
       return days[day] ?? 0;
     };
 
@@ -101,6 +128,11 @@ export async function createExperience(
           price: priceInCents,
           minCapacity,
           maxCapacity,
+          paymentMode,
+          // P-11 (L-100): additive — undefined keeps the @default(false).
+          ...(isCollective !== undefined && { isCollective }),
+          // P-02 (L-115): additive — undefined keeps the @default([FR]).
+          ...(languages !== undefined && { languages }),
           coverPhoto: coverPhotoUrl,
           status: 'DRAFT',
           // Location fields
@@ -125,7 +157,13 @@ export async function createExperience(
 
       // Add availability slots if provided
       if (availabilitySlots && availabilitySlots.length > 0) {
-        const slotsToCreate: { experienceId: string; dayOfWeek: number; startTime: string; endTime: string; isActive: boolean }[] = [];
+        const slotsToCreate: {
+          experienceId: string;
+          dayOfWeek: number;
+          startTime: string;
+          endTime: string;
+          isActive: boolean;
+        }[] = [];
 
         for (const slot of availabilitySlots) {
           for (const day of slot.days) {
@@ -227,14 +265,27 @@ export async function updateExperience(
       };
     }
 
-    const { title, type, description, duration, price, minCapacity, maxCapacity } =
-      validated.data;
+    const {
+      title,
+      type,
+      description,
+      duration,
+      price,
+      minCapacity,
+      maxCapacity,
+      paymentMode,
+      isCollective,
+      languages,
+    } = validated.data;
 
     // Generate new slug if title changed
     let slug = existingExperience.slug;
     if (title !== existingExperience.title) {
       const baseSlug = generateSlug(title);
-      slug = await ensureUniqueSlug(baseSlug, createExperienceSlugChecker(winery.id));
+      slug = await ensureUniqueSlug(
+        baseSlug,
+        createExperienceSlugChecker(winery.id)
+      );
     }
 
     // Convert price to cents
@@ -265,6 +316,11 @@ export async function updateExperience(
           price: priceInCents,
           minCapacity,
           maxCapacity,
+          paymentMode,
+          // P-11 (L-100): additive — undefined leaves the stored flag untouched.
+          ...(isCollective !== undefined && { isCollective }),
+          // P-02 (L-115): additive — undefined leaves stored languages untouched.
+          ...(languages !== undefined && { languages }),
           coverPhoto: coverPhotoUrl,
         },
       });
@@ -295,7 +351,10 @@ export async function updateExperience(
       data: { experienceId: experience.id, slug: experience.slug },
     };
   } catch (error) {
-    logError('updateExperience error', error, { action: 'updateExperience', experienceId });
+    logError('updateExperience error', error, {
+      action: 'updateExperience',
+      experienceId,
+    });
     return {
       success: false,
       error: {
@@ -341,7 +400,9 @@ export async function deleteExperience(
         _count: {
           select: {
             bookings: {
-              where: { status: { in: ['PENDING_PAYMENT', 'CONFIRMED'] } },
+              // Same rule as capacity (P-04): an expired hold/pending row
+              // is logically released and must not block deletion.
+              where: activeCapacityBookingWhere(),
             },
           },
         },
@@ -361,7 +422,8 @@ export async function deleteExperience(
         success: false,
         error: {
           code: 'VALIDATION_ERROR',
-          message: 'Cannot delete experience with active bookings. Archive it instead.',
+          message:
+            'Cannot delete experience with active bookings. Archive it instead.',
         },
       };
     }
@@ -379,209 +441,10 @@ export async function deleteExperience(
       data: { deleted: true },
     };
   } catch (error) {
-    logError('deleteExperience error', error, { action: 'deleteExperience', experienceId });
-    return {
-      success: false,
-      error: {
-        code: 'INTERNAL_ERROR',
-        message: 'Something went wrong. Please try again.',
-      },
-    };
-  }
-}
-
-/**
- * Get a single experience for editing
- */
-export async function getExperienceForEdit(
-  experienceId: string
-): Promise<ActionResult<{
-  id: string;
-  title: string;
-  type: string;
-  description: string;
-  duration: number;
-  price: number;
-  minCapacity: number;
-  maxCapacity: number;
-  coverPhoto: string;
-  galleryImages: { id: string; url: string; order: number }[];
-}>> {
-  try {
-    const session = await auth();
-    if (!session?.user) {
-      return {
-        success: false,
-        error: { code: 'UNAUTHORIZED', message: 'Please sign in to continue' },
-      };
-    }
-
-    const winery = await db.winery.findUnique({
-      where: { userId: session.user.id },
-      select: { id: true },
+    logError('deleteExperience error', error, {
+      action: 'deleteExperience',
+      experienceId,
     });
-
-    if (!winery) {
-      return {
-        success: false,
-        error: { code: 'NOT_FOUND', message: 'Winery not found' },
-      };
-    }
-
-    const experience = await db.experience.findFirst({
-      where: { id: experienceId, wineryId: winery.id },
-      include: { galleryImages: { orderBy: { order: 'asc' } } },
-    });
-
-    if (!experience) {
-      return {
-        success: false,
-        error: { code: 'NOT_FOUND', message: 'Experience not found' },
-      };
-    }
-
-    return {
-      success: true,
-      data: {
-        id: experience.id,
-        title: experience.title,
-        type: experience.type,
-        description: experience.description,
-        duration: experience.duration,
-        price: experience.price / 100, // Convert cents to CHF
-        minCapacity: experience.minCapacity,
-        maxCapacity: experience.maxCapacity,
-        coverPhoto: experience.coverPhoto,
-        galleryImages: experience.galleryImages.map((img) => ({
-          id: img.id,
-          url: img.url,
-          order: img.order,
-        })),
-      },
-    };
-  } catch (error) {
-    logError('getExperienceForEdit error', error, { action: 'getExperienceForEdit', experienceId });
-    return {
-      success: false,
-      error: {
-        code: 'INTERNAL_ERROR',
-        message: 'Something went wrong. Please try again.',
-      },
-    };
-  }
-}
-
-/**
- * Get an experience for preview (owner only, any status)
- */
-export async function getExperienceForPreview(
-  experienceId: string
-): Promise<ActionResult<{
-  id: string;
-  title: string;
-  slug: string;
-  type: string;
-  description: string;
-  duration: number;
-  price: number;
-  minCapacity: number;
-  maxCapacity: number;
-  coverPhoto: string;
-  status: string;
-  galleryImages: { id: string; url: string; order: number }[];
-  availabilitySlots: { id: string; dayOfWeek: number; startTime: string; endTime: string; isActive: boolean }[];
-  winery: {
-    id: string;
-    name: string;
-    slug: string;
-    commune: string;
-    address: string;
-    coverPhoto: string | null;
-    latitude: number | null;
-    longitude: number | null;
-    stripeOnboardingComplete: boolean;
-  };
-}>> {
-  try {
-    const session = await auth();
-    if (!session?.user) {
-      return {
-        success: false,
-        error: { code: 'UNAUTHORIZED', message: 'Please sign in to continue' },
-      };
-    }
-
-    const winery = await db.winery.findUnique({
-      where: { userId: session.user.id },
-      select: { id: true },
-    });
-
-    if (!winery) {
-      return {
-        success: false,
-        error: { code: 'NOT_FOUND', message: 'Winery not found' },
-      };
-    }
-
-    const experience = await db.experience.findFirst({
-      where: { id: experienceId, wineryId: winery.id },
-      include: {
-        winery: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            commune: true,
-            address: true,
-            coverPhoto: true,
-            latitude: true,
-            longitude: true,
-            stripeOnboardingComplete: true,
-          },
-        },
-        galleryImages: { orderBy: { order: 'asc' } },
-        availabilitySlots: { orderBy: { dayOfWeek: 'asc' } },
-      },
-    });
-
-    if (!experience) {
-      return {
-        success: false,
-        error: { code: 'NOT_FOUND', message: 'Experience not found' },
-      };
-    }
-
-    return {
-      success: true,
-      data: {
-        id: experience.id,
-        title: experience.title,
-        slug: experience.slug,
-        type: experience.type,
-        description: experience.description,
-        duration: experience.duration,
-        price: experience.price,
-        minCapacity: experience.minCapacity,
-        maxCapacity: experience.maxCapacity,
-        coverPhoto: experience.coverPhoto,
-        status: experience.status,
-        galleryImages: experience.galleryImages.map((img) => ({
-          id: img.id,
-          url: img.url,
-          order: img.order,
-        })),
-        availabilitySlots: experience.availabilitySlots.map((slot) => ({
-          id: slot.id,
-          dayOfWeek: slot.dayOfWeek,
-          startTime: slot.startTime,
-          endTime: slot.endTime,
-          isActive: slot.isActive,
-        })),
-        winery: experience.winery,
-      },
-    };
-  } catch (error) {
-    logError('getExperienceForPreview error', error, { action: 'getExperienceForPreview', experienceId });
     return {
       success: false,
       error: {

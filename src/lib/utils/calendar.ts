@@ -1,5 +1,6 @@
 import { createEvent, type EventAttributes } from 'ics';
-import { format, addMinutes } from 'date-fns';
+import { addMinutes } from 'date-fns';
+import { zonedWallClockToUTC } from '@/lib/datetime/zurich';
 
 export interface CalendarEventData {
   title: string;
@@ -18,19 +19,26 @@ export function generateICalEvent(event: CalendarEventData): string | null {
   const endDate = addMinutes(startDate, event.durationMinutes);
 
   const icsEvent: EventAttributes = {
+    // startDate/endDate are absolute UTC instants; emit UTC components so
+    // the calendar renders the correct Europe/Zurich time in any viewer TZ.
+    // (Default ics inputType 'local' would re-stamp the wall-clock as UTC.)
+    startInputType: 'utc',
+    startOutputType: 'utc',
+    endInputType: 'utc',
+    endOutputType: 'utc',
     start: [
-      startDate.getFullYear(),
-      startDate.getMonth() + 1,
-      startDate.getDate(),
-      startDate.getHours(),
-      startDate.getMinutes(),
+      startDate.getUTCFullYear(),
+      startDate.getUTCMonth() + 1,
+      startDate.getUTCDate(),
+      startDate.getUTCHours(),
+      startDate.getUTCMinutes(),
     ],
     end: [
-      endDate.getFullYear(),
-      endDate.getMonth() + 1,
-      endDate.getDate(),
-      endDate.getHours(),
-      endDate.getMinutes(),
+      endDate.getUTCFullYear(),
+      endDate.getUTCMonth() + 1,
+      endDate.getUTCDate(),
+      endDate.getUTCHours(),
+      endDate.getUTCMinutes(),
     ],
     title: event.title,
     description: event.description,
@@ -59,8 +67,15 @@ export function generateGoogleCalendarUrl(event: CalendarEventData): string {
   const startDate = event.startDate;
   const endDate = addMinutes(startDate, event.durationMinutes);
 
-  // Google Calendar format: YYYYMMDDTHHmmssZ
-  const formatForGoogle = (date: Date) => format(date, "yyyyMMdd'T'HHmmss");
+  // Google Calendar UTC format YYYYMMDDTHHmmssZ (startDate is a UTC instant).
+  const formatForGoogle = (date: Date) => {
+    const p = (n: number) => String(n).padStart(2, '0');
+    return (
+      `${date.getUTCFullYear()}${p(date.getUTCMonth() + 1)}` +
+      `${p(date.getUTCDate())}T${p(date.getUTCHours())}` +
+      `${p(date.getUTCMinutes())}${p(date.getUTCSeconds())}Z`
+    );
+  };
 
   const params = new URLSearchParams({
     action: 'TEMPLATE',
@@ -80,7 +95,10 @@ export function generateGoogleCalendarUrl(event: CalendarEventData): string {
 /**
  * Triggers a file download of the iCal event
  */
-export function downloadICalEvent(event: CalendarEventData, filename: string): boolean {
+export function downloadICalEvent(
+  event: CalendarEventData,
+  filename: string
+): boolean {
   const icsContent = generateICalEvent(event);
 
   if (!icsContent) {
@@ -116,10 +134,9 @@ export function createBookingCalendarEvent(booking: {
   reference: string;
   bookingUrl?: string;
 }): CalendarEventData {
-  // Parse the time slot (e.g., "14:00") and combine with date
-  const [hours, minutes] = booking.timeSlot.split(':').map(Number);
-  const startDate = new Date(booking.date);
-  startDate.setHours(hours ?? 0, minutes ?? 0, 0, 0);
+  // Combine the @db.Date (UTC-midnight) with the Europe/Zurich wall-clock
+  // timeSlot into the true absolute UTC instant.
+  const startDate = zonedWallClockToUTC(booking.date, booking.timeSlot);
 
   const location = `${booking.wineryAddress}, ${booking.wineryCommune}`;
 

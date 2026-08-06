@@ -28,7 +28,8 @@ export function AddToCalendar({ booking }: AddToCalendarProps) {
 
   const calendarEvent = createBookingCalendarEvent({
     ...booking,
-    bookingUrl: typeof window !== 'undefined' ? window.location.href : undefined,
+    bookingUrl:
+      typeof window !== 'undefined' ? window.location.href : undefined,
   });
 
   const handleGoogleCalendar = () => {
@@ -41,7 +42,7 @@ export function AddToCalendar({ booking }: AddToCalendarProps) {
   };
 
   return (
-    <div className="flex flex-col sm:flex-row gap-2">
+    <div className="flex flex-col gap-2 sm:flex-row">
       <Button
         variant="outline"
         size="sm"

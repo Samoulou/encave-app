@@ -42,8 +42,14 @@ export function WinemakerNewBookingEmail({
   const intro = t(winemakerNotification.newBooking.intro, locale);
   const guestInfo = t(winemakerNotification.newBooking.guestInfo, locale);
   const guestNameLabel = t(winemakerNotification.newBooking.guestName, locale);
-  const guestEmailLabel = t(winemakerNotification.newBooking.guestEmail, locale);
-  const viewDashboard = t(winemakerNotification.newBooking.viewDashboard, locale);
+  const guestEmailLabel = t(
+    winemakerNotification.newBooking.guestEmail,
+    locale
+  );
+  const viewDashboard = t(
+    winemakerNotification.newBooking.viewDashboard,
+    locale
+  );
 
   const dateLabel = t(common.date, locale);
   const timeLabel = t(common.time, locale);
@@ -53,7 +59,14 @@ export function WinemakerNewBookingEmail({
 
   return (
     <EmailLayout locale={locale} preview={t(subjects.wineryNewBooking, locale)}>
-      <Text style={{ fontSize: '24px', fontWeight: 'bold', color: '#7c2d12', margin: '0 0 16px 0' }}>
+      <Text
+        style={{
+          fontSize: '24px',
+          fontWeight: 'bold',
+          color: '#7c2d12',
+          margin: '0 0 16px 0',
+        }}
+      >
         {title}
       </Text>
 
@@ -61,9 +74,7 @@ export function WinemakerNewBookingEmail({
         {greeting} {winemakerName},
       </Text>
 
-      <Text style={{ margin: '0 0 24px 0' }}>
-        {intro}
-      </Text>
+      <Text style={{ margin: '0 0 24px 0' }}>{intro}</Text>
 
       <Section
         style={{
@@ -77,24 +88,48 @@ export function WinemakerNewBookingEmail({
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <tbody>
             <tr>
-              <td style={{ padding: '8px 0', color: '#6b7280', width: '40%' }}>{experienceLabel}</td>
-              <td style={{ padding: '8px 0', fontWeight: '500' }}>{experienceTitle}</td>
+              <td style={{ padding: '8px 0', color: '#6b7280', width: '40%' }}>
+                {experienceLabel}
+              </td>
+              <td style={{ padding: '8px 0', fontWeight: '500' }}>
+                {experienceTitle}
+              </td>
             </tr>
             <tr>
-              <td style={{ padding: '8px 0', color: '#6b7280' }}>{dateLabel}</td>
-              <td style={{ padding: '8px 0', fontWeight: 'bold' }}>{formatEmailDate(date, locale)}</td>
+              <td style={{ padding: '8px 0', color: '#6b7280' }}>
+                {dateLabel}
+              </td>
+              <td style={{ padding: '8px 0', fontWeight: 'bold' }}>
+                {formatEmailDate(date, locale)}
+              </td>
             </tr>
             <tr>
-              <td style={{ padding: '8px 0', color: '#6b7280' }}>{timeLabel}</td>
-              <td style={{ padding: '8px 0', fontWeight: 'bold' }}>{formatEmailTime(date, locale)}</td>
+              <td style={{ padding: '8px 0', color: '#6b7280' }}>
+                {timeLabel}
+              </td>
+              <td style={{ padding: '8px 0', fontWeight: 'bold' }}>
+                {formatEmailTime(date, locale)}
+              </td>
             </tr>
             <tr>
-              <td style={{ padding: '8px 0', color: '#6b7280' }}>{guestsLabel}</td>
-              <td style={{ padding: '8px 0' }}>{formatEmailGuests(guestCount, locale)}</td>
+              <td style={{ padding: '8px 0', color: '#6b7280' }}>
+                {guestsLabel}
+              </td>
+              <td style={{ padding: '8px 0' }}>
+                {formatEmailGuests(guestCount, locale)}
+              </td>
             </tr>
             <tr>
-              <td style={{ padding: '8px 0', color: '#6b7280' }}>{priceLabel}</td>
-              <td style={{ padding: '8px 0', fontWeight: 'bold', color: '#22c55e' }}>
+              <td style={{ padding: '8px 0', color: '#6b7280' }}>
+                {priceLabel}
+              </td>
+              <td
+                style={{
+                  padding: '8px 0',
+                  fontWeight: 'bold',
+                  color: '#22c55e',
+                }}
+              >
                 {formatEmailPrice(totalPrice)}
               </td>
             </tr>
@@ -110,19 +145,32 @@ export function WinemakerNewBookingEmail({
           margin: '0 0 24px 0',
         }}
       >
-        <Text style={{ margin: '0 0 12px 0', fontWeight: 'bold', fontSize: '14px' }}>
+        <Text
+          style={{ margin: '0 0 12px 0', fontWeight: 'bold', fontSize: '14px' }}
+        >
           {guestInfo}
         </Text>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <tbody>
             <tr>
-              <td style={{ padding: '4px 0', color: '#6b7280', width: '30%', fontSize: '14px' }}>
+              <td
+                style={{
+                  padding: '4px 0',
+                  color: '#6b7280',
+                  width: '30%',
+                  fontSize: '14px',
+                }}
+              >
                 {guestNameLabel}
               </td>
-              <td style={{ padding: '4px 0', fontSize: '14px' }}>{guestName}</td>
+              <td style={{ padding: '4px 0', fontSize: '14px' }}>
+                {guestName}
+              </td>
             </tr>
             <tr>
-              <td style={{ padding: '4px 0', color: '#6b7280', fontSize: '14px' }}>
+              <td
+                style={{ padding: '4px 0', color: '#6b7280', fontSize: '14px' }}
+              >
                 {guestEmailLabel}
               </td>
               <td style={{ padding: '4px 0', fontSize: '14px' }}>

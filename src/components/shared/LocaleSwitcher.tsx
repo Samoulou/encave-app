@@ -5,6 +5,7 @@ import { usePathname, useRouter } from '@/i18n/navigation';
 import { locales, type Locale } from '@/i18n/routing';
 import { Globe, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,7 +19,9 @@ const localeLabels: Record<Locale, string> = {
   en: 'EN',
 };
 
-export function LocaleSwitcher() {
+export function LocaleSwitcher({
+  triggerClassName,
+}: { triggerClassName?: string } = {}) {
   const locale = useLocale() as Locale;
   const router = useRouter();
   const pathname = usePathname();
@@ -32,7 +35,11 @@ export function LocaleSwitcher() {
     <div role="group" aria-label={t('languageSwitcher')}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground">
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn('gap-1.5 text-muted-foreground', triggerClassName)}
+          >
             <Globe className="h-4 w-4" aria-hidden="true" />
             <span>{localeLabels[locale]}</span>
           </Button>

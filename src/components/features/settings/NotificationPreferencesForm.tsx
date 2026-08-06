@@ -27,7 +27,6 @@ interface NotificationPreferencesFormProps {
     dailyDigest: boolean;
     weeklySummary: boolean;
     instantBookingAlerts: boolean;
-    unsubscribeToken: string;
   };
 }
 
@@ -67,7 +66,7 @@ export function NotificationPreferencesForm({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         {/* Daily Digest */}
-        <div className="rounded-lg border border-slate-200 bg-white p-6">
+        <div className="rounded-lg border border-border bg-white p-6">
           <FormField
             control={form.control}
             name="dailyDigest"
@@ -99,7 +98,7 @@ export function NotificationPreferencesForm({
         </div>
 
         {/* Weekly Summary */}
-        <div className="rounded-lg border border-slate-200 bg-white p-6">
+        <div className="rounded-lg border border-border bg-white p-6">
           <FormField
             control={form.control}
             name="weeklySummary"
@@ -131,7 +130,7 @@ export function NotificationPreferencesForm({
         </div>
 
         {/* Instant Booking Alerts */}
-        <div className="rounded-lg border border-slate-200 bg-white p-6">
+        <div className="rounded-lg border border-border bg-white p-6">
           <FormField
             control={form.control}
             name="instantBookingAlerts"

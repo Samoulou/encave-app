@@ -13,6 +13,8 @@ import { FullConfig } from '@playwright/test';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 
+import { assertLocalDbUrl } from '../../helpers/assert-local-db';
+
 // Charger .env.test AVANT tout le reste
 dotenv.config({ path: path.resolve(process.cwd(), '.env.test') });
 
@@ -23,21 +25,11 @@ async function globalSetup(config: FullConfig) {
   console.log('╚════════════════════════════════════════╝');
   console.log('');
 
-  // Vérifier que DATABASE_URL pointe vers la base de test
-  const dbUrl = process.env.DATABASE_URL || '';
-  if (!dbUrl.includes('test') && !dbUrl.includes('localhost')) {
-    console.error('⚠️  ATTENTION: DATABASE_URL ne semble pas pointer vers une base de test!');
-    console.error('   Valeur actuelle:', dbUrl.substring(0, 50) + '...');
-    console.error('');
-    console.error('   Configurez DATABASE_URL vers votre base de test avant de continuer.');
-    console.error('   Exemple: DATABASE_URL=postgresql://localhost:5432/encave_test');
-    console.error('');
-
-    // En CI, on peut vouloir continuer quand même
-    if (!process.env.CI) {
-      throw new Error('DATABASE_URL doit pointer vers une base de test');
-    }
-  }
+  // Le setup fait `db push` + wipe/reseed : allowlist stricte d'hôtes
+  // locaux, y compris en CI (les services CI sont toujours sur localhost).
+  // Remplace l'ancienne blocklist `includes('test')` qui laissait passer
+  // une URL cloud dont le nom de base contenait « test ».
+  assertLocalDbUrl(process.env.DATABASE_URL || '', 'DATABASE_URL');
 
   try {
     // 1. Appliquer les migrations Prisma (créer le schéma)

@@ -1,5 +1,9 @@
 import { getTranslations } from 'next-intl/server';
-import { SkeletonDashboardStats, Skeleton, SkeletonContainer } from '@/components/shared/Skeleton';
+import {
+  SkeletonDashboardStats,
+  Skeleton,
+  SkeletonContainer,
+} from '@/components/shared/Skeleton';
 
 export default async function EarningsLoading() {
   const t = await getTranslations('earnings');

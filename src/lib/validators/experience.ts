@@ -26,6 +26,9 @@ export const EXPERIENCE_TYPE_OPTIONS = [
   { value: 'WORKSHOP', label: 'Workshop' },
   { value: 'VINEYARD_TOUR', label: 'Vineyard Tour' },
   { value: 'FOOD_PAIRING', label: 'Food Pairing' },
+  // V3 types (P-02 enum, wired to search in P-05 / L-111)
+  { value: 'MEAL', label: 'Meal' },
+  { value: 'EVENT', label: 'Event' },
 ] as const;
 
 export const experienceTypeValues = EXPERIENCE_TYPE_OPTIONS.map(
@@ -39,8 +42,12 @@ export const availabilitySlotSchema = z.object({
   days: z.array(z.enum(['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'])),
   timeSlots: z.array(
     z.object({
-      start: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time format'),
-      end: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time format'),
+      start: z
+        .string()
+        .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time format'),
+      end: z
+        .string()
+        .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time format'),
     })
   ),
 });
@@ -71,24 +78,33 @@ export const createExperienceSchema = z
       .min(1, 'Title is required')
       .max(100, 'Title must be less than 100 characters'),
     type: z.enum(
-      ['TASTING', 'CELLAR_VISIT', 'WORKSHOP', 'VINEYARD_TOUR', 'FOOD_PAIRING'],
+      [
+        'TASTING',
+        'CELLAR_VISIT',
+        'WORKSHOP',
+        'VINEYARD_TOUR',
+        'FOOD_PAIRING',
+        'MEAL',
+        'EVENT',
+      ],
       {
         message: 'Please select an experience type',
       }
     ),
     description: z
       .string()
-      .min(20, 'Description must be at least 20 characters')
+      .min(100, 'Description must be at least 100 characters')
       .max(5000, 'Description must be less than 5000 characters'),
     duration: z
       .number()
       .refine(
-        (val) => durationValues.includes(val as (typeof durationValues)[number]),
+        (val) =>
+          durationValues.includes(val as (typeof durationValues)[number]),
         'Please select a valid duration'
       ),
     price: z
       .number()
-      .positive('Price must be greater than 0')
+      .nonnegative('Price cannot be negative')
       .max(100000, 'Price seems too high'),
     minCapacity: z
       .number()
@@ -98,14 +114,38 @@ export const createExperienceSchema = z
       .number()
       .int('Maximum capacity must be a whole number')
       .min(1, 'Maximum capacity must be at least 1'),
+    // V3 (P-08 / L-070): ONLINE (paid at checkout) vs ON_SITE (free /
+    // pay-at-the-winery). Optional (not .default) to keep the Zod input and
+    // output types symmetric — a .default() diverges them and breaks
+    // zodResolver. Undefined ⇒ ONLINE (forms set it explicitly).
+    paymentMode: z.enum(['ONLINE', 'ON_SITE']).optional(),
+    // V3 (P-11 / L-100): mark the experience as a collective event
+    // (bandeau + participating-wineries grid on the fiche). Optional (not
+    // .default) for the same zodResolver symmetry reason as paymentMode —
+    // undefined ⇒ false (@default(false) preserved on create).
+    isCollective: z.boolean().optional(),
+    // V3 (P-02 / L-115): spoken languages, wired to the catalogue language
+    // filter. Optional (not .default) for the same zodResolver input/output
+    // symmetry reason as paymentMode/isCollective; the forms seed ['FR'], and
+    // an omitted value keeps the DB @default([FR]).
+    languages: z
+      .array(z.enum(['FR', 'DE', 'EN']))
+      .min(1)
+      .optional(),
     // Location fields (optional)
     location: locationSchema.optional(),
     // Availability slots
     availabilitySlots: z.array(availabilitySlotSchema).optional(),
   })
   .refine((data) => data.maxCapacity >= data.minCapacity, {
-    message: 'Maximum capacity must be greater than or equal to minimum capacity',
+    message:
+      'Maximum capacity must be greater than or equal to minimum capacity',
     path: ['maxCapacity'],
+  })
+  // ONLINE offers must have a real price; ON_SITE may be free (price 0).
+  .refine((data) => data.paymentMode === 'ON_SITE' || data.price > 0, {
+    message: 'Price must be greater than 0',
+    path: ['price'],
   });
 
 export type CreateExperienceInput = z.infer<typeof createExperienceSchema>;

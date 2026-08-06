@@ -9,13 +9,11 @@ import { CancellationModal } from './CancellationModal';
 interface CancelBookingButtonProps {
   bookingId: string;
   accessToken: string;
-  totalPrice: number;
 }
 
 export function CancelBookingButton({
   bookingId,
   accessToken,
-  totalPrice,
 }: CancelBookingButtonProps) {
   const t = useTranslations('cancellation');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -25,9 +23,9 @@ export function CancelBookingButton({
       <Button
         variant="outline"
         onClick={() => setIsModalOpen(true)}
-        className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300"
+        className="border-red-200 text-red-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700"
       >
-        <XCircle className="h-4 w-4 mr-2" />
+        <XCircle className="mr-2 h-4 w-4" />
         {t('cancelBooking')}
       </Button>
 
@@ -36,7 +34,6 @@ export function CancelBookingButton({
         onClose={() => setIsModalOpen(false)}
         bookingId={bookingId}
         accessToken={accessToken}
-        totalPrice={totalPrice}
       />
     </>
   );

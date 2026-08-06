@@ -2,13 +2,21 @@
 
 import { z } from 'zod';
 import { differenceInHours } from 'date-fns';
+import { zonedWallClockToUTC } from '@/lib/datetime/zurich';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/server/db';
 import { auth } from '@/server/auth';
 import { BookingStatus, Locale } from '@prisma/client';
 import type { ActionResult } from '@/types/actions';
-import { logError } from '@/lib/logger';
-import { processRefund } from '@/server/services/payment.service';
+import { logError, logWarn } from '@/lib/logger';
+import {
+  appendRefundError,
+  processCancellationRefund,
+} from '@/server/services/booking-refund.service';
+import {
+  computeBookingRefund,
+  computeRefundCents,
+} from '@/lib/business-rules/cancellation-policy';
 import {
   sendBookingCancellationEmail,
   sendWinemakerCancellationEmail,
@@ -24,7 +32,7 @@ export interface ClientCancellationResult {
 /**
  * Cancel a booking as the authenticated client.
  * Verifies the user's email matches the booking's visitorEmail.
- * Refund policy: Full refund if >24h before experience, no refund otherwise.
+ * Refund follows the winery's cancellation policy (P-03 / L-043).
  */
 export async function cancelClientBooking(
   bookingId: string
@@ -35,6 +43,14 @@ export async function cancelClientBooking(
       return {
         success: false,
         error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
+      };
+    }
+    // Guest bookings are matched by email alone; require a VERIFIED email so an
+    // unverified sign-up can't cancel/refund someone else's guest booking.
+    if (!session.user.emailVerified) {
+      return {
+        success: false,
+        error: { code: 'FORBIDDEN', message: 'EMAIL_NOT_VERIFIED' },
       };
     }
 
@@ -55,6 +71,7 @@ export async function cancelClientBooking(
           select: {
             name: true,
             email: true,
+            cancellationPolicy: true,
             user: {
               select: {
                 name: true,
@@ -83,12 +100,16 @@ export async function cancelClientBooking(
       };
     }
 
-    // Calculate hours until experience
-    const [hours, minutes] = booking.timeSlot.split(':').map(Number);
-    const experienceDateTime = new Date(booking.date);
-    experienceDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
+    // Calculate hours until experience (Zurich wall-clock → UTC instant)
+    const experienceDateTime = zonedWallClockToUTC(
+      booking.date,
+      booking.timeSlot
+    );
 
-    const hoursUntilExperience = differenceInHours(experienceDateTime, new Date());
+    const hoursUntilExperience = differenceInHours(
+      experienceDateTime,
+      new Date()
+    );
 
     if (hoursUntilExperience < 0) {
       return {
@@ -100,53 +121,167 @@ export async function cancelClientBooking(
       };
     }
 
-    // Determine refund eligibility (>24h = full refund)
-    const isEligibleForRefund = hoursUntilExperience > 24;
+    // Refund per the policy snapshotted at booking (fallback: winery's
+    // current policy for legacy rows) on the full paid amount (D2),
+    // minus anything already refunded (e.g. an admin partial refund).
+    const { policy, paidCents, alreadyRefundedCents, refundDueCents } =
+      computeBookingRefund(booking, hoursUntilExperience);
     let refundAmount: number | null = null;
     let stripeRefundId: string | null = null;
+    let giftRestoredCents = 0;
+    let totalReturnedCents = 0;
 
-    if (isEligibleForRefund && booking.stripePaymentIntentId) {
+    // Atomic claim — see cancelBooking: prevents two concurrent
+    // cancellations from both obtaining a partial refund.
+    const claimed = await db.booking.updateMany({
+      where: { id: bookingId, status: BookingStatus.CONFIRMED },
+      data: {
+        status: BookingStatus.CANCELLED_BY_CLIENT,
+        cancelledAt: new Date(),
+      },
+    });
+    if (claimed.count === 0) {
+      return {
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Only confirmed bookings can be cancelled',
+        },
+      };
+    }
+
+    // Gift-aware refund since P-16 (ADR-0003) — see cancelBooking.
+    if (refundDueCents > 0) {
       try {
-        const refundResult = await processRefund(booking.stripePaymentIntentId, true);
-        refundAmount = refundResult.amount;
-        stripeRefundId = refundResult.refundId;
+        const outcome = await processCancellationRefund({
+          bookingId,
+          stripePaymentIntentId: booking.stripePaymentIntentId,
+          giftAppliedCents: booking.giftAppliedCents,
+          wineryPayout: booking.wineryPayout,
+          refundDueCents,
+          alreadyRefundedCents,
+          paidCents,
+          // Same rounding rule as the client refund (computeRefundCents),
+          // applied to the winery payout for the clawback share.
+          reversalCents: computeRefundCents(
+            policy,
+            hoursUntilExperience,
+            booking.wineryPayout
+          ),
+          actionName: 'cancelClientBooking',
+        });
+        refundAmount = outcome.cardRefundCents;
+        stripeRefundId = outcome.stripeRefundId;
+        giftRestoredCents = outcome.giftRestoredCents;
+        totalReturnedCents = outcome.totalReturnedCents;
       } catch (refundError) {
-        logError('Refund processing error', refundError, { action: 'cancelClientBooking', bookingId });
+        // Release the claim ONLY on a deterministic Stripe rejection —
+        // after an ambiguous network error the refund may have succeeded,
+        // and releasing would allow a second one once the idempotency key
+        // expires (24h). Ambiguous → keep the cancellation, store the
+        // error for manual reconciliation.
+        const deterministic =
+          typeof refundError === 'object' &&
+          refundError !== null &&
+          'type' in refundError &&
+          refundError.type === 'StripeInvalidRequestError';
+        if (deterministic) {
+          await db.booking.updateMany({
+            where: {
+              id: bookingId,
+              status: BookingStatus.CANCELLED_BY_CLIENT,
+            },
+            data: { status: BookingStatus.CONFIRMED, cancelledAt: null },
+          });
+        } else {
+          // Appended, and with the pending GIFT movements named (review
+          // #120 sweep): the card refund is the FIRST movement — an
+          // ambiguous failure means the gift restore and the winery
+          // reversal never ran, and no cron retries a cancelled booking.
+          await appendRefundError(
+            bookingId,
+            booking.giftAppliedCents > 0
+              ? `CARD_REFUND_AMBIGUOUS on gift booking (gift restore + winery reversal NOT run — reconcile all three movements, runbook incident-paiement): ${String(refundError)}`
+              : String(refundError)
+          );
+        }
+        logError('Refund processing error', refundError, {
+          action: 'cancelClientBooking',
+          bookingId,
+        });
         return {
           success: false,
           error: {
             code: 'PAYMENT_FAILED',
-            message: 'Failed to process refund. Please try again or contact support.',
+            message:
+              'Failed to process refund. Please try again or contact support.',
           },
         };
       }
     }
 
-    // Update booking status
-    const updatedBooking = await db.booking.update({
+    // Record the refund outcome on the already-cancelled booking.
+    // refundAmount persists the TOTAL value returned — card + restored
+    // gift balance (ADR-0003, Codex review; see cancelBooking).
+    // Conditional on the refundAmount we READ — a concurrent admin
+    // refund must not be clobbered out of the ledger (see cancelBooking).
+    if (totalReturnedCents > 0) {
+      const recorded = await db.booking.updateMany({
+        where: { id: bookingId, refundAmount: booking.refundAmount },
+        data: {
+          refundIssued: true,
+          refundAmount: alreadyRefundedCents + totalReturnedCents,
+          // A gift-only restitution has no Stripe refund — never null out
+          // a re_ written by an earlier admin refund (review #120).
+          ...(stripeRefundId ? { stripeRefundId } : {}),
+        },
+      });
+      if (recorded.count === 0) {
+        logWarn('Refund ledger conflict — concurrent refund writer', {
+          action: 'cancelClientBooking',
+          bookingId,
+          cancelRefundCents: totalReturnedCents,
+          stripeRefundId,
+        });
+        await appendRefundError(
+          bookingId,
+          `LEDGER_CONFLICT: cancellation returned ${totalReturnedCents} (${stripeRefundId ?? 'gift only'}) concurrently with another refund writer — reconcile with Stripe`
+        );
+      }
+    }
+    const updatedBooking = await db.booking.findUniqueOrThrow({
       where: { id: bookingId },
-      data: {
-        status: BookingStatus.CANCELLED_BY_CLIENT,
-        cancelledAt: new Date(),
-        refundIssued: isEligibleForRefund,
-        refundAmount,
-        stripeRefundId,
+      select: { id: true, status: true },
+    });
+
+    // Combine date and timeSlot for email formatting (Zurich → UTC)
+    const bookingDateTime = zonedWallClockToUTC(booking.date, booking.timeSlot);
+
+    // Send cancellation email to client (full paid total; refund exact,
+    // or generic wording when due but unprocessable — see cancelBooking).
+    // Restored gift balance counts as returned value (ADR-0003).
+    const refundUnprocessable =
+      refundDueCents > 0 && refundAmount === null && giftRestoredCents === 0;
+    if (refundUnprocessable) {
+      logError(
+        'Refund due but no Stripe payment intent on booking',
+        undefined,
+        { action: 'cancelClientBooking', bookingId, refundDueCents }
+      );
+    }
+    await sendBookingCancellationEmail(
+      booking.visitorEmail,
+      {
+        guestName: booking.visitorName,
+        experienceTitle: booking.experience.title,
+        wineryName: booking.winery.name,
+        date: bookingDateTime,
+        totalPrice: paidCents,
+        refundAmountCents: refundUnprocessable ? null : totalReturnedCents,
+        bookingRef: booking.reference,
       },
-    });
-
-    // Combine date and timeSlot for email formatting
-    const bookingDateTime = new Date(booking.date);
-    bookingDateTime.setHours(hours ?? 0, minutes ?? 0, 0, 0);
-
-    // Send cancellation email to client
-    await sendBookingCancellationEmail(booking.visitorEmail, {
-      guestName: booking.visitorName,
-      experienceTitle: booking.experience.title,
-      wineryName: booking.winery.name,
-      date: bookingDateTime,
-      totalPrice: booking.totalPrice,
-      bookingRef: booking.reference,
-    });
+      booking.locale
+    );
 
     // Send notification to winemaker
     await sendWinemakerCancellationEmail(
@@ -169,12 +304,16 @@ export async function cancelClientBooking(
       data: {
         bookingId: updatedBooking.id,
         status: updatedBooking.status,
-        refundIssued: isEligibleForRefund,
-        refundAmount,
+        // Client-facing: card refund + restored gift balance (ADR-0003).
+        refundIssued: totalReturnedCents > 0,
+        refundAmount: totalReturnedCents > 0 ? totalReturnedCents : null,
       },
     };
   } catch (error) {
-    logError('cancelClientBooking error', error, { action: 'cancelClientBooking', bookingId });
+    logError('cancelClientBooking error', error, {
+      action: 'cancelClientBooking',
+      bookingId,
+    });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to cancel booking' },
@@ -201,6 +340,12 @@ export async function updateClientProfile(
         error: { code: 'UNAUTHORIZED', message: 'Not authenticated' },
       };
     }
+    if (!session.user.emailVerified) {
+      return {
+        success: false,
+        error: { code: 'FORBIDDEN', message: 'EMAIL_NOT_VERIFIED' },
+      };
+    }
 
     const validated = UpdateProfileSchema.safeParse(input);
     if (!validated.success) {
@@ -224,7 +369,9 @@ export async function updateClientProfile(
       data: { name, preferredLocale },
     };
   } catch (error) {
-    logError('updateClientProfile error', error, { action: 'updateClientProfile' });
+    logError('updateClientProfile error', error, {
+      action: 'updateClientProfile',
+    });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to update profile' },

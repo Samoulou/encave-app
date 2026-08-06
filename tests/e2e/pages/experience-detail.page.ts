@@ -58,7 +58,10 @@ export class ExperienceDetailPage extends BasePage {
 
     // Content
     this.description = page.getByTestId('experience-description');
-    this.duration = page.getByTestId('experience-duration');
+    this.duration = page
+      .locator('main')
+      .getByTestId('experience-duration')
+      .first();
     this.capacity = page.getByTestId('experience-capacity');
     this.availabilityPreview = page.getByTestId('availability-preview');
     this.gallery = page.getByTestId('experience-gallery');
@@ -70,10 +73,10 @@ export class ExperienceDetailPage extends BasePage {
 
     // Booking CTA
     this.bookingCta = page.getByTestId('booking-cta');
-    this.price = page.getByTestId('experience-price');
-    this.bookNowButton = page.getByRole('button', { name: /book now/i });
     this.bookingWidget = page.getByTestId('booking-widget');
-    this.comingSoonBadge = page.getByText(/coming soon/i);
+    this.price = this.bookingWidget.getByTestId('experience-price');
+    this.bookNowButton = page.getByTestId('continue-to-checkout');
+    this.comingSoonBadge = page.getByText(/coming soon|soon|bient[oô]t/i);
 
     // Winery card
     this.wineryCard = page.getByTestId('winery-info-card');
@@ -97,7 +100,8 @@ export class ExperienceDetailPage extends BasePage {
    */
   async navigate(slug: string) {
     await this.goto(`/experiences/${slug}`, {
-      waitForSelector: '[data-testid="experience-hero-image"], [data-testid="not-found"]',
+      waitForSelector:
+        '[data-testid="experience-hero-image"], [data-testid="not-found"]',
     });
   }
 
@@ -147,11 +151,8 @@ export class ExperienceDetailPage extends BasePage {
    * Check if the Book Now button is visible and enabled
    */
   async isBookingEnabled(): Promise<boolean> {
-    const isVisible = await this.bookNowButton.isVisible();
-    if (!isVisible) return false;
-
-    // Check if it's not disabled
-    return this.bookNowButton.isEnabled();
+    if (!(await this.bookingWidget.isVisible())) return false;
+    return !(await this.comingSoonBadge.isVisible());
   }
 
   /**
@@ -165,8 +166,7 @@ export class ExperienceDetailPage extends BasePage {
    * Click the Book Now button to scroll to the booking widget
    */
   async clickBookNow() {
-    await this.bookNowButton.click();
-    // Wait for booking widget to be in view
+    await this.bookingWidget.scrollIntoViewIfNeeded();
     await this.bookingWidget.waitFor({ state: 'visible' });
   }
 
@@ -214,8 +214,12 @@ export class ExperienceDetailPage extends BasePage {
    * Get availability slots from preview
    */
   async getAvailabilitySlots(): Promise<string[]> {
-    const slots = await this.availabilityPreview.locator('[data-testid="availability-slot"]').all();
-    return Promise.all(slots.map((slot) => slot.textContent().then((t) => t?.trim() ?? '')));
+    const slots = await this.availabilityPreview
+      .locator('[data-testid="availability-slot"]')
+      .all();
+    return Promise.all(
+      slots.map((slot) => slot.textContent().then((t) => t?.trim() ?? ''))
+    );
   }
 
   /**
@@ -230,7 +234,9 @@ export class ExperienceDetailPage extends BasePage {
    */
   async getBreadcrumbs(): Promise<string[]> {
     const items = await this.breadcrumb.getByRole('listitem').all();
-    return Promise.all(items.map((item) => item.textContent().then((t) => t?.trim() ?? '')));
+    return Promise.all(
+      items.map((item) => item.textContent().then((t) => t?.trim() ?? ''))
+    );
   }
 
   /**

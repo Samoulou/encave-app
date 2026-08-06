@@ -30,6 +30,22 @@ export function ImageWithFallback({
 }: ImageWithFallbackProps) {
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const hasSource = typeof src !== 'string' || src.trim().length > 0;
+
+  if (!hasSource && showIconFallback && !fallbackSrc) {
+    return (
+      <div
+        className={cn(
+          'flex h-full w-full items-center justify-center bg-gradient-to-br from-burgundy-100 to-burgundy-200',
+          fallbackClassName
+        )}
+        role="img"
+        aria-label={alt}
+      >
+        <Wine className="h-12 w-12 text-burgundy-300" aria-hidden="true" />
+      </div>
+    );
+  }
 
   // If there's an error and we want to show icon fallback
   if (hasError && showIconFallback && !fallbackSrc) {
@@ -48,14 +64,14 @@ export function ImageWithFallback({
   }
 
   // Use fallback URL if provided and there's an error
-  const imageSrc = hasError && fallbackSrc ? fallbackSrc : src;
+  const imageSrc = (!hasSource || hasError) && fallbackSrc ? fallbackSrc : src;
 
   return (
     <>
       {isLoading && (
         <div
           className={cn(
-            'absolute inset-0 animate-skeleton-shimmer skeleton-warm',
+            'skeleton-warm absolute inset-0 animate-skeleton-shimmer',
             className
           )}
           aria-hidden="true"

@@ -9,6 +9,8 @@ interface BookingDetailsSectionProps {
   formattedTime: string;
   guestCount: number;
   totalPrice: number;
+  /** Client booking fee in cents — 0 for bookings made with the flag OFF. */
+  serviceFeeCents?: number;
 }
 
 export function BookingDetailsSection({
@@ -18,13 +20,14 @@ export function BookingDetailsSection({
   formattedTime,
   guestCount,
   totalPrice,
+  serviceFeeCents = 0,
 }: BookingDetailsSectionProps) {
   const t = useTranslations('confirmation');
 
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+        <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-foreground">
           <Wine className="size-5 text-primary" />
           {t('experienceDetails')}
         </h3>
@@ -41,16 +44,16 @@ export function BookingDetailsSection({
               {wineryName}
             </p>
           </div>
-          <div className="flex gap-6">
-            <div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+            <div className="min-w-0">
               <p className="text-sm text-muted-foreground">{t('date')}</p>
-              <p className="text-base font-semibold text-foreground">
+              <p className="break-words text-base font-semibold text-foreground">
                 {formattedDate}
               </p>
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-sm text-muted-foreground">{t('time')}</p>
-              <p className="text-base font-semibold text-foreground">
+              <p className="break-words text-base font-semibold text-foreground">
                 {formattedTime}
               </p>
             </div>
@@ -63,16 +66,24 @@ export function BookingDetailsSection({
           </div>
         </div>
       </div>
-      <div className="pt-4 border-t border-border">
-        <div className="flex justify-between items-center">
+      <div className="border-t border-border pt-4">
+        {serviceFeeCents > 0 && (
+          <div className="mb-2 flex items-start justify-between gap-4">
+            <p className="text-sm text-muted-foreground">{t('serviceFee')}</p>
+            <p className="shrink-0 text-right text-sm font-semibold text-foreground">
+              {formatCHF(serviceFeeCents)}
+            </p>
+          </div>
+        )}
+        <div className="flex items-start justify-between gap-4">
           <p className="text-base font-medium text-muted-foreground">
             {t('totalPaid')}
           </p>
-          <p className="text-xl font-bold text-foreground">
-            {formatCHF(totalPrice)}
+          <p className="shrink-0 text-right text-xl font-bold text-foreground">
+            {formatCHF(totalPrice + serviceFeeCents)}
           </p>
         </div>
-        <p className="text-xs text-muted-foreground mt-1 text-right">
+        <p className="mt-1 text-right text-xs text-muted-foreground">
           {t('includesTaxes')}
         </p>
       </div>

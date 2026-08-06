@@ -5,7 +5,18 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import { Clock, Users, Copy, Trash2, Edit, MoreVertical, Send, EyeOff, Archive } from 'lucide-react';
+import {
+  Clock,
+  Users,
+  Copy,
+  Trash2,
+  Edit,
+  MoreVertical,
+  Send,
+  EyeOff,
+  Archive,
+  ClipboardList,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -138,8 +149,8 @@ export function ExperienceManagementCard({
     <>
       <div
         className={cn(
-          'group relative flex flex-col bg-white rounded-xl overflow-hidden border border-transparent',
-          'hover:border-primary/20 transition-all duration-300 hover:-translate-y-1',
+          'group relative flex flex-col overflow-hidden rounded-xl border border-transparent bg-white',
+          'transition-all duration-300 hover:-translate-y-1 hover:border-primary/20',
           'shadow-card hover:shadow-card-hover'
         )}
       >
@@ -157,17 +168,17 @@ export function ExperienceManagementCard({
             }}
           />
           {/* Status Badge */}
-          <div className="absolute top-3 left-3">
+          <div className="absolute left-3 top-3">
             <StatusBadge status={experience.status} />
           </div>
           {/* More Menu */}
-          <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="absolute right-3 top-3 opacity-0 transition-opacity group-hover:opacity-100">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="bg-white/90 hover:bg-white text-gray-700 backdrop-blur-sm shadow-sm h-8 w-8"
+                  className="h-8 w-8 bg-white/90 text-gray-700 shadow-sm backdrop-blur-sm hover:bg-white"
                   disabled={isPending}
                 >
                   <MoreVertical className="h-4 w-4" />
@@ -231,13 +242,13 @@ export function ExperienceManagementCard({
         </div>
 
         {/* Content */}
-        <div className="p-5 flex flex-col flex-1 gap-3">
-          <h3 className="text-lg font-bold text-foreground leading-tight group-hover:text-primary transition-colors line-clamp-1">
+        <div className="flex flex-1 flex-col gap-3 p-5">
+          <h3 className="line-clamp-1 text-lg font-bold leading-tight text-foreground transition-colors group-hover:text-primary">
             {experience.title}
           </h3>
 
           {/* Meta Info */}
-          <div className="flex items-center text-sm text-gray-500 gap-4 mb-2">
+          <div className="mb-2 flex items-center gap-4 text-sm text-gray-500">
             <div className="flex items-center gap-1.5">
               <Clock className="h-4 w-4" aria-hidden="true" />
               {formatDuration(experience.duration)}
@@ -249,17 +260,19 @@ export function ExperienceManagementCard({
           </div>
 
           {/* Footer with Price and Actions */}
-          <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
+          <div className="mt-auto flex items-center justify-between border-t border-gray-100 pt-4">
             <span className="text-xl font-bold text-foreground">
               {formatPrice(experience.price)}
-              <span className="text-xs font-normal text-gray-500 ml-1">{t('perPerson')}</span>
+              <span className="ml-1 text-xs font-normal text-gray-500">
+                {t('perPerson')}
+              </span>
             </span>
 
             <div className="flex items-center gap-1">
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-gray-400 hover:text-primary hover:bg-primary/5"
+                className="h-8 w-8 text-gray-400 hover:bg-primary/5 hover:text-primary"
                 onClick={handleDuplicate}
                 disabled={isPending}
                 title={t('duplicate')}
@@ -269,7 +282,7 @@ export function ExperienceManagementCard({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-gray-400 hover:text-red-500 hover:bg-red-50"
+                className="h-8 w-8 text-gray-400 hover:bg-red-50 hover:text-red-500"
                 onClick={() => setDeleteModalOpen(true)}
                 disabled={isPending}
                 title={tCommon('delete')}
@@ -279,8 +292,14 @@ export function ExperienceManagementCard({
               <Button
                 asChild
                 size="sm"
-                className="ml-1 bg-primary/10 hover:bg-primary text-primary hover:text-white font-bold"
+                className="ml-1 bg-primary font-bold text-white shadow-lg shadow-primary/20 hover:bg-[hsl(var(--primary-hover))]"
               >
+                <Link href={`/dashboard/experiences/${experience.id}/sessions`}>
+                  <ClipboardList className="mr-1 h-3.5 w-3.5" />
+                  Inscrits
+                </Link>
+              </Button>
+              <Button asChild size="sm" variant="outline" className="font-bold">
                 <Link href={`/dashboard/experiences/${experience.id}/edit`}>
                   {tCommon('edit')}
                   <Edit className="ml-1 h-3.5 w-3.5" />

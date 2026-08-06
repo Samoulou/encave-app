@@ -43,7 +43,14 @@ export function ClientReminder2hEmail({
 
   return (
     <EmailLayout locale={locale} preview={t(subjects.reminder2h, locale)}>
-      <Text style={{ fontSize: '24px', fontWeight: 'bold', color: '#7c2d12', margin: '0 0 16px 0' }}>
+      <Text
+        style={{
+          fontSize: '24px',
+          fontWeight: 'bold',
+          color: '#7c2d12',
+          margin: '0 0 16px 0',
+        }}
+      >
         {title}
       </Text>
 
@@ -57,10 +64,24 @@ export function ClientReminder2hEmail({
           textAlign: 'center',
         }}
       >
-        <Text style={{ margin: 0, fontWeight: 'bold', fontSize: '18px', color: '#92400e' }}>
+        <Text
+          style={{
+            margin: 0,
+            fontWeight: 'bold',
+            fontSize: '18px',
+            color: '#92400e',
+          }}
+        >
           {startsSoon}
         </Text>
-        <Text style={{ margin: '8px 0 0 0', fontSize: '24px', fontWeight: 'bold', color: '#7c2d12' }}>
+        <Text
+          style={{
+            margin: '8px 0 0 0',
+            fontSize: '24px',
+            fontWeight: 'bold',
+            color: '#7c2d12',
+          }}
+        >
           {formatEmailTime(date, locale)}
         </Text>
       </div>
@@ -69,9 +90,7 @@ export function ClientReminder2hEmail({
         {greeting} {guestName},
       </Text>
 
-      <Text style={{ margin: '0 0 24px 0' }}>
-        {intro}
-      </Text>
+      <Text style={{ margin: '0 0 24px 0' }}>{intro}</Text>
 
       {/* Quick Details */}
       <Section
@@ -85,17 +104,32 @@ export function ClientReminder2hEmail({
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <tbody>
             <tr>
-              <td style={{ padding: '8px 0', color: '#6b7280', width: '40%' }}>{experienceLabel}</td>
-              <td style={{ padding: '8px 0', fontWeight: '500' }}>{experienceTitle}</td>
+              <td style={{ padding: '8px 0', color: '#6b7280', width: '40%' }}>
+                {experienceLabel}
+              </td>
+              <td style={{ padding: '8px 0', fontWeight: '500' }}>
+                {experienceTitle}
+              </td>
             </tr>
             <tr>
-              <td style={{ padding: '8px 0', color: '#6b7280' }}>{timeLabel}</td>
-              <td style={{ padding: '8px 0', fontWeight: 'bold', fontSize: '18px', color: '#7c2d12' }}>
+              <td style={{ padding: '8px 0', color: '#6b7280' }}>
+                {timeLabel}
+              </td>
+              <td
+                style={{
+                  padding: '8px 0',
+                  fontWeight: 'bold',
+                  fontSize: '18px',
+                  color: '#7c2d12',
+                }}
+              >
                 {formatEmailTime(date, locale)}
               </td>
             </tr>
             <tr>
-              <td style={{ padding: '8px 0', color: '#6b7280' }}>{guestsLabel}</td>
+              <td style={{ padding: '8px 0', color: '#6b7280' }}>
+                {guestsLabel}
+              </td>
               <td style={{ padding: '8px 0' }}>{guestCount}</td>
             </tr>
           </tbody>
@@ -111,10 +145,14 @@ export function ClientReminder2hEmail({
           margin: '0 0 24px 0',
         }}
       >
-        <Text style={{ margin: '0 0 8px 0', fontWeight: 'bold', fontSize: '14px' }}>
+        <Text
+          style={{ margin: '0 0 8px 0', fontWeight: 'bold', fontSize: '14px' }}
+        >
           {wineryName}
         </Text>
-        <Text style={{ margin: '0 0 8px 0', color: '#6b7280', fontSize: '14px' }}>
+        <Text
+          style={{ margin: '0 0 8px 0', color: '#6b7280', fontSize: '14px' }}
+        >
           {wineryAddress}
         </Text>
         <Text style={{ margin: 0, color: '#6b7280', fontSize: '14px' }}>

@@ -4,6 +4,9 @@ import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import type { ActionResult } from '@/types/actions';
 import { logError } from '@/lib/logger';
+import { revalidateTag } from 'next/cache';
+import { invalidateExperienceCaches } from './experience-helpers';
+import { generateOccurrences } from '@/server/services/occurrence.service';
 
 /**
  * Normalize a date to UTC midnight to avoid timezone issues.
@@ -86,6 +89,15 @@ export async function blockDate(
       },
     });
 
+    // Public reads gate on BlockedDate at read time (P-05 / D3) —
+    // refresh the occurrence-backed views. Occurrences themselves are
+    // never mutated (bookings on the date survive untouched).
+    revalidateTag(`occurrences:${experienceId}`);
+    // Also purge the public 'experiences' ISR tag: the fiche/catalogue bake
+    // blocked dates at read time, and the 'occurrences:*' tag has no cache
+    // subscriber, so on its own it refreshes nothing the public pages read.
+    invalidateExperienceCaches();
+
     return {
       success: true,
       data: {
@@ -150,9 +162,29 @@ export async function unblockDate(
       },
     });
 
+    // The date is bookable again at read time (D3 — status was never
+    // mutated); regenerate to materialize occurrences generation had
+    // skipped while the date was blocked.
+    try {
+      await generateOccurrences(experienceId);
+    } catch (generationError) {
+      logError('Occurrence generation failed after unblock', generationError, {
+        action: 'unblockDate',
+        experienceId,
+      });
+    }
+    revalidateTag(`occurrences:${experienceId}`);
+    // Also purge the public 'experiences' ISR tag: the fiche/catalogue bake
+    // blocked dates at read time, and the 'occurrences:*' tag has no cache
+    // subscriber, so on its own it refreshes nothing the public pages read.
+    invalidateExperienceCaches();
+
     return { success: true, data: { success: true } };
   } catch (error) {
-    logError('unblockDate error', error, { action: 'unblockDate', experienceId });
+    logError('unblockDate error', error, {
+      action: 'unblockDate',
+      experienceId,
+    });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to unblock date' },
@@ -207,9 +239,13 @@ export async function blockDateForAllExperiences(
       skipDuplicates: true,
     });
 
+    // Bulk block touches every published experience's public reads.
+    invalidateExperienceCaches();
     return { success: true, data: { blockedCount: result.count } };
   } catch (error) {
-    logError('blockDateForAllExperiences error', error, { action: 'blockDateForAllExperiences' });
+    logError('blockDateForAllExperiences error', error, {
+      action: 'blockDateForAllExperiences',
+    });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to block date' },
@@ -256,9 +292,12 @@ export async function unblockDateForAllExperiences(
       },
     });
 
+    invalidateExperienceCaches();
     return { success: true, data: { unblockedCount: result.count } };
   } catch (error) {
-    logError('unblockDateForAllExperiences error', error, { action: 'unblockDateForAllExperiences' });
+    logError('unblockDateForAllExperiences error', error, {
+      action: 'unblockDateForAllExperiences',
+    });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to unblock date' },
@@ -312,7 +351,10 @@ export async function getBlockedDatesForExperience(
       data: { dates: blockedDates.map((bd) => bd.date) },
     };
   } catch (error) {
-    logError('getBlockedDatesForExperience error', error, { action: 'getBlockedDatesForExperience', experienceId });
+    logError('getBlockedDatesForExperience error', error, {
+      action: 'getBlockedDatesForExperience',
+      experienceId,
+    });
     return {
       success: false,
       error: { code: 'INTERNAL_ERROR', message: 'Failed to get blocked dates' },

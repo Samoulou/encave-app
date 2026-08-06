@@ -1,9 +1,20 @@
-import { auth } from '@/server/auth';
-import { redirect } from 'next/navigation';
-import { getLocale } from 'next-intl/server';
+import { auth, isCurrentAdminSessionExpired } from '@/server/auth';
+import { notFound, redirect } from 'next/navigation';
+import { NextIntlClientProvider } from 'next-intl';
+import { getLocale, getMessages } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { db } from '@/server/db';
-import { Home, Building2, LogOut } from 'lucide-react';
+import {
+  Home,
+  Building2,
+  Store,
+  CalendarDays,
+  ClipboardList,
+  Users,
+  ShieldCheck,
+  UserPlus,
+  LogOut,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 async function getPendingCount() {
@@ -19,60 +30,151 @@ export default async function AdminLayout({
 }) {
   const session = await auth();
 
-  if (!session?.user || session.user.role !== 'ADMIN') {
+  if (!session?.user) {
+    // Expired-cookie case (the middleware only covers absent cookies):
+    // keep the pre-P-06 behavior of returning the admin to their
+    // section after re-login.
+    const locale = await getLocale();
+    redirect(`/${locale}/login?callbackUrl=/${locale}/admin`);
+  }
+
+  // Sole role gate since P-06 removed the middleware fetch: a logged-in
+  // non-admin gets the same 404 the middleware used to rewrite to.
+  if (session.user.role !== 'ADMIN') {
+    notFound();
+  }
+
+  // One fresh read for both admin gates (suspension + mandatory TOTP) — fresh
+  // (not the cookie-cached session) so a just-enrolled admin isn't bounced
+  // back to setup. The setup page lives outside this layout (no redirect loop).
+  const guard = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { suspendedAt: true, twoFactorEnabled: true },
+  });
+
+  if (guard?.suspendedAt) {
     const locale = await getLocale();
     redirect(`/${locale}`);
   }
 
+  // P-14 (L-152): TOTP is mandatory for admins.
+  if (!guard?.twoFactorEnabled) {
+    const locale = await getLocale();
+    redirect(`/${locale}/admin-setup/2fa`);
+  }
+
+  // P-16 (G-3): the sliding refresh resets expiresAt to the global 90 d —
+  // enforce the 7 d admin window on the session's AGE at the boundary. The
+  // revocation happens in a route handler (an RSC render cannot set
+  // cookies), which then lands on the login page.
+  if (await isCurrentAdminSessionExpired()) {
+    const locale = await getLocale();
+    redirect(`/api/auth/session-expired?locale=${locale}`);
+  }
+
   const pendingCount = await getPendingCount();
 
+  // P-06 (L-203): full messages for the admin client surface — the root
+  // layout only carries the public subset now.
+  const messages = await getMessages();
+
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="border-b bg-white">
-        <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-8">
-            <Link href="/admin" className="text-xl font-bold text-burgundy-700">
-              EnCave Admin
-            </Link>
-            <nav aria-label="Admin navigation" className="flex items-center gap-4">
+    <NextIntlClientProvider messages={messages}>
+      <div className="min-h-screen bg-muted">
+        <header className="border-b bg-white">
+          <div className="container flex h-16 items-center justify-between">
+            <div className="flex items-center gap-8">
               <Link
                 href="/admin"
-                className="flex items-center gap-2 text-sm text-slate-600 hover:text-burgundy-700"
+                className="text-xl font-bold text-burgundy-700"
               >
-                <Home className="h-4 w-4" aria-hidden="true" />
-                Dashboard
+                EnCave Admin
               </Link>
-              <Link
-                href="/admin/wineries/pending"
-                className="flex items-center gap-2 text-sm text-slate-600 hover:text-burgundy-700"
+              <nav
+                aria-label="Admin navigation"
+                className="flex items-center gap-4"
               >
-                <Building2 className="h-4 w-4" aria-hidden="true" />
-                Pending Wineries
-                {pendingCount > 0 && (
-                  <span
-                    className="flex h-5 min-w-5 items-center justify-center rounded-full bg-burgundy-600 px-1.5 text-xs font-medium text-white"
-                    aria-label={`${pendingCount} pending`}
-                  >
-                    {pendingCount}
-                  </span>
-                )}
-              </Link>
-            </nav>
+                <Link
+                  href="/admin"
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-burgundy-700"
+                >
+                  <Home className="h-4 w-4" aria-hidden="true" />
+                  Dashboard
+                </Link>
+                <Link
+                  href="/admin/wineries/pending"
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-burgundy-700"
+                >
+                  <Building2 className="h-4 w-4" aria-hidden="true" />
+                  Pending Wineries
+                  {pendingCount > 0 && (
+                    <span
+                      className="flex h-5 min-w-5 items-center justify-center rounded-full bg-burgundy-600 px-1.5 text-xs font-medium text-white"
+                      aria-label={`${pendingCount} pending`}
+                    >
+                      {pendingCount}
+                    </span>
+                  )}
+                </Link>
+                <Link
+                  href="/admin/wineries"
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-burgundy-700"
+                >
+                  <Store className="h-4 w-4" aria-hidden="true" />
+                  Wineries
+                </Link>
+                <Link
+                  href="/admin/utilisateurs"
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-burgundy-700"
+                >
+                  <Users className="h-4 w-4" aria-hidden="true" />
+                  Users
+                </Link>
+                <Link
+                  href="/admin/events"
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-burgundy-700"
+                >
+                  <CalendarDays className="h-4 w-4" aria-hidden="true" />
+                  Events
+                </Link>
+                <Link
+                  href="/admin/bookings"
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-burgundy-700"
+                >
+                  <ClipboardList className="h-4 w-4" aria-hidden="true" />
+                  Bookings
+                </Link>
+                <Link
+                  href="/admin/invitations"
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-burgundy-700"
+                >
+                  <UserPlus className="h-4 w-4" aria-hidden="true" />
+                  Invitations
+                </Link>
+                <Link
+                  href="/admin/compliance"
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-burgundy-700"
+                >
+                  <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                  Compliance
+                </Link>
+              </nav>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-muted-foreground">
+                {session.user.email}
+              </span>
+              <form action="/api/auth/signout" method="POST">
+                <Button variant="outline" size="sm" type="submit">
+                  <LogOut className="mr-2 h-4 w-4" aria-hidden="true" />
+                  Sign out
+                </Button>
+              </form>
+            </div>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-slate-600">
-              {session.user.email}
-            </span>
-            <form action="/api/auth/signout" method="POST">
-              <Button variant="outline" size="sm" type="submit">
-                <LogOut className="mr-2 h-4 w-4" aria-hidden="true" />
-                Sign out
-              </Button>
-            </form>
-          </div>
-        </div>
-      </header>
-      <main id="main-content">{children}</main>
-    </div>
+        </header>
+        <main id="main-content">{children}</main>
+      </div>
+    </NextIntlClientProvider>
   );
 }

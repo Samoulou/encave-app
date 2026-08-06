@@ -2,6 +2,36 @@ import type { Locale } from '@prisma/client';
 
 // Email subject lines
 export const subjects = {
+  tastingRecap: {
+    FR: 'Vos coups de cœur chez {wineryName}',
+    DE: 'Ihre Favoriten bei {wineryName}',
+    EN: 'Your favourites at {wineryName}',
+  },
+  tastingSheetReminder: {
+    FR: 'Fiche dégustation à remplir',
+    DE: 'Degustationsblatt auszufüllen',
+    EN: 'Tasting sheet to fill in',
+  },
+  wineOrderRequestWinery: {
+    FR: 'Nouvelle demande de commande — {clientName}',
+    DE: 'Neue Bestellanfrage — {clientName}',
+    EN: 'New order request — {clientName}',
+  },
+  wineOrderRequestClient: {
+    FR: 'Votre demande de commande chez {wineryName}',
+    DE: 'Ihre Bestellanfrage bei {wineryName}',
+    EN: 'Your order request at {wineryName}',
+  },
+  giftCardPurchase: {
+    FR: 'Votre bon cadeau EnCave est prêt',
+    DE: 'Ihr EnCave Geschenkgutschein ist bereit',
+    EN: 'Your EnCave gift card is ready',
+  },
+  giftCardDelivery: {
+    FR: '{purchaserName} vous offre un bon cadeau EnCave',
+    DE: '{purchaserName} schenkt Ihnen einen EnCave Geschenkgutschein',
+    EN: '{purchaserName} sent you an EnCave gift card',
+  },
   bookingConfirmation: {
     FR: 'Confirmation de votre reservation',
     DE: 'Bestatigung Ihrer Reservierung',
@@ -16,6 +46,41 @@ export const subjects = {
     FR: 'Annulation de votre reservation',
     DE: 'Stornierung Ihrer Reservierung',
     EN: 'Your booking cancellation',
+  },
+  bookingCancelledByWinery: {
+    FR: '{winemakerName} a dû annuler votre expérience',
+    DE: '{winemakerName} musste Ihr Erlebnis absagen',
+    EN: '{winemakerName} had to cancel your experience',
+  },
+  bookingExpired: {
+    FR: 'Votre réservation EnCave a expiré',
+    DE: 'Ihre EnCave-Reservierung ist abgelaufen',
+    EN: 'Your EnCave booking has expired',
+  },
+  manualRefundClient: {
+    FR: 'Votre réservation EnCave a été remboursée',
+    DE: 'Ihre EnCave-Reservierung wurde erstattet',
+    EN: 'Your EnCave booking has been refunded',
+  },
+  manualRefundWinemaker: {
+    FR: 'Une réservation a été remboursée par EnCave',
+    DE: 'Eine Reservierung wurde von EnCave erstattet',
+    EN: 'A booking has been refunded by EnCave',
+  },
+  noShowFeeCharged: {
+    FR: 'Frais de non-présentation prélevés',
+    DE: 'Nichterscheinungsgebühr abgebucht',
+    EN: 'No-show fee charged',
+  },
+  accountDeleted: {
+    FR: 'Votre compte EnCave a été supprimé',
+    DE: 'Ihr EnCave-Konto wurde gelöscht',
+    EN: 'Your EnCave account has been deleted',
+  },
+  emailChangedNotice: {
+    FR: "L'adresse e-mail de votre compte EnCave a été modifiée",
+    DE: 'Die E-Mail-Adresse Ihres EnCave-Kontos wurde geändert',
+    EN: 'The email address of your EnCave account was changed',
   },
   wineryNewBooking: {
     FR: 'Nouvelle reservation recue',
@@ -37,6 +102,11 @@ export const subjects = {
     DE: 'Aktualisierung Ihrer Registrierung',
     EN: 'Registration update',
   },
+  adminNewWinery: {
+    FR: 'Nouveau domaine à valider : {wineryName}',
+    DE: 'Neues Weingut zu prüfen: {wineryName}',
+    EN: 'New winery to review: {wineryName}',
+  },
   passwordReset: {
     FR: 'Reinitialisation de votre mot de passe',
     DE: 'Zurucksetzung Ihres Passworts',
@@ -51,6 +121,11 @@ export const subjects = {
     FR: 'Verifiez votre adresse e-mail',
     DE: 'Verifizieren Sie Ihre E-Mail-Adresse',
     EN: 'Verify your email address',
+  },
+  otpCode: {
+    FR: 'Votre code de vérification EnCave',
+    DE: 'Ihr EnCave-Bestätigungscode',
+    EN: 'Your EnCave verification code',
   },
   reminder2h: {
     FR: 'Votre experience commence bientot!',
@@ -72,6 +147,46 @@ export const subjects = {
     DE: 'Ihre wochentliche Zusammenfassung',
     EN: 'Your weekly summary',
   },
+  stripeActionRequired: {
+    FR: 'Action requise : votre compte Stripe a besoin de vous',
+    DE: 'Handlungsbedarf: Ihr Stripe-Konto braucht Sie',
+    EN: 'Action required: your Stripe account needs you',
+  },
+  requestSubmitted: {
+    FR: 'Votre demande a bien été transmise à {wineryName}',
+    DE: 'Ihre Anfrage wurde an {wineryName} übermittelt',
+    EN: 'Your request has been sent to {wineryName}',
+  },
+  contactMessage: {
+    FR: 'Nouveau message de contact — {name}',
+    DE: 'Neue Kontaktnachricht — {name}',
+    EN: 'New contact message — {name}',
+  },
+  contactAck: {
+    FR: 'Nous avons bien reçu votre message',
+    DE: 'Wir haben Ihre Nachricht erhalten',
+    EN: 'We received your message',
+  },
+  requestNewCustom: {
+    FR: 'Nouvelle demande sur-mesure — {clientName}',
+    DE: 'Neue Massanfrage — {clientName}',
+    EN: 'New custom request — {clientName}',
+  },
+  requestOfferReceived: {
+    FR: 'Votre offre de {wineryName} est arrivée',
+    DE: 'Ihr Angebot von {wineryName} ist da',
+    EN: 'Your offer from {wineryName} has arrived',
+  },
+  requestOfferExpiring: {
+    FR: 'Votre offre de {wineryName} expire bientôt',
+    DE: 'Ihr Angebot von {wineryName} läuft bald ab',
+    EN: 'Your offer from {wineryName} is expiring soon',
+  },
+  requestSlaEscalation: {
+    FR: 'Demande sur-mesure sans réponse depuis 48 h — {wineryName}',
+    DE: 'Massanfrage seit 48 h unbeantwortet — {wineryName}',
+    EN: 'Custom request unanswered for 48 h — {wineryName}',
+  },
 } as const;
 
 // Common email strings
@@ -87,7 +202,7 @@ export const common = {
     EN: 'Best regards',
   },
   team: {
-    FR: "L'equipe EnCave",
+    FR: "L'équipe EnCave",
     DE: 'Das EnCave-Team',
     EN: 'The EnCave Team',
   },
@@ -207,6 +322,20 @@ export const bookingCancellation = {
     FR: 'Si vous avez deja paye, votre remboursement sera traite sous 5-7 jours ouvrables.',
     DE: 'Falls Sie bereits bezahlt haben, wird Ihre Ruckerstattung innerhalb von 5-7 Werktagen bearbeitet.',
     EN: 'If you have already paid, your refund will be processed within 5-7 business days.',
+  },
+  // {amount} is replaced with the exact TOTAL returned (policy-based).
+  // Gift-aware wording (P-16 review #120): since ADR-0003 the amount can
+  // include a share re-credited to a gift card — never promise it all as
+  // a bank refund.
+  refundExact: {
+    FR: 'Un montant de {amount} vous sera restitué : sur votre moyen de paiement sous 5-7 jours ouvrables et, pour la part payée par bon cadeau, recréditée sur votre bon.',
+    DE: 'Ein Betrag von {amount} wird Ihnen zurückerstattet: auf Ihr Zahlungsmittel innerhalb von 5-7 Werktagen und, für den mit Gutschein bezahlten Anteil, als Wiedergutschrift auf Ihren Gutschein.',
+    EN: 'An amount of {amount} will be returned to you: to your payment method within 5-7 business days and, for the share paid with a gift card, re-credited to your gift card.',
+  },
+  noRefund: {
+    FR: "Conformement a la politique d'annulation de la cave, cette annulation ne donne pas droit a un remboursement.",
+    DE: 'Gemass den Stornierungsbedingungen des Weinguts besteht kein Anspruch auf Ruckerstattung.',
+    EN: "Per the winery's cancellation policy, this cancellation is not eligible for a refund.",
   },
   browseMore: {
     FR: "Decouvrir d'autres experiences",
@@ -329,7 +458,7 @@ export const wineryVerification = {
       EN: 'If you believe this decision was made in error or would like to provide additional information, please contact our support team.',
     },
     resubmit: {
-      FR: "Vous pouvez soumettre une nouvelle inscription une fois que vous avez traite les points mentionnes ci-dessus.",
+      FR: 'Vous pouvez soumettre une nouvelle inscription une fois que vous avez traite les points mentionnes ci-dessus.',
       DE: 'Sie konnen gerne eine neue Registrierung einreichen, sobald Sie die oben genannten Punkte bearbeitet haben.',
       EN: 'You are welcome to submit a new registration once you have addressed the concerns mentioned above.',
     },
@@ -363,6 +492,38 @@ export const auth = {
       FR: "Si vous n'avez pas fait cette demande, vous pouvez ignorer cet e-mail.",
       DE: 'Wenn Sie diese Anfrage nicht gestellt haben, konnen Sie diese E-Mail ignorieren.',
       EN: "If you didn't make this request, you can safely ignore this email.",
+    },
+  },
+  otp: {
+    title: {
+      FR: 'Votre code de vérification',
+      DE: 'Ihr Bestätigungscode',
+      EN: 'Your verification code',
+    },
+    introSignIn: {
+      FR: 'Utilisez ce code pour vous connecter à votre compte EnCave.',
+      DE: 'Verwenden Sie diesen Code, um sich bei Ihrem EnCave-Konto anzumelden.',
+      EN: 'Use this code to sign in to your EnCave account.',
+    },
+    introForgetPassword: {
+      FR: 'Utilisez ce code pour réinitialiser votre mot de passe EnCave.',
+      DE: 'Verwenden Sie diesen Code, um Ihr EnCave-Passwort zurückzusetzen.',
+      EN: 'Use this code to reset your EnCave password.',
+    },
+    introEmailVerification: {
+      FR: 'Utilisez ce code pour vérifier votre adresse e-mail.',
+      DE: 'Verwenden Sie diesen Code, um Ihre E-Mail-Adresse zu bestätigen.',
+      EN: 'Use this code to verify your email address.',
+    },
+    expiry: {
+      FR: 'Ce code expire dans 15 minutes.',
+      DE: 'Dieser Code läuft in 15 Minuten ab.',
+      EN: 'This code expires in 15 minutes.',
+    },
+    ignore: {
+      FR: "Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail.",
+      DE: 'Wenn Sie diese Anfrage nicht gestellt haben, ignorieren Sie diese E-Mail.',
+      EN: "If you didn't request this, you can safely ignore this email.",
     },
   },
   welcome: {
@@ -448,7 +609,7 @@ export const dailyDigest = {
     EN: "Today's bookings",
   },
   intro: {
-    FR: 'Voici un apercu de vos reservations pour aujourd\'hui et demain.',
+    FR: "Voici un apercu de vos reservations pour aujourd'hui et demain.",
     DE: 'Hier ist eine Ubersicht Ihrer Buchungen fur heute und morgen.',
     EN: "Here's an overview of your bookings for today and tomorrow.",
   },
@@ -502,17 +663,17 @@ export const postExperience = {
     EN: 'Your feedback matters',
   },
   feedbackText: {
-    FR: 'Nous travaillons sur une fonctionnalite d\'avis. En attendant, n\'hesitez pas a contacter le domaine directement pour partager votre experience.',
+    FR: "Nous travaillons sur une fonctionnalite d'avis. En attendant, n'hesitez pas a contacter le domaine directement pour partager votre experience.",
     DE: 'Wir arbeiten an einer Bewertungsfunktion. In der Zwischenzeit konnen Sie das Weingut direkt kontaktieren, um Ihre Erfahrungen zu teilen.',
-    EN: 'We\'re working on a review feature. In the meantime, feel free to contact the winery directly to share your experience.',
+    EN: "We're working on a review feature. In the meantime, feel free to contact the winery directly to share your experience.",
   },
   discoverMore: {
-    FR: 'Envie de decouvrir d\'autres experiences viticoles en Suisse?',
+    FR: "Envie de decouvrir d'autres experiences viticoles en Suisse?",
     DE: 'Mochten Sie weitere Weinerlebnisse in der Schweiz entdecken?',
     EN: 'Want to discover more wine experiences in Switzerland?',
   },
   discoverMoreCta: {
-    FR: 'Decouvrir plus d\'experiences',
+    FR: "Decouvrir plus d'experiences",
     DE: 'Mehr Erlebnisse entdecken',
     EN: 'Discover more experiences',
   },
@@ -570,9 +731,704 @@ export const weeklySummary = {
     DE: 'Dashboard anzeigen',
     EN: 'View dashboard',
   },
+  payoutsReceived: {
+    FR: 'Virements reçus cette semaine',
+    DE: 'Diese Woche erhaltene Auszahlungen',
+    EN: 'Payouts received this week',
+  },
+  payoutsLine: {
+    FR: '{amount} — {count} virement(s)',
+    DE: '{amount} — {count} Auszahlung(en)',
+    EN: '{amount} — {count} payout(s)',
+  },
+  downloadStatement: {
+    FR: 'Télécharger le relevé de {month}',
+    DE: 'Abrechnung {month} herunterladen',
+    EN: 'Download the {month} statement',
+  },
+} as const;
+
+// Booking cancelled by winery email strings
+export const bookingCancelledByWinery = {
+  title: {
+    FR: 'Votre encaveur a dû annuler',
+    DE: 'Ihr Winzer musste absagen',
+    EN: 'Your winemaker had to cancel',
+  },
+  intro: {
+    FR: 'Nous sommes désolés : {winemakerName} a dû annuler la session "{experienceTitle}" prévue le {date}.',
+    DE: 'Es tut uns leid: {winemakerName} musste die Session "{experienceTitle}" vom {date} absagen.',
+    EN: 'We are sorry: {winemakerName} had to cancel the session "{experienceTitle}" scheduled for {date}.',
+  },
+  reason: {
+    FR: 'Motif communiqué : "{reason}"',
+    DE: 'Angegebener Grund: "{reason}"',
+    EN: 'Reason given: "{reason}"',
+  },
+  refund: {
+    FR: 'Vous êtes intégralement remboursé. Le montant de {amount} sera crédité sur votre moyen de paiement sous 5 à 10 jours ouvrés selon votre banque.',
+    DE: 'Sie erhalten den vollen Betrag zurück. Der Betrag von {amount} wird Ihrem Zahlungsmittel je nach Bank innerhalb von 5 bis 10 Werktagen gutgeschrieben.',
+    EN: 'You will receive a full refund. The amount of {amount} will be credited to your payment method within 5 to 10 business days, depending on your bank.',
+  },
+  browseMore: {
+    FR: "Découvrir d'autres expériences",
+    DE: 'Weitere Erlebnisse entdecken',
+    EN: 'Browse more experiences',
+  },
+  alternativesTitle: {
+    FR: 'Des domaines à proximité pour vous consoler',
+    DE: 'Weingüter in der Nähe als kleiner Trost',
+    EN: 'Nearby wineries to make it up to you',
+  },
+  apology: {
+    FR: 'Avec nos excuses,',
+    DE: 'Mit unserer Entschuldigung,',
+    EN: 'With our apologies,',
+  },
+} as const;
+
+// Admin notification #22 — new winery to validate (internal inbox)
+export const adminNewWinery = {
+  title: {
+    FR: 'Nouveau domaine à valider',
+    DE: 'Neues Weingut zu prüfen',
+    EN: 'New winery to review',
+  },
+  intro: {
+    FR: 'Un nouveau domaine vient de s’inscrire et attend une validation.',
+    DE: 'Ein neues Weingut hat sich registriert und wartet auf Prüfung.',
+    EN: 'A new winery has just signed up and is awaiting review.',
+  },
+  nameLabel: {
+    FR: 'Domaine',
+    DE: 'Weingut',
+    EN: 'Winery',
+  },
+  communeLabel: {
+    FR: 'Commune',
+    DE: 'Gemeinde',
+    EN: 'Municipality',
+  },
+  contactLabel: {
+    FR: 'Contact',
+    DE: 'Kontakt',
+    EN: 'Contact',
+  },
+  cta: {
+    FR: 'Examiner le domaine',
+    DE: 'Weingut prüfen',
+    EN: 'Review the winery',
+  },
+} as const;
+
+// Booking expired email strings
+export const bookingExpired = {
+  title: {
+    FR: 'Votre réservation a expiré',
+    DE: 'Ihre Reservierung ist abgelaufen',
+    EN: 'Your booking has expired',
+  },
+  intro: {
+    FR: "Votre paiement n'a pas été finalisé dans les 30 minutes. Votre réservation pour {experienceTitle} le {date} a été annulée et votre place remise en disponibilité. Aucun montant n'a été débité.",
+    DE: 'Ihre Zahlung wurde nicht innerhalb von 30 Minuten abgeschlossen. Ihre Reservierung für {experienceTitle} am {date} wurde storniert und Ihr Platz wieder freigegeben. Es wurde kein Betrag abgebucht.',
+    EN: 'Your payment was not completed within 30 minutes. Your booking for {experienceTitle} on {date} has been cancelled and your spot released. No amount has been charged.',
+  },
+  cta: {
+    FR: "Retrouver l'expérience",
+    DE: 'Zum Erlebnis zurückkehren',
+    EN: 'Back to the experience',
+  },
+  signoff: {
+    FR: 'À très vite chez nos encaveurs,',
+    DE: 'Bis bald bei unseren Winzern,',
+    EN: 'See you soon at our winemakers,',
+  },
+} as const;
+
+// Manual refund email strings (admin-triggered refunds)
+export const manualRefund = {
+  client: {
+    title: {
+      FR: 'Votre remboursement est en route',
+      DE: 'Ihre Rückerstattung ist unterwegs',
+      EN: 'Your refund is on its way',
+    },
+    intro: {
+      FR: 'Nous vous confirmons le remboursement de {amount} pour votre réservation {reference} ({experienceTitle}).',
+      DE: 'Wir bestätigen Ihnen die Rückerstattung von {amount} für Ihre Reservierung {reference} ({experienceTitle}).',
+      EN: 'We confirm the refund of {amount} for your booking {reference} ({experienceTitle}).',
+    },
+    timing: {
+      FR: 'Les fonds réapparaîtront sur votre moyen de paiement sous 5 à 10 jours ouvrés selon votre banque.',
+      DE: 'Der Betrag wird Ihrem Zahlungsmittel je nach Bank innerhalb von 5 bis 10 Werktagen wieder gutgeschrieben.',
+      EN: 'The funds will reappear on your payment method within 5 to 10 business days, depending on your bank.',
+    },
+  },
+  winemaker: {
+    title: {
+      FR: 'Une réservation a été remboursée par EnCave',
+      DE: 'Eine Reservierung wurde von EnCave erstattet',
+      EN: 'A booking has been refunded by EnCave',
+    },
+    intro: {
+      FR: "L'équipe EnCave a procédé au remboursement de la réservation {reference} ({experienceTitle}, le {date}) pour un montant de {amount}.",
+      DE: 'Das EnCave-Team hat die Reservierung {reference} ({experienceTitle}, am {date}) in Höhe von {amount} erstattet.',
+      EN: 'The EnCave team has refunded booking {reference} ({experienceTitle}, on {date}) for an amount of {amount}.',
+    },
+    reason: {
+      FR: 'Motif communiqué : {reason}.',
+      DE: 'Angegebener Grund: {reason}.',
+      EN: 'Reason given: {reason}.',
+    },
+    deduction: {
+      FR: 'Ce montant est automatiquement déduit de votre prochain reversement Stripe Connect.',
+      DE: 'Dieser Betrag wird automatisch von Ihrer nächsten Stripe-Connect-Auszahlung abgezogen.',
+      EN: 'This amount is automatically deducted from your next Stripe Connect payout.',
+    },
+  },
+} as const;
+
+// No-show fee charged, to the client (P-08 / email #13, US-220)
+export const noShowFeeCharged = {
+  title: {
+    FR: 'Frais de non-présentation prélevés',
+    DE: 'Nichterscheinungsgebühr abgebucht',
+    EN: 'No-show fee charged',
+  },
+  intro: {
+    FR: 'Bonjour {firstName}, comme vous ne vous êtes pas présenté·e à votre réservation {reference} ({experienceTitle}, le {date}) et sans annulation dans les délais, {wineryName} a prélevé les frais de non-présentation de {amount}.',
+    DE: 'Guten Tag {firstName}, da Sie zu Ihrer Reservierung {reference} ({experienceTitle}, am {date}) nicht erschienen sind und nicht rechtzeitig storniert haben, hat {wineryName} die Nichterscheinungsgebühr von {amount} abgebucht.',
+    EN: 'Hello {firstName}, as you did not attend your booking {reference} ({experienceTitle}, on {date}) and did not cancel in time, {wineryName} charged the no-show fee of {amount}.',
+  },
+  policy: {
+    FR: 'Vous aviez accepté cette politique de non-présentation le {acceptedDate} lors de votre réservation.',
+    DE: 'Sie hatten diese Nichterscheinungs-Richtlinie am {acceptedDate} bei Ihrer Reservierung akzeptiert.',
+    EN: 'You accepted this no-show policy on {acceptedDate} when you booked.',
+  },
+  contact: {
+    FR: 'Une question ? Répondez à cet e-mail ou contactez directement le domaine.',
+    DE: 'Fragen? Antworten Sie auf diese E-Mail oder kontaktieren Sie das Weingut direkt.',
+    EN: 'Any questions? Reply to this email or contact the winery directly.',
+  },
+} as const;
+
+// Account deleted email strings (nLPD)
+export const accountDeleted = {
+  title: {
+    FR: 'Votre compte a été supprimé',
+    DE: 'Ihr Konto wurde gelöscht',
+    EN: 'Your account has been deleted',
+  },
+  intro: {
+    FR: 'Bonjour, nous vous confirmons la suppression de votre compte EnCave en date du {date}. Vos données personnelles ont été effacées de notre plateforme.',
+    DE: 'Guten Tag, wir bestätigen Ihnen die Löschung Ihres EnCave-Kontos per {date}. Ihre persönlichen Daten wurden von unserer Plattform entfernt.',
+    EN: 'Hello, we confirm the deletion of your EnCave account as of {date}. Your personal data has been erased from our platform.',
+  },
+  retention: {
+    FR: "Conformément au droit suisse, nous conservons l'historique anonymisé de vos réservations pendant 10 ans pour des raisons comptables.",
+    DE: 'Gemäss schweizerischem Recht bewahren wir den anonymisierten Verlauf Ihrer Reservierungen aus buchhalterischen Gründen während 10 Jahren auf.',
+    EN: 'In accordance with Swiss law, we retain the anonymised history of your bookings for 10 years for accounting purposes.',
+  },
+} as const;
+
+// Email-changed security notice (P-16 / G-2): always sent to the OLD
+// address when a self-service email change applies instantly.
+export const emailChangedNotice = {
+  title: {
+    FR: 'Votre adresse e-mail a été modifiée',
+    DE: 'Ihre E-Mail-Adresse wurde geändert',
+    EN: 'Your email address was changed',
+  },
+  intro: {
+    FR: "Bonjour, l'adresse e-mail de votre compte EnCave vient d'être remplacée par {newEmail}.",
+    DE: 'Guten Tag, die E-Mail-Adresse Ihres EnCave-Kontos wurde soeben durch {newEmail} ersetzt.',
+    EN: 'Hello, the email address of your EnCave account was just replaced with {newEmail}.',
+  },
+  warning: {
+    FR: "Si vous n'êtes pas à l'origine de ce changement, répondez immédiatement à cet e-mail ou écrivez à support@encave.ch — votre compte est peut-être compromis.",
+    DE: 'Falls Sie diese Änderung nicht veranlasst haben, antworten Sie sofort auf diese E-Mail oder schreiben Sie an support@encave.ch — Ihr Konto könnte kompromittiert sein.',
+    EN: 'If you did not make this change, reply to this email immediately or write to support@encave.ch — your account may be compromised.',
+  },
+} as const;
+
+// Tasting recap email strings (P-07 / email #3, US-230)
+export const tastingRecap = {
+  title: {
+    FR: 'Vos coups de cœur chez {wineryName}',
+    DE: 'Ihre Favoriten bei {wineryName}',
+    EN: 'Your favourites at {wineryName}',
+  },
+  intro: {
+    FR: 'Bonjour {guestName}, merci de votre visite ! Voici les vins que vous avez dégustés — de quoi prolonger le moment à la maison.',
+    DE: 'Guten Tag {guestName}, danke für Ihren Besuch! Hier sind die Weine, die Sie degustiert haben — um den Moment zu Hause zu verlängern.',
+    EN: 'Hello {guestName}, thank you for your visit! Here are the wines you tasted — a way to bring the moment home.',
+  },
+  cta: {
+    FR: 'Commander ces vins',
+    DE: 'Diese Weine bestellen',
+    EN: 'Order these wines',
+  },
+  note: {
+    FR: 'Votre demande part directement chez {wineryName}, qui vous recontactera pour la livraison et le paiement.',
+    DE: 'Ihre Anfrage geht direkt an {wineryName}, das Sie für Lieferung und Zahlung kontaktieren wird.',
+    EN: 'Your request goes directly to {wineryName}, who will get back to you about delivery and payment.',
+  },
+} as const;
+
+// Gift card purchaser confirmation, immediate (P-09 / email #6)
+export const giftCardPurchase = {
+  title: {
+    FR: 'Votre bon cadeau est prêt 🎁',
+    DE: 'Ihr Geschenkgutschein ist bereit 🎁',
+    EN: 'Your gift card is ready 🎁',
+  },
+  intro: {
+    FR: 'Bonjour {purchaserName}, merci ! Votre bon cadeau d’une valeur de {amount} est confirmé.',
+    DE: 'Guten Tag {purchaserName}, vielen Dank! Ihr Geschenkgutschein im Wert von {amount} ist bestätigt.',
+    EN: 'Hello {purchaserName}, thank you! Your gift card worth {amount} is confirmed.',
+  },
+  scheduled: {
+    FR: 'Il sera envoyé à {recipientName} le {deliverDate}. Vous en trouverez aussi une copie (PDF) en pièce jointe.',
+    DE: 'Er wird {recipientName} am {deliverDate} zugesandt. Eine Kopie (PDF) finden Sie im Anhang.',
+    EN: 'It will be sent to {recipientName} on {deliverDate}. A copy (PDF) is also attached.',
+  },
+  codeLabel: {
+    FR: 'Code',
+    DE: 'Code',
+    EN: 'Code',
+  },
+  validity: {
+    FR: 'Valable jusqu’au {expiryDate}, en une ou plusieurs fois.',
+    DE: 'Gültig bis {expiryDate}, ganz oder in Teilen.',
+    EN: 'Valid until {expiryDate}, in one or several visits.',
+  },
+} as const;
+
+// Gift card recipient delivery, on the chosen date (P-09 / email #7)
+export const giftCardDelivery = {
+  title: {
+    FR: 'Vous avez reçu un bon cadeau 🎁',
+    DE: 'Sie haben einen Geschenkgutschein erhalten 🎁',
+    EN: 'You received a gift card 🎁',
+  },
+  intro: {
+    FR: 'Bonjour {recipientName}, {purchaserName} vous offre un bon cadeau EnCave d’une valeur de {amount}.',
+    DE: 'Guten Tag {recipientName}, {purchaserName} schenkt Ihnen einen EnCave Geschenkgutschein im Wert von {amount}.',
+    EN: 'Hello {recipientName}, {purchaserName} is giving you an EnCave gift card worth {amount}.',
+  },
+  message: {
+    FR: 'Son message : « {message} »',
+    DE: 'Die Nachricht: „{message}“',
+    EN: 'Their message: “{message}”',
+  },
+  cta: {
+    FR: 'Voir mon bon cadeau',
+    DE: 'Meinen Gutschein ansehen',
+    EN: 'View my gift card',
+  },
+  validity: {
+    FR: 'Valable jusqu’au {expiryDate}, en une ou plusieurs fois, sur encave.ch.',
+    DE: 'Gültig bis {expiryDate}, ganz oder in Teilen, auf encave.ch.',
+    EN: 'Valid until {expiryDate}, in one or several visits, on encave.ch.',
+  },
+} as const;
+
+// Empty tasting sheet reminder, 21h (P-07 / email #21)
+export const tastingSheetReminder = {
+  title: {
+    FR: 'Votre fiche dégustation vous attend',
+    DE: 'Ihr Degustationsblatt wartet auf Sie',
+    EN: 'Your tasting sheet is waiting',
+  },
+  intro: {
+    FR: "Bonjour {firstName}, vos hôtes du jour sont repartis — cochez les vins servis pour qu'ils reçoivent leurs coups de cœur par email.",
+    DE: 'Guten Tag {firstName}, Ihre heutigen Gäste sind abgereist — haken Sie die servierten Weine ab, damit sie ihre Favoriten per E-Mail erhalten.',
+    EN: 'Hello {firstName}, today’s guests have left — tick the wines you served so they receive their favourites by email.',
+  },
+  sessionLine: {
+    FR: '{title} — {timeSlot}, {count} pers.',
+    DE: '{title} — {timeSlot}, {count} Pers.',
+    EN: '{title} — {timeSlot}, {count} guests',
+  },
+  cta: {
+    FR: 'Remplir la fiche',
+    DE: 'Blatt ausfüllen',
+    EN: 'Fill in the sheet',
+  },
+} as const;
+
+// Wine order request from the recap CTA (P-07 / US-230)
+export const wineOrderRequest = {
+  winery: {
+    title: {
+      FR: 'Nouvelle demande de commande',
+      DE: 'Neue Bestellanfrage',
+      EN: 'New order request',
+    },
+    intro: {
+      FR: '{clientName} a dégusté chez vous ({reference}) et souhaite commander :',
+      DE: '{clientName} hat bei Ihnen degustiert ({reference}) und möchte bestellen:',
+      EN: '{clientName} tasted at your winery ({reference}) and would like to order:',
+    },
+    contact: {
+      FR: 'Coordonnées : {email}{phone}',
+      DE: 'Kontakt: {email}{phone}',
+      EN: 'Contact details: {email}{phone}',
+    },
+    total: {
+      FR: 'Total indicatif : {amount}',
+      DE: 'Unverbindliche Summe: {amount}',
+      EN: 'Indicative total: {amount}',
+    },
+    note: {
+      FR: 'Répondez directement au client pour convenir de la livraison et du paiement.',
+      DE: 'Antworten Sie dem Kunden direkt, um Lieferung und Zahlung zu vereinbaren.',
+      EN: 'Reply to the client directly to arrange delivery and payment.',
+    },
+  },
+  client: {
+    title: {
+      FR: 'Votre demande est partie !',
+      DE: 'Ihre Anfrage ist unterwegs!',
+      EN: 'Your request is on its way!',
+    },
+    intro: {
+      FR: 'Nous avons transmis votre demande à {wineryName}, qui vous recontactera très vite pour la livraison et le paiement.',
+      DE: 'Wir haben Ihre Anfrage an {wineryName} weitergeleitet — man wird Sie bald wegen Lieferung und Zahlung kontaktieren.',
+      EN: 'We forwarded your request to {wineryName}, who will get back to you soon about delivery and payment.',
+    },
+    recap: {
+      FR: 'Votre sélection :',
+      DE: 'Ihre Auswahl:',
+      EN: 'Your selection:',
+    },
+  },
+} as const;
+
+// Email #18 — Stripe action required (P-13 / L-143)
+export const stripeActionRequired = {
+  title: {
+    FR: 'Action requise sur votre compte Stripe',
+    DE: 'Handlungsbedarf bei Ihrem Stripe-Konto',
+    EN: 'Action required on your Stripe account',
+  },
+  intro: {
+    FR: 'Bonjour {firstName}, Stripe a besoin d’informations supplémentaires pour continuer à verser vos revenus. Sans action de votre part, vos versements peuvent être suspendus.',
+    DE: 'Guten Tag {firstName}, Stripe benötigt zusätzliche Angaben, um Ihre Einnahmen weiterhin auszuzahlen. Ohne Ihr Zutun können Ihre Auszahlungen ausgesetzt werden.',
+    EN: 'Hello {firstName}, Stripe needs additional information to keep paying out your earnings. Without action, your payouts may be paused.',
+  },
+  listTitle: {
+    FR: 'Éléments demandés :',
+    DE: 'Angeforderte Angaben:',
+    EN: 'Requested items:',
+  },
+  cta: {
+    FR: 'Compléter mon compte Stripe',
+    DE: 'Mein Stripe-Konto vervollständigen',
+    EN: 'Complete my Stripe account',
+  },
+  note: {
+    FR: 'Le lien vous emmène sur votre profil EnCave, d’où vous pouvez reprendre la configuration Stripe en quelques minutes.',
+    DE: 'Der Link führt zu Ihrem EnCave-Profil, von dem aus Sie die Stripe-Einrichtung in wenigen Minuten abschliessen können.',
+    EN: 'The link takes you to your EnCave profile, from which you can resume the Stripe setup in a few minutes.',
+  },
+} as const;
+
+/**
+ * Human labels for the most common Stripe `currently_due` codes.
+ * Anything unknown falls back to the raw code — never hidden.
+ */
+export const stripeRequirementLabels: Record<string, Record<Locale, string>> = {
+  external_account: {
+    FR: 'Compte bancaire pour les versements',
+    DE: 'Bankkonto für Auszahlungen',
+    EN: 'Bank account for payouts',
+  },
+  'individual.verification.document': {
+    FR: 'Document d’identité',
+    DE: 'Identitätsnachweis',
+    EN: 'Identity document',
+  },
+  'individual.verification.additional_document': {
+    FR: 'Justificatif de domicile',
+    DE: 'Wohnsitznachweis',
+    EN: 'Proof of address',
+  },
+  'business_profile.url': {
+    FR: 'Site web ou description de l’activité',
+    DE: 'Website oder Beschreibung der Tätigkeit',
+    EN: 'Website or business description',
+  },
+  'business_profile.mcc': {
+    FR: 'Catégorie d’activité',
+    DE: 'Tätigkeitskategorie',
+    EN: 'Business category',
+  },
+  'tos_acceptance.date': {
+    FR: 'Acceptation des conditions Stripe',
+    DE: 'Zustimmung zu den Stripe-Bedingungen',
+    EN: 'Acceptance of the Stripe terms',
+  },
+  'individual.dob.day': {
+    FR: 'Date de naissance',
+    DE: 'Geburtsdatum',
+    EN: 'Date of birth',
+  },
+  'individual.address.line1': {
+    FR: 'Adresse personnelle',
+    DE: 'Privatadresse',
+    EN: 'Personal address',
+  },
+};
+
+// Sur-mesure request emails (P-10 / US-240, PAGES-EMAILS §8)
+export const request = {
+  // #8 — acknowledgement to the CLIENT (locale = Request.locale)
+  submitted: {
+    title: {
+      FR: 'Votre demande est bien partie',
+      DE: 'Ihre Anfrage ist unterwegs',
+      EN: 'Your request is on its way',
+    },
+    intro: {
+      FR: 'Bonjour {clientName}, nous avons transmis votre demande à {wineryName}. La cave revient vers vous avec une proposition sous 48 h.',
+      DE: 'Guten Tag {clientName}, wir haben Ihre Anfrage an {wineryName} weitergeleitet. Das Weingut meldet sich innerhalb von 48 Stunden mit einem Vorschlag bei Ihnen.',
+      EN: 'Hello {clientName}, we have forwarded your request to {wineryName}. The winery will get back to you with a proposal within 48 hours.',
+    },
+    recapTitle: {
+      FR: 'Récapitulatif de votre demande',
+      DE: 'Zusammenfassung Ihrer Anfrage',
+      EN: 'Summary of your request',
+    },
+    guests: {
+      FR: 'Nombre de personnes : {count}',
+      DE: 'Anzahl Personen: {count}',
+      EN: 'Number of guests: {count}',
+    },
+    desiredDate: {
+      FR: 'Date souhaitée : {date}',
+      DE: 'Gewünschtes Datum: {date}',
+      EN: 'Preferred date: {date}',
+    },
+    reference: {
+      FR: 'Référence : {reference}',
+      DE: 'Referenz: {reference}',
+      EN: 'Reference: {reference}',
+    },
+    signoff: {
+      FR: 'À très vite chez nos encaveurs,',
+      DE: 'Bis bald bei unseren Winzern,',
+      EN: 'See you soon at our winemakers,',
+    },
+  },
+  // #15 — new custom request to the WINERY (locale = winemaker preferredLocale)
+  newCustom: {
+    title: {
+      FR: 'Nouvelle demande sur-mesure',
+      DE: 'Neue Massanfrage',
+      EN: 'New custom request',
+    },
+    intro: {
+      FR: '{clientName} vous a envoyé une demande sur-mesure ({reference}). Voici les détails :',
+      DE: '{clientName} hat Ihnen eine Massanfrage gesendet ({reference}). Hier die Details:',
+      EN: '{clientName} has sent you a custom request ({reference}). Here are the details:',
+    },
+    contact: {
+      FR: 'Coordonnées : {email}{phone}',
+      DE: 'Kontakt: {email}{phone}',
+      EN: 'Contact details: {email}{phone}',
+    },
+    guests: {
+      FR: 'Nombre de personnes : {count}',
+      DE: 'Anzahl Personen: {count}',
+      EN: 'Number of guests: {count}',
+    },
+    desiredDate: {
+      FR: 'Date souhaitée : {date}',
+      DE: 'Gewünschtes Datum: {date}',
+      EN: 'Preferred date: {date}',
+    },
+    budget: {
+      FR: 'Budget indicatif : {amount}',
+      DE: 'Richtbudget: {amount}',
+      EN: 'Indicative budget: {amount}',
+    },
+    descriptionLabel: {
+      FR: 'Sa demande :',
+      DE: 'Die Anfrage:',
+      EN: 'Their request:',
+    },
+    sla: {
+      FR: 'Merci de répondre sous 48 h pour tenir votre délai de réponse.',
+      DE: 'Bitte antworten Sie innerhalb von 48 Stunden, um Ihre Antwortfrist einzuhalten.',
+      EN: 'Please reply within 48 hours to meet your response time.',
+    },
+    cta: {
+      FR: 'Répondre à la demande',
+      DE: 'Auf die Anfrage antworten',
+      EN: 'Reply to the request',
+    },
+  },
+  // #9 — offer ready, to the CLIENT (locale = Request.locale)
+  offerReceived: {
+    title: {
+      FR: 'Votre offre de {wineryName}',
+      DE: 'Ihr Angebot von {wineryName}',
+      EN: 'Your offer from {wineryName}',
+    },
+    intro: {
+      FR: 'Bonjour {clientName}, bonne nouvelle : {wineryName} vous a préparé une offre sur-mesure.',
+      DE: 'Guten Tag {clientName}, gute Nachricht: {wineryName} hat Ihnen ein massgeschneidertes Angebot erstellt.',
+      EN: 'Hello {clientName}, good news: {wineryName} has prepared a custom offer for you.',
+    },
+    messageLabel: {
+      FR: 'Le mot de la cave :',
+      DE: 'Die Nachricht des Weinguts:',
+      EN: 'A word from the winery:',
+    },
+    schedule: {
+      FR: 'Date et heure : {date} à {time}',
+      DE: 'Datum und Uhrzeit: {date} um {time}',
+      EN: 'Date and time: {date} at {time}',
+    },
+    guests: {
+      FR: 'Nombre de personnes : {count}',
+      DE: 'Anzahl Personen: {count}',
+      EN: 'Number of guests: {count}',
+    },
+    total: {
+      FR: 'Prix total, tout compris : {amount}',
+      DE: 'Gesamtpreis, alles inklusive: {amount}',
+      EN: 'Total price, all included: {amount}',
+    },
+    expiry: {
+      FR: 'À confirmer avant le {date}.',
+      DE: 'Bitte bis zum {date} bestätigen.',
+      EN: 'Please confirm before {date}.',
+    },
+    cta: {
+      FR: 'Payer maintenant',
+      DE: 'Jetzt bezahlen',
+      EN: 'Pay now',
+    },
+  },
+  // #10 — single reminder before the offer expires, to the CLIENT
+  offerExpiring: {
+    title: {
+      FR: 'Votre offre expire bientôt',
+      DE: 'Ihr Angebot läuft bald ab',
+      EN: 'Your offer is expiring soon',
+    },
+    intro: {
+      FR: 'Bonjour {clientName}, votre offre sur-mesure de {wineryName} expire le {date}. Sans confirmation, elle sera annulée.',
+      DE: 'Guten Tag {clientName}, Ihr massgeschneidertes Angebot von {wineryName} läuft am {date} ab. Ohne Bestätigung wird es storniert.',
+      EN: 'Hello {clientName}, your custom offer from {wineryName} expires on {date}. Without confirmation, it will be cancelled.',
+    },
+    total: {
+      FR: 'Montant à régler : {amount}',
+      DE: 'Zu zahlender Betrag: {amount}',
+      EN: 'Amount to pay: {amount}',
+    },
+    cta: {
+      FR: 'Payer mon offre',
+      DE: 'Mein Angebot bezahlen',
+      EN: 'Pay for my offer',
+    },
+  },
+  // Escalation — 48h no-answer, to the ADMIN (locale FR fixe)
+  slaEscalation: {
+    title: {
+      FR: 'Demande sur-mesure sans réponse depuis 48 h',
+      DE: 'Massanfrage seit 48 Stunden unbeantwortet',
+      EN: 'Custom request unanswered for 48 hours',
+    },
+    intro: {
+      FR: 'La cave {wineryName} n’a pas répondu à une demande sur-mesure dans le délai de 48 h.',
+      DE: 'Das Weingut {wineryName} hat eine Massanfrage nicht innerhalb von 48 Stunden beantwortet.',
+      EN: 'The winery {wineryName} has not answered a custom request within the 48-hour window.',
+    },
+    winery: {
+      FR: 'Cave : {name}',
+      DE: 'Weingut: {name}',
+      EN: 'Winery: {name}',
+    },
+    client: {
+      FR: 'Client : {name} ({email})',
+      DE: 'Kunde: {name} ({email})',
+      EN: 'Client: {name} ({email})',
+    },
+    reference: {
+      FR: 'Référence : {reference}',
+      DE: 'Referenz: {reference}',
+      EN: 'Reference: {reference}',
+    },
+    guests: {
+      FR: 'Nombre de personnes : {count}',
+      DE: 'Anzahl Personen: {count}',
+      EN: 'Number of guests: {count}',
+    },
+    createdAt: {
+      FR: 'Demande créée le : {date}',
+      DE: 'Anfrage erstellt am: {date}',
+      EN: 'Request created on: {date}',
+    },
+    cta: {
+      FR: 'Ouvrir l’inbox de la cave',
+      DE: 'Posteingang des Weinguts öffnen',
+      EN: 'Open the winery inbox',
+    },
+  },
 } as const;
 
 // Helper function to get translation
+// Contact form (P-12 / L-114) — team notification (internal) + client accusé.
+export const contact = {
+  notify: {
+    title: {
+      FR: 'Nouveau message de contact',
+      DE: 'Neue Kontaktnachricht',
+      EN: 'New contact message',
+    },
+    from: {
+      FR: 'De : {name} <{email}>',
+      DE: 'Von: {name} <{email}>',
+      EN: 'From: {name} <{email}>',
+    },
+    subjectLine: {
+      FR: 'Sujet : {subject}',
+      DE: 'Betreff: {subject}',
+      EN: 'Subject: {subject}',
+    },
+    messageTitle: {
+      FR: 'Message',
+      DE: 'Nachricht',
+      EN: 'Message',
+    },
+  },
+  ack: {
+    title: {
+      FR: 'Message bien reçu',
+      DE: 'Nachricht erhalten',
+      EN: 'Message received',
+    },
+    intro: {
+      FR: 'Bonjour {name}, merci pour votre message. Notre équipe vous répond dans les meilleurs délais.',
+      DE: 'Guten Tag {name}, vielen Dank für Ihre Nachricht. Unser Team meldet sich so schnell wie möglich bei Ihnen.',
+      EN: 'Hello {name}, thank you for your message. Our team will get back to you as soon as possible.',
+    },
+    recapTitle: {
+      FR: 'Votre message',
+      DE: 'Ihre Nachricht',
+      EN: 'Your message',
+    },
+    signoff: {
+      FR: "L'équipe EnCave",
+      DE: 'Ihr EnCave-Team',
+      EN: 'The EnCave team',
+    },
+  },
+};
+
 export function t<T extends Record<Locale, unknown>>(
   translations: T,
   locale: Locale

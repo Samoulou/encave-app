@@ -19,11 +19,16 @@ export function EarningsPageHeader() {
       <nav className="text-sm">
         <ol className="flex items-center gap-2">
           <li>
-            <Link href="/dashboard" className="text-[#915564] hover:text-primary transition-colors">
+            <Link
+              href="/dashboard"
+              className="text-muted-foreground transition-colors hover:text-primary"
+            >
               {tNav('dashboard')}
             </Link>
           </li>
-          <li className="text-[#915564]/50" aria-hidden="true">/</li>
+          <li className="text-muted-foreground/50" aria-hidden="true">
+            /
+          </li>
           <li>
             <span className="font-medium text-foreground">{t('title')}</span>
           </li>
@@ -33,12 +38,10 @@ export function EarningsPageHeader() {
       {/* Header with title and controls */}
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div className="flex flex-col gap-2">
-          <h1 className="font-display text-3xl md:text-4xl font-black tracking-tight text-foreground">
+          <h1 className="font-display text-3xl font-black tracking-tight text-foreground md:text-4xl">
             {t('title')}
           </h1>
-          <p className="text-[#915564] text-base">
-            {t('subtitle')}
-          </p>
+          <p className="text-base text-muted-foreground">{t('subtitle')}</p>
         </div>
 
         <div className="flex items-center gap-3">

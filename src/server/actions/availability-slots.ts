@@ -5,6 +5,12 @@ import { db } from '@/server/db';
 import { hasOverlappingSlots } from '@/lib/constants/time-slots';
 import type { ActionResult } from '@/types/actions';
 import { logError } from '@/lib/logger';
+import { revalidateTag } from 'next/cache';
+import { invalidateExperienceCaches } from './experience-helpers';
+import {
+  closeOrphanedRecurringOccurrences,
+  generateOccurrences,
+} from '@/server/services/occurrence.service';
 
 export interface AvailabilitySlotInput {
   id?: string;
@@ -78,7 +84,10 @@ export async function getAvailabilitySlots(
       })),
     };
   } catch (error) {
-    logError('getAvailabilitySlots error', error, { action: 'getAvailabilitySlots', experienceId });
+    logError('getAvailabilitySlots error', error, {
+      action: 'getAvailabilitySlots',
+      experienceId,
+    });
     return {
       success: false,
       error: {
@@ -139,7 +148,15 @@ export async function updateAvailabilitySlots(
       slotsByDay[slot.dayOfWeek] = daySlots;
     }
 
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayNames = [
+      'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+    ];
     for (const day of Object.keys(slotsByDay)) {
       const dayOfWeek = parseInt(day);
       const daySlots = slotsByDay[dayOfWeek];
@@ -208,12 +225,35 @@ export async function updateAvailabilitySlots(
       }
     });
 
+    // Sync occurrences with the new pattern (P-05 / L-024): materialize
+    // added slots, then close future RECURRING occurrences of removed
+    // slots (a removed slot must stop selling immediately). Failures
+    // don't fail the update — the booking path's defensive resolve and
+    // the daily cron are the backstop.
+    try {
+      await generateOccurrences(experienceId);
+      await closeOrphanedRecurringOccurrences(experienceId);
+    } catch (generationError) {
+      logError('Occurrence sync failed after slots update', generationError, {
+        action: 'updateAvailabilitySlots',
+        experienceId,
+      });
+    }
+    revalidateTag(`occurrences:${experienceId}`);
+    // The weekly slots are baked into the public fiche (cached under the
+    // 'experiences' tag) — purge it so a removed/changed slot stops being
+    // offered ('occurrences:*' alone has no cache subscriber).
+    invalidateExperienceCaches();
+
     return {
       success: true,
       data: { count: slots.length },
     };
   } catch (error) {
-    logError('updateAvailabilitySlots error', error, { action: 'updateAvailabilitySlots', experienceId });
+    logError('updateAvailabilitySlots error', error, {
+      action: 'updateAvailabilitySlots',
+      experienceId,
+    });
     return {
       success: false,
       error: {
@@ -273,6 +313,21 @@ export async function toggleSlotActive(
       where: { id: slotId },
       data: { isActive },
     });
+
+    // Same occurrence sync as updateAvailabilitySlots: an activated slot
+    // materializes, a deactivated one stops selling immediately.
+    try {
+      await generateOccurrences(slot.experienceId);
+      await closeOrphanedRecurringOccurrences(slot.experienceId);
+    } catch (generationError) {
+      logError('Occurrence sync failed after slot toggle', generationError, {
+        action: 'toggleSlotActive',
+        experienceId: slot.experienceId,
+      });
+    }
+    revalidateTag(`occurrences:${slot.experienceId}`);
+    // Purge the public 'experiences' tag (see updateAvailabilitySlots).
+    invalidateExperienceCaches();
 
     return {
       success: true,

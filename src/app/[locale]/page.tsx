@@ -1,18 +1,14 @@
-import { getTranslations, setRequestLocale } from 'next-intl/server';
-import Image from 'next/image';
-import { Link } from '@/i18n/navigation';
+import { setRequestLocale } from 'next-intl/server';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
-import { HealthStatus } from '@/components/shared/HealthStatus';
-import { Button } from '@/components/ui/button';
 import { JsonLd } from '@/components/shared/JsonLd';
 import { generateHomeMetadata } from '@/lib/seo';
 import { getBaseUrl } from '@/lib/env';
-import { HeroSearchBar } from '@/components/features/home/HeroSearchBar';
-import { PopularExperiences } from '@/components/features/home/PopularExperiences';
-import { HowItWorks } from '@/components/features/home/HowItWorks';
-import { FadeIn } from '@/components/shared/FadeIn';
-import { getFeaturedExperiences } from '@/server/queries/experience.queries';
+import { HomeMobileEditorial } from '@/components/features/home/HomeMobileEditorial';
+import { HomeDesktopEditorial } from '@/components/features/home/HomeDesktopEditorial';
+import { HomeConversionSections } from '@/components/features/home/HomeConversionSections';
+import { searchExperiences } from '@/server/queries/experience.queries';
+import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
 import type { Locale } from '@/i18n/routing';
 
 type Props = {
@@ -24,15 +20,28 @@ export async function generateMetadata({ params }: Props) {
   return generateHomeMetadata(locale as Locale);
 }
 
+// P-06 (L-202): with the header decoupled from auth(), nothing forces
+// per-request rendering — the home is ISR, invalidated by the
+// 'experiences' tag (searchExperiences) with a 300 s TTL safety net.
+export const revalidate = 300;
+
 export default async function Home({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const t = await getTranslations('home');
 
   const baseUrl = getBaseUrl();
 
-  // Fetch featured experiences for the homepage
-  const featuredExperiences = await getFeaturedExperiences(3);
+  // Use the same published experience source as the listing page so the
+  // editorial home stays aligned with real inventory.
+  const [
+    { experiences: featuredExperiences },
+    giftCardsEnabled,
+    requestsEnabled,
+  ] = await Promise.all([
+    searchExperiences({ limit: 8 }),
+    isFlagEnabled('GIFT_CARDS'),
+    isFlagEnabled('REQUESTS'),
+  ]);
 
   // SEO-003: Organization schema for home page
   const organizationSchema = {
@@ -42,7 +51,8 @@ export default async function Home({ params }: Props) {
     name: 'EnCave',
     url: baseUrl,
     logo: `${baseUrl}/logo.png`,
-    description: 'Plateforme de réservation d\'expériences viticoles en Valais, Suisse. Découvrez et réservez des dégustations de vin, visites de caves et expériences œnologiques authentiques.',
+    description:
+      "Plateforme de réservation d'expériences viticoles en Valais, Suisse. Découvrez et réservez des dégustations de vin, visites de caves et expériences œnologiques authentiques.",
     areaServed: {
       '@type': 'Place',
       name: 'Valais, Switzerland',
@@ -61,107 +71,29 @@ export default async function Home({ params }: Props) {
 
   return (
     <>
-    <JsonLd data={organizationSchema} />
-    <div className="min-h-screen bg-background">
-      <Header />
-
-      {/* Hero Section with Background Image */}
-      <section className="relative h-[350px] sm:h-[450px] md:h-[500px] lg:h-[600px] w-full flex items-center justify-center overflow-hidden">
-        {/* Background Image */}
-        <div className="absolute inset-0 z-0">
-          {/* Gradient Overlay */}
-          <div
-            className="absolute inset-0 z-10"
-            style={{
-              background: 'linear-gradient(135deg, rgba(32, 18, 22, 0.4) 0%, rgba(150, 42, 72, 0.5) 100%)',
-            }}
-          />
-          <Image
-            src="/images/herobanner-image.jpg"
-            alt={t('heroImageAlt')}
-            fill
-            className="object-cover object-center"
-            priority
-            sizes="100vw"
-            quality={60}
-          />
+      <JsonLd data={organizationSchema} />
+      <div className="min-h-screen bg-background">
+        <div className="hidden md:block">
+          <Header />
         </div>
 
-        {/* Hero Content */}
-        <div className="relative z-20 w-full max-w-4xl px-4 text-center">
-          <h1 className="font-display text-4xl md:text-5xl lg:text-7xl font-light text-white mb-6 leading-[1.08] tracking-tight drop-shadow-sm">
-            {t.rich('heroTitle', {
-              strong: (chunks) => <strong className="font-bold">{chunks}</strong>,
-              em: (chunks) => <em className="text-gold-300">{chunks}</em>,
-            })}
-          </h1>
-          <p className="text-lg md:text-xl text-white/90 mb-10 max-w-2xl mx-auto font-medium drop-shadow-sm">
-            {t('heroSubtitle')}
-          </p>
-
-          {/* Search Bar */}
-          <HeroSearchBar />
-        </div>
-      </section>
-
-      <main id="main-content" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-24">
-        {/* Popular Experiences Section */}
-        <FadeIn>
-          <PopularExperiences experiences={featuredExperiences} />
-        </FadeIn>
-
-        {/* How It Works Section */}
-        <FadeIn>
-          <HowItWorks />
-        </FadeIn>
-
-        {/* CTA Banner Section */}
-        <FadeIn>
-        <section className="relative rounded-3xl overflow-hidden">
-          <div className="absolute inset-0 bg-[#201216]">
-            <Image
-              src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=1920&auto=format&fit=crop"
-              alt={t('ctaImageAlt')}
-              fill
-              className="object-cover opacity-40 mix-blend-overlay"
-              sizes="100vw"
-            />
+        <main id="main-content">
+          <div className="md:hidden">
+            <HomeMobileEditorial experiences={featuredExperiences} />
           </div>
-          <div className="relative z-10 px-6 py-20 text-center">
-            <h2 className="font-display text-3xl md:text-5xl font-extrabold text-white mb-6">
-              {t('ctaTitle')}
-            </h2>
-            <p className="text-lg text-white/80 mb-8 max-w-xl mx-auto">
-              {t('ctaSubtitle')}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" asChild className="bg-primary hover:bg-[hsl(var(--primary-hover))] shadow-lg">
-                <Link href="/experiences">
-                  {t('ctaButton')}
-                </Link>
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                asChild
-                className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white border-white/30"
-              >
-                <Link href="/register?winemaker=true">
-                  {t('becomePartner')}
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </section>
-        </FadeIn>
 
-        {/* Health Status (for development) */}
-        <div className="mt-8 flex justify-center">
-          <HealthStatus />
-        </div>
-      </main>
-      <Footer />
-    </div>
+          <div className="hidden md:block">
+            <HomeDesktopEditorial experiences={featuredExperiences} />
+          </div>
+
+          {/* Conversion sections (P-12 / L-113) — responsive, rendered once */}
+          <HomeConversionSections
+            giftCardsEnabled={giftCardsEnabled}
+            requestsEnabled={requestsEnabled}
+          />
+        </main>
+        <Footer />
+      </div>
     </>
   );
 }

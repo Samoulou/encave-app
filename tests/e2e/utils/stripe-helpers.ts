@@ -58,47 +58,69 @@ export async function completeStripeCheckout(
   await page.waitForLoadState('networkidle');
 
   // Fill card number
-  const cardNumberInput = page.locator('[data-testid="card-number-input"], #cardNumber, [name="cardNumber"]');
+  const cardNumberInput = page.locator(
+    '[data-testid="card-number-input"], #cardNumber, [name="cardNumber"]'
+  );
   if (await cardNumberInput.isVisible()) {
     await cardNumberInput.fill(cardNumber);
   } else {
     // Try iframe approach
     const cardFrame = page.frameLocator('iframe[name*="card"]').first();
-    await cardFrame.locator('[name="cardnumber"], [data-elements-stable-field-name="cardNumber"]').fill(cardNumber);
+    await cardFrame
+      .locator(
+        '[name="cardnumber"], [data-elements-stable-field-name="cardNumber"]'
+      )
+      .fill(cardNumber);
   }
 
   // Fill expiry
-  const expiryInput = page.locator('[data-testid="expiry-input"], #cardExpiry, [name="cardExpiry"]');
+  const expiryInput = page.locator(
+    '[data-testid="expiry-input"], #cardExpiry, [name="cardExpiry"]'
+  );
   if (await expiryInput.isVisible()) {
     await expiryInput.fill(details.expiry);
   } else {
     const expiryFrame = page.frameLocator('iframe[name*="expiry"]').first();
-    await expiryFrame.locator('[name="exp-date"], [data-elements-stable-field-name="cardExpiry"]').fill(details.expiry);
+    await expiryFrame
+      .locator(
+        '[name="exp-date"], [data-elements-stable-field-name="cardExpiry"]'
+      )
+      .fill(details.expiry);
   }
 
   // Fill CVC
-  const cvcInput = page.locator('[data-testid="cvc-input"], #cardCvc, [name="cardCvc"]');
+  const cvcInput = page.locator(
+    '[data-testid="cvc-input"], #cardCvc, [name="cardCvc"]'
+  );
   if (await cvcInput.isVisible()) {
     await cvcInput.fill(details.cvc);
   } else {
     const cvcFrame = page.frameLocator('iframe[name*="cvc"]').first();
-    await cvcFrame.locator('[name="cvc"], [data-elements-stable-field-name="cardCvc"]').fill(details.cvc);
+    await cvcFrame
+      .locator('[name="cvc"], [data-elements-stable-field-name="cardCvc"]')
+      .fill(details.cvc);
   }
 
   // Fill name on card if present
-  const nameInput = page.locator('[data-testid="name-input"], #billingName, [name="billingName"]');
+  const nameInput = page.locator(
+    '[data-testid="name-input"], #billingName, [name="billingName"]'
+  );
   if (await nameInput.isVisible()) {
     await nameInput.fill(details.name);
   }
 
   // Fill postal code if present
-  const postalInput = page.locator('[data-testid="postal-input"], #billingPostalCode, [name="billingPostalCode"]');
+  const postalInput = page.locator(
+    '[data-testid="postal-input"], #billingPostalCode, [name="billingPostalCode"]'
+  );
   if (await postalInput.isVisible()) {
     await postalInput.fill(details.postalCode);
   }
 
   // Submit payment
-  const submitButton = page.locator('[data-testid="submit-button"], button[type="submit"]').filter({ hasText: /pay/i });
+  const submitButton = page
+    .locator('[data-testid="submit-button"], button[type="submit"]')
+    .filter({ hasText: /pay/i });
   await submitButton.click();
 
   // Wait for redirect back to app (confirmation page)
@@ -114,7 +136,9 @@ export async function cancelStripeCheckout(page: Page): Promise<void> {
   await page.waitForURL(/checkout\.stripe\.com/, { timeout: 30000 });
 
   // Look for back/cancel link
-  const backLink = page.locator('a[data-testid="back-link"], a:has-text("Back"), button:has-text("Cancel")');
+  const backLink = page.locator(
+    'a[data-testid="back-link"], a:has-text("Back"), button:has-text("Cancel")'
+  );
   await backLink.click();
 
   // Wait for redirect back to checkout page
@@ -136,10 +160,14 @@ export async function handle3DSecure(
 
   if (action === 'complete') {
     // Click "Complete authentication" button in test mode
-    await frame.locator('button:has-text("Complete"), #test-source-authorize-3ds').click();
+    await frame
+      .locator('button:has-text("Complete"), #test-source-authorize-3ds')
+      .click();
   } else {
     // Click "Fail authentication" button in test mode
-    await frame.locator('button:has-text("Fail"), #test-source-fail-3ds').click();
+    await frame
+      .locator('button:has-text("Fail"), #test-source-fail-3ds')
+      .click();
   }
 }
 
@@ -149,7 +177,10 @@ export async function handle3DSecure(
  *
  * @param ms - Milliseconds to wait (default: 2000)
  */
-export async function waitForStripeWebhook(page: Page, ms: number = 2000): Promise<void> {
+export async function waitForStripeWebhook(
+  page: Page,
+  ms: number = 2000
+): Promise<void> {
   await page.waitForTimeout(ms);
 }
 

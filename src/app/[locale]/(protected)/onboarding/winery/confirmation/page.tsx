@@ -11,7 +11,11 @@ import { getTranslations } from 'next-intl/server';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
   return generatePageMetadata({
     locale: locale as Locale,
@@ -49,7 +53,7 @@ export default async function WineryConfirmationPage() {
   return (
     <div className="min-h-screen bg-cream-50">
       {/* Progress bar - complete */}
-      <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-sm border-b border-stone-200/60">
+      <div className="sticky top-0 z-10 border-b border-stone-200/60 bg-white/90 backdrop-blur-sm">
         <AnimatedProgressBar progress={100} />
       </div>
 
@@ -60,28 +64,34 @@ export default async function WineryConfirmationPage() {
             <SuccessCheckmark size="md" />
           </div>
 
-          <h1 className="font-display text-display-md text-slate-900">
+          <h1 className="font-display text-display-md text-foreground">
             {t('congratulations')}
           </h1>
-          <p className="mt-3 text-lg text-slate-600">
+          <p className="mt-3 text-lg text-muted-foreground">
             {t.rich('submittedForVerification', {
               name: winery.name,
-              strong: (chunks: React.ReactNode) => <strong className="text-burgundy-700">{chunks}</strong>
+              strong: (chunks: React.ReactNode) => (
+                <strong className="text-burgundy-700">{chunks}</strong>
+              ),
             })}
           </p>
         </div>
 
         {/* Timeline */}
         <div className="mb-8 rounded-xl bg-white p-6 shadow-warm">
-          <h2 className="mb-5 font-semibold text-slate-900">{t('whatHappensNext')}</h2>
+          <h2 className="mb-5 font-semibold text-foreground">
+            {t('whatHappensNext')}
+          </h2>
           <ol className="space-y-4">
             <li className="flex gap-4">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-burgundy-600 text-sm font-semibold text-white">
                 1
               </div>
               <div className="pt-0.5">
-                <p className="font-medium text-slate-900">{t('step1Title')}</p>
-                <p className="text-sm text-slate-500">{t('step1Description')}</p>
+                <p className="font-medium text-foreground">{t('step1Title')}</p>
+                <p className="text-sm text-muted-foreground">
+                  {t('step1Description')}
+                </p>
               </div>
             </li>
             <li className="flex gap-4">
@@ -89,17 +99,21 @@ export default async function WineryConfirmationPage() {
                 2
               </div>
               <div className="pt-0.5">
-                <p className="font-medium text-slate-900">{t('step2Title')}</p>
-                <p className="text-sm text-slate-500">{t('step2Description')}</p>
+                <p className="font-medium text-foreground">{t('step2Title')}</p>
+                <p className="text-sm text-muted-foreground">
+                  {t('step2Description')}
+                </p>
               </div>
             </li>
             <li className="flex gap-4">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-stone-200 text-sm font-semibold text-slate-600">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-stone-200 text-sm font-semibold text-muted-foreground">
                 3
               </div>
               <div className="pt-0.5">
-                <p className="font-medium text-slate-900">{t('step3Title')}</p>
-                <p className="text-sm text-slate-500">{t('step3Description')}</p>
+                <p className="font-medium text-foreground">{t('step3Title')}</p>
+                <p className="text-sm text-muted-foreground">
+                  {t('step3Description')}
+                </p>
               </div>
             </li>
           </ol>
@@ -116,7 +130,9 @@ export default async function WineryConfirmationPage() {
               <p className="text-sm text-gold-800">
                 {t.rich('confirmationEmailSent', {
                   email: session.user.email,
-                  strong: (chunks: React.ReactNode) => <strong>{chunks}</strong>
+                  strong: (chunks: React.ReactNode) => (
+                    <strong>{chunks}</strong>
+                  ),
                 })}
               </p>
             </div>
@@ -124,17 +140,24 @@ export default async function WineryConfirmationPage() {
         </div>
 
         {/* Expected timeline */}
-        <div className="mb-8 flex items-center justify-center gap-2 text-sm text-slate-500">
+        <div className="mb-8 flex items-center justify-center gap-2 text-sm text-muted-foreground">
           <Clock className="h-4 w-4" />
-          <span>{t.rich('expectedResponse', {
-            hours: '48',
-            strong: (chunks: React.ReactNode) => <strong className="text-slate-700">{chunks}</strong>
-          })}</span>
+          <span>
+            {t.rich('expectedResponse', {
+              hours: '48',
+              strong: (chunks: React.ReactNode) => (
+                <strong className="text-foreground">{chunks}</strong>
+              ),
+            })}
+          </span>
         </div>
 
         {/* Return button */}
         <Button asChild className="w-full">
-          <Link href="/" className="inline-flex items-center justify-center gap-2">
+          <Link
+            href="/"
+            className="inline-flex items-center justify-center gap-2"
+          >
             {t('returnToHomepage')}
             <ArrowRight className="h-4 w-4" />
           </Link>

@@ -43,15 +43,12 @@ export function CalendarNavigation({
     onDateChange(new Date());
   };
 
-  const displayFormat = viewMode === 'calendar' ? 'MMMM yyyy' : "'Week of' MMM d, yyyy";
+  const displayFormat =
+    viewMode === 'calendar' ? 'MMMM yyyy' : "'Week of' MMM d, yyyy";
 
   return (
     <div className="flex items-center gap-2">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleToday}
-      >
+      <Button variant="outline" size="sm" onClick={handleToday}>
         {t('today')}
       </Button>
       <div className="flex items-center">
@@ -72,7 +69,7 @@ export function CalendarNavigation({
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
-      <h2 className="text-lg font-semibold text-slate-900">
+      <h2 className="text-lg font-semibold text-foreground">
         {format(currentDate, displayFormat, { locale: dateLocale })}
       </h2>
     </div>

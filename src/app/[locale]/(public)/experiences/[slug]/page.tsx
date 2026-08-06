@@ -1,36 +1,58 @@
 import type { Metadata } from 'next';
+import type { ReactNode } from 'react';
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
+import { setRequestLocale, getTranslations } from 'next-intl/server';
+import { addDays, addMonths } from 'date-fns';
+import { zonedWallClockToUTC } from '@/lib/datetime/zurich';
 import {
   getExperienceBySlug,
   getAllPublishedExperienceSlugs,
 } from '@/server/queries/experience.queries';
-import { ExperienceDetailHeader } from '@/components/features/experience/ExperienceDetailHeader';
+import { getEventParticipants } from '@/server/queries/event-participant.queries';
+import { getBookableOccurrences } from '@/server/queries/occurrence.queries';
+import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
+import {
+  dateKeyOf,
+  zurichTodayAsUTCDate,
+} from '@/lib/business-rules/occurrence-expansion';
+import { BOOKING_FEE_CENTS } from '@/lib/constants/pricing';
 import { ExperienceDetailGallery } from '@/components/features/experience/ExperienceDetailGallery';
-import { QuickFacts } from '@/components/features/experience/QuickFacts';
-import { AboutSection } from '@/components/features/experience/AboutSection';
 import { LocationSection } from '@/components/features/experience/LocationSection';
 import { BookingWidget } from '@/components/features/experience/BookingWidget';
+import { CancellationPolicyInfo } from '@/components/features/experience/CancellationPolicyInfo';
+import { NoShowFeeInfo } from '@/components/features/experience/NoShowFeeInfo';
 import { MobileBookingBar } from '@/components/features/experience/MobileBookingBar';
+import { ExperienceDetailActions } from '@/components/features/experience/ExperienceDetailActions';
 import { Breadcrumb } from '@/components/shared/Breadcrumb';
+import { ImageWithFallback } from '@/components/shared/ImageWithFallback';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { RelatedExperiencesSection } from './RelatedExperiencesSection';
+import { EventParticipantsSection } from './EventParticipantsSection';
 import { JsonLd } from '@/components/shared/JsonLd';
 import { Skeleton } from '@/components/shared/Skeleton';
 import { generateExperienceDetailMetadata } from '@/lib/seo';
 import { getBaseUrl } from '@/lib/env';
-import { type Locale, locales } from '@/i18n/routing';
+import { type Locale } from '@/i18n/routing';
+import { Link } from '@/i18n/navigation';
+import { ArrowUpRight, Check, Clock, Globe2, Users, Wine } from 'lucide-react';
 
 interface ExperiencePageProps {
   params: Promise<{ slug: string; locale: string }>;
 }
 
+// P-06 (L-202): ISR. Fiches are prerendered from the published slugs
+// and revalidated by the 'experiences' tag (mutations) with a 300 s TTL
+// as the safety net. dynamicParams covers slugs published after the
+// build (rendered on demand, then cached). Live capacity stays on
+// /book + checkout — the occurrence hints here may lag ≤300 s.
+export const revalidate = 300;
+export const dynamicParams = true;
+
 export async function generateStaticParams() {
   const slugs = await getAllPublishedExperienceSlugs();
-  return locales.flatMap((locale) =>
-    slugs.map((slug) => ({ locale, slug }))
-  );
+  return slugs.map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({
@@ -40,7 +62,8 @@ export async function generateMetadata({
   const experience = await getExperienceBySlug(slug);
 
   if (!experience) {
-    return { title: 'Experience Not Found | EnCave' };
+    const t = await getTranslations({ locale, namespace: 'experience' });
+    return { title: `${t('notFound')} | EnCave` };
   }
 
   return generateExperienceDetailMetadata(
@@ -53,53 +76,66 @@ export async function generateMetadata({
 }
 
 export default async function ExperiencePage({ params }: ExperiencePageProps) {
-  const { slug } = await params;
-  const experience = await getExperienceBySlug(slug);
+  const { slug, locale } = await params;
+  setRequestLocale(locale);
+
+  // Flag read overlaps the experience fetch — this is the LCP-critical
+  // route; never serialize independent I/O here.
+  const [
+    experience,
+    bookingFeeEnabled,
+    giftCardsEnabled,
+    noShowFeesEnabled,
+    collectiveEventsEnabled,
+  ] = await Promise.all([
+    getExperienceBySlug(slug),
+    isFlagEnabled('BOOKING_FEE'),
+    isFlagEnabled('GIFT_CARDS'),
+    isFlagEnabled('NO_SHOW_FEES'),
+    isFlagEnabled('COLLECTIVE_EVENTS'),
+  ]);
 
   if (!experience) {
     notFound();
   }
 
+  // Collective event (P-11 / L-101): flag-gated. When OFF, getEventParticipants
+  // is never called and the fiche renders exactly like a normal experience.
+  const showCollective = collectiveEventsEnabled && experience.isCollective;
+
+  const t = await getTranslations('experience');
+  const tNav = await getTranslations('nav');
+
+  // Client booking fee (P-03 / L-041) — flag OFF keeps today's display.
+  const serviceFeeCentsPerGuest = bookingFeeEnabled ? BOOKING_FEE_CENTS : 0;
+
+  // Punctual occurrences (P-05): the widgets derive selectable days from
+  // the weekly slots — a PUNCTUAL occurrence on an off-schedule day would
+  // be announced in search yet unselectable. Ship the bookable occurrence
+  // date keys so the widgets can enable those days too. Window = today →
+  // the picker's 3-month bound (+2 days absorbs client-timezone drift on
+  // both edges). Keys are computed server-side with dateKeyOf: occurrence
+  // dates are UTC midnights of Zurich calendar days — localDateKey would
+  // shift them by a day in some client timezones.
+  const occurrenceWindowFrom = zurichTodayAsUTCDate();
+  const [bookableOccurrences, collectiveParticipants] = await Promise.all([
+    getBookableOccurrences(experience.id, {
+      from: occurrenceWindowFrom,
+      to: addDays(addMonths(occurrenceWindowFrom, 3), 2),
+    }),
+    // Deduped + flag-gated: only collective events pay for this read.
+    showCollective ? getEventParticipants(experience.id) : Promise.resolve([]),
+  ]);
+  const occurrenceDateKeys = Array.from(
+    new Set(bookableOccurrences.map((occurrence) => dateKeyOf(occurrence.date)))
+  );
+
   const baseUrl = getBaseUrl();
+  const nextAvailableDate = getNextAvailableDate(
+    experience.availabilitySlots,
+    experience.duration
+  );
 
-  // SEO-002: Calculate next available date from availability slots
-  const getNextAvailableDate = () => {
-    if (!experience.availabilitySlots || experience.availabilitySlots.length === 0) {
-      return null;
-    }
-
-    const now = new Date();
-    const availableDays = experience.availabilitySlots
-      .filter((slot) => slot.isActive)
-      .map((slot) => slot.dayOfWeek);
-
-    if (availableDays.length === 0) return null;
-
-    // Find next available day (0 = Sunday, 1 = Monday, etc.)
-    for (let i = 0; i < 14; i++) {
-      const checkDate = new Date(now);
-      checkDate.setDate(now.getDate() + i);
-      const dayOfWeek = checkDate.getDay();
-      if (availableDays.includes(dayOfWeek)) {
-        // Get the first time slot for that day
-        const slot = experience.availabilitySlots.find(
-          (s) => s.dayOfWeek === dayOfWeek && s.isActive
-        );
-        if (slot) {
-          const [hoursStr, minutesStr] = slot.startTime.split(':');
-          const hours = parseInt(hoursStr ?? '10', 10);
-          const minutes = parseInt(minutesStr ?? '0', 10);
-          checkDate.setHours(hours, minutes, 0, 0);
-          return checkDate;
-        }
-      }
-    }
-    return null;
-  };
-
-  const nextAvailableDate = getNextAvailableDate();
-
-  // SEO-002: Schema.org Event structured data with complete fields
   const eventSchema = {
     '@context': 'https://schema.org',
     '@type': 'Event',
@@ -127,13 +163,14 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
         addressRegion: 'Valais',
         addressCountry: 'CH',
       },
-      ...((experience.latitude || experience.winery.latitude) && (experience.longitude || experience.winery.longitude) && {
-        geo: {
-          '@type': 'GeoCoordinates',
-          latitude: experience.latitude || experience.winery.latitude,
-          longitude: experience.longitude || experience.winery.longitude,
-        },
-      }),
+      ...((experience.latitude || experience.winery.latitude) &&
+        (experience.longitude || experience.winery.longitude) && {
+          geo: {
+            '@type': 'GeoCoordinates',
+            latitude: experience.latitude || experience.winery.latitude,
+            longitude: experience.longitude || experience.winery.longitude,
+          },
+        }),
     },
     offers: {
       '@type': 'Offer',
@@ -153,66 +190,253 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
       name: experience.winery.name,
     },
     maximumAttendeeCapacity: experience.maxCapacity,
-    remainingAttendeeCapacity: experience.maxCapacity, // Full capacity shown (bookings are per-slot)
+    remainingAttendeeCapacity: experience.maxCapacity,
+    // Collective event (P-11): the participating wineries are the performers.
+    ...(showCollective &&
+      collectiveParticipants.length > 0 && {
+        performer: collectiveParticipants.map((participant) => ({
+          '@type': 'Organization',
+          name: participant.wineryName,
+        })),
+      }),
   };
 
   const breadcrumbItems = [
-    { label: 'Home', href: '/' },
-    { label: 'Experiences', href: '/experiences' },
+    { label: tNav('home'), href: '/' },
+    { label: tNav('experiences'), href: '/experiences' },
     { label: experience.title },
+  ];
+  const locationAddress = experience.address || experience.winery.address;
+  const locationCommune = experience.city || experience.winery.commune;
+  const durationLabel = formatDuration(experience.duration);
+  const paragraphs = experience.description.split('\n\n').filter(Boolean);
+  const experienceTypeLabel = t(`types.${experience.type}`);
+  const practicalItems = [
+    t('detail.durationIndicated', { duration: durationLabel }),
+    t('detail.groupSize', {
+      min: experience.minCapacity,
+      max: experience.maxCapacity,
+    }),
+    t('detail.meetingPoint', { commune: locationCommune }),
+    t('detail.proposedBy', {
+      type: experienceTypeLabel,
+      winery: experience.winery.name,
+    }),
+    experience.winery.stripeOnboardingComplete
+      ? t('detail.securePaymentActive')
+      : t('detail.bookingToConfirm'),
   ];
 
   return (
-    <div className="min-h-screen bg-background-light">
+    <div className="min-h-screen bg-cream-50 text-ink-900">
       <Header />
       <JsonLd data={eventSchema} />
 
-      <main className="flex-grow w-full pb-24 lg:pb-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Breadcrumbs */}
-          <nav className="flex items-center text-sm mb-6 overflow-x-auto whitespace-nowrap">
-            <Breadcrumb items={breadcrumbItems} baseUrl={baseUrl} />
-          </nav>
+      <main className="w-full flex-grow pb-24 lg:pb-8">
+        <div className="border-b border-stone-200 bg-white px-4 py-3 sm:px-6 lg:px-10">
+          <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-4">
+            {/* tabIndex: a scrollable region must be keyboard-reachable
+                (axe scrollable-region-focusable, P-16 / L-183). */}
+            <nav
+              tabIndex={0}
+              className="min-w-0 overflow-x-auto whitespace-nowrap text-xs text-ink-500"
+            >
+              <span className="hidden lg:inline">
+                {t('detail.explore')} &gt; {experienceTypeLabel} &gt;{' '}
+                <strong className="font-semibold text-ink-900">
+                  {experience.title}
+                </strong>
+              </span>
+              <span className="lg:hidden">
+                <Breadcrumb items={breadcrumbItems} baseUrl={baseUrl} />
+              </span>
+            </nav>
+            <ExperienceDetailActions />
+          </div>
+        </div>
 
-          {/* Page Heading & Rating */}
-          <ExperienceDetailHeader
-            title={experience.title}
-            wineryName={experience.winery.name}
-            winerySlug={experience.winery.slug}
-            commune={experience.winery.commune}
+        <div className="mx-auto max-w-[1440px] px-4 py-6 sm:px-6 lg:px-10 lg:pb-14 lg:pt-5">
+          {showCollective && (
+            <div
+              className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-[14px] border border-burgundy-200 bg-burgundy-50 px-4 py-3"
+              data-testid="collective-banner"
+            >
+              <span className="inline-flex items-center gap-2 rounded-full bg-burgundy-700 px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-white">
+                <Users className="h-3.5 w-3.5" aria-hidden="true" />
+                {t('detail.collective.banner')}
+              </span>
+              <span className="text-sm font-medium text-burgundy-800">
+                {t('detail.collective.organizedBy', {
+                  winery: experience.winery.name,
+                })}
+              </span>
+            </div>
+          )}
+          <ExperienceDetailGallery
+            coverPhoto={experience.coverPhoto}
+            images={experience.galleryImages}
+            experienceTitle={experience.title}
           />
 
-          {/* Two Column Layout — gallery + booking widget side by side */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 relative">
-            {/* Left Column: Gallery + Details + Related (8 cols) */}
-            <div className="lg:col-span-8 flex flex-col gap-10">
-              {/* Image Gallery */}
-              <ExperienceDetailGallery
-                coverPhoto={experience.coverPhoto}
-                images={experience.galleryImages}
-                experienceTitle={experience.title}
-              />
+          <div className="relative grid grid-cols-1 gap-8 pt-8 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-12">
+            <div className="min-w-0">
+              <div className="mb-3 flex flex-wrap items-center gap-3">
+                <span
+                  className="rounded-full bg-burgundy-50 px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-burgundy-700"
+                  data-testid="experience-capacity"
+                >
+                  {t('detail.placesMax', { count: experience.maxCapacity })}
+                </span>
+              </div>
+              <h1 className="max-w-3xl font-display text-[2.35rem] font-medium leading-[1.05] tracking-[-0.015em] text-ink-900 sm:text-[2.9rem]">
+                {experience.title}
+              </h1>
+              <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ink-500">
+                <Link
+                  href={`/wineries/${experience.winery.slug}`}
+                  className="font-semibold text-burgundy-700 hover:underline"
+                >
+                  {experience.winery.name}
+                </Link>
+                <span>·</span>
+                <span>{locationCommune}</span>
+                <span>·</span>
+                <span>Valais</span>
+              </div>
 
-              {/* Quick Facts Chips */}
-              <QuickFacts
-                duration={experience.duration}
-                maxCapacity={experience.maxCapacity}
-                type={experience.type}
-              />
+              <div className="my-7 grid gap-4 border-y border-stone-200 py-5 sm:grid-cols-2 lg:grid-cols-4">
+                <MetaFact
+                  icon={<Clock className="h-[18px] w-[18px]" />}
+                  label={t('duration')}
+                  value={durationLabel}
+                  testId="experience-duration"
+                />
+                <MetaFact
+                  icon={<Users className="h-[18px] w-[18px]" />}
+                  label={t('detail.group')}
+                  value={t('detail.groupValue', {
+                    min: experience.minCapacity,
+                    max: experience.maxCapacity,
+                  })}
+                />
+                <MetaFact
+                  icon={<Wine className="h-[18px] w-[18px]" />}
+                  label={t('detail.format')}
+                  value={experienceTypeLabel}
+                  testId="experience-type-badge"
+                />
+                <MetaFact
+                  icon={<Globe2 className="h-[18px] w-[18px]" />}
+                  label={t('detail.place')}
+                  value={locationCommune}
+                />
+              </div>
 
-              {/* About Section */}
-              <AboutSection description={experience.description} />
+              <div
+                className="mb-8 flex items-center gap-4 rounded-[14px] border border-stone-200 bg-white p-4 shadow-audit-card"
+                data-testid="winery-info-card"
+              >
+                <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full bg-cream-200">
+                  <ImageWithFallback
+                    src={experience.winery.coverPhoto || experience.coverPhoto}
+                    alt={experience.winery.name}
+                    fill
+                    className="object-cover"
+                    sizes="64px"
+                    unoptimized
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="font-mono text-[11px] uppercase tracking-[0.1em] text-ink-500">
+                    {tNav('yourWinery')}
+                  </div>
+                  <div
+                    className="font-display text-lg font-semibold text-ink-900"
+                    data-testid="winery-name"
+                  >
+                    {experience.winery.name}
+                  </div>
+                  <div
+                    className="truncate text-xs text-ink-500"
+                    data-testid="winery-location"
+                  >
+                    {locationAddress} · {locationCommune}
+                  </div>
+                </div>
+                <Link
+                  href={`/wineries/${experience.winery.slug}`}
+                  className="hidden h-9 items-center gap-1 rounded-full border border-stone-200 px-4 text-xs font-semibold text-ink-700 transition-colors hover:border-burgundy-200 hover:text-burgundy-700 sm:inline-flex"
+                >
+                  {t('detail.viewProfile')}
+                  <ArrowUpRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
 
-              {/* Location Map */}
-              <LocationSection
-                address={experience.address || experience.winery.address}
-                commune={experience.city || experience.winery.commune}
-                wineryName={experience.winery.name}
-                latitude={experience.latitude || experience.winery.latitude}
-                longitude={experience.longitude || experience.winery.longitude}
-              />
+              <section data-testid="experience-description">
+                <h2 className="mb-3 font-display text-2xl font-semibold text-ink-900">
+                  {t('detail.theExperience')}
+                </h2>
+                <div className="max-w-3xl space-y-4 text-[15px] leading-7 text-ink-700">
+                  {paragraphs.length > 0 ? (
+                    paragraphs.map((paragraph) => (
+                      <p key={paragraph}>{paragraph}</p>
+                    ))
+                  ) : (
+                    <p>{experience.description}</p>
+                  )}
+                </div>
+              </section>
 
-              {/* Related Experiences - inside left column so booking widget stays sticky */}
+              {showCollective && (
+                <EventParticipantsSection
+                  participants={collectiveParticipants}
+                />
+              )}
+
+              <section className="mt-9">
+                <h2 className="mb-4 font-display text-2xl font-semibold text-ink-900">
+                  {t('detail.practicalInfo')}
+                </h2>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {practicalItems.map((item) => (
+                    <div
+                      key={item}
+                      className="flex items-center gap-3 text-sm text-ink-700"
+                    >
+                      <Check className="h-4 w-4 shrink-0 text-vine" />
+                      {item}
+                    </div>
+                  ))}
+                </div>
+                <CancellationPolicyInfo
+                  policy={experience.winery.cancellationPolicy}
+                  className="mt-5 rounded-[14px] border border-stone-200 bg-white p-4 shadow-audit-card"
+                />
+                {/* No-show policy en clair (P-12 / L-112) — ON_SITE offers of a
+                    winery opted into no-show fees, flag-gated. */}
+                {noShowFeesEnabled &&
+                  experience.paymentMode === 'ON_SITE' &&
+                  experience.winery.noShowFeeEnabled && (
+                    <NoShowFeeInfo
+                      feeCentsPerGuest={experience.winery.noShowFeeCents}
+                      className="mt-4 rounded-[14px] border border-amber-200 bg-amber-50 p-4"
+                    />
+                  )}
+              </section>
+
+              <div className="mt-10">
+                <LocationSection
+                  address={locationAddress}
+                  commune={locationCommune}
+                  wineryName={experience.winery.name}
+                  winerySlug={experience.winery.slug}
+                  latitude={experience.latitude || experience.winery.latitude}
+                  longitude={
+                    experience.longitude || experience.winery.longitude
+                  }
+                />
+              </div>
+
               <Suspense fallback={<RelatedExperiencesSkeleton />}>
                 <RelatedExperiencesSection
                   experienceId={experience.id}
@@ -222,8 +446,9 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
               </Suspense>
             </div>
 
-            {/* Right Column: Sticky Booking Widget (4 cols) */}
-            <div className="lg:col-span-4 relative hidden lg:block">
+            {/* L-221: sticky + self-start so the reservation panel aligns with
+                the gallery and stays in view instead of sliding below the fold. */}
+            <div className="sticky top-24 hidden self-start lg:block">
               <BookingWidget
                 price={experience.price}
                 experienceSlug={experience.slug}
@@ -233,14 +458,25 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
                 maxCapacity={experience.maxCapacity}
                 duration={experience.duration}
                 availabilitySlots={experience.availabilitySlots}
+                occurrenceDateKeys={occurrenceDateKeys}
+                serviceFeeCentsPerGuest={serviceFeeCentsPerGuest}
+                cancellationPolicy={experience.winery.cancellationPolicy}
               />
+              {giftCardsEnabled && (
+                <Link
+                  href={`/cadeaux?experience=${experience.id}`}
+                  className="mt-3 block rounded-xl border border-border bg-card px-4 py-3 text-center text-sm font-medium text-burgundy-700 transition-colors hover:bg-accent"
+                >
+                  🎁 {t('detail.giftCta')}
+                </Link>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Mobile Booking Bar */}
         <MobileBookingBar
           price={experience.price}
+          serviceFeeCentsPerGuest={serviceFeeCentsPerGuest}
           experienceSlug={experience.slug}
           experienceId={experience.id}
           stripeConnected={experience.winery.stripeOnboardingComplete}
@@ -248,6 +484,7 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
           maxCapacity={experience.maxCapacity}
           duration={experience.duration}
           availabilitySlots={experience.availabilitySlots}
+          occurrenceDateKeys={occurrenceDateKeys}
         />
       </main>
       <Footer />
@@ -255,16 +492,99 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
   );
 }
 
+function MetaFact({
+  icon,
+  label,
+  value,
+  testId,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+  testId?: string;
+}) {
+  return (
+    <div className="flex gap-3">
+      <div className="mt-0.5 text-burgundy-700">{icon}</div>
+      <div>
+        <div className="font-mono text-[10px] uppercase tracking-[0.1em] text-ink-500">
+          {label}
+        </div>
+        <div
+          className="mt-1 text-sm font-semibold text-ink-900"
+          data-testid={testId}
+        >
+          {value}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function getNextAvailableDate(
+  slots: Array<{ dayOfWeek: number; startTime: string; isActive: boolean }>,
+  duration: number
+) {
+  if (!slots || slots.length === 0 || duration <= 0) return null;
+
+  const now = new Date();
+  const availableDays = slots
+    .filter((slot) => slot.isActive)
+    .map((slot) => slot.dayOfWeek);
+
+  if (availableDays.length === 0) return null;
+
+  for (let i = 0; i < 14; i++) {
+    const checkDate = new Date(now);
+    checkDate.setDate(now.getDate() + i);
+    const dayOfWeek = checkDate.getDay();
+    if (availableDays.includes(dayOfWeek)) {
+      const slot = slots.find(
+        (candidate) => candidate.dayOfWeek === dayOfWeek && candidate.isActive
+      );
+      if (slot) {
+        // Combine the checked calendar day (server runs UTC) with the slot's
+        // Europe/Zurich wall-clock start into a real instant. Guard against a
+        // malformed slot time so this public render never throws.
+        try {
+          const dateOnly = new Date(
+            Date.UTC(
+              checkDate.getUTCFullYear(),
+              checkDate.getUTCMonth(),
+              checkDate.getUTCDate()
+            )
+          );
+          return zonedWallClockToUTC(dateOnly, slot.startTime);
+        } catch {
+          continue;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+function formatDuration(minutes: number) {
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  const remaining = minutes % 60;
+  return remaining > 0 ? `${hours}h ${remaining}` : `${hours}h`;
+}
+
 function RelatedExperiencesSkeleton() {
   return (
     <div className="mt-16">
-      <Skeleton className="h-8 w-48 mb-6" />
+      <Skeleton className="mb-6 h-8 w-48" />
       <div className="grid gap-6 md:grid-cols-3">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="overflow-hidden rounded-xl bg-white shadow-warm">
+          <div
+            key={i}
+            className="overflow-hidden rounded-xl bg-white shadow-warm"
+          >
             <Skeleton className="h-48 w-full" />
             <div className="p-5">
-              <Skeleton className="h-5 w-3/4 mb-2" />
+              <Skeleton className="mb-2 h-5 w-3/4" />
               <Skeleton className="h-4 w-1/2" />
             </div>
           </div>

@@ -83,7 +83,9 @@ export class ConfirmationPage extends BasePage {
     this.totalPaid = page.getByTestId('total-paid');
 
     // Calendar
-    this.addToCalendarButton = page.getByRole('button', { name: /add to calendar/i });
+    this.addToCalendarButton = page.getByRole('button', {
+      name: /add to calendar/i,
+    });
 
     // Winery card
     this.wineryCard = page.getByTestId('winery-details-card');
@@ -103,11 +105,17 @@ export class ConfirmationPage extends BasePage {
     this.visitorPhone = page.getByTestId('visitor-phone');
 
     // Email note
-    this.emailConfirmationNote = page.getByText(/confirmation.*sent|email.*sent/i);
+    this.emailConfirmationNote = page.getByText(
+      /confirmation.*sent|email.*sent/i
+    );
 
     // Navigation
-    this.viewExperienceLink = page.getByRole('link', { name: /view experience/i });
-    this.browseMoreLink = page.getByRole('link', { name: /browse more|explore/i });
+    this.viewExperienceLink = page.getByRole('link', {
+      name: /view experience/i,
+    });
+    this.browseMoreLink = page.getByRole('link', {
+      name: /browse more|explore/i,
+    });
   }
 
   /**
@@ -150,7 +158,9 @@ export class ConfirmationPage extends BasePage {
   async hasSuccessIcon(): Promise<boolean> {
     // Check for success styling - implementation depends on how icon is rendered
     const iconClass = await this.statusIcon.getAttribute('class');
-    return iconClass?.includes('success') || iconClass?.includes('green') || false;
+    return (
+      iconClass?.includes('success') || iconClass?.includes('green') || false
+    );
   }
 
   // === BOOKING REFERENCE ===
@@ -290,7 +300,10 @@ export class ConfirmationPage extends BasePage {
   /**
    * Click Add to Calendar and handle download
    */
-  async clickAddToCalendar(): Promise<{ filename: string; content: string } | null> {
+  async clickAddToCalendar(): Promise<{
+    filename: string;
+    content: string;
+  } | null> {
     const downloadPromise = this.page.waitForEvent('download');
     await this.addToCalendarButton.click();
 

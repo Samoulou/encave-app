@@ -1,6 +1,16 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { BookingStatus } from '@prisma/client';
 
+// React.cache is not available in Vitest's React runtime, but server query
+// modules use it for request-level deduplication in Next.
+vi.mock('react', async () => {
+  const actual = await vi.importActual<typeof import('react')>('react');
+  return {
+    ...actual,
+    cache: <T extends (...args: unknown[]) => unknown>(fn: T) => fn,
+  };
+});
+
 // Mock auth
 vi.mock('@/server/auth', () => ({
   auth: vi.fn(),
@@ -18,6 +28,11 @@ vi.mock('@/server/db', () => ({
       update: vi.fn(),
     },
   },
+}));
+
+vi.mock('@/server/services/email.service', () => ({
+  sendBookingConfirmationEmail: vi.fn(),
+  sendBookingCancellationEmail: vi.fn(),
 }));
 
 import { auth } from '@/server/auth';
@@ -63,227 +78,6 @@ describe('Booking Dashboard Server Actions', () => {
     vi.useRealTimers();
   });
 
-  describe('markBookingCompleted', () => {
-    it('marks a past confirmed booking as completed', async () => {
-      vi.mocked(auth).mockResolvedValue(mockSession as never);
-      vi.mocked(db.winery.findUnique).mockResolvedValue(mockWinery as never);
-      vi.mocked(db.booking.findFirst).mockResolvedValue(mockBooking as never);
-      vi.mocked(db.booking.update).mockResolvedValue({
-        ...mockBooking,
-        status: BookingStatus.COMPLETED,
-      } as never);
-
-      const { markBookingCompleted } = await import(
-        '@/server/actions/booking-dashboard'
-      );
-      const result = await markBookingCompleted('booking-123');
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.status).toBe(BookingStatus.COMPLETED);
-      }
-      expect(db.booking.update).toHaveBeenCalledWith({
-        where: { id: 'booking-123' },
-        data: { status: BookingStatus.COMPLETED },
-      });
-    });
-
-    it('returns UNAUTHORIZED when not authenticated', async () => {
-      vi.mocked(auth).mockResolvedValue(null);
-
-      const { markBookingCompleted } = await import(
-        '@/server/actions/booking-dashboard'
-      );
-      const result = await markBookingCompleted('booking-123');
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.code).toBe('UNAUTHORIZED');
-      }
-    });
-
-    it('returns FORBIDDEN when user is not a winery owner', async () => {
-      vi.mocked(auth).mockResolvedValue(mockSession as never);
-      vi.mocked(db.winery.findUnique).mockResolvedValue(null);
-
-      const { markBookingCompleted } = await import(
-        '@/server/actions/booking-dashboard'
-      );
-      const result = await markBookingCompleted('booking-123');
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.code).toBe('FORBIDDEN');
-      }
-    });
-
-    it('returns NOT_FOUND when booking does not exist', async () => {
-      vi.mocked(auth).mockResolvedValue(mockSession as never);
-      vi.mocked(db.winery.findUnique).mockResolvedValue(mockWinery as never);
-      vi.mocked(db.booking.findFirst).mockResolvedValue(null);
-
-      const { markBookingCompleted } = await import(
-        '@/server/actions/booking-dashboard'
-      );
-      const result = await markBookingCompleted('booking-123');
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.code).toBe('NOT_FOUND');
-      }
-    });
-
-    it('returns VALIDATION_ERROR for non-confirmed booking', async () => {
-      vi.mocked(auth).mockResolvedValue(mockSession as never);
-      vi.mocked(db.winery.findUnique).mockResolvedValue(mockWinery as never);
-      vi.mocked(db.booking.findFirst).mockResolvedValue({
-        ...mockBooking,
-        status: BookingStatus.CANCELLED_BY_CLIENT,
-      } as never);
-
-      const { markBookingCompleted } = await import(
-        '@/server/actions/booking-dashboard'
-      );
-      const result = await markBookingCompleted('booking-123');
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.code).toBe('VALIDATION_ERROR');
-        expect(result.error.message).toContain('confirmed');
-      }
-    });
-
-    it('returns VALIDATION_ERROR for future booking', async () => {
-      vi.mocked(auth).mockResolvedValue(mockSession as never);
-      vi.mocked(db.winery.findUnique).mockResolvedValue(mockWinery as never);
-      vi.mocked(db.booking.findFirst).mockResolvedValue({
-        ...mockBooking,
-        date: new Date('2026-01-15'), // Future date
-        timeSlot: '14:00',
-      } as never);
-
-      const { markBookingCompleted } = await import(
-        '@/server/actions/booking-dashboard'
-      );
-      const result = await markBookingCompleted('booking-123');
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.code).toBe('VALIDATION_ERROR');
-        expect(result.error.message).toContain('future');
-      }
-    });
-
-    it('verifies booking belongs to the winery', async () => {
-      vi.mocked(auth).mockResolvedValue(mockSession as never);
-      vi.mocked(db.winery.findUnique).mockResolvedValue(mockWinery as never);
-      vi.mocked(db.booking.findFirst).mockResolvedValue(null);
-
-      const { markBookingCompleted } = await import(
-        '@/server/actions/booking-dashboard'
-      );
-      await markBookingCompleted('booking-123');
-
-      expect(db.booking.findFirst).toHaveBeenCalledWith({
-        where: { id: 'booking-123', wineryId: 'winery-123' },
-      });
-    });
-  });
-
-  describe('markBookingNoShow', () => {
-    it('marks a past confirmed booking as no-show', async () => {
-      vi.mocked(auth).mockResolvedValue(mockSession as never);
-      vi.mocked(db.winery.findUnique).mockResolvedValue(mockWinery as never);
-      vi.mocked(db.booking.findFirst).mockResolvedValue(mockBooking as never);
-      vi.mocked(db.booking.update).mockResolvedValue({
-        ...mockBooking,
-        status: BookingStatus.NO_SHOW,
-      } as never);
-
-      const { markBookingNoShow } = await import(
-        '@/server/actions/booking-dashboard'
-      );
-      const result = await markBookingNoShow('booking-123');
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.status).toBe(BookingStatus.NO_SHOW);
-      }
-      expect(db.booking.update).toHaveBeenCalledWith({
-        where: { id: 'booking-123' },
-        data: { status: BookingStatus.NO_SHOW },
-      });
-    });
-
-    it('returns UNAUTHORIZED when not authenticated', async () => {
-      vi.mocked(auth).mockResolvedValue(null);
-
-      const { markBookingNoShow } = await import(
-        '@/server/actions/booking-dashboard'
-      );
-      const result = await markBookingNoShow('booking-123');
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.code).toBe('UNAUTHORIZED');
-      }
-    });
-
-    it('returns FORBIDDEN when user is not a winery owner', async () => {
-      vi.mocked(auth).mockResolvedValue(mockSession as never);
-      vi.mocked(db.winery.findUnique).mockResolvedValue(null);
-
-      const { markBookingNoShow } = await import(
-        '@/server/actions/booking-dashboard'
-      );
-      const result = await markBookingNoShow('booking-123');
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.code).toBe('FORBIDDEN');
-      }
-    });
-
-    it('returns VALIDATION_ERROR for non-confirmed booking', async () => {
-      vi.mocked(auth).mockResolvedValue(mockSession as never);
-      vi.mocked(db.winery.findUnique).mockResolvedValue(mockWinery as never);
-      vi.mocked(db.booking.findFirst).mockResolvedValue({
-        ...mockBooking,
-        status: BookingStatus.COMPLETED,
-      } as never);
-
-      const { markBookingNoShow } = await import(
-        '@/server/actions/booking-dashboard'
-      );
-      const result = await markBookingNoShow('booking-123');
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.code).toBe('VALIDATION_ERROR');
-      }
-    });
-
-    it('returns VALIDATION_ERROR for future booking', async () => {
-      vi.mocked(auth).mockResolvedValue(mockSession as never);
-      vi.mocked(db.winery.findUnique).mockResolvedValue(mockWinery as never);
-      vi.mocked(db.booking.findFirst).mockResolvedValue({
-        ...mockBooking,
-        date: new Date('2026-01-15'),
-        timeSlot: '14:00',
-      } as never);
-
-      const { markBookingNoShow } = await import(
-        '@/server/actions/booking-dashboard'
-      );
-      const result = await markBookingNoShow('booking-123');
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.code).toBe('VALIDATION_ERROR');
-      }
-    });
-  });
-
   describe('exportBookingsToCSV', () => {
     const mockBookings = [
       {
@@ -310,9 +104,8 @@ describe('Booking Dashboard Server Actions', () => {
       vi.mocked(db.winery.findUnique).mockResolvedValue(mockWinery as never);
       vi.mocked(db.booking.findMany).mockResolvedValue(mockBookings as never);
 
-      const { exportBookingsToCSV } = await import(
-        '@/server/actions/booking-dashboard'
-      );
+      const { exportBookingsToCSV } =
+        await import('@/server/actions/booking-dashboard');
       const result = await exportBookingsToCSV();
 
       expect(result.success).toBe(true);
@@ -320,7 +113,9 @@ describe('Booking Dashboard Server Actions', () => {
         expect(result.data.csvData).toContain('Date,Time,Experience');
         expect(result.data.csvData).toContain('Test Visitor');
         expect(result.data.csvData).toContain('Jane Doe');
-        expect(result.data.filename).toMatch(/^bookings_test-winery_\d{4}-\d{2}-\d{2}\.csv$/);
+        expect(result.data.filename).toMatch(
+          /^bookings_test-winery_\d{4}-\d{2}-\d{2}\.csv$/
+        );
       }
     });
 
@@ -329,9 +124,8 @@ describe('Booking Dashboard Server Actions', () => {
       vi.mocked(db.winery.findUnique).mockResolvedValue(mockWinery as never);
       vi.mocked(db.booking.findMany).mockResolvedValue(mockBookings as never);
 
-      const { exportBookingsToCSV } = await import(
-        '@/server/actions/booking-dashboard'
-      );
+      const { exportBookingsToCSV } =
+        await import('@/server/actions/booking-dashboard');
       const result = await exportBookingsToCSV();
 
       expect(result.success).toBe(true);
@@ -356,9 +150,8 @@ describe('Booking Dashboard Server Actions', () => {
       vi.mocked(db.winery.findUnique).mockResolvedValue(mockWinery as never);
       vi.mocked(db.booking.findMany).mockResolvedValue(mockBookings as never);
 
-      const { exportBookingsToCSV } = await import(
-        '@/server/actions/booking-dashboard'
-      );
+      const { exportBookingsToCSV } =
+        await import('@/server/actions/booking-dashboard');
       const result = await exportBookingsToCSV();
 
       expect(result.success).toBe(true);
@@ -378,11 +171,12 @@ describe('Booking Dashboard Server Actions', () => {
       };
       vi.mocked(auth).mockResolvedValue(mockSession as never);
       vi.mocked(db.winery.findUnique).mockResolvedValue(mockWinery as never);
-      vi.mocked(db.booking.findMany).mockResolvedValue([bookingWithComma] as never);
+      vi.mocked(db.booking.findMany).mockResolvedValue([
+        bookingWithComma,
+      ] as never);
 
-      const { exportBookingsToCSV } = await import(
-        '@/server/actions/booking-dashboard'
-      );
+      const { exportBookingsToCSV } =
+        await import('@/server/actions/booking-dashboard');
       const result = await exportBookingsToCSV();
 
       expect(result.success).toBe(true);
@@ -398,9 +192,8 @@ describe('Booking Dashboard Server Actions', () => {
       vi.mocked(db.winery.findUnique).mockResolvedValue(mockWinery as never);
       vi.mocked(db.booking.findMany).mockResolvedValue([]);
 
-      const { exportBookingsToCSV } = await import(
-        '@/server/actions/booking-dashboard'
-      );
+      const { exportBookingsToCSV } =
+        await import('@/server/actions/booking-dashboard');
       await exportBookingsToCSV({
         status: [BookingStatus.CONFIRMED],
         search: 'Test',
@@ -419,9 +212,8 @@ describe('Booking Dashboard Server Actions', () => {
     it('returns UNAUTHORIZED when not authenticated', async () => {
       vi.mocked(auth).mockResolvedValue(null);
 
-      const { exportBookingsToCSV } = await import(
-        '@/server/actions/booking-dashboard'
-      );
+      const { exportBookingsToCSV } =
+        await import('@/server/actions/booking-dashboard');
       const result = await exportBookingsToCSV();
 
       expect(result.success).toBe(false);
@@ -434,9 +226,8 @@ describe('Booking Dashboard Server Actions', () => {
       vi.mocked(auth).mockResolvedValue(mockSession as never);
       vi.mocked(db.winery.findUnique).mockResolvedValue(null);
 
-      const { exportBookingsToCSV } = await import(
-        '@/server/actions/booking-dashboard'
-      );
+      const { exportBookingsToCSV } =
+        await import('@/server/actions/booking-dashboard');
       const result = await exportBookingsToCSV();
 
       expect(result.success).toBe(false);
@@ -473,11 +264,12 @@ describe('Booking Dashboard Server Actions', () => {
     it('returns booking history for a client', async () => {
       vi.mocked(auth).mockResolvedValue(mockSession as never);
       vi.mocked(db.winery.findUnique).mockResolvedValue(mockWinery as never);
-      vi.mocked(db.booking.findMany).mockResolvedValue(mockClientBookings as never);
-
-      const { getClientHistory } = await import(
-        '@/server/actions/booking-dashboard'
+      vi.mocked(db.booking.findMany).mockResolvedValue(
+        mockClientBookings as never
       );
+
+      const { getClientHistory } =
+        await import('@/server/actions/booking-dashboard');
       const result = await getClientHistory('visitor@example.com');
 
       expect(result.success).toBe(true);
@@ -493,15 +285,17 @@ describe('Booking Dashboard Server Actions', () => {
       vi.mocked(db.winery.findUnique).mockResolvedValue(mockWinery as never);
       vi.mocked(db.booking.findMany).mockResolvedValue([]);
 
-      const { getClientHistory } = await import(
-        '@/server/actions/booking-dashboard'
-      );
+      const { getClientHistory } =
+        await import('@/server/actions/booking-dashboard');
       await getClientHistory('Visitor@EXAMPLE.com');
 
       expect(db.booking.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            visitorEmail: { equals: 'Visitor@EXAMPLE.com', mode: 'insensitive' },
+            visitorEmail: {
+              equals: 'Visitor@EXAMPLE.com',
+              mode: 'insensitive',
+            },
           }),
         })
       );
@@ -512,9 +306,8 @@ describe('Booking Dashboard Server Actions', () => {
       vi.mocked(db.winery.findUnique).mockResolvedValue(mockWinery as never);
       vi.mocked(db.booking.findMany).mockResolvedValue([]);
 
-      const { getClientHistory } = await import(
-        '@/server/actions/booking-dashboard'
-      );
+      const { getClientHistory } =
+        await import('@/server/actions/booking-dashboard');
       await getClientHistory('visitor@example.com');
 
       expect(db.booking.findMany).toHaveBeenCalledWith(
@@ -527,9 +320,8 @@ describe('Booking Dashboard Server Actions', () => {
     it('returns UNAUTHORIZED when not authenticated', async () => {
       vi.mocked(auth).mockResolvedValue(null);
 
-      const { getClientHistory } = await import(
-        '@/server/actions/booking-dashboard'
-      );
+      const { getClientHistory } =
+        await import('@/server/actions/booking-dashboard');
       const result = await getClientHistory('visitor@example.com');
 
       expect(result.success).toBe(false);
@@ -542,9 +334,8 @@ describe('Booking Dashboard Server Actions', () => {
       vi.mocked(auth).mockResolvedValue(mockSession as never);
       vi.mocked(db.winery.findUnique).mockResolvedValue(null);
 
-      const { getClientHistory } = await import(
-        '@/server/actions/booking-dashboard'
-      );
+      const { getClientHistory } =
+        await import('@/server/actions/booking-dashboard');
       const result = await getClientHistory('visitor@example.com');
 
       expect(result.success).toBe(false);
@@ -558,9 +349,8 @@ describe('Booking Dashboard Server Actions', () => {
       vi.mocked(db.winery.findUnique).mockResolvedValue(mockWinery as never);
       vi.mocked(db.booking.findMany).mockResolvedValue([]);
 
-      const { getClientHistory } = await import(
-        '@/server/actions/booking-dashboard'
-      );
+      const { getClientHistory } =
+        await import('@/server/actions/booking-dashboard');
       await getClientHistory('visitor@example.com');
 
       expect(db.booking.findMany).toHaveBeenCalledWith(

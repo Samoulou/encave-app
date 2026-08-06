@@ -60,7 +60,10 @@ export function AddressAutocomplete({
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     }
@@ -107,7 +110,9 @@ export function AddressAutocomplete({
     } catch (err) {
       console.error('Address search error:', err);
       setSuggestions([]);
-      setError('Unable to search addresses. Please try again or enter manually.');
+      setError(
+        'Unable to search addresses. Please try again or enter manually.'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -130,8 +135,15 @@ export function AddressAutocomplete({
 
   const handleSelectSuggestion = (result: NominatimResult) => {
     const address = result.address || {};
-    const street = [address.road, address.house_number].filter(Boolean).join(' ');
-    const city = address.city || address.town || address.village || address.municipality || '';
+    const street = [address.road, address.house_number]
+      .filter(Boolean)
+      .join(' ');
+    const city =
+      address.city ||
+      address.town ||
+      address.village ||
+      address.municipality ||
+      '';
     const zipCode = address.postcode || '';
 
     const addressData: AddressData = {
@@ -155,7 +167,9 @@ export function AddressAutocomplete({
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
-        setSelectedIndex((prev) => (prev < suggestions.length - 1 ? prev + 1 : prev));
+        setSelectedIndex((prev) =>
+          prev < suggestions.length - 1 ? prev + 1 : prev
+        );
         break;
       case 'ArrowUp':
         e.preventDefault();
@@ -192,7 +206,7 @@ export function AddressAutocomplete({
   return (
     <div ref={containerRef} className={cn('relative', className)}>
       <div className="relative">
-        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+        <MapPin className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
         <Input
           ref={inputRef}
           id={id}
@@ -202,17 +216,17 @@ export function AddressAutocomplete({
           onKeyDown={handleKeyDown}
           onFocus={() => suggestions.length > 0 && setIsOpen(true)}
           placeholder={placeholder}
-          className="bg-slate-50 border-stone-200 h-12 pl-10 pr-10"
+          className="h-12 border-stone-200 bg-muted pl-10 pr-10"
           autoComplete="off"
         />
         {isLoading && (
-          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 animate-spin" />
+          <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
         )}
         {!isLoading && query && (
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 hover:text-slate-600"
+            className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground hover:text-foreground"
           >
             <X className="h-4 w-4" />
           </button>
@@ -221,20 +235,22 @@ export function AddressAutocomplete({
 
       {/* Suggestions dropdown */}
       {isOpen && suggestions.length > 0 && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-stone-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+        <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-stone-200 bg-white shadow-lg">
           {suggestions.map((result, index) => (
             <button
               key={result.place_id}
               type="button"
               className={cn(
-                'w-full px-4 py-3 text-left text-sm hover:bg-slate-50 transition-colors flex items-start gap-3',
+                'flex w-full items-start gap-3 px-4 py-3 text-left text-sm transition-colors hover:bg-slate-50',
                 index === selectedIndex && 'bg-slate-50',
                 index !== suggestions.length - 1 && 'border-b border-stone-100'
               )}
               onClick={() => handleSelectSuggestion(result)}
             >
-              <MapPin className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-              <span className="text-slate-700 line-clamp-2">{result.display_name}</span>
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+              <span className="line-clamp-2 text-foreground">
+                {result.display_name}
+              </span>
             </button>
           ))}
         </div>
@@ -242,16 +258,17 @@ export function AddressAutocomplete({
 
       {/* No results message */}
       {noResults && !isLoading && query.length >= 3 && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-stone-200 rounded-lg shadow-lg p-4">
-          <p className="text-sm text-slate-500 text-center">
-            No addresses found. Try a different search or enter the address manually below.
+        <div className="absolute z-50 mt-1 w-full rounded-lg border border-stone-200 bg-white p-4 shadow-lg">
+          <p className="text-center text-sm text-muted-foreground">
+            No addresses found. Try a different search or enter the address
+            manually below.
           </p>
         </div>
       )}
 
       {/* Error message */}
       {error && (
-        <div className="flex items-center gap-2 mt-2 text-sm text-red-600">
+        <div className="mt-2 flex items-center gap-2 text-sm text-destructive">
           <AlertCircle className="h-4 w-4 shrink-0" />
           <span>{error}</span>
         </div>

@@ -63,12 +63,12 @@ export function SearchBar({
     <div className={cn('relative', className)}>
       {showSpinner ? (
         <Loader2
-          className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-burgundy-600 animate-spin"
+          className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-burgundy-600"
           aria-hidden="true"
         />
       ) : (
         <Search
-          className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+          className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground"
           aria-hidden="true"
         />
       )}
@@ -89,10 +89,10 @@ export function SearchBar({
           variant="ghost"
           size="sm"
           onClick={handleClear}
-          className="absolute right-2 top-1/2 h-8 w-8 -translate-y-1/2 p-0 hover:bg-slate-100"
+          className="absolute right-2 top-1/2 h-8 w-8 -translate-y-1/2 p-0 hover:bg-muted"
           aria-label={t('clearSearch')}
         >
-          <X className="h-4 w-4 text-slate-500" />
+          <X className="h-4 w-4 text-muted-foreground" />
         </Button>
       )}
     </div>

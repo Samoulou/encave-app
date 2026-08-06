@@ -22,17 +22,19 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { AuthPageLayout } from './AuthPageLayout';
 import { cn } from '@/lib/utils';
+import registerImage from '@/../public/images/register-image.jpg';
 
 export function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const currentSearchParams = searchParams ?? new URLSearchParams();
   const t = useTranslations('auth.register');
   const tCommon = useTranslations('common');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   // Pre-check winemaker if coming from "Become Partner" link
-  const isWinemakerFromUrl = searchParams.get('winemaker') === 'true';
+  const isWinemakerFromUrl = currentSearchParams.get('winemaker') === 'true';
 
   const form = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
@@ -64,7 +66,9 @@ export function RegisterForm() {
         if (result.error.code === 'USER_ALREADY_EXISTS') {
           setError(t('emailExists'));
         } else {
-          setError(result.error.message || tCommon('errors.somethingWentWrong'));
+          setError(
+            result.error.message || tCommon('errors.somethingWentWrong')
+          );
         }
         return;
       }
@@ -98,19 +102,17 @@ export function RegisterForm() {
 
   return (
     <AuthPageLayout
-      imageUrl="https://images.unsplash.com/photo-1523531294919-4bcd7c65e216?q=80&w=1920&auto=format&fit=crop"
+      imageUrl={registerImage}
       imageAlt={t('imageAlt')}
       heroTitle={t('heroTitle')}
       heroSubtitle={t('heroSubtitle')}
     >
       {/* Heading */}
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold text-slate-900 font-display">
+        <h1 className="font-display text-3xl font-bold text-foreground">
           {t('title')}
         </h1>
-        <p className="text-[#915564]">
-          {t('subtitle')}
-        </p>
+        <p className="text-muted-foreground">{t('subtitle')}</p>
       </div>
 
       {/* Form */}
@@ -174,7 +176,7 @@ export function RegisterForm() {
                     {...field}
                   />
                 </FormControl>
-                <p className="mt-1.5 text-xs text-slate-500">
+                <p className="mt-1.5 text-xs text-muted-foreground">
                   {t('passwordHint')}
                 </p>
                 <FormMessage />
@@ -222,10 +224,13 @@ export function RegisterForm() {
                 </FormControl>
                 <div className="space-y-1 leading-none">
                   <FormLabel className="flex cursor-pointer items-center gap-2">
-                    <Wine className="h-4 w-4 text-burgundy-600" aria-hidden="true" />
+                    <Wine
+                      className="h-4 w-4 text-burgundy-600"
+                      aria-hidden="true"
+                    />
                     {t('iAmWinemaker')}
                   </FormLabel>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-sm text-muted-foreground">
                     {t('winemakerDescription')}
                   </p>
                 </div>
@@ -242,11 +247,11 @@ export function RegisterForm() {
             {t('createAccount')}
           </Button>
 
-          <p className="text-center text-sm text-slate-600">
+          <p className="text-center text-sm text-muted-foreground">
             {t('haveAccount')}{' '}
             <Link
               href="/login"
-              className="font-medium text-burgundy-600 hover:text-burgundy-800 relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-gold-400 after:transition-all hover:after:w-full"
+              className="relative font-medium text-burgundy-600 after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-gold-400 after:transition-all hover:text-burgundy-800 hover:after:w-full"
             >
               {tCommon('buttons.signIn')}
             </Link>

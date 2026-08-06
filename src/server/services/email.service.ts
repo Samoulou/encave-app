@@ -2,12 +2,24 @@ import { Resend } from 'resend';
 import { render } from '@react-email/components';
 import { env, getBaseUrl } from '@/lib/env';
 import { logInfo, logError, logWarn } from '@/lib/logger';
+import { formatCHF } from '@/lib/utils/currency';
+import { formatDate } from '@/lib/i18n/formatters';
+import type { Locale as RoutingLocale } from '@/i18n/routing';
 import type { Locale } from '@prisma/client';
 import {
   BookingConfirmationEmail,
   BookingReminderEmail,
   BookingCancellationEmail,
+  BookingCancelledByWineryEmail,
+  BookingExpiredEmail,
+  ManualRefundClientEmail,
+  ManualRefundWinemakerEmail,
+  NoShowFeeChargedEmail,
+  AccountDeletedEmail,
+  EmailChangedNoticeEmail,
   PasswordResetEmail,
+  OtpEmail,
+  type OtpPurpose,
   WelcomeEmail,
   EmailVerificationEmail,
   WinemakerNewBookingEmail,
@@ -18,8 +30,37 @@ import {
   DailyDigestEmail,
   PostExperienceFollowUpEmail,
   WeeklySummaryEmail,
+  TastingRecapEmail,
+  type TastingRecapWine,
+  WineOrderRequestWineryEmail,
+  WineOrderRequestClientEmail,
+  type WineOrderRequestItemLine,
+  TastingSheetReminderEmail,
+  type ReminderSessionLine,
+  StripeActionRequiredEmail,
+  GiftCardPurchaseEmail,
+  GiftCardDeliveryEmail,
+  RequestSubmittedEmail,
+  RequestNewCustomEmail,
+  RequestOfferReceivedEmail,
+  RequestOfferExpiringEmail,
+  RequestSlaEscalationEmail,
+  AdminNewWineryToValidateEmail,
+  ContactMessageEmail,
+  ContactAckEmail,
 } from '@/emails';
 import { subjects, t } from '@/emails/translations';
+import {
+  logEmailSent,
+  logEmailFailed,
+} from '@/server/services/email-log.service';
+import { generateBookingQrPng } from '@/server/services/qr-code.service';
+import { generateBookingReceiptPDF } from '@/server/services/booking-receipt.service';
+import {
+  createBookingCalendarEvent,
+  generateICalEvent,
+} from '@/lib/utils/calendar';
+import type { WineryAlternative } from '@/server/queries/winery-alternatives.queries';
 
 const resend = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null;
 const FROM_EMAIL = 'EnCave <noreply@encave.ch>';
@@ -33,25 +74,73 @@ interface SendEmailOptions {
   to: string;
   subject: string;
   html: string;
+  /** Optional reply-to (P-12 / L-114 contact form routes replies to sender). */
+  replyTo?: string;
+  attachments?: {
+    filename: string;
+    content: string;
+    contentType?: string;
+    cid?: string;
+  }[];
+  /**
+   * Resend tags (P-07 tracking): surfaced back by the open/click webhook.
+   * Values must be ASCII letters, numbers, underscores or dashes.
+   */
+  tags?: { name: string; value: string }[];
+}
+
+export interface SendEmailResult {
+  ok: boolean;
+  /** Resend message id — matches webhook events to EmailLog rows. */
+  messageId?: string;
 }
 
 /**
  * BACK-004 FIX: Send email with exponential backoff retry
- * Retries up to 3 times with delays of 1s, 2s, 4s
+ * Retries up to 3 times with delays of 1s, 2s, 4s.
+ * Detailed variant (P-07): also returns the Resend message id so the
+ * open/click webhook can be matched back to the EmailLog row.
  */
-async function sendEmail({ to, subject, html }: SendEmailOptions): Promise<boolean> {
+async function sendEmailDetailed({
+  to,
+  subject,
+  html,
+  replyTo,
+  attachments,
+  tags,
+}: SendEmailOptions): Promise<SendEmailResult> {
   if (!resend) {
-    logInfo('Resend not configured, skipping email', { to, subject });
-    return true;
+    // In production a missing RESEND_API_KEY is an outage, not a no-op:
+    // returning success would set dedup flags (confirmationSentAt, …) and
+    // mark EmailLog entries "sent" while nothing was delivered.
+    if (process.env.NODE_ENV === 'production') {
+      logError(
+        'RESEND_API_KEY missing in production — email NOT sent',
+        undefined,
+        {
+          to,
+          subject,
+        }
+      );
+      return { ok: false };
+    }
+    logInfo('Resend not configured, skipping email (non-production)', {
+      to,
+      subject,
+    });
+    return { ok: true };
   }
 
   for (let attempt = 1; attempt <= MAX_RETRY_ATTEMPTS; attempt++) {
     try {
-      const { error } = await resend.emails.send({
+      const { data, error } = await resend.emails.send({
         from: FROM_EMAIL,
         to,
         subject,
         html,
+        ...(replyTo ? { replyTo } : {}),
+        attachments,
+        tags,
       });
 
       if (error) {
@@ -63,7 +152,7 @@ async function sendEmail({ to, subject, html }: SendEmailOptions): Promise<boole
         });
         if (attempt === MAX_RETRY_ATTEMPTS) {
           logError('Email max retries reached', error, { to, subject });
-          return false;
+          return { ok: false };
         }
         // Wait before retrying (exponential backoff: 1s, 2s, 4s)
         const delay = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt - 1);
@@ -71,7 +160,7 @@ async function sendEmail({ to, subject, html }: SendEmailOptions): Promise<boole
         continue;
       }
 
-      return true;
+      return { ok: true, messageId: data?.id };
     } catch (error) {
       logWarn(`Email attempt ${attempt}/${MAX_RETRY_ATTEMPTS} error`, {
         to,
@@ -80,7 +169,7 @@ async function sendEmail({ to, subject, html }: SendEmailOptions): Promise<boole
       });
       if (attempt === MAX_RETRY_ATTEMPTS) {
         logError('Email max retries reached', error, { to, subject });
-        return false;
+        return { ok: false };
       }
       // Wait before retrying
       const delay = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt - 1);
@@ -88,17 +177,12 @@ async function sendEmail({ to, subject, html }: SendEmailOptions): Promise<boole
     }
   }
 
-  return false;
+  return { ok: false };
 }
 
-/**
- * BACK-004 FIX: Non-blocking email sending
- * Fire and forget - logs errors but doesn't block caller
- */
-export function sendEmailNonBlocking(options: SendEmailOptions): void {
-  sendEmail(options).catch((error) => {
-    logError('Non-blocking email send failed', error, { to: options.to, subject: options.subject });
-  });
+async function sendEmail(options: SendEmailOptions): Promise<boolean> {
+  const { ok } = await sendEmailDetailed(options);
+  return ok;
 }
 
 function getLocale(locale?: Locale | null): Locale {
@@ -108,13 +192,21 @@ function getLocale(locale?: Locale | null): Locale {
 // Booking Emails
 
 export interface BookingConfirmationData {
+  bookingId?: string;
+  accessToken?: string;
   guestName: string;
   experienceTitle: string;
   wineryName: string;
+  wineryAddress: string;
+  wineryCommune: string;
   date: Date;
+  /** "HH:mm" start time — used for the PDF ticket + .ics attachments. */
+  timeSlot: string;
   guestCount: number;
   duration: number;
   totalPrice: number;
+  /** Client booking fee in cents (0 when BOOKING_FEE is OFF). */
+  serviceFeeCents?: number;
   bookingRef: string;
 }
 
@@ -124,17 +216,172 @@ export async function sendBookingConfirmationEmail(
   locale?: Locale | null
 ): Promise<boolean> {
   const loc = getLocale(locale);
+  const localePath = loc.toLowerCase();
+  const bookingUrl =
+    data.bookingId && data.accessToken
+      ? `${getBaseUrl()}/${localePath}/booking/${data.bookingId}?token=${data.accessToken}`
+      : `${getBaseUrl()}/${localePath}`;
   const html = await render(
     BookingConfirmationEmail({
       locale: loc,
       ...data,
-      bookingUrl: `${getBaseUrl()}/bookings/${data.bookingRef}`,
+      qrCodeCid: data.accessToken ? 'booking-qr-code' : undefined,
+      bookingUrl,
+    })
+  );
+
+  const attachments: SendEmailOptions['attachments'] = [];
+  if (data.accessToken) {
+    try {
+      const qrPng = await generateBookingQrPng(bookingUrl);
+      attachments.push({
+        filename: `billet-${data.bookingRef}.png`,
+        content: qrPng.toString('base64'),
+        contentType: 'image/png',
+        cid: 'booking-qr-code',
+      });
+    } catch (error) {
+      logError('Failed to generate booking QR code', error, {
+        action: 'sendBookingConfirmationEmail',
+        bookingRef: data.bookingRef,
+      });
+    }
+  }
+
+  // PDF receipt/ticket + .ics — each guarded so a generation failure never
+  // blocks the confirmation email (same doctrine as the QR block above).
+  try {
+    const pdf = await generateBookingReceiptPDF({
+      reference: data.bookingRef,
+      visitorName: data.guestName,
+      visitorEmail: email,
+      experienceTitle: data.experienceTitle,
+      wineryName: data.wineryName,
+      wineryAddress: data.wineryAddress,
+      wineryCommune: data.wineryCommune,
+      date: data.date,
+      timeSlot: data.timeSlot,
+      durationMinutes: data.duration,
+      guestCount: data.guestCount,
+      totalPrice: data.totalPrice,
+      serviceFeeCents: data.serviceFeeCents ?? 0,
+      generatedAt: new Date(),
+    });
+    attachments.push({
+      filename: `billet-${data.bookingRef}.pdf`,
+      content: pdf.toString('base64'),
+      contentType: 'application/pdf',
+    });
+  } catch (error) {
+    logError('Failed to generate booking PDF ticket', error, {
+      action: 'sendBookingConfirmationEmail',
+      bookingRef: data.bookingRef,
+    });
+  }
+
+  try {
+    const ics = generateICalEvent(
+      createBookingCalendarEvent({
+        experienceTitle: data.experienceTitle,
+        wineryName: data.wineryName,
+        wineryAddress: data.wineryAddress,
+        wineryCommune: data.wineryCommune,
+        date: data.date,
+        timeSlot: data.timeSlot,
+        durationMinutes: data.duration,
+        guestCount: data.guestCount,
+        reference: data.bookingRef,
+        bookingUrl,
+      })
+    );
+    if (ics) {
+      attachments.push({
+        filename: `encave-${data.bookingRef}.ics`,
+        content: Buffer.from(ics, 'utf-8').toString('base64'),
+        contentType: 'text/calendar',
+      });
+    }
+  } catch (error) {
+    logError('Failed to generate booking calendar invite', error, {
+      action: 'sendBookingConfirmationEmail',
+      bookingRef: data.bookingRef,
+    });
+  }
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.bookingConfirmation, loc),
+    html,
+    attachments,
+  });
+}
+
+export interface BookingExpiredData {
+  guestName: string;
+  experienceTitle: string;
+  date: Date;
+  experienceSlug: string;
+}
+
+export async function sendBookingExpiredEmail(
+  email: string,
+  data: BookingExpiredData,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const html = await render(
+    BookingExpiredEmail({
+      locale: loc,
+      ...data,
+      experienceUrl: `${getBaseUrl()}/${loc.toLowerCase()}/experiences/${data.experienceSlug}`,
     })
   );
 
   return sendEmail({
     to: email,
-    subject: t(subjects.bookingConfirmation, loc),
+    subject: t(subjects.bookingExpired, loc),
+    html,
+  });
+}
+
+export interface BookingCancelledByWineryData {
+  guestName: string;
+  winemakerName: string;
+  experienceTitle: string;
+  date: Date;
+  amountCents: number;
+  reason: string;
+  /** Up to 3 nearby publicly-visible wineries to console the guest (#5). */
+  alternatives?: WineryAlternative[];
+}
+
+export async function sendBookingCancelledByWineryEmail(
+  email: string,
+  data: BookingCancelledByWineryData,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const alternatives = (data.alternatives ?? []).map((alt) => ({
+    name: alt.name,
+    commune: alt.commune,
+    distanceLabel: alt.distanceLabel,
+    url: `${getBaseUrl()}/${loc.toLowerCase()}/wineries/${alt.slug}`,
+  }));
+  const html = await render(
+    BookingCancelledByWineryEmail({
+      locale: loc,
+      ...data,
+      alternatives,
+      experiencesUrl: `${getBaseUrl()}/${loc.toLowerCase()}/experiences`,
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.bookingCancelledByWinery, loc).replace(
+      '{winemakerName}',
+      data.winemakerName
+    ),
     html,
   });
 }
@@ -177,6 +424,8 @@ export interface BookingCancellationData {
   wineryName: string;
   date: Date;
   totalPrice: number;
+  /** Exact refunded cents (policy-based); 0 = no refund; null = unknown. */
+  refundAmountCents?: number | null;
   bookingRef: string;
 }
 
@@ -225,6 +474,24 @@ export async function sendPasswordResetEmail(
   });
 }
 
+// P-14 (L-150): email #11 — the 6-digit OTP code (login / password reset /
+// email verification). Wired into better-auth's emailOTP sendVerificationOTP.
+export async function sendOtpEmail(
+  email: string,
+  otp: string,
+  purpose: OtpPurpose,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const html = await render(OtpEmail({ locale: loc, otp, purpose }));
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.otpCode, loc),
+    html,
+  });
+}
+
 export async function sendWelcomeEmail(
   email: string,
   userName: string,
@@ -264,6 +531,50 @@ export async function sendEmailVerificationEmail(
   return sendEmail({
     to: email,
     subject: t(subjects.emailVerification, loc),
+    html,
+  });
+}
+
+/**
+ * Security notice to the OLD address after a self-service email change
+ * (P-16 / P-14 gap G-2). Fire-and-forget from the auth hook — a send
+ * failure must never fail the auth response.
+ */
+export async function sendEmailChangedNoticeEmail(
+  oldEmail: string,
+  newEmail: string,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const html = await render(
+    EmailChangedNoticeEmail({
+      locale: loc,
+      newEmail,
+    })
+  );
+
+  return sendEmail({
+    to: oldEmail,
+    subject: t(subjects.emailChangedNotice, loc),
+    html,
+  });
+}
+
+export async function sendAccountDeletedEmail(
+  email: string,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const html = await render(
+    AccountDeletedEmail({
+      locale: loc,
+      date: new Date(),
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.accountDeleted, loc),
     html,
   });
 }
@@ -332,6 +643,90 @@ export async function sendWinemakerCancellationEmail(
   });
 }
 
+export async function sendManualRefundClientEmail(
+  email: string,
+  data: {
+    firstName: string;
+    reference: string;
+    experienceTitle: string;
+    amountCents: number;
+  },
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const html = await render(
+    ManualRefundClientEmail({
+      locale: loc,
+      ...data,
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.manualRefundClient, loc),
+    html,
+  });
+}
+
+export async function sendManualRefundWinemakerEmail(
+  email: string,
+  data: {
+    firstName: string;
+    reference: string;
+    experienceTitle: string;
+    date: Date;
+    amountCents: number;
+    reason: string;
+  },
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const html = await render(
+    ManualRefundWinemakerEmail({
+      locale: loc,
+      ...data,
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.manualRefundWinemaker, loc),
+    html,
+  });
+}
+
+/**
+ * Email #13 (P-08): no-show fee charged, to the CLIENT — send in the booking's
+ * locale (never the winemaker's preferredLocale).
+ */
+export async function sendNoShowFeeChargedEmail(
+  email: string,
+  data: {
+    firstName: string;
+    reference: string;
+    experienceTitle: string;
+    wineryName: string;
+    date: Date;
+    amountCents: number;
+    acceptedAt: Date;
+  },
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const html = await render(
+    NoShowFeeChargedEmail({
+      locale: loc,
+      ...data,
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.noShowFeeCharged, loc),
+    html,
+  });
+}
+
 // Winery Verification Emails
 
 export async function sendWineryApprovedEmail(
@@ -379,6 +774,63 @@ export async function sendWineryRejectedEmail(
     subject: t(subjects.wineryRejected, loc),
     html,
   });
+}
+
+export interface AdminNewWineryData {
+  wineryName: string;
+  commune: string;
+  contactEmail: string;
+  wineryId: string;
+}
+
+/**
+ * Admin notification #22 (P-15 / L-163): a new winery signed up and awaits
+ * validation. Sent to the internal admin inbox (ADMIN_ALERT_EMAIL, else the
+ * CONTACT_INBOX), always in FR — the admin surface is French.
+ */
+export async function sendAdminNewWineryToValidateEmail(
+  data: AdminNewWineryData
+): Promise<boolean> {
+  const loc = getLocale('FR');
+  const recipient = env.ADMIN_ALERT_EMAIL ?? CONTACT_INBOX;
+  const html = await render(
+    AdminNewWineryToValidateEmail({
+      locale: loc,
+      wineryName: data.wineryName,
+      commune: data.commune,
+      contactEmail: data.contactEmail,
+      reviewUrl: `${getBaseUrl()}/${loc.toLowerCase()}/admin/wineries/${data.wineryId}`,
+    })
+  );
+
+  const ok = await sendEmail({
+    to: recipient,
+    subject: t(subjects.adminNewWinery, loc).replace(
+      '{wineryName}',
+      data.wineryName
+    ),
+    html,
+  });
+
+  // Logged here (not by the caller) because this is the only sender that
+  // targets a fixed internal inbox — the caller has no recipient to pass.
+  // A failure surfaces in the admin incidents panel (L-160).
+  if (ok) {
+    await logEmailSent('admin_new_winery', recipient, undefined, {
+      wineryId: data.wineryId,
+    });
+  } else {
+    await logEmailFailed(
+      'admin_new_winery',
+      recipient,
+      'Failed to send',
+      undefined,
+      {
+        wineryId: data.wineryId,
+      }
+    );
+  }
+  return ok;
 }
 
 // Automated Notification Emails
@@ -491,6 +943,10 @@ export interface WeeklySummaryData {
     bookings: number;
     guests: number;
   };
+  /** Real Stripe payouts of the last 7 days (P-13 / email #17). */
+  payouts?: { totalCents: number; count: number } | null;
+  /** Previous-month statement (P-13 / email #17). */
+  statement?: { monthKey: string; monthLabel: string } | null;
 }
 
 export async function sendWeeklySummaryEmail(
@@ -499,10 +955,19 @@ export async function sendWeeklySummaryEmail(
   locale?: Locale | null
 ): Promise<boolean> {
   const loc = getLocale(locale);
+  const { statement, ...rest } = data;
   const html = await render(
     WeeklySummaryEmail({
       locale: loc,
-      ...data,
+      ...rest,
+      statement: statement
+        ? {
+            // Session-authenticated route — fine for winemakers, who stay
+            // logged in on their own device.
+            url: `${getBaseUrl()}/api/dashboard/statements/${statement.monthKey}?locale=${loc.toLowerCase()}`,
+            monthLabel: statement.monthLabel,
+          }
+        : null,
       dashboardUrl: `${getBaseUrl()}/dashboard/earnings`,
     })
   );
@@ -512,4 +977,582 @@ export async function sendWeeklySummaryEmail(
     subject: t(subjects.weeklySummary, loc),
     html,
   });
+}
+
+/**
+ * Email #18 « Action requise Stripe » (P-13 / L-143). Caller (Connect
+ * webhook) owns the anti-spam decision — this only renders and sends.
+ */
+export async function sendStripeActionRequiredEmail(
+  email: string,
+  data: { firstName: string; currentlyDue: string[] },
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const html = await render(
+    StripeActionRequiredEmail({
+      locale: loc,
+      firstName: data.firstName,
+      currentlyDue: data.currentlyDue,
+      profileUrl: `${getBaseUrl()}/dashboard/winery/profile`,
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.stripeActionRequired, loc),
+    html,
+  });
+}
+
+// Tasting loop emails (P-07 / US-230)
+
+export interface TastingRecapEmailData {
+  bookingId: string;
+  wineryId: string;
+  guestName: string;
+  wineryName: string;
+  wines: TastingRecapWine[];
+  /** Tokenized wine-order page URL (D3). */
+  orderUrl: string;
+  /** Tokenized client opt-out URL (LCD). */
+  unsubscribeUrl: string;
+}
+
+/**
+ * Email #3 « Vos coups de cœur », J+2. Returns the detailed result so the
+ * scheduled-job handler can persist the Resend message id (tracking A3).
+ */
+export async function sendTastingRecapEmail(
+  email: string,
+  data: TastingRecapEmailData,
+  locale?: Locale | null
+): Promise<SendEmailResult> {
+  const loc = getLocale(locale);
+  const html = await render(
+    TastingRecapEmail({
+      locale: loc,
+      guestName: data.guestName,
+      wineryName: data.wineryName,
+      wines: data.wines,
+      orderUrl: data.orderUrl,
+      unsubscribeUrl: data.unsubscribeUrl,
+    })
+  );
+
+  return sendEmailDetailed({
+    to: email,
+    subject: t(subjects.tastingRecap, loc).replace(
+      '{wineryName}',
+      data.wineryName
+    ),
+    html,
+    tags: [
+      { name: 'email_type', value: 'tasting_recap' },
+      { name: 'winery_id', value: data.wineryId },
+      { name: 'booking_id', value: data.bookingId },
+    ],
+  });
+}
+
+export interface WineOrderRequestEmailData {
+  bookingId: string;
+  wineryId: string;
+  bookingReference: string;
+  clientName: string;
+  clientEmail: string;
+  clientPhone: string | null;
+  wineryName: string;
+  items: WineOrderRequestItemLine[];
+  totalCents: number;
+}
+
+/**
+ * Order request → winery (winemaker locale) + confirmation copy → client
+ * (Booking.locale). The winery email is the deliverable at launch (A6);
+ * when it fails, the client copy ("we forwarded your request") would be
+ * a lie — it is skipped, and the caller escalates the failure.
+ */
+export async function sendWineOrderRequestEmails(
+  wineryEmail: string,
+  data: WineOrderRequestEmailData,
+  wineryLocale: Locale | null | undefined,
+  clientLocale: Locale | null | undefined
+): Promise<{ winery: boolean; client: boolean }> {
+  const wineryLoc = getLocale(wineryLocale);
+  const clientLoc = getLocale(clientLocale);
+
+  const wineryHtml = await render(
+    WineOrderRequestWineryEmail({
+      locale: wineryLoc,
+      clientName: data.clientName,
+      clientEmail: data.clientEmail,
+      clientPhone: data.clientPhone,
+      bookingReference: data.bookingReference,
+      items: data.items,
+      totalCents: data.totalCents,
+    })
+  );
+  const wineryResult = await sendEmailDetailed({
+    to: wineryEmail,
+    subject: t(subjects.wineOrderRequestWinery, wineryLoc).replace(
+      '{clientName}',
+      data.clientName
+    ),
+    html: wineryHtml,
+    tags: [
+      { name: 'email_type', value: 'wine_order_request' },
+      { name: 'winery_id', value: data.wineryId },
+      { name: 'booking_id', value: data.bookingId },
+    ],
+  });
+
+  if (!wineryResult.ok) {
+    return { winery: false, client: false };
+  }
+
+  const clientHtml = await render(
+    WineOrderRequestClientEmail({
+      locale: clientLoc,
+      wineryName: data.wineryName,
+      items: data.items,
+      totalCents: data.totalCents,
+    })
+  );
+  const clientResult = await sendEmailDetailed({
+    to: data.clientEmail,
+    subject: t(subjects.wineOrderRequestClient, clientLoc).replace(
+      '{wineryName}',
+      data.wineryName
+    ),
+    html: clientHtml,
+  });
+
+  return { winery: true, client: clientResult.ok };
+}
+
+export interface TastingSheetReminderData {
+  wineryId: string;
+  firstName: string;
+  sessions: ReminderSessionLine[];
+  /** Deep link to the sessions calendar of the concerned experience. */
+  sheetUrl: string;
+}
+
+/** Email #21 — 21h empty-sheet reminder to the winemaker (L-063). */
+export async function sendTastingSheetReminderEmail(
+  email: string,
+  data: TastingSheetReminderData,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const html = await render(
+    TastingSheetReminderEmail({
+      locale: loc,
+      firstName: data.firstName,
+      sessions: data.sessions,
+      sheetUrl: data.sheetUrl,
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.tastingSheetReminder, loc),
+    html,
+    tags: [
+      { name: 'email_type', value: 'tasting_sheet_reminder' },
+      { name: 'winery_id', value: data.wineryId },
+    ],
+  });
+}
+
+export interface GiftCardPurchaseEmailData {
+  giftCardId: string;
+  purchaserName: string;
+  recipientName: string;
+  /** Pre-formatted card value, e.g. "CHF 100.00". */
+  amount: string;
+  /** Display code (grouped, e.g. "ABCD EFGH JKMN"). */
+  code: string;
+  deliverDate: string;
+  expiryDate: string;
+  /** Personalised PDF, attached to the email. */
+  pdf: Buffer;
+}
+
+/** Email #6 — purchaser confirmation, immediate (P-09 / L-083). */
+export async function sendGiftCardPurchaseEmail(
+  email: string,
+  data: GiftCardPurchaseEmailData,
+  locale?: Locale | null
+): Promise<SendEmailResult> {
+  const loc = getLocale(locale);
+  const html = await render(
+    GiftCardPurchaseEmail({
+      locale: loc,
+      purchaserName: data.purchaserName,
+      recipientName: data.recipientName,
+      amount: data.amount,
+      code: data.code,
+      deliverDate: data.deliverDate,
+      expiryDate: data.expiryDate,
+    })
+  );
+
+  return sendEmailDetailed({
+    to: email,
+    subject: t(subjects.giftCardPurchase, loc),
+    html,
+    attachments: [
+      {
+        filename: 'bon-cadeau-encave.pdf',
+        content: data.pdf.toString('base64'),
+        contentType: 'application/pdf',
+      },
+    ],
+    tags: [
+      { name: 'email_type', value: 'gift_card_purchase' },
+      { name: 'gift_card_id', value: data.giftCardId },
+    ],
+  });
+}
+
+export interface GiftCardDeliveryEmailData {
+  giftCardId: string;
+  recipientName: string;
+  purchaserName: string;
+  /** Pre-formatted card value, e.g. "CHF 100.00". */
+  amount: string;
+  message?: string | null;
+  /** Display code (grouped). */
+  code: string;
+  /** Public gift page /bon/[code]. */
+  giftUrl: string;
+  expiryDate: string;
+  /** Personalised PDF, attached to the email. */
+  pdf: Buffer;
+}
+
+/** Email #7 — recipient delivery, on the chosen date (P-09 / L-083). */
+export async function sendGiftCardDeliveryEmail(
+  email: string,
+  data: GiftCardDeliveryEmailData,
+  locale?: Locale | null
+): Promise<SendEmailResult> {
+  const loc = getLocale(locale);
+  const html = await render(
+    GiftCardDeliveryEmail({
+      locale: loc,
+      recipientName: data.recipientName,
+      purchaserName: data.purchaserName,
+      amount: data.amount,
+      message: data.message,
+      code: data.code,
+      giftUrl: data.giftUrl,
+      expiryDate: data.expiryDate,
+    })
+  );
+
+  return sendEmailDetailed({
+    to: email,
+    subject: t(subjects.giftCardDelivery, loc).replace(
+      '{purchaserName}',
+      data.purchaserName
+    ),
+    html,
+    attachments: [
+      {
+        filename: 'bon-cadeau-encave.pdf',
+        content: data.pdf.toString('base64'),
+        contentType: 'application/pdf',
+      },
+    ],
+    tags: [
+      { name: 'email_type', value: 'gift_card_delivery' },
+      { name: 'gift_card_id', value: data.giftCardId },
+    ],
+  });
+}
+
+// Sur-mesure request emails (P-10 / US-240)
+
+export interface RequestSubmittedEmailData {
+  clientName: string;
+  wineryName: string;
+  guestCount: number;
+  desiredDate: Date | null;
+  requestReference: string;
+}
+
+/** Email #8 — acknowledgement to the client (locale = Request.locale). */
+export async function sendRequestSubmittedEmail(
+  email: string,
+  data: RequestSubmittedEmailData,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const routingLocale = loc.toLowerCase() as RoutingLocale;
+  const html = await render(
+    RequestSubmittedEmail({
+      locale: loc,
+      clientName: data.clientName,
+      wineryName: data.wineryName,
+      guestCount: data.guestCount,
+      desiredDate: data.desiredDate
+        ? formatDate(data.desiredDate, routingLocale)
+        : null,
+      requestReference: data.requestReference,
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.requestSubmitted, loc).replace(
+      '{wineryName}',
+      data.wineryName
+    ),
+    html,
+    tags: [{ name: 'email_type', value: 'request_submitted' }],
+  });
+}
+
+export interface RequestNewCustomEmailData {
+  wineryId: string;
+  winemakerName: string;
+  clientName: string;
+  clientEmail: string;
+  clientPhone: string | null;
+  guestCount: number;
+  desiredDate: Date | null;
+  budgetCents: number | null;
+  description: string;
+  requestReference: string;
+  inboxUrl: string;
+}
+
+/** Email #15 — new sur-mesure request to the winery (winemaker locale). */
+export async function sendRequestNewCustomEmail(
+  email: string,
+  data: RequestNewCustomEmailData,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const routingLocale = loc.toLowerCase() as RoutingLocale;
+  const html = await render(
+    RequestNewCustomEmail({
+      locale: loc,
+      winemakerName: data.winemakerName,
+      clientName: data.clientName,
+      clientEmail: data.clientEmail,
+      clientPhone: data.clientPhone,
+      guestCount: data.guestCount,
+      desiredDate: data.desiredDate
+        ? formatDate(data.desiredDate, routingLocale)
+        : null,
+      budget: data.budgetCents !== null ? formatCHF(data.budgetCents) : null,
+      description: data.description,
+      requestReference: data.requestReference,
+      inboxUrl: data.inboxUrl,
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.requestNewCustom, loc).replace(
+      '{clientName}',
+      data.clientName
+    ),
+    html,
+    tags: [
+      { name: 'email_type', value: 'request_new_custom' },
+      { name: 'winery_id', value: data.wineryId },
+    ],
+  });
+}
+
+export interface RequestOfferReceivedEmailData {
+  clientName: string;
+  wineryName: string;
+  message: string;
+  totalPriceCents: number;
+  scheduledDate: Date;
+  scheduledStartTime: string; // "HH:mm"
+  guestCount: number;
+  expiresAt: Date;
+  payUrl: string;
+}
+
+/** Email #9 — the winery's offer, ready to pay (locale = Request.locale). */
+export async function sendRequestOfferReceivedEmail(
+  email: string,
+  data: RequestOfferReceivedEmailData,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const routingLocale = loc.toLowerCase() as RoutingLocale;
+  const html = await render(
+    RequestOfferReceivedEmail({
+      locale: loc,
+      clientName: data.clientName,
+      wineryName: data.wineryName,
+      message: data.message,
+      total: formatCHF(data.totalPriceCents),
+      eventDate: formatDate(data.scheduledDate, routingLocale),
+      eventTime: data.scheduledStartTime,
+      guestCount: data.guestCount,
+      expiry: formatDate(data.expiresAt, routingLocale),
+      payUrl: data.payUrl,
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.requestOfferReceived, loc).replace(
+      '{wineryName}',
+      data.wineryName
+    ),
+    html,
+    tags: [{ name: 'email_type', value: 'request_offer_received' }],
+  });
+}
+
+export interface RequestOfferExpiringEmailData {
+  clientName: string;
+  wineryName: string;
+  totalPriceCents: number;
+  expiresAt: Date;
+  payUrl: string;
+}
+
+/** Email #10 — single reminder before the offer expires (Request.locale). */
+export async function sendRequestOfferExpiringEmail(
+  email: string,
+  data: RequestOfferExpiringEmailData,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const routingLocale = loc.toLowerCase() as RoutingLocale;
+  const html = await render(
+    RequestOfferExpiringEmail({
+      locale: loc,
+      clientName: data.clientName,
+      wineryName: data.wineryName,
+      total: formatCHF(data.totalPriceCents),
+      expiry: formatDate(data.expiresAt, routingLocale),
+      payUrl: data.payUrl,
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.requestOfferExpiring, loc).replace(
+      '{wineryName}',
+      data.wineryName
+    ),
+    html,
+    tags: [{ name: 'email_type', value: 'request_offer_expiring' }],
+  });
+}
+
+export interface RequestSlaEscalationEmailData {
+  wineryName: string;
+  clientName: string;
+  clientEmail: string;
+  requestReference: string;
+  guestCount: number;
+  createdAt: Date;
+  inboxUrl: string;
+}
+
+/** Escalation — 48h no-answer, to the admin (locale FR fixe). */
+export async function sendRequestSlaEscalationEmail(
+  email: string,
+  data: RequestSlaEscalationEmailData,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+  const routingLocale = loc.toLowerCase() as RoutingLocale;
+  const html = await render(
+    RequestSlaEscalationEmail({
+      locale: loc,
+      wineryName: data.wineryName,
+      clientName: data.clientName,
+      clientEmail: data.clientEmail,
+      requestReference: data.requestReference,
+      guestCount: data.guestCount,
+      createdAt: formatDate(data.createdAt, routingLocale),
+      inboxUrl: data.inboxUrl,
+    })
+  );
+
+  return sendEmail({
+    to: email,
+    subject: t(subjects.requestSlaEscalation, loc).replace(
+      '{wineryName}',
+      data.wineryName
+    ),
+    html,
+    tags: [{ name: 'email_type', value: 'request_sla_escalation' }],
+  });
+}
+
+// Contact form (P-12 / L-114)
+
+/** Internal inbox that receives contact-form messages. */
+const CONTACT_INBOX = 'samuel@encave.ch';
+
+export interface ContactMessageData {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}
+
+/**
+ * Contact form (P-12 / L-114): notify the team (reply-to the sender) and send
+ * the sender a short accusé. Returns whether the TEAM notification went out —
+ * that is the deliverable; a failed accusé is logged, never fatal.
+ */
+export async function sendContactMessageEmail(
+  data: ContactMessageData,
+  locale?: Locale | null
+): Promise<boolean> {
+  const loc = getLocale(locale);
+
+  const teamHtml = await render(
+    ContactMessageEmail({
+      locale: loc,
+      name: data.name,
+      email: data.email,
+      subject: data.subject,
+      message: data.message,
+    })
+  );
+  const teamOk = await sendEmail({
+    to: CONTACT_INBOX,
+    replyTo: data.email,
+    subject: t(subjects.contactMessage, loc).replace('{name}', data.name),
+    html: teamHtml,
+    tags: [{ name: 'email_type', value: 'contact_message' }],
+  });
+
+  // Client accusé — best effort, never blocks the success path.
+  try {
+    const ackHtml = await render(
+      ContactAckEmail({ locale: loc, name: data.name, message: data.message })
+    );
+    const ackOk = await sendEmail({
+      to: data.email,
+      subject: t(subjects.contactAck, loc),
+      html: ackHtml,
+      tags: [{ name: 'email_type', value: 'contact_ack' }],
+    });
+    if (!ackOk) {
+      logWarn('contact accusé email failed', { to: data.email });
+    }
+  } catch (error) {
+    logError('contact accusé render/send failed', error, { to: data.email });
+  }
+
+  return teamOk;
 }

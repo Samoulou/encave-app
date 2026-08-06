@@ -102,7 +102,13 @@ describe('URL parameter parsing helpers', () => {
   // Helper function to parse types (similar to what's in the page component)
   function parseTypes(
     typeParam: string | null
-  ): ('TASTING' | 'CELLAR_VISIT' | 'WORKSHOP' | 'VINEYARD_TOUR' | 'FOOD_PAIRING')[] {
+  ): (
+    | 'TASTING'
+    | 'CELLAR_VISIT'
+    | 'WORKSHOP'
+    | 'VINEYARD_TOUR'
+    | 'FOOD_PAIRING'
+  )[] {
     if (!typeParam) return [];
     const validTypes = [
       'TASTING',
@@ -142,7 +148,12 @@ describe('URL parameter parsing helpers', () => {
   function parseSort(
     sort: string | undefined
   ): 'relevance' | 'price_asc' | 'price_desc' | 'newest' {
-    const validSorts = ['relevance', 'price_asc', 'price_desc', 'newest'] as const;
+    const validSorts = [
+      'relevance',
+      'price_asc',
+      'price_desc',
+      'newest',
+    ] as const;
     if (sort && validSorts.includes(sort as (typeof validSorts)[number])) {
       return sort as (typeof validSorts)[number];
     }
@@ -159,5 +170,275 @@ describe('URL parameter parsing helpers', () => {
   it('defaults to relevance for invalid sort', () => {
     expect(parseSort('invalid')).toBe('relevance');
     expect(parseSort(undefined)).toBe('relevance');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Date-window behavior (P-05 review fixes): today clamp, per-date blackout
+// correlation, blackout-aware nextOccurrence pick.
+// ---------------------------------------------------------------------------
+
+vi.mock('@/server/db', () => ({
+  db: {
+    experience: { findMany: vi.fn(), count: vi.fn() },
+    experienceOccurrence: { findMany: vi.fn() },
+    blockedDate: { findMany: vi.fn() },
+    booking: { groupBy: vi.fn() },
+  },
+}));
+
+const { db } = await import('@/server/db');
+const { searchExperiences } =
+  await import('@/server/queries/experience.queries');
+const { zurichTodayAsUTCDate } =
+  await import('@/lib/business-rules/occurrence-expansion');
+
+const WINERY = {
+  id: 'w-1',
+  name: 'Cave Test',
+  slug: 'cave-test',
+  commune: 'Sion',
+  latitude: null,
+  longitude: null,
+};
+
+describe('searchExperiences date window (P-05 / L-110, refonte P-06 / D3)', () => {
+  /**
+   * db.experience.findMany serves three call shapes in the new flow:
+   * capacity lookup (select id+maxCapacity), sort candidates (select
+   * id+createdAt) and card rows (full select). Route by select shape.
+   */
+  function routeExperienceFindMany(fixtures: {
+    capacities?: Array<{ id: string; maxCapacity: number }>;
+    candidates?: Array<{ id: string; createdAt: Date }>;
+    rows?: unknown[];
+  }) {
+    vi.mocked(db.experience.findMany).mockImplementation((async (args: {
+      select?: Record<string, unknown>;
+    }) => {
+      const select = args?.select ?? {};
+      if ('maxCapacity' in select && !('title' in select)) {
+        return fixtures.capacities ?? [];
+      }
+      if ('createdAt' in select && !('title' in select)) {
+        return fixtures.candidates ?? [];
+      }
+      return fixtures.rows ?? [];
+    }) as never);
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(db.experience.findMany).mockResolvedValue([] as never);
+    vi.mocked(db.experience.count).mockResolvedValue(0 as never);
+    vi.mocked(db.experienceOccurrence.findMany).mockResolvedValue([] as never);
+    vi.mocked(db.blockedDate.findMany).mockResolvedValue([] as never);
+    vi.mocked(db.booking.groupBy).mockResolvedValue([] as never);
+  });
+
+  it('excludes an experience whose only OPEN occurrence sits on a blocked date', async () => {
+    const day = new Date('2099-06-05T00:00:00.000Z');
+    vi.mocked(db.experienceOccurrence.findMany).mockResolvedValue([
+      {
+        experienceId: 'exp-blocked',
+        date: day,
+        startTime: '10:00',
+        capacityOverride: null,
+      },
+      {
+        experienceId: 'exp-free',
+        date: day,
+        startTime: '10:00',
+        capacityOverride: null,
+      },
+    ] as never);
+    vi.mocked(db.blockedDate.findMany).mockResolvedValue([
+      { experienceId: 'exp-blocked', date: day },
+    ] as never);
+    routeExperienceFindMany({
+      capacities: [
+        { id: 'exp-blocked', maxCapacity: 8 },
+        { id: 'exp-free', maxCapacity: 8 },
+      ],
+      candidates: [],
+      rows: [],
+    });
+
+    await searchExperiences({
+      availableFrom: '2099-06-05',
+      sort: 'newest',
+    });
+
+    expect(db.experience.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ id: { in: ['exp-free'] } }),
+      })
+    );
+  });
+
+  it('excludes a FULL slot from the date window (P-06 / D3)', async () => {
+    const day = new Date('2099-06-05T00:00:00.000Z');
+    vi.mocked(db.experienceOccurrence.findMany).mockResolvedValue([
+      {
+        experienceId: 'exp-full',
+        date: day,
+        startTime: '10:00',
+        capacityOverride: 4,
+      },
+      {
+        experienceId: 'exp-open',
+        date: day,
+        startTime: '10:00',
+        capacityOverride: null,
+      },
+    ] as never);
+    vi.mocked(db.booking.groupBy).mockResolvedValue([
+      {
+        experienceId: 'exp-full',
+        date: day,
+        timeSlot: '10:00',
+        _sum: { guestCount: 4 }, // override 4 -> 0 remaining
+      },
+      {
+        experienceId: 'exp-open',
+        date: day,
+        timeSlot: '10:00',
+        _sum: { guestCount: 7 }, // maxCapacity 8 -> 1 remaining
+      },
+    ] as never);
+    routeExperienceFindMany({
+      capacities: [
+        { id: 'exp-full', maxCapacity: 8 },
+        { id: 'exp-open', maxCapacity: 8 },
+      ],
+    });
+
+    await searchExperiences({
+      availableFrom: '2099-06-05',
+      sort: 'newest',
+    });
+
+    expect(db.experience.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ id: { in: ['exp-open'] } }),
+      })
+    );
+  });
+
+  it('clamps a past availableFrom to today (Zurich)', async () => {
+    await searchExperiences({
+      availableFrom: '2020-01-01',
+      availableTo: '2099-12-31',
+      sort: 'newest',
+    });
+
+    const args = vi.mocked(db.experienceOccurrence.findMany).mock.calls[0]?.[0];
+    const gte = (args?.where?.date as { gte?: Date } | undefined)?.gte;
+    expect(gte?.getTime()).toBe(zurichTodayAsUTCDate().getTime());
+  });
+
+  it('a window entirely in the past matches nothing without querying occurrences', async () => {
+    const result = await searchExperiences({
+      availableFrom: '2020-01-01',
+      availableTo: '2020-01-02',
+      sort: 'newest',
+    });
+
+    expect(db.experienceOccurrence.findMany).not.toHaveBeenCalled();
+    expect(db.experience.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ id: { in: [] } }),
+      })
+    );
+    expect(result.experiences).toEqual([]);
+  });
+
+  it('applies the spoken-language filter to the shared where (L-115)', async () => {
+    await searchExperiences({ language: 'DE', sort: 'newest' });
+
+    // Both the list query and the count share baseWhere; assert the
+    // languages predicate landed on the standard findMany call.
+    expect(db.experience.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ languages: { has: 'DE' } }),
+      })
+    );
+    expect(db.experience.count).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ languages: { has: 'DE' } }),
+      })
+    );
+  });
+
+  it('omits the languages predicate when no language is requested (L-115)', async () => {
+    await searchExperiences({ sort: 'newest' });
+
+    const call = vi.mocked(db.experience.findMany).mock.calls[0]?.[0] as
+      | { where?: Record<string, unknown> }
+      | undefined;
+    expect(call?.where).toBeDefined();
+    expect(call?.where && 'languages' in call.where).toBe(false);
+  });
+
+  it('next_availability orders ids by soonest bookable occurrence and fetches only the page (P-06)', async () => {
+    const blockedDay = new Date('2099-07-04T00:00:00.000Z');
+    const freeDay = new Date('2099-07-11T00:00:00.000Z');
+    const soonerDay = new Date('2099-07-05T00:00:00.000Z');
+    const cardRow = (id: string) => ({
+      id,
+      title: `Exp ${id}`,
+      slug: id,
+      type: 'TASTING',
+      duration: 60,
+      price: 2500,
+      maxCapacity: 8,
+      coverPhoto: 'https://example.com/c.jpg',
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+      winery: WINERY,
+    });
+
+    vi.mocked(db.experienceOccurrence.findMany).mockResolvedValue([
+      // exp-1: first occurrence blacked out -> bookable date is freeDay
+      {
+        experienceId: 'exp-1',
+        date: blockedDay,
+        startTime: '10:00',
+        capacityOverride: null,
+      },
+      {
+        experienceId: 'exp-2',
+        date: soonerDay,
+        startTime: '10:00',
+        capacityOverride: null,
+      },
+      {
+        experienceId: 'exp-1',
+        date: freeDay,
+        startTime: '10:00',
+        capacityOverride: null,
+      },
+    ] as never);
+    vi.mocked(db.blockedDate.findMany).mockResolvedValue([
+      { experienceId: 'exp-1', date: blockedDay },
+    ] as never);
+    routeExperienceFindMany({
+      capacities: [
+        { id: 'exp-1', maxCapacity: 8 },
+        { id: 'exp-2', maxCapacity: 8 },
+      ],
+      candidates: [
+        { id: 'exp-1', createdAt: new Date('2026-01-01T00:00:00.000Z') },
+        { id: 'exp-2', createdAt: new Date('2026-01-02T00:00:00.000Z') },
+      ],
+      rows: [cardRow('exp-1'), cardRow('exp-2')],
+    });
+
+    const result = await searchExperiences({ sort: 'next_availability' });
+
+    // exp-2 (July 5) sorts before exp-1 (July 11 - July 4 is blacked out)
+    expect(result.experiences.map((e) => e.id)).toEqual(['exp-2', 'exp-1']);
+    expect(result.experiences[1]?.nextOccurrence?.date.getTime()).toBe(
+      freeDay.getTime()
+    );
   });
 });

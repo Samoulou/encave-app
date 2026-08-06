@@ -82,9 +82,21 @@ describe('getPaymentStatusType', () => {
       ];
 
       const testCases = [
-        { stripeAccountId: null, stripeOnboardingComplete: false, stripeDetailsSubmitted: false },
-        { stripeAccountId: 'acct_123', stripeOnboardingComplete: false, stripeDetailsSubmitted: true },
-        { stripeAccountId: 'acct_123', stripeOnboardingComplete: true, stripeDetailsSubmitted: true },
+        {
+          stripeAccountId: null,
+          stripeOnboardingComplete: false,
+          stripeDetailsSubmitted: false,
+        },
+        {
+          stripeAccountId: 'acct_123',
+          stripeOnboardingComplete: false,
+          stripeDetailsSubmitted: true,
+        },
+        {
+          stripeAccountId: 'acct_123',
+          stripeOnboardingComplete: true,
+          stripeDetailsSubmitted: true,
+        },
       ];
 
       testCases.forEach((testCase) => {

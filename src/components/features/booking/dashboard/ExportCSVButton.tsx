@@ -10,6 +10,7 @@ import { BookingStatus } from '@prisma/client';
 
 export function ExportCSVButton() {
   const searchParams = useSearchParams();
+  const currentSearchParams = searchParams ?? new URLSearchParams();
   const t = useTranslations('bookings');
   const [isExporting, setIsExporting] = useState(false);
 
@@ -17,11 +18,11 @@ export function ExportCSVButton() {
     setIsExporting(true);
     try {
       // Parse current filters from URL
-      const statusParam = searchParams.get('status');
-      const experienceId = searchParams.get('experience') ?? undefined;
-      const dateFromParam = searchParams.get('from');
-      const dateToParam = searchParams.get('to');
-      const search = searchParams.get('search') ?? undefined;
+      const statusParam = currentSearchParams.get('status');
+      const experienceId = currentSearchParams.get('experience') ?? undefined;
+      const dateFromParam = currentSearchParams.get('from');
+      const dateToParam = currentSearchParams.get('to');
+      const search = currentSearchParams.get('search') ?? undefined;
 
       const filters = {
         status: statusParam
@@ -65,7 +66,7 @@ export function ExportCSVButton() {
     <button
       onClick={handleExport}
       disabled={isExporting}
-      className="flex items-center gap-2 h-10 px-4 rounded-lg border border-border bg-white text-foreground text-sm font-bold hover:bg-gray-50 transition-colors disabled:opacity-50"
+      className="flex h-10 items-center gap-2 rounded-lg border border-border bg-white px-4 text-sm font-bold text-foreground transition-colors hover:bg-muted disabled:opacity-50"
     >
       {isExporting ? (
         <Loader2 className="h-5 w-5 animate-spin" />

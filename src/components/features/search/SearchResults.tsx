@@ -1,6 +1,6 @@
 'use client';
 
-import { ExperienceCard } from './ExperienceCard';
+import { ExperienceCard } from '@/components/features/experience/ExperienceCard';
 import {
   Select,
   SelectContent,
@@ -12,11 +12,17 @@ import { Button } from '@/components/ui/button';
 import { Wine, ChevronLeft, ChevronRight, MapPin } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { ExperienceSearchResult } from '@/server/queries/experience.queries';
+import type { CatalogSort } from '@/lib/utils/search-params';
 
-type SortOption = 'relevance' | 'price_asc' | 'price_desc' | 'newest' | 'distance';
+type SortOption = CatalogSort;
 
-const SORT_OPTIONS: { value: SortOption; labelKey: string; locationOnly?: boolean }[] = [
+const SORT_OPTIONS: {
+  value: SortOption;
+  labelKey: string;
+  locationOnly?: boolean;
+}[] = [
   { value: 'distance', labelKey: 'sort.distance', locationOnly: true },
+  { value: 'next_availability', labelKey: 'sort.nextAvailability' },
   { value: 'relevance', labelKey: 'sort.relevance' },
   { value: 'price_asc', labelKey: 'sort.priceLowToHigh' },
   { value: 'price_desc', labelKey: 'sort.priceHighToLow' },
@@ -75,18 +81,24 @@ export function SearchResults({
 
       {/* Results Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-slate-600" data-testid="results-count">
-          <span className="font-medium text-slate-900">{total}</span>{' '}
+        <p
+          className="text-sm text-muted-foreground"
+          data-testid="results-count"
+        >
+          <span className="font-medium text-foreground">{total}</span>{' '}
           {total === 1 ? t('experienceFound') : t('experiencesFound')}
           {totalPages > 1 && (
-            <span className="ml-1 text-slate-500">
+            <span className="ml-1 text-muted-foreground">
               ({t('pageOf', { page, totalPages })})
             </span>
           )}
         </p>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-slate-600">{t('sortBy')}:</span>
-          <Select value={sort} onValueChange={(v) => onSortChange(v as SortOption)}>
+          <span className="text-sm text-muted-foreground">{t('sortBy')}:</span>
+          <Select
+            value={sort}
+            onValueChange={(v) => onSortChange(v as SortOption)}
+          >
             <SelectTrigger className="h-9 w-[180px]">
               <SelectValue />
             </SelectTrigger>
@@ -103,7 +115,10 @@ export function SearchResults({
 
       {/* Results Grid or Empty State */}
       {count > 0 ? (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" data-testid="search-results-grid">
+        <div
+          className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+          data-testid="search-results-grid"
+        >
           {experiences.map((experience) => (
             <ExperienceCard key={experience.id} experience={experience} />
           ))}
@@ -176,7 +191,7 @@ function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
             1
           </Button>
           {visiblePages[0] > 2 && (
-            <span className="px-2 text-slate-400">...</span>
+            <span className="px-2 text-muted-foreground">...</span>
           )}
         </>
       )}
@@ -196,20 +211,23 @@ function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
 
       {(() => {
         const lastVisible = visiblePages[visiblePages.length - 1];
-        return lastVisible !== undefined && lastVisible < totalPages && (
-          <>
-            {lastVisible < totalPages - 1 && (
-              <span className="px-2 text-slate-400">...</span>
-            )}
-            <Button
-              variant={page === totalPages ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => onPageChange(totalPages)}
-              className="min-w-[40px]"
-            >
-              {totalPages}
-            </Button>
-          </>
+        return (
+          lastVisible !== undefined &&
+          lastVisible < totalPages && (
+            <>
+              {lastVisible < totalPages - 1 && (
+                <span className="px-2 text-muted-foreground">...</span>
+              )}
+              <Button
+                variant={page === totalPages ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => onPageChange(totalPages)}
+                className="min-w-[40px]"
+              >
+                {totalPages}
+              </Button>
+            </>
+          )
         );
       })()}
 
@@ -234,14 +252,17 @@ function EmptyState({ locationName }: EmptyStateProps) {
   const t = useTranslations('search');
 
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-stone-300 bg-cream-50 px-6 py-16 text-center" data-testid="empty-state">
+    <div
+      className="flex flex-col items-center justify-center rounded-xl border border-dashed border-stone-300 bg-cream-50 px-6 py-16 text-center"
+      data-testid="empty-state"
+    >
       <div className="flex h-16 w-16 items-center justify-center rounded-full bg-burgundy-100">
         <Wine className="h-8 w-8 text-burgundy-600" aria-hidden="true" />
       </div>
-      <h3 className="mt-4 font-display text-lg font-semibold text-slate-900">
+      <h3 className="mt-4 font-display text-lg font-semibold text-foreground">
         {t('noResultsFound')}
       </h3>
-      <p className="mt-2 max-w-sm text-sm text-slate-600">
+      <p className="mt-2 max-w-sm text-sm text-muted-foreground">
         {locationName
           ? t('noExperiencesAtLocation', { location: locationName })
           : t('tryDifferentFilters')}

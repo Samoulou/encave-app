@@ -12,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { BookingStatusBadge } from './BookingStatusBadge';
+import { BookingStatusBadge } from '@/components/features/booking/BookingStatusBadge';
 import { getClientHistory } from '@/server/actions/booking-dashboard';
 
 const localeMap = { fr, de, en: enUS };
@@ -76,7 +76,7 @@ export function ClientDetailsModal({
         <div className="space-y-6">
           {/* Contact Info */}
           <div className="space-y-3">
-            <h3 className="text-sm font-medium text-slate-900">
+            <h3 className="text-sm font-medium text-foreground">
               {t('contactInfo')}
             </h3>
             <div className="space-y-2">
@@ -99,38 +99,40 @@ export function ClientDetailsModal({
 
           {/* Booking History */}
           <div className="space-y-3">
-            <h3 className="flex items-center gap-2 text-sm font-medium text-slate-900">
+            <h3 className="flex items-center gap-2 text-sm font-medium text-foreground">
               <History className="h-4 w-4" />
               {t('bookingHistory')}
             </h3>
 
             {isPending ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
             ) : error ? (
               <p className="text-sm text-red-600">{error}</p>
             ) : bookings.length === 0 ? (
-              <p className="text-sm text-slate-500">{t('noHistory')}</p>
+              <p className="text-sm text-muted-foreground">{t('noHistory')}</p>
             ) : (
               <div className="max-h-64 space-y-2 overflow-y-auto">
                 {bookings.map((booking) => (
                   <div
                     key={booking.id}
-                    className="rounded-lg border border-slate-200 p-3"
+                    className="rounded-lg border border-border p-3"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-slate-900">
+                        <p className="truncate text-sm font-medium text-foreground">
                           {booking.experience.title}
                         </p>
-                        <p className="text-xs text-slate-500">
-                          {format(new Date(booking.date), 'PPP', { locale: dateLocale })} {t('at')}{' '}
-                          {booking.timeSlot}
+                        <p className="text-xs text-muted-foreground">
+                          {format(new Date(booking.date), 'PPP', {
+                            locale: dateLocale,
+                          })}{' '}
+                          {t('at')} {booking.timeSlot}
                         </p>
-                        <p className="text-xs text-slate-500">
-                          {tCommon('guestCount', { count: booking.guestCount })} &middot; CHF{' '}
-                          {(booking.totalPrice / 100).toFixed(2)}
+                        <p className="text-xs text-muted-foreground">
+                          {tCommon('guestCount', { count: booking.guestCount })}{' '}
+                          &middot; CHF {(booking.totalPrice / 100).toFixed(2)}
                         </p>
                       </div>
                       <BookingStatusBadge status={booking.status} />

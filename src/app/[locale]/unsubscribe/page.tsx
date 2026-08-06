@@ -1,10 +1,15 @@
-import Link from 'next/link';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Link } from '@/i18n/navigation';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
   return generatePageMetadata({
     locale: locale as Locale,
@@ -14,23 +19,30 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 }
 
 interface PageProps {
+  params: Promise<{ locale: string }>;
   searchParams: Promise<{
     status?: string;
     type?: string;
   }>;
 }
 
-export default async function UnsubscribePage({ searchParams }: PageProps) {
-  const params = await searchParams;
-  const status = params.status;
-  const type = params.type;
+export default async function UnsubscribePage({
+  params,
+  searchParams,
+}: PageProps) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations('unsubscribe');
+
+  const { status, type } = await searchParams;
 
   const typeLabels: Record<string, string> = {
-    daily_digest: 'Daily Digest',
-    weekly_summary: 'Weekly Summary',
-    marketing: 'Marketing emails',
-    all: 'all marketing emails',
+    daily_digest: t('typeDaily'),
+    weekly_summary: t('typeWeekly'),
+    marketing: t('typeMarketing'),
+    all: t('typeAll'),
   };
+  const typeLabel = type ? (typeLabels[type] ?? type) : t('genericType');
 
   if (status === 'success') {
     return (
@@ -41,25 +53,23 @@ export default async function UnsubscribePage({ searchParams }: PageProps) {
               <CheckCircle2 className="h-8 w-8 text-green-600" />
             </div>
           </div>
-          <h1 className="mb-2 font-display text-2xl font-bold text-slate-900">
-            Unsubscribed Successfully
+          <h1 className="mb-2 font-display text-2xl font-bold text-foreground">
+            {t('successTitle')}
           </h1>
-          <p className="mb-6 text-slate-600">
-            You have been unsubscribed from{' '}
-            {type ? typeLabels[type] || type : 'email notifications'}.
+          <p className="mb-6 text-muted-foreground">
+            {t('successDesc', { type: typeLabel })}
           </p>
-          <p className="mb-8 text-sm text-slate-500">
-            You can manage your notification preferences anytime from your
-            dashboard settings.
+          <p className="mb-8 text-sm text-muted-foreground">
+            {t('manageHint')}
           </p>
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Button asChild variant="outline">
               <Link href="/dashboard/settings/notifications">
-                Manage Preferences
+                {t('managePreferences')}
               </Link>
             </Button>
             <Button asChild>
-              <Link href="/">Go to Homepage</Link>
+              <Link href="/">{t('goHome')}</Link>
             </Button>
           </div>
         </div>
@@ -76,19 +86,16 @@ export default async function UnsubscribePage({ searchParams }: PageProps) {
               <AlertCircle className="h-8 w-8 text-amber-600" />
             </div>
           </div>
-          <h1 className="mb-2 font-display text-2xl font-bold text-slate-900">
-            Invalid Link
+          <h1 className="mb-2 font-display text-2xl font-bold text-foreground">
+            {t('invalidTitle')}
           </h1>
-          <p className="mb-8 text-slate-600">
-            This unsubscribe link is invalid or has expired. Please use the link
-            from a recent email or manage your preferences from your dashboard.
-          </p>
+          <p className="mb-8 text-muted-foreground">{t('invalidDesc')}</p>
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Button asChild variant="outline">
-              <Link href="/login">Login to Manage</Link>
+              <Link href="/login">{t('loginManage')}</Link>
             </Button>
             <Button asChild>
-              <Link href="/">Go to Homepage</Link>
+              <Link href="/">{t('goHome')}</Link>
             </Button>
           </div>
         </div>
@@ -105,15 +112,12 @@ export default async function UnsubscribePage({ searchParams }: PageProps) {
               <XCircle className="h-8 w-8 text-red-600" />
             </div>
           </div>
-          <h1 className="mb-2 font-display text-2xl font-bold text-slate-900">
-            Something Went Wrong
+          <h1 className="mb-2 font-display text-2xl font-bold text-foreground">
+            {t('errorTitle')}
           </h1>
-          <p className="mb-8 text-slate-600">
-            We couldn&apos;t process your unsubscribe request. Please try again
-            or contact support if the problem persists.
-          </p>
+          <p className="mb-8 text-muted-foreground">{t('errorDesc')}</p>
           <Button asChild>
-            <Link href="/">Go to Homepage</Link>
+            <Link href="/">{t('goHome')}</Link>
           </Button>
         </div>
       </div>
@@ -124,19 +128,16 @@ export default async function UnsubscribePage({ searchParams }: PageProps) {
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center px-4">
       <div className="mx-auto max-w-md text-center">
-        <h1 className="mb-2 font-display text-2xl font-bold text-slate-900">
-          Email Preferences
+        <h1 className="mb-2 font-display text-2xl font-bold text-foreground">
+          {t('defaultTitle')}
         </h1>
-        <p className="mb-8 text-slate-600">
-          To manage your email preferences, please log in to your account and
-          visit the notification settings.
-        </p>
+        <p className="mb-8 text-muted-foreground">{t('defaultDesc')}</p>
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Button asChild variant="outline">
-            <Link href="/login">Login</Link>
+            <Link href="/login">{t('login')}</Link>
           </Button>
           <Button asChild>
-            <Link href="/">Go to Homepage</Link>
+            <Link href="/">{t('goHome')}</Link>
           </Button>
         </div>
       </div>

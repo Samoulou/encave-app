@@ -41,7 +41,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
             className="h-3 w-3 rounded-full"
             style={{ backgroundColor: entry.color }}
           />
-          <span className="text-[#915564]">
+          <span className="text-muted-foreground">
             {entry.dataKey === 'revenueDisplay' ? t('gross') : t('netPayout')}:
           </span>
           <span className="font-bold text-foreground">
@@ -73,29 +73,43 @@ export function EarningsChart({ data }: EarningsChartProps) {
   const yAxisMax = Math.ceil(maxValue / 2500) * 2500 || 10000;
 
   return (
-    <div className="rounded-xl border border-border bg-white p-6 lg:p-8 shadow-sm" role="region" aria-label="Revenue Evolution">
+    <div
+      className="rounded-xl border border-border bg-white p-6 shadow-sm lg:p-8"
+      role="region"
+      aria-label="Revenue Evolution"
+    >
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 id="earnings-chart-title" className="text-lg font-bold text-foreground">{t('title')}</h2>
-          <p id="earnings-chart-desc" className="text-sm text-[#915564]">
+          <h2
+            id="earnings-chart-title"
+            className="text-lg font-bold text-foreground"
+          >
+            {t('title')}
+          </h2>
+          <p id="earnings-chart-desc" className="text-sm text-muted-foreground">
             {t('subtitle')}
           </p>
         </div>
         <div className="flex items-center gap-4 text-xs font-medium">
           <div className="flex items-center gap-2">
             <span className="h-3 w-3 rounded-full bg-primary" />
-            <span className="text-[#915564]">{t('gross')}</span>
+            <span className="text-muted-foreground">{t('gross')}</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="h-3 w-3 rounded-full bg-gray-300" />
-            <span className="text-[#915564]">{t('netPayout')}</span>
+            <span className="text-muted-foreground">{t('netPayout')}</span>
           </div>
         </div>
       </div>
 
       {/* Chart */}
-      <div className="h-[320px]" role="img" aria-labelledby="earnings-chart-title" aria-describedby="earnings-chart-desc">
+      <div
+        className="h-[320px]"
+        role="img"
+        aria-labelledby="earnings-chart-title"
+        aria-describedby="earnings-chart-desc"
+      >
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
             data={chartData}

@@ -7,6 +7,15 @@ vi.mock('nuqs', () => ({
   useQueryState: vi.fn(() => [null, mockSetCommune]),
 }));
 
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string) => {
+    const messages: Record<string, string> = {
+      allCommunes: 'All communes',
+    };
+    return messages[key] ?? key;
+  },
+}));
+
 import { useQueryState } from 'nuqs';
 import { CommuneFilter } from '@/components/features/winery/CommuneFilter';
 

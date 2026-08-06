@@ -113,12 +113,12 @@ export function CalendarView({
         </div>
 
         {/* Calendar Grid */}
-        <div className="grid grid-cols-7 gap-px overflow-hidden rounded-lg border border-slate-200 bg-slate-200">
+        <div className="grid grid-cols-7 gap-px overflow-hidden rounded-lg border border-border bg-border">
           {/* Weekday Headers */}
           {weekdays.map((day) => (
             <div
               key={day}
-              className="bg-slate-50 py-2 text-center text-xs font-medium text-slate-500"
+              className="bg-muted py-2 text-center text-xs font-medium text-muted-foreground"
             >
               {day}
             </div>
@@ -130,7 +130,8 @@ export function CalendarView({
             const isCurrentMonth = isSameMonth(date, currentDate);
             const isCurrentDay = isToday(date);
             const hasBookings = dayData && dayData.bookingCount > 0;
-            const isBlocked = dayData && dayData.blockedExperienceIds.length > 0;
+            const isBlocked =
+              dayData && dayData.blockedExperienceIds.length > 0;
 
             return (
               <button
@@ -138,8 +139,8 @@ export function CalendarView({
                 onClick={() => handleDayClick(date)}
                 aria-label={format(date, 'PPPP')}
                 className={cn(
-                  'relative min-h-[80px] bg-white p-1.5 text-left transition-colors hover:bg-slate-50 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none',
-                  !isCurrentMonth && 'bg-slate-50 text-slate-400',
+                  'relative min-h-[80px] bg-white p-1.5 text-left transition-colors hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
+                  !isCurrentMonth && 'bg-muted text-muted-foreground',
                   isBlocked && 'bg-red-50'
                 )}
               >
@@ -148,8 +149,10 @@ export function CalendarView({
                   className={cn(
                     'mb-1 flex h-6 w-6 items-center justify-center rounded-full text-sm',
                     isCurrentDay && 'bg-burgundy-600 font-semibold text-white',
-                    !isCurrentDay && isCurrentMonth && 'font-medium text-slate-900',
-                    !isCurrentMonth && 'text-slate-400'
+                    !isCurrentDay &&
+                      isCurrentMonth &&
+                      'font-medium text-foreground',
+                    !isCurrentMonth && 'text-muted-foreground'
                   )}
                 >
                   {format(date, 'd')}
@@ -163,7 +166,7 @@ export function CalendarView({
                       <span className="rounded bg-burgundy-100 px-1.5 py-0.5 text-xs font-medium text-burgundy-700">
                         {dayData.bookingCount}
                       </span>
-                      <span className="flex items-center gap-0.5 text-[10px] text-slate-500">
+                      <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
                         <Users className="h-3 w-3" />
                         {dayData.totalGuests}
                       </span>
@@ -179,8 +182,9 @@ export function CalendarView({
                     {/* Preview of first booking */}
                     {dayData.bookings[0] && (
                       <BookingTooltip booking={dayData.bookings[0]}>
-                        <div className="truncate text-[10px] text-slate-600">
-                          {dayData.bookings[0].timeSlot} {dayData.bookings[0].visitorName}
+                        <div className="truncate text-[10px] text-muted-foreground">
+                          {dayData.bookings[0].timeSlot}{' '}
+                          {dayData.bookings[0].visitorName}
                         </div>
                       </BookingTooltip>
                     )}
@@ -189,7 +193,9 @@ export function CalendarView({
 
                 {/* Blocked Indicator */}
                 {isBlocked && !hasBookings && (
-                  <div className="mt-1 text-[10px] text-red-600">{t('blocked')}</div>
+                  <div className="mt-1 text-[10px] text-red-600">
+                    {t('blocked')}
+                  </div>
                 )}
               </button>
             );
@@ -197,7 +203,7 @@ export function CalendarView({
         </div>
 
         {/* Legend */}
-        <div className="mt-4 flex items-center gap-4 text-xs text-slate-500">
+        <div className="mt-4 flex items-center gap-4 text-xs text-muted-foreground">
           <div className="flex items-center gap-1.5">
             <span className="inline-block h-3 w-3 rounded-full bg-burgundy-600" />
             <span>{t('today')}</span>

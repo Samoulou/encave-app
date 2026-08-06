@@ -2,12 +2,17 @@ import dynamic from 'next/dynamic';
 import { auth } from '@/server/auth';
 import { redirect } from 'next/navigation';
 import { getLocale } from 'next-intl/server';
+import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
 import { Skeleton } from '@/components/shared/Skeleton';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 
-export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
   return generatePageMetadata({
     locale: locale as Locale,
@@ -18,7 +23,10 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 // Dynamic import for heavy form component (990 lines)
 const CreateExperienceForm = dynamic(
-  () => import('@/components/features/experience/CreateExperienceForm').then(mod => mod.CreateExperienceForm),
+  () =>
+    import('@/components/features/experience/CreateExperienceForm').then(
+      (mod) => mod.CreateExperienceForm
+    ),
   {
     loading: () => (
       <div className="space-y-6 p-6">
@@ -40,9 +48,17 @@ export default async function NewExperiencePage() {
     redirect(`/${locale}/login`);
   }
 
+  const [noShowFeesEnabled, collectiveEventsEnabled] = await Promise.all([
+    isFlagEnabled('NO_SHOW_FEES'),
+    isFlagEnabled('COLLECTIVE_EVENTS'),
+  ]);
+
   return (
     <WineryAccessGuard>
-      <CreateExperienceForm />
+      <CreateExperienceForm
+        noShowFeesEnabled={noShowFeesEnabled}
+        collectiveEventsEnabled={collectiveEventsEnabled}
+      />
     </WineryAccessGuard>
   );
 }

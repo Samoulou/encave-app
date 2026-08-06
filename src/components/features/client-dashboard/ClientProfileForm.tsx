@@ -52,10 +52,13 @@ export function ClientProfileForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="rounded-xl border border-border bg-white shadow-sm p-6 sm:p-8 space-y-6">
+      <div className="space-y-6 rounded-xl border border-border bg-white p-6 shadow-sm sm:p-8">
         {/* Name */}
         <div className="space-y-2">
-          <label htmlFor="name" className="block text-sm font-bold text-foreground">
+          <label
+            htmlFor="name"
+            className="block text-sm font-bold text-foreground"
+          >
             {t('name')}
           </label>
           <input
@@ -63,7 +66,7 @@ export function ClientProfileForm({
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full h-11 px-4 rounded-lg border border-border bg-white text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+            className="h-11 w-full rounded-lg border border-border bg-white px-4 text-sm text-foreground transition-colors focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"
             required
             minLength={1}
             maxLength={100}
@@ -72,7 +75,10 @@ export function ClientProfileForm({
 
         {/* Email (read-only) */}
         <div className="space-y-2">
-          <label htmlFor="email" className="block text-sm font-bold text-foreground">
+          <label
+            htmlFor="email"
+            className="block text-sm font-bold text-foreground"
+          >
             {t('email')}
           </label>
           <input
@@ -80,21 +86,24 @@ export function ClientProfileForm({
             type="email"
             value={email}
             disabled
-            className="w-full h-11 px-4 rounded-lg border border-border bg-gray-50 text-gray-500 text-sm cursor-not-allowed"
+            className="h-11 w-full cursor-not-allowed rounded-lg border border-border bg-muted px-4 text-sm text-muted-foreground"
           />
-          <p className="text-xs text-[#915564]">{t('emailReadonly')}</p>
+          <p className="text-xs text-muted-foreground">{t('emailReadonly')}</p>
         </div>
 
         {/* Language */}
         <div className="space-y-2">
-          <label htmlFor="language" className="block text-sm font-bold text-foreground">
+          <label
+            htmlFor="language"
+            className="block text-sm font-bold text-foreground"
+          >
             {t('language')}
           </label>
           <select
             id="language"
             value={preferredLocale}
             onChange={(e) => setPreferredLocale(e.target.value as Locale)}
-            className="w-full h-11 px-4 rounded-lg border border-border bg-white text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+            className="h-11 w-full rounded-lg border border-border bg-white px-4 text-sm text-foreground transition-colors focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary"
           >
             {LOCALE_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -109,10 +118,10 @@ export function ClientProfileForm({
       {result && (
         <div
           className={cn(
-            'rounded-lg p-3 text-sm flex items-center gap-2',
+            'flex items-center gap-2 rounded-lg p-3 text-sm',
             result.success
-              ? 'bg-green-50 text-green-800 border border-green-200'
-              : 'bg-red-50 text-red-800 border border-red-200'
+              ? 'border border-green-200 bg-green-50 text-green-800'
+              : 'border border-red-200 bg-red-50 text-red-800'
           )}
         >
           {result.success && <Check className="h-4 w-4" aria-hidden="true" />}
@@ -123,7 +132,7 @@ export function ClientProfileForm({
       {/* Submit */}
       <Button
         type="submit"
-        className="h-11 px-8 bg-primary hover:bg-primary/90 text-white font-bold"
+        className="h-11 bg-primary px-8 font-bold text-white hover:bg-primary/90"
         disabled={isPending || !hasChanges}
       >
         {isPending ? t('saving') : t('save')}

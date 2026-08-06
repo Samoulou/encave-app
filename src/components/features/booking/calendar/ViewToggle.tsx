@@ -17,13 +17,13 @@ export function ViewToggle() {
   const currentView = (view as ViewMode) || 'list';
 
   return (
-    <div className="bg-[#f8f6f6] p-1 rounded-lg flex items-center">
+    <div className="flex items-center rounded-lg bg-muted p-1">
       <button
         className={cn(
-          'px-4 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2',
+          'flex items-center gap-2 rounded-md px-4 py-1.5 text-sm font-medium transition-all',
           currentView === 'list'
-            ? 'bg-white text-foreground shadow-sm font-bold'
-            : 'text-[#915564] hover:text-foreground'
+            ? 'bg-white font-bold text-foreground shadow-sm'
+            : 'text-muted-foreground hover:text-foreground'
         )}
         onClick={() => setView(null)}
       >
@@ -32,10 +32,10 @@ export function ViewToggle() {
       </button>
       <button
         className={cn(
-          'px-4 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2',
+          'flex items-center gap-2 rounded-md px-4 py-1.5 text-sm font-medium transition-all',
           currentView === 'calendar'
-            ? 'bg-white text-foreground shadow-sm font-bold'
-            : 'text-[#915564] hover:text-foreground'
+            ? 'bg-white font-bold text-foreground shadow-sm'
+            : 'text-muted-foreground hover:text-foreground'
         )}
         onClick={() => setView('calendar')}
       >

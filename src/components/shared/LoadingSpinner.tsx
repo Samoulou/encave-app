@@ -14,14 +14,18 @@ const sizeClasses = {
   xl: 'h-12 w-12',
 };
 
-export function LoadingSpinner({ size = 'md', className, label }: LoadingSpinnerProps) {
+export function LoadingSpinner({
+  size = 'md',
+  className,
+  label,
+}: LoadingSpinnerProps) {
   return (
     <div className={cn('flex items-center justify-center gap-2', className)}>
       <Loader2
         className={cn('animate-spin text-burgundy-600', sizeClasses[size])}
         aria-hidden="true"
       />
-      {label && <span className="text-sm text-slate-600">{label}</span>}
+      {label && <span className="text-sm text-muted-foreground">{label}</span>}
       <span className="sr-only">{label || 'Loading...'}</span>
     </div>
   );

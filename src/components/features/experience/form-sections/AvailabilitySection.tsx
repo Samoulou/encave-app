@@ -1,14 +1,30 @@
-import { CalendarClock, Clock, Plus, Trash2, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { CalendarClock, Clock, Info, Plus, Trash2, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TimeSlotEditor } from '../TimeSlotEditor';
 import { SectionHeader } from './SectionHeader';
 import { DAYS_OF_WEEK } from './types';
-import type { AvailabilitySlot } from './types';
+import type { AvailabilitySlot, DayOfWeek } from './types';
+
+// Maps day codes to JS day indices used by the shared common.days.short keys.
+const DAY_TO_INDEX: Record<DayOfWeek, number> = {
+  SUN: 0,
+  MON: 1,
+  TUE: 2,
+  WED: 3,
+  THU: 4,
+  FRI: 5,
+  SAT: 6,
+};
 
 interface AvailabilitySectionProps {
   availabilitySlots: AvailabilitySlot[];
   editingTimeSlot: { slotId: string; timeSlotIndex: number } | null;
-  onDayToggle: (_slotId: string, _dayValue: string, _isSelected: boolean) => void;
+  onDayToggle: (
+    _slotId: string,
+    _dayValue: string,
+    _isSelected: boolean
+  ) => void;
   onEditTimeSlot: (_slotId: string, _timeSlotIndex: number) => void;
   onSaveTimeSlot: (_start: string, _end: string) => void;
   onCancelEdit: () => void;
@@ -32,22 +48,25 @@ export function AvailabilitySection({
   onAddPattern,
   sectionRef,
 }: AvailabilitySectionProps) {
+  const t = useTranslations('experience');
+  const tCommon = useTranslations('common');
+
   return (
     <section
       ref={sectionRef}
       id="availability"
-      className="bg-white border border-stone-200 rounded-xl p-6 md:p-8 scroll-mt-24 shadow-sm"
+      className="scroll-mt-24 rounded-xl border border-stone-200 bg-white p-6 shadow-sm md:p-8"
     >
-      <SectionHeader icon={CalendarClock} title="Availability" />
+      <SectionHeader icon={CalendarClock} title={t('availability.title')} />
       <div className="space-y-4">
         {/* Availability Slots */}
         {availabilitySlots.map((slot) => (
           <div
             key={slot.id}
-            className="bg-slate-50 rounded-lg p-4 border border-stone-200"
+            className="rounded-lg border border-stone-200 bg-muted p-4"
           >
             {/* Pattern Header with Delete */}
-            <div className="flex items-center justify-between mb-4">
+            <div className="mb-4 flex items-center justify-between">
               {/* Day Selector */}
               <div className="flex flex-wrap gap-2">
                 {DAYS_OF_WEEK.map((day) => {
@@ -57,14 +76,16 @@ export function AvailabilitySection({
                       key={day.value}
                       type="button"
                       className={cn(
-                        'px-3 py-1 text-xs font-bold rounded transition-colors',
+                        'rounded px-3 py-1 text-xs font-bold transition-colors',
                         isSelected
-                          ? 'bg-primary text-white'
-                          : 'bg-white text-slate-400 border border-stone-200'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'border border-stone-200 bg-white text-muted-foreground'
                       )}
-                      onClick={() => onDayToggle(slot.id, day.value, isSelected)}
+                      onClick={() =>
+                        onDayToggle(slot.id, day.value, isSelected)
+                      }
                     >
-                      {day.label}
+                      {tCommon(`days.short.${DAY_TO_INDEX[day.value]}`)}
                     </button>
                   );
                 })}
@@ -73,8 +94,8 @@ export function AvailabilitySection({
               <button
                 type="button"
                 onClick={() => onDeletePattern(slot.id)}
-                className="text-slate-400 hover:text-red-500 transition-colors p-1"
-                aria-label="Delete schedule pattern"
+                className="p-1 text-slate-400 transition-colors hover:text-red-500"
+                aria-label={t('deleteSchedulePattern')}
               >
                 <Trash2 className="h-4 w-4" />
               </button>
@@ -102,26 +123,31 @@ export function AvailabilitySection({
                 return (
                   <div
                     key={idx}
-                    className="flex items-center gap-2 bg-white px-3 py-2 rounded border border-stone-200 group"
+                    className="group flex items-center gap-2 rounded border border-stone-200 bg-white px-3 py-2"
                   >
-                    <Clock className="h-4 w-4 text-slate-400" aria-hidden="true" />
-                    <span className="text-sm font-medium">{timeSlot.start}</span>
+                    <Clock
+                      className="h-4 w-4 text-slate-400"
+                      aria-hidden="true"
+                    />
+                    <span className="text-sm font-medium">
+                      {timeSlot.start}
+                    </span>
                     <span className="text-slate-300">-</span>
                     <span className="text-sm font-medium">{timeSlot.end}</span>
                     {/* Edit Button */}
                     <button
                       type="button"
                       onClick={() => onEditTimeSlot(slot.id, idx)}
-                      className="ml-2 text-primary text-xs font-bold hover:underline opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="ml-2 text-xs font-bold text-primary opacity-0 transition-opacity hover:underline group-hover:opacity-100"
                     >
-                      Edit
+                      {tCommon('buttons.edit')}
                     </button>
                     {/* Delete Time Slot Button */}
                     <button
                       type="button"
                       onClick={() => onDeleteTimeSlot(slot.id, idx)}
-                      className="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                      aria-label="Delete time slot"
+                      className="text-slate-400 opacity-0 transition-opacity hover:text-red-500 group-hover:opacity-100"
+                      aria-label={t('deleteTimeSlot')}
                     >
                       <X className="h-4 w-4" aria-hidden="true" />
                     </button>
@@ -133,10 +159,10 @@ export function AvailabilitySection({
               <button
                 type="button"
                 onClick={() => onAddTimeSlot(slot.id)}
-                className="flex items-center gap-1 px-3 py-2 text-sm text-primary font-medium hover:bg-primary/5 rounded border border-dashed border-primary/30 transition-colors"
+                className="flex items-center gap-1 rounded border border-dashed border-primary/30 px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/5"
               >
                 <Plus className="h-4 w-4" aria-hidden="true" />
-                Add time
+                {t('availability.addTime')}
               </button>
             </div>
           </div>
@@ -145,12 +171,19 @@ export function AvailabilitySection({
         {/* Add Schedule Button */}
         <button
           type="button"
-          className="w-full py-3 border-2 border-dashed border-stone-300 rounded-lg text-slate-500 font-bold text-sm flex items-center justify-center gap-2 hover:border-primary hover:text-primary transition-colors"
+          className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-stone-300 py-3 text-sm font-bold text-muted-foreground transition-colors hover:border-primary hover:text-primary"
           onClick={onAddPattern}
         >
           <Plus className="h-4 w-4" aria-hidden="true" />
-          Add Schedule Pattern
+          {t('availability.addSchedulePattern')}
         </button>
+
+        {/* Punctual mode note (L-131): occurrences need a persisted
+            experience — the punctual builder lives on the edit page. */}
+        <p className="flex items-start gap-2 rounded-lg bg-stone-50 p-3 text-xs text-slate-500">
+          <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          {t('availability.punctual.availableAfterCreation')}
+        </p>
       </div>
     </section>
   );

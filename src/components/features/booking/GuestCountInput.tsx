@@ -3,6 +3,7 @@
 import { useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { Minus, Plus, Users, Loader2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -52,13 +53,17 @@ export function GuestCountInput({
     const currentValue = valueRef.current;
     const currentMax = maxRef.current;
     const currentRemaining = remainingCapacityRef.current;
-    const effectiveMax = currentRemaining !== null ? Math.min(currentMax, currentRemaining) : currentMax;
+    const effectiveMax =
+      currentRemaining !== null
+        ? Math.min(currentMax, currentRemaining)
+        : currentMax;
     if (currentValue < effectiveMax) {
       onChange(currentValue + 1);
     }
   }, [onChange]);
 
-  const effectiveMax = remainingCapacity !== null ? Math.min(max, remainingCapacity) : max;
+  const effectiveMax =
+    remainingCapacity !== null ? Math.min(max, remainingCapacity) : max;
   const canDecrement = value > min && !isLoading;
   const canIncrement = value < effectiveMax && !isLoading;
 
@@ -73,20 +78,31 @@ export function GuestCountInput({
           disabled={!canDecrement}
           className={cn(
             'h-12 w-12 rounded-full transition-all duration-150',
-            canDecrement && 'hover:bg-burgundy-50 hover:border-burgundy-300 active:scale-95 active:bg-burgundy-100',
-            !canDecrement && 'opacity-50 cursor-not-allowed'
+            canDecrement &&
+              'hover:border-burgundy-300 hover:bg-burgundy-50 active:scale-95 active:bg-burgundy-100',
+            !canDecrement && 'cursor-not-allowed opacity-50'
           )}
           aria-label={t('decreaseGuests')}
         >
           <Minus className="h-5 w-5" />
         </Button>
 
-        <div className="flex flex-col items-center min-w-[80px]">
+        {/* aria-live (P-16 / L-214): the +/- buttons move focusless value
+            changes — announce them to screen readers. */}
+        <div
+          className="flex min-w-[80px] flex-col items-center"
+          aria-live="polite"
+        >
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5 text-burgundy-600" />
-            <span className="text-2xl font-bold text-foreground tabular-nums" data-testid="guest-count-display">{value}</span>
+            <span
+              className="text-2xl font-bold tabular-nums text-foreground"
+              data-testid="guest-count-display"
+            >
+              {value}
+            </span>
           </div>
-          <span className="text-sm text-slate-500">
+          <span className="text-sm text-muted-foreground">
             {t('guests', { count: value })}
           </span>
         </div>
@@ -98,8 +114,9 @@ export function GuestCountInput({
           disabled={!canIncrement}
           className={cn(
             'h-12 w-12 rounded-full transition-all duration-150',
-            canIncrement && 'hover:bg-burgundy-50 hover:border-burgundy-300 active:scale-95 active:bg-burgundy-100',
-            !canIncrement && 'opacity-50 cursor-not-allowed'
+            canIncrement &&
+              'hover:border-burgundy-300 hover:bg-burgundy-50 active:scale-95 active:bg-burgundy-100',
+            !canIncrement && 'cursor-not-allowed opacity-50'
           )}
           aria-label={t('increaseGuests')}
         >
@@ -108,9 +125,9 @@ export function GuestCountInput({
       </div>
 
       {/* Capacity Info - BUG-031 FIX: Show text OR badge, not both */}
-      <div className="flex items-center justify-center gap-4 text-sm text-slate-500">
+      <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
         <span>{t('minGuests', { count: min })}</span>
-        <span className="text-slate-300">|</span>
+        <span className="text-border">|</span>
         {isLoading ? (
           <span className="flex items-center gap-1">
             <Loader2 className="h-3 w-3 animate-spin" />
@@ -125,13 +142,15 @@ export function GuestCountInput({
       </div>
 
       {/* Badge for low capacity - ONLY display when <= 3 */}
-      {remainingCapacity !== null && remainingCapacity <= 3 && remainingCapacity > 0 && (
-        <div className="flex justify-center">
-          <span className="inline-flex items-center rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-orange-800">
-            {t('remainingCapacity', { count: remainingCapacity })}
-          </span>
-        </div>
-      )}
+      {remainingCapacity !== null &&
+        remainingCapacity <= 3 &&
+        remainingCapacity > 0 && (
+          <div className="flex justify-center">
+            <Badge variant="warning">
+              {t('remainingCapacity', { count: remainingCapacity })}
+            </Badge>
+          </div>
+        )}
     </div>
   );
 }

@@ -24,12 +24,21 @@ export default function ExperiencesError({
     <div className="flex min-h-[400px] flex-col items-center justify-center px-4">
       <div className="w-full max-w-md text-center">
         <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-red-100">
-          <AlertTriangle className="h-12 w-12 text-red-600" aria-hidden="true" />
+          <AlertTriangle
+            className="h-12 w-12 text-red-600"
+            aria-hidden="true"
+          />
         </div>
-        <h1 className="font-display text-4xl font-bold text-slate-900">{t('serverError')}</h1>
-        <p className="mt-3 text-lg text-slate-600">{t('serverErrorDescription')}</p>
+        <h1 className="font-display text-4xl font-bold text-foreground">
+          {t('serverError')}
+        </h1>
+        <p className="mt-3 text-lg text-muted-foreground">
+          {t('serverErrorDescription')}
+        </p>
         {error.digest && (
-          <p className="mt-4 font-mono text-xs text-slate-400">Error ID: {error.digest}</p>
+          <p className="mt-4 font-mono text-xs text-muted-foreground">
+            Error ID: {error.digest}
+          </p>
         )}
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Button onClick={() => reset()} size="lg">
@@ -44,7 +53,7 @@ export default function ExperiencesError({
           </Button>
         </div>
         <div className="mt-10 rounded-lg border border-stone-200 bg-white p-4">
-          <div className="flex items-center justify-center gap-2 text-sm text-slate-600">
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <Mail className="h-4 w-4" aria-hidden="true" />
             <span>{t('supportContact')}</span>
           </div>

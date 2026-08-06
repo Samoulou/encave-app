@@ -124,12 +124,13 @@ export function WeekView({
         <div className="overflow-x-auto">
           <div className="min-w-[800px]">
             {/* Header with day names */}
-            <div className="grid grid-cols-8 gap-px border-b border-slate-200 bg-slate-200">
-              <div className="bg-slate-50 p-2" /> {/* Time column header */}
+            <div className="grid grid-cols-8 gap-px border-b border-border bg-border">
+              <div className="bg-muted p-2" /> {/* Time column header */}
               {weekDays.map((date) => {
                 const dayData = getDayData(date);
                 const isCurrentDay = isToday(date);
-                const isBlocked = dayData && dayData.blockedExperienceIds.length > 0;
+                const isBlocked =
+                  dayData && dayData.blockedExperienceIds.length > 0;
 
                 return (
                   <button
@@ -137,25 +138,25 @@ export function WeekView({
                     onClick={() => handleDayClick(date)}
                     aria-label={format(date, 'PPPP', { locale: dateLocale })}
                     className={cn(
-                      'bg-white p-2 text-center transition-colors hover:bg-slate-50 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none',
+                      'bg-white p-2 text-center transition-colors hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
                       isCurrentDay && 'bg-burgundy-50',
                       isBlocked && 'bg-red-50'
                     )}
                   >
-                    <div className="text-xs font-medium text-slate-500">
+                    <div className="text-xs font-medium text-muted-foreground">
                       {format(date, 'EEE', { locale: dateLocale })}
                     </div>
                     <div
                       className={cn(
                         'mx-auto mt-1 flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold',
                         isCurrentDay && 'bg-burgundy-600 text-white',
-                        !isCurrentDay && 'text-slate-900'
+                        !isCurrentDay && 'text-foreground'
                       )}
                     >
                       {format(date, 'd')}
                     </div>
                     {dayData && dayData.bookingCount > 0 && (
-                      <div className="mt-1 flex items-center justify-center gap-1 text-[10px] text-slate-500">
+                      <div className="mt-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground">
                         <span className="font-medium text-burgundy-600">
                           {dayData.bookingCount}
                         </span>
@@ -164,7 +165,9 @@ export function WeekView({
                       </div>
                     )}
                     {isBlocked && (
-                      <div className="mt-1 text-[10px] text-red-500">{t('blocked')}</div>
+                      <div className="mt-1 text-[10px] text-red-500">
+                        {t('blocked')}
+                      </div>
                     )}
                   </button>
                 );
@@ -172,11 +175,11 @@ export function WeekView({
             </div>
 
             {/* Time slots grid */}
-            <div className="grid grid-cols-8 gap-px bg-slate-200">
+            <div className="grid grid-cols-8 gap-px bg-border">
               {TIME_SLOTS.map((timeSlot) => (
                 <Fragment key={timeSlot}>
                   {/* Time label */}
-                  <div className="bg-slate-50 p-2 text-right text-xs text-slate-500">
+                  <div className="bg-muted p-2 text-right text-xs text-muted-foreground">
                     {timeSlot}
                   </div>
 
@@ -190,7 +193,7 @@ export function WeekView({
                         key={`${date.toISOString()}-${timeSlot}`}
                         className={cn(
                           'min-h-[48px] bg-white p-1',
-                          hasBookings && 'bg-slate-50'
+                          hasBookings && 'bg-muted'
                         )}
                       >
                         {bookings.map((booking) => (
@@ -198,10 +201,12 @@ export function WeekView({
                             <button
                               onClick={() => onBookingClick?.(booking.id)}
                               aria-label={`${booking.visitorName}, ${booking.timeSlot}, ${booking.guestCount} ${booking.guestCount === 1 ? 'guest' : 'guests'}`}
-                              className="mb-1 w-full rounded px-1.5 py-1 text-left text-xs text-white transition-opacity hover:opacity-90 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:outline-none"
+                              className="mb-1 w-full rounded px-1.5 py-1 text-left text-xs text-white transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                               style={{
                                 backgroundColor:
-                                  EXPERIENCE_TYPE_COLORS[booking.experience.type],
+                                  EXPERIENCE_TYPE_COLORS[
+                                    booking.experience.type
+                                  ],
                               }}
                             >
                               <div className="truncate font-medium">
@@ -225,7 +230,7 @@ export function WeekView({
         </div>
 
         {/* Legend */}
-        <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-slate-500">
+        <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           <span className="font-medium">{t('experienceTypes')}</span>
           {Object.entries(EXPERIENCE_TYPE_COLORS).map(([type, color]) => (
             <div key={type} className="flex items-center gap-1.5">

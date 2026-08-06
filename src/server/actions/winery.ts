@@ -6,17 +6,19 @@ import { put, del } from '@vercel/blob';
 import {
   wineryOnboardingSchema,
   wineryProfileSchema,
+  parseSignatureGrapes,
   type WineryOnboardingInput,
   type WineryProfileInput,
 } from '@/lib/validators/winery';
 import { generateSlug, ensureUniqueSlug } from '@/lib/utils/slug';
 import { geocodeWineryAddress } from '@/lib/geocoding';
-import {
-  IMAGE_MAX_SIZE,
-  WINERY_ALLOWED_TYPES,
-} from '@/lib/validators/image';
+import { IMAGE_MAX_SIZE, WINERY_ALLOWED_TYPES } from '@/lib/validators/image';
 import type { ActionResult } from '@/types/actions';
 import { logError, logWarn } from '@/lib/logger';
+import { getPostHogServer } from '@/lib/posthog';
+import { sendWelcomeEmailToWinemaker } from '@/server/services/welcome-email.service';
+import { sendAdminNewWineryToValidateEmail } from '@/server/services/email.service';
+import { invalidateWineryCaches } from './winery-helpers';
 
 /**
  * Check if a winery slug already exists
@@ -105,18 +107,10 @@ export async function createWinery(
       };
     }
 
-    // 7. Geocode address (non-blocking, best effort)
-    let coordinates: { latitude: number; longitude: number } | null = null;
-    try {
-      coordinates = await geocodeWineryAddress(address, commune);
-    } catch (geocodeError) {
-      // Log but don't fail - geocoding is optional
-      logWarn('Geocoding failed for new winery', { action: 'createWinery', error: geocodeError });
-    }
-
-    // 8. Create winery and update user role in a transaction
+    // 7. Create winery and update user role in a transaction. Geocoding
+    // happens AFTER the commit (P-16 / WS-F, L-210): signup must never
+    // wait on — or fail because of — Nominatim.
     const winery = await db.$transaction(async (tx) => {
-      // Create the winery with coordinates if available
       const newWinery = await tx.winery.create({
         data: {
           name,
@@ -128,8 +122,6 @@ export async function createWinery(
           email: user.email,
           userId: session.user.id,
           status: 'PENDING',
-          latitude: coordinates?.latitude ?? null,
-          longitude: coordinates?.longitude ?? null,
         },
       });
 
@@ -140,6 +132,64 @@ export async function createWinery(
       });
 
       return newWinery;
+    });
+
+    // 8. Post-commit, best-effort geocode (bounded by the 3s fetch timeout).
+    try {
+      const coordinates = await geocodeWineryAddress(address, commune);
+      if (coordinates) {
+        await db.winery.update({
+          where: { id: winery.id },
+          data: {
+            latitude: coordinates.latitude,
+            longitude: coordinates.longitude,
+          },
+        });
+      }
+    } catch (geocodeError) {
+      // Log but don't fail - geocoding is optional
+      logWarn('Geocoding failed for new winery', {
+        action: 'createWinery',
+        error: geocodeError,
+      });
+    }
+
+    // Track producer onboarding in PostHog (server-side)
+    const posthogServer = getPostHogServer();
+    if (posthogServer) {
+      posthogServer.capture({
+        distinctId: session.user.id,
+        event: 'producer_onboarded',
+        properties: {
+          winery_id: winery.id,
+          winery_slug: winery.slug,
+          winery_name: name,
+          commune,
+        },
+      });
+      await posthogServer.flush();
+    }
+
+    void sendWelcomeEmailToWinemaker(session.user.id).catch((error) => {
+      logError('send welcome winemaker email failed', error, {
+        action: 'createWinery',
+        userId: session.user.id,
+      });
+    });
+
+    // Email #22 (L-163): notify the admin inbox of a new domain to validate.
+    // The founder invitation path creates VERIFIED wineries via a different
+    // action, so it never reaches here — only real signups notify.
+    void sendAdminNewWineryToValidateEmail({
+      wineryName: name,
+      commune,
+      contactEmail: user.email,
+      wineryId: winery.id,
+    }).catch((error) => {
+      logError('send admin new-winery email failed', error, {
+        action: 'createWinery',
+        wineryId: winery.id,
+      });
     });
 
     return {
@@ -209,41 +259,89 @@ export async function updateWineryProfile(
       };
     }
 
-    // Check if address or commune changed - if so, re-geocode
+    // Check if address or commune changed - if so, re-geocode AFTER the
+    // commit (P-16 / WS-F, L-210): the profile save must never wait on —
+    // or fail because of — Nominatim.
     const addressChanged =
       (validated.data.address && validated.data.address !== winery.address) ||
       (validated.data.commune && validated.data.commune !== winery.commune);
 
-    let coordinates: { latitude: number; longitude: number } | null = null;
-    if (addressChanged) {
-      try {
-        const newAddress = validated.data.address ?? winery.address;
-        const newCommune = validated.data.commune ?? winery.commune;
-        coordinates = await geocodeWineryAddress(newAddress, newCommune);
-      } catch (geocodeError) {
-        logWarn('Geocoding failed for winery update', { action: 'updateWineryProfile', error: geocodeError });
-      }
-    }
+    // P-12 / L-117: pull the enrichment fields out of the spread — they are
+    // strings at the form layer but Int / Float / String[] in the DB.
+    const {
+      openingHours,
+      altitude,
+      hectares,
+      familyName,
+      signatureGrapes,
+      ...baseData
+    } = validated.data;
+
+    const altitudeMeters =
+      altitude && altitude.trim().length > 0
+        ? Number.parseInt(altitude, 10)
+        : null;
+    const hectaresValue =
+      hectares && hectares.trim().length > 0
+        ? Number.parseFloat(hectares.replace(',', '.'))
+        : null;
 
     // Update winery
     const updated = await db.winery.update({
       where: { id: winery.id },
       data: {
-        ...validated.data,
-        // Only update coordinates if address changed and we got new ones
+        ...baseData,
+        openingHours: openingHours?.trim() ? openingHours.trim() : null,
+        familyName: familyName?.trim() ? familyName.trim() : null,
+        altitude: Number.isNaN(altitudeMeters) ? null : altitudeMeters,
+        hectares: Number.isNaN(hectaresValue) ? null : hectaresValue,
+        signatureGrapes: parseSignatureGrapes(signatureGrapes),
+        // A changed address invalidates the old point until the post-commit
+        // geocode below refreshes it — stale coordinates are worse than a
+        // temporary commune fallback on the map.
         ...(addressChanged && {
-          latitude: coordinates?.latitude ?? null,
-          longitude: coordinates?.longitude ?? null,
+          latitude: null,
+          longitude: null,
         }),
       },
     });
+
+    // Post-commit, best-effort geocode (bounded by the 3s fetch timeout):
+    // the saved profile is already durable whatever Nominatim does.
+    if (addressChanged) {
+      try {
+        const newAddress = validated.data.address ?? winery.address;
+        const newCommune = validated.data.commune ?? winery.commune;
+        const coordinates = await geocodeWineryAddress(newAddress, newCommune);
+        if (coordinates) {
+          await db.winery.update({
+            where: { id: winery.id },
+            data: {
+              latitude: coordinates.latitude,
+              longitude: coordinates.longitude,
+            },
+          });
+        }
+      } catch (geocodeError) {
+        logWarn('Geocoding failed for winery update', {
+          action: 'updateWineryProfile',
+          error: geocodeError,
+        });
+      }
+    }
+
+    // Profile mutations can flip visibility (description / address /
+    // geocoding) — invalidate public caches.
+    invalidateWineryCaches(winery.slug);
 
     return {
       success: true,
       data: { updatedAt: updated.updatedAt },
     };
   } catch (error) {
-    logError('updateWineryProfile error', error, { action: 'updateWineryProfile' });
+    logError('updateWineryProfile error', error, {
+      action: 'updateWineryProfile',
+    });
     return {
       success: false,
       error: {
@@ -281,11 +379,18 @@ export async function uploadWineryImage(
     if (file.size > IMAGE_MAX_SIZE) {
       return {
         success: false,
-        error: { code: 'VALIDATION_ERROR', message: 'Image must be less than 5MB' },
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Image must be less than 5MB',
+        },
       };
     }
 
-    if (!WINERY_ALLOWED_TYPES.includes(file.type as typeof WINERY_ALLOWED_TYPES[number])) {
+    if (
+      !WINERY_ALLOWED_TYPES.includes(
+        file.type as (typeof WINERY_ALLOWED_TYPES)[number]
+      )
+    ) {
       return {
         success: false,
         error: {
@@ -358,12 +463,17 @@ export async function updateWineryCoverPhoto(
       data: { coverPhoto: coverPhotoUrl },
     });
 
+    // Cover photo is a public-facing asset; refresh listings + detail page.
+    invalidateWineryCaches(winery.slug);
+
     return {
       success: true,
       data: { updatedAt: updated.updatedAt },
     };
   } catch (error) {
-    logError('updateWineryCoverPhoto error', error, { action: 'updateWineryCoverPhoto' });
+    logError('updateWineryCoverPhoto error', error, {
+      action: 'updateWineryCoverPhoto',
+    });
     return {
       success: false,
       error: {
@@ -413,7 +523,10 @@ export async function addGalleryImage(
     }
 
     // Get next order number
-    const maxOrder = Math.max(0, ...winery.galleryImages.map((img) => img.order));
+    const maxOrder = Math.max(
+      0,
+      ...winery.galleryImages.map((img) => img.order)
+    );
 
     const image = await db.wineryGalleryImage.create({
       data: {
@@ -422,6 +535,9 @@ export async function addGalleryImage(
         wineryId: winery.id,
       },
     });
+
+    // Adding a photo can flip the "≥1 photo" visibility criterion.
+    invalidateWineryCaches(winery.slug);
 
     return {
       success: true,
@@ -492,12 +608,17 @@ export async function removeGalleryImage(
       where: { id: imageId },
     });
 
+    // Removing a photo can flip the "≥1 photo" visibility criterion off.
+    invalidateWineryCaches(winery.slug);
+
     return {
       success: true,
       data: { removed: true },
     };
   } catch (error) {
-    logError('removeGalleryImage error', error, { action: 'removeGalleryImage' });
+    logError('removeGalleryImage error', error, {
+      action: 'removeGalleryImage',
+    });
     return {
       success: false,
       error: {

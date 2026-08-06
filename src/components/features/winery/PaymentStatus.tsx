@@ -29,9 +29,9 @@ export function PaymentStatus({ status, className }: PaymentStatusProps) {
       label: t('notConnected'),
       description: t('notConnectedDescription'),
       icon: XCircle,
-      iconColor: 'text-slate-400',
-      bgColor: 'bg-slate-50',
-      textColor: 'text-slate-600',
+      iconColor: 'text-muted-foreground',
+      bgColor: 'bg-muted',
+      textColor: 'text-muted-foreground',
     },
     pending: {
       label: t('pendingVerification'),
@@ -79,12 +79,15 @@ export function PaymentStatus({ status, className }: PaymentStatusProps) {
       )}
     >
       <div className="flex items-center gap-3">
-        <Icon className={cn('h-5 w-5 flex-shrink-0', config.iconColor)} aria-hidden="true" />
+        <Icon
+          className={cn('h-5 w-5 flex-shrink-0', config.iconColor)}
+          aria-hidden="true"
+        />
         <div>
           <p className={cn('text-sm font-medium', config.textColor)}>
             {config.label}
           </p>
-          <p className="text-xs text-slate-500">{config.description}</p>
+          <p className="text-xs text-muted-foreground">{config.description}</p>
         </div>
       </div>
 

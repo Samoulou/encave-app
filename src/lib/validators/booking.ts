@@ -12,13 +12,34 @@ export const timeSlotSchema = z
   );
 
 /**
+ * Slot hold created at « Continuer » (P-04 / L-050). `previousHoldId` +
+ * `previousHoldToken` let the widget hand back its still-live prior hold
+ * (browser Back, changed party size) so its seats are released before the
+ * capacity check — otherwise users self-block on their own hold.
+ */
+export const createHoldSchema = z.object({
+  experienceId: z.string(),
+  date: z.string(),
+  timeSlot: timeSlotSchema,
+  guestCount: z.number().int().positive(),
+  previousHoldId: z.string().cuid().optional(),
+  previousHoldToken: z.string().min(16).optional(),
+});
+
+/**
  * Parse a validated time slot string into hours and minutes
  * Only call this after validation with timeSlotSchema
  */
-export function parseTimeSlot(timeSlot: string): { hours: number; minutes: number } {
+export function parseTimeSlot(timeSlot: string): {
+  hours: number;
+  minutes: number;
+} {
   const [hoursStr, minutesStr] = timeSlot.split(':');
-  const hours = parseInt(hoursStr!, 10);
-  const minutes = parseInt(minutesStr!, 10);
+  if (hoursStr === undefined || minutesStr === undefined) {
+    throw new Error(`Invalid time slot format: ${timeSlot}`);
+  }
+  const hours = parseInt(hoursStr, 10);
+  const minutes = parseInt(minutesStr, 10);
 
   // Double-check for safety (should never happen if timeSlotSchema was used)
   if (isNaN(hours) || isNaN(minutes)) {

@@ -1,65 +1,65 @@
-import { Suspense } from 'react';
 import {
-  getVerifiedWineries,
+  getPubliclyVisibleWineries,
   getDistinctCommunes,
 } from '@/server/queries/winery.queries';
-import { WineryCard } from '@/components/features/winery/WineryCard';
-import { CommuneFilter } from '@/components/features/winery/CommuneFilter';
-import { EmptyState } from '@/components/shared/EmptyState';
-import { getTranslations } from 'next-intl/server';
+import {
+  WineriesExplorer,
+  type WineryCardDTO,
+} from '@/components/features/winery/WineriesExplorer';
+import type { MapWinery } from '@/components/features/map/types';
 
-interface WineriesContentProps {
-  commune?: string;
+const EXCERPT_LENGTH = 220;
+
+function toExcerpt(html: string): string {
+  const text = html
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return text.length > EXCERPT_LENGTH
+    ? `${text.slice(0, EXCERPT_LENGTH).trimEnd()}…`
+    : text;
 }
 
 /**
- * Async server component that fetches winery data.
- * Designed to be wrapped in Suspense for streaming/progressive loading.
+ * Async server component that fetches winery data (P-06: always the
+ * FULL visible list — the commune filter is client-side in
+ * WineriesExplorer, which keeps this subtree ISR-compatible).
  */
-export async function WineriesContent({ commune }: WineriesContentProps) {
-  const [wineries, communes, t] = await Promise.all([
-    getVerifiedWineries(commune),
+export async function WineriesContent() {
+  const [wineries, communes] = await Promise.all([
+    getPubliclyVisibleWineries(),
     getDistinctCommunes(),
-    getTranslations('wineries'),
   ]);
 
-  return (
-    <>
-      {/* Filter Bar */}
-      <div className="sticky top-0 z-20 border-b border-stone-200/60 bg-white/95 backdrop-blur-md">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 py-4 lg:px-8">
-          <span className="text-sm font-medium text-slate-600">
-            {t('showingCount', { count: wineries.length })}
-          </span>
-          {communes.length > 0 && (
-            <Suspense fallback={<div className="h-11 w-[200px] skeleton-warm rounded-lg animate-skeleton-shimmer" />}>
-              <CommuneFilter communes={communes} />
-            </Suspense>
-          )}
-        </div>
-      </div>
+  // Minimal DTOs across the RSC boundary — never full Prisma objects.
+  // The card clamps to 2 lines: ship an excerpt, not the whole
+  // @db.Text profile (same discipline as SEARCH_CARD_SELECT).
+  const cardWineries: WineryCardDTO[] = wineries.map((w) => ({
+    id: w.id,
+    slug: w.slug,
+    name: w.name,
+    commune: w.commune,
+    description: toExcerpt(w.description),
+    coverPhoto: w.coverPhoto,
+    status: w.status,
+  }));
 
-      {/* Content */}
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 lg:px-8 lg:py-12">
-        {wineries.length === 0 ? (
-          <EmptyState
-            title={t('comingSoon')}
-            description={t('emptyDescription')}
-          />
-        ) : (
-          <div className="grid grid-cols-1 gap-6 md:gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {wineries.map((winery, index) => (
-              <div
-                key={winery.id}
-                className="animate-in fade-in slide-in-from-bottom-4"
-                style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'both' }}
-              >
-                <WineryCard winery={winery} />
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </>
+  const mapWineries: MapWinery[] = wineries.map((w) => ({
+    id: w.id,
+    name: w.name,
+    slug: w.slug,
+    commune: w.commune,
+    coverPhoto: w.coverPhoto,
+    latitude: w.latitude,
+    longitude: w.longitude,
+    _count: w._count,
+  }));
+
+  return (
+    <WineriesExplorer
+      wineries={cardWineries}
+      mapWineries={mapWineries}
+      communes={communes}
+    />
   );
 }

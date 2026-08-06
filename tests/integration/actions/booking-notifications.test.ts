@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import crypto from 'crypto';
 import { db } from '@/server/db';
-import { BookingStatus } from '@prisma/client';
+import { BookingStatus, UserRole } from '@prisma/client';
 
 // Mock db
 vi.mock('@/server/db', () => ({
@@ -14,93 +14,35 @@ vi.mock('@/server/db', () => ({
   },
 }));
 
+vi.mock('@/server/auth', () => ({
+  auth: vi.fn(),
+}));
+
 // Mock email service
 vi.mock('@/server/services/email.service', () => ({
   sendBookingConfirmationEmail: vi.fn().mockResolvedValue(true),
 }));
 
+import { auth } from '@/server/auth';
+
 describe('Booking Notification Actions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  describe('resendConfirmationEmail', () => {
-    const mockConfirmedBooking = {
-      id: 'booking-1',
-      reference: 'ENC-ABC123',
-      status: BookingStatus.CONFIRMED,
-      visitorName: 'John Doe',
-      visitorEmail: 'john@example.com',
-      date: new Date('2026-03-15'),
-      timeSlot: '14:00',
-      guestCount: 4,
-      totalPrice: 20000,
-      experience: {
-        title: 'Wine Tasting',
-        duration: 90,
+    vi.mocked(auth).mockResolvedValue({
+      user: {
+        id: 'client-1',
+        email: 'john@example.com',
+        role: UserRole.CLIENT,
       },
-      winery: {
-        name: 'Test Winery',
-      },
-    };
-
-    it('sends email for confirmed booking', async () => {
-      vi.mocked(db.booking.findUnique).mockResolvedValue(mockConfirmedBooking as never);
-      vi.mocked(db.booking.update).mockResolvedValue({} as never);
-
-      const { resendConfirmationEmail } = await import('@/server/actions/booking');
-      const result = await resendConfirmationEmail('booking-1');
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.sent).toBe(true);
-      }
-    });
-
-    it('returns NOT_FOUND when booking does not exist', async () => {
-      vi.mocked(db.booking.findUnique).mockResolvedValue(null);
-
-      const { resendConfirmationEmail } = await import('@/server/actions/booking');
-      const result = await resendConfirmationEmail('nonexistent');
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.code).toBe('NOT_FOUND');
-      }
-    });
-
-    it('returns VALIDATION_ERROR for non-confirmed booking', async () => {
-      vi.mocked(db.booking.findUnique).mockResolvedValue({
-        ...mockConfirmedBooking,
-        status: BookingStatus.PENDING_PAYMENT,
-      } as never);
-
-      const { resendConfirmationEmail } = await import('@/server/actions/booking');
-      const result = await resendConfirmationEmail('booking-1');
-
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.code).toBe('VALIDATION_ERROR');
-      }
-    });
-
-    it('updates confirmationSentAt on successful send', async () => {
-      vi.mocked(db.booking.findUnique).mockResolvedValue(mockConfirmedBooking as never);
-      vi.mocked(db.booking.update).mockResolvedValue({} as never);
-
-      const { resendConfirmationEmail } = await import('@/server/actions/booking');
-      await resendConfirmationEmail('booking-1');
-
-      expect(db.booking.update).toHaveBeenCalledWith({
-        where: { id: 'booking-1' },
-        data: { confirmationSentAt: expect.any(Date) },
-      });
-    });
+    } as never);
   });
 
   describe('getBookingByToken', () => {
     const accessToken = 'test-access-token-12345';
-    const tokenHash = crypto.createHash('sha256').update(accessToken).digest('hex');
+    const tokenHash = crypto
+      .createHash('sha256')
+      .update(accessToken)
+      .digest('hex');
 
     const mockBooking = {
       id: 'booking-1',
@@ -144,7 +86,7 @@ describe('Booking Notification Actions', () => {
       }
     });
 
-    it('searches by both plain token and hash', async () => {
+    it('searches by SHA-256 token hash', async () => {
       vi.mocked(db.booking.findFirst).mockResolvedValue(mockBooking as never);
 
       const { getBookingByToken } = await import('@/server/actions/booking');
@@ -153,10 +95,7 @@ describe('Booking Notification Actions', () => {
       expect(db.booking.findFirst).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
-            OR: [
-              { accessToken },
-              { accessTokenHash: tokenHash },
-            ],
+            accessTokenHash: tokenHash,
           },
         })
       );

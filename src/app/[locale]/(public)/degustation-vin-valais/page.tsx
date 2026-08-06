@@ -12,7 +12,9 @@ interface PageProps {
   params: Promise<{ locale: string }>;
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'landing.degustation' });
 
@@ -68,16 +70,18 @@ export default async function DegustationVinValaisPage({ params }: PageProps) {
       <FaqSchema items={faqItems} />
       <JsonLd data={breadcrumbSchema} />
       <div className="min-h-screen bg-cream-50">
-
         {/* Hero Section */}
         <section className="relative bg-gradient-to-br from-burgundy-800 via-burgundy-700 to-burgundy-900 py-20 lg:py-28">
           <div className="absolute inset-0 bg-[url('/images/wine-texture.png')] opacity-5" />
           <div className="relative mx-auto max-w-4xl px-6 text-center">
-            <Wine className="mx-auto mb-6 h-12 w-12 text-gold-400" aria-hidden="true" />
+            <Wine
+              className="mx-auto mb-6 h-12 w-12 text-gold-400"
+              aria-hidden="true"
+            />
             <h1 className="font-display text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
               {t('hero.title')}
             </h1>
-            <p className="mt-4 text-lg text-burgundy-100 max-w-2xl mx-auto">
+            <p className="mx-auto mt-4 max-w-2xl text-lg text-burgundy-100">
               {t('hero.subtitle')}
             </p>
           </div>
@@ -85,14 +89,17 @@ export default async function DegustationVinValaisPage({ params }: PageProps) {
 
         {/* Breadcrumb Navigation */}
         <nav className="mx-auto max-w-6xl px-6 py-4" aria-label="Breadcrumb">
-          <ol className="flex items-center gap-2 text-sm text-slate-600">
+          <ol className="flex items-center gap-2 text-sm text-muted-foreground">
             <li>
-              <Link href="/" className="hover:text-burgundy-600 transition-colors">
+              <Link
+                href="/"
+                className="transition-colors hover:text-burgundy-600"
+              >
                 EnCave
               </Link>
             </li>
             <li aria-hidden="true">/</li>
-            <li className="text-slate-900 font-medium">{t('hero.title')}</li>
+            <li className="font-medium text-foreground">{t('hero.title')}</li>
           </ol>
         </nav>
 
@@ -100,10 +107,10 @@ export default async function DegustationVinValaisPage({ params }: PageProps) {
         <section className="mx-auto max-w-4xl px-6 py-12 lg:py-16">
           <Card className="overflow-hidden rounded-xl border-0 shadow-warm-lg">
             <CardContent className="p-8 sm:p-10">
-              <h2 className="font-display text-2xl font-semibold text-slate-900 sm:text-3xl mb-6">
+              <h2 className="mb-6 font-display text-2xl font-semibold text-foreground sm:text-3xl">
                 {t('intro.title')}
               </h2>
-              <div className="space-y-4 text-slate-700 leading-relaxed">
+              <div className="space-y-4 leading-relaxed text-ink-700">
                 <p>{t('intro.paragraph1')}</p>
                 <p>{t('intro.paragraph2')}</p>
                 <p>{t('intro.paragraph3')}</p>
@@ -112,16 +119,31 @@ export default async function DegustationVinValaisPage({ params }: PageProps) {
               {/* Highlights */}
               <div className="mt-8 grid gap-4 sm:grid-cols-3">
                 <div className="flex items-center gap-3 rounded-lg bg-burgundy-50 p-4">
-                  <Clock className="h-5 w-5 text-burgundy-600" aria-hidden="true" />
-                  <span className="text-sm font-medium text-slate-900">{t('intro.highlight1')}</span>
+                  <Clock
+                    className="h-5 w-5 text-burgundy-600"
+                    aria-hidden="true"
+                  />
+                  <span className="text-sm font-medium text-foreground">
+                    {t('intro.highlight1')}
+                  </span>
                 </div>
                 <div className="flex items-center gap-3 rounded-lg bg-burgundy-50 p-4">
-                  <MapPin className="h-5 w-5 text-burgundy-600" aria-hidden="true" />
-                  <span className="text-sm font-medium text-slate-900">{t('intro.highlight2')}</span>
+                  <MapPin
+                    className="h-5 w-5 text-burgundy-600"
+                    aria-hidden="true"
+                  />
+                  <span className="text-sm font-medium text-foreground">
+                    {t('intro.highlight2')}
+                  </span>
                 </div>
                 <div className="flex items-center gap-3 rounded-lg bg-burgundy-50 p-4">
-                  <Star className="h-5 w-5 text-burgundy-600" aria-hidden="true" />
-                  <span className="text-sm font-medium text-slate-900">{t('intro.highlight3')}</span>
+                  <Star
+                    className="h-5 w-5 text-burgundy-600"
+                    aria-hidden="true"
+                  />
+                  <span className="text-sm font-medium text-foreground">
+                    {t('intro.highlight3')}
+                  </span>
                 </div>
               </div>
             </CardContent>
@@ -130,7 +152,7 @@ export default async function DegustationVinValaisPage({ params }: PageProps) {
 
         {/* FAQ Section */}
         <section className="mx-auto max-w-4xl px-6 py-12 lg:py-16">
-          <h2 className="font-display text-2xl font-semibold text-slate-900 sm:text-3xl mb-8 text-center">
+          <h2 className="mb-8 text-center font-display text-2xl font-semibold text-foreground sm:text-3xl">
             {t('faq.title')}
           </h2>
           <Card className="overflow-hidden rounded-xl border-0 shadow-warm-lg">
@@ -139,7 +161,6 @@ export default async function DegustationVinValaisPage({ params }: PageProps) {
             </CardContent>
           </Card>
         </section>
-
       </div>
     </>
   );
