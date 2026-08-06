@@ -59,6 +59,23 @@ export default async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // The coming-soon page lives outside [locale] (locale-less) — without a
+  // pass-through here, the intl middleware 307s it to /fr/coming-soon (404).
+  // While the gate is up it is served on ANY host (encave.ch + previews +
+  // localhost, so the page stays reviewable). Once the gate is down
+  // (post-launch), production redirects home — pre-launch links must not
+  // keep advertising the founder offer — while non-prod hosts keep it
+  // viewable for review.
+  if (pathname === '/coming-soon') {
+    const isProductionHost =
+      hostname === COMING_SOON_DOMAIN ||
+      hostname === `www.${COMING_SOON_DOMAIN}`;
+    if (isComingSoonGateUp || !isProductionHost) {
+      return NextResponse.next();
+    }
+    return NextResponse.redirect(new URL('/', request.url));
+  }
+
   // Coming Soon: redirect the production domain to the coming-soon page
   // until COMING_SOON=false flips the gate (launch bascule, WS-I).
   if (
@@ -66,11 +83,6 @@ export default async function middleware(request: NextRequest) {
     (hostname === COMING_SOON_DOMAIN ||
       hostname === `www.${COMING_SOON_DOMAIN}`)
   ) {
-    // Allow the coming-soon page itself
-    if (pathname === '/coming-soon') {
-      return NextResponse.next();
-    }
-
     // Allow article pages (accessible from coming-soon footer)
     const pathnameNoLocale = getPathnameWithoutLocale(pathname);
     const allowedPaths = ['/degustation-vin-valais', '/cepages-valaisans'];
