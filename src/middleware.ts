@@ -59,6 +59,14 @@ export default async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // The coming-soon page lives outside [locale] (locale-less) — serve it
+  // directly on ANY host. Without this, the intl middleware 307s it to
+  // /fr/coming-soon (404) and the page is unreviewable on previews/localhost.
+  // On encave.ch the behavior is unchanged (it was already passed through).
+  if (pathname === '/coming-soon') {
+    return NextResponse.next();
+  }
+
   // Coming Soon: redirect the production domain to the coming-soon page
   // until COMING_SOON=false flips the gate (launch bascule, WS-I).
   if (
@@ -66,11 +74,6 @@ export default async function middleware(request: NextRequest) {
     (hostname === COMING_SOON_DOMAIN ||
       hostname === `www.${COMING_SOON_DOMAIN}`)
   ) {
-    // Allow the coming-soon page itself
-    if (pathname === '/coming-soon') {
-      return NextResponse.next();
-    }
-
     // Allow article pages (accessible from coming-soon footer)
     const pathnameNoLocale = getPathnameWithoutLocale(pathname);
     const allowedPaths = ['/degustation-vin-valais', '/cepages-valaisans'];
