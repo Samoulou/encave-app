@@ -132,6 +132,78 @@ enum Locale {
   EN
 }
 
+enum ChannelType {
+  ENCAVE
+  GETYOURGUIDE
+  VIATOR
+  AIRBNB
+  OTHER
+}
+
+enum ChannelConnectionStatus {
+  PENDING
+  ACTIVE
+  PAUSED
+  ERROR
+  DISCONNECTED
+}
+
+enum ChannelCapability {
+  LISTINGS
+  AVAILABILITY
+  BOOKINGS
+  CANCELLATIONS
+  PRICING
+}
+
+enum ChannelDistributionMode {
+  IMPORT_ONLY
+  EXPORT_ONLY
+  BIDIRECTIONAL
+}
+
+enum ChannelPublicationStatus {
+  DRAFT
+  PENDING
+  PUBLISHED
+  PAUSED
+  ERROR
+}
+
+enum ChannelCapacityMode {
+  SHARED
+  ALLOCATED
+}
+
+enum MerchantOfRecord {
+  ENCAVE
+  CHANNEL
+  WINERY
+}
+
+enum ChannelInboxStatus {
+  PENDING
+  PROCESSING
+  PROCESSED
+  FAILED
+  IGNORED
+}
+
+enum ChannelOutboxStatus {
+  PENDING
+  PROCESSING
+  SENT
+  FAILED
+  CANCELLED
+}
+
+enum ChannelIncidentStatus {
+  OPEN
+  ACKNOWLEDGED
+  RESOLVED
+  IGNORED
+}
+
 model User {
   id               String    @id @default(cuid())
   email            String    @unique
@@ -152,10 +224,11 @@ model User {
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
-  accounts  Account[]
-  sessions  Session[]
-  winery    Winery?
-  twoFactor TwoFactor?
+  accounts        Account[]
+  sessions        Session[]
+  winery          Winery?
+  twoFactor       TwoFactor?
+  createdBookings Booking[]  @relation("BookingCreatedBy")
 
   @@index([suspendedAt])
   @@map("users")
@@ -217,6 +290,7 @@ model Winery {
   wineOrderRequests       WineOrderRequest[]
   requests                Request[]
   eventParticipations     EventParticipant[]
+  channelConnections      ChannelConnection[]
 
   @@index([commune])
   @@index([status])
@@ -395,6 +469,7 @@ model Experience {
   occurrences       ExperienceOccurrence[]
   participants      EventParticipant[]
   giftCards         GiftCard[]
+  channelListings   ChannelListing[]
 
   @@unique([wineryId, slug])
   @@index([wineryId])
@@ -528,12 +603,33 @@ model Booking {
   // keep using (experienceId, date, timeSlot) until P-05 switches over.
   occurrenceId                   String?
   occurrence                     ExperienceOccurrence? @relation(fields: [occurrenceId], references: [id], onDelete: SetNull)
+  sourceChannel                  ChannelType           @default(ENCAVE)
+  channelConnectionId            String?
+  channelConnection              ChannelConnection?    @relation(fields: [channelConnectionId], references: [id], onDelete: SetNull)
+  channelListingId               String?
+  channelListing                 ChannelListing?       @relation(fields: [channelListingId], references: [id], onDelete: SetNull)
+  externalBookingId              String?
+  externalBookingReference       String?
+  salesAttribution               ChannelType?
+  merchantOfRecord               MerchantOfRecord      @default(ENCAVE)
+  externalGrossAmount            Int?
+  externalCommissionAmount       Int?
+  externalNetAmount              Int?
+  externalCurrency               String?
+  externalStatus                 String?
+  externalCreatedAt              DateTime?
+  externalUpdatedAt              DateTime?
+  channelImportBatchId           String?
+  channelImportBatch             ChannelImportBatch?   @relation(fields: [channelImportBatchId], references: [id], onDelete: SetNull)
+  createdById                    String?
+  createdBy                      User?                 @relation("BookingCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
   createdAt                      DateTime              @default(now())
   updatedAt                      DateTime              @updatedAt
 
   wines            BookingWine[]
   wineOrderRequest WineOrderRequest?
 
+  @@unique([channelConnectionId, externalBookingId])
   @@index([experienceId])
   @@index([wineryId])
   @@index([experienceId, date, timeSlot])
@@ -556,7 +652,169 @@ model Booking {
   // NOT stripePaymentIntentId, so payouts.queries matches this column too).
   @@index([noShowFeeChargePaymentIntentId])
   @@index([occurrenceId])
+  @@index([channelConnectionId])
+  @@index([channelListingId])
+  @@index([channelImportBatchId])
+  @@index([createdById])
   @@map("bookings")
+}
+
+model ChannelConnection {
+  id                String                  @id @default(cuid())
+  wineryId          String
+  winery            Winery                  @relation(fields: [wineryId], references: [id], onDelete: Cascade)
+  channel           ChannelType
+  name              String
+  status            ChannelConnectionStatus @default(PENDING)
+  capabilities      ChannelCapability[]     @default([])
+  distributionMode  ChannelDistributionMode @default(BIDIRECTIONAL)
+  externalAccountId String?
+  credentials       Json?
+  settings          Json?
+  lastSyncedAt      DateTime?
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+
+  listings      ChannelListing[]
+  inboxEvents   ChannelInboxEvent[]
+  outboxEvents  ChannelOutboxEvent[]
+  syncRuns      ChannelSyncRun[]
+  syncIssues    ChannelSyncIssue[]
+  importBatches ChannelImportBatch[]
+  bookings      Booking[]
+
+  @@unique([wineryId, channel, externalAccountId])
+  @@index([wineryId, status])
+  @@map("channel_connections")
+}
+
+model ChannelListing {
+  id                  String                   @id @default(cuid())
+  channelConnectionId String
+  channelConnection   ChannelConnection        @relation(fields: [channelConnectionId], references: [id], onDelete: Cascade)
+  experienceId        String
+  experience          Experience               @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  externalProductId   String
+  externalOptionId    String?
+  publicationStatus   ChannelPublicationStatus @default(DRAFT)
+  capacityMode        ChannelCapacityMode      @default(SHARED)
+  capacityQuota       Int?
+  metadata            Json?
+  publishedAt         DateTime?
+  lastSyncedAt        DateTime?
+  createdAt           DateTime                 @default(now())
+  updatedAt           DateTime                 @updatedAt
+
+  bookings     Booking[]
+  outboxEvents ChannelOutboxEvent[]
+  syncIssues   ChannelSyncIssue[]
+
+  @@unique([channelConnectionId, experienceId])
+  @@unique([channelConnectionId, externalProductId, externalOptionId])
+  @@index([experienceId])
+  @@index([channelConnectionId, publicationStatus])
+  @@map("channel_listings")
+}
+
+model ChannelInboxEvent {
+  id                  String             @id @default(cuid())
+  channelConnectionId String
+  channelConnection   ChannelConnection  @relation(fields: [channelConnectionId], references: [id], onDelete: Cascade)
+  externalEventId     String
+  eventType           String
+  payload             Json
+  status              ChannelInboxStatus @default(PENDING)
+  attempts            Int                @default(0)
+  errorMessage        String?
+  receivedAt          DateTime           @default(now())
+  processedAt         DateTime?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  @@unique([channelConnectionId, externalEventId])
+  @@index([status, receivedAt])
+  @@map("channel_inbox_events")
+}
+
+model ChannelOutboxEvent {
+  id                  String              @id @default(cuid())
+  channelConnectionId String
+  channelConnection   ChannelConnection   @relation(fields: [channelConnectionId], references: [id], onDelete: Cascade)
+  channelListingId    String?
+  channelListing      ChannelListing?     @relation(fields: [channelListingId], references: [id], onDelete: Cascade)
+  eventType           String
+  payload             Json
+  status              ChannelOutboxStatus @default(PENDING)
+  attempts            Int                 @default(0)
+  availableAt         DateTime            @default(now())
+  processedAt         DateTime?
+  errorMessage        String?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  @@index([status, availableAt])
+  @@index([channelConnectionId])
+  @@map("channel_outbox_events")
+}
+
+model ChannelSyncRun {
+  id                  String                  @id @default(cuid())
+  channelConnectionId String
+  channelConnection   ChannelConnection       @relation(fields: [channelConnectionId], references: [id], onDelete: Cascade)
+  direction           ChannelDistributionMode
+  status              String
+  startedAt           DateTime                @default(now())
+  finishedAt          DateTime?
+  recordsProcessed    Int                     @default(0)
+  recordsFailed       Int                     @default(0)
+  errorMessage        String?
+  createdAt           DateTime                @default(now())
+
+  issues ChannelSyncIssue[]
+
+  @@index([channelConnectionId, startedAt])
+  @@map("channel_sync_runs")
+}
+
+model ChannelSyncIssue {
+  id                  String                @id @default(cuid())
+  channelConnectionId String
+  channelConnection   ChannelConnection     @relation(fields: [channelConnectionId], references: [id], onDelete: Cascade)
+  channelSyncRunId    String?
+  channelSyncRun      ChannelSyncRun?       @relation(fields: [channelSyncRunId], references: [id], onDelete: Cascade)
+  channelListingId    String?
+  channelListing      ChannelListing?       @relation(fields: [channelListingId], references: [id], onDelete: Cascade)
+  status              ChannelIncidentStatus @default(OPEN)
+  code                String
+  message             String
+  details             Json?
+  resolvedAt          DateTime?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+
+  @@index([channelConnectionId, status])
+  @@index([channelSyncRunId])
+  @@map("channel_sync_issues")
+}
+
+model ChannelImportBatch {
+  id                  String            @id @default(cuid())
+  channelConnectionId String
+  channelConnection   ChannelConnection @relation(fields: [channelConnectionId], references: [id], onDelete: Cascade)
+  sourceFilename      String?
+  status              String
+  totalRows           Int               @default(0)
+  importedRows        Int               @default(0)
+  failedRows          Int               @default(0)
+  errorReport         Json?
+  startedAt           DateTime          @default(now())
+  completedAt         DateTime?
+  createdAt           DateTime          @default(now())
+
+  bookings Booking[]
+
+  @@index([channelConnectionId, createdAt])
+  @@map("channel_import_batches")
 }
 
 model StripeEvent {
