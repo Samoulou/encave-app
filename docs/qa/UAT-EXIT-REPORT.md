@@ -55,7 +55,8 @@ Re-seeds effectués     : J0 __________ (+ re-seeds inter-blocs : ____________)
 - [ ] Incident simulé (E.2) : `____` min (**< 5 min**) — monitor externe
       `/api/health?deep=1` en place : OUI / NON
 - [ ] G-1 MFA validé sur preview (E.3 / S12-F)
-- [ ] Crons Vercel : 18 entrées actives, plan ≥ Pro confirmé
+- [ ] Crons Vercel : toutes les entrées de `vercel.json` actives (32 au
+      12.11 — `jq '.crons | length' vercel.json`), plan ≥ Pro confirmé
 - [ ] LHCI staging ≥ 95 (job `lhci-staging`, médiane 3 runs) : score `____`
 
 ### 2.4 Hors UAT (rappel — à vérifier avant la bascule, autres gates P-16)
@@ -76,6 +77,7 @@ Re-seeds effectués     : J0 __________ (+ re-seeds inter-blocs : ____________)
 | `COLLECTIVE_EVENTS`   | ON                            |                        |                      |
 | `OCCURRENCE_CAPACITY` | ON (défaut)                   |                        |                      |
 | `COMING_SOON` (env)   | à couper au launch (redeploy) |                        | middleware encave.ch |
+| `MAINTENANCE_MODE`    | absent (gel = `true`)         |                        | runbook restauration |
 
 Configuration monétaire launch : commission par défaut env
 `PLATFORM_COMMISSION_RATE` = `____` · caves fondatrices à 0 %
@@ -89,16 +91,17 @@ Configuration monétaire launch : commission par défaut env
 
 Dettes structurelles connues à trancher ici :
 
-- [ ] Unsubscribe non tokenisé des 3 emails d'agrégat (S13-C) :
-      ☐ corrigé avant launch · ☐ accepté, échéance `____`
+- [x] Unsubscribe non tokenisé des 3 emails d'agrégat (S13-C) :
+      corrigé (audit 12.11 — lien tokenisé + en-tête `List-Unsubscribe`
+      one-click sur digest, récap hebdo, suivi J+1 et « coups de cœur »)
 - [ ] Email #12 « vos billets » sans template distinct (couvert par #1) :
       ☐ accepté · ☐ template à créer, échéance `____`
 - [ ] Carte sauvegardée (`setup_future_usage`) non implémentée (PAGES §4) :
       ☐ accepté post-launch
 - [ ] Monitor externe `/api/health?deep=1` : ☐ en place · ☐ à mettre en place
       avant launch (sans lui, l'astreinte est aveugle)
-- [ ] Runbook `kill-switch-flags.md` : corriger la référence
-      `/admin/compliance` → `/admin` (panneau flags)
+- [x] Runbook `kill-switch-flags.md` : référence `/admin/compliance` →
+      `/admin` (panneau flags) corrigée (audit 12.11)
 
 ## 5. Écarts plan-vs-code confirmés en exécution
 

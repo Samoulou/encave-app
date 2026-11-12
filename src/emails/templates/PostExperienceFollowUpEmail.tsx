@@ -11,7 +11,8 @@ export interface PostExperienceFollowUpEmailProps {
   wineryName: string;
   date: Date;
   experiencesUrl: string;
-  unsubscribeUrl?: string;
+  /** Tokenised client opt-out link (footer + List-Unsubscribe header). */
+  unsubscribeUrl: string;
 }
 
 export function PostExperienceFollowUpEmail({
@@ -21,6 +22,7 @@ export function PostExperienceFollowUpEmail({
   wineryName,
   date,
   experiencesUrl,
+  unsubscribeUrl,
 }: PostExperienceFollowUpEmailProps) {
   const greeting = t(common.greeting, locale);
   const regards = t(common.regards, locale);
@@ -35,7 +37,11 @@ export function PostExperienceFollowUpEmail({
   const feedbackText = t(postExperience.feedbackText, locale);
 
   return (
-    <EmailLayout locale={locale} preview={t(subjects.postExperience, locale)}>
+    <EmailLayout
+      locale={locale}
+      preview={t(subjects.postExperience, locale)}
+      unsubscribeUrl={unsubscribeUrl}
+    >
       <Text
         style={{
           fontSize: '24px',

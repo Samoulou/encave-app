@@ -324,10 +324,10 @@ partie F (étapes 19–23). Ici, cocher le gate :
 
 ### E.4 — Crons Vercel
 
-| #   | Attendu                                                                                                                                                       | PASS | FAIL |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- | ---- |
-| 6   | Vercel Dashboard → Settings → Cron Jobs : **18 entrées** actives + plan **≥ Pro** (Hobby = 2 crons → deploy launch rejeté = **blocker**, upgrade avant L-189) | [ ]  | [ ]  |
-| 7   | Preuve d'exécution 24 h dans les logs (Functions)                                                                                                             | [ ]  | [ ]  |
+| #   | Attendu                                                                                                                                                                                                                          | PASS | FAIL |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- | ---- |
+| 6   | Vercel Dashboard → Settings → Cron Jobs : **toutes les entrées de `vercel.json`** actives (32 au 12.11 — `jq '.crons \| length' vercel.json`) + plan **≥ Pro** (Hobby → deploy launch rejeté = **blocker**, upgrade avant L-189) | [ ]  | [ ]  |
+| 7   | Preuve d'exécution 24 h dans les logs (Functions)                                                                                                                                                                                | [ ]  | [ ]  |
 
 ### E.5 — LHCI staging
 

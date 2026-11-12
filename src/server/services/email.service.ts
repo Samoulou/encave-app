@@ -1,5 +1,5 @@
 import { Resend } from 'resend';
-import { render } from '@react-email/components';
+import { render, toPlainText } from '@react-email/components';
 import { env, getBaseUrl } from '@/lib/env';
 import { logInfo, logError, logWarn } from '@/lib/logger';
 import { formatCHF } from '@/lib/utils/currency';
@@ -64,7 +64,40 @@ import type { WineryAlternative } from '@/server/queries/winery-alternatives.que
 
 const resend = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null;
 const FROM_EMAIL = 'EnCave <noreply@encave.ch>';
+// noreply@ has no inbox: every email carries a Reply-To that a human reads
+// (EMAIL_REPLY_TO, default support@encave.ch). The literal fallback keeps
+// the header set when `env` is partially mocked in tests.
+const DEFAULT_REPLY_TO = 'support@encave.ch';
 const DEFAULT_LOCALE: Locale = 'FR';
+
+/**
+ * Plain-text alternative of an HTML email. An HTML-only message scores
+ * worse with spam filters and is unreadable in text-only clients. Best
+ * effort: a conversion failure must never block the send.
+ */
+function htmlToText(html: string): string | undefined {
+  try {
+    const text = toPlainText(html);
+    return text.trim().length > 0 ? text : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * RFC 2369 + RFC 8058 headers for the opt-out-able (non-transactional)
+ * emails: the mailbox provider shows its native « unsubscribe » button and
+ * POSTs to the tokenised URL — the same one printed in the footer. The
+ * unsubscribe routes accept that POST (and stay GET-safe for the link).
+ */
+export function buildListUnsubscribeHeaders(
+  unsubscribeUrl: string
+): Record<string, string> {
+  return {
+    'List-Unsubscribe': `<${unsubscribeUrl}>`,
+    'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+  };
+}
 
 // BACK-004 FIX: Retry configuration
 const MAX_RETRY_ATTEMPTS = 3;
@@ -74,8 +107,18 @@ interface SendEmailOptions {
   to: string;
   subject: string;
   html: string;
-  /** Optional reply-to (P-12 / L-114 contact form routes replies to sender). */
+  /**
+   * Reply-to override (P-12 / L-114: the contact form routes replies to the
+   * sender). Defaults to EMAIL_REPLY_TO — never the noreply sender.
+   */
   replyTo?: string;
+  /**
+   * Tokenised opt-out URL — ONLY for opt-out-able emails (digest, weekly
+   * summary, follow-up, tasting recap). Adds the List-Unsubscribe /
+   * List-Unsubscribe-Post headers. Transactional emails (confirmation,
+   * reminders, refunds, security notices) must NOT set it.
+   */
+  unsubscribeUrl?: string;
   attachments?: {
     filename: string;
     content: string;
@@ -106,6 +149,7 @@ async function sendEmailDetailed({
   subject,
   html,
   replyTo,
+  unsubscribeUrl,
   attachments,
   tags,
 }: SendEmailOptions): Promise<SendEmailResult> {
@@ -131,6 +175,11 @@ async function sendEmailDetailed({
     return { ok: true };
   }
 
+  const text = htmlToText(html);
+  const headers = unsubscribeUrl
+    ? buildListUnsubscribeHeaders(unsubscribeUrl)
+    : undefined;
+
   for (let attempt = 1; attempt <= MAX_RETRY_ATTEMPTS; attempt++) {
     try {
       const { data, error } = await resend.emails.send({
@@ -138,7 +187,9 @@ async function sendEmailDetailed({
         to,
         subject,
         html,
-        ...(replyTo ? { replyTo } : {}),
+        ...(text ? { text } : {}),
+        replyTo: replyTo ?? env.EMAIL_REPLY_TO ?? DEFAULT_REPLY_TO,
+        ...(headers ? { headers } : {}),
         attachments,
         tags,
       });
@@ -426,6 +477,8 @@ export interface BookingCancellationData {
   totalPrice: number;
   /** Exact refunded cents (policy-based); 0 = no refund; null = unknown. */
   refundAmountCents?: number | null;
+  /** Pay-on-site booking never charged online (wasNeverChargedOnline). */
+  nothingCharged?: boolean;
   bookingRef: string;
 }
 
@@ -878,6 +931,8 @@ export interface DailyDigestData {
   wineryName: string;
   todayBookings: DailyDigestBooking[];
   tomorrowBookings: DailyDigestBooking[];
+  /** Tokenised winery opt-out URL (footer link + List-Unsubscribe). */
+  unsubscribeUrl: string;
 }
 
 export async function sendDailyDigestEmail(
@@ -898,6 +953,7 @@ export async function sendDailyDigestEmail(
     to: email,
     subject: t(subjects.dailyDigest, loc),
     html,
+    unsubscribeUrl: data.unsubscribeUrl,
   });
 }
 
@@ -906,6 +962,8 @@ export interface PostExperienceFollowUpData {
   experienceTitle: string;
   wineryName: string;
   date: Date;
+  /** Tokenised client opt-out URL (footer link + List-Unsubscribe). */
+  unsubscribeUrl: string;
 }
 
 export async function sendPostExperienceFollowUpEmail(
@@ -926,6 +984,7 @@ export async function sendPostExperienceFollowUpEmail(
     to: email,
     subject: t(subjects.postExperience, loc),
     html,
+    unsubscribeUrl: data.unsubscribeUrl,
   });
 }
 
@@ -947,6 +1006,8 @@ export interface WeeklySummaryData {
   payouts?: { totalCents: number; count: number } | null;
   /** Previous-month statement (P-13 / email #17). */
   statement?: { monthKey: string; monthLabel: string } | null;
+  /** Tokenised winery opt-out URL (footer link + List-Unsubscribe). */
+  unsubscribeUrl: string;
 }
 
 export async function sendWeeklySummaryEmail(
@@ -976,6 +1037,7 @@ export async function sendWeeklySummaryEmail(
     to: email,
     subject: t(subjects.weeklySummary, loc),
     html,
+    unsubscribeUrl: data.unsubscribeUrl,
   });
 }
 
@@ -1047,6 +1109,7 @@ export async function sendTastingRecapEmail(
       data.wineryName
     ),
     html,
+    unsubscribeUrl: data.unsubscribeUrl,
     tags: [
       { name: 'email_type', value: 'tasting_recap' },
       { name: 'winery_id', value: data.wineryId },
@@ -1095,6 +1158,9 @@ export async function sendWineOrderRequestEmails(
   );
   const wineryResult = await sendEmailDetailed({
     to: wineryEmail,
+    // The email tells the winemaker to « reply to the client directly »:
+    // a plain Reply must reach the client, not the support mailbox.
+    replyTo: data.clientEmail,
     subject: t(subjects.wineOrderRequestWinery, wineryLoc).replace(
       '{clientName}',
       data.clientName

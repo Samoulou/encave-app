@@ -5,10 +5,15 @@ moins d'une minute, sans déploiement**.
 
 ## Couper / réactiver un flag
 
-1. Admin → `/admin/compliance` (section flags) — toggle : effet immédiat
-   (le `setFeatureFlag` revalide le tag de cache).
-2. Secours (admin indisponible) — SQL direct sur Neon, effectif ≤ 60 s
-   (TTL du cache) :
+1. Admin → **`/admin`** (accueil admin, panneau « Feature flags » en bas
+   de page — `FeatureFlagsPanel`, pas `/admin/compliance`) — toggle : effet
+   immédiat (le `setFeatureFlag` revalide le tag de cache, qui purge aussi
+   les pages ISR ayant lu le flag).
+2. Secours (admin indisponible, ou site en `MAINTENANCE_MODE` : `/admin`
+   affiche alors la page de maintenance) — SQL direct sur Neon. Les
+   actions serveur lisent le flag avec un cache de 60 s ; une page publique
+   ISR qui l'a consommé (ex. `/cadeaux`) peut mettre jusqu'à ~5 min de plus
+   à changer d'état — le toggle admin reste la voie rapide :
    ```sql
    UPDATE feature_flags SET enabled = false WHERE key = 'GIFT_CARDS';
    ```
@@ -27,9 +32,14 @@ moins d'une minute, sans déploiement**.
 | `COLLECTIVE_EVENTS`   | Fiches événements collectifs       | Bandeau/grille masqués, ajout participants bloqué              | La billetterie de l'expérience porteuse reste active                                                                                           |
 | `OCCURRENCE_CAPACITY` | ⚠️ INVERSÉ — default ON            | OFF = fallback capacité P-04 (`maxCapacity`, sans gate statut) | Le comptage des places est identique dans les deux états — jamais d'oversell ; ne couper qu'en urgence avérée                                  |
 
-Flag env hors registre : `COMING_SOON` (gate de lancement) — voir
-`src/lib/flags.ts` et le plan P-16 WS-I : flip = env Vercel + redeploy
-(~2 min), ce n'est PAS un kill-switch minute.
+Flags env hors registre (lus par le middleware Edge, qui n'a pas accès à
+la base) — flip = env Vercel + redeploy (~2 min), ce ne sont PAS des
+kill-switches minute :
+
+- `COMING_SOON` : gate de lancement (voir `src/lib/flags.ts`, plan P-16
+  WS-I).
+- `MAINTENANCE_MODE` : gel des écritures + page de maintenance (voir
+  `restauration-db.md` § « Gel des écritures »).
 
 ## Après la coupure
 

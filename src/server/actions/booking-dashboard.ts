@@ -104,23 +104,34 @@ export async function rejectBooking(
     // the expire-cron and expired-webhook cancel paths (no stranded balance).
     await releaseGiftForBooking(bookingId);
 
-    // Send cancellation email to client in their booking locale (non-blocking)
-    sendBookingCancellationEmail(
-      booking.visitorEmail,
-      {
-        guestName: booking.visitorName,
-        experienceTitle: booking.experience.title,
-        wineryName: booking.winery.name,
-        date: booking.date,
-        totalPrice: booking.totalPrice,
-        bookingRef: booking.reference,
-      },
-      booking.locale
-    ).catch((error) => {
+    // Cancellation email to the client, in their booking locale. AWAITED:
+    // a fire-and-forget promise is dropped when the serverless function
+    // freezes right after the response — the client would never learn the
+    // booking was rejected. A send failure is logged, never fails the action
+    // (the rejection itself is already committed).
+    try {
+      const sent = await sendBookingCancellationEmail(
+        booking.visitorEmail,
+        {
+          guestName: booking.visitorName,
+          experienceTitle: booking.experience.title,
+          wineryName: booking.winery.name,
+          date: booking.date,
+          totalPrice: booking.totalPrice,
+          bookingRef: booking.reference,
+        },
+        booking.locale
+      );
+      if (!sent) {
+        logError('Booking rejection email not sent', undefined, {
+          bookingId,
+        });
+      }
+    } catch (error) {
       logError('Failed to send booking rejection email', error, {
         bookingId,
       });
-    });
+    }
 
     return {
       success: true,

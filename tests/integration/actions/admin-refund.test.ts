@@ -272,4 +272,28 @@ describe('refundBookingManually (résidu Luca B)', () => {
       })
     );
   });
+
+  it("emails the client in the booking's locale, the winery in the winemaker's", async () => {
+    const emails = await import('@/server/services/email.service');
+    vi.mocked(db.booking.findUnique).mockResolvedValue({
+      ...mockBooking,
+      locale: 'DE',
+    } as never);
+
+    const result = await refundBookingManually(validInput);
+
+    expect(result.success).toBe(true);
+    // Client: Booking.locale (persisted at checkout) — not French by
+    // default, not the winemaker's preferredLocale.
+    expect(emails.sendManualRefundClientEmail).toHaveBeenCalledWith(
+      'john@example.com',
+      expect.objectContaining({ reference: 'ENC-ABC12345' }),
+      'DE'
+    );
+    expect(emails.sendManualRefundWinemakerEmail).toHaveBeenCalledWith(
+      'winery@example.com',
+      expect.anything(),
+      'fr'
+    );
+  });
 });

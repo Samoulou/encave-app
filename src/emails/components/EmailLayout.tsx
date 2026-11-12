@@ -7,8 +7,10 @@ interface EmailLayoutProps {
   locale: Locale;
   preview?: string;
   /**
-   * Tokenized opt-out link (P-07, client_email_preferences). Defaults to
-   * the generic page for templates that predate the tokenized route.
+   * Tokenised opt-out link — passed ONLY by the opt-out-able emails (daily
+   * digest, weekly summary, post-visit follow-up, tasting recap). When it
+   * is absent (transactional emails) the footer shows no unsubscribe link:
+   * a link to a generic page that unsubscribes nobody is worse than none.
    */
   unsubscribeUrl?: string;
 }
@@ -16,18 +18,18 @@ interface EmailLayoutProps {
 const footerText: Record<Locale, { tagline: string; unsubscribe: string }> = {
   FR: {
     tagline:
-      'EnCave - Reservez des experiences de degustation uniques directement aupres des vignerons suisses',
-    unsubscribe: 'Se desinscrire des emails',
+      'EnCave - Réservez des expériences de dégustation uniques directement auprès des vignerons suisses',
+    unsubscribe: 'Se désinscrire de ces e-mails',
   },
   DE: {
     tagline:
       'EnCave - Buchen Sie einzigartige Weinverkostungserlebnisse direkt bei Schweizer Winzern',
-    unsubscribe: 'Von E-Mails abmelden',
+    unsubscribe: 'Diese E-Mails abbestellen',
   },
   EN: {
     tagline:
       'EnCave - Book unique wine tasting experiences directly with Swiss winemakers',
-    unsubscribe: 'Unsubscribe from emails',
+    unsubscribe: 'Unsubscribe from these emails',
   },
 };
 
@@ -35,7 +37,7 @@ export function EmailLayout({
   children,
   locale,
   preview,
-  unsubscribeUrl = 'https://encave.ch/unsubscribe',
+  unsubscribeUrl,
 }: EmailLayoutProps) {
   const footer = footerText[locale];
 
@@ -114,20 +116,22 @@ export function EmailLayout({
             >
               {footer.tagline}
             </Text>
-            <Text
-              style={{
-                fontSize: '11px',
-                color: '#9ca3af',
-                margin: 0,
-              }}
-            >
-              <a
-                href={unsubscribeUrl}
-                style={{ color: '#9ca3af', textDecoration: 'underline' }}
+            {unsubscribeUrl ? (
+              <Text
+                style={{
+                  fontSize: '11px',
+                  color: '#9ca3af',
+                  margin: 0,
+                }}
               >
-                {footer.unsubscribe}
-              </a>
-            </Text>
+                <a
+                  href={unsubscribeUrl}
+                  style={{ color: '#9ca3af', textDecoration: 'underline' }}
+                >
+                  {footer.unsubscribe}
+                </a>
+              </Text>
+            ) : null}
           </div>
         </Container>
       </Body>

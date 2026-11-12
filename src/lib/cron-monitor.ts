@@ -15,8 +15,13 @@ import * as Sentry from '@sentry/nextjs';
  * error to its HTTP 500 as before.
  */
 export const CRON_SCHEDULES = {
-  'encave-reminders': '0 16,17 * * *',
+  // Hourly 04:00–19:00 UTC (16 daily ?slot=N entries): the 2h reminder
+  // needs an hourly cadence; the J-1 reminder acts on the run that falls
+  // at 18h Europe/Zurich (16:00 UTC in summer, 17:00 UTC in winter).
+  'encave-reminders': '0 4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19 * * *',
   'encave-daily-digest': '0 6 * * *',
+  // The expiry sweep ALSO runs inside every process-scheduled-jobs slot
+  // (3-hourly); this daily entry is the full-budget pass.
   'encave-expire-pending-bookings': '0 3 * * *',
   'encave-generate-occurrences': '0 2 * * *',
   'encave-follow-ups': '0 8 * * *',
@@ -24,6 +29,7 @@ export const CRON_SCHEDULES = {
   'encave-process-scheduled-jobs': '0 0,3,6,9,12,15,18,21 * * *',
   'encave-tasting-sheet-reminder': '0 19,20 * * *',
   'encave-reconcile-gift-transfers': '0 4 * * *',
+  'encave-purge-retention': '0 1 * * *',
 } as const satisfies Record<string, string>;
 
 export type CronMonitorSlug = keyof typeof CRON_SCHEDULES;

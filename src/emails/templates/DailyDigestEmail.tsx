@@ -18,7 +18,8 @@ export interface DailyDigestEmailProps {
   todayBookings: DailyDigestBooking[];
   tomorrowBookings: DailyDigestBooking[];
   dashboardUrl: string;
-  unsubscribeUrl?: string;
+  /** Tokenised winery opt-out link (footer + List-Unsubscribe header). */
+  unsubscribeUrl: string;
 }
 
 export function DailyDigestEmail({
@@ -28,6 +29,7 @@ export function DailyDigestEmail({
   todayBookings,
   tomorrowBookings,
   dashboardUrl,
+  unsubscribeUrl,
 }: DailyDigestEmailProps) {
   const greeting = t(common.greeting, locale);
   const regards = t(common.regards, locale);
@@ -124,7 +126,11 @@ export function DailyDigestEmail({
   };
 
   return (
-    <EmailLayout locale={locale} preview={t(subjects.dailyDigest, locale)}>
+    <EmailLayout
+      locale={locale}
+      preview={t(subjects.dailyDigest, locale)}
+      unsubscribeUrl={unsubscribeUrl}
+    >
       <Text
         style={{
           fontSize: '24px',

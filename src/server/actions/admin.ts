@@ -502,12 +502,18 @@ export async function refundBookingManually(
   }
 
   try {
-    await sendManualRefundClientEmail(booking.visitorEmail, {
-      firstName: booking.visitorName.split(' ')[0] ?? booking.visitorName,
-      reference: booking.reference,
-      experienceTitle: booking.experience.title,
-      amountCents,
-    });
+    await sendManualRefundClientEmail(
+      booking.visitorEmail,
+      {
+        firstName: booking.visitorName.split(' ')[0] ?? booking.visitorName,
+        reference: booking.reference,
+        experienceTitle: booking.experience.title,
+        amountCents,
+      },
+      // Client email in the guest's own locale (persisted at checkout) —
+      // never French by default, never the winemaker's locale.
+      booking.locale
+    );
     await sendManualRefundWinemakerEmail(
       booking.winery.email,
       {

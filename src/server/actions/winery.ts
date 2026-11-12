@@ -168,30 +168,41 @@ export async function createWinery(
           commune,
         },
       });
-      await posthogServer.flush();
+      // Fire-and-forget: a PostHog outage must not turn a successful
+      // winery creation into an error (posthog-node rethrows after retries).
+      void posthogServer.flush().catch(() => {});
     }
 
-    void sendWelcomeEmailToWinemaker(session.user.id).catch((error) => {
-      logError('send welcome winemaker email failed', error, {
+    // Both emails are AWAITED (in parallel): a fire-and-forget promise is
+    // dropped when the serverless function freezes right after the response
+    // — the admin would never hear about a domain waiting for validation.
+    // allSettled + per-email logging: a failed email never fails the action
+    // (the winery is already created).
+    const [welcomeResult, adminResult] = await Promise.allSettled([
+      sendWelcomeEmailToWinemaker(session.user.id),
+      // Email #22 (L-163): notify the admin inbox of a new domain to
+      // validate. The founder invitation path creates VERIFIED wineries via
+      // a different action, so it never reaches here — only real signups
+      // notify.
+      sendAdminNewWineryToValidateEmail({
+        wineryName: name,
+        commune,
+        contactEmail: user.email,
+        wineryId: winery.id,
+      }),
+    ]);
+    if (welcomeResult.status === 'rejected') {
+      logError('send welcome winemaker email failed', welcomeResult.reason, {
         action: 'createWinery',
         userId: session.user.id,
       });
-    });
-
-    // Email #22 (L-163): notify the admin inbox of a new domain to validate.
-    // The founder invitation path creates VERIFIED wineries via a different
-    // action, so it never reaches here — only real signups notify.
-    void sendAdminNewWineryToValidateEmail({
-      wineryName: name,
-      commune,
-      contactEmail: user.email,
-      wineryId: winery.id,
-    }).catch((error) => {
-      logError('send admin new-winery email failed', error, {
+    }
+    if (adminResult.status === 'rejected') {
+      logError('send admin new-winery email failed', adminResult.reason, {
         action: 'createWinery',
         wineryId: winery.id,
       });
-    });
+    }
 
     return {
       success: true,

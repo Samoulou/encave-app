@@ -31,6 +31,16 @@ const envSchema = z.object({
   // Internal escalation inbox (P-10): a sur-mesure request unanswered > 48h
   // emails Sam here. Unset = escalation job skips cleanly (no throw).
   ADMIN_ALERT_EMAIL: z.string().email().optional(),
+  // Reply-To of every outgoing email. The sender is noreply@encave.ch (no
+  // inbox): without this header a client answering a confirmation, a
+  // security notice or a no-show email writes into the void. MUST be a
+  // monitored mailbox. A send may still override it (contact form → sender).
+  // An empty value (EMAIL_REPLY_TO="") counts as unset → default applies;
+  // a malformed address still fails the boot.
+  EMAIL_REPLY_TO: z.preprocess(
+    (value) => (value === '' ? undefined : value),
+    z.string().email().default('support@encave.ch')
+  ),
 
   // Storage (Vercel Blob)
   BLOB_READ_WRITE_TOKEN: z.string().optional(),
@@ -55,6 +65,15 @@ const envSchema = z.object({
   // Read directly via process.env in src/middleware.ts (Edge runtime);
   // declared here so the variable is documented and validated.
   COMING_SOON: z.string().optional(),
+
+  // Write-freeze switch (runbook restauration-db.md). The string 'true'
+  // makes the Edge middleware serve /[locale]/maintenance for every page
+  // request and answer 503 + Retry-After on mutating API routes — except
+  // /api/webhooks/**, /api/cron/** and /api/health, which must keep
+  // answering (Stripe disables an endpoint that keeps failing). Read via
+  // process.env in src/middleware.ts (Edge runtime), like COMING_SOON:
+  // flip = Vercel env change + redeploy. Declared here to be validated.
+  MAINTENANCE_MODE: z.string().optional(),
 
   // Sentry (Error Tracking)
   NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),

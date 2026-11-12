@@ -7,6 +7,21 @@ name: DB Migrate (ad hoc)
 # the logs, never committed). Pooler or direct Neon URL both work — the
 # pooler suffix is stripped automatically for DIRECT_URL, which Prisma
 # Migrate uses.
+#
+# The optional seed WIPES EVERY TABLE (gift-card ledger included). It is
+# fenced by four independent guards — all must pass:
+#   1. `seed` = yes-wipe-and-seed AND `seed_confirm` = the typed phrase
+#      `wipe-and-reseed` (a dropdown alone is one mis-click away);
+#   2. the target URL is pasted explicitly (never the ambient secret);
+#   3. the target host is on the allow-list `SEED_ALLOWED_DB_HOSTS`
+#      (repository VARIABLE, comma-separated hosts of disposable dev/preview
+#      databases). Unset or empty = seeding is impossible. A Neon host does
+#      not carry the branch name, so only an allow-list can tell a
+#      throwaway branch from production;
+#   4. nothing in the host / database name contains "prod", and the host is
+#      not the one declared in the `PRODUCTION_DB_HOST` variable.
+# Migrations alone (seed = no) stay allowed on any database, production
+# included — they are additive.
 
 on:
   workflow_dispatch:
@@ -28,6 +43,11 @@ on:
         options:
           - 'no'
           - 'yes-wipe-and-seed'
+      seed_confirm:
+        description: "Only when seeding: type 'wipe-and-reseed' to confirm the wipe. Leave empty otherwise."
+        required: false
+        default: ''
+        type: string
 
 jobs:
   migrate:
@@ -49,6 +69,66 @@ jobs:
         run: |
           echo "Refusing to seed: yes-wipe-and-seed requires pasting the target database_url explicitly."
           exit 1
+
+      - name: Validate seed confirmation phrase
+        if: ${{ inputs.seed == 'yes-wipe-and-seed' && inputs.seed_confirm != 'wipe-and-reseed' }}
+        run: |
+          echo "Refusing to seed: type 'wipe-and-reseed' in seed_confirm to confirm the wipe."
+          exit 1
+
+      # Runs BEFORE anything touches the database. The URL only travels
+      # through env (never interpolated into the script) and only the verdict
+      # is printed — never the host of a refused target.
+      - name: Refuse to seed a production-looking or unlisted database
+        if: ${{ inputs.seed == 'yes-wipe-and-seed' }}
+        env:
+          INPUT_URL: ${{ inputs.database_url }}
+          SEED_ALLOWED_DB_HOSTS: ${{ vars.SEED_ALLOWED_DB_HOSTS }}
+          PRODUCTION_DB_HOST: ${{ vars.PRODUCTION_DB_HOST }}
+        run: |
+          python3 - <<'PY'
+          import os
+          import sys
+          from urllib.parse import urlparse
+
+          def normalize(host):
+              # Neon: the pooled and the direct endpoint are the same database.
+              return (host or "").strip().lower().replace("-pooler.", ".")
+
+          try:
+              parsed = urlparse(os.environ.get("INPUT_URL", "").strip())
+          except ValueError:
+              sys.exit("Refusing to seed: database_url is not a parseable URL.")
+
+          host = normalize(parsed.hostname)
+          database = (parsed.path or "").lstrip("/").lower()
+          if not host:
+              sys.exit("Refusing to seed: database_url has no host.")
+
+          if "prod" in host or "prod" in database:
+              sys.exit("Refusing to seed: the target host or database name contains 'prod'.")
+
+          production = normalize(os.environ.get("PRODUCTION_DB_HOST"))
+          if production and host == production:
+              sys.exit("Refusing to seed: the target is the declared PRODUCTION_DB_HOST.")
+
+          allowed = {
+              normalize(entry)
+              for entry in os.environ.get("SEED_ALLOWED_DB_HOSTS", "").split(",")
+              if entry.strip()
+          }
+          if not allowed:
+              sys.exit(
+                  "Refusing to seed: the SEED_ALLOWED_DB_HOSTS repository variable is empty. "
+                  "List the hosts of the disposable dev/preview databases there first."
+              )
+          if host not in allowed:
+              sys.exit(
+                  "Refusing to seed: the target host is not on the SEED_ALLOWED_DB_HOSTS allow-list."
+              )
+
+          print("Seed target accepted: host is on the allow-list.")
+          PY
 
       - name: Checkout repository
         uses: actions/checkout@v4

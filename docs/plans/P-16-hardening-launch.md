@@ -1,7 +1,7 @@
 # P-16 — Hardening & launch
 
-> **Statut** : ✅ code mergé sur `dev` le 16.07.2026 — #118 → #119 → #120 → #121, zéro conflit (préflight d'intégration local : arbre identique, unit 1208, build vert, e2e 42/42). Variante e2e annulation-bon livrée en PR de suivi. **Restent les gates non-code du §5** : validation G-1 sur staging (Sam a mergé sans la validation preview — à faire sur `encave-dev.vercel.app`), campagne money-routing staging A.2 (bloquant launch), LHCI ≥ 95 staging, incident simulé, `/security-review` final, actes légaux/ops Sam, vérif plan Vercel (18 crons vs limite Hobby 2).
-> **Sources** : `docs/ENCAVE-V3-DELIVERY-PLAN.md` §P-16 · L-180→L-189, L-208, L-210, L-211, L-213, L-214 · gaps sécu P-14 §6bis · escalades `docs/plans/P-09-bons-cadeaux.md`
+> **Statut** : ✅ code mergé sur `dev` le 16.07.2026 — #118 → #119 → #120 → #121, zéro conflit (préflight d'intégration local : arbre identique, unit 1208, build vert, e2e 42/42). Variante e2e annulation-bon livrée en PR de suivi. **Restent les gates non-code du §5** : validation G-1 sur staging (Sam a mergé sans la validation preview — à faire sur `encave-dev.vercel.app`), campagne money-routing staging A.2 (bloquant launch), LHCI ≥ 95 staging, incident simulé, `/security-review` final, actes légaux/ops Sam, vérif plan Vercel (32 entrées cron au 12.11 — `jq '.crons | length' vercel.json` — vs limites du plan). Suite : audit pré-launch du 12.11.2026 → [`docs/audits/2026-11-12-audit-pre-launch.md`](../audits/2026-11-12-audit-pre-launch.md).
+> **Sources** : `docs/ENCAVE-V3-DELIVERY-PLAN.md` §P-16 · L-180→L-189, L-208, L-210, L-211, L-213, L-214 · gaps sécu P-14 ([P-14-auth-v3.md §6bis](./P-14-auth-v3.md)) · escalades `docs/plans/P-09-bons-cadeaux.md`
 
 ## 1. Objectif (2 lignes max)
 

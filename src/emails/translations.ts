@@ -33,17 +33,17 @@ export const subjects = {
     EN: '{purchaserName} sent you an EnCave gift card',
   },
   bookingConfirmation: {
-    FR: 'Confirmation de votre reservation',
-    DE: 'Bestatigung Ihrer Reservierung',
+    FR: 'Confirmation de votre réservation',
+    DE: 'Bestätigung Ihrer Reservierung',
     EN: 'Your booking confirmation',
   },
   bookingReminder: {
-    FR: 'Rappel: votre experience approche',
+    FR: 'Rappel : votre expérience approche',
     DE: 'Erinnerung: Ihr Erlebnis steht bevor',
     EN: 'Reminder: your experience is coming up',
   },
   bookingCancellation: {
-    FR: 'Annulation de votre reservation',
+    FR: 'Annulation de votre réservation',
     DE: 'Stornierung Ihrer Reservierung',
     EN: 'Your booking cancellation',
   },
@@ -83,22 +83,22 @@ export const subjects = {
     EN: 'The email address of your EnCave account was changed',
   },
   wineryNewBooking: {
-    FR: 'Nouvelle reservation recue',
+    FR: 'Nouvelle réservation reçue',
     DE: 'Neue Reservierung erhalten',
     EN: 'New booking received',
   },
   wineryCancellation: {
-    FR: 'Reservation annulee',
+    FR: 'Réservation annulée',
     DE: 'Reservierung storniert',
     EN: 'Booking cancelled',
   },
   wineryApproved: {
-    FR: 'Votre domaine a ete verifie!',
+    FR: 'Votre domaine a été vérifié !',
     DE: 'Ihr Weingut wurde verifiziert!',
     EN: 'Your winery has been verified!',
   },
   wineryRejected: {
-    FR: 'Mise a jour de votre inscription',
+    FR: 'Mise à jour de votre inscription',
     DE: 'Aktualisierung Ihrer Registrierung',
     EN: 'Registration update',
   },
@@ -108,17 +108,17 @@ export const subjects = {
     EN: 'New winery to review: {wineryName}',
   },
   passwordReset: {
-    FR: 'Reinitialisation de votre mot de passe',
-    DE: 'Zurucksetzung Ihres Passworts',
+    FR: 'Réinitialisation de votre mot de passe',
+    DE: 'Zurücksetzen Ihres Passworts',
     EN: 'Reset your password',
   },
   welcome: {
-    FR: 'Bienvenue sur EnCave!',
+    FR: 'Bienvenue sur EnCave !',
     DE: 'Willkommen bei EnCave!',
     EN: 'Welcome to EnCave!',
   },
   emailVerification: {
-    FR: 'Verifiez votre adresse e-mail',
+    FR: 'Vérifiez votre adresse e-mail',
     DE: 'Verifizieren Sie Ihre E-Mail-Adresse',
     EN: 'Verify your email address',
   },
@@ -128,23 +128,23 @@ export const subjects = {
     EN: 'Your EnCave verification code',
   },
   reminder2h: {
-    FR: 'Votre experience commence bientot!',
+    FR: 'Votre expérience commence bientôt !',
     DE: 'Ihr Erlebnis beginnt bald!',
     EN: 'Your experience starts soon!',
   },
   dailyDigest: {
-    FR: 'Vos reservations du jour',
+    FR: 'Vos réservations du jour',
     DE: 'Ihre heutigen Buchungen',
     EN: "Today's bookings",
   },
   postExperience: {
-    FR: 'Merci pour votre visite!',
-    DE: 'Danke fur Ihren Besuch!',
+    FR: 'Merci pour votre visite !',
+    DE: 'Danke für Ihren Besuch!',
     EN: 'Thank you for your visit!',
   },
   weeklySummary: {
-    FR: 'Votre resume hebdomadaire',
-    DE: 'Ihre wochentliche Zusammenfassung',
+    FR: 'Votre résumé hebdomadaire',
+    DE: 'Ihre wöchentliche Zusammenfassung',
     EN: 'Your weekly summary',
   },
   stripeActionRequired: {
@@ -198,7 +198,7 @@ export const common = {
   },
   regards: {
     FR: 'Cordialement',
-    DE: 'Mit freundlichen Grussen',
+    DE: 'Mit freundlichen Grüssen',
     EN: 'Best regards',
   },
   team: {
@@ -207,7 +207,7 @@ export const common = {
     EN: 'The EnCave Team',
   },
   questions: {
-    FR: "Si vous avez des questions, n'hesitez pas a contacter notre equipe.",
+    FR: "Si vous avez des questions, n'hésitez pas à contacter notre équipe.",
     DE: 'Bei Fragen wenden Sie sich bitte an unser Team.',
     EN: "If you have any questions, please don't hesitate to contact our team.",
   },
@@ -232,7 +232,7 @@ export const common = {
     EN: 'Price',
   },
   experience: {
-    FR: 'Experience',
+    FR: 'Expérience',
     DE: 'Erlebnis',
     EN: 'Experience',
   },
@@ -242,7 +242,7 @@ export const common = {
     EN: 'Winery',
   },
   duration: {
-    FR: 'Duree',
+    FR: 'Durée',
     DE: 'Dauer',
     EN: 'Duration',
   },
@@ -251,32 +251,32 @@ export const common = {
 // Booking confirmation email strings
 export const bookingConfirmation = {
   title: {
-    FR: 'Reservation confirmee!',
-    DE: 'Reservierung bestatigt!',
+    FR: 'Réservation confirmée !',
+    DE: 'Reservierung bestätigt!',
     EN: 'Booking confirmed!',
   },
   intro: {
-    FR: 'Votre reservation a ete confirmee avec succes.',
-    DE: 'Ihre Reservierung wurde erfolgreich bestatigt.',
+    FR: 'Votre réservation a été confirmée avec succès.',
+    DE: 'Ihre Reservierung wurde erfolgreich bestätigt.',
     EN: 'Your booking has been successfully confirmed.',
   },
   details: {
-    FR: 'Details de votre reservation',
+    FR: 'Détails de votre réservation',
     DE: 'Details Ihrer Reservierung',
     EN: 'Your booking details',
   },
   bookingRef: {
-    FR: 'Reference de reservation',
+    FR: 'Référence de réservation',
     DE: 'Buchungsreferenz',
     EN: 'Booking reference',
   },
   viewBooking: {
-    FR: 'Voir ma reservation',
+    FR: 'Voir ma réservation',
     DE: 'Meine Reservierung ansehen',
     EN: 'View my booking',
   },
   lookingForward: {
-    FR: 'Nous avons hate de vous accueillir!',
+    FR: 'Nous avons hâte de vous accueillir !',
     DE: 'Wir freuen uns auf Sie!',
     EN: 'We look forward to welcoming you!',
   },
@@ -285,17 +285,17 @@ export const bookingConfirmation = {
 // Booking reminder email strings
 export const bookingReminder = {
   title: {
-    FR: 'Votre experience approche!',
+    FR: 'Votre expérience approche !',
     DE: 'Ihr Erlebnis steht bevor!',
     EN: 'Your experience is coming up!',
   },
   intro: {
-    FR: 'Nous vous rappelons votre reservation a venir.',
+    FR: 'Nous vous rappelons votre réservation à venir.',
     DE: 'Wir erinnern Sie an Ihre bevorstehende Reservierung.',
     EN: 'This is a reminder about your upcoming booking.',
   },
   tomorrow: {
-    FR: "C'est demain!",
+    FR: "C'est demain !",
     DE: 'Es ist morgen!',
     EN: "It's tomorrow!",
   },
@@ -309,18 +309,18 @@ export const bookingReminder = {
 // Booking cancellation email strings
 export const bookingCancellation = {
   title: {
-    FR: 'Reservation annulee',
+    FR: 'Réservation annulée',
     DE: 'Reservierung storniert',
     EN: 'Booking cancelled',
   },
   intro: {
-    FR: 'Votre reservation a ete annulee.',
+    FR: 'Votre réservation a été annulée.',
     DE: 'Ihre Reservierung wurde storniert.',
     EN: 'Your booking has been cancelled.',
   },
   refund: {
-    FR: 'Si vous avez deja paye, votre remboursement sera traite sous 5-7 jours ouvrables.',
-    DE: 'Falls Sie bereits bezahlt haben, wird Ihre Ruckerstattung innerhalb von 5-7 Werktagen bearbeitet.',
+    FR: 'Si vous avez déjà payé, votre remboursement sera traité sous 5-7 jours ouvrables.',
+    DE: 'Falls Sie bereits bezahlt haben, wird Ihre Rückerstattung innerhalb von 5-7 Werktagen bearbeitet.',
     EN: 'If you have already paid, your refund will be processed within 5-7 business days.',
   },
   // {amount} is replaced with the exact TOTAL returned (policy-based).
@@ -332,13 +332,20 @@ export const bookingCancellation = {
     DE: 'Ein Betrag von {amount} wird Ihnen zurückerstattet: auf Ihr Zahlungsmittel innerhalb von 5-7 Werktagen und, für den mit Gutschein bezahlten Anteil, als Wiedergutschrift auf Ihren Gutschein.',
     EN: 'An amount of {amount} will be returned to you: to your payment method within 5-7 business days and, for the share paid with a gift card, re-credited to your gift card.',
   },
+  // Pay-on-site booking: nothing was ever charged online — neither the
+  // "refund in 5-7 days" nor the "no refund per policy" sentence is true.
+  nothingCharged: {
+    FR: "Cette réservation était à régler sur place : aucun montant n'a été débité, il n'y a donc rien à rembourser.",
+    DE: 'Diese Reservierung war vor Ort zu bezahlen: Es wurde nichts belastet, es gibt daher nichts zu erstatten.',
+    EN: 'This booking was payable on site: nothing was charged, so there is nothing to refund.',
+  },
   noRefund: {
-    FR: "Conformement a la politique d'annulation de la cave, cette annulation ne donne pas droit a un remboursement.",
-    DE: 'Gemass den Stornierungsbedingungen des Weinguts besteht kein Anspruch auf Ruckerstattung.',
+    FR: "Conformément à la politique d'annulation de la cave, cette annulation ne donne pas droit à un remboursement.",
+    DE: 'Gemäss den Stornierungsbedingungen des Weinguts besteht kein Anspruch auf Rückerstattung.',
     EN: "Per the winery's cancellation policy, this cancellation is not eligible for a refund.",
   },
   browseMore: {
-    FR: "Decouvrir d'autres experiences",
+    FR: "Découvrir d'autres expériences",
     DE: 'Weitere Erlebnisse entdecken',
     EN: 'Browse more experiences',
   },
@@ -348,13 +355,13 @@ export const bookingCancellation = {
 export const winemakerNotification = {
   newBooking: {
     title: {
-      FR: 'Nouvelle reservation!',
+      FR: 'Nouvelle réservation !',
       DE: 'Neue Reservierung!',
       EN: 'New booking!',
     },
     intro: {
-      FR: 'Vous avez recu une nouvelle reservation pour votre experience.',
-      DE: 'Sie haben eine neue Reservierung fur Ihr Erlebnis erhalten.',
+      FR: 'Vous avez reçu une nouvelle réservation pour votre expérience.',
+      DE: 'Sie haben eine neue Reservierung für Ihr Erlebnis erhalten.',
       EN: 'You have received a new booking for your experience.',
     },
     guestInfo: {
@@ -380,13 +387,13 @@ export const winemakerNotification = {
   },
   cancellation: {
     title: {
-      FR: 'Reservation annulee',
+      FR: 'Réservation annulée',
       DE: 'Reservierung storniert',
       EN: 'Booking cancelled',
     },
     intro: {
-      FR: 'Une reservation pour votre experience a ete annulee.',
-      DE: 'Eine Reservierung fur Ihr Erlebnis wurde storniert.',
+      FR: 'Une réservation pour votre expérience a été annulée.',
+      DE: 'Eine Reservierung für Ihr Erlebnis wurde storniert.',
       EN: 'A booking for your experience has been cancelled.',
     },
   },
@@ -396,31 +403,31 @@ export const winemakerNotification = {
 export const wineryVerification = {
   approved: {
     title: {
-      FR: 'Bienvenue sur EnCave!',
+      FR: 'Bienvenue sur EnCave !',
       DE: 'Willkommen bei EnCave!',
       EN: 'Welcome to EnCave!',
     },
     intro: {
-      FR: 'Excellente nouvelle! Votre domaine a ete verifie et est maintenant actif sur la plateforme EnCave.',
+      FR: 'Excellente nouvelle ! Votre domaine a été vérifié et est maintenant actif sur la plateforme EnCave.',
       DE: 'Grossartige Neuigkeiten! Ihr Weingut wurde verifiziert und ist jetzt auf der EnCave-Plattform aktiv.',
       EN: 'Great news! Your winery has been verified and is now active on the EnCave platform.',
     },
     canNow: {
-      FR: 'Vous pouvez maintenant:',
-      DE: 'Sie konnen jetzt:',
+      FR: 'Vous pouvez maintenant :',
+      DE: 'Sie können jetzt:',
       EN: 'You can now:',
     },
     actions: {
       FR: [
-        'Completer votre profil avec des photos et descriptions',
-        'Creer des experiences de degustation pour vos clients',
-        'Gerer votre calendrier de disponibilites',
-        'Recevoir et gerer les reservations',
+        'Compléter votre profil avec des photos et des descriptions',
+        'Créer des expériences de dégustation pour vos clients',
+        'Gérer votre calendrier de disponibilités',
+        'Recevoir et gérer les réservations',
       ],
       DE: [
-        'Ihr Profil mit Fotos und Beschreibungen vervollstandigen',
-        'Verkostungserlebnisse fur Ihre Gaste erstellen',
-        'Ihren Verfugbarkeitskalender verwalten',
+        'Ihr Profil mit Fotos und Beschreibungen vervollständigen',
+        'Verkostungserlebnisse für Ihre Gäste erstellen',
+        'Ihren Verfügbarkeitskalender verwalten',
         'Reservierungen empfangen und verwalten',
       ],
       EN: [
@@ -431,20 +438,20 @@ export const wineryVerification = {
       ],
     },
     goToDashboard: {
-      FR: 'Acceder au tableau de bord',
+      FR: 'Accéder au tableau de bord',
       DE: 'Zum Dashboard gehen',
       EN: 'Go to Dashboard',
     },
   },
   rejected: {
     title: {
-      FR: 'Mise a jour de votre inscription',
+      FR: 'Mise à jour de votre inscription',
       DE: 'Aktualisierung Ihrer Registrierung',
       EN: 'Registration Update',
     },
     intro: {
-      FR: "Merci de votre interet pour rejoindre la plateforme EnCave. Apres examen de votre inscription, nous ne pouvons malheureusement pas l'approuver pour le moment.",
-      DE: 'Vielen Dank fur Ihr Interesse an der EnCave-Plattform. Nach Prufung Ihrer Registrierung konnen wir diese leider derzeit nicht genehmigen.',
+      FR: "Merci de l'intérêt que vous portez à la plateforme EnCave. Après examen de votre inscription, nous ne pouvons malheureusement pas l'approuver pour le moment.",
+      DE: 'Vielen Dank für Ihr Interesse an der EnCave-Plattform. Nach Prüfung Ihrer Registrierung können wir diese leider derzeit nicht genehmigen.',
       EN: 'Thank you for your interest in joining the EnCave platform. After reviewing your registration, we regret to inform you that we are unable to approve it at this time.',
     },
     reason: {
@@ -453,13 +460,13 @@ export const wineryVerification = {
       EN: 'Reason',
     },
     appeal: {
-      FR: "Si vous pensez que cette decision est une erreur ou si vous souhaitez fournir des informations supplementaires, veuillez contacter notre equipe d'assistance.",
-      DE: 'Wenn Sie glauben, dass diese Entscheidung ein Fehler war oder zusatzliche Informationen bereitstellen mochten, wenden Sie sich bitte an unser Support-Team.',
+      FR: "Si vous pensez que cette décision est une erreur ou si vous souhaitez fournir des informations supplémentaires, veuillez contacter notre équipe d'assistance.",
+      DE: 'Wenn Sie glauben, dass diese Entscheidung ein Fehler war oder zusätzliche Informationen bereitstellen möchten, wenden Sie sich bitte an unser Support-Team.',
       EN: 'If you believe this decision was made in error or would like to provide additional information, please contact our support team.',
     },
     resubmit: {
-      FR: 'Vous pouvez soumettre une nouvelle inscription une fois que vous avez traite les points mentionnes ci-dessus.',
-      DE: 'Sie konnen gerne eine neue Registrierung einreichen, sobald Sie die oben genannten Punkte bearbeitet haben.',
+      FR: 'Vous pouvez soumettre une nouvelle inscription une fois les points mentionnés ci-dessus traités.',
+      DE: 'Sie können gerne eine neue Registrierung einreichen, sobald Sie die oben genannten Punkte bearbeitet haben.',
       EN: 'You are welcome to submit a new registration once you have addressed the concerns mentioned above.',
     },
   },
@@ -469,28 +476,28 @@ export const wineryVerification = {
 export const auth = {
   passwordReset: {
     title: {
-      FR: 'Reinitialisation du mot de passe',
-      DE: 'Passwort zurucksetzen',
+      FR: 'Réinitialisation du mot de passe',
+      DE: 'Passwort zurücksetzen',
       EN: 'Reset your password',
     },
     intro: {
-      FR: 'Vous avez demande la reinitialisation de votre mot de passe.',
-      DE: 'Sie haben eine Zurucksetzung Ihres Passworts angefordert.',
+      FR: 'Vous avez demandé la réinitialisation de votre mot de passe.',
+      DE: 'Sie haben das Zurücksetzen Ihres Passworts angefordert.',
       EN: 'You requested to reset your password.',
     },
     button: {
-      FR: 'Reinitialiser le mot de passe',
-      DE: 'Passwort zurucksetzen',
+      FR: 'Réinitialiser le mot de passe',
+      DE: 'Passwort zurücksetzen',
       EN: 'Reset password',
     },
     expiry: {
       FR: 'Ce lien expire dans 1 heure.',
-      DE: 'Dieser Link lauft in 1 Stunde ab.',
+      DE: 'Dieser Link läuft in 1 Stunde ab.',
       EN: 'This link expires in 1 hour.',
     },
     ignore: {
       FR: "Si vous n'avez pas fait cette demande, vous pouvez ignorer cet e-mail.",
-      DE: 'Wenn Sie diese Anfrage nicht gestellt haben, konnen Sie diese E-Mail ignorieren.',
+      DE: 'Wenn Sie diese Anfrage nicht gestellt haben, können Sie diese E-Mail ignorieren.',
       EN: "If you didn't make this request, you can safely ignore this email.",
     },
   },
@@ -528,45 +535,45 @@ export const auth = {
   },
   welcome: {
     title: {
-      FR: 'Bienvenue sur EnCave!',
+      FR: 'Bienvenue sur EnCave !',
       DE: 'Willkommen bei EnCave!',
       EN: 'Welcome to EnCave!',
     },
     intro: {
-      FR: 'Merci de vous etre inscrit sur EnCave.',
-      DE: 'Vielen Dank fur Ihre Anmeldung bei EnCave.',
+      FR: 'Merci pour votre inscription sur EnCave.',
+      DE: 'Vielen Dank für Ihre Anmeldung bei EnCave.',
       EN: 'Thank you for signing up with EnCave.',
     },
     discover: {
-      FR: 'Decouvrez des experiences de degustation uniques directement aupres des vignerons suisses.',
+      FR: 'Découvrez des expériences de dégustation uniques directement auprès des vignerons suisses.',
       DE: 'Entdecken Sie einzigartige Verkostungserlebnisse direkt bei Schweizer Winzern.',
       EN: 'Discover unique wine tasting experiences directly with Swiss winemakers.',
     },
     explore: {
-      FR: 'Explorer les experiences',
+      FR: 'Explorer les expériences',
       DE: 'Erlebnisse entdecken',
       EN: 'Explore experiences',
     },
   },
   verification: {
     title: {
-      FR: 'Verifiez votre adresse e-mail',
+      FR: 'Vérifiez votre adresse e-mail',
       DE: 'Verifizieren Sie Ihre E-Mail-Adresse',
       EN: 'Verify your email address',
     },
     intro: {
-      FR: 'Veuillez cliquer sur le bouton ci-dessous pour verifier votre adresse e-mail.',
-      DE: 'Bitte klicken Sie auf die Schaltflache unten, um Ihre E-Mail-Adresse zu verifizieren.',
+      FR: 'Veuillez cliquer sur le bouton ci-dessous pour vérifier votre adresse e-mail.',
+      DE: 'Bitte klicken Sie auf die Schaltfläche unten, um Ihre E-Mail-Adresse zu verifizieren.',
       EN: 'Please click the button below to verify your email address.',
     },
     button: {
-      FR: "Verifier l'e-mail",
+      FR: "Vérifier l'e-mail",
       DE: 'E-Mail verifizieren',
       EN: 'Verify email',
     },
     expiry: {
       FR: 'Ce lien expire dans 24 heures.',
-      DE: 'Dieser Link lauft in 24 Stunden ab.',
+      DE: 'Dieser Link läuft in 24 Stunden ab.',
       EN: 'This link expires in 24 hours.',
     },
   },
@@ -575,17 +582,17 @@ export const auth = {
 // Client 2h reminder email strings
 export const clientReminder2h = {
   title: {
-    FR: 'Votre experience commence bientot!',
+    FR: 'Votre expérience commence bientôt !',
     DE: 'Ihr Erlebnis beginnt bald!',
     EN: 'Your experience starts soon!',
   },
   intro: {
-    FR: 'Votre experience de degustation commence dans moins de 2 heures.',
-    DE: 'Ihr Verkostungserlebnis beginnt in weniger als 2 Stunden.',
-    EN: 'Your wine tasting experience starts in less than 2 hours.',
+    FR: 'Votre expérience de dégustation commence dans environ 2 heures.',
+    DE: 'Ihr Verkostungserlebnis beginnt in rund 2 Stunden.',
+    EN: 'Your wine tasting experience starts in about 2 hours.',
   },
   startsSoon: {
-    FR: 'Commence bientot',
+    FR: 'Commence bientôt',
     DE: 'Beginnt bald',
     EN: 'Starts soon',
   },
@@ -604,13 +611,13 @@ export const clientReminder2h = {
 // Daily digest email strings
 export const dailyDigest = {
   title: {
-    FR: 'Vos reservations du jour',
+    FR: 'Vos réservations du jour',
     DE: 'Ihre heutigen Buchungen',
     EN: "Today's bookings",
   },
   intro: {
-    FR: "Voici un apercu de vos reservations pour aujourd'hui et demain.",
-    DE: 'Hier ist eine Ubersicht Ihrer Buchungen fur heute und morgen.',
+    FR: "Voici un aperçu de vos réservations pour aujourd'hui et demain.",
+    DE: 'Hier ist eine Übersicht Ihrer Buchungen für heute und morgen.',
     EN: "Here's an overview of your bookings for today and tomorrow.",
   },
   today: {
@@ -624,7 +631,7 @@ export const dailyDigest = {
     EN: 'Tomorrow',
   },
   noBookings: {
-    FR: 'Aucune reservation',
+    FR: 'Aucune réservation',
     DE: 'Keine Buchungen',
     EN: 'No bookings',
   },
@@ -643,37 +650,37 @@ export const dailyDigest = {
 // Post-experience follow-up email strings
 export const postExperience = {
   title: {
-    FR: 'Merci pour votre visite!',
-    DE: 'Danke fur Ihren Besuch!',
+    FR: 'Merci pour votre visite !',
+    DE: 'Danke für Ihren Besuch!',
     EN: 'Thank you for your visit!',
   },
   intro: {
-    FR: 'Nous esperons que vous avez passe un excellent moment lors de votre experience de degustation.',
+    FR: 'Nous espérons que vous avez passé un excellent moment lors de votre expérience de dégustation.',
     DE: 'Wir hoffen, dass Sie bei Ihrem Verkostungserlebnis eine tolle Zeit hatten.',
     EN: 'We hope you had a wonderful time at your wine tasting experience.',
   },
   visitedOn: {
-    FR: 'Visite le',
+    FR: 'Visite du',
     DE: 'Besucht am',
     EN: 'Visited on',
   },
   feedbackTitle: {
     FR: 'Votre avis compte',
-    DE: 'Ihre Meinung zahlt',
+    DE: 'Ihre Meinung zählt',
     EN: 'Your feedback matters',
   },
   feedbackText: {
-    FR: "Nous travaillons sur une fonctionnalite d'avis. En attendant, n'hesitez pas a contacter le domaine directement pour partager votre experience.",
-    DE: 'Wir arbeiten an einer Bewertungsfunktion. In der Zwischenzeit konnen Sie das Weingut direkt kontaktieren, um Ihre Erfahrungen zu teilen.',
+    FR: "Nous travaillons sur une fonctionnalité d'avis. En attendant, n'hésitez pas à contacter directement le domaine pour partager votre expérience.",
+    DE: 'Wir arbeiten an einer Bewertungsfunktion. In der Zwischenzeit können Sie das Weingut direkt kontaktieren, um Ihre Erfahrungen zu teilen.',
     EN: "We're working on a review feature. In the meantime, feel free to contact the winery directly to share your experience.",
   },
   discoverMore: {
-    FR: "Envie de decouvrir d'autres experiences viticoles en Suisse?",
-    DE: 'Mochten Sie weitere Weinerlebnisse in der Schweiz entdecken?',
+    FR: "Envie de découvrir d'autres expériences viticoles en Suisse ?",
+    DE: 'Möchten Sie weitere Weinerlebnisse in der Schweiz entdecken?',
     EN: 'Want to discover more wine experiences in Switzerland?',
   },
   discoverMoreCta: {
-    FR: "Decouvrir plus d'experiences",
+    FR: "Découvrir plus d'expériences",
     DE: 'Mehr Erlebnisse entdecken',
     EN: 'Discover more experiences',
   },
@@ -682,17 +689,17 @@ export const postExperience = {
 // Weekly summary email strings
 export const weeklySummary = {
   title: {
-    FR: 'Votre resume hebdomadaire',
-    DE: 'Ihre wochentliche Zusammenfassung',
+    FR: 'Votre résumé hebdomadaire',
+    DE: 'Ihre wöchentliche Zusammenfassung',
     EN: 'Your weekly summary',
   },
   intro: {
-    FR: 'Voici un apercu de votre activite de la semaine derniere et des reservations a venir.',
-    DE: 'Hier ist eine Ubersicht Ihrer Aktivitaten der letzten Woche und der kommenden Buchungen.',
+    FR: 'Voici un aperçu de votre activité de la semaine dernière et des réservations à venir.',
+    DE: 'Hier ist eine Übersicht Ihrer Aktivitäten der letzten Woche und der kommenden Buchungen.',
     EN: "Here's an overview of your activity from last week and upcoming bookings.",
   },
   lastWeek: {
-    FR: 'Semaine derniere',
+    FR: 'Semaine dernière',
     DE: 'Letzte Woche',
     EN: 'Last week',
   },
@@ -702,7 +709,7 @@ export const weeklySummary = {
     EN: 'This week',
   },
   bookings: {
-    FR: 'Reservations',
+    FR: 'Réservations',
     DE: 'Buchungen',
     EN: 'Bookings',
   },
@@ -717,13 +724,13 @@ export const weeklySummary = {
     EN: 'Revenue',
   },
   upcoming: {
-    FR: 'Reservations a venir',
+    FR: 'Réservations à venir',
     DE: 'Kommende Buchungen',
     EN: 'Upcoming bookings',
   },
   noActivity: {
-    FR: 'Aucune activite',
-    DE: 'Keine Aktivitat',
+    FR: 'Aucune activité',
+    DE: 'Keine Aktivität',
     EN: 'No activity',
   },
   viewDashboard: {
@@ -944,6 +951,8 @@ export const emailChangedNotice = {
     DE: 'Guten Tag, die E-Mail-Adresse Ihres EnCave-Kontos wurde soeben durch {newEmail} ersetzt.',
     EN: 'Hello, the email address of your EnCave account was just replaced with {newEmail}.',
   },
+  // « Reply to this email » is true: the sender is noreply@, but every email
+  // carries Reply-To = EMAIL_REPLY_TO (a monitored mailbox, email.service).
   warning: {
     FR: "Si vous n'êtes pas à l'origine de ce changement, répondez immédiatement à cet e-mail ou écrivez à support@encave.ch — votre compte est peut-être compromis.",
     DE: 'Falls Sie diese Änderung nicht veranlasst haben, antworten Sie sofort auf diese E-Mail oder schreiben Sie an support@encave.ch — Ihr Konto könnte kompromittiert sein.',

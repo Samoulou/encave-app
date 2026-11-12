@@ -4,7 +4,7 @@ import { withCronMonitor } from '@/lib/cron-monitor';
 import { db } from '@/server/db';
 import { BookingStatus } from '@prisma/client';
 import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
-import { findEmptySheetSessions } from '@/server/queries/wine.queries';
+import { findEmptySheetSessionsByWinery } from '@/server/queries/wine.queries';
 import { sendTastingSheetReminderEmail } from '@/server/services/email.service';
 import {
   logEmailSent,
@@ -56,10 +56,16 @@ export async function GET() {
         },
       });
 
+      // ONE read for every winery (was one query per winery).
+      const sessionsByWinery = await findEmptySheetSessionsByWinery({
+        wineryIds: wineryIds.map((row) => row.wineryId),
+        now,
+      });
+
       const results = { wineries: 0, sent: 0, failed: 0, skipped: 0 };
       for (const { wineryId } of wineryIds) {
         try {
-          const sessions = await findEmptySheetSessions({ wineryId, now });
+          const sessions = sessionsByWinery.get(wineryId) ?? [];
           if (sessions.length === 0) continue;
           results.wineries++;
 

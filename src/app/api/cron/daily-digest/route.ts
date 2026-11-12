@@ -11,6 +11,7 @@ import {
 import { startOfDay, endOfDay, addDays } from 'date-fns';
 import { BookingStatus, WineryStatus } from '@prisma/client';
 import { mapWithConcurrency } from '@/lib/utils/concurrency';
+import { getWineryUnsubscribeUrl } from '@/server/services/email-preferences.service';
 import { logError } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
@@ -96,11 +97,22 @@ export async function GET() {
             return;
           }
 
+          // Tokenised opt-out (footer link + List-Unsubscribe header),
+          // scoped to THIS digest. Creates the preferences row when the
+          // winery never opened its notification settings.
+          const unsubscribeUrl = await getWineryUnsubscribeUrl(
+            winery.id,
+            'daily_digest',
+            winery.notificationPreferences,
+            now
+          );
+
           const success = await sendDailyDigestEmail(
             winery.email,
             {
               winemakerName: winery.user.name || 'Winemaker',
               wineryName: winery.name,
+              unsubscribeUrl,
               todayBookings: todayBookings.map((b) => ({
                 time: b.timeSlot,
                 experienceTitle: b.experience.title,

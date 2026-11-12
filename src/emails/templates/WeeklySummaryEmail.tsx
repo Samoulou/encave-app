@@ -24,7 +24,8 @@ export interface WeeklySummaryEmailProps {
   /** Previous-month statement PDF link (P-13 / email #17). */
   statement?: { url: string; monthLabel: string } | null;
   dashboardUrl: string;
-  unsubscribeUrl?: string;
+  /** Tokenised winery opt-out link (footer + List-Unsubscribe header). */
+  unsubscribeUrl: string;
 }
 
 export function WeeklySummaryEmail({
@@ -36,6 +37,7 @@ export function WeeklySummaryEmail({
   payouts,
   statement,
   dashboardUrl,
+  unsubscribeUrl,
 }: WeeklySummaryEmailProps) {
   const greeting = t(common.greeting, locale);
   const regards = t(common.regards, locale);
@@ -70,7 +72,11 @@ export function WeeklySummaryEmail({
   const hasThisWeekActivity = thisWeekPreview.bookings > 0;
 
   return (
-    <EmailLayout locale={locale} preview={t(subjects.weeklySummary, locale)}>
+    <EmailLayout
+      locale={locale}
+      preview={t(subjects.weeklySummary, locale)}
+      unsubscribeUrl={unsubscribeUrl}
+    >
       <Text
         style={{
           fontSize: '24px',

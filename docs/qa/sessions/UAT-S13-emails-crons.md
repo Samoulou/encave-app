@@ -37,12 +37,12 @@ WHERE status = 'failed' ORDER BY "createdAt" DESC;
 
 ### B. Agrégats : daily-digest & weekly-summary (#17)
 
-| #   | Action / attendu                                                                                                                                                                             | PASS | FAIL |
-| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- | ---- |
-| 4   | `curl -H "Authorization: Bearer $CRON_SECRET" https://encave-dev.vercel.app/api/cron/daily-digest` → 200 ; digest envoyé aux caves avec activité (email_logs `daily_digest`)                 | [ ]  | [ ]  |
-| 5   | `curl -H "Authorization: Bearer $CRON_SECRET" https://encave-dev.vercel.app/api/cron/weekly-summary` → 200 ; récap hebdo #17 (`weekly_summary`) — contenu : stats de la semaine, lien relevé | [ ]  | [ ]  |
-| 6   | Relancer chacun une 2e fois → pas de doublon le même jour (dédup) ou comportement documenté — consigner                                                                                      | [ ]  | [ ]  |
-| 7   | Rappels : `curl …/api/cron/reminders` hors 18 h Zurich → le bloc J-1 ne part pas (garde), le bloc 2 h tourne — un booking à ~2 h reçoit son rappel                                           | [ ]  | [ ]  |
+| #   | Action / attendu                                                                                                                                                                                                                                             | PASS | FAIL |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---- | ---- |
+| 4   | `curl -H "Authorization: Bearer $CRON_SECRET" https://encave-dev.vercel.app/api/cron/daily-digest` → 200 ; digest envoyé aux caves avec activité (email_logs `daily_digest`)                                                                                 | [ ]  | [ ]  |
+| 5   | `curl -H "Authorization: Bearer $CRON_SECRET" https://encave-dev.vercel.app/api/cron/weekly-summary` → 200 ; récap hebdo #17 (`weekly_summary`) — contenu : stats de la semaine, lien relevé                                                                 | [ ]  | [ ]  |
+| 6   | Relancer chacun une 2e fois → pas de doublon le même jour (dédup) ou comportement documenté — consigner                                                                                                                                                      | [ ]  | [ ]  |
+| 7   | Rappels : `curl …/api/cron/reminders` avant 18 h Zurich → le bloc J-1 ne part pas (garde), le bloc 2 h tourne — un booking débutant dans (1 h, 2 h 30] et ayant reçu son J-1 reçoit son rappel, **une seule fois** (rejouer le curl : `reminder2h.sent` = 0) | [ ]  | [ ]  |
 
 ### C. Dette unsubscribe (décision à acter)
 
@@ -67,11 +67,11 @@ tokenisé — fallback sur la page statique `/unsubscribe` (la route tokenisée
 
 ### E. Crons Vercel : plan & preuve d'exécution
 
-| #   | Action / attendu                                                                                                                                                                                                              | PASS | FAIL |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- | ---- |
-| 14  | Vercel Dashboard → projet staging → **Settings → Cron Jobs** : les **18 entrées** de `vercel.json` sont actives (8× `process-scheduled-jobs?slot=`, 2× `reminders?window=`, 2× `tasting-sheet-reminder?window=`, 6 restantes) | [ ]  | [ ]  |
-| 15  | **Plan Vercel** : Hobby = 2 crons max → les 18 entrées exigent ≥ Pro. Consigner le plan constaté : `____` (si Hobby → **blocker launch**, cf. Volet D E.4)                                                                    | [ ]  | [ ]  |
-| 16  | Preuve d'exécution 24 h : logs Vercel (Functions) montrent les runs planifiés de la veille (ou consigner que staging vit en déclenchement manuel)                                                                             | [ ]  | [ ]  |
+| #   | Action / attendu                                                                                                                                                                                                                                                                    | PASS | FAIL |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- | ---- |
+| 14  | Vercel Dashboard → projet staging → **Settings → Cron Jobs** : les **32 entrées** de `vercel.json` sont actives (16× `reminders?slot=4..19`, 8× `process-scheduled-jobs?slot=`, 2× `tasting-sheet-reminder?window=`, 6 restantes — recompter : `jq '.crons \| length' vercel.json`) | [ ]  | [ ]  |
+| 15  | **Plan Vercel** : les 32 entrées (toutes quotidiennes) exigent un plan qui les accepte — ≥ Pro. Consigner le plan constaté : `____` (si Hobby → **blocker launch**, cf. Volet D E.4)                                                                                                | [ ]  | [ ]  |
+| 16  | Preuve d'exécution 24 h : logs Vercel (Functions) montrent les runs planifiés de la veille (ou consigner que staging vit en déclenchement manuel)                                                                                                                                   | [ ]  | [ ]  |
 
 ## Vigilances
 

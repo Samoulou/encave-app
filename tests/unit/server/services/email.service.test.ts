@@ -25,9 +25,10 @@ vi.mock('resend', () => ({
   })),
 }));
 
-// Mock react-email render
+// Mock react-email render (+ the plain-text conversion of the HTML part)
 vi.mock('@react-email/components', () => ({
   render: vi.fn().mockResolvedValue('<html>test email</html>'),
+  toPlainText: vi.fn(() => 'test email'),
 }));
 
 // Mock email components
@@ -46,6 +47,9 @@ vi.mock('@/emails', () => ({
   DailyDigestEmail: vi.fn(() => null),
   PostExperienceFollowUpEmail: vi.fn(() => null),
   WeeklySummaryEmail: vi.fn(() => null),
+  TastingRecapEmail: vi.fn(() => null),
+  ContactMessageEmail: vi.fn(() => null),
+  ContactAckEmail: vi.fn(() => null),
 }));
 
 // Mock attachment generators (kept hermetic — exercised in the service tests)
@@ -77,6 +81,9 @@ vi.mock('@/emails/translations', () => ({
     dailyDigest: { FR: 'Digest', EN: 'Digest' },
     postExperience: { FR: 'Suivi', EN: 'Follow Up' },
     weeklySummary: { FR: 'Resume', EN: 'Summary' },
+    tastingRecap: { FR: 'Recap {wineryName}', EN: 'Recap {wineryName}' },
+    contactMessage: { FR: 'Contact {name}', EN: 'Contact {name}' },
+    contactAck: { FR: 'Accuse', EN: 'Ack' },
   },
   t: vi.fn(
     (subject: Record<string, string>, locale: string) =>
@@ -98,7 +105,13 @@ const {
   sendWineryRejectedEmail,
   sendDailyDigestEmail,
   sendWeeklySummaryEmail,
+  sendPostExperienceFollowUpEmail,
+  sendTastingRecapEmail,
+  sendContactMessageEmail,
+  buildListUnsubscribeHeaders,
 } = await import('@/server/services/email.service');
+
+const { toPlainText } = await import('@react-email/components');
 
 describe('Email Service', () => {
   beforeEach(() => {
@@ -310,6 +323,8 @@ describe('Email Service', () => {
       wineryName: 'Winery',
       todayBookings: [],
       tomorrowBookings: [],
+      unsubscribeUrl:
+        'https://test.encave.ch/api/unsubscribe/tok-winery?type=daily_digest',
     };
 
     it('sends email successfully', async () => {
@@ -324,12 +339,147 @@ describe('Email Service', () => {
       wineryName: 'Winery',
       lastWeekStats: { bookings: 5, guests: 20, revenue: 50000 },
       thisWeekPreview: { bookings: 3, guests: 12 },
+      unsubscribeUrl:
+        'https://test.encave.ch/api/unsubscribe/tok-winery?type=weekly_summary',
     };
 
     it('sends email successfully', async () => {
       const result = await sendWeeklySummaryEmail('winemaker@test.com', data);
       expect(result).toBe(true);
     });
+  });
+
+  describe('email hygiene — text part, reply-to, List-Unsubscribe', () => {
+    const lastSend = () =>
+      mockEmailsSend.mock.calls[mockEmailsSend.mock.calls.length - 1]?.[0];
+
+    it('sends a plain-text alternative next to the HTML', async () => {
+      await sendWelcomeEmail('test@example.com', 'John');
+
+      expect(lastSend()).toMatchObject({
+        html: '<html>test email</html>',
+        text: 'test email',
+      });
+    });
+
+    it('still sends when the plain-text conversion throws', async () => {
+      vi.mocked(toPlainText).mockImplementationOnce(() => {
+        throw new Error('boom');
+      });
+
+      const result = await sendWelcomeEmail('test@example.com', 'John');
+
+      expect(result).toBe(true);
+      expect(lastSend()).not.toHaveProperty('text');
+    });
+
+    it('replies go to a real mailbox by default, never to noreply', async () => {
+      await sendWelcomeEmail('test@example.com', 'John');
+
+      expect(lastSend().from).toContain('noreply@encave.ch');
+      expect(lastSend().replyTo).toBe('support@encave.ch');
+    });
+
+    it('keeps an explicit reply-to (contact form → the sender)', async () => {
+      await sendContactMessageEmail({
+        name: 'Jeanne',
+        email: 'jeanne@example.com',
+        subject: 'Question',
+        message: 'Bonjour',
+      });
+
+      // 1st send = team notification, 2nd = accusé to the sender.
+      expect(mockEmailsSend.mock.calls[0]?.[0].replyTo).toBe(
+        'jeanne@example.com'
+      );
+      expect(mockEmailsSend.mock.calls[1]?.[0].replyTo).toBe(
+        'support@encave.ch'
+      );
+    });
+
+    it('transactional emails carry NO List-Unsubscribe header', async () => {
+      await sendBookingReminderEmail('test@example.com', {
+        guestName: 'John Doe',
+        experienceTitle: 'Wine Tasting',
+        wineryName: 'Test Winery',
+        wineryAddress: 'Rue du Vin 1',
+        date: new Date('2025-06-15'),
+        guestCount: 2,
+        bookingRef: 'REF-123',
+      });
+
+      expect(lastSend()).not.toHaveProperty('headers');
+    });
+
+    it('builds the RFC 8058 one-click header pair', () => {
+      expect(buildListUnsubscribeHeaders('https://x.test/u/1')).toEqual({
+        'List-Unsubscribe': '<https://x.test/u/1>',
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      });
+    });
+
+    it.each([
+      [
+        'daily digest',
+        () =>
+          sendDailyDigestEmail('winemaker@test.com', {
+            winemakerName: 'Winemaker',
+            wineryName: 'Winery',
+            todayBookings: [],
+            tomorrowBookings: [],
+            unsubscribeUrl: 'https://test.encave.ch/api/unsubscribe/t1',
+          }),
+        'https://test.encave.ch/api/unsubscribe/t1',
+      ],
+      [
+        'weekly summary',
+        () =>
+          sendWeeklySummaryEmail('winemaker@test.com', {
+            winemakerName: 'Winemaker',
+            wineryName: 'Winery',
+            lastWeekStats: { bookings: 5, guests: 20, revenue: 50000 },
+            thisWeekPreview: { bookings: 3, guests: 12 },
+            unsubscribeUrl: 'https://test.encave.ch/api/unsubscribe/t2',
+          }),
+        'https://test.encave.ch/api/unsubscribe/t2',
+      ],
+      [
+        'post-visit follow-up',
+        () =>
+          sendPostExperienceFollowUpEmail('guest@test.com', {
+            guestName: 'Guest',
+            experienceTitle: 'Wine Tasting',
+            wineryName: 'Winery',
+            date: new Date('2025-06-15'),
+            unsubscribeUrl: 'https://test.encave.ch/api/unsubscribe/client/t3',
+          }),
+        'https://test.encave.ch/api/unsubscribe/client/t3',
+      ],
+      [
+        'tasting recap',
+        () =>
+          sendTastingRecapEmail('guest@test.com', {
+            bookingId: 'b1',
+            wineryId: 'w1',
+            guestName: 'Guest',
+            wineryName: 'Winery',
+            wines: [],
+            orderUrl: 'https://test.encave.ch/fr/booking/b1/commande?token=x',
+            unsubscribeUrl: 'https://test.encave.ch/api/unsubscribe/client/t4',
+          }),
+        'https://test.encave.ch/api/unsubscribe/client/t4',
+      ],
+    ])(
+      '%s: List-Unsubscribe points at its tokenised URL',
+      async (_name, send, url) => {
+        await send();
+
+        expect(lastSend().headers).toEqual({
+          'List-Unsubscribe': `<${url}>`,
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+        });
+      }
+    );
   });
 
   describe('retry behavior', () => {

@@ -17,6 +17,8 @@ export interface BookingCancellationEmailProps {
    * 0 = explicitly no refund.
    */
   refundAmountCents?: number | null;
+  /** Pay-on-site booking never charged online → dedicated wording. */
+  nothingCharged?: boolean;
   bookingRef: string;
   experiencesUrl: string;
 }
@@ -29,6 +31,7 @@ export function BookingCancellationEmail({
   date,
   totalPrice,
   refundAmountCents = null,
+  nothingCharged = false,
   bookingRef: _bookingRef,
   experiencesUrl,
 }: BookingCancellationEmailProps) {
@@ -39,8 +42,9 @@ export function BookingCancellationEmail({
 
   const title = t(bookingCancellation.title, locale);
   const intro = t(bookingCancellation.intro, locale);
-  const refund =
-    refundAmountCents === null
+  const refund = nothingCharged
+    ? t(bookingCancellation.nothingCharged, locale)
+    : refundAmountCents === null
       ? t(bookingCancellation.refund, locale)
       : refundAmountCents > 0
         ? t(bookingCancellation.refundExact, locale).replace(

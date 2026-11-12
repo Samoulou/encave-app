@@ -7,6 +7,10 @@ import { logError } from '@/lib/logger';
 
 const NOMINATIM_BASE_URL = 'https://nominatim.openstreetmap.org/search';
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+// Nominatim is a free community service with no latency SLA: without a
+// bound, a slow upstream pinned the function (and the address field) until
+// the platform timeout. Same 3 s budget as src/lib/geocoding.ts (L-210).
+const NOMINATIM_TIMEOUT_MS = 3000;
 
 // Simple in-memory cache
 const cache = new Map<string, { data: unknown; timestamp: number }>();
@@ -81,6 +85,7 @@ export async function GET(request: NextRequest) {
         'User-Agent': 'EnCave/1.0 (https://encave.ch; contact@encave.ch)',
         Accept: 'application/json',
       },
+      signal: AbortSignal.timeout(NOMINATIM_TIMEOUT_MS),
     });
 
     if (!response.ok) {
@@ -114,6 +119,14 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(data);
   } catch (error) {
+    // AbortSignal.timeout rejects with a TimeoutError DOMException.
+    if (error instanceof Error && error.name === 'TimeoutError') {
+      logError('Nominatim timeout', error, { action: 'geocodeSearch' });
+      return NextResponse.json(
+        { error: 'Geocoding service timed out' },
+        { status: 504 }
+      );
+    }
     logError('Geocode search error', error, { action: 'geocodeSearch' });
     return NextResponse.json(
       { error: 'Failed to search addresses' },

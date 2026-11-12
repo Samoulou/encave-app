@@ -79,9 +79,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
   entries.push(...createEntry('/contact', 'monthly', 0.5));
 
-  // Auth pages (lower priority, but still indexed for discoverability)
-  entries.push(...createEntry('/login', 'monthly', 0.3));
-  entries.push(...createEntry('/register', 'monthly', 0.3));
+  // /login and /register are deliberately NOT listed: a sitemap advertises
+  // the pages we want ranked, and an auth form has no search value (it is
+  // also rendered per request — the (auth) layout reads the session).
 
   // Legal pages
   entries.push(...createEntry('/legal/privacy', 'monthly', 0.2));

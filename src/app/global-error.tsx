@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { loadSentryClient } from '@/lib/sentry-client';
 
 export default function GlobalError({
   error,
@@ -11,7 +12,16 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error('Global error:', error);
+    // This boundary replaces the ROOT layout: it is the last line of defence
+    // and the errors it sees are the worst ones — they must reach Sentry.
+    // The browser SDK is deferred (src/lib/sentry-client.ts): load it on
+    // demand, never through a static @sentry/nextjs import in a client file.
+    void loadSentryClient().then((Sentry) => {
+      Sentry?.captureException(error, {
+        tags: { boundary: 'global-error' },
+        extra: { digest: error.digest },
+      });
+    });
   }, [error]);
 
   return (

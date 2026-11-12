@@ -1,12 +1,68 @@
 {
   "crons": [
     {
-      "path": "/api/cron/reminders?window=cest",
+      "path": "/api/cron/reminders?slot=4",
+      "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/reminders?slot=5",
+      "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/cron/reminders?slot=6",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/reminders?slot=7",
+      "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/cron/reminders?slot=8",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/reminders?slot=9",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/reminders?slot=10",
+      "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/cron/reminders?slot=11",
+      "schedule": "0 11 * * *"
+    },
+    {
+      "path": "/api/cron/reminders?slot=12",
+      "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/cron/reminders?slot=13",
+      "schedule": "0 13 * * *"
+    },
+    {
+      "path": "/api/cron/reminders?slot=14",
+      "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/cron/reminders?slot=15",
+      "schedule": "0 15 * * *"
+    },
+    {
+      "path": "/api/cron/reminders?slot=16",
       "schedule": "0 16 * * *"
     },
     {
-      "path": "/api/cron/reminders?window=cet",
+      "path": "/api/cron/reminders?slot=17",
       "schedule": "0 17 * * *"
+    },
+    {
+      "path": "/api/cron/reminders?slot=18",
+      "schedule": "0 18 * * *"
+    },
+    {
+      "path": "/api/cron/reminders?slot=19",
+      "schedule": "0 19 * * *"
     },
     {
       "path": "/api/cron/daily-digest",
@@ -71,6 +127,10 @@
     {
       "path": "/api/cron/reconcile-gift-transfers",
       "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/purge-retention",
+      "schedule": "0 1 * * *"
     }
   ]
 }

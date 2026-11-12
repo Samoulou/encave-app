@@ -254,13 +254,13 @@ la SEULE preuve acceptée : l'en-tête `x-vercel-cron: 1` n'authentifie plus
 rien, il était falsifiable ; Vercel Cron envoie lui-même le Bearer dès que
 `CRON_SECRET` est défini sur le projet). Tous en GET.
 
-### 6.1 Les 9 endpoints (18 entrées `vercel.json`)
+### 6.1 Les 9 endpoints (32 entrées `vercel.json` — recompter : `jq '.crons | length' vercel.json`)
 
 ```bash
 BASE=https://encave-dev.vercel.app
 AUTH='Authorization: Bearer '"$CRON_SECRET"
 
-curl -H "$AUTH" "$BASE/api/cron/reminders"                    # #2 J-1 (garde 18h Zurich) + rappel 2h
+curl -H "$AUTH" "$BASE/api/cron/reminders"                    # horaire : #2 J-1 (≥ 18h Zurich) + rappel 2h
 curl -H "$AUTH" "$BASE/api/cron/daily-digest"                 # digest quotidien encaveur
 curl -H "$AUTH" "$BASE/api/cron/expire-pending-bookings"      # libère les holds expirés
 curl -H "$AUTH" "$BASE/api/cron/generate-occurrences"         # matérialise les occurrences
@@ -274,10 +274,14 @@ curl -H "$AUTH" "$BASE/api/cron/reconcile-gift-transfers"     # transferts gift 
 Notes vérifiées dans le code :
 
 - Sans header valide → `401 {"error":"Unauthorized"}` (test d'entrée J0).
-- Les query params de `vercel.json` (`?window=cest|cet`, `?slot=0..21`) ne
-  changent **pas** le comportement — ils rendent les 18 entrées uniques. Les
-  gardes réelles sont horaires : `reminders` n'envoie le J-1 (#2) **que si
-  l'heure Zurich courante = 18 h** (le bloc rappel 2 h tourne à chaque appel) ;
+- Les query params de `vercel.json` (`?window=cest|cet`, `?slot=N`) ne
+  changent **pas** le comportement — ils rendent les entrées uniques. Les
+  gardes réelles sont horaires : `reminders` tourne **chaque heure de 04:00
+  à 19:00 UTC** (16 entrées `?slot=4..19`) ; le J-1 (#2) part au passage de
+  **18 h Zurich**, les passages de 19 h+ le même soir ne font que rattraper
+  ce que celui de 18 h a laissé (jamais un booking créé après 18 h) ; le
+  rappel 2 h part pour toute session débutant dans (1 h, 2 h 30] et une
+  seule fois (marqueur posé avant l'envoi) ;
   `tasting-sheet-reminder` n'agit **qu'à 21 h Zurich** (sinon
   `{"skipped":"not_local_reminder_hour"}`) — un `skipped` peut donc être le
   comportement correct.

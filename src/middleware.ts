@@ -46,17 +46,94 @@ const COMING_SOON_DOMAIN = 'encave.ch';
 // string 'false' keeps the gate up — fail-closed pre-launch.
 const isComingSoonGateUp = process.env.COMING_SOON !== 'false';
 
+// Write-freeze switch (docs/runbooks/restauration-db.md). Env-based for the
+// same reason as COMING_SOON — the Edge middleware cannot read the DB — so
+// the flip is a Vercel env change (MAINTENANCE_MODE=true) + redeploy, and
+// lifting it is the same operation. Fail-OPEN: only the exact string 'true'
+// closes the site (a typo must never take production down).
+const isMaintenanceMode = process.env.MAINTENANCE_MODE === 'true';
+
+/** Seconds a client / crawler is asked to wait before retrying. */
+const MAINTENANCE_RETRY_AFTER = '600';
+
+/**
+ * API routes that keep answering during a freeze:
+ *  - webhooks: Stripe/Resend retry on 5xx and Stripe DISABLES an endpoint
+ *    that keeps failing — they must stay accepted (their handlers are
+ *    idempotent; events are replayable, see the restore runbook);
+ *  - crons: authenticated by CRON_SECRET, they finish what is in flight;
+ *  - health: the external monitor must keep seeing the real state.
+ */
+const MAINTENANCE_API_EXEMPT_PREFIXES = [
+  '/api/webhooks/',
+  '/api/cron/',
+  '/api/health',
+];
+
+const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+
+function maintenanceRefusal(): NextResponse {
+  return NextResponse.json(
+    {
+      error: 'maintenance',
+      message: 'EnCave is under maintenance. Please retry in a few minutes.',
+    },
+    {
+      status: 503,
+      headers: {
+        'Retry-After': MAINTENANCE_RETRY_AFTER,
+        'Cache-Control': 'no-store',
+      },
+    }
+  );
+}
+
 export default async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const hostname = request.headers.get('host') ?? '';
 
-  // Skip middleware for API routes and static files
-  if (
-    pathname.startsWith('/api') ||
-    pathname.startsWith('/_next') ||
-    pathname.includes('.')
-  ) {
+  // API routes: untouched, except that a write freeze refuses the MUTATING
+  // ones (reads keep working — a GET cannot write through our handlers'
+  // contract; the exempt list is documented above).
+  if (pathname.startsWith('/api')) {
+    if (
+      isMaintenanceMode &&
+      !SAFE_METHODS.has(request.method) &&
+      !MAINTENANCE_API_EXEMPT_PREFIXES.some((prefix) =>
+        pathname.startsWith(prefix)
+      )
+    ) {
+      return maintenanceRefusal();
+    }
     return NextResponse.next();
+  }
+
+  // Skip middleware for static files
+  if (pathname.startsWith('/_next') || pathname.includes('.')) {
+    return NextResponse.next();
+  }
+
+  // Maintenance: every page shows /[locale]/maintenance. Takes precedence
+  // over the Coming Soon gate and over auth redirects.
+  if (isMaintenanceMode) {
+    // Server actions are POSTs on page URLs: refuse them like a mutating
+    // API call — rewriting one to an HTML page would break the client.
+    if (!SAFE_METHODS.has(request.method)) {
+      return maintenanceRefusal();
+    }
+    const locale = getLocaleFromPathname(pathname);
+    // 503 + Retry-After, not 200: crawlers must not index the maintenance
+    // copy in place of the real pages, nor drop them from the index.
+    return NextResponse.rewrite(
+      new URL(`/${locale}/maintenance`, request.url),
+      {
+        status: 503,
+        headers: {
+          'Retry-After': MAINTENANCE_RETRY_AFTER,
+          'Cache-Control': 'no-store',
+        },
+      }
+    );
   }
 
   // The coming-soon page lives outside [locale] (locale-less) — without a
@@ -150,12 +227,18 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except:
-     * - api (API routes)
+     * - api (API routes — handled by the dedicated matcher below)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public folder files with extensions
      */
     '/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)',
+    /*
+     * API routes: matched ONLY so that MAINTENANCE_MODE can refuse the
+     * mutating ones (the matcher is static — it cannot depend on the env).
+     * Outside maintenance the middleware returns next() on the first line.
+     */
+    '/api/:path*',
   ],
 };

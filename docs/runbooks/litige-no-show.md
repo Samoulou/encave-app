@@ -29,14 +29,22 @@ par personne).
 - La cave peut annuler son marquage NO_SHOW dans les 72 h
   (`revertBookingNoShow`) — ce revert déclenche le remboursement
   automatique des frais (voir `noShowFeeRefundId`).
-- Au-delà, côté admin : **`refundBookingManually` existe côté serveur mais
-  n'a PAS d'UI** — l'appeler n'est pas possible depuis l'admin aujourd'hui.
-  Passer par le Dashboard Stripe : Paiements → le PaymentIntent des frais
-  (`noShowFeeChargePaymentIntentId`) → Refund (total). Puis consigner :
-  ```sql
-  UPDATE bookings SET "noShowFeeRefundedCents" = <montant>,
-    "noShowFeeRefundId" = 're_XXX' WHERE id = '...';
-  ```
+- Au-delà, côté admin, il y a **deux remboursements distincts** — ne pas
+  les confondre :
+  - **Le prix de la réservation** (paiement initial du client) : `/admin` →
+    **Réservations** (`/admin/bookings`) → bouton de remboursement de la
+    ligne (`AdminRefundControls` → action `refundBookingManually`) : montant
+    partiel ou total, motif obligatoire (≥ 10 caractères), journalisé dans
+    `admin_actions`, e-mails client (dans la langue de la réservation) et
+    cave envoyés automatiquement.
+  - **Les frais de no-show** (prélèvement séparé, off-session, sur
+    l'empreinte) : ils ne passent **pas** par ce bouton. Passer par le
+    Dashboard Stripe : Paiements → le PaymentIntent des frais
+    (`noShowFeeChargePaymentIntentId`) → Refund (total). Puis consigner :
+    ```sql
+    UPDATE bookings SET "noShowFeeRefundedCents" = <montant>,
+      "noShowFeeRefundId" = 're_XXX' WHERE id = '...';
+    ```
 
 ## Chargeback (contestation bancaire)
 

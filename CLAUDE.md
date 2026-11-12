@@ -8,9 +8,9 @@ The codebase is the working V2 MVP; the product target is V3. Strategy validated
 
 1. **Keep what exists and works — extend it, never rewrite it** to cosmetically match V3 docs. New behavior is added on top of the current code.
 2. **Everything missing is built per the V3 docs**, the product/business source of truth: `docs/v3/ENCAVE-V3-PRD.md` (scope, user stories, NFR), `docs/v3/ENCAVE-V3-BUSINESS.md` (pricing, unit economics), `docs/v3/ENCAVE-V3-PAGES-EMAILS.md` (every screen and email), `docs/v3/ENCAVE-V3-PLANNING.md` (phases, gates, fuses). Current technical state: `docs/ARCHITECTURE.md` (kept current — routing, rendering, server layer, caching). Historical gap snapshot: `docs/archive/ENCAVE-V3-GAP-ANALYSIS.md`. **Execution is driven by `docs/ENCAVE-V3-DELIVERY-PLAN.md`** (package loop P-01→P-16, gate-style DoDs, living status table — supersedes the epic structure of ENCAVE-V3-PLANNING.md for day-to-day work), backed by the item-level `docs/ENCAVE-V3-LAUNCH-BACKLOG.md`.
-3. **Stack decision**: the V3 docs' tech references (Supabase, Drizzle, Trigger.dev, Postgres RLS, magic link, Axiom, monorepo) are **superseded** — we stay on the stack below. This file is authoritative for tech; V3 docs for product/UX/business. "RLS 100%" translates to app-layer tenant filtering + DB invariants + role×resource tests. Deferred jobs (request reminders, scheduled gift-card delivery, J+2 email) use Vercel Cron + the `ScheduledJob` table, not Trigger.dev — the generic runner is `/api/cron/process-scheduled-jobs` (hourly): add new job types to its `JOB_REGISTRY` (type + kill-switch flag + handler, inseparable), never a per-type cron.
-4. **Launch pillars (16 Nov 2026), all still to build**: gift cards (bons cadeaux), sur-mesure requests, anti no-show (SetupIntent card imprint + configurable fee), tasting sheet → J+2 wine email loop, collective events (light). Then V3.1 Shop (Jan 2027), V3.2 Stay (Feb 2027), V3.3 reviews/widget.
-5. **Every money-touching feature ships behind a feature flag** (env-based until a flag system exists) — gift cards and no-show fees must be disable-able in under a minute without a deploy.
+3. **Stack decision**: the V3 docs' tech references (Supabase, Drizzle, Trigger.dev, Postgres RLS, magic link, Axiom, monorepo) are **superseded** — we stay on the stack below. This file is authoritative for tech; V3 docs for product/UX/business. "RLS 100%" translates to app-layer tenant filtering + DB invariants + role×resource tests. Deferred jobs (request reminders, scheduled gift-card delivery, J+2 email) use Vercel Cron + the `ScheduledJob` table, not Trigger.dev — the generic runner is `/api/cron/process-scheduled-jobs` (every 3 h — eight once-daily `?slot=N` entries in `vercel.json`): add new job types to its `JOB_REGISTRY` (type + kill-switch flag + handler, inseparable), never a per-type cron.
+4. **Launch pillars (16 Nov 2026) — all shipped, each behind its feature flag** (P-07→P-11): gift cards (bons cadeaux), sur-mesure requests, anti no-show (SetupIntent card imprint + configurable fee), tasting sheet → J+2 wine email loop, collective events (light). Next: V3.1 Shop (Jan 2027), V3.2 Stay (Feb 2027), V3.3 reviews/widget.
+5. **Every money-touching feature ships behind a feature flag** — the DB-backed registry `src/lib/flags.ts`, toggled from `/admin` (runbook `docs/runbooks/kill-switch-flags.md`): gift cards and no-show fees must be disable-able in under a minute without a deploy. Only two switches are env-based, because the Edge middleware cannot read the DB: `COMING_SOON` (launch gate) and `MAINTENANCE_MODE` (write freeze) — both need a redeploy.
 6. **Schema changes are additive migrations** — never destructive changes to existing tables as a side effect of a feature.
 7. **Routes**: existing routes keep their current (English) paths. New V3 surfaces follow the French naming of the pages inventory (`/cadeaux`, `/sur-mesure`, `/compte`, `/encaveur/*`…). Renaming an existing route requires a dedicated epic with redirects — never as a side effect.
 
@@ -36,18 +36,18 @@ Test commands use `dotenv -e .env.test --` prefix. Never run tests against produ
 - **Next.js** ^14.2.35 (App Router, Server Components, Server Actions)
 - **React** ^18.3.1 | **TypeScript** ^5.0.0 (strict, noUncheckedIndexedAccess, noImplicitAny)
 - **Prisma** ^5.22.0 — PostgreSQL (Neon), pooled `DATABASE_URL`, `DIRECT_URL` for migrations, cuid() IDs
-- **better-auth** ^1.4.17 — email/password + OAuth (Google/Apple)
+- **better-auth** ^1.7.21 — email/password + email OTP + TOTP (admin) + OAuth (Google only — Apple removed in P-14)
 - **Stripe** ^20.1.2 — Connect, API version pinned `2025-12-15.clover` (never change)
-- **next-intl** ^4.7.0 — locales: fr (default), de, en; localePrefix: always
+- **next-intl** ^4.15.0 — locales: fr (default), de, en; localePrefix: always
 - **Tailwind** ^3.4.0 + shadcn/ui (Radix + CVA) | **Prettier** with tailwindcss plugin
-- **react-hook-form** ^7.70.0 + **Zod** ^4.3.5 (v4 API, not v3)
+- **react-hook-form** ^7.70.0 + **Zod** ^4.6.7 (v4 API, not v3)
 - **nuqs** ^2.8.6 (URL search params). framer-motion was removed in P-01 (CSS animations only) — don't reintroduce it
 - **react-day-picker** ^9.13.0 (v9, not v8)
-- **Pino** ^10.1.1 (structured logging) | **Sentry** ^10.33.0
+- **Pino** ^10.1.1 (structured logging) | **Sentry** ^10.78.0
 - **Resend** ^6.7.0 + React Email | **Vercel Blob** ^2.0.0
 - **Vitest** ^2.0.0 (jsdom) + **Playwright** ^1.57.0 (Chromium only)
 - **date-fns** ^4.1.0 | **@react-pdf/renderer** ^4.3.2
-- **Fonts**: Manrope (`--font-manrope`, sans) + Fraunces (`--font-fraunces`, display/serif — prices, KPIs, headings) + JetBrains Mono (`--font-mono`)
+- **Fonts** (`next/font/google`, `src/app/[locale]/layout.tsx`): Nunito (`--font-display`, headings) + Averia Serif Libre (`--font-serif`, plus the 400-italic face `--font-display-italic`) + Mukta Vaani (`--font-sans`, body) + JetBrains Mono (`--font-mono`)
 
 ## Architecture
 
@@ -184,7 +184,8 @@ Component → Server Action → Service/Query → DB
 - Booking access tokens stored as `accessTokenHash` — never store plaintext
 - Never expose Prisma types with sensitive fields to client — create DTOs
 - CSP headers in `next.config.js` — check before adding external scripts/iframes
-- Cron routes authenticate via `CRON_SECRET` using `src/lib/cron-auth.ts`
+- Cron routes authenticate via `Authorization: Bearer $CRON_SECRET` only, using `src/lib/cron-auth.ts`. Every cron entry of `vercel.json` must be mirrored (union crontab) in `CRON_SCHEDULES` (`src/lib/cron-monitor.ts`) — `tests/unit/lib/cron-monitor.test.ts` fails on drift
+- `MAINTENANCE_MODE=true` (env + redeploy) = maintenance page on every page + 503 on mutating API calls and server actions; `/api/webhooks/**`, `/api/cron/**` and `/api/health` stay open (`src/middleware.ts`, runbook `docs/runbooks/restauration-db.md`)
 
 ## Business Rules
 
@@ -219,7 +220,7 @@ V3 target (see `docs/v3/ENCAVE-V3-BUSINESS.md` — build incrementally, feature-
 - TWINT first at checkout (currently `card` only), Link enabled, saved cards via `setup_future_usage`
 - VAT: prices displayed TTC; anticipate the 100k CHF threshold (no Stripe Tax yet)
 
-### V3 Domain Rules (target — none of these models exist yet; specs in `docs/v3/`)
+### V3 Domain Rules (specs in `docs/v3/` — all five are shipped behind their feature flag, P-07→P-11)
 
 - **Gift cards**: 2.50 fee at purchase, commission of the winery's tier at redemption. Append-only ledger, balance never negative (DB invariant), partial redemption, 5-year validity, transactional lock against concurrent redemption. Admin needs a total-liability view
 - **Requests (sur-mesure)**: client form → winery offer (text, total price, expiry) → payment link → tickets. Visible 48h SLA; single automatic reminder before offer expiry, then closure
@@ -231,7 +232,7 @@ V3 target (see `docs/v3/ENCAVE-V3-BUSINESS.md` — build incrementally, feature-
 ### Experience Rules
 
 - Status: `DRAFT` → `PUBLISHED` → `ARCHIVED`
-- Slugs unique per winery (compound), not globally
+- Slugs are globally unique at creation (`ensureUniqueSlug` — the fiche URL `/experiences/[slug]` has no winery segment); the DB constraint itself is still the compound per-winery one
 - Duration in minutes, price in cents
 
 ### Booking References
@@ -249,20 +250,21 @@ Two components with similar names may coexist (e.g. `ExperiencesList.tsx` and `E
 
 If you find unused twins along the way, propose removing them (don't leave them rotting — they will trap the next agent).
 
-## Known Debt & Pitfalls (audited 2026-07-09)
+## Known Debt & Pitfalls (audited 2026-07-09, re-verified 2026-11-12)
 
 Current architecture: `docs/ARCHITECTURE.md`. Historical audits (pre-delivery snapshots): `docs/archive/ENCAVE-V3-GAP-ANALYSIS.md` §10, `docs/archive/ENCAVE-V3-PERF-AUDIT.md`. Perf status: was home mobile Lighthouse 48 / LCP 9.8s; after P-01 + P-06 all OBSERVED metrics are green locally (home LCP 706 ms, HTML −33% to −69%, 173 ISR routes) but the local Lantern SIMULATION still reads home 73 (known artifact, see `docs/archive/plans/P-06-performance.md`); NFR truth = staging/CDN, tooled gate = Lighthouse CI in P-16/L-182. Don't rediscover these; fix them when touching the area:
 
-- The confirmation email is sent WITHOUT `bookingId`/`accessToken` (`checkout-confirmation.service.ts`) → no QR attachment, ticket button links to the homepage, the guest magic link is never delivered
-- ~~Only 2 of 5 cron routes scheduled~~ fixed: all 8 cron routes are in `vercel.json` (P-07 added `process-scheduled-jobs` + `tasting-sheet-reminder` at 19:00/20:00 UTC with a 21h-Zurich guard)
+- ~~The confirmation email is sent WITHOUT `bookingId`/`accessToken`~~ fixed: `sendBookingConfirmationNotifications` (`checkout-confirmation.service.ts`) passes both → inline QR + PDF ticket + `.ics`, tokenised ticket link. The send result is checked: `confirmationSentAt` is only stamped on a real send
+- ~~Only 2 of 5 cron routes scheduled~~ fixed: all 9 cron routes are in `vercel.json` (`process-scheduled-jobs` ×8 slots, `tasting-sheet-reminder` at 19:00/20:00 UTC with a 21h-Zurich guard, `reminders` hourly 04:00–19:00 UTC as 16 `?slot=N` entries — J-1 at 18h Zurich with evening catch-up, 2h reminder for sessions starting in (1h, 2h30], both claimed before send)
 - ~~The confirmation QR encodes `/checkin/{bookingId}`~~ stale: `QRCodeCard` now encodes the ticket URL `/{locale}/booking/{id}?token=…`, which the scanner accepts
 - ~~The Stripe **Connect** webhook has no idempotency guard~~ stale: it claims events via `StripeEvent` like the checkout webhook (verified P-13)
-- `refundBookingManually` (admin) exists server-side but no UI calls it (`requestAccountDeletion` nLPD is now wired to `DeleteAccountSection`)
-- The OLD `translations.ts` blocks are unaccented French (newer blocks are correct — imitate `manualRefund`); `sendEmail` silently returns success when `RESEND_API_KEY` is unset (non-production only since P-01). Client-facing emails must use `Booking.locale` (persisted at checkout since P-07) — never the winemaker's `preferredLocale`
+- ~~`refundBookingManually` (admin) has no UI~~ fixed: `AdminRefundControls` on `/admin/bookings` (`requestAccountDeletion` nLPD is wired to `DeleteAccountSection`). It refunds the BOOKING payment only — a no-show fee is refunded from the Stripe Dashboard (runbook `litige-no-show.md`)
+- ~~The OLD `translations.ts` blocks are unaccented French~~ fixed 12.11: full FR + DE pass (accents, umlauts, French punctuation spacing), guarded by `tests/unit/emails/translations.test.ts` — Swiss German: `ss`, never `ß`. `sendEmail` returns `false` (never success) when `RESEND_API_KEY` is unset in production; it silently succeeds only outside production. Client-facing emails must use `Booking.locale` (persisted at checkout since P-07) — never the winemaker's `preferredLocale`. Every email carries a plain-text part and `Reply-To: EMAIL_REPLY_TO` (the sender `noreply@` has no inbox)
 - ~~Earnings "next payout" heuristics + occupancy placebo~~ fixed P-13: `/dashboard/payouts` reads real Stripe payouts (`payouts.queries.ts`, 5-min `unstable_cache`, errors throw → retry banner, never a heuristic fallback); transaction statuses are booking facts (`upcoming/completed/refunded`); the landing KPI is a real 30-day fill rate over persisted occurrences (`dashboard-today.queries.ts`)
-- The receipt PDF claims "Taxes et frais de service inclus" while no VAT is computed anywhere
-- The 3 aggregate emails (DailyDigest, WeeklySummary, PostExperienceFollowUp) don't pass a tokenised `unsubscribeUrl` → they fall back to the static `/unsubscribe` page (compliance gap; the tokenised route `/api/unsubscribe/[token]` exists but has no producer)
-- The middleware hardcodes the Coming Soon gate on `encave.ch` — remove at launch
+- ~~The receipt PDF claims "Taxes et frais de service inclus"~~ fixed: one statement everywhere (receipt PDF, confirmation page, sur-mesure offer) — « Prix TTC. EnCave n'est pas assujettie à la TVA à ce jour. » No VAT is computed anywhere: revisit ALL three strings (`vatNote`, `includesTaxes`, `offerPriceNote`) the day EnCave registers for VAT (100k CHF threshold)
+- ~~The 3 aggregate emails don't pass a tokenised `unsubscribeUrl`~~ fixed 12.11: `src/server/services/email-preferences.service.ts` is the single producer/consumer of opt-out links — wineries (DailyDigest, WeeklySummary) → `/api/unsubscribe/[token]?type=…`, clients (PostExperienceFollowUp, TastingRecap) → `/api/unsubscribe/client/[token]`. The same URL feeds the footer link and the `List-Unsubscribe` + `List-Unsubscribe-Post` headers (both routes accept the one-click POST). Transactional emails (confirmation, reminders, refunds, security notices) pass no `unsubscribeUrl` and show no unsubscribe link — a new opt-out-able email MUST pass one
+- ~~The middleware hardcodes the Coming Soon gate~~ fixed P-16: env flag `COMING_SOON` (anything but `false` keeps the gate up, fail-closed). Still to do at launch: set `COMING_SOON=false` on Vercel + redeploy. The gate is hostname-based (`encave.ch` / `www.encave.ch`): the production `*.vercel.app` domain is NOT gated
+- Still open (see the audit report §5–6): legal identity placeholders (`mentionsLegales.*` = `[À COMPLÉTER]`, « EnCave SA » + a fictitious address hardcoded on the three legal pages); no Node `engines` pin in `package.json` (CI runs Node 20); `/login` and `/register` are indexable (out of the sitemap, but no `noindex`); `createWinery` still awaits an unguarded `posthogServer.flush()` before its emails
 
 ## Pre-launch audit (12.11.2026)
 

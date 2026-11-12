@@ -8,15 +8,25 @@ import {
   logEmailFailed,
   logEmailSkipped,
 } from '@/server/services/email-log.service';
+import { getClientUnsubscribe } from '@/server/services/email-preferences.service';
 import { startOfDay, subHours } from 'date-fns';
 import { zonedWallClockToUTC } from '@/lib/datetime/zurich';
 import { BookingStatus, ScheduledJobStatus } from '@prisma/client';
 import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
 import { tastingRecapDedupeKey } from '@/lib/constants/wine';
-import { logError } from '@/lib/logger';
+import { mapWithConcurrency } from '@/lib/utils/concurrency';
+import { logError, logWarn } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60;
+// Per-booking email round-trips — the default budget truncated a busy day
+// silently. The run stops ITSELF before the cutoff (RUN_BUDGET_MS); what is
+// left is picked up by the next daily run (open-ended window below).
+export const maxDuration = 300;
+
+/** Stop starting new sends after this long (maxDuration is 300 s). */
+const RUN_BUDGET_MS = 240_000;
+/** Low enough for the Resend send rate. */
+const SEND_CONCURRENCY = 5;
 
 function toDateOnlyUTC(date: Date): Date {
   return new Date(
@@ -35,7 +45,14 @@ export async function GET() {
   }
 
   const now = new Date();
-  const results = { sent: 0, failed: 0, skippedRecapArmed: 0 };
+  const deadline = Date.now() + RUN_BUDGET_MS;
+  const results = {
+    sent: 0,
+    failed: 0,
+    skippedRecapArmed: 0,
+    skippedOptedOut: 0,
+    deferred: 0,
+  };
 
   try {
     // P-16 (WS-E): Sentry check-in — a missed run = dead cron alert.
@@ -57,9 +74,17 @@ export async function GET() {
             lte: toDateOnlyUTC(startOfDay(followUpCutoff)),
           },
         },
-        include: {
-          experience: true,
-          winery: true,
+        // Only what the email renders (the old `include` dragged the full
+        // experience + winery rows, descriptions included).
+        select: {
+          id: true,
+          visitorEmail: true,
+          visitorName: true,
+          locale: true,
+          date: true,
+          timeSlot: true,
+          experience: { select: { title: true, duration: true } },
+          winery: { select: { name: true } },
         },
       });
 
@@ -90,25 +115,26 @@ export async function GET() {
         }
       }
 
-      // Filter by actual experience end time
-      for (const booking of bookings) {
+      await mapWithConcurrency(bookings, SEND_CONCURRENCY, async (booking) => {
+        // The claim below sets followUpSentAt BEFORE the send (so two
+        // overlapping runs never both email); this flag tells the catch
+        // whether it has to be released.
+        let claimed = false;
         try {
-          // Parse the time slot and calculate when experience ended
+          // Filter by actual experience end time.
           const bookingStartTime = getBookingStartTime(
             booking.date,
             booking.timeSlot
           );
-
-          // Add experience duration to get end time
           const experienceEndTime = new Date(
             bookingStartTime.getTime() + booking.experience.duration * 60 * 1000
           );
 
           // Only skip a session that is still too recent (< 22h). No lower
           // bound → a session missed on one run is caught the next; the
-          // followUpSentAt guard (set on success) prevents a double send.
+          // followUpSentAt guard prevents a double send.
           if (experienceEndTime > followUpCutoff) {
-            continue;
+            return;
           }
 
           // D4 skip — deliberately WITHOUT setting followUpSentAt: nothing was
@@ -123,8 +149,42 @@ export async function GET() {
               booking.id
             );
             results.skippedRecapArmed++;
-            continue;
+            return;
           }
+
+          if (Date.now() > deadline) {
+            results.deferred++;
+            return;
+          }
+
+          // Opt-out + tokenised unsubscribe link (same preference row as the
+          // tasting recap): this email is not transactional, the client may
+          // refuse it. An opted-out booking is marked handled — it will
+          // never be sent, no point re-evaluating it for three days.
+          const preference = await getClientUnsubscribe(booking.visitorEmail);
+          if (preference.optedOut) {
+            await db.booking.updateMany({
+              where: { id: booking.id, followUpSentAt: null },
+              data: { followUpSentAt: new Date() },
+            });
+            await logEmailSkipped(
+              'follow_up',
+              booking.visitorEmail,
+              'opted_out',
+              booking.id
+            );
+            results.skippedOptedOut++;
+            return;
+          }
+
+          const claim = await db.booking.updateMany({
+            where: { id: booking.id, followUpSentAt: null },
+            data: { followUpSentAt: new Date() },
+          });
+          if (claim.count !== 1) {
+            return;
+          }
+          claimed = true;
 
           const success = await sendPostExperienceFollowUpEmail(
             booking.visitorEmail,
@@ -133,31 +193,43 @@ export async function GET() {
               experienceTitle: booking.experience.title,
               wineryName: booking.winery.name,
               date: bookingStartTime,
+              unsubscribeUrl: preference.unsubscribeUrl,
             },
             booking.locale
           );
 
           if (success) {
-            await db.booking.update({
-              where: { id: booking.id },
-              data: { followUpSentAt: new Date() },
-            });
             await logEmailSent('follow_up', booking.visitorEmail, booking.id);
             results.sent++;
-          } else {
-            await logEmailFailed(
-              'follow_up',
-              booking.visitorEmail,
-              'Failed to send',
-              booking.id
-            );
-            results.failed++;
+            return;
           }
+
+          // Nothing left: release the claim so the next daily run retries.
+          await db.booking.updateMany({
+            where: { id: booking.id },
+            data: { followUpSentAt: null },
+          });
+          claimed = false;
+          await logEmailFailed(
+            'follow_up',
+            booking.visitorEmail,
+            'Failed to send',
+            booking.id
+          );
+          results.failed++;
         } catch (error) {
           logError('FollowUps cron error for booking', error, {
             action: 'cronFollowUps',
             bookingId: booking.id,
           });
+          if (claimed) {
+            await db.booking
+              .updateMany({
+                where: { id: booking.id },
+                data: { followUpSentAt: null },
+              })
+              .catch(() => undefined);
+          }
           await logEmailFailed(
             'follow_up',
             booking.visitorEmail,
@@ -166,6 +238,13 @@ export async function GET() {
           );
           results.failed++;
         }
+      });
+
+      if (results.deferred > 0) {
+        logWarn('follow-ups cron hit its time budget — rest left to next run', {
+          action: 'cronFollowUps',
+          deferred: results.deferred,
+        });
       }
 
       return NextResponse.json({
