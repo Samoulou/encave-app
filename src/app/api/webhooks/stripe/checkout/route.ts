@@ -1,6 +1,7 @@
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import type Stripe from 'stripe';
+import * as Sentry from '@sentry/nextjs';
 import { getStripe, isStripeConfigured } from '@/server/stripe';
 import { db } from '@/server/db';
 import { env } from '@/lib/env';
@@ -20,6 +21,13 @@ import {
   markStripeEventFailed,
   markStripeEventProcessed,
 } from '@/server/services/stripe-event.service';
+
+/**
+ * Explicit budget for the handler (Stripe + DB + emails/PDF). MUST stay well
+ * under STALE_STRIPE_EVENT_MINUTES (stripe-event.service): a run still alive
+ * past the stale threshold could be reclaimed and double-processed.
+ */
+export const maxDuration = 60;
 
 export async function POST(req: Request) {
   if (!isStripeConfigured()) {
@@ -63,8 +71,17 @@ export async function POST(req: Request) {
     );
   }
 
-  const shouldProcess = await claimStripeEvent(event);
-  if (!shouldProcess) {
+  const claim = await claimStripeEvent(event);
+  if (claim === 'in_progress') {
+    // Another delivery of this event is mid-handler. A 2xx here would end
+    // Stripe's retries — if that run then dies, the event is lost for good.
+    // 409 keeps Stripe redelivering until it is PROCESSED or reclaimable.
+    return NextResponse.json(
+      { error: 'Event is being processed', retry: true },
+      { status: 409 }
+    );
+  }
+  if (claim === 'duplicate') {
     return NextResponse.json({ received: true, duplicate: true });
   }
 
@@ -151,6 +168,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       await refundOrphanedCheckoutPayment(session);
     } else if (result === 'not_pending') {
       await refundOrphanIfCancelledNeverConfirmed(session);
+    } else if (result === 'session_mismatch') {
+      await refundPaidSessionMismatch(session);
     }
     return;
   }
@@ -185,6 +204,14 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     await refundOrphanIfCancelledNeverConfirmed(session);
     return;
   }
+  // PAID on a session the booking no longer points at (a newer session was
+  // minted for the same booking, or the booking was already paid on another
+  // one). Never acknowledge it silently — and never settle a gift transfer
+  // on it: the gift state on the booking belongs to the CURRENT session.
+  if (result === 'session_mismatch') {
+    await refundPaidSessionMismatch(session);
+    return;
+  }
 
   // Gift-redeemed booking (P-09): settle the platform→winery transfer of
   // the gift-covered part, INDEPENDENTLY of the confirmation result — it
@@ -197,6 +224,50 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       await settleGiftTransfer(bookingId);
     }
   }
+}
+
+/**
+ * A PAID Checkout Session that is not the one its booking currently points at
+ * (`session_mismatch`): the client was charged on a superseded session — a
+ * second tab/device on the same sur-mesure offer, or a double payment after
+ * the booking was already confirmed on another session.
+ *
+ * Decision: REFUND, never "confirm on the stale session". The booking's money
+ * fields (totals, service fee, gift redemption) and its hold window were
+ * rewritten for the CURRENT session; confirming on the old one would record a
+ * booking whose amounts may not match what was charged, leave the current
+ * session payable (double charge) and settle a gift transfer on the wrong
+ * redemption. The refund reuses the orphan path: idempotent on the session id
+ * (Stripe key + already-refunded tolerance), `reverse_transfer` derived from
+ * the session itself. The booking is left untouched — it stays payable on its
+ * current session, or CONFIRMED if it already was.
+ *
+ * A Stripe failure throws → the event is marked FAILED and redelivered.
+ */
+async function refundPaidSessionMismatch(session: Stripe.Checkout.Session) {
+  const bookingId = session.metadata?.bookingId;
+  logError(
+    'Paid checkout session does not match its booking — refunding',
+    undefined,
+    {
+      action: 'refundPaidSessionMismatch',
+      bookingId,
+      sessionId: session.id,
+      kind: session.metadata?.kind ?? 'booking',
+      amountTotal: session.amount_total,
+    }
+  );
+  Sentry.captureMessage('paid checkout session mismatch — refunded', {
+    level: 'error',
+    tags: { area: 'stripe-webhook', incident: 'session-mismatch' },
+    extra: {
+      bookingId,
+      sessionId: session.id,
+      kind: session.metadata?.kind ?? 'booking',
+      amountTotal: session.amount_total,
+    },
+  });
+  await refundOrphanedCheckoutPayment(session);
 }
 
 /**

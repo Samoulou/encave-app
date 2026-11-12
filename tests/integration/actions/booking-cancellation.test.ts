@@ -537,9 +537,104 @@ describe('Booking Cancellation Actions', () => {
       // Should not call processRefund even though >24h (no payment to refund)
       expect(processRefund).not.toHaveBeenCalled();
     });
+
+    // ON_SITE / free offer (P-08): the price is settled at the winery —
+    // nothing was ever charged online, so there is nothing to refund and
+    // nothing "impossible" about it.
+    it.each([
+      [
+        'no card imprint',
+        { stripeCheckoutSessionId: null, noShowSetupIntentId: null },
+      ],
+      [
+        'card imprint (setup-mode session)',
+        {
+          stripeCheckoutSessionId: 'cs_test_setup_1',
+          noShowSetupIntentId: 'seti_test_1',
+        },
+      ],
+    ])(
+      'cancels an ON_SITE booking (%s) with NO refund incident and no "refund pending" email',
+      async (_label, sessionFacts) => {
+        vi.mocked(db.booking.findFirst).mockResolvedValue({
+          ...mockConfirmedBooking,
+          date: new Date('2026-01-14'), // > 24h → the policy would "owe" 100%
+          timeSlot: '14:00',
+          stripePaymentIntentId: null,
+          giftAppliedCents: 0,
+          ...sessionFacts,
+        } as never);
+
+        const { cancelBooking } = await import('@/server/actions/booking');
+        const result = await cancelBooking('booking-cancel-1', accessToken);
+
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.refundIssued).toBe(false);
+          expect(result.data.refundAmount).toBeNull();
+        }
+        expect(processRefund).not.toHaveBeenCalled();
+        // No CARD_REFUND_IMPOSSIBLE marker appended to Booking.refundError.
+        expect(db.$executeRaw).not.toHaveBeenCalled();
+        // 0 = "no refund" wording; null would be "your refund is pending".
+        expect(sendBookingCancellationEmail).toHaveBeenCalledWith(
+          'cancel@example.com',
+          expect.objectContaining({ refundAmountCents: 0 }),
+          'EN'
+        );
+      }
+    );
+
+    it('STILL flags a booking that went through a PAYMENT session but has no payment intent (real anomaly)', async () => {
+      vi.mocked(db.booking.findFirst).mockResolvedValue({
+        ...mockConfirmedBooking,
+        date: new Date('2026-01-14'),
+        timeSlot: '14:00',
+        stripePaymentIntentId: null,
+        giftAppliedCents: 0,
+        stripeCheckoutSessionId: 'cs_test_payment_1',
+        noShowSetupIntentId: null,
+      } as never);
+
+      const { cancelBooking } = await import('@/server/actions/booking');
+      const result = await cancelBooking('booking-cancel-1', accessToken);
+
+      expect(result.success).toBe(true);
+      expect(processRefund).not.toHaveBeenCalled();
+      // The reconciliation marker is persisted…
+      expect(db.$executeRaw).toHaveBeenCalledTimes(1);
+      // …and the client is never told "no refund" while money is owed.
+      expect(sendBookingCancellationEmail).toHaveBeenCalledWith(
+        'cancel@example.com',
+        expect.objectContaining({ refundAmountCents: null }),
+        'EN'
+      );
+    });
   });
 
   describe('getCancellationInfo', () => {
+    it('announces no refund for an ON_SITE booking (nothing was charged online)', async () => {
+      vi.mocked(db.booking.findFirst).mockResolvedValue({
+        ...mockConfirmedBooking,
+        date: new Date('2026-01-14'),
+        timeSlot: '14:00',
+        stripePaymentIntentId: null,
+        giftAppliedCents: 0,
+        stripeCheckoutSessionId: null,
+        noShowSetupIntentId: null,
+      } as never);
+
+      const { getCancellationInfo } = await import('@/server/actions/booking');
+      const result = await getCancellationInfo('booking-cancel-1', accessToken);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.canCancel).toBe(true);
+        expect(result.data.isEligibleForRefund).toBe(false);
+        expect(result.data.refundAmount).toBe(0);
+      }
+    });
+
     it('returns refund eligible info when >24h before experience', async () => {
       const bookingWithFutureDate = {
         ...mockConfirmedBooking,

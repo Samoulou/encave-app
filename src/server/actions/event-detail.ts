@@ -9,6 +9,7 @@ import { getStripe } from '@/server/stripe';
 import {
   appendRefundError,
   processCancellationRefund,
+  wasNeverChargedOnline,
 } from '@/server/services/booking-refund.service';
 import { sendBookingCancelledByWineryEmail } from '@/server/services/email.service';
 import { getNearbyWineryAlternatives } from '@/server/queries/winery-alternatives.queries';
@@ -674,6 +675,9 @@ export async function cancelEventSession(
       giftAppliedCents: true,
       wineryPayout: true,
       refundAmount: true,
+      // ON_SITE detection (wasNeverChargedOnline) — imprint bookings carry
+      // a setup-mode Checkout Session.
+      noShowSetupIntentId: true,
     },
   });
 
@@ -749,7 +753,10 @@ export async function cancelEventSession(
           stripePaymentIntentId: booking.stripePaymentIntentId,
           giftAppliedCents: booking.giftAppliedCents,
           wineryPayout: booking.wineryPayout,
-          refundDueCents: Math.max(0, paidCents - alreadyRefundedCents),
+          // Nothing charged online (ON_SITE) → nothing due, no incident.
+          refundDueCents: wasNeverChargedOnline(booking)
+            ? 0
+            : Math.max(0, paidCents - alreadyRefundedCents),
           alreadyRefundedCents,
           paidCents,
           // 100% refund → full winery clawback.

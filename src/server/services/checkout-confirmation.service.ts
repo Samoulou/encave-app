@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import type Stripe from 'stripe';
+import * as Sentry from '@sentry/nextjs';
 import {
   BookingStatus,
   ExperiencePaymentMode,
@@ -212,13 +213,16 @@ async function sendBookingConfirmationNotifications(
         source,
       },
     });
-    await posthogServer.flush();
+    // Best-effort analytics — never on the confirmation path: an awaited
+    // flush could stall (PostHog slow/unreachable) or throw BEFORE the
+    // client email below, on a booking that is already CONFIRMED and paid.
+    void posthogServer.flush().catch(() => {});
   }
 
   const bookingDateTime = zonedWallClockToUTC(booking.date, booking.timeSlot);
 
   try {
-    await sendBookingConfirmationEmail(
+    const confirmationSent = await sendBookingConfirmationEmail(
       booking.visitorEmail,
       {
         bookingId: booking.id,
@@ -240,19 +244,33 @@ async function sendBookingConfirmationNotifications(
       // winemaker's — the winery notification below keeps its own locale.
       booking.locale
     );
-    await db.booking.update({
-      where: { id: booking.id },
-      data: { confirmationSentAt: new Date() },
-    });
+    // sendEmail resolves `false` (it does not throw) when Resend refused
+    // the message after its retries, or when the key is missing in
+    // production. Stamp the dedupe flag ONLY on a real send — a false
+    // "sent" hides a paid client left without ticket.
+    if (confirmationSent) {
+      await db.booking.update({
+        where: { id: booking.id },
+        data: { confirmationSentAt: new Date() },
+      });
+    } else {
+      reportConfirmationEmailFailure('client_confirmation', booking.id, source);
+    }
   } catch (error) {
     logError('Failed to send confirmation email', error, {
       bookingId: booking.id,
       source,
     });
+    reportConfirmationEmailFailure(
+      'client_confirmation',
+      booking.id,
+      source,
+      error
+    );
   }
 
   try {
-    await sendWinemakerNewBookingEmail(
+    const wineryNotified = await sendWinemakerNewBookingEmail(
       booking.winery.email,
       {
         winemakerName: booking.winery.user.name ?? 'Winemaker',
@@ -266,16 +284,55 @@ async function sendBookingConfirmationNotifications(
       },
       booking.winery.user.preferredLocale
     );
-    await db.booking.update({
-      where: { id: booking.id },
-      data: { wineryNotifiedAt: new Date() },
-    });
+    if (wineryNotified) {
+      await db.booking.update({
+        where: { id: booking.id },
+        data: { wineryNotifiedAt: new Date() },
+      });
+    } else {
+      reportConfirmationEmailFailure('winery_new_booking', booking.id, source);
+    }
   } catch (error) {
     logError('Failed to send winery notification', error, {
       bookingId: booking.id,
       source,
     });
+    reportConfirmationEmailFailure(
+      'winery_new_booking',
+      booking.id,
+      source,
+      error
+    );
   }
+}
+
+/**
+ * A confirmation email that did not go out is an incident on a CONFIRMED
+ * (usually paid) booking: the dedupe stamp stays null and Sentry is told
+ * (alert rule on area:email) instead of leaving a Pino line nobody reads.
+ */
+function reportConfirmationEmailFailure(
+  email: 'client_confirmation' | 'winery_new_booking',
+  bookingId: string,
+  source: CheckoutConfirmationSource | 'gift' | 'on_site' | 'imprint',
+  error?: unknown
+): void {
+  if (error === undefined) {
+    logError('Confirmation email was not sent', undefined, {
+      bookingId,
+      email,
+      source,
+    });
+  }
+  Sentry.captureMessage(`booking ${email} email not sent`, {
+    level: 'error',
+    tags: { area: 'email', email },
+    extra: {
+      bookingId,
+      source,
+      ...(error !== undefined ? { error: String(error) } : {}),
+    },
+  });
 }
 
 /**

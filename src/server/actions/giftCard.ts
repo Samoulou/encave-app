@@ -9,6 +9,7 @@ import { db } from '@/server/db';
 import { auth } from '@/server/auth';
 import { requireAdmin } from '@/server/admin-guard';
 import { getBaseUrl } from '@/lib/env';
+import { isE2ETest } from '@/lib/e2e-mode';
 import type { ActionResult } from '@/types/actions';
 import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
 import {
@@ -177,7 +178,7 @@ export async function createGiftCardCheckoutAction(
     // no Stripe call; the spec POSTs the signed synthetic
     // `checkout.session.completed` (kind: gift_card) itself and the card
     // is minted by the REAL webhook code.
-    if (process.env.E2E_TEST === 'true') {
+    if (isE2ETest()) {
       return {
         success: true,
         data: {
@@ -297,6 +298,16 @@ export async function resendGiftCardAction(
       return {
         success: false,
         error: { code: 'UNAUTHORIZED', message: 'Please sign in' },
+      };
+    }
+
+    // The card is matched on the session email: an UNVERIFIED address must
+    // not unlock it (anyone can register with a gift recipient's email).
+    // Same gate as the guest-booking reads (client.actions.ts).
+    if (!session.user.emailVerified) {
+      return {
+        success: false,
+        error: { code: 'FORBIDDEN', message: 'EMAIL_NOT_VERIFIED' },
       };
     }
 

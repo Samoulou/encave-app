@@ -14,13 +14,29 @@ import { logInfo } from '@/lib/logger';
 export const STALE_STRIPE_EVENT_MINUTES = 15;
 
 /**
+ * Outcome of a claim attempt:
+ *  - `claimed`     → this delivery owns the event and MUST process it;
+ *  - `duplicate`   → already PROCESSED — acknowledge with a 2xx;
+ *  - `in_progress` → another delivery holds a live (non-stale) PROCESSING
+ *    claim. The caller MUST answer with a non-2xx: a 2xx would tell Stripe
+ *    the event is delivered, so if that other run then dies (timeout / OOM /
+ *    a DB blip in the FAILED marker) no redelivery would ever come back to
+ *    hit the stale reclaim below — the paid booking / gift card would be
+ *    lost. With a non-2xx Stripe keeps retrying until the event is either
+ *    PROCESSED (→ `duplicate`) or stale (→ reclaimed).
+ */
+export type StripeEventClaim = 'claimed' | 'duplicate' | 'in_progress';
+
+/**
  * Idempotency guard shared by all Stripe webhook routes (checkout + connect).
  * An event is processed at most once; FAILED events are eligible for retry
  * when Stripe redelivers them, and a PROCESSING row abandoned mid-handler is
  * reclaimed after STALE_STRIPE_EVENT_MINUTES so a timed-out mint/confirm still
  * completes on a redelivery instead of being lost.
  */
-export async function claimStripeEvent(event: Stripe.Event): Promise<boolean> {
+export async function claimStripeEvent(
+  event: Stripe.Event
+): Promise<StripeEventClaim> {
   try {
     await db.stripeEvent.create({
       data: {
@@ -29,7 +45,7 @@ export async function claimStripeEvent(event: Stripe.Event): Promise<boolean> {
         status: 'PROCESSING',
       },
     });
-    return true;
+    return 'claimed';
   } catch (error) {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -40,12 +56,22 @@ export async function claimStripeEvent(event: Stripe.Event): Promise<boolean> {
         select: { status: true },
       });
 
+      if (existing?.status === 'PROCESSED') {
+        logInfo('Duplicate Stripe event skipped', {
+          eventId: event.id,
+          eventType: event.type,
+          status: existing.status,
+        });
+        return 'duplicate';
+      }
+
       if (existing?.status === 'FAILED') {
         const retry = await db.stripeEvent.updateMany({
           where: { stripeEventId: event.id, status: 'FAILED' },
           data: { status: 'PROCESSING', errorMessage: null },
         });
-        return retry.count === 1;
+        if (retry.count === 1) return 'claimed';
+        // A concurrent redelivery won the FAILED → PROCESSING retry.
       }
 
       // Stale PROCESSING reclaim: a handler killed between claim and mark
@@ -70,16 +96,18 @@ export async function claimStripeEvent(event: Stripe.Event): Promise<boolean> {
             eventId: event.id,
             eventType: event.type,
           });
-          return true;
+          return 'claimed';
         }
       }
 
-      logInfo('Duplicate Stripe event skipped', {
+      // Another delivery is processing this event right now (or its fate is
+      // unknown): never acknowledge — ask Stripe to redeliver.
+      logInfo('Stripe event already in progress — redelivery requested', {
         eventId: event.id,
         eventType: event.type,
         status: existing?.status,
       });
-      return false;
+      return 'in_progress';
     }
 
     throw error;

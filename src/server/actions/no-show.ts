@@ -158,12 +158,18 @@ export async function chargeNoShowFee(
   // Atomic CAS claim: only reachable from null / FAILED, never from PENDING
   // (in flight) or CHARGED (PI id set). Postgres re-checks the WHERE after the
   // row lock, so a concurrent double-tap loses (count === 0).
+  // The two claimable states are listed EXPLICITLY: `{ not: PENDING }`
+  // compiles to `<> 'PENDING'`, which is NULL (→ no match) for a booking that
+  // was never charged — the first charge was refused as CHARGE_IN_PROGRESS.
   const claim = await db.booking.updateMany({
     where: {
       id: booking.id,
       status: BookingStatus.NO_SHOW,
       noShowFeeChargePaymentIntentId: null,
-      noShowFeeChargeStatus: { not: NoShowChargeStatus.PENDING },
+      OR: [
+        { noShowFeeChargeStatus: null },
+        { noShowFeeChargeStatus: NoShowChargeStatus.FAILED },
+      ],
     },
     data: { noShowFeeChargeStatus: NoShowChargeStatus.PENDING },
   });

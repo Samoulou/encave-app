@@ -2,6 +2,7 @@ import type Stripe from 'stripe';
 import { getStripe } from '@/server/stripe';
 import { db } from '@/server/db';
 import { env, getBaseUrl } from '@/lib/env';
+import { isE2ETest } from '@/lib/e2e-mode';
 import { logError, logInfo } from '@/lib/logger';
 
 /**
@@ -190,10 +191,7 @@ export async function processRefund(
   // (`e2e_…`, cf. booking checkout) resolve to a synthetic refund — never
   // call Stripe. The cancellation paths always pass an explicit amount
   // when a refund is due (computeBookingRefund.stripeAmountArg).
-  if (
-    process.env.E2E_TEST === 'true' &&
-    stripePaymentIntentOrSessionId.startsWith('e2e_')
-  ) {
+  if (isE2ETest() && stripePaymentIntentOrSessionId.startsWith('e2e_')) {
     return {
       refundId: `re_e2e_${Date.now()}`,
       amount: amountCents ?? 0,

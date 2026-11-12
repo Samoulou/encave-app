@@ -12,6 +12,7 @@ import { logError, logWarn } from '@/lib/logger';
 import {
   appendRefundError,
   processCancellationRefund,
+  wasNeverChargedOnline,
 } from '@/server/services/booking-refund.service';
 import {
   computeBookingRefund,
@@ -124,8 +125,18 @@ export async function cancelClientBooking(
     // Refund per the policy snapshotted at booking (fallback: winery's
     // current policy for legacy rows) on the full paid amount (D2),
     // minus anything already refunded (e.g. an admin partial refund).
-    const { policy, paidCents, alreadyRefundedCents, refundDueCents } =
-      computeBookingRefund(booking, hoursUntilExperience);
+    const {
+      policy,
+      paidCents,
+      alreadyRefundedCents,
+      refundDueCents: policyRefundDueCents,
+    } = computeBookingRefund(booking, hoursUntilExperience);
+    // ON_SITE / free offer settled at the winery: nothing was ever charged
+    // online, so nothing is due back — whatever the policy says about the
+    // (unpaid) price. Never a "refund impossible" incident for these.
+    const refundDueCents = wasNeverChargedOnline(booking)
+      ? 0
+      : policyRefundDueCents;
     let refundAmount: number | null = null;
     let stripeRefundId: string | null = null;
     let giftRestoredCents = 0;

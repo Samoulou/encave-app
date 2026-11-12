@@ -36,7 +36,7 @@ vi.mock('@/lib/logger', () => ({
   logWarn: vi.fn(),
 }));
 
-const { processCancellationRefund } =
+const { processCancellationRefund, wasNeverChargedOnline } =
   await import('@/server/services/booking-refund.service');
 
 /**
@@ -199,5 +199,46 @@ describe('processCancellationRefund — gift-funded booking (ADR-0003)', () => {
     expect(appendedMessages().join(' ')).toContain('GIFT_RESTORE_FAILED');
     // The reversal is still attempted — independent compensation.
     expect(reverseGiftTransferForCancellation).toHaveBeenCalled();
+  });
+});
+
+describe('wasNeverChargedOnline — ON_SITE bookings have nothing to refund', () => {
+  const base = {
+    stripePaymentIntentId: null,
+    giftAppliedCents: 0,
+    stripeCheckoutSessionId: null,
+    noShowSetupIntentId: null,
+  };
+
+  it('true for an on-site booking without imprint (no Checkout Session at all)', () => {
+    expect(wasNeverChargedOnline(base)).toBe(true);
+  });
+
+  it('true for an on-site booking with a card imprint (setup-mode session)', () => {
+    expect(
+      wasNeverChargedOnline({
+        ...base,
+        stripeCheckoutSessionId: 'cs_test_setup',
+        noShowSetupIntentId: 'seti_test_1',
+      })
+    ).toBe(true);
+  });
+
+  it('false as soon as a card charge or a gift redemption exists', () => {
+    expect(
+      wasNeverChargedOnline({ ...base, stripePaymentIntentId: 'pi_test_1' })
+    ).toBe(false);
+    expect(wasNeverChargedOnline({ ...base, giftAppliedCents: 5000 })).toBe(
+      false
+    );
+  });
+
+  it('false for a PAYMENT session that lost its payment intent — the anomaly must keep alerting', () => {
+    expect(
+      wasNeverChargedOnline({
+        ...base,
+        stripeCheckoutSessionId: 'cs_test_payment',
+      })
+    ).toBe(false);
   });
 });

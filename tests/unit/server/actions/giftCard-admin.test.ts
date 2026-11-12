@@ -100,7 +100,7 @@ describe('resendGiftCardAction', () => {
 
   it('refuses a card the caller does not own', async () => {
     vi.mocked(auth).mockResolvedValue({
-      user: { email: 'someone@else.com' },
+      user: { email: 'someone@else.com', emailVerified: true },
     } as never);
     vi.mocked(db.giftCard.findFirst).mockResolvedValue(null as never);
     const r = await resendGiftCardAction({ giftCardId: CUID });
@@ -109,9 +109,20 @@ describe('resendGiftCardAction', () => {
     expect(resendGiftCardEmail).not.toHaveBeenCalled();
   });
 
+  it('refuses an unverified email even for a matching card', async () => {
+    vi.mocked(auth).mockResolvedValue({
+      user: { email: 'jean@example.com', emailVerified: false },
+    } as never);
+    const r = await resendGiftCardAction({ giftCardId: CUID });
+    expect(r.success).toBe(false);
+    if (!r.success) expect(r.error.code).toBe('FORBIDDEN');
+    expect(db.giftCard.findFirst).not.toHaveBeenCalled();
+    expect(resendGiftCardEmail).not.toHaveBeenCalled();
+  });
+
   it('resends for an owned card', async () => {
     vi.mocked(auth).mockResolvedValue({
-      user: { email: 'jean@example.com' },
+      user: { email: 'jean@example.com', emailVerified: true },
     } as never);
     vi.mocked(db.giftCard.findFirst).mockResolvedValue({ id: CUID } as never);
     vi.mocked(resendGiftCardEmail).mockResolvedValue(true);

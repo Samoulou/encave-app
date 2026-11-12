@@ -337,7 +337,7 @@ describe.skipIf(!url)('checkout webhook route (P0 lot 1)', () => {
     expect(confirmMock).not.toHaveBeenCalled();
   });
 
-  it('two concurrent POSTs of the same event process exactly once, both 2xx', async () => {
+  it('two concurrent POSTs of the same event process exactly once — the loser is told to retry (409), never acked mid-flight', async () => {
     const confirmMock = vi.mocked(emails.sendBookingConfirmationEmail);
     confirmMock.mockClear();
 
@@ -356,11 +356,31 @@ describe.skipIf(!url)('checkout webhook route (P0 lot 1)', () => {
     const bodyA = (await resA.json()) as Record<string, unknown>;
     const bodyB = (await resB.json()) as Record<string, unknown>;
 
-    // Never a 500 on a duplicate — Stripe would retry-storm.
-    expect(resA.status).toBe(200);
-    expect(resB.status).toBe(200);
-    const duplicates = [bodyA, bodyB].filter((b) => b.duplicate === true);
-    expect(duplicates).toHaveLength(1);
+    // Exactly one delivery owns the event and answers 200. The other one
+    // must NOT be acknowledged while the winner is still mid-handler: a 2xx
+    // ends Stripe's retries, so if the winner then died the event would be
+    // lost for good (the stale-PROCESSING reclaim only runs on a
+    // redelivery). It gets a 409 → Stripe redelivers → 200 duplicate once
+    // PROCESSED. (If it happened to arrive after the winner finished, a
+    // plain 200 duplicate is equally correct.) Never a 500.
+    const responses = [
+      { status: resA.status, body: bodyA },
+      { status: resB.status, body: bodyB },
+    ];
+    const winners = responses.filter(
+      (r) => r.status === 200 && r.body.duplicate !== true
+    );
+    const losers = responses.filter(
+      (r) => r.status === 409 || (r.status === 200 && r.body.duplicate === true)
+    );
+    expect(winners).toHaveLength(1);
+    expect(losers).toHaveLength(1);
+
+    // The redelivery Stripe sends after the 409 is a clean duplicate ack.
+    const redelivery = await POST(webhookRequest(event));
+    const redeliveryBody = (await redelivery.json()) as Record<string, unknown>;
+    expect(redelivery.status).toBe(200);
+    expect(redeliveryBody.duplicate).toBe(true);
 
     // Exactly one processing: one confirmation email, booking CONFIRMED.
     expect(confirmMock).toHaveBeenCalledTimes(1);
@@ -669,5 +689,114 @@ describe.skipIf(!url)('checkout webhook route (P0 lot 1)', () => {
     });
     expect(row.status).toBe(BookingStatus.CONFIRMED);
     expect(row.giftTransferId).not.toBeNull();
+  });
+
+  it('a PAID session that is not the booking current session is REFUNDED — booking untouched, never a silent ack', async () => {
+    const confirmMock = vi.mocked(emails.sendBookingConfirmationEmail);
+    confirmMock.mockClear();
+    stripeStub.fns.refundsCreate.mockClear();
+
+    // The booking points at its CURRENT session; an older one gets paid
+    // (second tab / device on the same offer, or a superseded retry).
+    const suffix = Math.random().toString(36).slice(2, 10);
+    const currentSessionId = `cs_dbtest_current_${suffix}`;
+    const staleSessionId = `cs_dbtest_stale_${suffix}`;
+    const stalePaymentIntentId = `pi_dbtest_stale_${suffix}`;
+    const booking = await seedBooking({
+      stripeCheckoutSessionId: currentSessionId,
+    });
+    const event = signedEvent({
+      type: 'checkout.session.completed',
+      session: {
+        id: staleSessionId,
+        metadata: { bookingId: booking.id },
+        paymentIntentId: stalePaymentIntentId,
+      },
+    });
+
+    const { status, body } = await post(event);
+    expect(status).toBe(200);
+    expect(body).toEqual({ received: true });
+
+    // The stranded charge goes back, once, keyed on the paid session.
+    expect(stripeStub.fns.refundsCreate).toHaveBeenCalledTimes(1);
+    expect(stripeStub.fns.refundsCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        payment_intent: stalePaymentIntentId,
+        reverse_transfer: true,
+        refund_application_fee: true,
+      }),
+      { idempotencyKey: `orphan-refund-${staleSessionId}` }
+    );
+
+    // The booking still belongs to its current session: not confirmed on
+    // the stale one, not deleted, still payable.
+    expect(confirmMock).not.toHaveBeenCalled();
+    const row = await db.booking.findUniqueOrThrow({
+      where: { id: booking.id },
+      select: {
+        status: true,
+        stripeCheckoutSessionId: true,
+        stripePaymentIntentId: true,
+      },
+    });
+    expect(row).toEqual({
+      status: BookingStatus.PENDING_PAYMENT,
+      stripeCheckoutSessionId: currentSessionId,
+      stripePaymentIntentId: null,
+    });
+    const stripeEvent = await db.stripeEvent.findUniqueOrThrow({
+      where: { stripeEventId: event.eventId },
+      select: { status: true },
+    });
+    expect(stripeEvent.status).toBe('PROCESSED');
+  });
+
+  it('a redelivery while the event is PROCESSING gets 409 until it is stale, then is reclaimed and processed', async () => {
+    const confirmMock = vi.mocked(emails.sendBookingConfirmationEmail);
+    confirmMock.mockClear();
+
+    const booking = await seedBooking();
+    const event = signedEvent({
+      type: 'checkout.session.completed',
+      session: { metadata: { bookingId: booking.id } },
+    });
+
+    // A previous delivery claimed the event and died mid-handler
+    // (function timeout / OOM): the row is PROCESSING, nothing happened.
+    await db.stripeEvent.create({
+      data: {
+        stripeEventId: event.eventId,
+        type: 'checkout.session.completed',
+        status: 'PROCESSING',
+      },
+    });
+
+    // Fresh claim → NOT acknowledged: Stripe must keep redelivering.
+    const early = await post(event);
+    expect(early.status).toBe(409);
+    expect(early.body.duplicate).toBeUndefined();
+    expect(confirmMock).not.toHaveBeenCalled();
+    const pending = await db.booking.findUniqueOrThrow({
+      where: { id: booking.id },
+      select: { status: true },
+    });
+    expect(pending.status).toBe(BookingStatus.PENDING_PAYMENT);
+
+    // Past the stale threshold the next redelivery reclaims and processes.
+    await db.$executeRaw`
+      UPDATE stripe_events
+      SET "updatedAt" = NOW() - INTERVAL '16 minutes'
+      WHERE "stripeEventId" = ${event.eventId}
+    `;
+    const late = await post(event);
+    expect(late.status).toBe(200);
+    expect(late.body).toEqual({ received: true });
+    expect(confirmMock).toHaveBeenCalledTimes(1);
+    const confirmed = await db.booking.findUniqueOrThrow({
+      where: { id: booking.id },
+      select: { status: true },
+    });
+    expect(confirmed.status).toBe(BookingStatus.CONFIRMED);
   });
 });

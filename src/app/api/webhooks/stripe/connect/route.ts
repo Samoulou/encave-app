@@ -21,6 +21,13 @@ import {
   shouldNotifyStripeAction,
 } from '@/lib/business-rules/stripe-action-email';
 
+/**
+ * Explicit budget for the handler (Stripe + DB + emails/PDF). MUST stay well
+ * under STALE_STRIPE_EVENT_MINUTES (stripe-event.service): a run still alive
+ * past the stale threshold could be reclaimed and double-processed.
+ */
+export const maxDuration = 60;
+
 export async function POST(req: Request) {
   if (!isStripeConfigured()) {
     logError('Stripe is not configured');
@@ -63,8 +70,17 @@ export async function POST(req: Request) {
     );
   }
 
-  const shouldProcess = await claimStripeEvent(event);
-  if (!shouldProcess) {
+  const claim = await claimStripeEvent(event);
+  if (claim === 'in_progress') {
+    // Another delivery of this event is mid-handler. A 2xx here would end
+    // Stripe's retries — if that run then dies, the event is lost for good.
+    // 409 keeps Stripe redelivering until it is PROCESSED or reclaimable.
+    return NextResponse.json(
+      { error: 'Event is being processed', retry: true },
+      { status: 409 }
+    );
+  }
+  if (claim === 'duplicate') {
     return NextResponse.json({ received: true, duplicate: true });
   }
 

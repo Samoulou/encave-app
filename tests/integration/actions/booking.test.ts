@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // Mock the db module
 vi.mock('@/server/db', () => ({
@@ -140,7 +140,7 @@ describe('Booking Server Actions', () => {
       }
     });
 
-    it('counts CONFIRMED plus non-expired PENDING_PAYMENT holds (L-050)', async () => {
+    it('counts seat-holding statuses (CONFIRMED, COMPLETED, NO_SHOW) plus non-expired PENDING_PAYMENT holds (L-050)', async () => {
       vi.mocked(db.experience.findUnique).mockResolvedValue({
         maxCapacity: 10,
       } as never);
@@ -157,8 +157,18 @@ describe('Booking Server Actions', () => {
       expect(db.booking.aggregate).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
+            // A checked-in (COMPLETED) or no-show seat was sold and is
+            // physically taken: it must never be offered again.
             OR: [
-              { status: BookingStatus.CONFIRMED },
+              {
+                status: {
+                  in: [
+                    BookingStatus.CONFIRMED,
+                    BookingStatus.COMPLETED,
+                    BookingStatus.NO_SHOW,
+                  ],
+                },
+              },
               {
                 status: BookingStatus.PENDING_PAYMENT,
                 expiresAt: { gt: expect.any(Date) },
@@ -171,6 +181,16 @@ describe('Booking Server Actions', () => {
   });
 
   describe('getTimeSlotsForDate', () => {
+    // Slots that have already started are hidden — pin "now" two weeks
+    // before the fixture date (Saturday 2024-06-15) so its slots are future.
+    beforeEach(() => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2024-06-01T08:00:00.000Z'));
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
     it('returns NOT_FOUND when experience does not exist', async () => {
       vi.mocked(db.experience.findUnique).mockResolvedValue(null);
 
@@ -249,6 +269,47 @@ describe('Booking Server Actions', () => {
       if (result.success) {
         expect(result.data[0]?.available).toBe(false);
         expect(result.data[0]?.remainingCapacity).toBe(0);
+      }
+    });
+
+    it("hides today's slots that have already started (Zurich wall clock)", async () => {
+      // 2024-06-15 11:30 in Zurich (CEST = UTC+2): the 10:00 session has
+      // started, the 14:00 one has not.
+      vi.setSystemTime(new Date('2024-06-15T09:30:00.000Z'));
+      vi.mocked(db.experience.findUnique).mockResolvedValue({
+        id: 'exp-123',
+        maxCapacity: 10,
+        availabilitySlots: [
+          { startTime: '10:00', endTime: '11:00', dayOfWeek: 6 },
+          { startTime: '14:00', endTime: '15:00', dayOfWeek: 6 },
+        ],
+      } as never);
+      vi.mocked(db.booking.groupBy).mockResolvedValue([]);
+
+      const result = await getTimeSlotsForDate('exp-123', '2024-06-15');
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.map((slot) => slot.timeSlot)).toEqual(['14:00']);
+      }
+    });
+
+    it('offers no slot at all for a past date', async () => {
+      vi.setSystemTime(new Date('2024-06-16T08:00:00.000Z'));
+      vi.mocked(db.experience.findUnique).mockResolvedValue({
+        id: 'exp-123',
+        maxCapacity: 10,
+        availabilitySlots: [
+          { startTime: '10:00', endTime: '11:00', dayOfWeek: 6 },
+        ],
+      } as never);
+      vi.mocked(db.booking.groupBy).mockResolvedValue([]);
+
+      const result = await getTimeSlotsForDate('exp-123', '2024-06-15');
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toEqual([]);
       }
     });
   });

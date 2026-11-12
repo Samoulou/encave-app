@@ -15,6 +15,7 @@ import {
 import {
   appendRefundError,
   processCancellationRefund,
+  wasNeverChargedOnline,
 } from '@/server/services/booking-refund.service';
 import {
   computeBookingRefund,
@@ -22,6 +23,7 @@ import {
 } from '@/lib/business-rules/cancellation-policy';
 import {
   activeCapacityBookingWhere,
+  isSlotStartInFuture,
   resolveOccurrenceCapacity,
 } from '@/lib/business-rules/capacity';
 import { calculateEndTime } from '@/lib/constants/time-slots';
@@ -271,9 +273,12 @@ export async function getTimeSlotsForDate(
       });
     }
 
-    const slots: TimeSlotAvailability[] = Array.from(bySlot.values()).sort(
-      (a, b) => a.timeSlot.localeCompare(b.timeSlot)
-    );
+    // A session that has already started is not offered at all (today's
+    // earlier slots) — the hold/checkout actions refuse it server-side too.
+    const now = new Date();
+    const slots: TimeSlotAvailability[] = Array.from(bySlot.values())
+      .filter((slot) => isSlotStartInFuture(bookingDate, slot.timeSlot, now))
+      .sort((a, b) => a.timeSlot.localeCompare(b.timeSlot));
 
     return { success: true, data: slots };
   } catch (error) {
@@ -579,8 +584,18 @@ export async function cancelBooking(
     // Refund per the policy snapshotted at booking (fallback: winery's
     // current policy for legacy rows) on the full paid amount (D2),
     // minus anything already refunded (e.g. an admin partial refund).
-    const { policy, paidCents, alreadyRefundedCents, refundDueCents } =
-      computeBookingRefund(booking, hoursUntilExperience);
+    const {
+      policy,
+      paidCents,
+      alreadyRefundedCents,
+      refundDueCents: policyRefundDueCents,
+    } = computeBookingRefund(booking, hoursUntilExperience);
+    // ON_SITE / free offer settled at the winery: nothing was ever charged
+    // online, so nothing is due back — whatever the policy says about the
+    // (unpaid) price. Never a "refund impossible" incident for these.
+    const refundDueCents = wasNeverChargedOnline(booking)
+      ? 0
+      : policyRefundDueCents;
     let refundAmount: number | null = null;
     let stripeRefundId: string | null = null;
     let giftRestoredCents = 0;
@@ -864,10 +879,10 @@ export async function getCancellationInfo(
     }
 
     // Policy-based amount on the full paid total (tickets + service fee).
-    const refundAmount = computeBookingRefund(
-      booking,
-      hoursUntilExperience
-    ).refundDueCents;
+    // Nothing was charged online on an ON_SITE booking → nothing to refund.
+    const refundAmount = wasNeverChargedOnline(booking)
+      ? 0
+      : computeBookingRefund(booking, hoursUntilExperience).refundDueCents;
 
     return {
       success: true,

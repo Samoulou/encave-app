@@ -56,12 +56,24 @@ vi.mock('@/server/services/giftCard-redemption.service', () => ({
   releaseGiftForBooking: vi.fn(async () => 'noop'),
 }));
 
+// Real Stripe refunds are out of scope here — the route's job is to ROUTE a
+// stranded paid session to the orphan-refund path.
+vi.mock('@/server/services/payment.service', () => ({
+  refundOrphanedCheckoutPayment: vi.fn(async () => ({
+    refundId: 're_test_1',
+    amount: 9500,
+  })),
+}));
+
 vi.mock('@/server/services/checkout-confirmation.service', () => ({
   confirmBookingFromPaidCheckoutSession: vi.fn().mockResolvedValue('confirmed'),
 }));
 
 import { headers } from 'next/headers';
 import { confirmBookingFromPaidCheckoutSession } from '@/server/services/checkout-confirmation.service';
+import { refundOrphanedCheckoutPayment } from '@/server/services/payment.service';
+import { settleGiftTransfer } from '@/server/services/giftCard-transfer.service';
+import { Prisma } from '@prisma/client';
 
 const { POST } = await import('@/app/api/webhooks/stripe/checkout/route');
 
@@ -251,6 +263,167 @@ describe('Stripe checkout webhook handler', () => {
 
     expect(response.status).toBe(200);
     expect(db.booking.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('REFUNDS a paid session that is not the booking current session (never a silent ack)', async () => {
+    // A superseded session got paid: the booking points at a newer one (or
+    // was already confirmed on another). Money was taken → it must go back.
+    const session = {
+      id: 'cs_test_superseded',
+      payment_status: 'paid',
+      payment_intent: 'pi_test_superseded',
+      amount_total: 9500,
+      // Gift metadata present: the transfer must NOT be settled on a
+      // session the booking no longer points at.
+      metadata: { bookingId: 'booking-1', giftAppliedCents: '5000' },
+    } as unknown as Stripe.Checkout.Session;
+    mockConstructEvent.mockReturnValue({
+      id: 'evt_checkout_mismatch',
+      type: 'checkout.session.completed',
+      data: { object: session },
+    } as Stripe.Event);
+    mockConfirmBookingFromPaidCheckoutSession.mockResolvedValue({
+      result: 'session_mismatch',
+    });
+
+    const response = await POST(createMockRequest());
+
+    expect(response.status).toBe(200);
+    expect(refundOrphanedCheckoutPayment).toHaveBeenCalledTimes(1);
+    expect(refundOrphanedCheckoutPayment).toHaveBeenCalledWith(session);
+    expect(settleGiftTransfer).not.toHaveBeenCalled();
+  });
+
+  it('REFUNDS a sur-mesure offer paid on a superseded session (second tab / device)', async () => {
+    const session = {
+      id: 'cs_test_offer_old',
+      payment_status: 'paid',
+      payment_intent: 'pi_test_offer_old',
+      amount_total: 120000,
+      metadata: {
+        kind: 'request_offer',
+        bookingId: 'booking-1',
+        requestOfferId: 'offer-1',
+      },
+    } as unknown as Stripe.Checkout.Session;
+    mockConstructEvent.mockReturnValue({
+      id: 'evt_offer_mismatch',
+      type: 'checkout.session.completed',
+      data: { object: session },
+    } as Stripe.Event);
+    mockConfirmBookingFromPaidCheckoutSession.mockResolvedValue({
+      result: 'session_mismatch',
+    });
+
+    const response = await POST(createMockRequest());
+
+    expect(response.status).toBe(200);
+    expect(refundOrphanedCheckoutPayment).toHaveBeenCalledWith(session);
+  });
+
+  it('a failed mismatch refund fails the event (500) so Stripe redelivers it', async () => {
+    const { db } = await import('@/server/db');
+    const session = {
+      id: 'cs_test_superseded',
+      payment_status: 'paid',
+      payment_intent: 'pi_test_superseded',
+      metadata: { bookingId: 'booking-1' },
+    } as unknown as Stripe.Checkout.Session;
+    mockConstructEvent.mockReturnValue({
+      id: 'evt_checkout_mismatch_fail',
+      type: 'checkout.session.completed',
+      data: { object: session },
+    } as Stripe.Event);
+    mockConfirmBookingFromPaidCheckoutSession.mockResolvedValue({
+      result: 'session_mismatch',
+    });
+    vi.mocked(refundOrphanedCheckoutPayment).mockRejectedValueOnce(
+      new Error('Stripe unavailable')
+    );
+
+    const response = await POST(createMockRequest());
+
+    expect(response.status).toBe(500);
+    expect(db.stripeEvent.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: 'FAILED' }),
+      })
+    );
+  });
+
+  describe('redelivery while the event row already exists', () => {
+    const duplicateKey = () =>
+      new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+        code: 'P2002',
+        clientVersion: 'test',
+      });
+    const paidEvent = {
+      id: 'evt_redelivered',
+      type: 'checkout.session.completed',
+      data: {
+        object: {
+          id: 'cs_test_paid',
+          payment_status: 'paid',
+          payment_intent: 'pi_test_123',
+          metadata: { bookingId: 'booking-1' },
+        },
+      },
+    } as unknown as Stripe.Event;
+
+    it('answers 409 (NOT 2xx) while another delivery is still PROCESSING — Stripe must keep retrying', async () => {
+      const { db } = await import('@/server/db');
+      mockConstructEvent.mockReturnValue(paidEvent);
+      vi.mocked(db.stripeEvent.create).mockRejectedValueOnce(duplicateKey());
+      vi.mocked(db.stripeEvent.findUnique).mockResolvedValueOnce({
+        status: 'PROCESSING',
+      } as never);
+      // Not stale: the reclaim CAS matches nothing.
+      vi.mocked(db.stripeEvent.updateMany).mockResolvedValueOnce({
+        count: 0,
+      } as never);
+
+      const response = await POST(createMockRequest());
+      const data = await response.json();
+
+      expect(response.status).toBe(409);
+      expect(data.duplicate).toBeUndefined();
+      expect(mockConfirmBookingFromPaidCheckoutSession).not.toHaveBeenCalled();
+    });
+
+    it('reclaims a STALE PROCESSING row and processes the event', async () => {
+      const { db } = await import('@/server/db');
+      mockConstructEvent.mockReturnValue(paidEvent);
+      vi.mocked(db.stripeEvent.create).mockRejectedValueOnce(duplicateKey());
+      vi.mocked(db.stripeEvent.findUnique).mockResolvedValueOnce({
+        status: 'PROCESSING',
+      } as never);
+      vi.mocked(db.stripeEvent.updateMany).mockResolvedValueOnce({
+        count: 1,
+      } as never);
+
+      const response = await POST(createMockRequest());
+
+      expect(response.status).toBe(200);
+      expect(mockConfirmBookingFromPaidCheckoutSession).toHaveBeenCalledTimes(
+        1
+      );
+    });
+
+    it('acknowledges an already PROCESSED event with 200 duplicate', async () => {
+      const { db } = await import('@/server/db');
+      mockConstructEvent.mockReturnValue(paidEvent);
+      vi.mocked(db.stripeEvent.create).mockRejectedValueOnce(duplicateKey());
+      vi.mocked(db.stripeEvent.findUnique).mockResolvedValueOnce({
+        status: 'PROCESSED',
+      } as never);
+
+      const response = await POST(createMockRequest());
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.duplicate).toBe(true);
+      expect(mockConfirmBookingFromPaidCheckoutSession).not.toHaveBeenCalled();
+    });
   });
 
   it('returns 400 when the Stripe signature is missing', async () => {

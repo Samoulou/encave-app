@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type Stripe from 'stripe';
 import { BookingStatus } from '@prisma/client';
+import * as Sentry from '@sentry/nextjs';
 import { db } from '@/server/db';
+import { getPostHogServer } from '@/lib/posthog';
 import {
   sendBookingConfirmationEmail,
   sendWinemakerNewBookingEmail,
@@ -30,6 +32,11 @@ vi.mock('@/lib/logger', () => ({
 
 vi.mock('@/lib/posthog', () => ({
   getPostHogServer: vi.fn(() => null),
+}));
+
+vi.mock('@sentry/nextjs', () => ({
+  captureException: vi.fn(),
+  captureMessage: vi.fn(),
 }));
 
 const mockDb = vi.mocked(db);
@@ -180,5 +187,107 @@ describe('confirmBookingFromPaidCheckoutSession', () => {
     expect(result.result).toBe('session_mismatch');
     expect(mockDb.booking.updateMany).not.toHaveBeenCalled();
     expect(mockSendBookingConfirmationEmail).not.toHaveBeenCalled();
+  });
+});
+
+describe('confirmation side effects (emails + analytics)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockDb.booking.findUnique.mockResolvedValue(pendingBooking as never);
+    mockDb.booking.updateMany.mockResolvedValue({ count: 1 } as never);
+    mockDb.booking.update.mockResolvedValue({} as never);
+    mockSendBookingConfirmationEmail.mockResolvedValue(true);
+    mockSendWinemakerNewBookingEmail.mockResolvedValue(true);
+    vi.mocked(getPostHogServer).mockReturnValue(null);
+  });
+
+  it('stamps confirmationSentAt / wineryNotifiedAt only when the emails were really sent', async () => {
+    const { confirmBookingFromPaidCheckoutSession } =
+      await import('@/server/services/checkout-confirmation.service');
+
+    await confirmBookingFromPaidCheckoutSession(paidSession, 'webhook');
+
+    const stamped = mockDb.booking.update.mock.calls.map(
+      (call) => Object.keys(call[0].data)[0]
+    );
+    expect(stamped).toEqual(['confirmationSentAt', 'wineryNotifiedAt']);
+    expect(Sentry.captureMessage).not.toHaveBeenCalled();
+  });
+
+  it('does NOT stamp confirmationSentAt and alerts (area:email) when the client email was not sent', async () => {
+    // sendEmail resolves false — it does not throw — when Resend refused
+    // the message or the key is missing in production.
+    mockSendBookingConfirmationEmail.mockResolvedValue(false);
+    const { confirmBookingFromPaidCheckoutSession } =
+      await import('@/server/services/checkout-confirmation.service');
+
+    const result = await confirmBookingFromPaidCheckoutSession(
+      paidSession,
+      'webhook'
+    );
+
+    // The booking is paid and stays confirmed — only the stamp is withheld.
+    expect(result.result).toBe('confirmed');
+    const stamped = mockDb.booking.update.mock.calls.map(
+      (call) => Object.keys(call[0].data)[0]
+    );
+    expect(stamped).toEqual(['wineryNotifiedAt']);
+    expect(Sentry.captureMessage).toHaveBeenCalledTimes(1);
+    expect(Sentry.captureMessage).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        tags: { area: 'email', email: 'client_confirmation' },
+        extra: expect.objectContaining({ bookingId: 'booking-1' }),
+      })
+    );
+  });
+
+  it('alerts when the client email throws, and still notifies the winery', async () => {
+    mockSendBookingConfirmationEmail.mockRejectedValue(
+      new Error('render failed')
+    );
+    const { confirmBookingFromPaidCheckoutSession } =
+      await import('@/server/services/checkout-confirmation.service');
+
+    const result = await confirmBookingFromPaidCheckoutSession(
+      paidSession,
+      'webhook'
+    );
+
+    expect(result.result).toBe('confirmed');
+    expect(mockSendWinemakerNewBookingEmail).toHaveBeenCalledOnce();
+    expect(Sentry.captureMessage).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        tags: { area: 'email', email: 'client_confirmation' },
+      })
+    );
+  });
+
+  it('never waits on (or fails because of) the PostHog flush', async () => {
+    const capture = vi.fn();
+    // A flush that rejects — and, in the other failure mode, one that never
+    // settles — must leave the confirmation and its emails untouched.
+    const flush = vi
+      .fn()
+      .mockReturnValueOnce(Promise.reject(new Error('posthog down')))
+      .mockReturnValueOnce(new Promise(() => {}));
+    vi.mocked(getPostHogServer).mockReturnValue({ capture, flush } as never);
+    const { confirmBookingFromPaidCheckoutSession } =
+      await import('@/server/services/checkout-confirmation.service');
+
+    const rejected = await confirmBookingFromPaidCheckoutSession(
+      paidSession,
+      'webhook'
+    );
+    const hanging = await confirmBookingFromPaidCheckoutSession(
+      paidSession,
+      'webhook'
+    );
+
+    expect(rejected.result).toBe('confirmed');
+    expect(hanging.result).toBe('confirmed');
+    expect(capture).toHaveBeenCalledTimes(2);
+    expect(mockSendBookingConfirmationEmail).toHaveBeenCalledTimes(2);
   });
 });

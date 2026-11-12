@@ -2,6 +2,7 @@ import * as Sentry from '@sentry/nextjs';
 import { BookingStatus } from '@prisma/client';
 import { db } from '@/server/db';
 import { getStripe } from '@/server/stripe';
+import { isE2ETest } from '@/lib/e2e-mode';
 import { logError, logInfo } from '@/lib/logger';
 
 /**
@@ -58,7 +59,7 @@ export async function settleGiftTransfer(
   // replaced by a synthetic transfer id (same convention as the fake
   // checkout sessions). The real money routing is verified on staging
   // (WS-A.2, blocking launch gate).
-  if (process.env.E2E_TEST === 'true') {
+  if (isE2ETest()) {
     await db.booking.update({
       where: { id: bookingId },
       data: { giftTransferId: `tr_e2e_${bookingId}` },
@@ -206,10 +207,7 @@ export async function reverseGiftTransferForCancellation(
   // — recording a fake reversal would permanently satisfy the durable
   // guard while the winery keeps the money. Real routing is verified on
   // staging (WS-A.2, blocking launch gate).
-  if (
-    process.env.E2E_TEST === 'true' &&
-    booking.giftTransferId.startsWith('tr_e2e_')
-  ) {
+  if (isE2ETest() && booking.giftTransferId.startsWith('tr_e2e_')) {
     await db.booking.update({
       where: { id: bookingId },
       data: { giftTransferReversalId: `trr_e2e_${bookingId}` },

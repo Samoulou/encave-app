@@ -1,4 +1,12 @@
-import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
+import {
+  describe,
+  it,
+  expect,
+  vi,
+  beforeAll,
+  beforeEach,
+  afterEach,
+} from 'vitest';
 import { db } from '@/server/db';
 import { BookingStatus, ExperienceStatus, WineryStatus } from '@prisma/client';
 
@@ -57,16 +65,18 @@ vi.mock('@/server/db', () => ({
       findFirst: vi.fn(),
     },
     // $transaction executes the callback with the same db object (simplified mock)
-    $transaction: vi.fn(async (callback: (tx: unknown) => Promise<unknown>) => {
-      // Create a transaction-like object that delegates to the mocked methods
-      const { db } = await import('@/server/db');
-      return callback({
-        booking: db.booking,
-        experience: db.experience,
-        experienceOccurrence: db.experienceOccurrence,
-        giftCardTransaction: db.giftCardTransaction,
-      });
-    }),
+    $transaction: vi.fn(
+      async (callback: (_tx: unknown) => Promise<unknown>) => {
+        // Create a transaction-like object that delegates to the mocked methods
+        const { db } = await import('@/server/db');
+        return callback({
+          booking: db.booking,
+          experience: db.experience,
+          experienceOccurrence: db.experienceOccurrence,
+          giftCardTransaction: db.giftCardTransaction,
+        });
+      }
+    ),
   },
 }));
 
@@ -116,6 +126,13 @@ function requireCaptured(
   if (data === null) throw new Error('booking.create was never called');
   return data;
 }
+
+// Relative, never a literal: a session that has started is no longer
+// bookable (slot-start cutoff), so a hard-coded day turns the suite red the
+// morning it goes by. Always a real YYYY-MM-DD, ~30 days ahead.
+const FUTURE_DATE = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+  .toISOString()
+  .slice(0, 10);
 
 describe('Checkout Server Actions', () => {
   // The checkout action drags a large module graph (Stripe SDK, services):
@@ -178,7 +195,7 @@ describe('Checkout Server Actions', () => {
   const validInput = {
     experienceId: 'exp-1',
     wineryId: 'winery-1',
-    date: '2026-12-15',
+    date: FUTURE_DATE,
     timeSlot: '10:00',
     guestCount: 4,
     visitorName: 'John Doe',
@@ -567,7 +584,7 @@ describe('Checkout Server Actions', () => {
       const { createBookingHold } = await import('@/server/actions/checkout');
       const result = await createBookingHold({
         experienceId: 'exp-1',
-        date: '2026-12-15',
+        date: FUTURE_DATE,
         timeSlot: '10:00',
         guestCount: 4,
       });
@@ -610,7 +627,7 @@ describe('Checkout Server Actions', () => {
       const { createBookingHold } = await import('@/server/actions/checkout');
       const result = await createBookingHold({
         experienceId: 'exp-1',
-        date: '2026-12-15',
+        date: FUTURE_DATE,
         timeSlot: '10:00',
         guestCount: 4,
         previousHoldId: 'ckvhold00000000000000000w',
@@ -654,7 +671,7 @@ describe('Checkout Server Actions', () => {
       const { createBookingHold } = await import('@/server/actions/checkout');
       const result = await createBookingHold({
         experienceId: 'exp-1',
-        date: '2026-12-15',
+        date: FUTURE_DATE,
         timeSlot: '10:00',
         guestCount: 2,
       });
@@ -664,6 +681,140 @@ describe('Checkout Server Actions', () => {
         expect(result.error.code).toBe('NO_CAPACITY');
       }
       expect(db.booking.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('slot-start cutoff (a started session is not for sale)', () => {
+    // Only Date is faked — the Serializable retry backoff keeps real timers.
+    // 09:30 UTC on the slot's day = 10:30 (CET) / 11:30 (CEST) in Zurich:
+    // the 10:00 session has started, the 14:00 one has not.
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(new Date(`${FUTURE_DATE}T09:30:00.000Z`));
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('refuses a hold on a slot that already started today', async () => {
+      vi.mocked(db.experience.findUnique).mockResolvedValue(
+        mockExperienceForClaim as never
+      );
+
+      const { createBookingHold } = await import('@/server/actions/checkout');
+      const result = await createBookingHold({
+        experienceId: 'exp-1',
+        date: FUTURE_DATE,
+        timeSlot: '10:00',
+        guestCount: 2,
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe('INVALID_SLOT');
+      }
+      expect(db.booking.aggregate).not.toHaveBeenCalled();
+      expect(db.booking.create).not.toHaveBeenCalled();
+    });
+
+    it('still holds a later slot of the same day', async () => {
+      vi.mocked(db.experience.findUnique).mockResolvedValue(
+        mockExperienceForClaim as never
+      );
+      vi.mocked(db.booking.aggregate).mockResolvedValue({
+        _sum: { guestCount: 0 },
+      } as never);
+      vi.mocked(db.booking.create).mockResolvedValue({
+        id: 'hold-later',
+      } as never);
+
+      const { createBookingHold } = await import('@/server/actions/checkout');
+      const result = await createBookingHold({
+        experienceId: 'exp-1',
+        date: FUTURE_DATE,
+        timeSlot: '14:00',
+        guestCount: 2,
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it('refuses a NEW booking (no hold) on a started slot — no row, no Stripe session', async () => {
+      vi.mocked(db.experience.findUnique).mockResolvedValue(
+        mockExperience as never
+      );
+
+      const { createBookingAndCheckout } =
+        await import('@/server/actions/checkout');
+      const result = await createBookingAndCheckout(validInput);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe('INVALID_SLOT');
+      }
+      expect(db.booking.create).not.toHaveBeenCalled();
+      expect(sessionCreateMock).not.toHaveBeenCalled();
+    });
+
+    it('lets a live hold taken before the start be completed (claim is not re-validated)', async () => {
+      vi.mocked(db.experience.findUnique).mockResolvedValue(
+        mockExperienceForClaim as never
+      );
+      vi.mocked(db.booking.updateMany).mockResolvedValue({
+        count: 1,
+      } as never);
+      vi.mocked(db.booking.findUniqueOrThrow).mockResolvedValue({
+        id: 'hold-1',
+        reference: 'ENC-HOLD1234',
+        stripeCheckoutSessionId: null,
+      } as never);
+      vi.mocked(db.booking.update).mockResolvedValue({} as never);
+
+      const { createBookingAndCheckout } =
+        await import('@/server/actions/checkout');
+      const result = await createBookingAndCheckout({
+        ...validInputForClaim,
+        holdId: 'ckvhold00000000000000000w',
+        holdToken: 'hold-token-0123456789abcdef',
+      });
+
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe('per-IP rate limit on createBookingAndCheckout', () => {
+    it('refuses before touching the DB when the IP budget is exhausted, whatever the email', async () => {
+      const { checkRateLimit, HOLD_RATE_LIMIT } =
+        await import('@/server/services/rate-limit.service');
+      vi.mocked(checkRateLimit).mockImplementation(async (identifier) => ({
+        success: !identifier.startsWith('checkout:'),
+        remaining: 0,
+        resetAt: Date.now() + 60_000,
+      }));
+
+      const { createBookingAndCheckout } =
+        await import('@/server/actions/checkout');
+      const result = await createBookingAndCheckout({
+        ...validInput,
+        visitorEmail: 'fresh-address-every-time@example.com',
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe('RATE_LIMITED');
+      }
+      expect(checkRateLimit).toHaveBeenCalledWith(
+        'checkout:203.0.113.7',
+        HOLD_RATE_LIMIT
+      );
+      expect(db.experience.findUnique).not.toHaveBeenCalled();
+      expect(db.booking.create).not.toHaveBeenCalled();
+
+      vi.mocked(checkRateLimit).mockResolvedValue({
+        success: true,
+        remaining: 1,
+        resetAt: Date.now() + 60_000,
+      });
     });
   });
 
@@ -775,6 +926,70 @@ describe('Checkout Server Actions', () => {
       // old (possibly already-paid) session might still settle.
       expect(db.booking.update).not.toHaveBeenCalled();
       expect(sessionCreateMock).not.toHaveBeenCalled();
+    });
+
+    it("refuses the retry when expire() failed and the previous session is STILL 'open' (never two live sessions)", async () => {
+      vi.mocked(db.experience.findUnique).mockResolvedValue(
+        mockExperienceForClaim as never
+      );
+      vi.mocked(db.booking.updateMany).mockResolvedValue({
+        count: 1,
+      } as never);
+      vi.mocked(db.booking.findUniqueOrThrow).mockResolvedValue({
+        id: 'hold-1',
+        reference: 'ENC-HOLD1234',
+        stripeCheckoutSessionId: 'cs_stale_open',
+      } as never);
+      // A transient Stripe error: expire() threw but nothing was expired.
+      sessionExpireMock.mockRejectedValueOnce(new Error('Stripe API timeout'));
+      sessionRetrieveMock.mockResolvedValueOnce({ status: 'open' });
+
+      const { createBookingAndCheckout } =
+        await import('@/server/actions/checkout');
+      const result = await createBookingAndCheckout({
+        ...validInputForClaim,
+        holdId: 'ckvhold00000000000000000w',
+        holdToken: 'hold-token-0123456789abcdef',
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe('CONFLICT');
+      }
+      // A second session would let a payment on the first one land on a
+      // booking that no longer points at it.
+      expect(db.booking.update).not.toHaveBeenCalled();
+      expect(sessionCreateMock).not.toHaveBeenCalled();
+    });
+
+    it("proceeds with the retry when the previous session is verifiably 'expired'", async () => {
+      vi.mocked(db.experience.findUnique).mockResolvedValue(
+        mockExperienceForClaim as never
+      );
+      vi.mocked(db.booking.updateMany).mockResolvedValue({
+        count: 1,
+      } as never);
+      vi.mocked(db.booking.findUniqueOrThrow).mockResolvedValue({
+        id: 'hold-1',
+        reference: 'ENC-HOLD1234',
+        stripeCheckoutSessionId: 'cs_stale_expired',
+      } as never);
+      vi.mocked(db.booking.update).mockResolvedValue({} as never);
+      sessionExpireMock.mockRejectedValueOnce(
+        new Error('Session is no longer open')
+      );
+      sessionRetrieveMock.mockResolvedValueOnce({ status: 'expired' });
+
+      const { createBookingAndCheckout } =
+        await import('@/server/actions/checkout');
+      const result = await createBookingAndCheckout({
+        ...validInputForClaim,
+        holdId: 'ckvhold00000000000000000w',
+        holdToken: 'hold-token-0123456789abcdef',
+      });
+
+      expect(result.success).toBe(true);
+      expect(sessionCreateMock).toHaveBeenCalledTimes(1);
     });
 
     it('ignores a holdId without its ownership token (degrades to create)', async () => {

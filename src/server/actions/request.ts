@@ -18,6 +18,7 @@ import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { getStripe } from '@/server/stripe';
 import { getBaseUrl } from '@/lib/env';
+import { isE2ETest } from '@/lib/e2e-mode';
 import type { ActionResult, ErrorCode } from '@/types/actions';
 import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
 import {
@@ -26,7 +27,7 @@ import {
   REQUEST_RATE_LIMIT,
   BOOKING_RATE_LIMIT,
 } from '@/server/services/rate-limit.service';
-import { logError, logInfo } from '@/lib/logger';
+import { logError, logInfo, logWarn } from '@/lib/logger';
 import {
   getEffectiveCommissionRate,
   computeCommissionCents,
@@ -524,10 +525,16 @@ export async function createRequestOfferCheckout(
     const priorBookingId = offer.bookingId;
     let bookingId = offer.bookingId;
     let bookingReference = '';
+    // Checkout Session of a previous attempt on the SAME pending booking.
+    let previousSessionId: string | null = null;
     if (bookingId) {
       const existing = await db.booking.findUnique({
         where: { id: bookingId },
-        select: { status: true, reference: true },
+        select: {
+          status: true,
+          reference: true,
+          stripeCheckoutSessionId: true,
+        },
       });
       if (existing?.status === BookingStatus.CONFIRMED) {
         return {
@@ -540,6 +547,50 @@ export async function createRequestOfferCheckout(
         bookingId = null;
       } else {
         bookingReference = existing.reference;
+        previousSessionId = existing.stripeCheckoutSessionId?.startsWith('cs_')
+          ? existing.stripeCheckoutSessionId
+          : null;
+      }
+    }
+
+    // One LIVE Checkout Session per offer. Each "Pay" click used to mint a
+    // new session without killing the previous one (24 h Stripe default): a
+    // payment on the older one landed on a booking that no longer pointed at
+    // it. Ask Stripe about the previous session BEFORE minting:
+    //  - 'complete' → it is paid / settling, its webhook confirms the booking
+    //    — never open a second charge;
+    //  - unknown (Stripe unreachable) → fail closed, the client retries;
+    //  - 'open' → superseded below, once the booking points at the new one;
+    //  - 'expired' → nothing to do.
+    let previousSessionIsOpen = false;
+    if (previousSessionId) {
+      try {
+        const previousSession =
+          await getStripe().checkout.sessions.retrieve(previousSessionId);
+        if (previousSession.status === 'complete') {
+          return {
+            success: false,
+            error: {
+              code: 'CONFLICT',
+              message: 'A payment for this offer is already being processed',
+            },
+          };
+        }
+        previousSessionIsOpen = previousSession.status === 'open';
+      } catch (retrieveError) {
+        logError(
+          'Could not verify previous offer checkout session',
+          retrieveError,
+          {
+            action: 'createRequestOfferCheckout',
+            bookingId: bookingId ?? undefined,
+            sessionId: previousSessionId,
+          }
+        );
+        return {
+          success: false,
+          error: { code: 'CONFLICT', message: 'Please retry' },
+        };
       }
     }
 
@@ -617,6 +668,13 @@ export async function createRequestOfferCheckout(
       await getTranslations({ locale: routing, namespace: 'surMesure' })
     )('stripeLineItem');
 
+    // Explicit 30-min payment window, same rule as the booking checkout
+    // (Stripe's floor is 30 min from creation — one minute of margin). The
+    // booking's expiresAt is aligned on the session's REAL expiry below, so
+    // the expire-cron and the payment window agree.
+    const sessionExpiresAtUnix =
+      Math.floor(Date.now() / 1000) + STRIPE_SESSION_DURATION_MINUTES * 60 + 60;
+
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
       payment_method_types: ['twint', 'card', 'link'],
       mode: 'payment',
@@ -637,6 +695,7 @@ export async function createRequestOfferCheckout(
         ...(platformFee > 0 ? { application_fee_amount: platformFee } : {}),
         transfer_data: { destination: stripeAccountId },
       },
+      expires_at: sessionExpiresAtUnix,
       customer_email: offer.request.clientEmail,
       success_url: `${baseUrl}/booking/${bookingId}/confirmation?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/${routing}/sur-mesure/offre/${parsed.data.token}?status=cancelled`,
@@ -662,7 +721,7 @@ export async function createRequestOfferCheckout(
     // booking/offer still get a session id (NOT cs_-prefixed, so the
     // webhook's stale-session guard stays inert) and the spec POSTs the
     // signed synthetic completed event with kind: request_offer.
-    if (process.env.E2E_TEST === 'true') {
+    if (isE2ETest()) {
       const e2eSessionId = `e2e_sess_${bookingId}`;
       await db.$transaction([
         db.booking.update({
@@ -709,13 +768,37 @@ export async function createRequestOfferCheckout(
       // would delete mid-payment.
       db.booking.update({
         where: { id: bookingId },
-        data: { stripeCheckoutSessionId: session.id, expiresAt },
+        data: {
+          stripeCheckoutSessionId: session.id,
+          expiresAt: session.expires_at
+            ? new Date(session.expires_at * 1000)
+            : expiresAt,
+        },
       }),
       db.requestOffer.update({
         where: { id: offer.id },
         data: { stripeCheckoutSessionId: session.id },
       }),
     ]);
+
+    // Kill the superseded session — AFTER the booking points at the new one,
+    // never before: the `checkout.session.expired` webhook deletes a pending
+    // booking still pointing at the expired session, and would race this
+    // very request. Best-effort: if it cannot be expired (paid in the
+    // meantime, Stripe hiccup), a payment on it is a `session_mismatch` that
+    // the checkout webhook refunds — the client is never charged twice.
+    if (previousSessionId && previousSessionIsOpen) {
+      try {
+        await getStripe().checkout.sessions.expire(previousSessionId);
+      } catch (expireError) {
+        logWarn('Could not expire superseded offer checkout session', {
+          action: 'createRequestOfferCheckout',
+          bookingId,
+          sessionId: previousSessionId,
+          error: String(expireError),
+        });
+      }
+    }
 
     return { success: true, data: { checkoutUrl: session.url } };
   } catch (error) {

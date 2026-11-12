@@ -22,6 +22,36 @@ import { logError, logInfo } from '@/lib/logger';
  *    and appended to `Booking.refundError` for manual reconciliation.
  */
 
+/**
+ * True when the booking never carried ANY online money: no card charge
+ * (payment intent) and no gift redemption — an ON_SITE / free offer settled
+ * at the winery (P-08). Such a booking has nothing to refund: the price on
+ * the row is what the guest would have paid at the cave, not a payment.
+ * Without this, every ON_SITE cancellation computed a refund "due" on that
+ * price and raised a false CARD_REFUND_IMPOSSIBLE incident (Sentry +
+ * refundError) plus a "refund pending" email.
+ *
+ * Decided on the booking's OWN facts, not the experience's current
+ * paymentMode (which the winery may have switched since): an on-site
+ * booking has either no Checkout Session at all (no imprint) or a
+ * setup-mode one (card imprint → noShowSetupIntentId). A booking that went
+ * through a PAYMENT session but lost its payment intent is NOT matched —
+ * that is the genuine data anomaly the incident marker exists for.
+ */
+export function wasNeverChargedOnline(booking: {
+  stripePaymentIntentId: string | null;
+  giftAppliedCents: number;
+  stripeCheckoutSessionId: string | null;
+  noShowSetupIntentId: string | null;
+}): boolean {
+  if (booking.stripePaymentIntentId || booking.giftAppliedCents > 0) {
+    return false;
+  }
+  return (
+    !booking.stripeCheckoutSessionId || Boolean(booking.noShowSetupIntentId)
+  );
+}
+
 export interface CancellationRefundInput {
   bookingId: string;
   stripePaymentIntentId: string | null;

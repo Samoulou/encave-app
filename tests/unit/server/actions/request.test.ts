@@ -17,8 +17,18 @@ vi.mock('@/server/services/rate-limit.service', () => ({
 }));
 
 const sessionsCreate = vi.fn();
+const sessionsRetrieve = vi.fn();
+const sessionsExpire = vi.fn();
 vi.mock('@/server/stripe', () => ({
-  getStripe: () => ({ checkout: { sessions: { create: sessionsCreate } } }),
+  getStripe: () => ({
+    checkout: {
+      sessions: {
+        create: sessionsCreate,
+        retrieve: sessionsRetrieve,
+        expire: sessionsExpire,
+      },
+    },
+  }),
 }));
 
 vi.mock('@/server/auth', () => ({ auth: vi.fn() }));
@@ -163,11 +173,16 @@ describe('createRequestAction', () => {
 });
 
 describe('composeRequestOfferAction', () => {
+  // Relative, never a literal: the validator refuses a past scheduledDate,
+  // so a hard-coded day turns the whole block red once it has gone by.
+  const futureScheduledDate = new Date(Date.now() + 30 * 24 * 3600 * 1000)
+    .toISOString()
+    .slice(0, 10);
   const validOffer = {
     requestId: 'clrequest000000000000000',
     message: 'Nous vous proposons une dégustation privée avec repas.',
     totalPriceCents: 120000,
-    scheduledDate: '2026-08-20',
+    scheduledDate: futureScheduledDate,
     scheduledStartTime: '18:00',
     validityDays: 7,
   };
@@ -375,5 +390,104 @@ describe('createRequestOfferCheckout — money routing', () => {
     expect(r.success).toBe(false);
     if (!r.success) expect(r.error.code).toBe('CONFLICT');
     expect(sessionsCreate).not.toHaveBeenCalled();
+  });
+
+  it('gives the session an explicit ~30-min expiry (never the 24 h Stripe default)', async () => {
+    vi.mocked(db.requestOffer.findUnique).mockResolvedValue(
+      offerRow(null) as never
+    );
+    const before = Math.floor(Date.now() / 1000);
+    const r = await createRequestOfferCheckout({ token });
+    expect(r.success).toBe(true);
+    const params = sessionsCreate.mock.calls[0]?.[0];
+    // Stripe's floor is 30 min from creation; one minute of margin.
+    expect(params.expires_at).toBeGreaterThanOrEqual(before + 30 * 60);
+    expect(params.expires_at).toBeLessThanOrEqual(before + 32 * 60);
+  });
+
+  describe('one live Checkout Session per offer', () => {
+    /** Offer already linked to a PENDING booking that carries a session. */
+    function retryOnPendingBooking() {
+      const row = offerRow(null);
+      row.bookingId = 'bk-existing' as never;
+      vi.mocked(db.requestOffer.findUnique).mockResolvedValue(row as never);
+      vi.mocked(db.booking.findUnique).mockResolvedValueOnce({
+        status: 'PENDING_PAYMENT',
+        reference: 'ENC-ABCD1234',
+        stripeCheckoutSessionId: 'cs_previous',
+      } as never);
+    }
+
+    beforeEach(() => {
+      sessionsCreate.mockClear();
+      sessionsRetrieve.mockReset();
+      sessionsExpire.mockReset();
+      vi.mocked(db.$transaction).mockClear();
+      vi.mocked(db.$transaction).mockResolvedValue([] as never);
+    });
+
+    it('supersedes a still-open previous session — expired only AFTER the booking points at the new one', async () => {
+      retryOnPendingBooking();
+      sessionsRetrieve.mockResolvedValue({ status: 'open' });
+      sessionsExpire.mockResolvedValue({ status: 'expired' });
+
+      const r = await createRequestOfferCheckout({ token });
+
+      expect(r.success).toBe(true);
+      expect(db.booking.create).not.toHaveBeenCalled(); // same booking reused
+      expect(sessionsCreate).toHaveBeenCalledTimes(1);
+      expect(sessionsExpire).toHaveBeenCalledWith('cs_previous');
+      // Order matters: expiring first would let the session.expired webhook
+      // delete a booking that still points at the session being expired.
+      const repointed = vi.mocked(db.$transaction).mock.invocationCallOrder[0];
+      const expired = sessionsExpire.mock.invocationCallOrder[0];
+      expect(repointed).toBeDefined();
+      expect(expired).toBeDefined();
+      expect(Number(repointed)).toBeLessThan(Number(expired));
+    });
+
+    it('refuses a second charge while the previous session is complete (paid / settling)', async () => {
+      retryOnPendingBooking();
+      sessionsRetrieve.mockResolvedValue({ status: 'complete' });
+
+      const r = await createRequestOfferCheckout({ token });
+
+      expect(r.success).toBe(false);
+      if (!r.success) expect(r.error.code).toBe('CONFLICT');
+      expect(sessionsCreate).not.toHaveBeenCalled();
+      expect(sessionsExpire).not.toHaveBeenCalled();
+    });
+
+    it('fails closed when the previous session cannot be verified', async () => {
+      retryOnPendingBooking();
+      sessionsRetrieve.mockRejectedValue(new Error('Stripe unreachable'));
+
+      const r = await createRequestOfferCheckout({ token });
+
+      expect(r.success).toBe(false);
+      if (!r.success) expect(r.error.code).toBe('CONFLICT');
+      expect(sessionsCreate).not.toHaveBeenCalled();
+    });
+
+    it('mints a new session without any expire call when the previous one already expired', async () => {
+      retryOnPendingBooking();
+      sessionsRetrieve.mockResolvedValue({ status: 'expired' });
+
+      const r = await createRequestOfferCheckout({ token });
+
+      expect(r.success).toBe(true);
+      expect(sessionsCreate).toHaveBeenCalledTimes(1);
+      expect(sessionsExpire).not.toHaveBeenCalled();
+    });
+
+    it('still succeeds when the superseded session cannot be expired (covered by the webhook mismatch refund)', async () => {
+      retryOnPendingBooking();
+      sessionsRetrieve.mockResolvedValue({ status: 'open' });
+      sessionsExpire.mockRejectedValue(new Error('Stripe API timeout'));
+
+      const r = await createRequestOfferCheckout({ token });
+
+      expect(r.success).toBe(true);
+    });
   });
 });

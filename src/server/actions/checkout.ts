@@ -9,6 +9,7 @@ import { addMinutes } from 'date-fns';
 import { getStripe } from '@/server/stripe';
 import { db } from '@/server/db';
 import { getBaseUrl } from '@/lib/env';
+import { isE2ETest } from '@/lib/e2e-mode';
 import { getTranslations } from 'next-intl/server';
 import type { ActionResult } from '@/types/actions';
 import {
@@ -35,6 +36,7 @@ import {
 import { BOOKING_FEE_CENTS } from '@/lib/constants/pricing';
 import {
   activeCapacityBookingWhere,
+  isSlotStartInFuture,
   resolveOccurrenceCapacity,
 } from '@/lib/business-rules/capacity';
 import {
@@ -315,6 +317,13 @@ export async function createBookingHold(
     const platformFee = computeCommissionCents(totalPrice, commissionRate);
     const bookingDate = new Date(date);
 
+    // A session that has already started (Zurich wall clock) is not for
+    // sale — whatever the OCCURRENCE_CAPACITY flag says (the occurrence
+    // resolver only refuses past DATES, and only blocks when the flag is ON).
+    if (!isSlotStartInFuture(bookingDate, timeSlot)) {
+      return occurrenceRefusalError('INVALID_SLOT');
+    }
+
     // Occurrence gate (P-05 / ADR-0002): resolve OUTSIDE the Serializable
     // transaction. Refusals block only when the flag is ON.
     const occurrenceCapacityOn = await isFlagEnabled('OCCURRENCE_CAPACITY');
@@ -468,6 +477,25 @@ export async function createBookingAndCheckout(
       visitorEmail,
       visitorPhone,
     } = validated.data;
+
+    // Per-IP budget FIRST: the email below is caller-chosen, so on its own it
+    // bounds nothing — each call without a hold creates a PENDING booking
+    // that blocks up to maxCapacity seats for the whole payment window.
+    // Same budget as the hold step (the public entry to this action).
+    const ip = getClientIp(await headers());
+    const ipRateLimitResult = await checkRateLimit(
+      `checkout:${ip}`,
+      HOLD_RATE_LIMIT
+    );
+    if (!ipRateLimitResult.success) {
+      return {
+        success: false,
+        error: {
+          code: 'RATE_LIMITED',
+          message: 'Too many booking attempts. Please try again later.',
+        },
+      };
+    }
 
     // Rate limit by visitor email to prevent booking abuse
     const rateLimitResult = await checkRateLimit(
@@ -679,13 +707,17 @@ export async function createBookingAndCheckout(
         // A re-claim (retry after payment abort) must kill the previous
         // Stripe session: two live sessions on one booking let a stale
         // session's expiry webhook delete a booking being paid on the
-        // newer one. expire() only throws when the session is no longer
-        // 'open' — that covers BOTH "already expired" (safe to proceed)
-        // and "already paid" (NOT safe: the old completed-webhook may still
-        // be in flight, and releasing the gift + starting a second charge
-        // here would let the customer keep the gift value while the winery
-        // goes unpaid for it — P-16 review finding). Retrieve to tell them
-        // apart before touching money.
+        // newer one. expire() throws when the session is no longer 'open'
+        // — "already expired" (safe to proceed) or "already paid" (NOT
+        // safe: the old completed-webhook may still be in flight, and
+        // releasing the gift + starting a second charge here would let the
+        // customer keep the gift value while the winery goes unpaid for it
+        // — P-16 review finding) — but ALSO on a transient Stripe/network
+        // error, with the session still 'open'. Retrieve to tell them apart
+        // before touching money: only a session Stripe reports 'expired' is
+        // dead. A still-'open' one must not be doubled by a second live
+        // session (a payment on it would land on a booking that no longer
+        // points at it) — fail closed, the client retries.
         let previousSessionIsDead = true;
         if (claimedBooking.stripeCheckoutSessionId) {
           try {
@@ -698,7 +730,7 @@ export async function createBookingAndCheckout(
                 await getStripe().checkout.sessions.retrieve(
                   claimedBooking.stripeCheckoutSessionId
                 );
-              previousSessionIsDead = previousSession.status !== 'complete';
+              previousSessionIsDead = previousSession.status === 'expired';
             } catch (retrieveError) {
               // Can't confirm the old session's fate — fail closed rather
               // than risk a double charge / stranding the gift release.
@@ -730,7 +762,7 @@ export async function createBookingAndCheckout(
             error: {
               code: 'CONFLICT',
               message:
-                'This booking may already be paid. Please refresh the page before retrying.',
+                'This booking may already be paid or its previous payment session is still open. Please refresh the page before retrying.',
             },
           };
         }
@@ -755,6 +787,12 @@ export async function createBookingAndCheckout(
         // OUTSIDE the Serializable tx (ADR-0002 §3); the successful-claim
         // path above deliberately does NOT re-validate the occurrence —
         // closing is forward-only and spares live holds mid-payment.
+        // Same doctrine for the start cutoff: a NEW booking is refused
+        // once the session has started, a live hold taken before the start
+        // may still be completed.
+        if (!isSlotStartInFuture(bookingDate, timeSlot)) {
+          return occurrenceRefusalError('INVALID_SLOT');
+        }
         const occurrenceCapacityOn = await isFlagEnabled('OCCURRENCE_CAPACITY');
         const resolved = await resolveOccurrenceForBooking({
           experienceId,
@@ -863,7 +901,7 @@ export async function createBookingAndCheckout(
       const baseUrl = getBaseUrl();
       const loc = validated.data.locale ?? 'fr';
 
-      if (wantsImprint && process.env.E2E_TEST !== 'true') {
+      if (wantsImprint && !isE2ETest()) {
         const sessionExpiresAtUnix =
           Math.floor(Date.now() / 1000) +
           STRIPE_SESSION_DURATION_MINUTES * 60 +
@@ -1070,7 +1108,7 @@ export async function createBookingAndCheckout(
       };
     }
 
-    if (process.env.E2E_TEST === 'true') {
+    if (isE2ETest()) {
       const checkoutUrl = `https://checkout.stripe.com/pay/e2e_${booking.id}`;
 
       await db.booking.update({
