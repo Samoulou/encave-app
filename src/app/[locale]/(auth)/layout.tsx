@@ -30,7 +30,8 @@ export default async function AuthLayout({
 
   return (
     <NextIntlClientProvider messages={messages}>
-      {children}
+      {/* Skip-link target: these pages render no <main> of their own. */}
+      <main id="main-content">{children}</main>
     </NextIntlClientProvider>
   );
 }

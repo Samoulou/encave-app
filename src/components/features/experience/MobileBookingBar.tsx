@@ -74,15 +74,19 @@ export function MobileBookingBar({
     };
   }, []);
 
+  // While the bar is slid off-screen it is aria-hidden: its button must
+  // leave the tab order too (axe aria-hidden-focus).
+  const isBarShown = isVisible && !hasFocusedInput;
+
   return (
     <>
       <div
         className={cn(
           'fixed bottom-0 left-0 right-0 z-40 translate-y-full border-t border-border bg-white p-4 opacity-0 shadow-warm-xl transition duration-200 ease-out lg:hidden',
           'pb-[calc(1rem+env(safe-area-inset-bottom))]',
-          isVisible && !hasFocusedInput && 'translate-y-0 opacity-100'
+          isBarShown && 'translate-y-0 opacity-100'
         )}
-        aria-hidden={!isVisible || hasFocusedInput}
+        aria-hidden={!isBarShown}
       >
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <div>
@@ -96,6 +100,7 @@ export function MobileBookingBar({
           {isBookingEnabled ? (
             <Button
               className="hover:bg-primary-hover bg-primary px-6 font-bold text-white"
+              tabIndex={isBarShown ? undefined : -1}
               onClick={() => setIsDrawerOpen(true)}
             >
               {t('bookNow')}

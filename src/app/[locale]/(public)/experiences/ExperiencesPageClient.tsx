@@ -393,7 +393,7 @@ export function ExperiencesPageClient({
           />
         </aside>
 
-        <main className="min-w-0">
+        <div className="min-w-0">
           {view === 'list' && (
             <div className="relative mb-6 h-[320px] overflow-hidden rounded-[18px] border border-stone-200 bg-stone-50 shadow-audit-card">
               <DesktopOnly>
@@ -510,7 +510,7 @@ export function ExperiencesPageClient({
               isFetching={isFetching}
             />
           )}
-        </main>
+        </div>
       </div>
 
       <div className="lg:hidden">
@@ -661,7 +661,7 @@ function MobileListing({
       </div>
 
       {/* Main Content */}
-      <main>
+      <div>
         {/* Search Bar */}
         <SearchBar
           value={currentParams.search}
@@ -724,7 +724,7 @@ function MobileListing({
             />
           </div>
         )}
-      </main>
+      </div>
     </div>
   );
 }

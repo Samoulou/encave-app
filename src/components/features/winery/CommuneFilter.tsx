@@ -28,7 +28,10 @@ export function CommuneFilter({ communes }: CommuneFilterProps) {
       value={commune ?? 'all'}
       onValueChange={(value) => setCommune(value === 'all' ? null : value)}
     >
-      <SelectTrigger className="w-[200px] border-stone-200 bg-white shadow-sm hover:border-burgundy-300 focus:border-burgundy-400 focus:ring-burgundy-400/20">
+      <SelectTrigger
+        aria-label={t('filterByCommune')}
+        className="w-[200px] border-stone-200 bg-white shadow-sm hover:border-burgundy-300 focus:border-burgundy-400 focus:ring-burgundy-400/20"
+      >
         <div className="flex items-center gap-2">
           <MapPin className="h-4 w-4 text-burgundy-500" />
           <SelectValue placeholder={t('allCommunes')} />

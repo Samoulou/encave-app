@@ -232,6 +232,7 @@ export function HomeDesktopEditorial({
               <Link
                 href={`/experiences?type=${type}`}
                 key={title}
+                prefetch={false}
                 className="flex items-center gap-3 rounded-xl border border-stone-200 bg-white px-4 py-3.5 transition-colors hover:bg-cream-100"
               >
                 <span className="grid h-10 w-10 place-items-center rounded-full bg-burgundy-50 text-burgundy-700">

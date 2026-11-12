@@ -8,7 +8,7 @@ interface ForgotPasswordPageProps {
 export async function generateMetadata({ params }: ForgotPasswordPageProps) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'auth.forgotPassword' });
-  return { title: `${t('title')} | EnCave`, robots: { index: false } };
+  return { title: t('title'), robots: { index: false } };
 }
 
 export default function ForgotPasswordPage() {

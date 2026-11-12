@@ -32,7 +32,10 @@ export default async function MaintenancePage({
   const t = await getTranslations('maintenance');
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-cream-50 via-cream-100 to-burgundy-50 px-6 text-center">
+    <main
+      id="main-content"
+      className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-cream-50 via-cream-100 to-burgundy-50 px-6 text-center"
+    >
       <Image
         src="/icons/encave-logo.png"
         alt="EnCave"

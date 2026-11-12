@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import {
   getPubliclyVisibleWineries,
   getDistinctCommunes,
@@ -7,6 +8,7 @@ import {
   type WineryCardDTO,
 } from '@/components/features/winery/WineriesExplorer';
 import type { MapWinery } from '@/components/features/map/types';
+import { WineriesStaticFallback } from './WineriesStaticFallback';
 
 const EXCERPT_LENGTH = 220;
 
@@ -55,11 +57,21 @@ export async function WineriesContent() {
     _count: w._count,
   }));
 
+  // WineriesExplorer bails out to CSR (nuqs): its fallback is the
+  // server-rendered grid, so the prerendered HTML carries real cards.
   return (
-    <WineriesExplorer
-      wineries={cardWineries}
-      mapWineries={mapWineries}
-      communes={communes}
-    />
+    <Suspense
+      fallback={
+        cardWineries.length > 0 ? (
+          <WineriesStaticFallback wineries={cardWineries} />
+        ) : null
+      }
+    >
+      <WineriesExplorer
+        wineries={cardWineries}
+        mapWineries={mapWineries}
+        communes={communes}
+      />
+    </Suspense>
   );
 }

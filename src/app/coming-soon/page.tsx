@@ -15,7 +15,7 @@ import { ComingSoonPricing } from '@/components/features/coming-soon/ComingSoonP
  */
 export default function ComingSoonPage() {
   return (
-    <main className="bg-cream-50">
+    <main id="main-content" className="bg-cream-50">
       <ComingSoonHero />
       <ComingSoonDiscover />
       <div className="mx-auto max-w-4xl px-6" aria-hidden="true">

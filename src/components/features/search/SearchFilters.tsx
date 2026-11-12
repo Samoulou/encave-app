@@ -212,7 +212,7 @@ export function SearchFilters({
           value={commune ?? 'all'}
           onValueChange={(v) => onCommuneChange(v === 'all' ? null : v)}
         >
-          <SelectTrigger>
+          <SelectTrigger aria-label={t('location')}>
             <SelectValue placeholder={tWinery('allCommunes')} />
           </SelectTrigger>
           <SelectContent>
@@ -237,7 +237,7 @@ export function SearchFilters({
             onLanguageChange(LANGUAGE_OPTIONS.find((l) => l === v) ?? null)
           }
         >
-          <SelectTrigger>
+          <SelectTrigger aria-label={t('language')}>
             <SelectValue placeholder={t('languageAll')} />
           </SelectTrigger>
           <SelectContent>

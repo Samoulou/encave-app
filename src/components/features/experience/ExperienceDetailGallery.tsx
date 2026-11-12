@@ -112,7 +112,6 @@ export function ExperienceDetailGallery({
               className="object-cover transition-transform duration-700 group-hover:scale-105"
               sizes="(max-width: 768px) 100vw, 66vw"
               priority
-              unoptimized
               placeholder="blur"
               blurDataURL={IMAGE_PLACEHOLDERS.hero}
             />
@@ -167,7 +166,6 @@ export function ExperienceDetailGallery({
                       fill
                       className="object-cover transition-transform duration-700 group-hover:scale-105"
                       sizes="(max-width: 768px) 50vw, 33vw"
-                      unoptimized
                       placeholder="blur"
                       blurDataURL={IMAGE_PLACEHOLDERS.square}
                     />

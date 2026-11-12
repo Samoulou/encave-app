@@ -20,6 +20,7 @@ const averia = Averia_Serif_Libre({
   style: ['normal', 'italic'],
   variable: '--font-serif',
   display: 'swap',
+  preload: false,
 });
 
 // Accent italique des titres (hero <em>) — même pattern L-206 que [locale]/layout.
@@ -29,6 +30,7 @@ const averiaItalic = Averia_Serif_Libre({
   style: ['italic'],
   variable: '--font-display-italic',
   display: 'swap',
+  preload: false,
 });
 
 const mukta = Mukta_Vaani({
@@ -43,6 +45,7 @@ const jetbrainsMono = JetBrains_Mono({
   weight: ['500', '700'],
   variable: '--font-mono',
   display: 'swap',
+  preload: false,
 });
 
 export const metadata: Metadata = {

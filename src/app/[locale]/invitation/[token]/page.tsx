@@ -17,7 +17,7 @@ interface InvitationPageProps {
 export async function generateMetadata({ params }: InvitationPageProps) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'invitation' });
-  return { title: `${t('title')} | EnCave`, robots: { index: false } };
+  return { title: t('title'), robots: { index: false } };
 }
 
 export default async function InvitationPage({ params }: InvitationPageProps) {
@@ -48,7 +48,10 @@ export default async function InvitationPage({ params }: InvitationPageProps) {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-cream-50 px-4 py-12">
+    <main
+      id="main-content"
+      className="flex min-h-screen items-center justify-center bg-cream-50 px-4 py-12"
+    >
       <div className="w-full max-w-md rounded-2xl border border-stone-200 bg-white p-8 shadow-warm">
         <div className="mb-6 flex items-center gap-3">
           <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-white">
@@ -83,6 +86,6 @@ export default async function InvitationPage({ params }: InvitationPageProps) {
           </NextIntlClientProvider>
         )}
       </div>
-    </div>
+    </main>
   );
 }

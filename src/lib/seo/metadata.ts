@@ -5,6 +5,24 @@ import { locales, defaultLocale, type Locale } from '@/i18n/routing';
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://encave.ch';
 
 /**
+ * Social preview used when a page has no image of its own. A page-level
+ * `openGraph` REPLACES the root one (Next merges metadata shallowly), so
+ * every generator below must set an image explicitly — without it the
+ * shared links had no preview at all.
+ */
+const DEFAULT_OG_IMAGE = '/og-image.jpg';
+
+/**
+ * The root layout applies the `%s | EnCave` title template. Most message
+ * titles already end with the brand ("… | EnCave"), which rendered
+ * "… | EnCave | EnCave" in the <title>. Branded strings opt out of the
+ * template; bare ones keep it.
+ */
+function resolveTitle(title: string): Metadata['title'] {
+  return /\|\s*EnCave\s*$/.test(title) ? { absolute: title } : title;
+}
+
+/**
  * Map locale codes to og:locale format
  */
 const ogLocaleMap: Record<Locale, string> = {
@@ -90,8 +108,10 @@ export async function generatePageMetadata({
   const alternates = generateAlternateLinks(path);
   const ogLocale = generateOgLocale(locale);
 
+  const socialImages = images.length > 0 ? images : [DEFAULT_OG_IMAGE];
+
   const metadata: Metadata = {
-    title,
+    title: resolveTitle(title),
     description,
     alternates: {
       canonical: canonicalUrl,
@@ -105,13 +125,13 @@ export async function generatePageMetadata({
       locale: ogLocale.locale,
       alternateLocale: ogLocale.alternateLocales,
       type: 'website',
-      images: images.length > 0 ? images : undefined,
+      images: socialImages,
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      images: images.length > 0 ? images : undefined,
+      images: socialImages,
     },
   };
 
@@ -179,7 +199,7 @@ export async function generateExperienceDetailMetadata(
   const ogLocale = generateOgLocale(locale);
 
   return {
-    title: t('title', { title }),
+    title: resolveTitle(t('title', { title })),
     description: metaDescription,
     alternates: {
       canonical: canonicalUrl,
@@ -193,13 +213,13 @@ export async function generateExperienceDetailMetadata(
       locale: ogLocale.locale,
       alternateLocale: ogLocale.alternateLocales,
       type: 'article',
-      images: coverPhoto ? [coverPhoto] : undefined,
+      images: [coverPhoto || DEFAULT_OG_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',
       title: t('title', { title }),
       description: metaDescription,
-      images: coverPhoto ? [coverPhoto] : undefined,
+      images: [coverPhoto || DEFAULT_OG_IMAGE],
     },
   };
 }
@@ -245,7 +265,7 @@ export async function generateWineryDetailMetadata(
   const ogLocale = generateOgLocale(locale);
 
   return {
-    title: t('title', { name }),
+    title: resolveTitle(t('title', { name })),
     description: metaDescription,
     alternates: {
       canonical: canonicalUrl,
@@ -259,13 +279,13 @@ export async function generateWineryDetailMetadata(
       locale: ogLocale.locale,
       alternateLocale: ogLocale.alternateLocales,
       type: 'website',
-      images: coverPhoto ? [coverPhoto] : undefined,
+      images: [coverPhoto || DEFAULT_OG_IMAGE],
     },
     twitter: {
       card: 'summary_large_image',
       title: t('title', { name }),
       description: metaDescription,
-      images: coverPhoto ? [coverPhoto] : undefined,
+      images: [coverPhoto || DEFAULT_OG_IMAGE],
     },
   };
 }

@@ -24,7 +24,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     locale: locale as Locale,
     path: '/sur-mesure',
     namespace: 'metadata.surMesure',
-    noIndex: true,
   });
 }
 
@@ -45,7 +44,10 @@ export default async function SurMesurePage({ params }: Props) {
   return (
     <>
       <Header />
-      <main className="mx-auto max-w-2xl px-4 py-12 sm:px-6 lg:py-16">
+      <main
+        id="main-content"
+        className="mx-auto max-w-2xl px-4 py-12 sm:px-6 lg:py-16"
+      >
         <header className="mb-10 text-center">
           <h1 className="font-serif text-3xl font-bold sm:text-4xl">
             {t('pageTitle')}

@@ -47,15 +47,26 @@ export function HomeSearchShortcuts({
 
   return (
     <div className={cn('flex flex-wrap items-center gap-2', className)}>
-      <Link href={weekendHref} className={chipClass}>
+      {/* prefetch off: every query-string variant is the SAME static
+          catalogue payload (filters are client-side) — the home was
+          downloading it 7 times (~200 kB) before any click. */}
+      <Link href={weekendHref} className={chipClass} prefetch={false}>
         <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />
         {t('thisWeekend')}
       </Link>
-      <Link href="/experiences?type=TASTING" className={chipClass}>
+      <Link
+        href="/experiences?type=TASTING"
+        className={chipClass}
+        prefetch={false}
+      >
         <Wine className="h-3.5 w-3.5" aria-hidden="true" />
         {t('tastings')}
       </Link>
-      <Link href="/experiences?type=MEAL" className={chipClass}>
+      <Link
+        href="/experiences?type=MEAL"
+        className={chipClass}
+        prefetch={false}
+      >
         <UtensilsCrossed className="h-3.5 w-3.5" aria-hidden="true" />
         {t('withMeal')}
       </Link>

@@ -63,7 +63,7 @@ export async function generateMetadata({
 
   if (!experience) {
     const t = await getTranslations({ locale, namespace: 'experience' });
-    return { title: `${t('notFound')} | EnCave` };
+    return { title: t('notFound') };
   }
 
   return generateExperienceDetailMetadata(
@@ -232,7 +232,7 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
       <Header />
       <JsonLd data={eventSchema} />
 
-      <main className="w-full flex-grow pb-24 lg:pb-8">
+      <main id="main-content" className="w-full flex-grow pb-24 lg:pb-8">
         <div className="border-b border-stone-200 bg-white px-4 py-3 sm:px-6 lg:px-10">
           <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-4">
             {/* tabIndex: a scrollable region must be keyboard-reachable
@@ -343,7 +343,6 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
                     fill
                     className="object-cover"
                     sizes="64px"
-                    unoptimized
                   />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -449,19 +448,26 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
             {/* L-221: sticky + self-start so the reservation panel aligns with
                 the gallery and stays in view instead of sliding below the fold. */}
             <div className="sticky top-24 hidden self-start lg:block">
-              <BookingWidget
-                price={experience.price}
-                experienceSlug={experience.slug}
-                experienceId={experience.id}
-                stripeConnected={experience.winery.stripeOnboardingComplete}
-                minCapacity={experience.minCapacity}
-                maxCapacity={experience.maxCapacity}
-                duration={experience.duration}
-                availabilitySlots={experience.availabilitySlots}
-                occurrenceDateKeys={occurrenceDateKeys}
-                serviceFeeCentsPerGuest={serviceFeeCentsPerGuest}
-                cancellationPolicy={experience.winery.cancellationPolicy}
-              />
+              {/* BookingWidget reads the URL (nuqs → useSearchParams): on
+                  this ISR page that bails out to client rendering up to the
+                  NEAREST Suspense boundary. Without its own boundary the
+                  whole fiche (h1, description, gallery) was dropped from
+                  the server HTML and only loading.tsx was prerendered. */}
+              <Suspense fallback={<BookingWidgetSkeleton />}>
+                <BookingWidget
+                  price={experience.price}
+                  experienceSlug={experience.slug}
+                  experienceId={experience.id}
+                  stripeConnected={experience.winery.stripeOnboardingComplete}
+                  minCapacity={experience.minCapacity}
+                  maxCapacity={experience.maxCapacity}
+                  duration={experience.duration}
+                  availabilitySlots={experience.availabilitySlots}
+                  occurrenceDateKeys={occurrenceDateKeys}
+                  serviceFeeCentsPerGuest={serviceFeeCentsPerGuest}
+                  cancellationPolicy={experience.winery.cancellationPolicy}
+                />
+              </Suspense>
               {giftCardsEnabled && (
                 <Link
                   href={`/cadeaux?experience=${experience.id}`}
@@ -474,20 +480,38 @@ export default async function ExperiencePage({ params }: ExperiencePageProps) {
           </div>
         </div>
 
-        <MobileBookingBar
-          price={experience.price}
-          serviceFeeCentsPerGuest={serviceFeeCentsPerGuest}
-          experienceSlug={experience.slug}
-          experienceId={experience.id}
-          stripeConnected={experience.winery.stripeOnboardingComplete}
-          minCapacity={experience.minCapacity}
-          maxCapacity={experience.maxCapacity}
-          duration={experience.duration}
-          availabilitySlots={experience.availabilitySlots}
-          occurrenceDateKeys={occurrenceDateKeys}
-        />
+        {/* Same nuqs bailout as BookingWidget (the drawer embeds it). */}
+        <Suspense fallback={null}>
+          <MobileBookingBar
+            price={experience.price}
+            serviceFeeCentsPerGuest={serviceFeeCentsPerGuest}
+            experienceSlug={experience.slug}
+            experienceId={experience.id}
+            stripeConnected={experience.winery.stripeOnboardingComplete}
+            minCapacity={experience.minCapacity}
+            maxCapacity={experience.maxCapacity}
+            duration={experience.duration}
+            availabilitySlots={experience.availabilitySlots}
+            occurrenceDateKeys={occurrenceDateKeys}
+          />
+        </Suspense>
       </main>
       <Footer />
+    </div>
+  );
+}
+
+function BookingWidgetSkeleton() {
+  return (
+    <div
+      className="space-y-4 rounded-2xl border border-stone-200 bg-white p-6"
+      aria-hidden="true"
+    >
+      <Skeleton className="h-8 w-32" />
+      <Skeleton className="h-12 w-full" />
+      <Skeleton className="h-12 w-full" />
+      <Skeleton className="h-12 w-full" />
+      <Skeleton className="h-12 w-full rounded-xl" />
     </div>
   );
 }

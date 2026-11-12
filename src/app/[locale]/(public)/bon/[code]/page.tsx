@@ -40,7 +40,7 @@ export default async function GiftCardPublicPage({ params }: Props) {
   return (
     <>
       <Header />
-      <main className="mx-auto max-w-lg px-4 py-16 sm:px-6">
+      <main id="main-content" className="mx-auto max-w-lg px-4 py-16 sm:px-6">
         {!giftCard ? (
           <div className="rounded-xl border border-border bg-card p-8 text-center">
             <h1 className="font-serif text-2xl font-semibold">

@@ -189,6 +189,7 @@ export function HomeMobileEditorial({
             <Link
               href={`/experiences?type=${type}`}
               key={name}
+              prefetch={false}
               className={`flex min-w-24 flex-col gap-2 rounded-[14px] border border-black/5 p-3 ${color}`}
             >
               <span className="grid h-9 w-9 place-items-center rounded-full bg-white/70 text-burgundy-700">

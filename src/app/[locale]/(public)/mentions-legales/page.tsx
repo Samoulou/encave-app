@@ -44,7 +44,10 @@ export default async function MentionsLegalesPage({
   return (
     <div className="min-h-screen bg-cream-50">
       <Header />
-      <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16">
+      <main
+        id="main-content"
+        className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:py-16"
+      >
         <article className="prose prose-slate prose-headings:font-display prose-headings:text-slate-900 prose-p:text-slate-600 prose-a:text-burgundy-600 prose-a:no-underline hover:prose-a:underline max-w-none">
           <h1>{t('title')}</h1>
           <p className="lead">{t('intro')}</p>

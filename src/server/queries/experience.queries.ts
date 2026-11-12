@@ -600,6 +600,49 @@ export const getExperienceCommunes = cache(
 );
 
 /**
+ * Latest published experiences for the 404 page.
+ *
+ * Next renders the `[locale]/not-found` boundary into the payload of EVERY
+ * route under the segment, so its data must be cached: the previous
+ * uncached read cost one DB query per dynamic request (dashboard,
+ * checkout, admin…) and per ISR regeneration.
+ */
+export const getNotFoundSuggestions = cache(
+  unstable_cache(
+    async (): Promise<
+      Array<{ id: string; title: string; slug: string; wineryName: string }>
+    > => {
+      const experiences = await db.experience.findMany({
+        where: {
+          status: ExperienceStatus.PUBLISHED,
+          winery: publiclyVisibleWineryWhere,
+        },
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          winery: { select: { name: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 4,
+      });
+
+      return experiences.map((exp) => ({
+        id: exp.id,
+        title: exp.title,
+        slug: exp.slug,
+        wineryName: exp.winery.name,
+      }));
+    },
+    ['not-found-suggestions'],
+    {
+      revalidate: 600,
+      tags: ['experiences', 'wineries'],
+    }
+  )
+);
+
+/**
  * Get a single experience by slug.
  * Cached for 5 minutes. Wrapped with React.cache for request deduplication.
  */
@@ -612,6 +655,9 @@ export const getExperienceBySlug = cache(
           status: ExperienceStatus.PUBLISHED,
           winery: publiclyVisibleWineryWhere,
         },
+        // Slugs are only unique per winery in the DB: resolve legacy
+        // duplicates deterministically (the oldest keeps the URL).
+        orderBy: { createdAt: 'asc' },
         select: {
           id: true,
           title: true,

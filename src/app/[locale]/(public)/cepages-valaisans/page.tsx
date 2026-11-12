@@ -5,6 +5,8 @@ import { Grape, Wine } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { JsonLd } from '@/components/shared/JsonLd';
 import { getBaseUrl } from '@/lib/env';
+import { generatePageMetadata } from '@/lib/seo/metadata';
+import type { Locale } from '@/i18n/routing';
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -14,18 +16,18 @@ export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: 'landing.cepages' });
+  const [metadata, t] = await Promise.all([
+    generatePageMetadata({
+      locale: locale as Locale,
+      namespace: 'landing.cepages.metadata',
+      titleKey: 'title',
+      descriptionKey: 'description',
+      path: '/cepages-valaisans',
+    }),
+    getTranslations({ locale, namespace: 'landing.cepages' }),
+  ]);
 
-  return {
-    title: t('metadata.title'),
-    description: t('metadata.description'),
-    keywords: t('metadata.keywords'),
-    openGraph: {
-      title: t('metadata.title'),
-      description: t('metadata.description'),
-      type: 'website',
-    },
-  };
+  return { ...metadata, keywords: t('metadata.keywords') };
 }
 
 export default async function CepagesValaisansPage({ params }: PageProps) {
@@ -93,10 +95,9 @@ export default async function CepagesValaisansPage({ params }: PageProps) {
     <>
       <JsonLd data={breadcrumbSchema} />
       <JsonLd data={itemListSchema} />
-      <div className="min-h-screen bg-cream-50">
+      <main id="main-content" className="min-h-screen bg-cream-50">
         {/* Hero Section */}
         <section className="relative bg-gradient-to-br from-burgundy-800 via-burgundy-700 to-burgundy-900 py-20 lg:py-28">
-          <div className="absolute inset-0 bg-[url('/images/wine-texture.png')] opacity-5" />
           <div className="relative mx-auto max-w-4xl px-6 text-center">
             <Grape
               className="mx-auto mb-6 h-12 w-12 text-gold-400"
@@ -245,7 +246,7 @@ export default async function CepagesValaisansPage({ params }: PageProps) {
             ))}
           </div>
         </section>
-      </div>
+      </main>
     </>
   );
 }

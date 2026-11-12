@@ -50,7 +50,7 @@ export default async function Home({ params }: Props) {
     '@id': `${baseUrl}/#organization`,
     name: 'EnCave',
     url: baseUrl,
-    logo: `${baseUrl}/logo.png`,
+    logo: `${baseUrl}/icons/icon-512x512.png`,
     description:
       "Plateforme de réservation d'expériences viticoles en Valais, Suisse. Découvrez et réservez des dégustations de vin, visites de caves et expériences œnologiques authentiques.",
     areaServed: {

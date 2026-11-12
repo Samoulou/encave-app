@@ -62,9 +62,9 @@ export function WineriesExplorer({
       {/* Filter Bar */}
       <div className="sticky top-0 z-20 border-b border-stone-200/60 bg-white/95 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6 lg:px-8">
-          <span className="text-sm font-medium text-slate-600">
+          <h2 className="text-sm font-medium text-slate-600">
             {t('showingCount', { count: filtered.length })}
-          </span>
+          </h2>
           <div className="flex items-center gap-3">
             <ViewToggle />
             {communes.length > 0 && (

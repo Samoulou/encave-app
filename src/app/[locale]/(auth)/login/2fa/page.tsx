@@ -8,7 +8,7 @@ interface TwoFactorPageProps {
 export async function generateMetadata({ params }: TwoFactorPageProps) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'auth.twoFactor' });
-  return { title: `${t('title')} | EnCave`, robots: { index: false } };
+  return { title: t('title'), robots: { index: false } };
 }
 
 export default function TwoFactorPage() {

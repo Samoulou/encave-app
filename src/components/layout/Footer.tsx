@@ -45,9 +45,9 @@ export async function Footer() {
           </div>
 
           <div>
-            <h3 className="mb-4 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-burgundy-700">
+            <h2 className="mb-4 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-burgundy-700">
               {tFooter('navigation')}
-            </h3>
+            </h2>
             <ul className="space-y-3 text-sm">
               <li>
                 <Link
@@ -103,9 +103,9 @@ export async function Footer() {
           </div>
 
           <div>
-            <h3 className="mb-4 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-burgundy-700">
+            <h2 className="mb-4 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-burgundy-700">
               {t('discover')}
-            </h3>
+            </h2>
             <ul className="space-y-3 text-sm">
               <li>
                 <Link
@@ -127,9 +127,9 @@ export async function Footer() {
           </div>
 
           <div>
-            <h3 className="mb-4 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-burgundy-700">
+            <h2 className="mb-4 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-burgundy-700">
               {tFooter('legal')}
-            </h3>
+            </h2>
             <ul className="space-y-3 text-sm">
               <li>
                 <Link

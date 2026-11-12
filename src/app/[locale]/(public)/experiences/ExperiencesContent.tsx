@@ -1,9 +1,11 @@
+import { Suspense } from 'react';
 import {
   searchExperiences,
   getExperienceCommunes,
   type SearchParams,
 } from '@/server/queries/experience.queries';
 import { ExperiencesPageClient } from './ExperiencesPageClient';
+import { ExperiencesStaticFallback } from './ExperiencesStaticFallback';
 import { JsonLd } from '@/components/shared/JsonLd';
 import { getBaseUrl } from '@/lib/env';
 
@@ -70,20 +72,31 @@ export async function ExperiencesContent({
   return (
     <>
       <JsonLd data={itemListSchema} />
-      <ExperiencesPageClient
-        initialExperiences={searchResult.experiences}
-        communes={communes}
-        pagination={{
-          total: searchResult.total,
-          page: searchResult.page,
-          limit: searchResult.limit,
-          totalPages: searchResult.totalPages,
-        }}
-        locationSearch={{
-          hasLocationSearch: searchResult.hasLocationSearch,
-          locationName: searchResult.locationName,
-        }}
-      />
+      {/* The client catalogue bails out to CSR (nuqs): its fallback is the
+          server-rendered default grid, so the HTML carries real cards. */}
+      <Suspense
+        fallback={
+          <ExperiencesStaticFallback
+            experiences={searchResult.experiences}
+            total={searchResult.total}
+          />
+        }
+      >
+        <ExperiencesPageClient
+          initialExperiences={searchResult.experiences}
+          communes={communes}
+          pagination={{
+            total: searchResult.total,
+            page: searchResult.page,
+            limit: searchResult.limit,
+            totalPages: searchResult.totalPages,
+          }}
+          locationSearch={{
+            hasLocationSearch: searchResult.hasLocationSearch,
+            locationName: searchResult.locationName,
+          }}
+        />
+      </Suspense>
     </>
   );
 }

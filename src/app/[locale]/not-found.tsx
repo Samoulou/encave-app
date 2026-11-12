@@ -1,31 +1,13 @@
-import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { Home, Search, Wine } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { NotFoundSearch } from '@/components/shared/NotFoundSearch';
-import { db } from '@/server/db';
-import { ExperienceStatus } from '@prisma/client';
+import { Link } from '@/i18n/navigation';
+import { getNotFoundSuggestions } from '@/server/queries/experience.queries';
 
 async function getPopularExperiences() {
   try {
-    return await db.experience.findMany({
-      where: {
-        status: ExperienceStatus.PUBLISHED,
-        winery: { status: 'VERIFIED' },
-      },
-      select: {
-        id: true,
-        title: true,
-        slug: true,
-        winery: {
-          select: {
-            name: true,
-          },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 4,
-    });
+    return await getNotFoundSuggestions();
   } catch {
     return [];
   }
@@ -77,7 +59,7 @@ export default async function NotFound() {
                     {exp.title}
                   </span>
                   <span className="ml-2 text-sm text-muted-foreground">
-                    — {exp.winery.name}
+                    — {exp.wineryName}
                   </span>
                 </Link>
               ))}

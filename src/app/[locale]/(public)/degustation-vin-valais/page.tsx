@@ -7,6 +7,8 @@ import { FaqSchema } from '@/components/seo/FaqSchema';
 import { FaqAccordion } from '@/components/shared/FaqAccordion';
 import { JsonLd } from '@/components/shared/JsonLd';
 import { getBaseUrl } from '@/lib/env';
+import { generatePageMetadata } from '@/lib/seo/metadata';
+import type { Locale } from '@/i18n/routing';
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -16,18 +18,18 @@ export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: 'landing.degustation' });
+  const [metadata, t] = await Promise.all([
+    generatePageMetadata({
+      locale: locale as Locale,
+      namespace: 'landing.degustation.metadata',
+      titleKey: 'title',
+      descriptionKey: 'description',
+      path: '/degustation-vin-valais',
+    }),
+    getTranslations({ locale, namespace: 'landing.degustation' }),
+  ]);
 
-  return {
-    title: t('metadata.title'),
-    description: t('metadata.description'),
-    keywords: t('metadata.keywords'),
-    openGraph: {
-      title: t('metadata.title'),
-      description: t('metadata.description'),
-      type: 'website',
-    },
-  };
+  return { ...metadata, keywords: t('metadata.keywords') };
 }
 
 export default async function DegustationVinValaisPage({ params }: PageProps) {
@@ -69,10 +71,9 @@ export default async function DegustationVinValaisPage({ params }: PageProps) {
     <>
       <FaqSchema items={faqItems} />
       <JsonLd data={breadcrumbSchema} />
-      <div className="min-h-screen bg-cream-50">
+      <main id="main-content" className="min-h-screen bg-cream-50">
         {/* Hero Section */}
         <section className="relative bg-gradient-to-br from-burgundy-800 via-burgundy-700 to-burgundy-900 py-20 lg:py-28">
-          <div className="absolute inset-0 bg-[url('/images/wine-texture.png')] opacity-5" />
           <div className="relative mx-auto max-w-4xl px-6 text-center">
             <Wine
               className="mx-auto mb-6 h-12 w-12 text-gold-400"
@@ -161,7 +162,7 @@ export default async function DegustationVinValaisPage({ params }: PageProps) {
             </CardContent>
           </Card>
         </section>
-      </div>
+      </main>
     </>
   );
 }

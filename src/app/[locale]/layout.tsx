@@ -38,12 +38,16 @@ const nunito = Nunito({
 });
 
 // Serif accents / sub-headings — Averia Serif Libre. Mapped to `font-serif`.
+// Not preloaded: 4 static files used for accents below the fold. Preloading
+// them (10 font preloads per page in total) competed with the LCP image on
+// mobile; they still load on demand through @font-face.
 const averia = Averia_Serif_Libre({
   subsets: ['latin'],
   weight: ['400', '700'],
   style: ['normal', 'italic'],
   variable: '--font-serif',
   display: 'swap',
+  preload: false,
 });
 
 // Body / UI — Mukta Vaani. Mapped to `font-sans`.
@@ -63,6 +67,7 @@ const averiaItalic = Averia_Serif_Libre({
   style: ['italic'],
   variable: '--font-display-italic',
   display: 'swap',
+  preload: false,
 });
 
 const jetbrainsMono = JetBrains_Mono({
@@ -70,6 +75,7 @@ const jetbrainsMono = JetBrains_Mono({
   weight: ['500', '700'],
   variable: '--font-mono',
   display: 'swap',
+  preload: false,
 });
 
 type Props = {
@@ -101,9 +107,8 @@ export default async function LocaleLayout({ children, params }: Props) {
   return (
     <html lang={locale} suppressHydrationWarning>
       <head>
-        {/* L-206: warm up connections to critical third-party origins */}
-        <link rel="preconnect" href="https://js.stripe.com" />
-        <link rel="preconnect" href="https://api.stripe.com" />
+        {/* No Stripe preconnect: checkout is a hosted redirect, Stripe.js is
+            never loaded — the two warm-ups only stole bandwidth from the LCP. */}
         <link rel="dns-prefetch" href="https://eu.posthog.com" />
       </head>
       <body

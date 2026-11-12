@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { generatePageMetadata } from '@/lib/seo/metadata';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { formatDate } from '@/lib/i18n/formatters';
 import type { Locale } from '@/i18n/routing';
@@ -13,12 +14,13 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: 'legal' });
-
-  return {
-    title: t('terms.title'),
-    description: t('terms.description'),
-  };
+  return generatePageMetadata({
+    locale: locale as Locale,
+    namespace: 'legal',
+    titleKey: 'terms.title',
+    descriptionKey: 'terms.description',
+    path: '/legal/terms',
+  });
 }
 
 export default async function TermsOfServicePage({ params }: Props) {

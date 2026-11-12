@@ -81,8 +81,8 @@ export function SearchResults({
 
       {/* Results Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <p
-          className="text-sm text-muted-foreground"
+        <h2
+          className="text-sm font-normal text-muted-foreground"
           data-testid="results-count"
         >
           <span className="font-medium text-foreground">{total}</span>{' '}
@@ -92,14 +92,14 @@ export function SearchResults({
               ({t('pageOf', { page, totalPages })})
             </span>
           )}
-        </p>
+        </h2>
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">{t('sortBy')}:</span>
           <Select
             value={sort}
             onValueChange={(v) => onSortChange(v as SortOption)}
           >
-            <SelectTrigger className="h-9 w-[180px]">
+            <SelectTrigger className="h-9 w-[180px]" aria-label={t('sortBy')}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

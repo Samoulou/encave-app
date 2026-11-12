@@ -24,6 +24,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   return generatePageMetadata({
     locale: locale as Locale,
+    // Without `path` the canonical pointed at the home page: Google would
+    // have folded /cadeaux into it.
+    path: '/cadeaux',
     namespace: 'metadata.giftCards',
   });
 }
@@ -51,7 +54,10 @@ export default async function GiftCardsPage({ params, searchParams }: Props) {
   return (
     <>
       <Header />
-      <main className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:py-16">
+      <main
+        id="main-content"
+        className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:py-16"
+      >
         <header className="mb-10 text-center">
           <h1 className="font-serif text-3xl font-bold sm:text-4xl">
             {t('pageTitle')}

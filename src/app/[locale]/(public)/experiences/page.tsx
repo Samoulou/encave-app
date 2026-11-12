@@ -48,48 +48,50 @@ export default async function ExperiencesPage({ params }: PageProps) {
     <div className="min-h-screen bg-cream-50">
       <Header />
 
-      {/* Hero Section with background image */}
-      <section className="relative min-h-[280px] w-full sm:min-h-[320px]">
-        <Image
-          src="/images/herobanner-image-v2.jpg"
-          alt=""
-          fill
-          className="object-cover"
-          priority
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-burgundy-950/80 via-burgundy-900/40 to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 p-8 lg:p-12">
-          <div className="mx-auto max-w-7xl">
-            {/* Back to Home Link */}
-            <Link
-              href="/"
-              className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-cream-100 transition-colors hover:text-white"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              {tNav('backToHome')}
-            </Link>
+      <main id="main-content">
+        {/* Hero Section with background image */}
+        <section className="relative min-h-[280px] w-full sm:min-h-[320px]">
+          <Image
+            src="/images/herobanner-image-v2.jpg"
+            alt=""
+            fill
+            className="object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-burgundy-950/80 via-burgundy-900/40 to-transparent" />
+          <div className="absolute bottom-0 left-0 right-0 p-8 lg:p-12">
+            <div className="mx-auto max-w-7xl">
+              {/* Back to Home Link */}
+              <Link
+                href="/"
+                className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-cream-100 transition-colors hover:text-white"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                {tNav('backToHome')}
+              </Link>
 
-            {/* Page Title */}
-            <h1 className="font-display text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
-              {t('wineExperiences')}
-            </h1>
-            <p className="mt-3 max-w-2xl text-lg text-white/90">
-              {t('discoverExperiences')}
-            </p>
+              {/* Page Title */}
+              <h1 className="font-display text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
+                {t('wineExperiences')}
+              </h1>
+              <p className="mt-3 max-w-2xl text-lg text-white/90">
+                {t('discoverExperiences')}
+              </p>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Main Content */}
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        {/* Default dataset — prerendered, client refines via action */}
-        <Suspense fallback={<ContentLoadingState />}>
-          {/* Explicit default sort: searchExperiences({}) would fall back
+        {/* Main Content */}
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+          {/* Default dataset — prerendered, client refines via action */}
+          <Suspense fallback={<ContentLoadingState />}>
+            {/* Explicit default sort: searchExperiences({}) would fall back
               to createdAt while the client marks next_availability active
               — page 1 and fetched page 2 must share one ordering. */}
-          <ExperiencesContent searchParams={{ sort: DEFAULT_CATALOG_SORT }} />
-        </Suspense>
-      </div>
+            <ExperiencesContent searchParams={{ sort: DEFAULT_CATALOG_SORT }} />
+          </Suspense>
+        </div>
+      </main>
       <Footer />
     </div>
   );
@@ -131,7 +133,7 @@ function ContentLoadingState() {
       </aside>
 
       {/* Main content skeleton */}
-      <main className="space-y-6">
+      <div className="space-y-6">
         {/* Search bar skeleton */}
         <Skeleton className="h-12 w-full" />
 
@@ -143,7 +145,7 @@ function ContentLoadingState() {
 
         {/* Grid skeleton */}
         <SkeletonExperienceGrid count={6} />
-      </main>
+      </div>
     </SkeletonContainer>
   );
 }

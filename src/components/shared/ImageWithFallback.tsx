@@ -29,7 +29,10 @@ export function ImageWithFallback({
   ...props
 }: ImageWithFallbackProps) {
   const [hasError, setHasError] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  // A `priority` image is the LCP candidate: it must be visible in the
+  // server HTML. Gating it on `onLoad` (opacity-0 until React hydrates)
+  // tied the LCP to JS execution — the blur placeholder covers the load.
+  const [isLoading, setIsLoading] = useState(!props.priority);
   const hasSource = typeof src !== 'string' || src.trim().length > 0;
 
   if (!hasSource && showIconFallback && !fallbackSrc) {
