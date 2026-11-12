@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
@@ -14,11 +15,16 @@ import type { Locale } from '@/i18n/routing';
 import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
 import { getGiftableExperiences } from '@/server/queries/giftCard.queries';
 import { GiftCardConfigurator } from '@/components/features/gift-cards/GiftCardConfigurator';
+import { GiftCardsUrlState } from './GiftCardsUrlState';
 
 interface Props {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ status?: string; experience?: string }>;
 }
+
+// ISR like the other public pages: the page no longer reads searchParams
+// (see GiftCardsUrlState). The GIFT_CARDS flag read (60 s cache + tag)
+// bounds how long a switched-off page can linger.
+export const revalidate = 300;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
@@ -31,8 +37,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 }
 
-export default async function GiftCardsPage({ params, searchParams }: Props) {
-  const [{ locale }, search] = await Promise.all([params, searchParams]);
+export default async function GiftCardsPage({ params }: Props) {
+  const { locale } = await params;
   setRequestLocale(locale);
 
   // Money feature behind the kill-switch: OFF → the page does not exist.
@@ -67,34 +73,9 @@ export default async function GiftCardsPage({ params, searchParams }: Props) {
           </p>
         </header>
 
-        {search.status === 'success' && (
-          <div
-            role="status"
-            className="mb-8 rounded-lg border border-green-600/30 bg-green-50 p-4 text-green-900 dark:bg-green-950/40 dark:text-green-200"
-          >
-            <p className="font-semibold">{t('successTitle')}</p>
-            <p className="text-sm">{t('successBody')}</p>
-          </div>
-        )}
-        {search.status === 'cancelled' && (
-          <div
-            role="status"
-            className="mb-8 rounded-lg border border-amber-600/30 bg-amber-50 p-4 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200"
-          >
-            <p className="font-semibold">{t('cancelledTitle')}</p>
-            <p className="text-sm">{t('cancelledBody')}</p>
-          </div>
-        )}
-
-        <GiftCardConfigurator
-          experiences={experiences}
-          preselectExperienceId={
-            search.experience &&
-            experiences.some((e) => e.id === search.experience)
-              ? search.experience
-              : undefined
-          }
-        />
+        <Suspense fallback={<GiftCardConfigurator experiences={experiences} />}>
+          <GiftCardsUrlState experiences={experiences} />
+        </Suspense>
 
         <section className="mt-16">
           <h2 className="mb-4 font-serif text-2xl font-semibold">

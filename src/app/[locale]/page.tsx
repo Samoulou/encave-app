@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { setRequestLocale } from 'next-intl/server';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
@@ -78,21 +79,34 @@ export default async function Home({ params }: Props) {
         </div>
 
         <main id="main-content">
+          {/* Each block sits in its own Suspense boundary. Nothing suspends
+              on the server (the HTML is unchanged), but React hydrates
+              boundaries one by one and yields between them: the mobile AND
+              desktop trees are both in the page, and hydrating them as a
+              single task was the longest main-thread block of the home. */}
           <div className="md:hidden">
-            <HomeMobileEditorial experiences={featuredExperiences} />
+            <Suspense fallback={null}>
+              <HomeMobileEditorial experiences={featuredExperiences} />
+            </Suspense>
           </div>
 
           <div className="hidden md:block">
-            <HomeDesktopEditorial experiences={featuredExperiences} />
+            <Suspense fallback={null}>
+              <HomeDesktopEditorial experiences={featuredExperiences} />
+            </Suspense>
           </div>
 
           {/* Conversion sections (P-12 / L-113) — responsive, rendered once */}
-          <HomeConversionSections
-            giftCardsEnabled={giftCardsEnabled}
-            requestsEnabled={requestsEnabled}
-          />
+          <Suspense fallback={null}>
+            <HomeConversionSections
+              giftCardsEnabled={giftCardsEnabled}
+              requestsEnabled={requestsEnabled}
+            />
+          </Suspense>
         </main>
-        <Footer />
+        <Suspense fallback={null}>
+          <Footer />
+        </Suspense>
       </div>
     </>
   );

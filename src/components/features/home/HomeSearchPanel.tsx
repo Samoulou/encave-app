@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { LocationAutocomplete } from '@/components/features/search/LocationAutocomplete';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
+import { LazyCalendar } from '@/components/shared/LazyCalendar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -118,7 +118,7 @@ export function HomeSearchPanel({ variant = 'desktop' }: HomeSearchPanelProps) {
               side={variant === 'desktop' ? 'top' : 'bottom'}
               className="w-auto p-0"
             >
-              <Calendar
+              <LazyCalendar
                 mode="single"
                 selected={selectedDate ?? undefined}
                 onSelect={(date) => {
