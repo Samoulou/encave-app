@@ -7,16 +7,7 @@ import {
   endOfWeek,
   addDays,
 } from 'date-fns';
-
-/**
- * Convert a local date to UTC date, preserving the local date components.
- * This ensures that dates in local time map to the correct database date.
- */
-function localDateToUTC(date: Date): Date {
-  return new Date(
-    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
-  );
-}
+import { localDateToUTC } from '@/lib/i18n/formatters';
 
 /**
  * Get the date string in YYYY-MM-DD format from a UTC date.

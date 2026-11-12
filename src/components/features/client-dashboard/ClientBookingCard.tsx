@@ -23,6 +23,7 @@ import { BookingStatusBadge } from '@/components/features/booking/BookingStatusB
 import { cancelClientBooking } from '@/server/actions/client.actions';
 import type { ClientBookingWithDetails } from '@/server/queries/client-booking.queries';
 import type { BookingStatus } from '@prisma/client';
+import { useActionErrorMessage } from '@/hooks/useActionErrorMessage';
 
 interface ClientBookingCardProps {
   booking: ClientBookingWithDetails;
@@ -35,6 +36,8 @@ export function ClientBookingCard({
 }: ClientBookingCardProps) {
   const locale = useLocale();
   const t = useTranslations('clientDashboard');
+  const tButtons = useTranslations('common.buttons');
+  const actionError = useActionErrorMessage();
   const [isExpanded, setIsExpanded] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -69,7 +72,7 @@ export function ClientBookingCard({
       } else {
         setCancelResult({
           success: false,
-          message: result.error.message,
+          message: actionError(result.error),
         });
       }
       setShowCancelDialog(false);
@@ -263,7 +266,7 @@ export function ClientBookingCard({
               <button
                 onClick={() => setShowCancelDialog(false)}
                 className="text-muted-foreground hover:text-foreground"
-                aria-label="Close"
+                aria-label={tButtons('close')}
               >
                 <X className="h-5 w-5" />
               </button>

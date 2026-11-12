@@ -14,6 +14,7 @@ import { getStripeDashboardLink } from '@/server/actions/stripe';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import type { PaymentStatusType } from '@/lib/utils/payment-status';
+import { useActionErrorMessage } from '@/hooks/useActionErrorMessage';
 
 interface PaymentStatusProps {
   status: PaymentStatusType;
@@ -22,6 +23,7 @@ interface PaymentStatusProps {
 
 export function PaymentStatus({ status, className }: PaymentStatusProps) {
   const t = useTranslations('stripe.paymentStatus');
+  const actionError = useActionErrorMessage();
   const [isLoading, setIsLoading] = useState(false);
 
   const statusConfig = {
@@ -61,7 +63,7 @@ export function PaymentStatus({ status, className }: PaymentStatusProps) {
       if (result.success) {
         window.open(result.data.url, '_blank', 'noopener,noreferrer');
       } else {
-        toast.error(result.error.message);
+        toast.error(actionError(result.error));
       }
     } catch {
       toast.error(t('failedToOpen'));

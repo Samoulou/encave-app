@@ -32,6 +32,7 @@ import type {
   ManageableParticipantDTO,
   SelectableWineryDTO,
 } from '@/server/queries/event-participant.queries';
+import { useActionErrorMessage } from '@/hooks/useActionErrorMessage';
 
 interface EventParticipantsPanelProps {
   experienceId: string;
@@ -52,6 +53,7 @@ export function EventParticipantsPanel({
   selectableWineries,
 }: EventParticipantsPanelProps) {
   const t = useTranslations('experience.collective.panel');
+  const actionError = useActionErrorMessage();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -91,7 +93,7 @@ export function EventParticipantsPanel({
         resetAddForm();
         router.refresh();
       } else {
-        toast.error(result.error.message);
+        toast.error(actionError(result.error));
       }
     });
   }
@@ -103,7 +105,7 @@ export function EventParticipantsPanel({
         toast.success(t('removed'));
         router.refresh();
       } else {
-        toast.error(result.error.message);
+        toast.error(actionError(result.error));
       }
     });
   }
@@ -124,7 +126,7 @@ export function EventParticipantsPanel({
       if (result.success) {
         router.refresh();
       } else {
-        toast.error(result.error.message);
+        toast.error(actionError(result.error));
       }
     });
   }

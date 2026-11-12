@@ -56,15 +56,38 @@ export interface ExperienceOption {
   title: string;
 }
 
-/**
- * Get bookings for a winery with optional filters and sorting.
- * Wrapped with React.cache for request-level deduplication.
- */
-export const getWineryBookings = cache(async function getWineryBookings(
+/** Rows per page of the winery bookings list (server-side pagination). */
+export const WINERY_BOOKINGS_PAGE_SIZE = 10;
+
+const wineryBookingSelect = {
+  id: true,
+  reference: true,
+  visitorEmail: true,
+  visitorName: true,
+  visitorPhone: true,
+  date: true,
+  timeSlot: true,
+  guestCount: true,
+  totalPrice: true,
+  wineryPayout: true,
+  status: true,
+  cancelledAt: true,
+  refundIssued: true,
+  refundAmount: true,
+  createdAt: true,
+  experience: {
+    select: {
+      id: true,
+      title: true,
+      slug: true,
+    },
+  },
+} satisfies Prisma.BookingSelect;
+
+function buildWineryBookingsWhere(
   wineryId: string,
-  filters?: BookingFilters,
-  sort?: BookingSortOptions
-): Promise<BookingWithExperience[]> {
+  filters?: BookingFilters
+): Prisma.BookingWhereInput {
   const where: Prisma.BookingWhereInput = {
     wineryId,
     // Unclaimed slot holds (P-04 / L-050) are internal capacity rows with
@@ -105,10 +128,15 @@ export const getWineryBookings = cache(async function getWineryBookings(
     ];
   }
 
-  // Determine sort order
-  const orderBy: Prisma.BookingOrderByWithRelationInput = {};
+  return where;
+}
+
+function buildWineryBookingsOrderBy(
+  sort?: BookingSortOptions
+): Prisma.BookingOrderByWithRelationInput[] {
+  const primary: Prisma.BookingOrderByWithRelationInput = {};
   if (sort) {
-    orderBy[
+    primary[
       sort.field === 'totalPrice'
         ? 'totalPrice'
         : sort.field === 'guestCount'
@@ -117,39 +145,83 @@ export const getWineryBookings = cache(async function getWineryBookings(
     ] = sort.direction;
   } else {
     // Default: upcoming first (date asc), but show past at bottom
-    orderBy.date = 'asc';
+    primary.date = 'asc';
   }
+  // `id` is the final tie-break: without a total order, two rows sharing
+  // (sort key, timeSlot) could swap between pages of the paginated list.
+  return [primary, { timeSlot: 'asc' }, { id: 'asc' }];
+}
 
-  const bookings = await db.booking.findMany({
-    where,
-    orderBy: [orderBy, { timeSlot: 'asc' }],
-    select: {
-      id: true,
-      reference: true,
-      visitorEmail: true,
-      visitorName: true,
-      visitorPhone: true,
-      date: true,
-      timeSlot: true,
-      guestCount: true,
-      totalPrice: true,
-      wineryPayout: true,
-      status: true,
-      cancelledAt: true,
-      refundIssued: true,
-      refundAmount: true,
-      createdAt: true,
-      experience: {
-        select: {
-          id: true,
-          title: true,
-          slug: true,
-        },
-      },
-    },
+/**
+ * ALL bookings of a winery matching the filters — the CSV export path.
+ * Unbounded on purpose (the export is the full filtered set): never feed
+ * this to a rendered list, use {@link getWineryBookingsPage}.
+ * Wrapped with React.cache for request-level deduplication.
+ */
+export const getWineryBookings = cache(async function getWineryBookings(
+  wineryId: string,
+  filters?: BookingFilters,
+  sort?: BookingSortOptions
+): Promise<BookingWithExperience[]> {
+  return db.booking.findMany({
+    where: buildWineryBookingsWhere(wineryId, filters),
+    orderBy: buildWineryBookingsOrderBy(sort),
+    select: wineryBookingSelect,
   });
+});
 
-  return bookings;
+export interface WineryBookingsPage {
+  bookings: BookingWithExperience[];
+  /** Rows matching the filters, across all pages. */
+  total: number;
+  /** 1-based page actually returned (clamped to the last page). */
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+/**
+ * One page of a winery's bookings (dashboard list). The page is sliced in
+ * SQL (`skip`/`take`) next to a `count` of the same predicate — the list
+ * used to ship every booking (emails and phones included) to the browser,
+ * which then displayed five of them.
+ *
+ * A page past the end (stale URL, a filter that shrank the result) is
+ * clamped to the last page rather than rendered empty.
+ */
+export const getWineryBookingsPage = cache(async function getWineryBookingsPage(
+  wineryId: string,
+  filters?: BookingFilters,
+  sort?: BookingSortOptions,
+  pagination?: { page?: number; pageSize?: number }
+): Promise<WineryBookingsPage> {
+  const pageSize = Math.min(
+    100,
+    Math.max(1, Math.trunc(pagination?.pageSize ?? WINERY_BOOKINGS_PAGE_SIZE))
+  );
+  const requestedPage = Math.max(1, Math.trunc(pagination?.page ?? 1) || 1);
+  const where = buildWineryBookingsWhere(wineryId, filters);
+  const orderBy = buildWineryBookingsOrderBy(sort);
+
+  const fetchPage = (page: number) =>
+    db.booking.findMany({
+      where,
+      orderBy,
+      select: wineryBookingSelect,
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    });
+
+  const [rows, total] = await Promise.all([
+    fetchPage(requestedPage),
+    db.booking.count({ where }),
+  ]);
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const page = Math.min(requestedPage, totalPages);
+  const bookings =
+    page !== requestedPage && total > 0 ? await fetchPage(page) : rows;
+
+  return { bookings, total, page, pageSize, totalPages };
 });
 
 /**

@@ -84,7 +84,9 @@ export default async function ExperiencesPage({ params }: PageProps) {
         {/* Main Content */}
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
           {/* Default dataset — prerendered, client refines via action */}
-          <Suspense fallback={<ContentLoadingState />}>
+          <Suspense
+            fallback={<ContentLoadingState label={t('loadingExperiences')} />}
+          >
             {/* Explicit default sort: searchExperiences({}) would fall back
               to createdAt while the client marks next_availability active
               — page 1 and fetched page 2 must share one ordering. */}
@@ -102,10 +104,10 @@ export default async function ExperiencesPage({ params }: PageProps) {
  * Header is NOT included since it renders immediately above.
  * Uses SkeletonContainer for proper accessibility (aria-busy, screen reader text).
  */
-function ContentLoadingState() {
+function ContentLoadingState({ label }: { label: string }) {
   return (
     <SkeletonContainer
-      label="Loading wine experiences..."
+      label={label}
       className="lg:grid lg:grid-cols-[280px_1fr] lg:gap-8"
     >
       {/* Sidebar filters skeleton (desktop) */}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -57,6 +57,7 @@ import {
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import type { ExperienceType, ExperiencePaymentMode } from '@prisma/client';
+import { useActionErrorMessage } from '@/hooks/useActionErrorMessage';
 
 // Language endonyms are locale-invariant, so they are rendered as-is.
 const LANGUAGE_ENDONYMS = [
@@ -126,6 +127,7 @@ export function EditExperienceForm({
   collectiveEventsEnabled = false,
 }: EditExperienceFormProps) {
   const t = useTranslations('experience');
+  const actionError = useActionErrorMessage();
   const tCommon = useTranslations('common');
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -252,7 +254,7 @@ export function EditExperienceForm({
           router.push('/dashboard/experiences');
           router.refresh();
         } else {
-          toast.error(result.error.message);
+          toast.error(actionError(result.error));
         }
       } catch {
         toast.error(tCommon('errors.somethingWentWrong'));
@@ -260,7 +262,7 @@ export function EditExperienceForm({
         setIsSubmitting(false);
       }
     },
-    [coverPhoto, galleryImages, experience.id, router, t, tCommon]
+    [coverPhoto, galleryImages, experience.id, router, t, tCommon, actionError]
   );
 
   // Calculate description character count

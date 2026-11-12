@@ -366,10 +366,10 @@ export function ExperiencesPageClient({
         <aside className="sticky top-24 h-fit rounded-[18px] border border-stone-200 bg-white p-5 shadow-audit-card">
           <div className="mb-5">
             <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-burgundy-700">
-              Discovery
+              {tSearch('refineEyebrow')}
             </div>
             <h2 className="mt-1 font-display text-2xl font-semibold text-ink-900">
-              Affiner
+              {tSearch('refineTitle')}
             </h2>
           </div>
           <SearchFilters
@@ -405,11 +405,11 @@ export function ExperiencesPageClient({
               </DesktopOnly>
               <div className="absolute left-4 top-4 rounded-xl bg-white/95 px-4 py-3 shadow-audit-card">
                 <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-burgundy-700">
-                  Domaines
+                  {tSearch('mapEyebrow')}
                 </div>
                 <div className="mt-1 flex items-center gap-2 font-display text-lg font-semibold">
                   <MapPin className="h-4 w-4 text-burgundy-700" />
-                  {mapWineries.length} lieux
+                  {tSearch('placesCount', { count: mapWineries.length })}
                 </div>
               </div>
             </div>
@@ -448,7 +448,7 @@ export function ExperiencesPageClient({
                 })}
               </p>
               <h2 className="mt-1 font-display text-[30px] font-semibold text-ink-900">
-                Expériences disponibles
+                {tSearch('availableExperiences')}
               </h2>
             </div>
             <div className="flex flex-wrap items-center gap-3">
@@ -493,10 +493,10 @@ export function ExperiencesPageClient({
                 <div className="rounded-[18px] border border-dashed border-stone-300 bg-white p-10 text-center xl:col-span-2">
                   <Search className="mx-auto h-8 w-8 text-burgundy-600" />
                   <h3 className="mt-4 font-display text-xl font-semibold">
-                    Aucun résultat trouvé
+                    {tSearch('noResultsFound')}
                   </h3>
                   <p className="mt-2 text-sm text-ink-500">
-                    Essayez d’ajuster les filtres ou la recherche.
+                    {tSearch('tryDifferentFilters')}
                   </p>
                 </div>
               )}

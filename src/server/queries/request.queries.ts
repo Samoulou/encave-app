@@ -4,10 +4,13 @@ import { unstable_cache } from 'next/cache';
 import { subHours } from 'date-fns';
 import {
   type Locale,
+  type Prisma,
   type RequestStatus,
   type RequestOfferStatus,
 } from '@prisma/client';
 import { db } from '@/server/db';
+import { hashToken } from '@/lib/utils/token';
+import { deriveOfferPaymentToken } from '@/lib/utils/offer-payment-token';
 import {
   REQUESTS_CACHE_TAG,
   REQUEST_ALERT_HOURS,
@@ -205,26 +208,34 @@ export interface PublicOfferView {
  */
 export const getRequestOfferByToken = cache(
   async (token: string): Promise<PublicOfferView | null> => {
-    const offer = await db.requestOffer.findUnique({
-      where: { paymentToken: token },
-      select: {
-        id: true,
-        status: true,
-        message: true,
-        totalPrice: true,
-        scheduledDate: true,
-        scheduledStartTime: true,
-        expiresAt: true,
-        request: {
-          select: {
-            clientName: true,
-            guestCount: true,
-            locale: true,
-            winery: { select: { name: true } },
-          },
+    const offerSelect = {
+      id: true,
+      status: true,
+      message: true,
+      totalPrice: true,
+      scheduledDate: true,
+      scheduledStartTime: true,
+      expiresAt: true,
+      request: {
+        select: {
+          clientName: true,
+          guestCount: true,
+          locale: true,
+          winery: { select: { name: true } },
         },
       },
-    });
+    } satisfies Prisma.RequestOfferSelect;
+    // Hash-first (tokens are hashed at rest); plaintext fallback for the
+    // offers created before that change.
+    const offer =
+      (await db.requestOffer.findUnique({
+        where: { paymentTokenHash: hashToken(token) },
+        select: offerSelect,
+      })) ??
+      (await db.requestOffer.findUnique({
+        where: { paymentToken: token },
+        select: offerSelect,
+      }));
     if (!offer) return null;
     return {
       offerId: offer.id,
@@ -284,6 +295,7 @@ export const getClientRequests = cache(
           orderBy: { createdAt: 'desc' },
           take: 1,
           select: {
+            id: true,
             status: true,
             totalPrice: true,
             expiresAt: true,
@@ -307,7 +319,10 @@ export const getClientRequests = cache(
             status: r.offers[0].status,
             totalPrice: r.offers[0].totalPrice,
             expiresAt: r.offers[0].expiresAt,
-            paymentToken: r.offers[0].paymentToken,
+            // Legacy plaintext if the row still has one, else re-derived.
+            paymentToken:
+              r.offers[0].paymentToken ??
+              deriveOfferPaymentToken(r.offers[0].id),
             scheduledDate: r.offers[0].scheduledDate,
             scheduledStartTime: r.offers[0].scheduledStartTime,
           }

@@ -1,37 +1,44 @@
 'use client';
 
 import { useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { parseAsArrayOf, parseAsString, useQueryStates } from 'nuqs';
 import { Download, Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { exportBookingsToCSV } from '@/server/actions/booking-dashboard';
 import { toast } from 'sonner';
 import { BookingStatus } from '@prisma/client';
+import { useActionErrorMessage } from '@/hooks/useActionErrorMessage';
+
+// Same URL keys as BookingFilters / BookingSearch — read-only here. `page`
+// is deliberately absent: the export is the FULL filtered set, never the
+// page on screen.
+const exportFilterParsers = {
+  status: parseAsArrayOf(parseAsString),
+  experience: parseAsString,
+  from: parseAsString,
+  to: parseAsString,
+  search: parseAsString,
+};
 
 export function ExportCSVButton() {
-  const searchParams = useSearchParams();
-  const currentSearchParams = searchParams ?? new URLSearchParams();
+  const [urlFilters] = useQueryStates(exportFilterParsers);
   const t = useTranslations('bookings');
+  const actionError = useActionErrorMessage();
   const [isExporting, setIsExporting] = useState(false);
 
   const handleExport = async () => {
     setIsExporting(true);
     try {
-      // Parse current filters from URL
-      const statusParam = currentSearchParams.get('status');
-      const experienceId = currentSearchParams.get('experience') ?? undefined;
-      const dateFromParam = currentSearchParams.get('from');
-      const dateToParam = currentSearchParams.get('to');
-      const search = currentSearchParams.get('search') ?? undefined;
-
+      // Current filters from the URL (the server re-validates them).
       const filters = {
-        status: statusParam
-          ? (statusParam.split(',') as BookingStatus[])
-          : undefined,
-        experienceId,
-        dateFrom: dateFromParam ? new Date(dateFromParam) : undefined,
-        dateTo: dateToParam ? new Date(dateToParam) : undefined,
-        search,
+        status:
+          urlFilters.status && urlFilters.status.length > 0
+            ? (urlFilters.status as BookingStatus[])
+            : undefined,
+        experienceId: urlFilters.experience ?? undefined,
+        dateFrom: urlFilters.from ? new Date(urlFilters.from) : undefined,
+        dateTo: urlFilters.to ? new Date(urlFilters.to) : undefined,
+        search: urlFilters.search ?? undefined,
       };
 
       const result = await exportBookingsToCSV(filters);
@@ -52,10 +59,11 @@ export function ExportCSVButton() {
 
         toast.success(t('toast.exportSuccess'));
       } else {
-        toast.error(result.error.message);
+        toast.error(actionError(result.error));
       }
-    } catch (error) {
-      console.error('Export failed:', error);
+    } catch {
+      // Network failure or a thrown action — the toast is the user signal;
+      // server-side failures are already logged by the action itself.
       toast.error(t('toast.exportFailed'));
     } finally {
       setIsExporting(false);

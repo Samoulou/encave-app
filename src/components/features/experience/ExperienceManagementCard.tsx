@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { Link, useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import {
@@ -36,6 +35,7 @@ import {
 } from '@/server/actions/experience';
 import type { ExperienceStatus } from '@prisma/client';
 import { cn } from '@/lib/utils';
+import { useActionErrorMessage } from '@/hooks/useActionErrorMessage';
 
 interface ExperienceManagementCardProps {
   experience: {
@@ -54,6 +54,7 @@ export function ExperienceManagementCard({
 }: ExperienceManagementCardProps) {
   const router = useRouter();
   const t = useTranslations('experience');
+  const actionError = useActionErrorMessage();
   const tCommon = useTranslations('common.buttons');
   const [isPending, startTransition] = useTransition();
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -81,7 +82,7 @@ export function ExperienceManagementCard({
         });
         router.refresh();
       } else {
-        toast.error(result.error.message);
+        toast.error(actionError(result.error));
       }
     });
   };
@@ -95,7 +96,7 @@ export function ExperienceManagementCard({
         });
         router.refresh();
       } else {
-        toast.error(result.error.message);
+        toast.error(actionError(result.error));
       }
     });
   };
@@ -109,7 +110,7 @@ export function ExperienceManagementCard({
         });
         router.refresh();
       } else {
-        toast.error(result.error.message);
+        toast.error(actionError(result.error));
       }
     });
   };
@@ -123,7 +124,7 @@ export function ExperienceManagementCard({
         });
         router.refresh();
       } else {
-        toast.error(result.error.message);
+        toast.error(actionError(result.error));
       }
     });
   };
@@ -137,7 +138,7 @@ export function ExperienceManagementCard({
         });
         router.refresh();
       } else {
-        toast.error(result.error.message);
+        toast.error(actionError(result.error));
       }
       setDeleteModalOpen(false);
     });

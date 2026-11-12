@@ -10,13 +10,15 @@ import {
   deleteWineSchema,
 } from '@/lib/validators/wine';
 import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
-import { invalidateWineryCaches } from './winery-helpers';
+import { invalidateWineryDetailCache } from './experience-helpers';
 
 /**
  * Winemaker wine catalogue CRUD (P-07 / L-060). Every action: auth →
  * TASTING_SHEET flag → safeParse → ownership (winery.userId) → mutation
- * → cache invalidation. The public winery page lists available wines,
- * hence invalidateWineryCaches on every mutation.
+ * → cache invalidation. Only the public page of THIS winery lists its
+ * wines, hence the entity-level invalidateWineryDetailCache (no listing,
+ * no other page shows a wine — the broad tags would purge the whole
+ * public tree for nothing).
  */
 
 interface OwnedWinery {
@@ -90,7 +92,7 @@ export async function createWine(
       data: { ...parsed.data, wineryId: gate.winery.id },
       select: { id: true },
     });
-    invalidateWineryCaches(gate.winery.slug);
+    invalidateWineryDetailCache(gate.winery.slug);
     logInfo('wine.created', {
       action: 'createWine',
       wineId: wine.id,
@@ -133,7 +135,7 @@ export async function updateWine(
         error: { code: 'NOT_FOUND', message: 'Wine not found' },
       };
     }
-    invalidateWineryCaches(gate.winery.slug);
+    invalidateWineryDetailCache(gate.winery.slug);
     logInfo('wine.updated', {
       action: 'updateWine',
       wineId,
@@ -192,7 +194,7 @@ export async function deleteWine(
     }
 
     await db.wine.delete({ where: { id: wine.id } });
-    invalidateWineryCaches(gate.winery.slug);
+    invalidateWineryDetailCache(gate.winery.slug);
     logInfo('wine.deleted', {
       action: 'deleteWine',
       wineId: wine.id,

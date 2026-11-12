@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { auth } from '@/server/auth';
-import { db } from '@/server/db';
+import { getCurrentWinery } from '@/server/queries/winery.queries';
 import { redirect } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
@@ -46,10 +46,7 @@ export default async function ExperiencesDashboardPage({
   const page = Math.max(1, parseInt(params.page || '1', 10));
 
   // Get winery ID for auth check only - needs session.user.id
-  const winery = await db.winery.findUnique({
-    where: { userId: session.user.id },
-    select: { id: true },
-  });
+  const winery = await getCurrentWinery(session.user.id);
 
   if (!winery) {
     const locale = await getLocale();

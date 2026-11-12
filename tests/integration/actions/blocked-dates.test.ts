@@ -333,6 +333,7 @@ describe('Blocked Date Server Actions', () => {
       vi.mocked(auth).mockResolvedValue(mockSession as never);
       vi.mocked(db.winery.findUnique).mockResolvedValue({
         id: 'winery-123',
+        experiences: [{ slug: 'degustation' }, { slug: 'visite' }],
       } as never);
       vi.mocked(db.blockedDate.deleteMany).mockResolvedValue({
         count: 3,

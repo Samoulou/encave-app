@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -35,6 +35,7 @@ import { createBookingAndCheckout } from '@/server/actions/checkout';
 import { useNavigateWithTransition } from '@/hooks/useNavigateWithTransition';
 import { formatCHF } from '@/lib/utils/currency';
 import { capturePostHog } from '@/lib/posthog-client';
+import { useActionErrorMessage } from '@/hooks/useActionErrorMessage';
 
 // BUG-013: Periodic recheck interval (60 seconds)
 const AVAILABILITY_RECHECK_INTERVAL_MS = 60000;
@@ -43,22 +44,32 @@ const AVAILABILITY_RECHECK_INTERVAL_MS = 60000;
 const phoneRegex =
   /^(\+41|0041|0)?[\s-]?[1-9](?:[\s-]?\d){8}$|^\+?[1-9](?:[\s-]?\d){6,14}$/;
 
-const checkoutFormSchema = z.object({
-  firstName: z.string().min(2, 'First name must be at least 2 characters'),
-  lastName: z.string().min(2, 'Last name must be at least 2 characters'),
-  email: z.string().email('Invalid email address'),
-  phone: z.string().regex(phoneRegex, 'Invalid phone number'),
-  ageConfirmed: z
-    .boolean()
-    .refine((value) => value, 'Merci de confirmer votre age.'),
-  // P-12 / L-112: explicit CGV + cancellation-policy acceptance. No booking
-  // without it (mirrors the server's acceptedTerms: z.literal(true)).
-  acceptedTerms: z
-    .boolean()
-    .refine((value) => value, 'Merci d’accepter les CGV et la politique.'),
-});
+/** Translated validation messages of the checkout form. */
+interface CheckoutFormMessages {
+  firstNameMin: string;
+  lastNameMin: string;
+  emailInvalid: string;
+  phoneInvalid: string;
+  ageRequired: string;
+  termsRequired: string;
+}
 
-type CheckoutFormData = z.infer<typeof checkoutFormSchema>;
+// The field errors are rendered as-is under each input, so the messages
+// come from the translations (they used to be hardcoded EN/FR strings).
+function buildCheckoutFormSchema(messages: CheckoutFormMessages) {
+  return z.object({
+    firstName: z.string().min(2, messages.firstNameMin),
+    lastName: z.string().min(2, messages.lastNameMin),
+    email: z.string().email(messages.emailInvalid),
+    phone: z.string().regex(phoneRegex, messages.phoneInvalid),
+    ageConfirmed: z.boolean().refine((value) => value, messages.ageRequired),
+    // P-12 / L-112: explicit CGV + cancellation-policy acceptance. No booking
+    // without it (mirrors the server's acceptedTerms: z.literal(true)).
+    acceptedTerms: z.boolean().refine((value) => value, messages.termsRequired),
+  });
+}
+
+type CheckoutFormData = z.infer<ReturnType<typeof buildCheckoutFormSchema>>;
 
 interface CheckoutClientProps {
   experience: ExperienceForBooking;
@@ -104,10 +115,23 @@ export function CheckoutClient({
   giftEnabled,
 }: CheckoutClientProps) {
   const t = useTranslations('checkout');
+  const actionError = useActionErrorMessage();
   const locale = useLocale() as 'fr' | 'de' | 'en';
   const tBooking = useTranslations('booking');
   const tErrors = useTranslations('errors');
   const { navigate } = useNavigateWithTransition();
+  const checkoutFormSchema = useMemo(
+    () =>
+      buildCheckoutFormSchema({
+        firstNameMin: t('validation.firstNameMin'),
+        lastNameMin: t('validation.lastNameMin'),
+        emailInvalid: t('validation.emailInvalid'),
+        phoneInvalid: t('validation.phoneInvalid'),
+        ageRequired: t('ageGate.errors.required'),
+        termsRequired: t('acceptance.required'),
+      }),
+    [t]
+  );
 
   const [submitError, setSubmitError] = useState<string | null>(null);
   // No-show card imprint (P-08): the client must accept the fee before booking
@@ -203,19 +227,27 @@ export function CheckoutClient({
             return;
           }
         } else {
-          setAvailabilityError(result.error.message);
+          setAvailabilityError(actionError(result.error));
         }
       } catch {
-        setAvailabilityError(
-          'Failed to verify availability. Please try again.'
-        );
+        setAvailabilityError(tErrors('genericError'));
       } finally {
         if (showLoading) {
           setIsCheckingAvailability(false);
         }
       }
     },
-    [date, time, guestCount, slug, navigate, experience.id, holdId]
+    [
+      date,
+      time,
+      guestCount,
+      slug,
+      navigate,
+      experience.id,
+      holdId,
+      actionError,
+      tErrors,
+    ]
   );
 
   // BUG-003: Validate availability on mount — SKIPPED when the client
@@ -342,7 +374,7 @@ export function CheckoutClient({
         window.location.assign(result.data.checkoutUrl);
       } else {
         hasSubmittedRef.current = false;
-        setSubmitError(result.error.message);
+        setSubmitError(actionError(result.error));
       }
     } catch {
       hasSubmittedRef.current = false;
@@ -367,7 +399,7 @@ export function CheckoutClient({
         <div className="mb-8 grid gap-4 lg:grid-cols-[1fr_360px] lg:items-end">
           <div>
             <div className="font-mono text-[11px] uppercase tracking-[0.16em] text-burgundy-700">
-              Paiement sécurisé
+              {t('eyebrow')}
             </div>
             <h1 className="mt-2 font-display text-4xl font-semibold tracking-[-0.02em] text-ink-900 md:text-5xl">
               {t('pageTitle')}
@@ -392,9 +424,7 @@ export function CheckoutClient({
                 <p className="text-sm font-bold text-ink-900">
                   Stripe Checkout
                 </p>
-                <p className="text-xs text-ink-500">
-                  Paiement carte et wallet, redirection sécurisée.
-                </p>
+                <p className="text-xs text-ink-500">{t('stripeBlurb')}</p>
               </div>
             </div>
           </div>
@@ -418,7 +448,7 @@ export function CheckoutClient({
                 ) : (
                   <>
                     <RefreshCw className="mr-1 h-4 w-4" />
-                    Retry
+                    {t('retry')}
                   </>
                 )}
               </Button>
@@ -506,15 +536,15 @@ export function CheckoutClient({
                 <div className="mb-4 flex items-center justify-between">
                   <div>
                     <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-burgundy-700">
-                      Étape 1
+                      {t('stepLabel', { step: 1 })}
                     </div>
                     <h2 className="mt-1 font-display text-2xl font-semibold">
-                      Vos coordonnées
+                      {t('yourDetails')}
                     </h2>
                   </div>
                   <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
                     <Check className="mr-1 inline h-3 w-3" />
-                    Réservation tenue
+                    {t('holdBadge')}
                   </span>
                 </div>
                 {/* Contact Details Section */}
@@ -532,10 +562,10 @@ export function CheckoutClient({
                 <div className="mb-5 flex items-center justify-between">
                   <div>
                     <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-burgundy-700">
-                      Étape 2
+                      {t('stepLabel', { step: 2 })}
                     </div>
                     <h2 className="mt-1 font-display text-2xl font-semibold">
-                      Paiement express
+                      {t('expressPayment')}
                     </h2>
                   </div>
                   <CreditCard className="h-6 w-6 text-burgundy-700" />

@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Landmark } from 'lucide-react';
 import { auth } from '@/server/auth';
-import { db } from '@/server/db';
+import { getCurrentWinery } from '@/server/queries/winery.queries';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
 import { PayoutsList } from './PayoutsList';
 import { StripeDashboardButton } from '@/components/features/payouts/StripeDashboardButton';
@@ -39,10 +39,7 @@ export default async function PayoutsPage() {
     redirect(`/${locale}/login`);
   }
 
-  const winery = await db.winery.findUnique({
-    where: { userId: session.user.id },
-    select: { stripeAccountId: true, stripeOnboardingComplete: true },
-  });
+  const winery = await getCurrentWinery(session.user.id);
   if (!winery) {
     const locale = await getLocale();
     redirect(`/${locale}/onboarding/winery`);

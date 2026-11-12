@@ -7,6 +7,7 @@ vi.mock('@/server/db', () => ({
       findMany: vi.fn(),
       findFirst: vi.fn(),
       aggregate: vi.fn(),
+      count: vi.fn(),
     },
     experience: {
       findMany: vi.fn(),
@@ -17,6 +18,8 @@ vi.mock('@/server/db', () => ({
 import { db } from '@/server/db';
 import {
   getWineryBookings,
+  getWineryBookingsPage,
+  WINERY_BOOKINGS_PAGE_SIZE,
   getBookingSummary,
   getWineryExperiencesForFilter,
 } from '@/server/queries/booking.queries';
@@ -162,7 +165,7 @@ describe('booking.queries', () => {
 
       expect(db.booking.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          orderBy: [{ date: 'asc' }, { timeSlot: 'asc' }],
+          orderBy: [{ date: 'asc' }, { timeSlot: 'asc' }, { id: 'asc' }],
         })
       );
     });
@@ -177,7 +180,7 @@ describe('booking.queries', () => {
 
       expect(db.booking.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          orderBy: [{ totalPrice: 'desc' }, { timeSlot: 'asc' }],
+          orderBy: [{ totalPrice: 'desc' }, { timeSlot: 'asc' }, { id: 'asc' }],
         })
       );
     });
@@ -192,7 +195,7 @@ describe('booking.queries', () => {
 
       expect(db.booking.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          orderBy: [{ guestCount: 'asc' }, { timeSlot: 'asc' }],
+          orderBy: [{ guestCount: 'asc' }, { timeSlot: 'asc' }, { id: 'asc' }],
         })
       );
     });
@@ -214,6 +217,94 @@ describe('booking.queries', () => {
             },
           }),
         })
+      );
+    });
+  });
+
+  describe('getWineryBookingsPage', () => {
+    it('slices the page in SQL and counts the same predicate', async () => {
+      vi.mocked(db.booking.findMany).mockResolvedValue([]);
+      vi.mocked(db.booking.count).mockResolvedValue(42);
+
+      const result = await getWineryBookingsPage(
+        'winery-page-1',
+        { status: [BookingStatus.CONFIRMED] },
+        undefined,
+        { page: 3 }
+      );
+
+      const findArgs = vi.mocked(db.booking.findMany).mock.calls[0]?.[0];
+      const countArgs = vi.mocked(db.booking.count).mock.calls[0]?.[0];
+      expect(findArgs).toMatchObject({
+        skip: 2 * WINERY_BOOKINGS_PAGE_SIZE,
+        take: WINERY_BOOKINGS_PAGE_SIZE,
+        orderBy: [{ date: 'asc' }, { timeSlot: 'asc' }, { id: 'asc' }],
+      });
+      // The count runs on exactly the list predicate (tenant + hold
+      // exclusion + filters) — otherwise "x of y" would lie.
+      expect(countArgs?.where).toEqual(findArgs?.where);
+      expect(countArgs?.where).toMatchObject({
+        wineryId: 'winery-page-1',
+        status: { in: [BookingStatus.CONFIRMED] },
+        NOT: { visitorEmail: { endsWith: '@hold.encave.ch' } },
+      });
+      expect(result).toMatchObject({
+        total: 42,
+        page: 3,
+        pageSize: WINERY_BOOKINGS_PAGE_SIZE,
+        totalPages: Math.ceil(42 / WINERY_BOOKINGS_PAGE_SIZE),
+      });
+      expect(db.booking.findMany).toHaveBeenCalledTimes(1);
+    });
+
+    it('defaults to page 1 and never issues an unbounded read', async () => {
+      vi.mocked(db.booking.findMany).mockResolvedValue([]);
+      vi.mocked(db.booking.count).mockResolvedValue(0);
+
+      const result = await getWineryBookingsPage('winery-page-2');
+
+      expect(db.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ skip: 0, take: WINERY_BOOKINGS_PAGE_SIZE })
+      );
+      // Empty result still reports one (empty) page — the UI never shows
+      // "page 1 of 0".
+      expect(result).toMatchObject({ total: 0, page: 1, totalPages: 1 });
+    });
+
+    it('clamps a page past the end to the last page', async () => {
+      vi.mocked(db.booking.findMany)
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([{ id: 'last-row' }] as never);
+      vi.mocked(db.booking.count).mockResolvedValue(
+        WINERY_BOOKINGS_PAGE_SIZE + 1
+      );
+
+      const result = await getWineryBookingsPage(
+        'winery-page-3',
+        undefined,
+        undefined,
+        { page: 99 }
+      );
+
+      expect(result.page).toBe(2);
+      expect(result.bookings).toEqual([{ id: 'last-row' }]);
+      expect(vi.mocked(db.booking.findMany).mock.calls[1]?.[0]).toMatchObject({
+        skip: WINERY_BOOKINGS_PAGE_SIZE,
+        take: WINERY_BOOKINGS_PAGE_SIZE,
+      });
+    });
+
+    it('sanitises hostile pagination input', async () => {
+      vi.mocked(db.booking.findMany).mockResolvedValue([]);
+      vi.mocked(db.booking.count).mockResolvedValue(0);
+
+      await getWineryBookingsPage('winery-page-4', undefined, undefined, {
+        page: -5,
+        pageSize: 100000,
+      });
+
+      expect(db.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ skip: 0, take: 100 })
       );
     });
   });

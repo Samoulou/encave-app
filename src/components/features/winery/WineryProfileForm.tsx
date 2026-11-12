@@ -23,6 +23,7 @@ import { WineryMediaSection } from './WineryMediaSection';
 import { WineryBasicInfoSection } from './WineryBasicInfoSection';
 import { WineryContactSection } from './WineryContactSection';
 import { WineryDomaineDetailsSection } from './WineryDomaineDetailsSection';
+import { useActionErrorMessage } from '@/hooks/useActionErrorMessage';
 
 interface GalleryImage {
   id: string;
@@ -53,6 +54,7 @@ interface WineryProfileFormProps {
 export function WineryProfileForm({ winery }: WineryProfileFormProps) {
   const router = useRouter();
   const t = useTranslations('winery');
+  const actionError = useActionErrorMessage();
   const tCommon = useTranslations('common');
   const [isSaving, setIsSaving] = useState(false);
   const [coverPhoto, setCoverPhoto] = useState<string | null>(
@@ -118,7 +120,7 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
           setHasUnsavedChanges(false);
           router.refresh();
         } else {
-          toast.error(result.error.message);
+          toast.error(actionError(result.error));
         }
       } catch {
         toast.error(tCommon('errors.somethingWentWrong'));
@@ -126,7 +128,7 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
         setIsSaving(false);
       }
     },
-    [router, t, tCommon]
+    [router, t, tCommon, actionError]
   );
 
   async function handleImageUpload(file: File): Promise<string> {
@@ -153,7 +155,7 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
       });
       router.refresh();
     } else {
-      toast.error(result.error.message);
+      toast.error(actionError(result.error));
       setCoverPhoto(winery.coverPhoto); // Revert on error
     }
     setIsUploadingCover(false);
@@ -178,7 +180,7 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
       });
       router.refresh();
     } else {
-      toast.error(result.error.message);
+      toast.error(actionError(result.error));
       throw new Error(result.error.message);
     }
 
@@ -196,7 +198,7 @@ export function WineryProfileForm({ winery }: WineryProfileFormProps) {
       });
       router.refresh();
     } else {
-      toast.error(result.error.message);
+      toast.error(actionError(result.error));
     }
   }
 

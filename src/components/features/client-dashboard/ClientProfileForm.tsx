@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { updateClientProfile } from '@/server/actions/client.actions';
 import type { Locale } from '@prisma/client';
+import { useActionErrorMessage } from '@/hooks/useActionErrorMessage';
 
 interface ClientProfileFormProps {
   initialName: string;
@@ -26,6 +27,7 @@ export function ClientProfileForm({
   initialLocale,
 }: ClientProfileFormProps) {
   const t = useTranslations('clientDashboard.profile');
+  const actionError = useActionErrorMessage();
   const [name, setName] = useState(initialName);
   const [preferredLocale, setPreferredLocale] = useState<Locale>(initialLocale);
   const [isPending, startTransition] = useTransition();
@@ -45,7 +47,7 @@ export function ClientProfileForm({
       if (res.success) {
         setResult({ success: true });
       } else {
-        setResult({ success: false, message: res.error.message });
+        setResult({ success: false, message: actionError(res.error) });
       }
     });
   }

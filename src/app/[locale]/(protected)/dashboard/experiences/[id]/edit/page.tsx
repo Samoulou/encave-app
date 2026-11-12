@@ -1,6 +1,7 @@
 import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
 import { auth } from '@/server/auth';
+import { getCurrentWinery } from '@/server/queries/winery.queries';
 import { db } from '@/server/db';
 import { redirect, notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
@@ -80,10 +81,7 @@ export default async function EditExperiencePage({ params }: PageProps) {
   const { id } = await params;
 
   // Get winery
-  const winery = await db.winery.findUnique({
-    where: { userId: session.user.id },
-    select: { id: true, status: true },
-  });
+  const winery = await getCurrentWinery(session.user.id);
 
   if (!winery) {
     const locale = await getLocale();

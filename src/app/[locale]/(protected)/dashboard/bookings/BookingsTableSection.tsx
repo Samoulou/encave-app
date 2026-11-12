@@ -3,7 +3,7 @@ import { startOfMonth, parseISO } from 'date-fns';
 import { BookingsTable } from '@/components/features/booking/dashboard/BookingsTable';
 import { BookingsEmptyState } from '@/components/features/booking/dashboard/BookingsEmptyState';
 import {
-  getWineryBookings,
+  getWineryBookingsPage,
   getBookingSummary,
   type BookingFilters as BookingFiltersType,
   type BookingSortOptions,
@@ -30,6 +30,7 @@ interface BookingsTableSectionProps {
     order?: string;
     view?: string;
     month?: string;
+    page?: string;
   };
 }
 
@@ -93,9 +94,15 @@ export async function BookingsTableSection({
   const statusFilter =
     filters.status && filters.status.length > 0 ? filters.status : undefined;
 
+  // 1-based page of the list (server-side pagination — only the rows of
+  // the current page cross the RSC boundary).
+  const requestedPage = Number.parseInt(params.page ?? '1', 10);
+  const page =
+    Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+
   // Fetch bookings and calendar data in parallel
-  const [bookings, summary, calendarData] = await Promise.all([
-    getWineryBookings(wineryId, filters, sort),
+  const [bookingsPage, summary, calendarData] = await Promise.all([
+    getWineryBookingsPage(wineryId, filters, sort, { page }),
     getBookingSummary(wineryId),
     viewMode === 'calendar'
       ? getMonthCalendarData(wineryId, calendarDate, statusFilter)
@@ -104,7 +111,7 @@ export async function BookingsTableSection({
         : Promise.resolve(new Map()),
   ]);
 
-  const hasAnyBookings = summary.totalGuests > 0 || bookings.length > 0;
+  const hasAnyBookings = summary.totalGuests > 0 || bookingsPage.total > 0;
 
   if (!hasAnyBookings) {
     return <BookingsEmptyState />;
@@ -113,8 +120,14 @@ export async function BookingsTableSection({
   return (
     <>
       {viewMode === 'list' ? (
-        bookings.length > 0 ? (
-          <BookingsTable bookings={bookings} />
+        bookingsPage.total > 0 ? (
+          <BookingsTable
+            bookings={bookingsPage.bookings}
+            total={bookingsPage.total}
+            page={bookingsPage.page}
+            pageSize={bookingsPage.pageSize}
+            totalPages={bookingsPage.totalPages}
+          />
         ) : (
           <div className="rounded-xl border border-border bg-white p-8 text-center">
             <p className="text-[#915564]">{t('filters.noResults')}</p>

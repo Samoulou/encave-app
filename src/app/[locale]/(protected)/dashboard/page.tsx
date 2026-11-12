@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { QrCode } from 'lucide-react';
 import { auth } from '@/server/auth';
-import { db } from '@/server/db';
+import { getCurrentWinery } from '@/server/queries/winery.queries';
 import { Link } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
@@ -54,10 +54,7 @@ export default async function DashboardTodayPage() {
     redirect(`/${locale}`);
   }
 
-  const winery = await db.winery.findUnique({
-    where: { userId: session.user.id },
-    select: { id: true, stripeOnboardingComplete: true },
-  });
+  const winery = await getCurrentWinery(session.user.id);
   if (!winery) {
     redirect(`/${locale}/onboarding/winery`);
   }

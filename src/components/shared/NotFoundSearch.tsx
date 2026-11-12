@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { useRouter } from '@/i18n/navigation';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -10,9 +11,9 @@ interface NotFoundSearchProps {
   placeholder?: string;
 }
 
-export function NotFoundSearch({
-  placeholder = 'Search experiences...',
-}: NotFoundSearchProps) {
+export function NotFoundSearch({ placeholder }: NotFoundSearchProps) {
+  const t = useTranslations('search');
+  const tButtons = useTranslations('common.buttons');
   const [query, setQuery] = useState('');
   const router = useRouter();
 
@@ -34,14 +35,14 @@ export function NotFoundSearch({
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder={placeholder}
+          placeholder={placeholder ?? t('placeholder')}
           className="h-12 pl-12 text-base"
-          aria-label="Search experiences"
+          aria-label={t('searchExperiencesLabel')}
         />
       </div>
       <Button type="submit" size="lg" className="h-12 px-6">
         <Search className="h-5 w-5 sm:mr-2" aria-hidden="true" />
-        <span className="hidden sm:inline">Search</span>
+        <span className="hidden sm:inline">{tButtons('search')}</span>
       </Button>
     </form>
   );

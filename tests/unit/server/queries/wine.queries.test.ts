@@ -11,7 +11,7 @@ vi.mock('@/server/db', () => ({
 }));
 
 const { db } = await import('@/server/db');
-const { findEmptySheetSessions } =
+const { findEmptySheetSessions, findEmptySheetSessionsByWinery } =
   await import('@/server/queries/wine.queries');
 const { zonedDateKey, zonedWallClockToUTC } =
   await import('@/lib/datetime/zurich');
@@ -37,9 +37,11 @@ describe('findEmptySheetSessions', () => {
       title: string;
       duration: number;
       wines: { id: string }[];
+      wineryId: string;
     }> = {}
   ) {
     return {
+      wineryId: overrides.wineryId ?? 'winery-1',
       guestCount: overrides.guestCount ?? 2,
       timeSlot: overrides.timeSlot ?? '10:00',
       experienceId: overrides.experienceId ?? 'exp-1',
@@ -123,5 +125,61 @@ describe('findEmptySheetSessions', () => {
       now,
     });
     expect(sessions.map((s) => s.timeSlot)).toEqual(['10:00']);
+  });
+  describe('findEmptySheetSessionsByWinery (one query for the 21h cron)', () => {
+    it('buckets the ended, empty-sheet sessions per winery in a single read', async () => {
+      vi.mocked(db.booking.findMany).mockResolvedValue([
+        bookingRow({ wineryId: 'winery-1', guestCount: 2 }),
+        bookingRow({ wineryId: 'winery-1', guestCount: 1 }),
+        bookingRow({
+          wineryId: 'winery-2',
+          experienceId: 'exp-2',
+          timeSlot: '14:00',
+          guestCount: 5,
+        }),
+        // winery-3: sheet already filled → no reminder.
+        bookingRow({
+          wineryId: 'winery-3',
+          experienceId: 'exp-3',
+          wines: [{ id: 'bw-1' }],
+        }),
+      ] as never);
+
+      const byWinery = await findEmptySheetSessionsByWinery({
+        wineryIds: ['winery-1', 'winery-2', 'winery-3', 'winery-4'],
+        now,
+      });
+
+      expect(db.booking.findMany).toHaveBeenCalledTimes(1);
+      expect(db.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            wineryId: {
+              in: ['winery-1', 'winery-2', 'winery-3', 'winery-4'],
+            },
+          }),
+        })
+      );
+      expect(Array.from(byWinery.keys()).sort()).toEqual([
+        'winery-1',
+        'winery-2',
+      ]);
+      expect(byWinery.get('winery-1')).toEqual([
+        expect.objectContaining({ experienceId: 'exp-1', attendeeCount: 3 }),
+      ]);
+      expect(byWinery.get('winery-2')).toEqual([
+        expect.objectContaining({ timeSlot: '14:00', attendeeCount: 5 }),
+      ]);
+    });
+
+    it('does not query at all without wineries', async () => {
+      const byWinery = await findEmptySheetSessionsByWinery({
+        wineryIds: [],
+        now,
+      });
+
+      expect(byWinery.size).toBe(0);
+      expect(db.booking.findMany).not.toHaveBeenCalled();
+    });
   });
 });

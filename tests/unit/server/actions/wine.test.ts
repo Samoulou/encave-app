@@ -23,8 +23,8 @@ vi.mock('@/server/queries/feature-flags.queries', () => ({
   isFlagEnabled: vi.fn(),
 }));
 
-vi.mock('@/server/actions/winery-helpers', () => ({
-  invalidateWineryCaches: vi.fn(),
+vi.mock('@/server/actions/experience-helpers', () => ({
+  invalidateWineryDetailCache: vi.fn(),
 }));
 
 vi.mock('@/lib/logger', () => ({
@@ -37,8 +37,8 @@ const { auth } = await import('@/server/auth');
 const { db } = await import('@/server/db');
 const { isFlagEnabled } =
   await import('@/server/queries/feature-flags.queries');
-const { invalidateWineryCaches } =
-  await import('@/server/actions/winery-helpers');
+const { invalidateWineryDetailCache } =
+  await import('@/server/actions/experience-helpers');
 const { createWine, updateWine, deleteWine } =
   await import('@/server/actions/wine');
 
@@ -117,7 +117,7 @@ describe('createWine', () => {
       data: { ...validWine, wineryId: 'winery-1' },
       select: { id: true },
     });
-    expect(invalidateWineryCaches).toHaveBeenCalledWith('cave-test');
+    expect(invalidateWineryDetailCache).toHaveBeenCalledWith('cave-test');
   });
 });
 
@@ -172,7 +172,7 @@ describe('updateWine', () => {
       where: { id: 'cjld2cjxh0000qzrmn831i7rn', wineryId: 'winery-1' },
       data: { available: false },
     });
-    expect(invalidateWineryCaches).toHaveBeenCalledWith('cave-test');
+    expect(invalidateWineryDetailCache).toHaveBeenCalledWith('cave-test');
   });
 });
 
@@ -224,6 +224,6 @@ describe('deleteWine', () => {
     vi.mocked(db.wine.delete).mockResolvedValue({ id: 'wine-1' } as never);
     const result = await deleteWine({ wineId: 'cjld2cjxh0000qzrmn831i7rn' });
     expect(result).toEqual({ success: true, data: { wineId: 'wine-1' } });
-    expect(invalidateWineryCaches).toHaveBeenCalledWith('cave-test');
+    expect(invalidateWineryDetailCache).toHaveBeenCalledWith('cave-test');
   });
 });

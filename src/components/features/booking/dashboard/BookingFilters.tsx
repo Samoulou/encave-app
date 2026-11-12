@@ -1,7 +1,12 @@
 'use client';
 
 import { useTransition } from 'react';
-import { useQueryState, parseAsArrayOf, parseAsString } from 'nuqs';
+import {
+  useQueryState,
+  parseAsArrayOf,
+  parseAsInteger,
+  parseAsString,
+} from 'nuqs';
 import { BookingStatus } from '@prisma/client';
 import { Filter, Loader2 } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
@@ -58,16 +63,32 @@ export function BookingFilters({ experiences }: BookingFiltersProps) {
   // Use nuqs with startTransition for non-blocking URL updates
   const transitionOptions = { shallow: false, startTransition };
 
-  const [statusFilter, setStatusFilter] = useQueryState(
+  const [statusFilter, setStatusFilterRaw] = useQueryState(
     'status',
     parseAsArrayOf(parseAsString).withOptions(transitionOptions)
   );
-  const [experienceFilter, setExperienceFilter] = useQueryState(
+  const [experienceFilter, setExperienceFilterRaw] = useQueryState(
     'experience',
     transitionOptions
   );
-  const [dateFrom, setDateFrom] = useQueryState('from', transitionOptions);
-  const [dateTo, setDateTo] = useQueryState('to', transitionOptions);
+  const [dateFrom, setDateFromRaw] = useQueryState('from', transitionOptions);
+  const [dateTo, setDateToRaw] = useQueryState('to', transitionOptions);
+  // The list is paginated server-side: any filter change goes back to
+  // page 1 (nuqs batches both updates into a single navigation).
+  const [, setPage] = useQueryState(
+    'page',
+    parseAsInteger.withOptions(transitionOptions)
+  );
+  const withPageReset =
+    <T,>(setter: (_value: T) => unknown) =>
+    (value: T) => {
+      void setPage(null);
+      void setter(value);
+    };
+  const setStatusFilter = withPageReset(setStatusFilterRaw);
+  const setExperienceFilter = withPageReset(setExperienceFilterRaw);
+  const setDateFrom = withPageReset(setDateFromRaw);
+  const setDateTo = withPageReset(setDateToRaw);
 
   const activeFilterCount = [
     statusFilter && statusFilter.length > 0,

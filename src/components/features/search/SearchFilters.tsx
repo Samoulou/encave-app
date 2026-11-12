@@ -18,7 +18,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Calendar } from '@/components/ui/calendar';
+import { LazyCalendar } from '@/components/shared/LazyCalendar';
 import { Button } from '@/components/ui/button';
 import { X, SlidersHorizontal, CalendarDays } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -274,7 +274,7 @@ export function SearchFilters({
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-auto p-0">
-              <Calendar
+              <LazyCalendar
                 mode="single"
                 selected={quand !== null ? localDateFromKey(quand) : undefined}
                 onSelect={(date) => {

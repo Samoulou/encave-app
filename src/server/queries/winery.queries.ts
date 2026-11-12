@@ -1,5 +1,7 @@
+import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
 import { db } from '@/server/db';
+import { WINERIES_TAG, wineryTag } from '@/lib/utils/cache-tags';
 import {
   isWineryPubliclyVisible,
   publiclyVisibleWineryWhere,
@@ -76,61 +78,71 @@ export const getPubliclyVisibleWineries = unstable_cache(
  * Note: switched from `findUnique` to `findFirst` because the where
  * clause is now compound (not just the slug).
  */
-export const getWineryBySlug = unstable_cache(
-  async (slug: string) => {
-    const winery = await db.winery.findFirst({
-      where: {
-        slug,
-        ...publiclyVisibleWineryWhere,
+async function fetchPubliclyVisibleWineryBySlug(slug: string) {
+  const winery = await db.winery.findFirst({
+    where: {
+      slug,
+      ...publiclyVisibleWineryWhere,
+    },
+    include: {
+      galleryImages: {
+        orderBy: { order: 'asc' },
       },
-      include: {
-        galleryImages: {
-          orderBy: { order: 'asc' },
-        },
-        // Public wine list (P-07 / L-064) — rendered only when the
-        // TASTING_SHEET flag is ON (checked by the page, not here).
-        wines: {
-          where: { available: true },
-          orderBy: { name: 'asc' },
-          select: {
-            id: true,
-            name: true,
-            grapeVariety: true,
-            vintage: true,
-            price: true,
-          },
-        },
-        // Needed by isWineryPubliclyVisible (the include above gives us
-        // the full gallery, we only need ids — but reusing it avoids an
-        // extra query).
-        experiences: {
-          where: { status: 'PUBLISHED' },
-          select: { status: true },
+      // Public wine list (P-07 / L-064) — rendered only when the
+      // TASTING_SHEET flag is ON (checked by the page, not here).
+      wines: {
+        where: { available: true },
+        orderBy: { name: 'asc' },
+        select: {
+          id: true,
+          name: true,
+          grapeVariety: true,
+          vintage: true,
+          price: true,
         },
       },
-    });
+      // Needed by isWineryPubliclyVisible (the include above gives us
+      // the full gallery, we only need ids — but reusing it avoids an
+      // extra query).
+      experiences: {
+        where: { status: 'PUBLISHED' },
+        select: { status: true },
+      },
+    },
+  });
 
-    if (!winery) {
-      return null;
-    }
-
-    // Final TS check (description strip-tags + trim).
-    if (!isWineryPubliclyVisible(winery)) {
-      return null;
-    }
-
-    return winery;
-  },
-  // v3 (P-12 / L-117): payload gained the enrichment scalars (signatureGrapes
-  // etc.). The bump prevents pre-deploy cache entries (missing signatureGrapes)
-  // being served to the fiche, which reads `.length` — an undefined would
-  // throw. v2 added the P-07 `wines` include for the same reason.
-  ['winery-by-slug-v3'],
-  {
-    revalidate: 300,
-    tags: ['wineries'],
+  if (!winery) {
+    return null;
   }
-);
+
+  // Final TS check (description strip-tags + trim).
+  if (!isWineryPubliclyVisible(winery)) {
+    return null;
+  }
+
+  return winery;
+}
+
+/**
+ * Cached 5 minutes. The wrapper is built per slug so the entry carries the
+ * ENTITY tag `winery:{slug}` next to the listing tag (quality lot B3): a
+ * change only this fiche displays (its wine list) purges this page alone.
+ * The slug is part of the cache key through the key parts.
+ */
+export function getWineryBySlug(slug: string) {
+  return unstable_cache(
+    () => fetchPubliclyVisibleWineryBySlug(slug),
+    // v3 (P-12 / L-117): payload gained the enrichment scalars (signatureGrapes
+    // etc.). The bump prevents pre-deploy cache entries (missing signatureGrapes)
+    // being served to the fiche, which reads `.length` — an undefined would
+    // throw. v2 added the P-07 `wines` include for the same reason.
+    ['winery-by-slug-v3', slug],
+    {
+      revalidate: 300,
+      tags: [WINERIES_TAG, wineryTag(slug)],
+    }
+  )();
+}
 
 /**
  * Get distinct communes from publicly visible wineries.
@@ -159,28 +171,56 @@ export const getDistinctCommunes = unstable_cache(
 );
 
 /**
- * Get winery name by user ID (for dashboard).
- * Short cache, user-specific.
+ * The caller's OWN winery, resolved from the session user — ONE lookup per
+ * request (React.cache), shared by the dashboard layout, the pages, the
+ * access guard and the owner-side queries. Each of them used to run its own
+ * `db.winery.findUnique({ where: { userId } })` with a slightly different
+ * select (3-4 round trips per dashboard request — audit A9).
  *
- * NOT a public query — visibility filter does NOT apply here.
+ * Scalars only, enough for every tenant gate and nav decision. It carries
+ * `stripeAccountId`: SERVER-SIDE USE ONLY — never pass the object to a
+ * client component, pick the fields you render.
+ *
+ * NOT a public query — the visibility filter does NOT apply here.
  */
-export async function getWineryByUserId(userId: string) {
+export const getCurrentWinery = cache(async function getCurrentWinery(
+  userId: string
+) {
   return db.winery.findUnique({
     where: { userId },
-    select: { name: true },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      status: true,
+      stripeAccountId: true,
+      stripeOnboardingComplete: true,
+      stripeDetailsSubmitted: true,
+    },
   });
+});
+
+export type CurrentWinery = NonNullable<
+  Awaited<ReturnType<typeof getCurrentWinery>>
+>;
+
+/**
+ * Get winery name by user ID (for dashboard).
+ * Thin view over {@link getCurrentWinery} (same request-level lookup).
+ */
+export async function getWineryByUserId(userId: string) {
+  const winery = await getCurrentWinery(userId);
+  return winery ? { name: winery.name } : null;
 }
 
 /**
  * Winery id + name for the dashboard layout (P-10): the sidebar needs the id
- * to resolve the requests nav badge count. Kept separate from
- * getWineryByUserId to avoid widening its shape for existing callers.
+ * to resolve the requests nav badge count. Thin view over
+ * {@link getCurrentWinery} (same request-level lookup).
  */
 export async function getWineryNavContext(userId: string) {
-  return db.winery.findUnique({
-    where: { userId },
-    select: { id: true, name: true },
-  });
+  const winery = await getCurrentWinery(userId);
+  return winery ? { id: winery.id, name: winery.name } : null;
 }
 
 /**

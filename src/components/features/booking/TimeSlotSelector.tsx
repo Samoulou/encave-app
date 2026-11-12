@@ -9,6 +9,7 @@ import {
   getTimeSlotsForDate,
   type TimeSlotAvailability,
 } from '@/server/actions/booking';
+import { useActionErrorMessage } from '@/hooks/useActionErrorMessage';
 
 interface TimeSlotSelectorProps {
   experienceId: string;
@@ -26,6 +27,7 @@ export function TimeSlotSelector({
   onCapacityUpdate,
 }: TimeSlotSelectorProps) {
   const t = useTranslations('booking');
+  const actionError = useActionErrorMessage();
   const tCommon = useTranslations('common');
   const [slots, setSlots] = useState<TimeSlotAvailability[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -56,7 +58,7 @@ export function TimeSlotSelector({
             }
           }
         } else {
-          setError(result.error.message);
+          setError(actionError(result.error));
           setSlots([]);
         }
       })
@@ -74,6 +76,7 @@ export function TimeSlotSelector({
     onTimeChange,
     onCapacityUpdate,
     t,
+    actionError,
   ]);
 
   useEffect(() => {

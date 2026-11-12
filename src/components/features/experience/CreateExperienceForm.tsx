@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -51,6 +51,7 @@ import type {
   AvailabilitySlot,
   DayOfWeek,
 } from './form-sections';
+import { useActionErrorMessage } from '@/hooks/useActionErrorMessage';
 
 // Form sections for navigation
 const FORM_SECTIONS = [
@@ -73,6 +74,7 @@ export function CreateExperienceForm({
   collectiveEventsEnabled = false,
 }: CreateExperienceFormProps = {}) {
   const t = useTranslations('experience');
+  const actionError = useActionErrorMessage();
   const tCommon = useTranslations('common');
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -280,14 +282,22 @@ export function CreateExperienceForm({
         setCreatedExperienceId(result.data.experienceId);
         toast.success(t('toast.draftSaved'));
       } else {
-        toast.error(result.error.message);
+        toast.error(actionError(result.error));
       }
     } catch {
       toast.error(tCommon('errors.somethingWentWrong'));
     } finally {
       setIsSubmitting(false);
     }
-  }, [form, galleryImages, location, availabilitySlots, t, tCommon]);
+  }, [
+    form,
+    galleryImages,
+    location,
+    availabilitySlots,
+    t,
+    tCommon,
+    actionError,
+  ]);
 
   const onSubmit = useCallback(
     async (data: CreateExperienceInput) => {
@@ -347,7 +357,7 @@ export function CreateExperienceForm({
             router.push('/dashboard/experiences');
           }
         } else {
-          toast.error(result.error.message);
+          toast.error(actionError(result.error));
         }
       } catch {
         toast.error(tCommon('errors.somethingWentWrong'));
@@ -363,6 +373,7 @@ export function CreateExperienceForm({
       availabilitySlots,
       t,
       tCommon,
+      actionError,
     ]
   );
 
@@ -375,7 +386,7 @@ export function CreateExperienceForm({
       if (result.success) {
         toast.success(t('publishedSuccess'));
       } else {
-        toast.error(result.error.message);
+        toast.error(actionError(result.error));
       }
     } catch {
       toast.error(t('toast.publishFailed'));

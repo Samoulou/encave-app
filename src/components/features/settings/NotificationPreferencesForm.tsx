@@ -21,6 +21,7 @@ import {
   type NotificationPreferencesInput,
 } from '@/lib/validators/notifications';
 import { updateNotificationPreferences } from '@/server/actions/notifications';
+import { useActionErrorMessage } from '@/hooks/useActionErrorMessage';
 
 interface NotificationPreferencesFormProps {
   initialData: {
@@ -34,6 +35,7 @@ export function NotificationPreferencesForm({
   initialData,
 }: NotificationPreferencesFormProps) {
   const t = useTranslations('settings.notifications');
+  const actionError = useActionErrorMessage();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<NotificationPreferencesInput>({
@@ -53,7 +55,7 @@ export function NotificationPreferencesForm({
       if (result.success) {
         toast.success(t('updated'));
       } else {
-        toast.error(result.error?.message || t('updateFailed'));
+        toast.error(actionError(result.error));
       }
     } catch {
       toast.error(t('unexpectedError'));
@@ -89,7 +91,7 @@ export function NotificationPreferencesForm({
                   <Switch
                     checked={field.value}
                     onCheckedChange={field.onChange}
-                    aria-label="Daily Digest"
+                    aria-label={t('dailyDigest')}
                   />
                 </FormControl>
               </FormItem>
@@ -121,7 +123,7 @@ export function NotificationPreferencesForm({
                   <Switch
                     checked={field.value}
                     onCheckedChange={field.onChange}
-                    aria-label="Weekly Summary"
+                    aria-label={t('weeklySummary')}
                   />
                 </FormControl>
               </FormItem>
@@ -153,7 +155,7 @@ export function NotificationPreferencesForm({
                   <Switch
                     checked={field.value}
                     onCheckedChange={field.onChange}
-                    aria-label="Instant Booking Alerts"
+                    aria-label={t('instantAlerts')}
                   />
                 </FormControl>
               </FormItem>

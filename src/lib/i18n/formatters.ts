@@ -164,3 +164,22 @@ export function getRelativeTime(date: Date | string): {
     return { count: Math.max(1, diffMinutes), unit: 'minutes' };
   }
 }
+
+/**
+ * Date-only value for a `@db.Date` comparison: the LOCAL calendar day of
+ * `date`, as UTC midnight.
+ *
+ * `@db.Date` columns round-trip as UTC-midnight Dates, while a picker (or
+ * `new Date()`) yields an instant whose calendar day depends on the runtime
+ * time zone — comparing the raw instant shifts the window by a day. This is
+ * the one shared implementation (it used to be re-declared in each query).
+ *
+ * "Local" is the runtime's zone (UTC on Vercel). When the business day
+ * matters (Europe/Zurich "today"), use `zurichTodayAsUTCDate()` from
+ * `@/lib/business-rules/occurrence-expansion` instead.
+ */
+export function localDateToUTC(date: Date): Date {
+  return new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+  );
+}

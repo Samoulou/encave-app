@@ -229,7 +229,11 @@ export async function checkInBooking(
       };
     }
 
-    revalidatePath('/dashboard/bookings');
+    // Route PATTERN, not a URL: with `localePrefix: 'always'` the page lives
+    // at /[locale]/dashboard/bookings — the bare '/dashboard/bookings' never
+    // matched a route (it only worked through the router-cache reset that
+    // any revalidate call in a server action triggers).
+    revalidatePath('/[locale]/dashboard/bookings', 'page');
     logInfo('booking.check_in', {
       bookingRef: booking.reference,
       actorId: session.user.id,

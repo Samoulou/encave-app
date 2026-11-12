@@ -3,6 +3,7 @@
 import { useTransition } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -15,6 +16,7 @@ export function ExperiencesPagination({
   currentPage,
   totalPages,
 }: ExperiencesPaginationProps) {
+  const t = useTranslations('search');
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentSearchParams = searchParams ?? new URLSearchParams();
@@ -75,14 +77,17 @@ export function ExperiencesPagination({
         isPending && 'opacity-50'
       )}
     >
-      <nav className="flex items-center gap-1" aria-label="Pagination">
+      <nav
+        className="flex items-center gap-1"
+        aria-label={t('paginationLabel')}
+      >
         <Button
           variant="ghost"
           size="icon"
           className="h-9 w-9 text-muted-foreground hover:text-foreground disabled:opacity-50"
           onClick={() => goToPage(currentPage - 1)}
           disabled={currentPage === 1 || isPending}
-          aria-label="Previous page"
+          aria-label={t('previousPage')}
         >
           <ChevronLeft className="h-5 w-5" />
         </Button>
@@ -122,7 +127,7 @@ export function ExperiencesPagination({
           className="h-9 w-9 text-muted-foreground hover:text-foreground disabled:opacity-50"
           onClick={() => goToPage(currentPage + 1)}
           disabled={currentPage === totalPages || isPending}
-          aria-label="Next page"
+          aria-label={t('nextPage')}
         >
           <ChevronRight className="h-5 w-5" />
         </Button>

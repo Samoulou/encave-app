@@ -65,9 +65,16 @@ test('mobile fiche expérience: pas de maplibre avant scroll vers la carte', asy
     .first()
     .getAttribute('href')
     .catch(() => null);
-  test.skip(!href, 'no seeded experience card');
+  // The e2e seed publishes experiences: a missing card is a broken seed or
+  // a broken catalogue, never a reason to skip the budget (a conditional
+  // skip turned this guard into a silent no-op).
+  if (!href) {
+    throw new Error(
+      'perf-budget: no experience card on /fr/experiences — seed or catalogue is broken'
+    );
+  }
 
-  await page.goto(href as string);
+  await page.goto(href);
   await page.waitForLoadState('networkidle');
 
   // Above the fold only — the map is below.
@@ -89,16 +96,22 @@ test('desktop fiche expérience: la carte se charge après scroll (garde anti-su
     .first()
     .getAttribute('href')
     .catch(() => null);
-  test.skip(!href, 'no seeded experience card');
+  // The e2e seed publishes experiences: a missing card is a broken seed or
+  // a broken catalogue, never a reason to skip the budget (a conditional
+  // skip turned this guard into a silent no-op).
+  if (!href) {
+    throw new Error(
+      'perf-budget: no experience card on /fr/experiences — seed or catalogue is broken'
+    );
+  }
 
-  await page.goto(href as string);
+  await page.goto(href);
   await page.waitForLoadState('domcontentloaded');
 
   const locationSection = page.getByTestId('location-section');
-  test.skip(
-    !(await locationSection.count()),
-    'fiche without coordinates in seed'
-  );
+  // Every seeded winery is geocoded and the section is always rendered:
+  // its absence is a regression, not a reason to skip.
+  await expect(locationSection).toHaveCount(1);
   await locationSection.scrollIntoViewIfNeeded();
   await expect
     .poll(async () => hasMaplibreChunk(page), { timeout: 15_000 })

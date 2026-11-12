@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { auth } from '@/server/auth';
-import { db } from '@/server/db';
+import { getCurrentWinery } from '@/server/queries/winery.queries';
 import { redirect } from 'next/navigation';
 import { getLocale } from 'next-intl/server';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
@@ -14,6 +14,7 @@ import { EarningsChartsSection } from './EarningsChartsSection';
 import { EarningsTransactionsSection } from './EarningsTransactionsSection';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
+import { useTranslations } from 'next-intl';
 
 export async function generateMetadata({
   params,
@@ -46,10 +47,7 @@ export default async function EarningsPage({ searchParams }: PageProps) {
   }
 
   // Get winery for the user - needs session.user.id
-  const winery = await db.winery.findUnique({
-    where: { userId: session.user.id },
-    select: { id: true, stripeOnboardingComplete: true },
-  });
+  const winery = await getCurrentWinery(session.user.id);
 
   if (!winery) {
     const locale = await getLocale();
@@ -96,9 +94,10 @@ export default async function EarningsPage({ searchParams }: PageProps) {
 
 /** Skeleton for summary cards - matches mockup 3-card layout */
 function SummarySkeleton() {
+  const tCommon = useTranslations('common');
   return (
     <SkeletonContainer
-      label="Loading summary..."
+      label={tCommon('loading')}
       className="grid grid-cols-1 gap-4 md:grid-cols-3"
     >
       {Array.from({ length: 3 }).map((_, i) => (
@@ -122,8 +121,9 @@ function SummarySkeleton() {
 
 /** Skeleton for the GMV highlight card */
 function GmvSkeleton() {
+  const tCommon = useTranslations('common');
   return (
-    <SkeletonContainer label="Loading GMV...">
+    <SkeletonContainer label={tCommon('loading')}>
       <div className="rounded-xl border border-border bg-white p-6 shadow-sm">
         <Skeleton className="h-4 w-48" />
         <Skeleton className="mt-2 h-10 w-40" />
@@ -135,8 +135,9 @@ function GmvSkeleton() {
 
 /** Skeleton for chart section - matches Revenue Evolution chart */
 function ChartsSkeleton() {
+  const tCommon = useTranslations('common');
   return (
-    <SkeletonContainer label="Loading chart...">
+    <SkeletonContainer label={tCommon('loading')}>
       <div className="rounded-xl border border-border bg-white p-6 shadow-sm lg:p-8">
         <div className="mb-8 flex items-center justify-between">
           <div>
@@ -156,8 +157,9 @@ function ChartsSkeleton() {
 
 /** Skeleton for transactions section - matches mockup table layout */
 function TransactionsSkeleton() {
+  const tCommon = useTranslations('common');
   return (
-    <SkeletonContainer label="Loading transactions..." className="space-y-4">
+    <SkeletonContainer label={tCommon('loading')} className="space-y-4">
       <div className="flex items-center justify-between">
         <Skeleton className="h-6 w-44" />
         <Skeleton className="h-4 w-16" />

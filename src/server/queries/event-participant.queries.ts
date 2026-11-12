@@ -2,6 +2,7 @@ import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
 import { db } from '@/server/db';
 import { eligibleParticipantWineryWhere } from '@/lib/business-rules/collective-events';
+import { EXPERIENCES_TAG, eventParticipantsTag } from '@/lib/utils/cache-tags';
 
 /**
  * Collective-event participant reads (P-11 / L-100, L-101).
@@ -30,42 +31,53 @@ export interface EventParticipantPublicDTO {
  * only cater the event). A cave suspended AFTER being added disappears here
  * automatically.
  */
-export const getEventParticipants = cache(
-  unstable_cache(
-    async (experienceId: string): Promise<EventParticipantPublicDTO[]> => {
-      const rows = await db.eventParticipant.findMany({
-        where: {
-          experienceId,
-          winery: eligibleParticipantWineryWhere,
-        },
-        orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
-        select: {
-          id: true,
-          description: true,
-          logo: true,
-          winery: {
-            select: {
-              name: true,
-              slug: true,
-              commune: true,
-              coverPhoto: true,
-            },
-          },
-        },
-      });
-
-      return rows.map((row) => ({
-        id: row.id,
-        wineryName: row.winery.name,
-        winerySlug: row.winery.slug,
-        commune: row.winery.commune,
-        description: row.description,
-        logoUrl: row.logo ?? row.winery.coverPhoto,
-      }));
+async function fetchEventParticipants(
+  experienceId: string
+): Promise<EventParticipantPublicDTO[]> {
+  const rows = await db.eventParticipant.findMany({
+    where: {
+      experienceId,
+      winery: eligibleParticipantWineryWhere,
     },
-    ['event-participants-v1'],
-    { revalidate: 300, tags: ['experiences'] }
-  )
+    orderBy: [{ order: 'asc' }, { createdAt: 'asc' }],
+    select: {
+      id: true,
+      description: true,
+      logo: true,
+      winery: {
+        select: {
+          name: true,
+          slug: true,
+          commune: true,
+          coverPhoto: true,
+        },
+      },
+    },
+  });
+
+  return rows.map((row) => ({
+    id: row.id,
+    wineryName: row.winery.name,
+    winerySlug: row.winery.slug,
+    commune: row.winery.commune,
+    description: row.description,
+    logoUrl: row.logo ?? row.winery.coverPhoto,
+  }));
+}
+
+// Built per experience so the entry carries its own entity tag next to the
+// listing tag (quality lot B3): adding / removing / reordering a participant
+// can purge this grid (and its fiche) alone.
+export const getEventParticipants = cache(
+  (experienceId: string): Promise<EventParticipantPublicDTO[]> =>
+    unstable_cache(
+      () => fetchEventParticipants(experienceId),
+      ['event-participants-v1', experienceId],
+      {
+        revalidate: 300,
+        tags: [EXPERIENCES_TAG, eventParticipantsTag(experienceId)],
+      }
+    )()
 );
 
 export interface ManageableParticipantDTO {

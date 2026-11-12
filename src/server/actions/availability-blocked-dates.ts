@@ -5,17 +5,15 @@ import { db } from '@/server/db';
 import type { ActionResult } from '@/types/actions';
 import { logError } from '@/lib/logger';
 import { revalidateTag } from 'next/cache';
-import { invalidateExperienceCaches } from './experience-helpers';
+import { invalidateExperienceAvailabilityCaches } from './experience-helpers';
 import { generateOccurrences } from '@/server/services/occurrence.service';
+import { localDateToUTC } from '@/lib/i18n/formatters';
 
 /**
  * Normalize a date to UTC midnight to avoid timezone issues.
  * This ensures the same date is stored/queried regardless of client timezone.
  */
-function normalizeToUTCDate(date: Date): Date {
-  const d = new Date(date);
-  return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-}
+const normalizeToUTCDate = localDateToUTC;
 
 interface BlockDateResult {
   id: string;
@@ -93,10 +91,10 @@ export async function blockDate(
     // refresh the occurrence-backed views. Occurrences themselves are
     // never mutated (bookings on the date survive untouched).
     revalidateTag(`occurrences:${experienceId}`);
-    // Also purge the public 'experiences' ISR tag: the fiche/catalogue bake
-    // blocked dates at read time, and the 'occurrences:*' tag has no cache
-    // subscriber, so on its own it refreshes nothing the public pages read.
-    invalidateExperienceCaches();
+    // Also purge the public caches that bake blocked dates at read time —
+    // THIS fiche and the catalogue's availability cache (the 'occurrences:*'
+    // tag has no cache subscriber). Other fiches / winery pages stay cached.
+    invalidateExperienceAvailabilityCaches(experience.slug);
 
     return {
       success: true,
@@ -174,10 +172,10 @@ export async function unblockDate(
       });
     }
     revalidateTag(`occurrences:${experienceId}`);
-    // Also purge the public 'experiences' ISR tag: the fiche/catalogue bake
-    // blocked dates at read time, and the 'occurrences:*' tag has no cache
-    // subscriber, so on its own it refreshes nothing the public pages read.
-    invalidateExperienceCaches();
+    // Also purge the public caches that bake blocked dates at read time —
+    // THIS fiche and the catalogue's availability cache (the 'occurrences:*'
+    // tag has no cache subscriber). Other fiches / winery pages stay cached.
+    invalidateExperienceAvailabilityCaches(experience.slug);
 
     return { success: true, data: { success: true } };
   } catch (error) {
@@ -214,7 +212,7 @@ export async function blockDateForAllExperiences(
       include: {
         experiences: {
           where: { status: 'PUBLISHED' },
-          select: { id: true },
+          select: { id: true, slug: true },
         },
       },
     });
@@ -239,8 +237,11 @@ export async function blockDateForAllExperiences(
       skipDuplicates: true,
     });
 
-    // Bulk block touches every published experience's public reads.
-    invalidateExperienceCaches();
+    // Bulk block touches every published experience of THIS winery: their
+    // fiches + the catalogue availability cache, nothing else.
+    invalidateExperienceAvailabilityCaches(
+      winery.experiences.map((experience) => experience.slug)
+    );
     return { success: true, data: { blockedCount: result.count } };
   } catch (error) {
     logError('blockDateForAllExperiences error', error, {
@@ -271,7 +272,7 @@ export async function unblockDateForAllExperiences(
     // Get winery
     const winery = await db.winery.findUnique({
       where: { userId: session.user.id },
-      select: { id: true },
+      select: { id: true, experiences: { select: { slug: true } } },
     });
 
     if (!winery) {
@@ -292,7 +293,9 @@ export async function unblockDateForAllExperiences(
       },
     });
 
-    invalidateExperienceCaches();
+    invalidateExperienceAvailabilityCaches(
+      winery.experiences.map((experience) => experience.slug)
+    );
     return { success: true, data: { unblockedCount: result.count } };
   } catch (error) {
     logError('unblockDateForAllExperiences error', error, {

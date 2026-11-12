@@ -1,6 +1,6 @@
 'use client';
 
-import { useQueryState } from 'nuqs';
+import { parseAsInteger, useQueryState } from 'nuqs';
 import { Search, X, Loader2 } from 'lucide-react';
 import { useRef, useEffect, useCallback, useState, useTransition } from 'react';
 import { useTranslations } from 'next-intl';
@@ -16,6 +16,11 @@ export function BookingSearch() {
     shallow: false,
     startTransition,
   });
+  // Server-side pagination: a new search term always starts on page 1.
+  const [, setPage] = useQueryState(
+    'page',
+    parseAsInteger.withOptions({ shallow: false, startTransition })
+  );
   const inputRef = useRef<HTMLInputElement>(null);
   const [localValue, setLocalValue] = useState(search ?? '');
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -31,10 +36,11 @@ export function BookingSearch() {
         clearTimeout(timeoutRef.current);
       }
       timeoutRef.current = setTimeout(() => {
-        setSearch(value || null);
+        void setPage(null);
+        void setSearch(value || null);
       }, 300);
     },
-    [setSearch]
+    [setSearch, setPage]
   );
 
   // Cleanup timeout on unmount
@@ -54,7 +60,8 @@ export function BookingSearch() {
 
   const clearSearch = () => {
     setLocalValue('');
-    setSearch(null);
+    void setPage(null);
+    void setSearch(null);
     if (inputRef.current) {
       inputRef.current.focus();
     }

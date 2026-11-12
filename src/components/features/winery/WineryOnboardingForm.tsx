@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
+import { useActionErrorMessage } from '@/hooks/useActionErrorMessage';
 
 const MAX_DESCRIPTION_LENGTH = 500;
 const MIN_DESCRIPTION_LENGTH = 50;
@@ -38,6 +39,7 @@ const MIN_DESCRIPTION_LENGTH = 50;
 export function WineryOnboardingForm() {
   const router = useRouter();
   const t = useTranslations('winery');
+  const actionError = useActionErrorMessage();
   const tCommon = useTranslations('common');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -67,7 +69,7 @@ export function WineryOnboardingForm() {
         router.push('/onboarding/winery/confirmation');
         router.refresh();
       } else {
-        setError(result.error.message);
+        setError(actionError(result.error));
       }
     } catch {
       setError(tCommon('errors.somethingWentWrong'));

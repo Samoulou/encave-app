@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { BookingStatusBadge } from '@/components/features/booking/BookingStatusBadge';
 import { getClientHistory } from '@/server/actions/booking-dashboard';
+import { useActionErrorMessage } from '@/hooks/useActionErrorMessage';
 
 const localeMap = { fr, de, en: enUS };
 
@@ -44,6 +45,7 @@ export function ClientDetailsModal({
   visitorPhone,
 }: ClientDetailsModalProps) {
   const t = useTranslations('bookings.clientModal');
+  const actionError = useActionErrorMessage();
   const tCommon = useTranslations('bookings');
   const locale = useLocale();
   const dateLocale = localeMap[locale as keyof typeof localeMap] || enUS;
@@ -59,12 +61,12 @@ export function ClientDetailsModal({
           setBookings(result.data.bookings);
           setError(null);
         } else {
-          setError(result.error.message);
+          setError(actionError(result.error));
           setBookings([]);
         }
       });
     }
-  }, [open, visitorEmail]);
+  }, [open, visitorEmail, actionError]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

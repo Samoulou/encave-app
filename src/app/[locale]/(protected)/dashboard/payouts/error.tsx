@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
 import { Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { AlertTriangle, LayoutDashboard, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useReportBoundaryError } from '@/hooks/useReportBoundaryError';
 
 export default function PayoutsError({
   error,
@@ -16,9 +16,7 @@ export default function PayoutsError({
   const t = useTranslations('errors');
   const tCommon = useTranslations('common');
 
-  useEffect(() => {
-    console.error('Payouts page error:', error);
-  }, [error]);
+  useReportBoundaryError(error, 'dashboard-payouts');
 
   return (
     <div className="flex min-h-[400px] flex-col items-center justify-center px-4">
@@ -37,7 +35,7 @@ export default function PayoutsError({
         </p>
         {error.digest && (
           <p className="mt-4 font-mono text-xs text-muted-foreground">
-            Error ID: {error.digest}
+            {t('errorId', { id: error.digest })}
           </p>
         )}
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">

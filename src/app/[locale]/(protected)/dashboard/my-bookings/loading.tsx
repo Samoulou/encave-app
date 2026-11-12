@@ -1,8 +1,10 @@
 import { Skeleton, SkeletonContainer } from '@/components/shared/Skeleton';
+import { useTranslations } from 'next-intl';
 
 export default function MyBookingsLoading() {
+  const tCommon = useTranslations('common');
   return (
-    <SkeletonContainer label="Loading bookings..." className="space-y-8">
+    <SkeletonContainer label={tCommon('loading')} className="space-y-8">
       <Skeleton className="h-8 w-48" />
 
       {/* Upcoming section */}

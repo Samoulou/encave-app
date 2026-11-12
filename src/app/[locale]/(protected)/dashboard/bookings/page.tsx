@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { auth } from '@/server/auth';
-import { db } from '@/server/db';
+import { getCurrentWinery } from '@/server/queries/winery.queries';
 import { redirect } from 'next/navigation';
 import { getLocale } from 'next-intl/server';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
@@ -14,6 +14,7 @@ import { VisibilityBannerSkeleton } from '@/components/features/dashboard/Visibi
 import { TastingSheetAlertBanner } from '@/components/features/wine/TastingSheetAlertBanner';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
+import { useTranslations } from 'next-intl';
 
 export async function generateMetadata({
   params,
@@ -40,6 +41,7 @@ interface PageProps {
     order?: string;
     view?: string;
     month?: string;
+    page?: string;
   }>;
 }
 
@@ -55,10 +57,7 @@ export default async function BookingsDashboardPage({
   }
 
   // Get winery for the user - needs session.user.id
-  const winery = await db.winery.findUnique({
-    where: { userId: session.user.id },
-    select: { id: true },
-  });
+  const winery = await getCurrentWinery(session.user.id);
 
   if (!winery) {
     const locale = await getLocale();
@@ -102,9 +101,10 @@ export default async function BookingsDashboardPage({
 
 /** Skeleton for KPI cards - matches BookingSummaryCards layout (3 cards) */
 function SummaryCardsSkeleton() {
+  const tCommon = useTranslations('common');
   return (
     <SkeletonContainer
-      label="Loading summary..."
+      label={tCommon('loading')}
       className="grid grid-cols-1 gap-4 md:grid-cols-3"
     >
       {Array.from({ length: 3 }).map((_, i) => (
@@ -127,9 +127,10 @@ function SummaryCardsSkeleton() {
 
 /** Skeleton for filters toolbar */
 function FiltersSkeleton() {
+  const tCommon = useTranslations('common');
   return (
     <SkeletonContainer
-      label="Loading filters..."
+      label={tCommon('loading')}
       className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-white p-2"
     >
       <div className="flex min-w-[300px] flex-1 items-center gap-2">
@@ -143,8 +144,9 @@ function FiltersSkeleton() {
 
 /** Skeleton for bookings table - matches mockup layout */
 function TableSkeleton() {
+  const tCommon = useTranslations('common');
   return (
-    <SkeletonContainer label="Loading bookings..." className="space-y-4">
+    <SkeletonContainer label={tCommon('loading')} className="space-y-4">
       <div className="overflow-hidden rounded-xl border border-border bg-white shadow-sm">
         {/* Table Header */}
         <div className="border-b border-border px-6 py-4">

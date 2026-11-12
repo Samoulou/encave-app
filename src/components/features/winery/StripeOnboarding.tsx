@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { startStripeOnboarding } from '@/server/actions/stripe';
 import { toast } from 'sonner';
+import { useActionErrorMessage } from '@/hooks/useActionErrorMessage';
 
 interface StripeOnboardingProps {
   wineryId: string;
@@ -14,6 +15,7 @@ interface StripeOnboardingProps {
 
 export function StripeOnboarding({ wineryId }: StripeOnboardingProps) {
   const t = useTranslations('stripe.onboarding');
+  const actionError = useActionErrorMessage();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSetupPayments = async () => {
@@ -25,7 +27,7 @@ export function StripeOnboarding({ wineryId }: StripeOnboardingProps) {
         // Redirect to Stripe onboarding
         window.location.href = result.data.url;
       } else {
-        toast.error(result.error.message);
+        toast.error(actionError(result.error));
       }
     } catch {
       toast.error(t('failedToStart'));

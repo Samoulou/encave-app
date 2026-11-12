@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo, memo, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, memo, useTransition } from 'react';
+import { parseAsInteger, useQueryState } from 'nuqs';
 import { BookingStatus } from '@prisma/client';
 import { MoreVertical, X, Users, Loader2 } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
@@ -18,6 +18,8 @@ import { toast } from 'sonner';
 import { formatDate } from '@/lib/i18n/formatters';
 import type { Locale } from '@/i18n/routing';
 import { getInitials } from '@/lib/get-initials';
+import { useRouter } from '@/i18n/navigation';
+import { useActionErrorMessage } from '@/hooks/useActionErrorMessage';
 
 interface BookingWithExperience {
   id: string;
@@ -39,21 +41,35 @@ interface BookingWithExperience {
 }
 
 interface BookingsTableProps {
+  /** Rows of the CURRENT page only — sliced in SQL, not in the browser. */
   bookings: BookingWithExperience[];
+  /** Rows matching the filters across all pages. */
+  total: number;
+  /** 1-based page the server returned (already clamped). */
+  page: number;
+  pageSize: number;
+  totalPages: number;
 }
-
-const DEFAULT_PAGE_SIZE = 5;
 
 /**
  * Bookings table component matching US-UI-09 mockup.
  * Features: Avatar with initials fallback, inline reject for pending payments,
- * context menu for other statuses, and simplified pagination.
+ * context menu for other statuses, and server-side pagination (the page
+ * number lives in the URL — `?page=` — like every other list filter).
  */
-function BookingsTableComponent({ bookings }: BookingsTableProps) {
+function BookingsTableComponent({
+  bookings,
+  total,
+  page,
+  pageSize,
+  totalPages,
+}: BookingsTableProps) {
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations('bookings');
+  const actionError = useActionErrorMessage();
   const [, startTransition] = useTransition();
+  const [isPaging, startPaging] = useTransition();
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [clientModalData, setClientModalData] = useState<{
     name: string;
@@ -61,24 +77,22 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
     phone: string;
   } | null>(null);
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = DEFAULT_PAGE_SIZE;
+  // Page number in the URL; `shallow: false` re-runs the server query.
+  const [, setPageParam] = useQueryState(
+    'page',
+    parseAsInteger.withOptions({
+      shallow: false,
+      startTransition: startPaging,
+    })
+  );
+  const goToPage = (next: number) => {
+    const target = Math.min(totalPages, Math.max(1, next));
+    // Page 1 is the default — keep the URL clean.
+    void setPageParam(target === 1 ? null : target);
+  };
 
-  // Calculate paginated data
-  const totalPages = Math.ceil(bookings.length / pageSize);
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = Math.min(startIndex + pageSize, bookings.length);
-  const paginatedBookings = useMemo(() => {
-    return bookings.slice(startIndex, startIndex + pageSize);
-  }, [bookings, startIndex, pageSize]);
-
-  // Reset to page 1 when bookings change
-  useMemo(() => {
-    if (currentPage > totalPages && totalPages > 0) {
-      setCurrentPage(1);
-    }
-  }, [currentPage, totalPages]);
+  const startIndex = (page - 1) * pageSize;
+  const endIndex = Math.min(startIndex + bookings.length, total);
 
   const handleReject = async (bookingId: string) => {
     setPendingAction(`reject-${bookingId}`);
@@ -89,7 +103,7 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
           toast.success(t('toast.rejected'));
           router.refresh();
         } else {
-          toast.error(result.error.message);
+          toast.error(actionError(result.error));
         }
       } catch {
         toast.error(t('toast.rejectFailed'));
@@ -148,8 +162,8 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#f2e9eb]">
-              {paginatedBookings.map((booking) => {
+            <tbody className="divide-y divide-[#f2e9eb]" aria-busy={isPaging}>
+              {bookings.map((booking) => {
                 const bookingDate = new Date(booking.date);
                 const isPendingStatus =
                   booking.status === BookingStatus.PENDING_PAYMENT;
@@ -279,21 +293,21 @@ function BookingsTableComponent({ bookings }: BookingsTableProps) {
             {t('pagination.showing', {
               from: startIndex + 1,
               to: endIndex,
-              total: bookings.length,
+              total,
             })}
           </span>
           <div className="flex gap-2">
             <button
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
+              onClick={() => goToPage(page - 1)}
+              disabled={page <= 1 || isPaging}
               className="rounded-lg border border-border px-3 py-1 text-sm text-muted-foreground hover:bg-primary-light disabled:cursor-not-allowed disabled:opacity-50"
               aria-label={t('pagination.previousPage')}
             >
               {t('pagination.previous')}
             </button>
             <button
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
+              onClick={() => goToPage(page + 1)}
+              disabled={page >= totalPages || isPaging}
               className="rounded-lg border border-border px-3 py-1 text-sm text-muted-foreground hover:bg-primary-light disabled:cursor-not-allowed disabled:opacity-50"
               aria-label={t('pagination.nextPage')}
             >

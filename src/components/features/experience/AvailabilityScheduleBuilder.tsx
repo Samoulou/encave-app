@@ -30,6 +30,7 @@ import {
 } from '@/server/actions/availability';
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
+import { useActionErrorMessage } from '@/hooks/useActionErrorMessage';
 
 interface AvailabilityScheduleBuilderProps {
   experienceId: string;
@@ -49,6 +50,7 @@ export function AvailabilityScheduleBuilder({
   experienceStatus,
 }: AvailabilityScheduleBuilderProps) {
   const t = useTranslations('experience.availability');
+  const actionError = useActionErrorMessage();
   const tCommon = useTranslations('common');
   const tDaysFull = useTranslations('common.days.full');
   const tDaysShort = useTranslations('common.days.short');
@@ -185,7 +187,7 @@ export function AvailabilityScheduleBuilder({
         setSlotsByDay(grouped);
       }
     } else {
-      toast.error(result.error.message);
+      toast.error(actionError(result.error));
     }
 
     setIsSaving(false);

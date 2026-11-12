@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { startStripeOnboarding } from '@/server/actions/stripe';
 import { toast } from 'sonner';
+import { useActionErrorMessage } from '@/hooks/useActionErrorMessage';
 
 interface StripeCallbackResultProps {
   status: 'complete' | 'pending' | 'incomplete';
@@ -27,6 +28,7 @@ export function StripeCallbackResult({
   wineryId,
 }: StripeCallbackResultProps) {
   const t = useTranslations('stripe.callback');
+  const actionError = useActionErrorMessage();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleContinueOnboarding = async () => {
@@ -36,7 +38,7 @@ export function StripeCallbackResult({
       if (result.success) {
         window.location.href = result.data.url;
       } else {
-        toast.error(result.error.message);
+        toast.error(actionError(result.error));
       }
     } catch {
       toast.error(t('failedToContinue'));

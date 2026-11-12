@@ -1,6 +1,7 @@
 import { cache } from 'react';
 import { BookingStatus } from '@prisma/client';
 import { db } from '@/server/db';
+import { getCurrentWinery } from '@/server/queries/winery.queries';
 import { sessionEndUTC } from '@/lib/datetime/zurich';
 import { zurichTodayAsUTCDate } from '@/lib/business-rules/occurrence-expansion';
 import { hashToken } from '@/lib/utils/token';
@@ -63,10 +64,7 @@ export interface TastingEmailStatsDTO {
  */
 export const getTastingEmailStats = cache(
   async (userId: string): Promise<TastingEmailStatsDTO> => {
-    const winery = await db.winery.findUnique({
-      where: { userId },
-      select: { id: true },
-    });
+    const winery = await getCurrentWinery(userId);
     if (!winery) return { sent: 0, opened: 0, clicked: 0 };
 
     const [sent, opened, clicked] = await Promise.all([
@@ -103,25 +101,30 @@ export interface EmptySheetSessionDTO {
 
 /**
  * Sessions of the given Zurich calendar day that already ENDED with at
- * least one active booking and an empty tasting sheet. Feeds both the
- * dashboard alert banner and the 21h reminder email (L-063).
+ * least one active booking and an empty tasting sheet — for SEVERAL
+ * wineries in ONE query (quality lot, audit A8: the 21h reminder cron ran
+ * this read once per winery). Wineries without such a session are absent
+ * from the map.
  *
- * Not React.cached: also called from the cron route (no request scope).
+ * Not React.cached: called from the cron route (no request scope).
  */
-export async function findEmptySheetSessions(options: {
-  wineryId: string;
+export async function findEmptySheetSessionsByWinery(options: {
+  wineryIds: readonly string[];
   now: Date;
-}): Promise<EmptySheetSessionDTO[]> {
-  const { wineryId, now } = options;
+}): Promise<Map<string, EmptySheetSessionDTO[]>> {
+  const { wineryIds, now } = options;
+  const result = new Map<string, EmptySheetSessionDTO[]>();
+  if (wineryIds.length === 0) return result;
   const todayUTC = zurichTodayAsUTCDate(now);
 
   const bookings = await db.booking.findMany({
     where: {
-      wineryId,
+      wineryId: { in: [...wineryIds] },
       date: todayUTC,
       status: { in: [BookingStatus.CONFIRMED, BookingStatus.COMPLETED] },
     },
     select: {
+      wineryId: true,
       guestCount: true,
       timeSlot: true,
       experienceId: true,
@@ -131,9 +134,15 @@ export async function findEmptySheetSessions(options: {
   });
 
   // Group per session (experienceId, timeSlot) — date is fixed to today.
+  // An experience belongs to exactly one winery, so the key is unique
+  // across wineries too.
   const sessions = new Map<
     string,
-    EmptySheetSessionDTO & { duration: number; hasWines: boolean }
+    EmptySheetSessionDTO & {
+      wineryId: string;
+      duration: number;
+      hasWines: boolean;
+    }
   >();
   for (const booking of bookings) {
     const key = `${booking.experienceId}|${booking.timeSlot}`;
@@ -143,6 +152,7 @@ export async function findEmptySheetSessions(options: {
       existing.hasWines = existing.hasWines || booking.wines.length > 0;
     } else {
       sessions.set(key, {
+        wineryId: booking.wineryId,
         experienceId: booking.experienceId,
         experienceTitle: booking.experience.title,
         date: todayUTC,
@@ -154,30 +164,50 @@ export async function findEmptySheetSessions(options: {
     }
   }
 
-  return Array.from(sessions.values())
+  const ended = Array.from(sessions.values())
     .filter((session) => {
       if (session.hasWines) return false;
       return (
         sessionEndUTC(session.date, session.timeSlot, session.duration) <= now
       );
     })
-    .map((session) => ({
+    .sort((a, b) => a.timeSlot.localeCompare(b.timeSlot));
+
+  for (const session of ended) {
+    const list = result.get(session.wineryId) ?? [];
+    list.push({
       experienceId: session.experienceId,
       experienceTitle: session.experienceTitle,
       date: session.date,
       timeSlot: session.timeSlot,
       attendeeCount: session.attendeeCount,
-    }))
-    .sort((a, b) => a.timeSlot.localeCompare(b.timeSlot));
+    });
+    result.set(session.wineryId, list);
+  }
+  return result;
+}
+
+/**
+ * Single-winery view of {@link findEmptySheetSessionsByWinery}. Feeds the
+ * dashboard alert banner and the 21h reminder email (L-063).
+ *
+ * Not React.cached: also called from the cron route (no request scope).
+ */
+export async function findEmptySheetSessions(options: {
+  wineryId: string;
+  now: Date;
+}): Promise<EmptySheetSessionDTO[]> {
+  const byWinery = await findEmptySheetSessionsByWinery({
+    wineryIds: [options.wineryId],
+    now: options.now,
+  });
+  return byWinery.get(options.wineryId) ?? [];
 }
 
 /** Owner-scoped variant for the dashboard banner. */
 export const getOwnerEmptySheetSessionsToday = cache(
   async (userId: string): Promise<EmptySheetSessionDTO[]> => {
-    const winery = await db.winery.findUnique({
-      where: { userId },
-      select: { id: true },
-    });
+    const winery = await getCurrentWinery(userId);
     if (!winery) return [];
     return findEmptySheetSessions({ wineryId: winery.id, now: new Date() });
   }

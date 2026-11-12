@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { parseAsString, useQueryState } from 'nuqs';
 import { useTranslations } from 'next-intl';
 import { Calendar, Loader2, Receipt } from 'lucide-react';
 import { toast } from 'sonner';
@@ -11,6 +11,7 @@ import {
   createBookingCalendarEvent,
 } from '@/lib/utils/calendar';
 import { exportBookingReceiptPDF } from '@/server/actions/booking-receipt';
+import { useActionErrorMessage } from '@/hooks/useActionErrorMessage';
 
 interface ConfirmationActionsProps {
   booking: {
@@ -29,7 +30,9 @@ interface ConfirmationActionsProps {
 
 export function ConfirmationActions({ booking }: ConfirmationActionsProps) {
   const t = useTranslations('confirmation');
-  const searchParams = useSearchParams();
+  const actionError = useActionErrorMessage();
+  // Stripe's return param — read-only here (nuqs, never useSearchParams).
+  const [sessionId] = useQueryState('session_id', parseAsString);
   const [isDownloadingReceipt, setIsDownloadingReceipt] = useState(false);
 
   const calendarEvent = createBookingCalendarEvent({
@@ -45,13 +48,10 @@ export function ConfirmationActions({ booking }: ConfirmationActionsProps) {
   const handleDownloadReceipt = async () => {
     setIsDownloadingReceipt(true);
     try {
-      const result = await exportBookingReceiptPDF(
-        booking.id,
-        searchParams?.get('session_id') ?? null
-      );
+      const result = await exportBookingReceiptPDF(booking.id, sessionId);
 
       if (!result.success) {
-        toast.error(result.error?.message ?? 'Unable to generate receipt.');
+        toast.error(actionError(result.error));
         return;
       }
 
@@ -73,7 +73,7 @@ export function ConfirmationActions({ booking }: ConfirmationActionsProps) {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch {
-      toast.error('Unable to generate receipt.');
+      toast.error(actionError(null));
     } finally {
       setIsDownloadingReceipt(false);
     }

@@ -1,6 +1,7 @@
 import { cache } from 'react';
 import { BookingStatus } from '@prisma/client';
 import { db } from '@/server/db';
+import { getCurrentWinery } from '@/server/queries/winery.queries';
 import { zurichTodayAsUTCDate } from '@/lib/business-rules/occurrence-expansion';
 
 /**
@@ -33,10 +34,7 @@ export interface ScanDayEntryDTO {
 export const getScanDayList = cache(async function getScanDayList(
   userId: string
 ): Promise<ScanDayEntryDTO[] | null> {
-  const winery = await db.winery.findUnique({
-    where: { userId },
-    select: { id: true },
-  });
+  const winery = await getCurrentWinery(userId);
   if (!winery) return null;
 
   const today = zurichTodayAsUTCDate();

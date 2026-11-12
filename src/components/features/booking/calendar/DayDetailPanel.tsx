@@ -21,6 +21,7 @@ import {
 } from '@/server/actions/availability';
 import { toast } from 'sonner';
 import { formatCHF } from '@/lib/utils/currency';
+import { useActionErrorMessage } from '@/hooks/useActionErrorMessage';
 
 interface DayBooking {
   id: string;
@@ -64,6 +65,7 @@ export function DayDetailPanel({
   onRefresh,
 }: DayDetailPanelProps) {
   const t = useTranslations('calendar');
+  const actionError = useActionErrorMessage();
   const locale = useLocale();
   const dateLocale = dateLocales[locale as keyof typeof dateLocales] || enUS;
   const [isBlocking, setIsBlocking] = useState(false);
@@ -82,7 +84,7 @@ export function DayDetailPanel({
         );
         onRefresh?.();
       } else {
-        toast.error(result.error?.message || t('blockError'));
+        toast.error(actionError(result.error));
       }
     } catch {
       toast.error(t('blockError'));
@@ -104,7 +106,7 @@ export function DayDetailPanel({
         );
         onRefresh?.();
       } else {
-        toast.error(result.error?.message || t('unblockError'));
+        toast.error(actionError(result.error));
       }
     } catch {
       toast.error(t('unblockError'));

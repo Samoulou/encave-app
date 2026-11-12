@@ -2,7 +2,7 @@ import { notFound, redirect } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { ArrowLeft } from 'lucide-react';
 import { auth } from '@/server/auth';
-import { db } from '@/server/db';
+import { getCurrentWinery } from '@/server/queries/winery.queries';
 import { Link } from '@/i18n/navigation';
 import { Badge } from '@/components/ui/badge';
 import { WineryAccessGuard } from '@/components/features/winery/WineryAccessGuard';
@@ -52,10 +52,7 @@ export default async function PayoutDetailPage({
     notFound();
   }
 
-  const winery = await db.winery.findUnique({
-    where: { userId: session.user.id },
-    select: { stripeAccountId: true },
-  });
+  const winery = await getCurrentWinery(session.user.id);
   if (!winery?.stripeAccountId) {
     notFound();
   }

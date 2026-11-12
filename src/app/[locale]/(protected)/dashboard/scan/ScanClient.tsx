@@ -32,6 +32,7 @@ import {
   type ScanSubmitOutcome,
 } from '@/lib/scan/scan-queue';
 import type { ScanDayEntryDTO } from '@/server/queries/scan.queries';
+import { useActionErrorMessage } from '@/hooks/useActionErrorMessage';
 
 interface ScanClientProps {
   expectedSessionId?: string;
@@ -97,6 +98,7 @@ export function ScanClient({
   queueScope,
 }: ScanClientProps) {
   const t = useTranslations('scan');
+  const actionError = useActionErrorMessage();
   const scannerRef = useRef<{ stop: () => Promise<void> } | null>(null);
   const lastScanRef = useRef<{ value: string; at: number } | null>(null);
   const flushingRef = useRef(false);
@@ -280,12 +282,12 @@ export function ScanClient({
         } else {
           setState({
             type: 'error',
-            message: result.error.message || t('resultError'),
+            message: actionError(result.error),
           });
         }
       });
     },
-    [expectedSessionId, markScanned, t]
+    [expectedSessionId, markScanned, t, actionError]
   );
 
   const handleDecoded = useCallback(

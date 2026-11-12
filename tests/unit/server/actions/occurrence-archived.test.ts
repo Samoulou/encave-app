@@ -18,7 +18,7 @@ vi.mock('@/server/services/occurrence.service', () => ({
 }));
 
 vi.mock('@/server/actions/experience-helpers', () => ({
-  invalidateExperienceCaches: vi.fn(),
+  invalidateExperienceAvailabilityCaches: vi.fn(),
 }));
 
 vi.mock('next/cache', () => ({

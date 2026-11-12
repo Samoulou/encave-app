@@ -19,7 +19,8 @@
       "clearAll": "Tout effacer",
       "tryAgain": "Réessayer",
       "goHome": "Retour à l'accueil",
-      "signIn": "Se connecter"
+      "signIn": "Se connecter",
+      "close": "Fermer"
     },
     "labels": {
       "email": "Adresse e-mail",
@@ -162,6 +163,8 @@
       "forgotPasswordContactSupport": "Contactez le support pour réinitialiser votre mot de passe",
       "passwordPlaceholder": "Entrez votre mot de passe",
       "invalidCredentials": "Adresse e-mail ou mot de passe incorrect.",
+      "accountSuspended": "Ce compte est suspendu. Écrivez-nous à support@encave.ch pour en savoir plus.",
+      "socialSignInFailed": "La connexion avec Google n'a pas abouti. Si vous avez déjà un compte avec cette adresse, connectez-vous avec votre mot de passe ou recevez un code par e-mail.",
       "signingIn": "Connexion en cours...",
       "logIn": "Se connecter",
       "noAccount": "Nouveau sur EnCave?",
@@ -293,6 +296,70 @@
       "title": "Une envie particulière ?",
       "subtitle": "Décrivez votre moment idéal — un encaveur vous répond avec une offre personnalisée sous 48 h.",
       "cta": "Faire une demande"
+    },
+    "editorial": {
+      "heroImageAlt": "Vignes valaisannes",
+      "desktopEyebrow": "Expériences disponibles en Valais",
+      "desktopHeroTitle": "Le Valais,<br></br>une <em>cave</em><br></br>à ciel ouvert.",
+      "desktopHeroSubtitle": "Dégustations privées, visites de cave et ateliers proposés par les domaines valaisans disponibles sur EnCave.",
+      "sectionEyebrow": "Expériences disponibles",
+      "sectionTitle": "Réservez maintenant, partez selon vos disponibilités.",
+      "viewExperiences": "Voir les expériences",
+      "book": "Réserver",
+      "region": "Valais",
+      "wineriesCount": "{count, plural, =0 {Aucun domaine} one {# domaine} other {# domaines}}",
+      "viewMap": "Voir la carte",
+      "byMood": "Par envie",
+      "categories": {
+        "TASTING": {
+          "title": "Dégustations",
+          "description": "Expériences œnologiques",
+          "short": "Dégustation"
+        },
+        "CELLAR_VISIT": {
+          "title": "Visites de cave",
+          "description": "Dans les domaines",
+          "short": "Visite cave"
+        },
+        "VINEYARD_TOUR": {
+          "title": "Balades",
+          "description": "Dans les vignes",
+          "short": "Balade vigne"
+        },
+        "WORKSHOP": {
+          "title": "Ateliers",
+          "description": "Savoir-faire",
+          "short": "Atelier"
+        },
+        "FOOD_PAIRING": {
+          "title": "Accords mets-vins",
+          "description": "Tables locales",
+          "short": "Accords"
+        }
+      },
+      "trust": {
+        "cancellation": "Annulation selon la politique du domaine",
+        "payment": "Paiement sécurisé Stripe",
+        "duration": "Durées et horaires affichés par expérience",
+        "capacity": "Capacités indiquées par les domaines",
+        "region": "Expériences viticoles en Valais"
+      },
+      "mobileBadge": "Valais · expériences vérifiées",
+      "mobileHeroTitle": "Le vin, <em>chez ceux qui le font</em>.",
+      "mobileHeroSubtitle": "Dégustations, ateliers et vendanges réservés directement avec le vigneron.",
+      "viewAll": "Voir tout",
+      "featuredTitle": "À l'affiche",
+      "featuredSubtitle": "Une expérience disponible sur EnCave.",
+      "addToFavorites": "Ajouter aux favoris",
+      "maxCapacity": "max {count}",
+      "perPersonShort": "/ pers.",
+      "nearYou": "Près de vous",
+      "nav": {
+        "explore": "Explorer",
+        "favorites": "Favoris",
+        "bookings": "Réservations",
+        "account": "Compte"
+      }
     }
   },
   "experience": {
@@ -696,7 +763,9 @@
         "adding": "Ajout…",
         "add": "Ajouter"
       }
-    }
+    },
+    "addressSearchFailed": "Impossible de rechercher les adresses. Réessayez ou saisissez l'adresse manuellement.",
+    "addressNoResults": "Aucune adresse trouvée. Essayez une autre recherche ou saisissez l'adresse manuellement."
   },
   "booking": {
     "selectDate": "Choisissez une date",
@@ -938,7 +1007,20 @@
     "giftErrorEXPIRED": "Ce bon a expiré.",
     "giftErrorDEPLETED": "Ce bon est épuisé.",
     "giftErrorWRONG_EXPERIENCE": "Ce bon n’est valable que pour une autre expérience.",
-    "giftErrorGeneric": "Impossible d’appliquer ce code."
+    "giftErrorGeneric": "Impossible d’appliquer ce code.",
+    "eyebrow": "Paiement sécurisé",
+    "stripeBlurb": "Paiement par carte ou wallet, redirection sécurisée.",
+    "retry": "Réessayer",
+    "stepLabel": "Étape {step}",
+    "yourDetails": "Vos coordonnées",
+    "holdBadge": "Réservation tenue",
+    "expressPayment": "Paiement express",
+    "validation": {
+      "firstNameMin": "Le prénom doit contenir au moins 2 caractères.",
+      "lastNameMin": "Le nom doit contenir au moins 2 caractères.",
+      "emailInvalid": "Adresse e-mail invalide.",
+      "phoneInvalid": "Numéro de téléphone invalide."
+    }
   },
   "confirmation": {
     "bookingConfirmed": "Réservation confirmée !",
@@ -975,7 +1057,7 @@
     "guests": "Invités",
     "adult": "Adulte",
     "adults": "Adultes",
-    "includesTaxes": "Taxes et frais de service inclus",
+    "includesTaxes": "Prix TTC. EnCave n'est pas assujettie à la TVA à ce jour.",
     "valaisSwitzerland": "Valais, Suisse",
     "checkInTicket": "Billet d'enregistrement",
     "presentQRCode": "Présentez ce code QR à votre arrivée à la réception du domaine.",
@@ -1662,7 +1744,16 @@
     "clearAll": "Tout effacer",
     "capacityPill": "{count, plural, one {# personne} other {# personnes}}",
     "viewList": "Liste",
-    "viewMap": "Carte"
+    "viewMap": "Carte",
+    "refineEyebrow": "Découverte",
+    "refineTitle": "Affiner",
+    "mapEyebrow": "Domaines",
+    "placesCount": "{count, plural, =0 {Aucun lieu} one {# lieu} other {# lieux}}",
+    "availableExperiences": "Expériences disponibles",
+    "paginationLabel": "Pagination",
+    "previousPage": "Page précédente",
+    "nextPage": "Page suivante",
+    "searchExperiencesLabel": "Rechercher des expériences"
   },
   "errors": {
     "somethingWentWrong": "Une erreur s'est produite!",
@@ -1691,7 +1782,35 @@
     "fileTooLarge": "Le fichier est trop volumineux",
     "invalidFileType": "Type de fichier non valide",
     "uploadFailed": "Échec du téléchargement",
-    "errorId": "Identifiant d'erreur : {id}"
+    "errorId": "Identifiant d'erreur : {id}",
+    "codes": {
+      "UNAUTHORIZED": "Votre session a expiré. Veuillez vous reconnecter.",
+      "FORBIDDEN": "Vous n'avez pas les droits nécessaires pour effectuer cette action.",
+      "NOT_FOUND": "L'élément demandé est introuvable. Il a peut-être été supprimé.",
+      "VALIDATION_ERROR": "Certaines informations sont invalides. Vérifiez votre saisie et réessayez.",
+      "CONFLICT": "Cette action n'est plus possible : la situation a changé entre-temps. Actualisez la page.",
+      "RATE_LIMITED": "Trop de tentatives. Patientez quelques instants avant de réessayer.",
+      "STRIPE_ERROR": "Le service de paiement a rencontré un problème. Veuillez réessayer.",
+      "STRIPE_NOT_CONFIGURED": "Le paiement en ligne n'est pas disponible pour le moment.",
+      "STRIPE_NOT_READY": "Ce domaine ne peut pas encore encaisser de paiements en ligne.",
+      "NO_CAPACITY": "Il ne reste plus assez de places pour ce créneau.",
+      "OCCURRENCE_CLOSED": "Ce créneau n'est plus ouvert à la réservation.",
+      "DATE_BLOCKED": "Cette date n'est pas disponible.",
+      "INVALID_SLOT": "Ce créneau n'est pas disponible. Choisissez-en un autre.",
+      "FEE_CHANGED": "Le montant a changé depuis l'affichage de la page. Vérifiez le récapitulatif avant de continuer.",
+      "NO_SHOW_CHANGED": "Les conditions de non-présentation ont changé. Vérifiez-les avant de continuer.",
+      "WRONG_SESSION": "Ce billet correspond à une autre séance.",
+      "WRONG_DAY": "Ce billet n'est pas valable aujourd'hui.",
+      "PAYMENT_NOT_CONFIRMED": "Le paiement de cette réservation n'est pas encore confirmé.",
+      "BOOKING_CANCELLED": "Cette réservation a été annulée.",
+      "MARKED_NO_SHOW": "Cette réservation est marquée comme non présentée.",
+      "ALREADY_CHECKED_IN": "Ce billet a déjà été scanné.",
+      "CHECKED_IN": "Cette réservation a déjà été enregistrée à l'arrivée.",
+      "PAYMENT_FAILED": "Le paiement a échoué. Veuillez réessayer.",
+      "HAS_BOOKINGS": "Cette expérience a des réservations : elle ne peut pas être supprimée. Archivez-la plutôt.",
+      "SLOTS_OVERLAP": "Deux créneaux se chevauchent le même jour. Corrigez les horaires puis réessayez.",
+      "INTERNAL_ERROR": "Une erreur est survenue de notre côté. Veuillez réessayer."
+    }
   },
   "empty": {
     "noExperiences": "Aucune expérience trouvée",
@@ -1721,7 +1840,8 @@
     "getDirections": "Itinéraire",
     "mapLoadError": "Impossible de charger la carte",
     "locationDenied": "L'accès à la localisation a été refusé",
-    "locating": "Localisation..."
+    "locating": "Localisation...",
+    "viewMode": "Mode d'affichage"
   },
   "onboarding": {
     "step": "Étape {current} sur {total}",
@@ -2870,7 +2990,7 @@
     "offerDateLabel": "Date proposée",
     "offerGuestsLabel": "Nombre de personnes",
     "offerPriceLabel": "Prix total",
-    "offerPriceNote": "Prix tout compris, TVA incluse.",
+    "offerPriceNote": "Prix total, tout compris (TTC). EnCave n'est pas assujettie à la TVA à ce jour.",
     "offerExpiryLabel": "Valable jusqu'au {date}",
     "offerPayCta": "Payer et confirmer",
     "offerPaying": "Redirection vers le paiement…",
@@ -3113,7 +3233,8 @@
     "cta": "Créer mon compte",
     "creating": "Création…",
     "passwordTooShort": "Le mot de passe doit contenir au moins {min} caractères.",
-    "signInFailed": "Compte existant : mot de passe incorrect. Réessayez."
+    "signInFailed": "Compte existant : mot de passe incorrect. Réessayez.",
+    "verifyEmailFirst": "Confirmez d'abord votre adresse e-mail : ouvrez le lien que nous venons de vous envoyer, puis validez à nouveau ce formulaire."
   },
   "receipt": {
     "title": "Reçu de réservation",

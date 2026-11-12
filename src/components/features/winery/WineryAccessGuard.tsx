@@ -1,8 +1,9 @@
 import { auth } from '@/server/auth';
+import { getCurrentWinery } from '@/server/queries/winery.queries';
 import { db } from '@/server/db';
 import { redirect } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
-import Link from 'next/link';
+import { getLocale, getTranslations } from 'next-intl/server';
+import { Link } from '@/i18n/navigation';
 import {
   Card,
   CardContent,
@@ -23,16 +24,18 @@ interface WineryAccessGuardProps {
 export async function WineryAccessGuard({ children }: WineryAccessGuardProps) {
   const t = await getTranslations('winery.accessGuard');
   const session = await auth();
+  // Locale-prefixed targets: with `localePrefix: 'always'` a bare '/login'
+  // costs an extra 307 through the middleware and can land on the wrong
+  // locale.
+  const locale = await getLocale();
 
   if (!session?.user) {
-    redirect('/login');
+    redirect(`/${locale}/login`);
   }
 
   // Get winery directly from database (more reliable than JWT session role)
-  const winery = await db.winery.findUnique({
-    where: { userId: session.user.id },
-    select: { status: true, name: true },
-  });
+  // — the request-level cached lookup shared with the layout and the page.
+  const winery = await getCurrentWinery(session.user.id);
 
   // Check if user has a winery
   if (!winery) {
@@ -65,7 +68,7 @@ export async function WineryAccessGuard({ children }: WineryAccessGuardProps) {
     }
 
     // User has WINEMAKER role but no winery - redirect to onboarding
-    redirect('/onboarding/winery');
+    redirect(`/${locale}/onboarding/winery`);
   }
 
   // Handle different winery statuses
@@ -189,6 +192,6 @@ export async function WineryAccessGuard({ children }: WineryAccessGuardProps) {
       return <>{children}</>;
 
     default:
-      redirect('/onboarding/winery');
+      redirect(`/${locale}/onboarding/winery`);
   }
 }

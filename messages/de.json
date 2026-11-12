@@ -19,7 +19,8 @@
       "clearAll": "Alles loschen",
       "tryAgain": "Erneut versuchen",
       "goHome": "Zur Startseite",
-      "signIn": "Anmelden"
+      "signIn": "Anmelden",
+      "close": "Schliessen"
     },
     "labels": {
       "email": "E-Mail-Adresse",
@@ -162,6 +163,8 @@
       "forgotPasswordContactSupport": "Kontaktieren Sie den Support, um Ihr Passwort zuruckzusetzen",
       "passwordPlaceholder": "Geben Sie Ihr Passwort ein",
       "invalidCredentials": "E-Mail-Adresse oder Passwort ist falsch.",
+      "accountSuspended": "Dieses Konto ist gesperrt. Schreiben Sie uns an support@encave.ch, um mehr zu erfahren.",
+      "socialSignInFailed": "Die Anmeldung mit Google ist fehlgeschlagen. Wenn Sie bereits ein Konto mit dieser Adresse haben, melden Sie sich mit Ihrem Passwort an oder lassen Sie sich einen Code per E-Mail senden.",
       "signingIn": "Anmeldung...",
       "logIn": "Anmelden",
       "noAccount": "Neu bei EnCave?",
@@ -293,6 +296,70 @@
       "title": "Ein besonderer Wunsch?",
       "subtitle": "Beschreiben Sie Ihren idealen Moment — ein Winzer antwortet innerhalb von 48 Stunden mit einem persönlichen Angebot.",
       "cta": "Anfrage stellen"
+    },
+    "editorial": {
+      "heroImageAlt": "Walliser Rebberge",
+      "desktopEyebrow": "Verfügbare Erlebnisse im Wallis",
+      "desktopHeroTitle": "Das Wallis,<br></br>ein <em>Weinkeller</em><br></br>unter freiem Himmel.",
+      "desktopHeroSubtitle": "Private Degustationen, Kellerbesichtigungen und Workshops der Walliser Weingüter auf EnCave.",
+      "sectionEyebrow": "Verfügbare Erlebnisse",
+      "sectionTitle": "Jetzt buchen, kommen, wann es Ihnen passt.",
+      "viewExperiences": "Erlebnisse ansehen",
+      "book": "Buchen",
+      "region": "Wallis",
+      "wineriesCount": "{count, plural, =0 {Kein Weingut} one {# Weingut} other {# Weingüter}}",
+      "viewMap": "Karte ansehen",
+      "byMood": "Nach Lust und Laune",
+      "categories": {
+        "TASTING": {
+          "title": "Degustationen",
+          "description": "Weinerlebnisse",
+          "short": "Degustation"
+        },
+        "CELLAR_VISIT": {
+          "title": "Kellerbesichtigungen",
+          "description": "Auf den Weingütern",
+          "short": "Kellerbesuch"
+        },
+        "VINEYARD_TOUR": {
+          "title": "Spaziergänge",
+          "description": "In den Reben",
+          "short": "Rebenspaziergang"
+        },
+        "WORKSHOP": {
+          "title": "Workshops",
+          "description": "Handwerk",
+          "short": "Workshop"
+        },
+        "FOOD_PAIRING": {
+          "title": "Wein und Speisen",
+          "description": "Lokale Küche",
+          "short": "Pairing"
+        }
+      },
+      "trust": {
+        "cancellation": "Stornierung gemäss den Bedingungen des Weinguts",
+        "payment": "Sichere Zahlung mit Stripe",
+        "duration": "Dauer und Zeiten pro Erlebnis angegeben",
+        "capacity": "Platzzahl von den Weingütern angegeben",
+        "region": "Weinerlebnisse im Wallis"
+      },
+      "mobileBadge": "Wallis · geprüfte Erlebnisse",
+      "mobileHeroTitle": "Wein, <em>bei denen, die ihn machen</em>.",
+      "mobileHeroSubtitle": "Degustationen, Workshops und Weinlese direkt beim Winzer gebucht.",
+      "viewAll": "Alle ansehen",
+      "featuredTitle": "Im Fokus",
+      "featuredSubtitle": "Ein Erlebnis, das auf EnCave verfügbar ist.",
+      "addToFavorites": "Zu Favoriten hinzufügen",
+      "maxCapacity": "max. {count}",
+      "perPersonShort": "/ Pers.",
+      "nearYou": "In Ihrer Nähe",
+      "nav": {
+        "explore": "Entdecken",
+        "favorites": "Favoriten",
+        "bookings": "Buchungen",
+        "account": "Konto"
+      }
     }
   },
   "experience": {
@@ -696,7 +763,9 @@
         "adding": "Wird hinzugefügt…",
         "add": "Hinzufügen"
       }
-    }
+    },
+    "addressSearchFailed": "Die Adresssuche ist fehlgeschlagen. Versuchen Sie es erneut oder geben Sie die Adresse von Hand ein.",
+    "addressNoResults": "Keine Adresse gefunden. Versuchen Sie eine andere Suche oder geben Sie die Adresse von Hand ein."
   },
   "booking": {
     "selectDate": "Datum auswahlen",
@@ -938,7 +1007,20 @@
     "giftErrorEXPIRED": "Dieser Gutschein ist abgelaufen.",
     "giftErrorDEPLETED": "Dieser Gutschein ist aufgebraucht.",
     "giftErrorWRONG_EXPERIENCE": "Dieser Gutschein gilt nur für ein anderes Erlebnis.",
-    "giftErrorGeneric": "Code konnte nicht angewendet werden."
+    "giftErrorGeneric": "Code konnte nicht angewendet werden.",
+    "eyebrow": "Sichere Zahlung",
+    "stripeBlurb": "Zahlung per Karte oder Wallet, sichere Weiterleitung.",
+    "retry": "Erneut versuchen",
+    "stepLabel": "Schritt {step}",
+    "yourDetails": "Ihre Kontaktdaten",
+    "holdBadge": "Reservierung gehalten",
+    "expressPayment": "Express-Zahlung",
+    "validation": {
+      "firstNameMin": "Der Vorname muss mindestens 2 Zeichen enthalten.",
+      "lastNameMin": "Der Nachname muss mindestens 2 Zeichen enthalten.",
+      "emailInvalid": "Ungültige E-Mail-Adresse.",
+      "phoneInvalid": "Ungültige Telefonnummer."
+    }
   },
   "confirmation": {
     "bookingConfirmed": "Buchung bestatigt!",
@@ -975,7 +1057,7 @@
     "guests": "Gäste",
     "adult": "Erwachsener",
     "adults": "Erwachsene",
-    "includesTaxes": "Inklusive Steuern und Servicegebühren",
+    "includesTaxes": "Preise inkl. Steuern. EnCave ist derzeit nicht mehrwertsteuerpflichtig.",
     "valaisSwitzerland": "Wallis, Schweiz",
     "checkInTicket": "Check-in-Ticket",
     "presentQRCode": "Zeigen Sie diesen QR-Code bei Ihrer Ankunft am Empfang des Weinguts vor.",
@@ -1662,7 +1744,16 @@
     "clearAll": "Alle löschen",
     "capacityPill": "{count, plural, one {# Person} other {# Personen}}",
     "viewList": "Liste",
-    "viewMap": "Karte"
+    "viewMap": "Karte",
+    "refineEyebrow": "Entdecken",
+    "refineTitle": "Verfeinern",
+    "mapEyebrow": "Weingüter",
+    "placesCount": "{count, plural, =0 {Kein Ort} one {# Ort} other {# Orte}}",
+    "availableExperiences": "Verfügbare Erlebnisse",
+    "paginationLabel": "Seitennavigation",
+    "previousPage": "Vorherige Seite",
+    "nextPage": "Nächste Seite",
+    "searchExperiencesLabel": "Erlebnisse suchen"
   },
   "errors": {
     "somethingWentWrong": "Etwas ist schiefgelaufen!",
@@ -1691,7 +1782,35 @@
     "fileTooLarge": "Datei ist zu gross",
     "invalidFileType": "Ungultiger Dateityp",
     "uploadFailed": "Upload fehlgeschlagen",
-    "errorId": "Fehler-ID: {id}"
+    "errorId": "Fehler-ID: {id}",
+    "codes": {
+      "UNAUTHORIZED": "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.",
+      "FORBIDDEN": "Sie haben nicht die nötigen Rechte für diese Aktion.",
+      "NOT_FOUND": "Das gewünschte Element wurde nicht gefunden. Möglicherweise wurde es gelöscht.",
+      "VALIDATION_ERROR": "Einige Angaben sind ungültig. Bitte prüfen Sie Ihre Eingaben und versuchen Sie es erneut.",
+      "CONFLICT": "Diese Aktion ist nicht mehr möglich: Die Situation hat sich inzwischen geändert. Bitte laden Sie die Seite neu.",
+      "RATE_LIMITED": "Zu viele Versuche. Bitte warten Sie einen Moment und versuchen Sie es erneut.",
+      "STRIPE_ERROR": "Beim Zahlungsdienst ist ein Problem aufgetreten. Bitte versuchen Sie es erneut.",
+      "STRIPE_NOT_CONFIGURED": "Die Online-Zahlung ist derzeit nicht verfügbar.",
+      "STRIPE_NOT_READY": "Dieses Weingut kann noch keine Online-Zahlungen entgegennehmen.",
+      "NO_CAPACITY": "Für diesen Termin sind nicht mehr genügend Plätze frei.",
+      "OCCURRENCE_CLOSED": "Dieser Termin kann nicht mehr gebucht werden.",
+      "DATE_BLOCKED": "Dieses Datum ist nicht verfügbar.",
+      "INVALID_SLOT": "Dieser Termin ist nicht verfügbar. Bitte wählen Sie einen anderen.",
+      "FEE_CHANGED": "Der Betrag hat sich seit dem Laden der Seite geändert. Bitte prüfen Sie die Übersicht, bevor Sie fortfahren.",
+      "NO_SHOW_CHANGED": "Die Bedingungen bei Nichterscheinen haben sich geändert. Bitte prüfen Sie diese, bevor Sie fortfahren.",
+      "WRONG_SESSION": "Dieses Ticket gehört zu einem anderen Termin.",
+      "WRONG_DAY": "Dieses Ticket ist heute nicht gültig.",
+      "PAYMENT_NOT_CONFIRMED": "Die Zahlung für diese Buchung ist noch nicht bestätigt.",
+      "BOOKING_CANCELLED": "Diese Buchung wurde storniert.",
+      "MARKED_NO_SHOW": "Diese Buchung ist als nicht erschienen markiert.",
+      "ALREADY_CHECKED_IN": "Dieses Ticket wurde bereits gescannt.",
+      "CHECKED_IN": "Diese Buchung wurde bereits eingecheckt.",
+      "PAYMENT_FAILED": "Die Zahlung ist fehlgeschlagen. Bitte versuchen Sie es erneut.",
+      "HAS_BOOKINGS": "Für dieses Erlebnis gibt es Reservierungen: Es kann nicht gelöscht werden. Archivieren Sie es stattdessen.",
+      "SLOTS_OVERLAP": "Zwei Zeitfenster überschneiden sich am selben Tag. Korrigieren Sie die Zeiten und versuchen Sie es erneut.",
+      "INTERNAL_ERROR": "Bei uns ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut."
+    }
   },
   "empty": {
     "noExperiences": "Keine Erlebnisse gefunden",
@@ -1721,7 +1840,8 @@
     "getDirections": "Route berechnen",
     "mapLoadError": "Karte konnte nicht geladen werden",
     "locationDenied": "Standortzugriff wurde verweigert",
-    "locating": "Standort wird ermittelt..."
+    "locating": "Standort wird ermittelt...",
+    "viewMode": "Ansicht"
   },
   "onboarding": {
     "step": "Schritt {current} von {total}",
@@ -2870,7 +2990,7 @@
     "offerDateLabel": "Vorgeschlagenes Datum",
     "offerGuestsLabel": "Anzahl Personen",
     "offerPriceLabel": "Gesamtpreis",
-    "offerPriceNote": "Alles inklusive, MwSt. inbegriffen.",
+    "offerPriceNote": "Gesamtpreis, alles inklusive. EnCave ist derzeit nicht mehrwertsteuerpflichtig.",
     "offerExpiryLabel": "Gültig bis {date}",
     "offerPayCta": "Bezahlen und bestätigen",
     "offerPaying": "Weiterleitung zur Zahlung…",
@@ -3113,7 +3233,8 @@
     "cta": "Konto erstellen",
     "creating": "Wird erstellt…",
     "passwordTooShort": "Das Passwort muss mindestens {min} Zeichen lang sein.",
-    "signInFailed": "Konto existiert bereits: falsches Passwort. Versuchen Sie es erneut."
+    "signInFailed": "Konto existiert bereits: falsches Passwort. Versuchen Sie es erneut.",
+    "verifyEmailFirst": "Bestätigen Sie zuerst Ihre E-Mail-Adresse: Öffnen Sie den Link, den wir Ihnen soeben gesendet haben, und senden Sie dieses Formular dann erneut ab."
   },
   "receipt": {
     "title": "Buchungsbeleg",

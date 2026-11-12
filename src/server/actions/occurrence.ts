@@ -12,7 +12,7 @@ import {
   addPunctualOccurrencesSchema,
 } from '@/lib/validators/occurrence';
 import { createPunctualOccurrences } from '@/server/services/occurrence.service';
-import { invalidateExperienceCaches } from './experience-helpers';
+import { invalidateExperienceAvailabilityCaches } from './experience-helpers';
 
 /**
  * Owner-side occurrence management (P-05 / L-131, L-132).
@@ -69,10 +69,12 @@ const ARCHIVED_CONFLICT = {
 
 function invalidateOccurrenceCaches(
   experienceId: string,
-  winerySlug: string,
+  _winerySlug: string,
   experienceSlug: string
 ) {
-  invalidateExperienceCaches(winerySlug, experienceSlug);
+  // Availability-only change: this fiche + the catalogue's next-availability
+  // cache. The winery page and every other fiche stay cached (quality lot).
+  invalidateExperienceAvailabilityCaches(experienceSlug);
   // Forward-looking tag: occurrence reads are React.cache only today
   // (per-request), so fresh data comes from the action's router.refresh —
   // the tag exists so a future unstable_cache subscriber invalidates

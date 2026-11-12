@@ -27,7 +27,7 @@ export function ViewToggle({ className }: ViewToggleProps) {
         className
       )}
       role="radiogroup"
-      aria-label="View mode"
+      aria-label={t('viewMode')}
     >
       <button
         type="button"

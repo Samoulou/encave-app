@@ -184,11 +184,15 @@ vi.mock('@/server/db', () => ({
     experienceOccurrence: { findMany: vi.fn() },
     blockedDate: { findMany: vi.fn() },
     booking: { groupBy: vi.fn() },
+    // Soonest open, non-blacked-out occurrence per experience (LATERAL
+    // top-1). The SQL itself is exercised on real Postgres in
+    // tests/db/next-bookable-occurrences.test.ts — here it is a fixture.
+    $queryRaw: vi.fn(),
   },
 }));
 
 const { db } = await import('@/server/db');
-const { searchExperiences } =
+const { searchExperiences, normalizeSearchParams } =
   await import('@/server/queries/experience.queries');
 const { zurichTodayAsUTCDate } =
   await import('@/lib/business-rules/occurrence-expansion');
@@ -234,26 +238,20 @@ describe('searchExperiences date window (P-05 / L-110, refonte P-06 / D3)', () =
     vi.mocked(db.experienceOccurrence.findMany).mockResolvedValue([] as never);
     vi.mocked(db.blockedDate.findMany).mockResolvedValue([] as never);
     vi.mocked(db.booking.groupBy).mockResolvedValue([] as never);
+    vi.mocked(db.$queryRaw).mockResolvedValue([] as never);
   });
 
-  it('excludes an experience whose only OPEN occurrence sits on a blocked date', async () => {
+  it('keeps only the experiences the candidate query returns (a blacked-out day yields no candidate)', async () => {
     const day = new Date('2099-06-05T00:00:00.000Z');
-    vi.mocked(db.experienceOccurrence.findMany).mockResolvedValue([
-      {
-        experienceId: 'exp-blocked',
-        date: day,
-        startTime: '10:00',
-        capacityOverride: null,
-      },
+    // exp-blocked's only OPEN occurrence sits on a blocked date: the SQL
+    // (NOT EXISTS blocked_dates) returns no row for it.
+    vi.mocked(db.$queryRaw).mockResolvedValue([
       {
         experienceId: 'exp-free',
         date: day,
         startTime: '10:00',
         capacityOverride: null,
       },
-    ] as never);
-    vi.mocked(db.blockedDate.findMany).mockResolvedValue([
-      { experienceId: 'exp-blocked', date: day },
     ] as never);
     routeExperienceFindMany({
       capacities: [
@@ -278,7 +276,7 @@ describe('searchExperiences date window (P-05 / L-110, refonte P-06 / D3)', () =
 
   it('excludes a FULL slot from the date window (P-06 / D3)', async () => {
     const day = new Date('2099-06-05T00:00:00.000Z');
-    vi.mocked(db.experienceOccurrence.findMany).mockResolvedValue([
+    vi.mocked(db.$queryRaw).mockResolvedValue([
       {
         experienceId: 'exp-full',
         date: day,
@@ -323,18 +321,102 @@ describe('searchExperiences date window (P-05 / L-110, refonte P-06 / D3)', () =
         where: expect.objectContaining({ id: { in: ['exp-open'] } }),
       })
     );
+    // The seat count goes through the shared capacity predicate, on the
+    // candidate slots only.
+    const seatWhere = vi.mocked(db.booking.groupBy).mock.calls[0]?.[0]
+      ?.where as { AND?: unknown[] } | undefined;
+    expect(seatWhere?.AND).toHaveLength(2);
+    // Soonest slot sold out → the exhaustive scan runs, restricted to
+    // that experience (never the whole catalogue).
+    expect(db.experienceOccurrence.findMany).toHaveBeenCalledTimes(1);
+    expect(db.experienceOccurrence.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          experienceId: { in: ['exp-full'] },
+        }),
+      })
+    );
+  });
+
+  it('falls back to a later slot when the soonest one is sold out', async () => {
+    const day = new Date('2099-06-05T00:00:00.000Z');
+    vi.mocked(db.$queryRaw).mockResolvedValue([
+      {
+        experienceId: 'exp-busy',
+        date: day,
+        startTime: '10:00',
+        capacityOverride: null,
+      },
+    ] as never);
+    // Same fixture serves the candidate seat count and the fallback scan.
+    vi.mocked(db.booking.groupBy).mockResolvedValue([
+      {
+        experienceId: 'exp-busy',
+        date: day,
+        timeSlot: '10:00',
+        _sum: { guestCount: 8 },
+      },
+    ] as never);
+    vi.mocked(db.experienceOccurrence.findMany).mockResolvedValue([
+      {
+        experienceId: 'exp-busy',
+        date: day,
+        startTime: '10:00',
+        capacityOverride: null,
+      },
+      {
+        experienceId: 'exp-busy',
+        date: day,
+        startTime: '14:00',
+        capacityOverride: null,
+      },
+    ] as never);
+    routeExperienceFindMany({
+      capacities: [{ id: 'exp-busy', maxCapacity: 8 }],
+    });
+
+    await searchExperiences({ availableFrom: '2099-06-05', sort: 'newest' });
+
+    expect(db.experience.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ id: { in: ['exp-busy'] } }),
+      })
+    );
+  });
+
+  it('does not read occurrences in the common case (every soonest slot has seats)', async () => {
+    const day = new Date('2099-06-05T00:00:00.000Z');
+    vi.mocked(db.$queryRaw).mockResolvedValue([
+      {
+        experienceId: 'exp-a',
+        date: day,
+        startTime: '10:00',
+        capacityOverride: null,
+      },
+    ] as never);
+    routeExperienceFindMany({ capacities: [{ id: 'exp-a', maxCapacity: 8 }] });
+
+    await searchExperiences({ availableFrom: '2099-06-05', sort: 'newest' });
+
+    expect(db.$queryRaw).toHaveBeenCalledTimes(1);
+    expect(db.experienceOccurrence.findMany).not.toHaveBeenCalled();
+    expect(db.blockedDate.findMany).not.toHaveBeenCalled();
   });
 
   it('clamps a past availableFrom to today (Zurich)', async () => {
+    routeExperienceFindMany({ capacities: [{ id: 'exp-a', maxCapacity: 8 }] });
+
     await searchExperiences({
       availableFrom: '2020-01-01',
       availableTo: '2099-12-31',
       sort: 'newest',
     });
 
-    const args = vi.mocked(db.experienceOccurrence.findMany).mock.calls[0]?.[0];
-    const gte = (args?.where?.date as { gte?: Date } | undefined)?.gte;
-    expect(gte?.getTime()).toBe(zurichTodayAsUTCDate().getTime());
+    // Tagged template: [strings, ...values] — the window's lower bound is
+    // passed as a calendar key.
+    const values = vi.mocked(db.$queryRaw).mock.calls[0]?.slice(1) ?? [];
+    expect(values).toContain(zurichTodayAsUTCDate().toISOString().slice(0, 10));
+    expect(values).not.toContain('2020-01-01');
   });
 
   it('a window entirely in the past matches nothing without querying occurrences', async () => {
@@ -345,6 +427,7 @@ describe('searchExperiences date window (P-05 / L-110, refonte P-06 / D3)', () =
     });
 
     expect(db.experienceOccurrence.findMany).not.toHaveBeenCalled();
+    expect(db.$queryRaw).not.toHaveBeenCalled();
     expect(db.experience.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ id: { in: [] } }),
@@ -397,11 +480,13 @@ describe('searchExperiences date window (P-05 / L-110, refonte P-06 / D3)', () =
       winery: WINERY,
     });
 
-    vi.mocked(db.experienceOccurrence.findMany).mockResolvedValue([
-      // exp-1: first occurrence blacked out -> bookable date is freeDay
+    // exp-1: its first occurrence (blockedDay) is blacked out — the SQL
+    // skips it and returns freeDay as the soonest candidate.
+    expect(blockedDay.getTime()).toBeLessThan(soonerDay.getTime());
+    vi.mocked(db.$queryRaw).mockResolvedValue([
       {
         experienceId: 'exp-1',
-        date: blockedDay,
+        date: freeDay,
         startTime: '10:00',
         capacityOverride: null,
       },
@@ -411,15 +496,6 @@ describe('searchExperiences date window (P-05 / L-110, refonte P-06 / D3)', () =
         startTime: '10:00',
         capacityOverride: null,
       },
-      {
-        experienceId: 'exp-1',
-        date: freeDay,
-        startTime: '10:00',
-        capacityOverride: null,
-      },
-    ] as never);
-    vi.mocked(db.blockedDate.findMany).mockResolvedValue([
-      { experienceId: 'exp-1', date: blockedDay },
     ] as never);
     routeExperienceFindMany({
       capacities: [
@@ -439,6 +515,75 @@ describe('searchExperiences date window (P-05 / L-110, refonte P-06 / D3)', () =
     expect(result.experiences.map((e) => e.id)).toEqual(['exp-2', 'exp-1']);
     expect(result.experiences[1]?.nextOccurrence?.date.getTime()).toBe(
       freeDay.getTime()
+    );
+  });
+});
+
+describe('search cache key (quality lot B6)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(db.experience.findMany).mockResolvedValue([] as never);
+    vi.mocked(db.experience.count).mockResolvedValue(0 as never);
+    vi.mocked(db.$queryRaw).mockResolvedValue([] as never);
+  });
+
+  it('serialises equivalent requests identically', () => {
+    const a = normalizeSearchParams({
+      type: ['WORKSHOP', 'TASTING', 'TASTING'],
+      commune: ' Sion ',
+      sort: 'newest',
+    });
+    const b = normalizeSearchParams({
+      sort: 'newest',
+      commune: 'Sion',
+      page: 1,
+      limit: 20,
+      type: ['TASTING', 'WORKSHOP'],
+      search: undefined,
+    });
+    expect(JSON.stringify(a)).toBe(JSON.stringify(b));
+  });
+
+  it('trims, collapses and lower-cases the free text', () => {
+    expect(normalizeSearchParams({ search: '  Petite   ARVINE ' }).search).toBe(
+      'petite arvine'
+    );
+    expect('search' in normalizeSearchParams({ search: '   ' })).toBe(false);
+  });
+
+  it('rounds coordinates so a raw GPS fix does not mint a new key', () => {
+    const a = normalizeSearchParams({
+      location: 'sion',
+      lat: 46.2331234,
+      lng: 7.3601111,
+    });
+    const b = normalizeSearchParams({
+      location: 'sion',
+      lat: 46.2330999,
+      lng: 7.3600888,
+    });
+    expect(a).toEqual(b);
+    expect(a.lat).toBe(46.233);
+  });
+
+  it('sanitises page and limit', () => {
+    expect(normalizeSearchParams({ page: -3, limit: 0 })).toMatchObject({
+      page: 1,
+      limit: 1,
+    });
+  });
+
+  it('runs the search with the normalised text', async () => {
+    await searchExperiences({ search: '  Fendant ', sort: 'newest' });
+
+    expect(db.experience.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          OR: expect.arrayContaining([
+            { title: { contains: 'fendant', mode: 'insensitive' } },
+          ]),
+        }),
+      })
     );
   });
 });

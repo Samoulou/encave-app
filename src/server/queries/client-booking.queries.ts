@@ -1,15 +1,7 @@
 import { cache } from 'react';
 import { db } from '@/server/db';
 import { BookingStatus, type ExperienceType } from '@prisma/client';
-
-/**
- * Convert a local date to UTC date, preserving the local date components.
- */
-function localDateToUTC(date: Date): Date {
-  return new Date(
-    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
-  );
-}
+import { localDateToUTC } from '@/lib/i18n/formatters';
 
 export interface ClientBookingWithDetails {
   id: string;

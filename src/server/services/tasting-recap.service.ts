@@ -9,6 +9,7 @@ import {
   logEmailSent,
   logEmailSkipped,
 } from '@/server/services/email-log.service';
+import { getClientUnsubscribe } from '@/server/services/email-preferences.service';
 import type { ScheduledJobHandlerResult } from '@/server/services/scheduled-jobs.service';
 
 /**
@@ -76,14 +77,8 @@ export async function processTastingRecapJob(
 
   // Client opt-out (A4): get-or-create the per-email preference row — the
   // unsubscribe token must exist before we link to it from the footer.
-  const email = booking.visitorEmail.toLowerCase();
-  const preference = await db.clientEmailPreference.upsert({
-    where: { email },
-    update: {},
-    create: { email },
-    select: { marketingOptOut: true, unsubscribeToken: true },
-  });
-  if (preference.marketingOptOut) {
+  const preference = await getClientUnsubscribe(booking.visitorEmail);
+  if (preference.optedOut) {
     await logEmailSkipped(
       'tasting_recap',
       booking.visitorEmail,
@@ -113,7 +108,7 @@ export async function processTastingRecapJob(
       wineryName: booking.winery.name,
       wines: booking.wines.map(({ wine }) => wine),
       orderUrl: `${getBaseUrl()}/${localePath}/booking/${booking.id}/commande?token=${recapToken}`,
-      unsubscribeUrl: `${getBaseUrl()}/api/unsubscribe/client/${preference.unsubscribeToken}`,
+      unsubscribeUrl: preference.unsubscribeUrl,
     },
     booking.locale
   );

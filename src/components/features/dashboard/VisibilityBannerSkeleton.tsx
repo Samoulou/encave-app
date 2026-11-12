@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import { Skeleton, SkeletonContainer } from '@/components/shared/Skeleton';
 
 /**
@@ -7,9 +8,11 @@ import { Skeleton, SkeletonContainer } from '@/components/shared/Skeleton';
  * when the banner streams in.
  */
 export function VisibilityBannerSkeleton() {
+  // Dashboard-only (dynamic routes): safe to resolve the locale here.
+  const t = useTranslations('common');
   return (
     <SkeletonContainer
-      label="Chargement du statut de visibilité..."
+      label={t('loading')}
       className="rounded-xl border border-stone-200 bg-card p-5 sm:p-6"
     >
       <div className="min-h-[260px] space-y-3">

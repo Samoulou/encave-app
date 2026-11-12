@@ -146,6 +146,7 @@ interface PaginationProps {
 }
 
 function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
+  const t = useTranslations('search');
   // Generate page numbers to show (max 5 visible)
   const getVisiblePages = () => {
     const pages: number[] = [];
@@ -168,14 +169,14 @@ function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
   return (
     <nav
       className="flex items-center justify-center gap-1"
-      aria-label="Pagination"
+      aria-label={t('paginationLabel')}
     >
       <Button
         variant="outline"
         size="sm"
         onClick={() => onPageChange(page - 1)}
         disabled={page <= 1}
-        aria-label="Previous page"
+        aria-label={t('previousPage')}
       >
         <ChevronLeft className="h-4 w-4" />
       </Button>
@@ -236,7 +237,7 @@ function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
         size="sm"
         onClick={() => onPageChange(page + 1)}
         disabled={page >= totalPages}
-        aria-label="Next page"
+        aria-label={t('nextPage')}
       >
         <ChevronRight className="h-4 w-4" />
       </Button>

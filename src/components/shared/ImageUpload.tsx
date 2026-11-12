@@ -69,10 +69,11 @@ export function ImageUpload({
       const url = await onUpload(file);
       onChange(url);
       setPreview(null);
-    } catch (err) {
+    } catch {
+      // The upload action logs the cause server-side; the user gets the
+      // translated message.
       setError(t('errorUploadFailed'));
       setPreview(null);
-      console.error('Upload error:', err);
     } finally {
       setIsUploading(false);
     }

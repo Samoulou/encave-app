@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { MapPin, Loader2, X, AlertCircle } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
@@ -42,10 +43,11 @@ interface AddressAutocompleteProps {
 export function AddressAutocomplete({
   value,
   onChange,
-  placeholder = 'Search for an address...',
+  placeholder,
   className,
   id,
 }: AddressAutocompleteProps) {
+  const t = useTranslations('experience');
   const [query, setQuery] = useState(value.fullAddress || '');
   const [suggestions, setSuggestions] = useState<NominatimResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -71,52 +73,54 @@ export function AddressAutocomplete({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const searchAddress = useCallback(async (searchQuery: string) => {
-    if (searchQuery.length < 3) {
-      setSuggestions([]);
-      setNoResults(false);
-      setError(null);
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-    setNoResults(false);
-
-    try {
-      // Use server-side proxy to avoid CORS and User-Agent issues
-      const response = await fetch(
-        `/api/geocode/search?q=${encodeURIComponent(searchQuery)}`
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Search failed');
-      }
-
-      const data = await response.json();
-
-      if (Array.isArray(data)) {
-        setSuggestions(data);
-        setIsOpen(data.length > 0);
-        setNoResults(data.length === 0);
-        setSelectedIndex(-1);
-      } else if (data.error) {
-        throw new Error(data.error);
-      } else {
+  const searchAddress = useCallback(
+    async (searchQuery: string) => {
+      if (searchQuery.length < 3) {
         setSuggestions([]);
-        setNoResults(true);
+        setNoResults(false);
+        setError(null);
+        return;
       }
-    } catch (err) {
-      console.error('Address search error:', err);
-      setSuggestions([]);
-      setError(
-        'Unable to search addresses. Please try again or enter manually.'
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+
+      setIsLoading(true);
+      setError(null);
+      setNoResults(false);
+
+      try {
+        // Use server-side proxy to avoid CORS and User-Agent issues
+        const response = await fetch(
+          `/api/geocode/search?q=${encodeURIComponent(searchQuery)}`
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || 'Search failed');
+        }
+
+        const data = await response.json();
+
+        if (Array.isArray(data)) {
+          setSuggestions(data);
+          setIsOpen(data.length > 0);
+          setNoResults(data.length === 0);
+          setSelectedIndex(-1);
+        } else if (data.error) {
+          throw new Error(data.error);
+        } else {
+          setSuggestions([]);
+          setNoResults(true);
+        }
+      } catch {
+        // The geocoding proxy logs its own failures server-side; here the
+        // user just needs a translated way out (manual entry).
+        setSuggestions([]);
+        setError(t('addressSearchFailed'));
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [t]
+  );
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newQuery = e.target.value;
@@ -215,7 +219,7 @@ export function AddressAutocomplete({
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
           onFocus={() => suggestions.length > 0 && setIsOpen(true)}
-          placeholder={placeholder}
+          placeholder={placeholder ?? t('addressSearchPlaceholder')}
           className="h-12 border-stone-200 bg-muted pl-10 pr-10"
           autoComplete="off"
         />
@@ -260,8 +264,7 @@ export function AddressAutocomplete({
       {noResults && !isLoading && query.length >= 3 && (
         <div className="absolute z-50 mt-1 w-full rounded-lg border border-stone-200 bg-white p-4 shadow-lg">
           <p className="text-center text-sm text-muted-foreground">
-            No addresses found. Try a different search or enter the address
-            manually below.
+            {t('addressNoResults')}
           </p>
         </div>
       )}
