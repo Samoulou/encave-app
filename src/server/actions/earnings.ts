@@ -5,6 +5,7 @@ import { db } from '@/server/db';
 import { format } from 'date-fns';
 import type { ActionResult } from '@/types/actions';
 import { logError } from '@/lib/logger';
+import { escapeCsvField } from '@/lib/utils/csv';
 import {
   getTransactions,
   getYearToDateSummary,
@@ -60,8 +61,9 @@ export async function exportEarningsCSV(
 
     const rows = transactions.map((t) => [
       format(t.date, 'yyyy-MM-dd'),
-      `"${t.experienceTitle.replace(/"/g, '""')}"`,
-      t.reference,
+      // Winemaker-controlled text: quoted AND formula-neutralized.
+      escapeCsvField(t.experienceTitle),
+      escapeCsvField(t.reference),
       t.guestCount.toString(),
       (t.grossAmount / 100).toFixed(2),
       (t.platformFee / 100).toFixed(2),

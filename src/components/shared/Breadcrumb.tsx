@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useLocale } from 'next-intl';
 import { ChevronRight, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { serializeJsonLd } from '@/lib/utils/json-ld';
 
 interface BreadcrumbItem {
   label: string;
@@ -55,7 +56,9 @@ export function Breadcrumb({
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+        dangerouslySetInnerHTML={{
+          __html: serializeJsonLd(breadcrumbSchema),
+        }}
       />
       <nav aria-label="Breadcrumb" className={cn('flex', className)}>
         <ol className="flex flex-wrap items-center gap-1.5 text-sm">

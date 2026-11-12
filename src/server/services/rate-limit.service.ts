@@ -6,6 +6,7 @@
  */
 
 import { env } from '@/lib/env';
+import { isE2ETest } from '@/lib/e2e-mode';
 import { logWarn, logError } from '@/lib/logger';
 
 interface RateLimitEntry {
@@ -179,7 +180,7 @@ export async function checkRateLimit(
   // per-IP budgets serialize/starve unrelated specs. Same convention as
   // the better-auth rateLimit (P-14: enabled unless E2E_TEST). The rate
   // limiting logic itself keeps its own unit tests.
-  if (process.env.E2E_TEST === 'true') {
+  if (isE2ETest()) {
     return {
       success: true,
       remaining: config.maxRequests,

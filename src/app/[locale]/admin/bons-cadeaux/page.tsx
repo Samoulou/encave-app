@@ -8,6 +8,7 @@ import {
   getGiftCardLiabilityCents,
 } from '@/server/queries/giftCard.queries';
 import { AdminGiftCardsTable } from '@/components/features/admin/AdminGiftCardsTable';
+import { requireAdminPage } from '@/server/admin-page-guard';
 
 interface Props {
   params: Promise<{ locale: string }>;
@@ -23,6 +24,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function AdminGiftCardsPage({ params }: Props) {
+  // Defence in depth: the admin layout is skipped on RSC navigations —
+  // every admin page authorizes itself before reading anything.
+  await requireAdminPage();
+
   const { locale } = await params;
   setRequestLocale(locale);
 

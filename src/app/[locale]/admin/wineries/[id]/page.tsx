@@ -11,6 +11,7 @@ import { getWineryHistory } from '@/server/queries/admin-wineries.queries';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
+import { requireAdminPage } from '@/server/admin-page-guard';
 
 export async function generateMetadata({
   params,
@@ -51,6 +52,10 @@ async function getWinery(id: string) {
 export default async function WineryDetailPage({
   params,
 }: WineryDetailPageProps) {
+  // Defence in depth: the admin layout is skipped on RSC navigations —
+  // every admin page authorizes itself before reading anything.
+  await requireAdminPage();
+
   const { id } = await params;
   const [winery, history, t] = await Promise.all([
     getWinery(id),

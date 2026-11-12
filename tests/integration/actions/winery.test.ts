@@ -43,6 +43,13 @@ const mockDb = vi.mocked(db);
 const mockPut = vi.mocked(put);
 const mockDel = vi.mocked(del);
 
+// Blob URLs of the caller's own upload folder (uploadWineryImage writes
+// under wineries/{userId}/) and of another tenant — see blob-ownership.ts.
+const OWNED_BLOB_BASE =
+  'https://store123.public.blob.vercel-storage.com/wineries/user-123';
+const FOREIGN_BLOB_URL =
+  'https://store123.public.blob.vercel-storage.com/wineries/user-999/cover.jpg';
+
 describe('Winery Profile Actions Integration Tests', () => {
   const mockSession: Session = {
     user: {
@@ -317,7 +324,7 @@ describe('Winery Profile Actions Integration Tests', () => {
 
     it('successfully sets cover photo', async () => {
       const updatedAt = new Date();
-      const newCoverUrl = 'https://blob.vercel-storage.com/new-cover.jpg';
+      const newCoverUrl = `${OWNED_BLOB_BASE}/new-cover.jpg`;
 
       mockAuth.mockResolvedValueOnce(mockSession);
       mockDb.winery.findUnique.mockResolvedValueOnce(mockWinery);
@@ -340,8 +347,8 @@ describe('Winery Profile Actions Integration Tests', () => {
     });
 
     it('deletes old cover photo when replacing', async () => {
-      const oldCoverUrl = 'https://blob.vercel-storage.com/old-cover.jpg';
-      const newCoverUrl = 'https://blob.vercel-storage.com/new-cover.jpg';
+      const oldCoverUrl = `${OWNED_BLOB_BASE}/old-cover.jpg`;
+      const newCoverUrl = `${OWNED_BLOB_BASE}/new-cover.jpg`;
 
       mockAuth.mockResolvedValueOnce(mockSession);
       mockDb.winery.findUnique.mockResolvedValueOnce({
@@ -360,6 +367,56 @@ describe('Winery Profile Actions Integration Tests', () => {
       expect(result.success).toBe(true);
       expect(mockDel).toHaveBeenCalledWith(oldCoverUrl);
     });
+
+    it.each([
+      ['another tenant blob', FOREIGN_BLOB_URL],
+      ['a foreign host', 'https://example.com/photo.jpg'],
+      [
+        'an owned-looking query string',
+        `${FOREIGN_BLOB_URL}?wineries/user-123/`,
+      ],
+    ])('refuses %s and never stores or deletes it', async (_label, url) => {
+      mockAuth.mockResolvedValueOnce(mockSession);
+      mockDb.winery.findUnique.mockResolvedValueOnce(mockWinery);
+
+      const result = await updateWineryCoverPhoto(url);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe('VALIDATION_ERROR');
+      }
+      expect(mockDb.winery.update).not.toHaveBeenCalled();
+      expect(mockDel).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['another tenant blob', FOREIGN_BLOB_URL],
+      ['a seed/Unsplash cover', 'https://images.unsplash.com/photo-1?w=800'],
+      ['a local path', '/images/hero.jpg'],
+    ])(
+      'never passes a stored %s to del() when replacing or clearing',
+      async (_label, storedUrl) => {
+        mockAuth.mockResolvedValueOnce(mockSession);
+        mockDb.winery.findUnique.mockResolvedValueOnce({
+          ...mockWinery,
+          coverPhoto: storedUrl,
+        });
+        mockDb.winery.update.mockResolvedValueOnce({
+          ...mockWinery,
+          coverPhoto: null,
+          updatedAt: new Date(),
+        });
+
+        const result = await updateWineryCoverPhoto(null);
+
+        expect(result.success).toBe(true);
+        expect(mockDel).not.toHaveBeenCalled();
+        expect(mockDb.winery.update).toHaveBeenCalledWith({
+          where: { id: mockWinery.id },
+          data: { coverPhoto: null },
+        });
+      }
+    );
 
     it('allows removing cover photo by passing null', async () => {
       mockAuth.mockResolvedValueOnce(mockSession);
@@ -411,7 +468,7 @@ describe('Winery Profile Actions Integration Tests', () => {
         galleryImages: Array(6).fill({ id: 'img', url: 'url', order: 1 }),
       });
 
-      const result = await addGalleryImage('https://example.com/photo.jpg');
+      const result = await addGalleryImage(`${OWNED_BLOB_BASE}/photo.jpg`);
 
       expect(result.success).toBe(false);
       if (!result.success) {
@@ -420,12 +477,31 @@ describe('Winery Profile Actions Integration Tests', () => {
       }
     });
 
+    it.each([
+      ['another tenant blob', FOREIGN_BLOB_URL],
+      ['a foreign host', 'https://example.com/photo.jpg'],
+    ])('refuses %s', async (_label, url) => {
+      mockAuth.mockResolvedValueOnce(mockSession);
+      mockDb.winery.findUnique.mockResolvedValueOnce({
+        ...mockWinery,
+        galleryImages: [],
+      });
+
+      const result = await addGalleryImage(url);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe('VALIDATION_ERROR');
+      }
+      expect(mockDb.wineryGalleryImage.create).not.toHaveBeenCalled();
+    });
+
     it('successfully adds gallery image with correct order', async () => {
       const existingImages = [
         { id: 'img-1', url: 'url1', order: 1 },
         { id: 'img-2', url: 'url2', order: 2 },
       ];
-      const newImageUrl = 'https://blob.vercel-storage.com/gallery.jpg';
+      const newImageUrl = `${OWNED_BLOB_BASE}/gallery.jpg`;
 
       mockAuth.mockResolvedValueOnce(mockSession);
       mockDb.winery.findUnique.mockResolvedValueOnce({
@@ -498,7 +574,7 @@ describe('Winery Profile Actions Integration Tests', () => {
     it('successfully removes gallery image and deletes from blob', async () => {
       const imageToRemove = {
         id: 'img-123',
-        url: 'https://blob.vercel-storage.com/gallery.jpg',
+        url: `${OWNED_BLOB_BASE}/gallery.jpg`,
         order: 1,
         wineryId: mockWinery.id,
         createdAt: new Date(),
@@ -519,6 +595,29 @@ describe('Winery Profile Actions Integration Tests', () => {
       expect(mockDel).toHaveBeenCalledWith(imageToRemove.url);
       expect(mockDb.wineryGalleryImage.delete).toHaveBeenCalledWith({
         where: { id: 'img-123' },
+      });
+    });
+
+    it('drops a legacy row holding a foreign URL without calling del()', async () => {
+      const legacyImage = {
+        id: 'img-legacy',
+        url: FOREIGN_BLOB_URL,
+        order: 1,
+        wineryId: mockWinery.id,
+        createdAt: new Date(),
+      };
+
+      mockAuth.mockResolvedValueOnce(mockSession);
+      mockDb.winery.findUnique.mockResolvedValueOnce(mockWinery);
+      mockDb.wineryGalleryImage.findFirst.mockResolvedValueOnce(legacyImage);
+      mockDb.wineryGalleryImage.delete.mockResolvedValueOnce(legacyImage);
+
+      const result = await removeGalleryImage('img-legacy');
+
+      expect(result.success).toBe(true);
+      expect(mockDel).not.toHaveBeenCalled();
+      expect(mockDb.wineryGalleryImage.delete).toHaveBeenCalledWith({
+        where: { id: 'img-legacy' },
       });
     });
 

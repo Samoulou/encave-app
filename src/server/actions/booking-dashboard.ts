@@ -7,6 +7,7 @@ import { BookingStatus } from '@prisma/client';
 import { format } from 'date-fns';
 import type { ActionResult } from '@/types/actions';
 import { logError } from '@/lib/logger';
+import { escapeCsvField } from '@/lib/utils/csv';
 import {
   getWineryBookings,
   type BookingFilters,
@@ -203,22 +204,16 @@ export async function exportBookingsToCSV(
       }
     };
 
-    // Escape CSV field (handle quotes and commas)
-    const escapeCSV = (value: string): string => {
-      if (value.includes(',') || value.includes('"') || value.includes('\n')) {
-        return `"${value.replace(/"/g, '""')}"`;
-      }
-      return value;
-    };
-
     // Generate CSV rows
     const rows = bookings.map((booking) => [
       format(new Date(booking.date), 'yyyy-MM-dd'),
       booking.timeSlot,
-      escapeCSV(booking.experience.title),
-      escapeCSV(booking.visitorName),
-      escapeCSV(booking.visitorEmail),
-      escapeCSV(booking.visitorPhone),
+      // Guest- and winemaker-controlled text: quoted AND formula-neutralized
+      // (a visitor name like `=HYPERLINK(…)` must never run in Excel).
+      escapeCsvField(booking.experience.title),
+      escapeCsvField(booking.visitorName),
+      escapeCsvField(booking.visitorEmail),
+      escapeCsvField(booking.visitorPhone),
       booking.guestCount.toString(),
       formatStatus(booking.status),
       (booking.totalPrice / 100).toFixed(2),

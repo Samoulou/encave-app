@@ -11,6 +11,7 @@ import { AdminSuspensionControls } from '@/components/features/admin/AdminSuspen
 import { AdminRefundControls } from '@/components/features/admin/AdminRefundControls';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
+import { requireAdminPage } from '@/server/admin-page-guard';
 
 export async function generateMetadata({
   params,
@@ -32,6 +33,10 @@ interface AdminBookingsPageProps {
 export default async function AdminBookingsPage({
   searchParams,
 }: AdminBookingsPageProps) {
+  // Defence in depth: the admin layout is skipped on RSC navigations —
+  // every admin page authorizes itself before reading anything.
+  await requireAdminPage();
+
   const filters = await searchParams;
   const q = filters.q?.trim() ?? '';
   const status =

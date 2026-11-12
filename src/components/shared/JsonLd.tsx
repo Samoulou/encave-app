@@ -1,6 +1,10 @@
+import { serializeJsonLd } from '@/lib/utils/json-ld';
+
 /**
  * SEO-001 to SEO-005: JSON-LD Structured Data Component
- * Renders schema.org structured data for SEO
+ * Renders schema.org structured data for SEO. The payload carries
+ * user-controlled strings (titles, descriptions) — always serialized with
+ * serializeJsonLd so `</script>` can never break out of the block.
  */
 
 interface JsonLdProps {
@@ -12,7 +16,7 @@ export function JsonLd({ data }: JsonLdProps) {
     <script
       type="application/ld+json"
       suppressHydrationWarning
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+      dangerouslySetInnerHTML={{ __html: serializeJsonLd(data) }}
     />
   );
 }

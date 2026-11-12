@@ -750,6 +750,12 @@ export async function suspendUser(
         suspensionReason: parsed.data.reason,
       },
     }),
+    // Revoke every session of the suspended user in the same transaction:
+    // the suspension gate lives in the layouts, which server actions never
+    // render — without this a suspended account kept calling actions until
+    // its session expired (up to 90 d). The signed session-cookie cache can
+    // still answer for at most 5 min (better-auth cookieCache.maxAge).
+    db.session.deleteMany({ where: { userId: parsed.data.targetId } }),
     db.adminAction.create({
       data: {
         adminId: admin.data.adminId,

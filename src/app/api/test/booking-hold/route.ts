@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createBookingHold } from '@/server/actions/checkout';
+import { isE2ETest } from '@/lib/e2e-mode';
 
 /**
  * k6-only entry point to the hold engine (P-16 / L-180). Server actions are
@@ -12,7 +13,7 @@ import { createBookingHold } from '@/server/actions/checkout';
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
-  if (process.env.E2E_TEST !== 'true') {
+  if (!isE2ETest()) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 

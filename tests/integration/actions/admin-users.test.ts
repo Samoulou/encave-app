@@ -5,11 +5,18 @@ vi.mock('@/server/auth', () => ({
   auth: vi.fn(),
   // G-3 boundary check (P-16) — not expired by default in tests.
   isCurrentAdminSessionExpired: vi.fn(async () => false),
+  // Fresh suspension/TOTP read at the admin boundary — a healthy,
+  // TOTP-enrolled admin by default in tests.
+  getCurrentUserSecurityState: vi.fn(async () => ({
+    suspended: false,
+    twoFactorEnabled: true,
+  })),
 }));
 
 vi.mock('@/server/db', () => ({
   db: {
     user: { findUnique: vi.fn(), update: vi.fn() },
+    session: { deleteMany: vi.fn() },
     adminAction: { create: vi.fn() },
     $transaction: vi.fn(),
   },
@@ -30,7 +37,11 @@ vi.mock('@/server/services/email.service', () => ({
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { anonymizeUser } from '@/server/services/anonymization.service';
-import { changeUserRole, anonymizeUserAsAdmin } from '@/server/actions/admin';
+import {
+  changeUserRole,
+  anonymizeUserAsAdmin,
+  suspendUser,
+} from '@/server/actions/admin';
 
 const mockAuth = vi.mocked(auth);
 const mockDb = vi.mocked(db);
@@ -208,5 +219,41 @@ describe('anonymizeUserAsAdmin', () => {
     });
     expect(result.success).toBe(false);
     if (!result.success) expect(result.error.code).toBe('NOT_FOUND');
+  });
+});
+
+describe('suspendUser', () => {
+  it('rejects a non-admin caller without touching the DB', async () => {
+    mockAuth.mockResolvedValue(clientSession);
+    const result = await suspendUser({
+      targetId: TARGET_ID,
+      reason: 'fraud investigation',
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error.code).toBe('FORBIDDEN');
+    expect(mockDb.$transaction).not.toHaveBeenCalled();
+    expect(mockDb.session.deleteMany).not.toHaveBeenCalled();
+  });
+
+  // Security (audit M1): the suspension gate lives in layouts that server
+  // actions never render — the user's sessions must be revoked with the
+  // suspension itself, in the same transaction.
+  it('revokes every session of the suspended user in the transaction', async () => {
+    mockAuth.mockResolvedValue(adminSession);
+    const result = await suspendUser({
+      targetId: TARGET_ID,
+      reason: 'fraud investigation',
+    });
+
+    expect(result.success).toBe(true);
+    expect(mockDb.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: TARGET_ID } })
+    );
+    expect(mockDb.session.deleteMany).toHaveBeenCalledWith({
+      where: { userId: TARGET_ID },
+    });
+    expect(mockDb.$transaction).toHaveBeenCalledTimes(1);
+    // user.update + session.deleteMany + adminAction.create, atomically.
+    expect(mockDb.$transaction.mock.calls[0]?.[0]).toHaveLength(3);
   });
 });

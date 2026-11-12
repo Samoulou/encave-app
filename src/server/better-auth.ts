@@ -10,6 +10,7 @@ import {
 // P-16 / WS-G: G-1 (TOTP on OTP/social paths) + G-2 (email-change notice)
 // hooks, and the per-role session windows (login stamp + G-3 boundary check).
 import { authHardening, sessionWindowMsForRole } from '@/server/auth-hardening';
+import { isE2ETest } from '@/lib/e2e-mode';
 import type { Locale } from '@prisma/client';
 
 const SALT_ROUNDS = 10;
@@ -180,6 +181,12 @@ export const auth = betterAuth({
       role: {
         type: 'string',
         defaultValue: 'CLIENT',
+        // SECURITY: never client-settable. Without `input: false`
+        // better-auth copies the field from the /sign-up/email and
+        // /update-user bodies → anyone could self-assign ADMIN. Roles are
+        // only ever written server-side (createWinery, founder invitation,
+        // changeUserRole).
+        input: false,
       },
       preferredLocale: {
         type: 'string',
@@ -207,11 +214,17 @@ export const auth = betterAuth({
   // Rate limiting (L-155): persistent (DB) so limits hold across serverless
   // instances. Per-endpoint rules use the AUTH_/REGISTRATION_RATE_LIMIT numbers.
   rateLimit: {
-    enabled: process.env.E2E_TEST !== 'true',
+    enabled: !isE2ETest(),
     storage: 'database',
     window: 60,
     max: 10,
     customRules: {
+      // Session read, fired by every page view (HeaderAuthSlot + useSession)
+      // — the global 10/min rule 429'd ordinary browsing. `false` disables
+      // rate limiting for the path (better-auth rate-limiter: a custom rule
+      // resolving to `false` short-circuits). Read-only, cookie-bound: no
+      // brute-force surface.
+      '/get-session': false,
       '/sign-in/email': { window: 900, max: 5 }, // AUTH_RATE_LIMIT
       '/sign-in/email-otp': { window: 900, max: 5 },
       '/sign-up/email': { window: 3600, max: 3 }, // REGISTRATION_RATE_LIMIT

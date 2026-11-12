@@ -13,6 +13,7 @@ import { COLLECTIVE_SOLD_STATUSES } from '@/lib/business-rules/collective-events
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
 import type { ExperienceStatus, ExperienceType } from '@prisma/client';
+import { requireAdminPage } from '@/server/admin-page-guard';
 
 export async function generateMetadata({
   params,
@@ -41,6 +42,10 @@ export default async function AdminEventsPage({
   params,
   searchParams,
 }: AdminEventsPageProps) {
+  // Defence in depth: the admin layout is skipped on RSC navigations —
+  // every admin page authorizes itself before reading anything.
+  await requireAdminPage();
+
   const { locale } = await params;
   const filters = await searchParams;
   const [t, tExp, collectiveEventsEnabled] = await Promise.all([

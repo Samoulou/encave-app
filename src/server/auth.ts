@@ -126,6 +126,35 @@ export async function getCurrentUserTwoFactorEnabled(): Promise<boolean> {
 }
 
 /**
+ * Fresh (non-cached) security state of the current user, for the ADMIN
+ * boundary (pages + server actions): suspension and TOTP enrolment are
+ * read from the DB, never from the cookie-cached session (5 min lag), so a
+ * suspended admin or one who never enrolled TOTP is refused immediately.
+ * `null` = no session or no user row — callers must fail closed.
+ * React.cache: one read per request however many guards call it.
+ */
+export const getCurrentUserSecurityState = cache(
+  async function getCurrentUserSecurityState(): Promise<{
+    suspended: boolean;
+    twoFactorEnabled: boolean;
+  } | null> {
+    const session = await auth();
+    if (!session?.user) return null;
+
+    const user = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { suspendedAt: true, twoFactorEnabled: true },
+    });
+    if (!user) return null;
+
+    return {
+      suspended: user.suspendedAt !== null,
+      twoFactorEnabled: user.twoFactorEnabled === true,
+    };
+  }
+);
+
+/**
  * G-3 (P-16 / WS-G): TRUE when the current session outlived its per-role
  * window (ADMIN 7 d). The login-time cap (session create hook) is undone
  * by better-auth's sliding refresh, which resets `expiresAt` to the

@@ -1,3 +1,5 @@
+import { serializeJsonLd } from '@/lib/utils/json-ld';
+
 /**
  * FAQ Schema Component for SEO
  * Renders Schema.org FAQPage structured data
@@ -29,7 +31,7 @@ export function FaqSchema({ items }: FaqSchemaProps) {
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      dangerouslySetInnerHTML={{ __html: serializeJsonLd(schema) }}
     />
   );
 }

@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
+import { requireAdminPage } from '@/server/admin-page-guard';
 
 export async function generateMetadata({
   params,
@@ -25,7 +26,11 @@ const legalPages = [
   { label: 'Cancellation', href: '/legal/cancellation' },
 ];
 
-export default function AdminCompliancePage() {
+export default async function AdminCompliancePage() {
+  // Defence in depth: the admin layout is skipped on RSC navigations —
+  // every admin page authorizes itself before reading anything.
+  await requireAdminPage();
+
   const postHogConfigured = Boolean(process.env.NEXT_PUBLIC_POSTHOG_KEY);
   const postHogHost =
     process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://eu.posthog.com';

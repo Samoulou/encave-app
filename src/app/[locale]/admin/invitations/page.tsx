@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import { InvitationGenerator } from '@/components/features/admin/InvitationGenerator';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
+import { requireAdminPage } from '@/server/admin-page-guard';
 
 export async function generateMetadata({
   params,
@@ -21,6 +22,10 @@ export default async function AdminInvitationsPage({
 }: {
   params: Promise<{ locale: string }>;
 }) {
+  // Defence in depth: the admin layout is skipped on RSC navigations —
+  // every admin page authorizes itself before reading anything.
+  await requireAdminPage();
+
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'admin.invitations' });
 

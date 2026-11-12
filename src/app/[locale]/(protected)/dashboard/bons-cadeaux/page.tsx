@@ -29,9 +29,17 @@ export default async function MyGiftCardsPage({ params }: Props) {
     redirect(`/${locale}/login`);
   }
 
-  const [t, cards] = await Promise.all([
+  // SECURITY: gift cards are attached by email alone and this page shows
+  // their redemption CODE (bearer money). Never match on an unverified
+  // address — sign-in does not require verification, so anyone could
+  // register with a recipient's email and read their codes. Same gate as
+  // the guest bookings (ClientBookingsPage); the query is not even run.
+  const emailVerified = session.user.emailVerified;
+
+  const [t, tBookings, cards] = await Promise.all([
     getTranslations('giftCards'),
-    getMyGiftCards(session.user.email),
+    getTranslations('clientDashboard.bookings'),
+    emailVerified ? getMyGiftCards(session.user.email) : Promise.resolve([]),
   ]);
 
   // Chrome (sidebar + main) comes from the /dashboard layout.
@@ -40,7 +48,13 @@ export default async function MyGiftCardsPage({ params }: Props) {
       <h1 className="mb-8 font-serif text-2xl font-bold sm:text-3xl">
         {t('compteTitle')}
       </h1>
-      <MyGiftCardsList cards={cards} locale={locale as Locale} />
+      {emailVerified ? (
+        <MyGiftCardsList cards={cards} locale={locale as Locale} />
+      ) : (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
+          {tBookings('verifyEmailBanner')}
+        </div>
+      )}
     </div>
   );
 }

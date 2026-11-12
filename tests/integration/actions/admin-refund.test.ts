@@ -27,6 +27,12 @@ vi.mock('@/server/db', () => ({
 vi.mock('@/server/auth', () => ({
   auth: vi.fn(),
   isCurrentAdminSessionExpired: vi.fn().mockResolvedValue(false),
+  // Fresh suspension/TOTP read at the admin boundary — a healthy,
+  // TOTP-enrolled admin by default in tests.
+  getCurrentUserSecurityState: vi.fn(async () => ({
+    suspended: false,
+    twoFactorEnabled: true,
+  })),
 }));
 
 vi.mock('@/server/stripe', () => ({

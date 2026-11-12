@@ -249,8 +249,10 @@ Pas de combinatoire inter-flags, **sauf** risque financier : gift × annulation
 ## 6. Gestion du temps : crons manuels + antidatage SQL
 
 **Jamais attendre un cron réel.** Les 9 endpoints acceptent
-`Authorization: Bearer $CRON_SECRET` (vérifié `src/lib/cron-auth.ts` — accepte
-aussi `x-vercel-cron: 1` posé par Vercel). Tous en GET.
+`Authorization: Bearer $CRON_SECRET` (vérifié `src/lib/cron-auth.ts` — c'est
+la SEULE preuve acceptée : l'en-tête `x-vercel-cron: 1` n'authentifie plus
+rien, il était falsifiable ; Vercel Cron envoie lui-même le Bearer dès que
+`CRON_SECRET` est défini sur le projet). Tous en GET.
 
 ### 6.1 Les 9 endpoints (18 entrées `vercel.json`)
 

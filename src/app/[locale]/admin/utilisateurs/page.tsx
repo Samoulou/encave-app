@@ -15,6 +15,7 @@ import {
 } from '@/server/queries/admin-users.queries';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
+import { requireAdminPage } from '@/server/admin-page-guard';
 
 export async function generateMetadata({
   params,
@@ -38,6 +39,10 @@ export default async function AdminUsersPage({
   params,
   searchParams,
 }: AdminUsersPageProps) {
+  // Defence in depth: the admin layout is skipped on RSC navigations —
+  // every admin page authorizes itself before reading anything.
+  await requireAdminPage();
+
   const { locale } = await params;
   setRequestLocale(locale);
   const filters = await searchParams;

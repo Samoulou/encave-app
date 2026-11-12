@@ -36,6 +36,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { getTranslations } from 'next-intl/server';
 import { generatePageMetadata } from '@/lib/seo/metadata';
 import type { Locale } from '@/i18n/routing';
+import { requireAdminPage } from '@/server/admin-page-guard';
 
 export async function generateMetadata({
   params,
@@ -75,6 +76,10 @@ async function getRecentPending() {
 }
 
 export default async function AdminDashboard() {
+  // Defence in depth: the admin layout is skipped on RSC navigations —
+  // every admin page authorizes itself before reading anything.
+  await requireAdminPage();
+
   const [stats, recentPending, flags, kpis, todayKpis, webhook, incidents, t] =
     await Promise.all([
       getWineryStats(),

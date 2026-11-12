@@ -13,6 +13,12 @@ vi.mock('@/server/auth', () => ({
   auth: vi.fn(),
   // G-3 boundary check (P-16) — not expired by default in tests.
   isCurrentAdminSessionExpired: vi.fn(async () => false),
+  // Fresh suspension/TOTP read at the admin boundary — a healthy,
+  // TOTP-enrolled admin by default in tests.
+  getCurrentUserSecurityState: vi.fn(async () => ({
+    suspended: false,
+    twoFactorEnabled: true,
+  })),
 }));
 
 vi.mock('next/cache', () => ({

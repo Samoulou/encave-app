@@ -13,6 +13,7 @@ import {
 import { generateSlug, ensureUniqueSlug } from '@/lib/utils/slug';
 import { geocodeWineryAddress } from '@/lib/geocoding';
 import { IMAGE_MAX_SIZE, WINERY_ALLOWED_TYPES } from '@/lib/validators/image';
+import { isOwnedBlobUrl, wineryBlobPrefix } from '@/lib/utils/blob-ownership';
 import type { ActionResult } from '@/types/actions';
 import { logError, logWarn } from '@/lib/logger';
 import { getPostHogServer } from '@/lib/posthog';
@@ -449,8 +450,30 @@ export async function updateWineryCoverPhoto(
       };
     }
 
-    // Delete old cover photo if exists and we're replacing
-    if (winery.coverPhoto && coverPhotoUrl !== winery.coverPhoto) {
+    // SECURITY: the URL comes from the client. Only a blob this user
+    // uploaded (uploadWineryImage → wineries/{userId}/…) may be stored —
+    // an arbitrary URL here used to be handed to del() on the next change,
+    // letting any account delete another tenant's images.
+    const ownerPrefix = wineryBlobPrefix(session.user.id);
+    if (
+      coverPhotoUrl !== null &&
+      coverPhotoUrl !== winery.coverPhoto &&
+      !isOwnedBlobUrl(coverPhotoUrl, ownerPrefix)
+    ) {
+      return {
+        success: false,
+        error: { code: 'VALIDATION_ERROR', message: 'Invalid image URL' },
+      };
+    }
+
+    // Delete the old cover photo when replacing — but ONLY a blob in this
+    // user's own folder. Legacy values (seed/Unsplash URLs, local paths) or
+    // anything else are simply left alone, never passed to del().
+    if (
+      winery.coverPhoto &&
+      coverPhotoUrl !== winery.coverPhoto &&
+      isOwnedBlobUrl(winery.coverPhoto, ownerPrefix)
+    ) {
       try {
         await del(winery.coverPhoto);
       } catch {
@@ -508,6 +531,15 @@ export async function addGalleryImage(
       return {
         success: false,
         error: { code: 'NOT_FOUND', message: 'Winery not found' },
+      };
+    }
+
+    // SECURITY: same rule as the cover photo — only a blob uploaded by
+    // this user may enter the gallery (it is del()'d on removal).
+    if (!isOwnedBlobUrl(imageUrl, wineryBlobPrefix(session.user.id))) {
+      return {
+        success: false,
+        error: { code: 'VALIDATION_ERROR', message: 'Invalid image URL' },
       };
     }
 
@@ -596,11 +628,15 @@ export async function removeGalleryImage(
       };
     }
 
-    // Delete from Blob storage
-    try {
-      await del(image.url);
-    } catch {
-      // Ignore deletion errors
+    // Delete from Blob storage — only a blob in this user's own folder.
+    // A legacy/foreign URL stored on the row is dropped from the DB but
+    // never passed to del() (it could be another tenant's image).
+    if (isOwnedBlobUrl(image.url, wineryBlobPrefix(session.user.id))) {
+      try {
+        await del(image.url);
+      } catch {
+        // Ignore deletion errors
+      }
     }
 
     // Delete from database

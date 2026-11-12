@@ -51,6 +51,29 @@ export default async function MyRequestsPage({ params }: Props) {
     redirect(`/${locale}/login`);
   }
 
+  // SECURITY: requests are attached by email alone and carry the offer's
+  // payment token — never match on an unverified address (anyone can
+  // register with someone else's email; sign-in does not require
+  // verification). Same gate as the guest bookings (ClientBookingsPage).
+  if (!session.user.emailVerified) {
+    const [t, tBookings] = await Promise.all([
+      getTranslations('surMesure'),
+      getTranslations('clientDashboard.bookings'),
+    ]);
+    return (
+      <div className="mx-auto max-w-3xl space-y-6">
+        <header>
+          <h1 className="font-display text-2xl font-bold text-foreground sm:text-3xl">
+            {t('myRequestsTitle')}
+          </h1>
+        </header>
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
+          {tBookings('verifyEmailBanner')}
+        </div>
+      </div>
+    );
+  }
+
   const [t, requests] = await Promise.all([
     getTranslations('surMesure'),
     getClientRequests(session.user.email),

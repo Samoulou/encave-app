@@ -5,6 +5,12 @@ import type { Session } from '@/server/auth';
 vi.mock('@/server/auth', () => ({
   auth: vi.fn(),
   isCurrentAdminSessionExpired: vi.fn().mockResolvedValue(false),
+  // Fresh suspension/TOTP read at the admin boundary — a healthy,
+  // TOTP-enrolled admin by default in tests.
+  getCurrentUserSecurityState: vi.fn(async () => ({
+    suspended: false,
+    twoFactorEnabled: true,
+  })),
 }));
 
 // Mock Prisma
@@ -27,7 +33,7 @@ vi.mock('@/server/services/email.service', () => ({
   sendWineryRejectedEmail: vi.fn(),
 }));
 
-import { auth } from '@/server/auth';
+import { auth, getCurrentUserSecurityState } from '@/server/auth';
 import { db } from '@/server/db';
 import {
   sendWineryApprovedEmail,
@@ -77,6 +83,12 @@ describe('Admin Actions Integration Tests', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // afterEach's resetAllMocks wipes mock implementations — re-arm the
+    // healthy admin state the boundary reads on every action.
+    vi.mocked(getCurrentUserSecurityState).mockResolvedValue({
+      suspended: false,
+      twoFactorEnabled: true,
+    });
   });
 
   afterEach(() => {

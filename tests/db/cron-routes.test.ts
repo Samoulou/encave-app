@@ -3,7 +3,7 @@
  * migrated database (pre-launch test plan, volet A).
  *
  * Under test, for every route in src/app/api/cron/:
- * - the REAL verifyCronRequest (x-vercel-cron / Bearer CRON_SECRET) — the
+ * - the REAL verifyCronRequest (Bearer CRON_SECRET only) — the
  *   auth is the object of the suite, so @/lib/cron-auth is NOT mocked
  *   (unlike tasting-loop.test.ts); next/headers is a mutable stub instead,
  * - the Europe/Zurich hour guards (18h reminders, 21h tasting sheet) in
@@ -343,13 +343,16 @@ describe.skipIf(!url)('cron routes (lot 2 P0 — auth, guards, flags)', () => {
       }
     );
 
+    // Security regression: `x-vercel-cron` is a plain request header any
+    // client can send — it must never authenticate a cron call on its own.
     it.each(CRON_ROUTES)(
-      '$name: x-vercel-cron: 1 → 200 (production header path)',
+      '$name: x-vercel-cron: 1 without the Bearer → 401 (spoofable header)',
       async ({ load }) => {
         setRequestHeaders({ 'x-vercel-cron': '1' });
         const { GET } = await load();
         const res = await GET();
-        expect(res.status).toBe(200);
+        expect(res.status).toBe(401);
+        expect(await res.json()).toEqual({ error: 'Unauthorized' });
       }
     );
   });

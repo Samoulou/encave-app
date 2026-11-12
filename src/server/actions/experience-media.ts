@@ -7,6 +7,10 @@ import {
   IMAGE_MAX_SIZE,
   EXPERIENCE_ALLOWED_TYPES,
 } from '@/lib/validators/image';
+import {
+  experienceBlobPrefix,
+  isOwnedBlobUrl,
+} from '@/lib/utils/blob-ownership';
 import type { ActionResult } from '@/types/actions';
 import { logError } from '@/lib/logger';
 
@@ -127,8 +131,10 @@ export async function deleteUploadedImage(
       };
     }
 
-    // Only allow deleting images in this winery's folder
-    if (!imageUrl.includes(`experiences/${winery.id}/`)) {
+    // Only allow deleting images in this winery's folder. The URL is
+    // PARSED (host + path prefix) — a substring test let a query string or
+    // fragment (`…/other-winery/x.jpg?experiences/{id}/`) pass.
+    if (!isOwnedBlobUrl(imageUrl, experienceBlobPrefix(winery.id))) {
       return {
         success: false,
         error: { code: 'FORBIDDEN', message: 'Cannot delete this image' },

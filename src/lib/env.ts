@@ -76,6 +76,11 @@ const envSchema = z.object({
   NEXT_PUBLIC_BASE_URL: z.string().url().optional(),
   NEXT_PUBLIC_SITE_URL: z.string().url().optional(),
 
+  // E2E simulation switch (Playwright / k6): fake Stripe sessions, rate
+  // limits off, /api/test/* open. Read through isE2ETest() in
+  // src/lib/e2e-mode.ts — refused on the production deployment (below).
+  E2E_TEST: z.string().optional(),
+
   // Node environment
   NODE_ENV: z
     .enum(['development', 'production', 'test'])
@@ -99,6 +104,13 @@ function getEnv() {
   if (data.NODE_ENV === 'production' && !data.BETTER_AUTH_SECRET) {
     console.error('❌ BETTER_AUTH_SECRET is required in production');
     throw new Error('BETTER_AUTH_SECRET is required in production');
+  }
+
+  // E2E_TEST disables every rate limit and replaces Stripe with synthetic
+  // sessions — it must never boot on the production deployment.
+  if (data.VERCEL_ENV === 'production' && data.E2E_TEST === 'true') {
+    console.error('❌ E2E_TEST=true is forbidden when VERCEL_ENV=production');
+    throw new Error('E2E_TEST must not be enabled in production');
   }
 
   return data;
