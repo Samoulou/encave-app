@@ -68,3 +68,18 @@ export function isOwnedBlobUrl(url: unknown, ownerPrefix: string): boolean {
     pathname.startsWith(expectedStart) && pathname.length > expectedStart.length
   );
 }
+
+/**
+ * Same-origin static asset under `public/images/` (the seed / demo covers,
+ * e.g. `/images/herobanner-image-v2.jpg`). A plain absolute path made of
+ * safe characters only: no scheme, no host (`//evil.test`), no traversal,
+ * no query or fragment. Such a value is harmless to store — and is never a
+ * blob, so it is never passed to `del()`.
+ */
+const LOCAL_IMAGE_PATH = /^\/images\/[A-Za-z0-9][A-Za-z0-9/_.-]*$/;
+
+export function isLocalImagePath(url: unknown): boolean {
+  if (typeof url !== 'string') return false;
+  if (!LOCAL_IMAGE_PATH.test(url)) return false;
+  return !url.includes('//') && !url.split('/').includes('..');
+}

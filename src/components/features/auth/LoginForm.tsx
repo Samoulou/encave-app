@@ -60,7 +60,11 @@ export function LoginForm() {
 
       if (result.error) {
         // Handle Better Auth errors
-        setError(result.error.message || t('invalidCredentials'));
+        setError(
+          result.error.code === 'ACCOUNT_SUSPENDED'
+            ? t('accountSuspended')
+            : result.error.message || t('invalidCredentials')
+        );
         setIsLoading(false);
         return;
       }
@@ -109,6 +113,12 @@ export function LoginForm() {
             {error && (
               <div className="rounded-lg bg-red-50 p-4 text-sm text-red-600">
                 {error}
+              </div>
+            )}
+            {/* A refused Google sign-in comes back here (errorCallbackURL). */}
+            {!error && currentSearchParams.get('error') && (
+              <div className="rounded-lg bg-red-50 p-4 text-sm text-red-600">
+                {t('socialSignInFailed')}
               </div>
             )}
 

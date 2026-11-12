@@ -77,6 +77,16 @@ export function AdminSecuritySetup({
         setError(result.error.message || t('failed'));
         return;
       }
+      // A password reset now revokes EVERY session of the account
+      // (revokeSessionsOnPasswordReset — audit M3), this one included.
+      // Sign straight back in with the password just set so the TOTP
+      // enrolment below runs on a live session. TOTP is not enrolled yet,
+      // so no second factor is asked here.
+      const signedIn = await authClient.signIn.email({ email, password });
+      if (signedIn.error) {
+        setError(signedIn.error.message || t('failed'));
+        return;
+      }
       setPasswordSet(true);
     } catch {
       setError(tCommon('errors.somethingWentWrong'));

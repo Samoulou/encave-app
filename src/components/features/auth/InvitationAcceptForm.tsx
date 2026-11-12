@@ -47,7 +47,16 @@ export function InvitationAcceptForm({
       // New invitee → sign up. Already-registered invitee (e.g. an existing
       // CLIENT) → fall back to sign-in with the same password. Either way the
       // session lands on the invited email, which the server re-checks.
-      const signUpResult = await signUp.email({ email, password, name });
+      // callbackURL: the email-verification link sent at sign-up brings the
+      // founder back HERE — provisioning requires a verified address
+      // (audit M3), so a brand-new account submits once, confirms the
+      // email, then submits again (the invitation stays valid meanwhile).
+      const signUpResult = await signUp.email({
+        email,
+        password,
+        name,
+        callbackURL: `/invitation/${token}`,
+      });
       if (signUpResult.error) {
         const signInResult = await signIn.email({ email, password });
         if (signInResult.error) {
@@ -60,7 +69,11 @@ export function InvitationAcceptForm({
         wineryName: wineryName.trim(),
       });
       if (!provision.success) {
-        setError(provision.error.message);
+        setError(
+          provision.error.message === 'EMAIL_NOT_VERIFIED'
+            ? t('verifyEmailFirst')
+            : provision.error.message
+        );
         return;
       }
       router.push('/dashboard/winery/profile');

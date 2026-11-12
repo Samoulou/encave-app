@@ -11,6 +11,7 @@ import {
   sendRequestSlaEscalationEmail,
 } from '@/server/services/email.service';
 import type { ScheduledJobHandlerResult } from '@/server/services/scheduled-jobs.service';
+import { deriveOfferPaymentToken } from '@/lib/utils/offer-payment-token';
 
 function readStringField(
   payload: Prisma.JsonValue,
@@ -67,7 +68,9 @@ export async function processRequestOfferReminderJob(
   if (offer.expiresAt.getTime() <= Date.now()) {
     return { ok: false, skipReason: 'already_expired' };
   }
-  if (!offer.paymentToken) return { ok: false, skipReason: 'no_token' };
+  // Legacy offers still carry their stored plaintext token; every offer
+  // created since the hash-at-rest change has none and is re-derived.
+  const paymentToken = offer.paymentToken ?? deriveOfferPaymentToken(offer.id);
 
   const routingLocale = offer.request.locale.toLowerCase() as RoutingLocale;
   const ok = await sendRequestOfferExpiringEmail(
@@ -77,7 +80,7 @@ export async function processRequestOfferReminderJob(
       wineryName: offer.request.winery?.name ?? 'EnCave',
       totalPriceCents: offer.totalPrice,
       expiresAt: offer.expiresAt,
-      payUrl: `${getBaseUrl()}/${routingLocale}/sur-mesure/offre/${offer.paymentToken}`,
+      payUrl: `${getBaseUrl()}/${routingLocale}/sur-mesure/offre/${paymentToken}`,
     },
     offer.request.locale
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { signIn } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
 
@@ -29,11 +29,16 @@ function GoogleIcon({ className }: { className?: string }) {
 
 export function SocialLoginButtons() {
   const t = useTranslations('auth.login');
+  const locale = useLocale();
 
   const handleGoogleSignIn = async () => {
     await signIn.social({
       provider: 'google',
       callbackURL: '/',
+      // A refused sign-in (e.g. the address belongs to an unverified
+      // password account) used to land on better-auth's raw, untranslated
+      // /api/auth/error page.
+      errorCallbackURL: `/${locale}/login`,
     });
   };
 

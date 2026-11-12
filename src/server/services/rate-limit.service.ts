@@ -5,9 +5,14 @@
  * This implementation uses a sliding window approach with automatic cleanup.
  */
 
+import { headers } from 'next/headers';
 import { env } from '@/lib/env';
 import { isE2ETest } from '@/lib/e2e-mode';
+import type { ActionResult } from '@/types/actions';
 import { logWarn, logError } from '@/lib/logger';
+
+/** Upper bound for one Upstash REST call (ms). */
+const UPSTASH_TIMEOUT_MS = 1500;
 
 interface RateLimitEntry {
   count: number;
@@ -77,6 +82,9 @@ async function checkRateLimitRedis(
     // Use Upstash REST API for atomic operations
     const response = await fetch(`${env.UPSTASH_REDIS_REST_URL}/pipeline`, {
       method: 'POST',
+      // Never let a slow Redis hold the checkout: on timeout the catch
+      // below falls back to the in-memory limiter.
+      signal: AbortSignal.timeout(UPSTASH_TIMEOUT_MS),
       headers: {
         Authorization: `Bearer ${env.UPSTASH_REDIS_REST_TOKEN}`,
         'Content-Type': 'application/json',
@@ -205,6 +213,7 @@ export async function resetRateLimit(identifier: string): Promise<void> {
     try {
       await fetch(`${env.UPSTASH_REDIS_REST_URL}/del/ratelimit:${identifier}`, {
         method: 'GET',
+        signal: AbortSignal.timeout(UPSTASH_TIMEOUT_MS),
         headers: {
           Authorization: `Bearer ${env.UPSTASH_REDIS_REST_TOKEN}`,
         },
@@ -231,6 +240,48 @@ export function getClientIp(headerList: Headers): string {
     if (first) return first;
   }
   return headerList.get('x-real-ip')?.trim() || 'unknown';
+}
+
+/**
+ * Budget of the unauthenticated READ actions (availability, time slots,
+ * booking-form data, ticket lookup by token…): generous — a real visitor
+ * clicking through a calendar stays far below — but it bounds scraping and
+ * DB load from one address.
+ */
+export const PUBLIC_READ_RATE_LIMIT: RateLimitConfig = {
+  maxRequests: 60,
+  windowMs: 60 * 1000, // per minute
+};
+
+/**
+ * Per-IP rate limit for a PUBLIC read server action (CLAUDE.md: read-only
+ * actions over public data skip auth but MUST be rate-limited per IP).
+ *
+ * One line at the top of the action:
+ *
+ *   const limited = await rateLimitPublicRead('availability');
+ *   if (limited) return limited;
+ *
+ * Returns `null` when the call may proceed, or the ready-to-return
+ * RATE_LIMITED ActionResult. `key` namespaces the budget per action so a
+ * busy calendar cannot starve the ticket page. E2E-aware through
+ * checkRateLimit (isE2ETest). Reads the request headers: call it only from
+ * a server action or a DYNAMIC render — never from an ISR page tree.
+ */
+export async function rateLimitPublicRead(
+  key: string,
+  config: RateLimitConfig = PUBLIC_READ_RATE_LIMIT
+): Promise<ActionResult<never> | null> {
+  const ip = getClientIp(await headers());
+  const result = await checkRateLimit(`public-read:${key}:${ip}`, config);
+  if (result.success) return null;
+  return {
+    success: false,
+    error: {
+      code: 'RATE_LIMITED',
+      message: 'Too many requests. Please try again in a moment.',
+    },
+  };
 }
 
 // Pre-configured rate limiters for common use cases

@@ -1,4 +1,5 @@
 import { betterAuth } from 'better-auth';
+import { APIError } from 'better-auth/api';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { emailOTP, twoFactor } from 'better-auth/plugins';
 import bcrypt from 'bcryptjs';
@@ -9,7 +10,11 @@ import {
 } from '@/server/services/email.service';
 // P-16 / WS-G: G-1 (TOTP on OTP/social paths) + G-2 (email-change notice)
 // hooks, and the per-role session windows (login stamp + G-3 boundary check).
-import { authHardening, sessionWindowMsForRole } from '@/server/auth-hardening';
+import {
+  authHardening,
+  isSessionCreationBlocked,
+  sessionWindowMsForRole,
+} from '@/server/auth-hardening';
 import { isE2ETest } from '@/lib/e2e-mode';
 import type { Locale } from '@prisma/client';
 
@@ -97,6 +102,14 @@ export const auth = betterAuth({
       // "get a code" tab should fail, not fork a new CLIENT (review).
       disableSignUp: true,
       sendVerificationOTP: async ({ email, otp, type }) => {
+        // better-auth 1.7 added the 'change-email' OTP purpose. It is only
+        // reachable when emailOTP.changeEmail is enabled — it is NOT here
+        // (email change goes through the link flow below, confirmed on the
+        // current address). Refuse rather than mail a code for a flow we
+        // never reviewed.
+        if (type === 'change-email') {
+          return;
+        }
         const user = await db.user.findUnique({
           where: { email },
           select: { preferredLocale: true },
@@ -125,15 +138,28 @@ export const auth = betterAuth({
     },
   },
 
-  // Per-role session length at login (L-153) — see sessionWindowMsForRole.
+  // Per-role session length at login (L-153) — see sessionWindowMsForRole —
+  // and the central suspension gate: EVERY session of the app is minted
+  // through this hook (password, email OTP, Google, TOTP verify, email
+  // verification auto sign-in), so a suspended user can never obtain one.
+  // Same single user read as before — no extra query.
   databaseHooks: {
     session: {
       create: {
         before: async (session) => {
           const user = await db.user.findUnique({
             where: { id: session.userId },
-            select: { role: true },
+            select: { role: true, suspendedAt: true },
           });
+          if (isSessionCreationBlocked(user)) {
+            // Thrown (not `return false`): several better-auth sign-in
+            // routes do not null-check an aborted session and would answer
+            // a 500; an APIError surfaces as a clean 403 everywhere.
+            throw new APIError('FORBIDDEN', {
+              code: 'ACCOUNT_SUSPENDED',
+              message: 'This account is suspended',
+            });
+          }
           return {
             data: {
               ...session,
@@ -150,6 +176,10 @@ export const auth = betterAuth({
   // Email/password authentication with bcrypt (matches seed data)
   emailAndPassword: {
     enabled: true,
+    // A password reset is how a victim takes an account back — every
+    // session that existed before it (a pre-registered attacker's included)
+    // must die with the old password (audit M3).
+    revokeSessionsOnPasswordReset: true,
     password: {
       hash: (password) => bcrypt.hash(password, SALT_ROUNDS),
       verify: ({ password, hash }) => bcrypt.compare(password, hash),
@@ -191,6 +221,14 @@ export const auth = betterAuth({
       preferredLocale: {
         type: 'string',
         defaultValue: 'FR',
+      },
+      // Suspension travels with the session user so `auth()` can refuse a
+      // suspended account WITHOUT an extra DB read per call (see
+      // src/server/auth.ts). Never client-settable.
+      suspendedAt: {
+        type: 'date',
+        required: false,
+        input: false,
       },
     },
     // P-14 (L-151): self-service email change. Confirmation is sent to the
@@ -236,7 +274,16 @@ export const auth = betterAuth({
   // OAuth providers - only included if credentials are configured
   socialProviders: getSocialProviders(),
 
-  // Account linking - allow linking without email verification
+  // Account linking. Since better-auth 1.7 Google attaches to an existing
+  // local account with the same email ONLY when that local email is
+  // verified (`requireLocalEmailVerified`, default true — deprecated
+  // option, the gate becomes unconditional; NEVER set it to false, guarded
+  // by tests/unit/server/better-auth-prehijack.test.ts). An unverified row
+  // proves nothing: auto-linking it would hand the real owner an account
+  // whose password a squatter still knows (pre-account hijack,
+  // GHSA-g38m-r43w-p2q7 / audit M3). The email-OTP sign-in is the recovery
+  // path: it wipes the unproven credentials and sessions, then verifies
+  // the address.
   account: {
     accountLinking: {
       enabled: true,
@@ -248,6 +295,13 @@ export const auth = betterAuth({
   advanced: {
     crossSubDomainCookies: {
       enabled: false,
+    },
+    // Client IP for the rate limiter and session records. better-auth 1.7
+    // only trusts SINGLE-value headers (no trustedProxies): Vercel
+    // overwrites both with the real client address. Without a resolvable
+    // IP every visitor would share one bucket per path.
+    ipAddress: {
+      ipAddressHeaders: ['x-forwarded-for', 'x-real-ip'],
     },
   },
 });

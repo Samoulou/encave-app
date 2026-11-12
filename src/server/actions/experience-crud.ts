@@ -8,12 +8,60 @@ import {
 } from '@/lib/validators/experience';
 import { generateSlug, ensureUniqueSlug } from '@/lib/utils/slug';
 import { activeCapacityBookingWhere } from '@/lib/business-rules/capacity';
+import {
+  experienceBlobPrefix,
+  isLocalImagePath,
+  isOwnedBlobUrl,
+} from '@/lib/utils/blob-ownership';
 import type { ActionResult } from '@/types/actions';
 import { logError } from '@/lib/logger';
 import {
   invalidateExperienceCaches,
   createExperienceSlugChecker,
 } from './experience-helpers';
+
+/** Max gallery images persisted per experience (AC 8). */
+const MAX_GALLERY_IMAGES = 8;
+
+/**
+ * SECURITY (pre-launch audit): cover + gallery URLs come straight from the
+ * client and end up in the public fiche (`<Image>`, JSON-LD) and in emails.
+ * An arbitrary URL there is a tracking pixel / content-injection vector, so
+ * only three kinds of value are accepted:
+ *  - a blob THIS winery uploaded (uploadExperienceImage →
+ *    `experiences/{wineryId}/…`);
+ *  - a same-origin `/images/…` static asset (seed / demo covers);
+ *  - on update, a value ALREADY stored on that experience (legacy rows —
+ *    e.g. seeded Unsplash covers — stay editable without a re-upload).
+ * Returns the validated lists, or null when any URL is refused.
+ */
+function validateExperienceImages(
+  wineryId: string,
+  coverPhotoUrl: unknown,
+  galleryImageUrls: unknown,
+  alreadyStored: ReadonlySet<string> = new Set()
+): { cover: string; gallery: string[] } | null {
+  const ownerPrefix = experienceBlobPrefix(wineryId);
+  const isAllowed = (url: unknown): url is string =>
+    typeof url === 'string' &&
+    (alreadyStored.has(url) ||
+      isOwnedBlobUrl(url, ownerPrefix) ||
+      isLocalImagePath(url));
+
+  if (!isAllowed(coverPhotoUrl)) return null;
+  if (!Array.isArray(galleryImageUrls)) return null;
+  const gallery: string[] = [];
+  for (const url of galleryImageUrls.slice(0, MAX_GALLERY_IMAGES)) {
+    if (!isAllowed(url)) return null;
+    gallery.push(url);
+  }
+  return { cover: coverPhotoUrl, gallery };
+}
+
+const INVALID_IMAGE_ERROR: ActionResult<never> = {
+  success: false,
+  error: { code: 'VALIDATION_ERROR', message: 'Invalid image URL' },
+};
 
 /**
  * Create a new experience for the current user's winery
@@ -85,6 +133,14 @@ export async function createExperience(
       availabilitySlots,
     } = validated.data;
 
+    // Cover + gallery must be this winery's own uploads (or local assets).
+    const images = validateExperienceImages(
+      winery.id,
+      coverPhotoUrl,
+      galleryImageUrls
+    );
+    if (!images) return INVALID_IMAGE_ERROR;
+
     // 4. Generate a globally unique slug (the fiche URL has no winery segment)
     const baseSlug = generateSlug(title);
     const slug = await ensureUniqueSlug(
@@ -133,7 +189,7 @@ export async function createExperience(
           ...(isCollective !== undefined && { isCollective }),
           // P-02 (L-115): additive — undefined keeps the @default([FR]).
           ...(languages !== undefined && { languages }),
-          coverPhoto: coverPhotoUrl,
+          coverPhoto: images.cover,
           status: 'DRAFT',
           // Location fields
           address: location?.street || null,
@@ -145,9 +201,9 @@ export async function createExperience(
       });
 
       // Add gallery images if provided (AC 8)
-      if (galleryImageUrls.length > 0) {
+      if (images.gallery.length > 0) {
         await tx.experienceGalleryImage.createMany({
-          data: galleryImageUrls.slice(0, 8).map((url, index) => ({
+          data: images.gallery.map((url, index) => ({
             experienceId: newExperience.id,
             url,
             order: index,
@@ -265,6 +321,19 @@ export async function updateExperience(
       };
     }
 
+    // Cover + gallery: this winery's own uploads, local assets, or values
+    // this experience already holds (legacy rows stay editable).
+    const images = validateExperienceImages(
+      winery.id,
+      coverPhotoUrl,
+      galleryImageUrls,
+      new Set([
+        existingExperience.coverPhoto,
+        ...existingExperience.galleryImages.map((image) => image.url),
+      ])
+    );
+    if (!images) return INVALID_IMAGE_ERROR;
+
     const {
       title,
       type,
@@ -321,14 +390,14 @@ export async function updateExperience(
           ...(isCollective !== undefined && { isCollective }),
           // P-02 (L-115): additive — undefined leaves stored languages untouched.
           ...(languages !== undefined && { languages }),
-          coverPhoto: coverPhotoUrl,
+          coverPhoto: images.cover,
         },
       });
 
       // Add new gallery images
-      if (galleryImageUrls.length > 0) {
+      if (images.gallery.length > 0) {
         await tx.experienceGalleryImage.createMany({
-          data: galleryImageUrls.slice(0, 8).map((url, index) => ({
+          data: images.gallery.map((url, index) => ({
             experienceId,
             url,
             order: index,
@@ -421,7 +490,9 @@ export async function deleteExperience(
       return {
         success: false,
         error: {
-          code: 'VALIDATION_ERROR',
+          // Dedicated code: the UI shows translated guidance ("archive it
+          // instead") rather than a generic validation message.
+          code: 'HAS_BOOKINGS',
           message:
             'Cannot delete experience with active bookings. Archive it instead.',
         },

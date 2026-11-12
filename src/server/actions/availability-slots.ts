@@ -6,7 +6,7 @@ import { hasOverlappingSlots } from '@/lib/constants/time-slots';
 import type { ActionResult } from '@/types/actions';
 import { logError } from '@/lib/logger';
 import { revalidateTag } from 'next/cache';
-import { invalidateExperienceCaches } from './experience-helpers';
+import { invalidateExperienceAvailabilityCaches } from './experience-helpers';
 import {
   closeOrphanedRecurringOccurrences,
   generateOccurrences,
@@ -130,7 +130,7 @@ export async function updateAvailabilitySlots(
 
     const experience = await db.experience.findFirst({
       where: { id: experienceId, wineryId: winery.id },
-      select: { id: true },
+      select: { id: true, slug: true },
     });
 
     if (!experience) {
@@ -165,7 +165,7 @@ export async function updateAvailabilitySlots(
         return {
           success: false,
           error: {
-            code: 'VALIDATION_ERROR',
+            code: 'SLOTS_OVERLAP',
             message: `Overlapping time slots found on ${dayName}`,
           },
         };
@@ -240,10 +240,11 @@ export async function updateAvailabilitySlots(
       });
     }
     revalidateTag(`occurrences:${experienceId}`);
-    // The weekly slots are baked into the public fiche (cached under the
-    // 'experiences' tag) — purge it so a removed/changed slot stops being
-    // offered ('occurrences:*' alone has no cache subscriber).
-    invalidateExperienceCaches();
+    // The weekly slots are baked into the public fiche — purge THAT fiche
+    // and the catalogue's next-availability cache so a removed/changed
+    // slot stops being offered ('occurrences:*' alone has no cache
+    // subscriber). The other fiches and winery pages stay cached.
+    invalidateExperienceAvailabilityCaches(experience.slug);
 
     return {
       success: true,
@@ -297,7 +298,7 @@ export async function toggleSlotActive(
       where: { id: slotId },
       include: {
         experience: {
-          select: { wineryId: true },
+          select: { wineryId: true, slug: true },
         },
       },
     });
@@ -326,8 +327,9 @@ export async function toggleSlotActive(
       });
     }
     revalidateTag(`occurrences:${slot.experienceId}`);
-    // Purge the public 'experiences' tag (see updateAvailabilitySlots).
-    invalidateExperienceCaches();
+    // Purge this fiche + the catalogue availability cache (see
+    // updateAvailabilitySlots).
+    invalidateExperienceAvailabilityCaches(slot.experience.slug);
 
     return {
       success: true,

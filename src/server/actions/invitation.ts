@@ -141,6 +141,27 @@ export async function provisionFounderWinery(
       };
     }
 
+    // SECURITY (audit M3): matching the invited email is not enough — sign-in
+    // does not require a verified address, so anyone holding a leaked link
+    // could register the invited email themselves and walk away with a
+    // VERIFIED 0%-commission winery. The caller must have PROVEN control of
+    // that mailbox. Read fresh (the session copy lags by the 5 min cookie
+    // cache right after the verification link is clicked). The invitation
+    // is NOT consumed: the founder verifies, then submits again.
+    const account = await db.user.findUnique({
+      where: { id: session.user.id },
+      select: { emailVerified: true },
+    });
+    if (!account?.emailVerified) {
+      return {
+        success: false,
+        error: {
+          code: 'FORBIDDEN',
+          message: 'EMAIL_NOT_VERIFIED',
+        },
+      };
+    }
+
     // One winery per user.
     const existing = await db.winery.findUnique({
       where: { userId: session.user.id },

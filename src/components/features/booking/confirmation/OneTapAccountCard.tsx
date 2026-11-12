@@ -68,13 +68,12 @@ export function OneTapAccountCard({
       });
 
       if (result.error) {
-        if (result.error.code === 'USER_ALREADY_EXISTS') {
+        if (result.error.code?.startsWith('USER_ALREADY_EXISTS')) {
           setError(tRegister('emailExists'));
           setEmailAlreadyExists(true);
         } else {
-          setError(
-            result.error.message || tCommon('errors.somethingWentWrong')
-          );
+          // better-auth returns an English message — never render it.
+          setError(tCommon('errors.somethingWentWrong'));
         }
         return;
       }

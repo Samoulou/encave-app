@@ -10,8 +10,13 @@ import type { TestUser } from '../fixtures/auth.fixture';
 /** Dismiss the cookie consent overlay when it covers the UI. */
 export async function acceptCookiesIfVisible(page: Page) {
   const accept = page.getByRole('button', { name: 'Tout accepter' });
+  // The banner mounts in an effect, AFTER hydration: an instantaneous
+  // isVisible() raced it and, when it lost, the banner stayed up and
+  // pointer-blocked the bottom submit button of the next form.
+  await accept.waitFor({ state: 'visible', timeout: 2500 }).catch(() => {});
   if (await accept.isVisible().catch(() => false)) {
     await accept.click();
+    await accept.waitFor({ state: 'hidden', timeout: 2500 }).catch(() => {});
   }
 }
 

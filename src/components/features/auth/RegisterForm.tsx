@@ -63,7 +63,9 @@ export function RegisterForm() {
 
       if (result.error) {
         // Handle Better Auth errors
-        if (result.error.code === 'USER_ALREADY_EXISTS') {
+        // better-auth answers USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL on the
+        // email sign-up route (USER_ALREADY_EXISTS on others).
+        if (result.error.code?.startsWith('USER_ALREADY_EXISTS')) {
           setError(t('emailExists'));
         } else {
           setError(

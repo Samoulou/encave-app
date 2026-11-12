@@ -21,6 +21,8 @@ export type ErrorCode =
   | 'MARKED_NO_SHOW'
   | 'ALREADY_CHECKED_IN'
   | 'PAYMENT_FAILED'
+  | 'HAS_BOOKINGS'
+  | 'SLOTS_OVERLAP'
   | 'INTERNAL_ERROR';
 
 export type ActionResult<T> =

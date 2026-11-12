@@ -113,3 +113,34 @@ describe('isOwnedBlobUrl', () => {
     expect(isOwnedBlobUrl(`${HOST}/wineries/user-123/a.jpg`, '')).toBe(false);
   });
 });
+
+describe('isLocalImagePath', () => {
+  it('accepts plain same-origin /images/ assets', async () => {
+    const { isLocalImagePath } = await import('@/lib/utils/blob-ownership');
+    expect(isLocalImagePath('/images/herobanner-image-v2.jpg')).toBe(true);
+    expect(isLocalImagePath('/images/test/domaine-du-test.jpg')).toBe(true);
+  });
+
+  it('refuses hosts, traversal, queries and anything outside /images/', async () => {
+    const { isLocalImagePath } = await import('@/lib/utils/blob-ownership');
+    for (const value of [
+      '//evil.test/images/x.jpg',
+      'https://evil.test/images/x.jpg',
+      '/images/../api/auth/sign-out',
+      '/images//x.jpg',
+      '/images/x.jpg?x=1',
+      '/images/x.jpg#frag',
+      '/images/',
+      '/img/x.jpg',
+      'images/x.jpg',
+      '/images/%2e%2e/x',
+      '/images/a b.jpg',
+      '',
+      null,
+      undefined,
+      42,
+    ]) {
+      expect(isLocalImagePath(value), String(value)).toBe(false);
+    }
+  });
+});

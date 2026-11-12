@@ -12,6 +12,10 @@ import {
   stubStripeCheckout,
   expectOnStripeStub,
 } from '../utils/journeys';
+// The payment token is hashed at rest: the test cannot read it from the DB
+// any more (that is the point) — it re-derives it like the server does
+// (same BETTER_AUTH_SECRET, loaded from .env.test by playwright.config).
+import { deriveOfferPaymentToken } from '../../../src/lib/utils/offer-payment-token';
 import { confirmBookingViaWebhook } from '../utils/stripe-webhook';
 import { testDb, findRequestByClientEmail } from '../utils/db';
 
@@ -70,7 +74,7 @@ test.describe('Sur-mesure request A→Z', () => {
 
     // 3. Client pays through the tokenized offer page.
     await stubStripeCheckout(page);
-    await request.gotoOffer(offer.paymentToken);
+    await request.gotoOffer(deriveOfferPaymentToken(offer.id));
     await expect(page.getByText(/900/).first()).toBeVisible();
     await request.payOffer();
     await expectOnStripeStub(page);
@@ -103,7 +107,7 @@ test.describe('Sur-mesure request A→Z', () => {
     expect(paidRequest?.status).toBe('PAID');
 
     // 5. The offer page now shows the paid state (no more pay button).
-    await request.gotoOffer(offer.paymentToken);
+    await request.gotoOffer(deriveOfferPaymentToken(offer.id));
     await expect(page.getByText('Offre déjà réglée')).toBeVisible();
   });
 });

@@ -1895,6 +1895,15 @@ async function main() {
   console.log('🚀 Run: npx prisma migrate reset    (clear + re-seed)');
   console.log('   Or:  npm run db:seed              (seed only)');
   console.log('='.repeat(60));
+
+  // better-auth keys a credential account on the USER ID (1.7 refuses the
+  // password sign-in otherwise). The nested creates above cannot know the
+  // generated id, so the seeded accounts are re-keyed here in one pass.
+  await prisma.$executeRaw`
+    UPDATE "accounts"
+    SET "accountId" = "userId"
+    WHERE "providerId" = 'credential' AND "accountId" <> "userId"
+  `;
 }
 
 main()

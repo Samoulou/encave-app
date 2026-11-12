@@ -59,10 +59,30 @@ export function isSessionPastRoleWindow(
   return now - new Date(createdAt).getTime() > sessionWindowMsForRole(role);
 }
 
-// Mirrors better-auth's two-factor plugin constants (pinned ^1.4.x —
-// dist/plugins/two-factor/constant.mjs). Not exported by the package.
+/**
+ * Central suspension gate, used by the session `create.before` database
+ * hook (src/server/better-auth.ts): a suspended user — or a user row that
+ * no longer exists — must never be handed a session, whatever the sign-in
+ * path. Pure so it is unit-testable without better-auth.
+ */
+export function isSessionCreationBlocked(
+  user: { suspendedAt: Date | null } | null | undefined
+): boolean {
+  if (!user) return true;
+  return user.suspendedAt !== null;
+}
+
+// Mirrors better-auth's two-factor plugin constants and challenge records
+// (pinned ^1.7.x — dist/plugins/two-factor/{constant,index,
+// verify-two-factor}.mjs). Not exported by the package. RE-CHECK ON EVERY
+// better-auth BUMP: verify-totp consumes BOTH verification rows below.
 const TWO_FACTOR_COOKIE_NAME = 'two_factor';
 const TWO_FACTOR_COOKIE_MAX_AGE_S = 600;
+
+/** Identifier of the per-challenge attempt counter verify-totp consumes. */
+export function twoFactorAttemptsIdentifier(challengeIdentifier: string) {
+  return `2fa-attempts-${challengeIdentifier}`;
+}
 
 /** Paths G-1 covers on top of the built-in `/sign-in/email` matcher. */
 export function isSecondFactorGapPath(path: string): boolean {
@@ -86,21 +106,32 @@ export function authHardening(): BetterAuthPlugin {
             ).twoFactorEnabled;
             if (!enrolled) return;
 
-            // Same sequence as the built-in hook: the fresh session must
-            // not survive an unchallenged second factor.
+            // Same sequence as the built-in hook (two-factor/index.mjs,
+            // 1.7): the fresh session must not survive an unchallenged
+            // second factor, and downstream hooks must not observe it.
             deleteSessionCookie(ctx, true);
             await ctx.context.internalAdapter.deleteSession(data.session.token);
+            ctx.context.setNewSession(null);
             const twoFactorCookie = ctx.context.createAuthCookie(
               TWO_FACTOR_COOKIE_NAME,
               { maxAge: TWO_FACTOR_COOKIE_MAX_AGE_S }
             );
             const identifier = `2fa-${generateRandomString(20)}`;
+            const expiresAt = new Date(
+              Date.now() + TWO_FACTOR_COOKIE_MAX_AGE_S * 1000
+            );
             await ctx.context.internalAdapter.createVerificationValue({
               value: data.user.id,
               identifier,
-              expiresAt: new Date(
-                Date.now() + TWO_FACTOR_COOKIE_MAX_AGE_S * 1000
-              ),
+              expiresAt,
+            });
+            // 1.7: verify-totp `beginAttempt` consumes this counter and
+            // answers INVALID_TWO_FACTOR_COOKIE when it is missing — without
+            // it the challenge minted here could never be completed.
+            await ctx.context.internalAdapter.createVerificationValue({
+              value: '0',
+              identifier: twoFactorAttemptsIdentifier(identifier),
+              expiresAt,
             });
             await ctx.setSignedCookie(
               twoFactorCookie.name,
@@ -122,7 +153,11 @@ export function authHardening(): BetterAuthPlugin {
               throw ctx.redirect(`${origin}/login/2fa`);
             }
             // JSON flow: OtpLoginForm already routes on this flag (P-14).
-            return ctx.json({ twoFactorRedirect: true });
+            // `twoFactorMethods` mirrors the built-in response shape (1.7).
+            return ctx.json({
+              twoFactorRedirect: true,
+              twoFactorMethods: ['totp'],
+            });
           }),
         },
         {

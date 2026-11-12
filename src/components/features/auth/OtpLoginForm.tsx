@@ -23,6 +23,7 @@ interface OtpLoginFormProps {
 export function OtpLoginForm({ onUsePassword }: OtpLoginFormProps) {
   const t = useTranslations('auth.otpLogin');
   const tCommon = useTranslations('common');
+  const tLogin = useTranslations('auth.login');
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -58,7 +59,11 @@ export function OtpLoginForm({ onUsePassword }: OtpLoginFormProps) {
     try {
       const result = await signIn.emailOtp({ email, otp });
       if (result.error) {
-        setError(result.error.message || t('invalidCode'));
+        setError(
+          result.error.code === 'ACCOUNT_SUSPENDED'
+            ? tLogin('accountSuspended')
+            : result.error.message || t('invalidCode')
+        );
         return;
       }
       // A 2FA-enabled account must clear the second factor first.

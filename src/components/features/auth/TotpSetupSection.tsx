@@ -41,7 +41,9 @@ export function TotpSetupSection({
     setError(null);
     try {
       const result = await authClient.twoFactor.enable({ password });
-      if (result.error || !result.data) {
+      // better-auth 1.7: `enable` answers a union — only the TOTP method
+      // (the default, the only one configured here) carries a URI + codes.
+      if (result.error || !result.data || result.data.method !== 'totp') {
         setError(result.error?.message || t('enableFailed'));
         return;
       }

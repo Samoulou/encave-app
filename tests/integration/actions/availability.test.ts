@@ -65,8 +65,11 @@ describe('Availability Actions', () => {
     },
   };
 
-  const mockWinery = { id: 'winery-123' };
-  const mockExperience = { id: 'exp-123' };
+  const mockWinery = {
+    id: 'winery-123',
+    experiences: [{ slug: 'degustation' }],
+  };
+  const mockExperience = { id: 'exp-123', slug: 'degustation' };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -209,7 +212,7 @@ describe('Availability Actions', () => {
       }
     });
 
-    it('returns VALIDATION_ERROR for overlapping slots', async () => {
+    it('returns SLOTS_OVERLAP for overlapping slots', async () => {
       mockAuth.mockResolvedValueOnce(mockSession);
       mockDb.winery.findUnique.mockResolvedValueOnce(mockWinery as never);
       mockDb.experience.findFirst.mockResolvedValueOnce(
@@ -226,7 +229,7 @@ describe('Availability Actions', () => {
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error.code).toBe('VALIDATION_ERROR');
+        expect(result.error.code).toBe('SLOTS_OVERLAP');
         expect(result.error.message).toContain('Overlapping');
       }
     });

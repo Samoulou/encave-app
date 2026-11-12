@@ -13,7 +13,7 @@ vi.mock('@/server/db', () => ({
       updateMany: vi.fn(),
     },
     winery: { findUnique: vi.fn(), create: vi.fn() },
-    user: { update: vi.fn() },
+    user: { update: vi.fn(), findUnique: vi.fn() },
     verificationLog: { create: vi.fn() },
     $transaction: vi.fn(),
   },
@@ -135,13 +135,17 @@ describe('provisionFounderWinery', () => {
       count: 1,
     } as never);
     vi.mocked(db.winery.findUnique).mockResolvedValue(null); // no existing winery
+    // The caller has proven control of the invited mailbox (fresh DB read).
+    vi.mocked(db.user.findUnique).mockResolvedValue({
+      emailVerified: true,
+    } as never);
     vi.mocked(db.winery.create).mockResolvedValue({
       id: 'winery-1',
       slug: 'domaine-test',
     } as never);
     vi.mocked(db.$transaction).mockImplementation(((fn: unknown) =>
       typeof fn === 'function'
-        ? (fn as (tx: typeof db) => unknown)(db)
+        ? (fn as (_tx: typeof db) => unknown)(db)
         : Promise.resolve(fn)) as never);
   });
 
@@ -242,6 +246,40 @@ describe('provisionFounderWinery', () => {
       email: 'someone-else@test.ch',
     } as never);
     const result = await provisionFounderWinery(input);
+    expect(result).toMatchObject({
+      success: false,
+      error: { code: 'FORBIDDEN' },
+    });
+    expect(db.winery.create).not.toHaveBeenCalled();
+  });
+
+  // Security (audit M3): a leaked link + the invited email is not enough —
+  // sign-in does not require a verified address.
+  it('is FORBIDDEN while the caller email is unverified, and consumes nothing', async () => {
+    vi.mocked(db.user.findUnique).mockResolvedValue({
+      emailVerified: false,
+    } as never);
+
+    const result = await provisionFounderWinery(input);
+
+    expect(result).toMatchObject({
+      success: false,
+      error: { code: 'FORBIDDEN' },
+    });
+    expect(db.user.findUnique).toHaveBeenCalledWith({
+      where: { id: 'user-1' },
+      select: { emailVerified: true },
+    });
+    expect(db.$transaction).not.toHaveBeenCalled();
+    expect(db.invitation.updateMany).not.toHaveBeenCalled();
+    expect(db.winery.create).not.toHaveBeenCalled();
+  });
+
+  it('fails closed when the user row cannot be read', async () => {
+    vi.mocked(db.user.findUnique).mockResolvedValue(null);
+
+    const result = await provisionFounderWinery(input);
+
     expect(result).toMatchObject({
       success: false,
       error: { code: 'FORBIDDEN' },

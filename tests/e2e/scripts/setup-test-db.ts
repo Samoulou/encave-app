@@ -140,7 +140,9 @@ async function main() {
       data: {
         userId: createdUser.id,
         providerId: 'credential',
-        accountId: user.email,
+        // better-auth keys a credential account on the USER ID (1.7 refuses
+        // the sign-in otherwise) — never on the email.
+        accountId: createdUser.id,
         password: hashedPassword,
       },
     });

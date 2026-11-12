@@ -7,8 +7,10 @@
 import { describe, it, expect } from 'vitest';
 import {
   isSecondFactorGapPath,
+  isSessionCreationBlocked,
   isSessionPastRoleWindow,
   sessionWindowMsForRole,
+  twoFactorAttemptsIdentifier,
 } from '@/server/auth-hardening';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -65,5 +67,27 @@ describe('isSecondFactorGapPath (G-1)', () => {
     expect(isSecondFactorGapPath('/two-factor/verify-totp')).toBe(false);
     expect(isSecondFactorGapPath('/sign-up/email')).toBe(false);
     expect(isSecondFactorGapPath('/change-email')).toBe(false);
+  });
+});
+
+describe('isSessionCreationBlocked (audit M1 — central suspension gate)', () => {
+  it('blocks a suspended user', () => {
+    expect(isSessionCreationBlocked({ suspendedAt: new Date() })).toBe(true);
+  });
+
+  it('lets an active user through', () => {
+    expect(isSessionCreationBlocked({ suspendedAt: null })).toBe(false);
+  });
+
+  it('fails closed when the user row is missing', () => {
+    expect(isSessionCreationBlocked(null)).toBe(true);
+    expect(isSessionCreationBlocked(undefined)).toBe(true);
+  });
+});
+
+describe('twoFactorAttemptsIdentifier (better-auth 1.7 challenge contract)', () => {
+  it('matches the key verify-totp consumes for a challenge', () => {
+    // dist/plugins/two-factor/verify-two-factor.mjs: `2fa-attempts-${cookie}`
+    expect(twoFactorAttemptsIdentifier('2fa-abc')).toBe('2fa-attempts-2fa-abc');
   });
 });

@@ -63,7 +63,21 @@ export const auth = cache(async function auth(): Promise<Session | null> {
       preferredLocale: Locale;
       twoFactorEnabled?: boolean;
       emailVerified?: boolean;
+      suspendedAt?: Date | string | null;
     };
+
+    // Central suspension gate (audit M1): a suspended account has NO
+    // session as far as the app is concerned — every server action and
+    // protected page starts with auth(), so none of them needs its own
+    // check. `suspendedAt` is a better-auth additional field carried by the
+    // session user: zero extra DB read per call. Trade-off, accepted: the
+    // value is as fresh as the session read — up to the 5 min cookie cache
+    // right after a suspension (suspendUser also deletes the sessions, and
+    // the session-create hook refuses new ones, so that window is the only
+    // gap). The ADMIN boundary reads it fresh (getCurrentUserSecurityState).
+    if (user.suspendedAt) {
+      return null;
+    }
 
     return {
       user: {

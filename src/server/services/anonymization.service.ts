@@ -68,6 +68,59 @@ export async function anonymizeUser(
       },
     });
 
+    // nLPD (audit 2026-11-12): every other table keyed by the person's
+    // email. Same rule as the bookings above — the PERSONAL fields are
+    // blanked, the commercial / financial record stays (amounts, statuses,
+    // references, the gift-card code + balance and its append-only ledger,
+    // offers and their prices), as the legal retention of accounting
+    // records requires.
+    const byEmail = {
+      equals: user.email,
+      mode: 'insensitive',
+    } satisfies Prisma.StringFilter;
+
+    // Gift cards bought: the card and its ledger are untouched; only the
+    // buyer's identity and the personal note go.
+    await tx.giftCard.updateMany({
+      where: { purchaserEmail: byEmail },
+      data: {
+        purchaserEmail: deletedEmail,
+        purchaserName: null,
+        message: null,
+      },
+    });
+    // Gift cards received: the code stays redeemable (bearer value).
+    await tx.giftCard.updateMany({
+      where: { recipientEmail: byEmail },
+      data: { recipientEmail: null, recipientName: null, message: null },
+    });
+
+    // Sur-mesure requests: identity + free-text brief. The winery's offers
+    // (text, price, status, booking link) are its own commercial record.
+    await tx.request.updateMany({
+      where: { clientEmail: byEmail },
+      data: {
+        clientEmail: deletedEmail,
+        clientName: deletedName,
+        clientPhone: null,
+        description: '',
+      },
+    });
+
+    // Wine order requests (J+2 recap): identity only, the ordered lines stay.
+    await tx.wineOrderRequest.updateMany({
+      where: { clientEmail: byEmail },
+      data: {
+        clientEmail: deletedEmail,
+        clientName: deletedName,
+        clientPhone: null,
+      },
+    });
+
+    // Pure contact-list rows — nothing to retain: deleted outright.
+    await tx.clientEmailPreference.deleteMany({ where: { email: byEmail } });
+    await tx.newsletterSubscription.deleteMany({ where: { email: byEmail } });
+
     if (user.winery) {
       await tx.experience.updateMany({
         where: { wineryId: user.winery.id, status: 'PUBLISHED' },

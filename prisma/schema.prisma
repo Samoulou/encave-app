@@ -234,6 +234,8 @@ model WineryGalleryImage {
   winery    Winery   @relation(fields: [wineryId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 
+  // Quality lot (audit 2026-11-12): FK index — fiche include + visibility EXISTS.
+  @@index([wineryId])
   @@map("winery_gallery_images")
 }
 
@@ -259,6 +261,8 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([providerId, accountId])
+  // Quality lot (audit 2026-11-12): better-auth reads accounts by user.
+  @@index([userId])
   @@map("accounts")
 }
 
@@ -274,6 +278,8 @@ model Session {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  // Quality lot (audit 2026-11-12): list/revoke sessions by user, cascade delete.
+  @@index([userId])
   @@map("sessions")
 }
 
@@ -295,6 +301,8 @@ model Verification {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @default(now()) @updatedAt
 
+  // Quality lot (audit 2026-11-12): better-auth looks codes up by identifier.
+  @@index([identifier])
   @@map("verifications")
 }
 
@@ -302,11 +310,20 @@ model Verification {
 // plugin's expected shape (two-factor/schema.d.mts): secret + backupCodes
 // (both returned:false) keyed by userId. One row per user (1-1).
 model TwoFactor {
-  id          String @id @default(cuid())
-  secret      String
-  backupCodes String
-  userId      String @unique
-  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                      String    @id @default(cuid())
+  secret                  String
+  backupCodes             String
+  userId                  String    @unique
+  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Security lot (audit 2026-11-12) — better-auth 1.7 twoFactor schema:
+  // `verified` = the TOTP secret was confirmed by a first valid code (rows
+  // created before 1.7 are enrolled → default true); the two others carry
+  // the account-level lockout after consecutive failed verifications.
+  // better-auth REJECTS every /api/auth request when one is missing
+  // (tests/unit/server/better-auth-schema.test.ts guards it).
+  verified                Boolean?  @default(true)
+  failedVerificationCount Int?      @default(0)
+  lockedUntil             DateTime?
 
   @@map("two_factors")
 }
@@ -350,6 +367,8 @@ model VerificationLog {
   reason    String?
   createdAt DateTime @default(now())
 
+  // Quality lot (audit 2026-11-12): FK index (admin winery detail).
+  @@index([wineryId])
   @@map("verification_logs")
 }
 
@@ -407,6 +426,9 @@ model Experience {
   @@index([description(ops: raw("gin_trgm_ops"))], type: Gin, map: "experiences_description_trgm_idx")
   @@index([status, price])
   @@index([createdAt])
+  // Quality lot (audit 2026-11-12): the public fiche resolves by slug alone — the
+  // (wineryId, slug) unique cannot serve it.
+  @@index([slug])
   @@map("experiences")
 }
 
@@ -418,6 +440,8 @@ model ExperienceGalleryImage {
   experience   Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
   createdAt    DateTime   @default(now())
 
+  // Quality lot (audit 2026-11-12): FK index — fiche gallery include.
+  @@index([experienceId])
   @@map("experience_gallery_images")
 }
 
@@ -556,6 +580,11 @@ model Booking {
   // NOT stripePaymentIntentId, so payouts.queries matches this column too).
   @@index([noShowFeeChargePaymentIntentId])
   @@index([occurrenceId])
+  // Quality lot (audit 2026-11-12): admin bookings list orders by createdAt.
+  @@index([createdAt])
+  // Declared in migration 20260712120000_p09_gift_redemption but missing here:
+  // without it the next `migrate dev` would have generated a DROP INDEX.
+  @@index([giftAppliedCents, giftTransferId])
   @@map("bookings")
 }
 
@@ -630,6 +659,8 @@ model EmailLog {
   @@index([type, createdAt])
   @@index([recipientId])
   @@index([wineryId, type])
+  // Quality lot (audit 2026-11-12): admin health view (failed, recent) + retention purge.
+  @@index([status, createdAt])
   @@map("email_logs")
 }
 
@@ -852,7 +883,17 @@ model RequestOffer {
   // the #10 reminder, and grants only "view offer + pay it", never data a
   // DB reader wouldn't already have. NOT hashed on purpose (a rotating hash
   // would break the #9 link when #10 mints a new one).
+  // Security lot (audit 2026-11-12): being phased out — see paymentTokenHash.
+  // Still written (dual-write) because the reminder job and « mes demandes »
+  // read it back; once they derive the token instead, stop writing it and
+  // null the column.
   paymentToken            String?            @unique
+  // sha256 of the payment-link token (src/lib/utils/token.ts). The token is
+  // DERIVED from the offer id (src/lib/utils/offer-payment-token.ts), so the
+  // link can always be rebuilt server-side and only this hash needs to be
+  // stored. Lookup is hash-first; rows created before this column (null)
+  // fall back to the legacy plaintext match until they expire.
+  paymentTokenHash        String?            @unique
   stripeCheckoutSessionId String?
   bookingId               String?
   createdAt               DateTime           @default(now())
