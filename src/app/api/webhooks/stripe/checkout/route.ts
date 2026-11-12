@@ -5,17 +5,24 @@ import * as Sentry from '@sentry/nextjs';
 import { getStripe, isStripeConfigured } from '@/server/stripe';
 import { db } from '@/server/db';
 import { env } from '@/lib/env';
-import { BookingStatus } from '@prisma/client';
+import { BookingStatus, NoShowChargeStatus } from '@prisma/client';
 import {
   confirmBookingFromPaidCheckoutSession,
   confirmImprintBookingFromSetupSession,
 } from '@/server/services/checkout-confirmation.service';
-import { createGiftCardFromPayment } from '@/server/services/giftCard.service';
+import {
+  createGiftCardFromPayment,
+  disableGiftCardForPayment,
+} from '@/server/services/giftCard.service';
 import { settleGiftTransfer } from '@/server/services/giftCard-transfer.service';
-import { releaseGiftForBooking } from '@/server/services/giftCard-redemption.service';
+import {
+  releaseGiftForBooking,
+  releaseGiftForBookingInTx,
+} from '@/server/services/giftCard-redemption.service';
+import { syncBookingRefundFromStripe } from '@/server/services/booking-refund.service';
 import { flipRequestOfferPaid } from '@/server/services/request.service';
 import { refundOrphanedCheckoutPayment } from '@/server/services/payment.service';
-import { logError, logInfo } from '@/lib/logger';
+import { logError, logInfo, logWarn } from '@/lib/logger';
 import {
   claimStripeEvent,
   markStripeEventFailed,
@@ -28,6 +35,17 @@ import {
  * past the stale threshold could be reclaimed and double-processed.
  */
 export const maxDuration = 60;
+
+/**
+ * A `checkout.session.expired` event for a booking whose own expiry is
+ * still further away than this was RE-CLAIMED: the client retried after an
+ * aborted payment, the action extended the hold (now + 30 min) and expired
+ * the old session itself — its expiry webhook can land before the new
+ * session id is written on the row. A naturally expired session arrives
+ * AFTER the booking's expiry (both are aligned on `session.expires_at`), so
+ * a couple of minutes absorb any clock skew without ever matching it.
+ */
+const RECLAIM_GUARD_MS = 2 * 60 * 1000;
 
 export async function POST(req: Request) {
   if (!isStripeConfigured()) {
@@ -117,6 +135,28 @@ export async function POST(req: Request) {
         break;
       }
 
+      // Money that moved OUTSIDE the app (M3): a chargeback opened by the
+      // cardholder, or a refund issued from the Stripe Dashboard. The
+      // endpoint must be subscribed to these three event types.
+      case 'charge.dispute.created': {
+        await handleChargeDispute(
+          event.data.object as Stripe.Dispute,
+          'opened'
+        );
+        break;
+      }
+      case 'charge.dispute.closed': {
+        await handleChargeDispute(
+          event.data.object as Stripe.Dispute,
+          'closed'
+        );
+        break;
+      }
+      case 'charge.refunded': {
+        await handleChargeRefunded(event.data.object as Stripe.Charge);
+        break;
+      }
+
       default:
         // Log unhandled events but don't fail
         logInfo('Unhandled checkout event type', { eventType: event.type });
@@ -170,6 +210,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       await refundOrphanIfCancelledNeverConfirmed(session);
     } else if (result === 'session_mismatch') {
       await refundPaidSessionMismatch(session);
+    } else if (result === 'amount_mismatch') {
+      await refundPaidAmountMismatch(session);
     }
     return;
   }
@@ -210,6 +252,11 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   // on it: the gift state on the booking belongs to the CURRENT session.
   if (result === 'session_mismatch') {
     await refundPaidSessionMismatch(session);
+    return;
+  }
+  // PAID, but not the amount the booking owes — never confirmed silently.
+  if (result === 'amount_mismatch') {
+    await refundPaidAmountMismatch(session);
     return;
   }
 
@@ -260,6 +307,39 @@ async function refundPaidSessionMismatch(session: Stripe.Checkout.Session) {
   Sentry.captureMessage('paid checkout session mismatch — refunded', {
     level: 'error',
     tags: { area: 'stripe-webhook', incident: 'session-mismatch' },
+    extra: {
+      bookingId,
+      sessionId: session.id,
+      kind: session.metadata?.kind ?? 'booking',
+      amountTotal: session.amount_total,
+    },
+  });
+  await refundOrphanedCheckoutPayment(session);
+}
+
+/**
+ * A PAID session whose total is not what its booking owes
+ * (`amount_mismatch`, checkout-confirmation.service). Every session is
+ * built server-side from the booking, so this is a bug or a stale session
+ * that slipped through — the booking was NOT confirmed. Give the money
+ * back (orphan path, idempotent on the session id) and alert; the booking
+ * stays pending and expires normally.
+ */
+async function refundPaidAmountMismatch(session: Stripe.Checkout.Session) {
+  const bookingId = session.metadata?.bookingId;
+  logError(
+    'Paid checkout amount does not match its booking — refunding',
+    undefined,
+    {
+      action: 'refundPaidAmountMismatch',
+      bookingId,
+      sessionId: session.id,
+      amountTotal: session.amount_total,
+    }
+  );
+  Sentry.captureMessage('paid checkout amount mismatch — refunded', {
+    level: 'error',
+    tags: { area: 'stripe-webhook', incident: 'amount-mismatch' },
     extra: {
       bookingId,
       sessionId: session.id,
@@ -328,11 +408,21 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
       status: true,
       reference: true,
       stripeCheckoutSessionId: true,
+      expiresAt: true,
     },
   });
 
   if (!booking) {
-    logError('Booking not found', undefined, { bookingId });
+    // The row is already gone (a previous delivery of this event, or the
+    // hold cleanup). A deleted booking can never use its gift again, so
+    // returning whatever is still reserved is always right — and it makes
+    // this handler safe to REPLAY: the redemption is keyed by bookingId and
+    // survives the row (no FK). Idempotent, no-op without a gift.
+    const released = await releaseGiftForBooking(bookingId);
+    logInfo('Expired session — booking already gone', {
+      bookingId,
+      giftReleased: released === 'refunded',
+    });
     return;
   }
 
@@ -361,24 +451,56 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
     return;
   }
 
+  // Re-claim IN FLIGHT: the booking still points at this (just expired)
+  // session, but its own expiry was pushed into the future — the client is
+  // retrying right now and the new session id is not written yet. Deleting
+  // here killed the booking under the retry (and, with a gift, could strand
+  // the re-redemption on a row that no longer exists). If the retry never
+  // completes, the expiry sweep cleans the row once its window is over.
+  const reclaimCutoff = new Date(Date.now() + RECLAIM_GUARD_MS);
+  if (booking.expiresAt && booking.expiresAt > reclaimCutoff) {
+    logInfo('Expired session — booking was re-claimed, keeping', {
+      bookingRef: booking.reference,
+      expiredSessionId: session.id,
+      bookingExpiresAt: booking.expiresAt.toISOString(),
+    });
+    return;
+  }
+
   // Guarded delete (replaces a check-then-delete TOCTOU): only remove a
   // booking STILL pending payment on THIS session (or one that hasn't had a
-  // session id attached yet). A concurrent confirmation (CAS → CONFIRMED) or a
-  // newer session must survive — never delete a booking being paid (P-04).
-  const deleted = await db.booking.deleteMany({
-    where: {
-      id: bookingId,
-      status: BookingStatus.PENDING_PAYMENT,
-      OR: [
-        { stripeCheckoutSessionId: session.id },
-        { stripeCheckoutSessionId: null },
-      ],
-    },
+  // session id attached yet) and NOT re-claimed meanwhile. A concurrent
+  // confirmation (CAS → CONFIRMED), a newer session or a re-claim must
+  // survive — never delete a booking being paid (P-04).
+  //
+  // The delete and the gift release are ONE transaction: done as two
+  // statements, a failure in between left the row gone with its redemption
+  // still reserved, and the redelivery had nothing left to act on.
+  const deleted = await db.$transaction(async (tx) => {
+    const result = await tx.booking.deleteMany({
+      where: {
+        id: bookingId,
+        status: BookingStatus.PENDING_PAYMENT,
+        AND: [
+          {
+            OR: [
+              { stripeCheckoutSessionId: session.id },
+              { stripeCheckoutSessionId: null },
+            ],
+          },
+          { OR: [{ expiresAt: null }, { expiresAt: { lte: reclaimCutoff } }] },
+        ],
+      },
+    });
+    if (result.count === 0) return false;
+    // Idempotent, no-op when no gift was applied (P-09, Luca §4).
+    await releaseGiftForBookingInTx(tx, bookingId);
+    return true;
   });
 
-  if (deleted.count === 0) {
+  if (!deleted) {
     logInfo(
-      'Expired session — booking confirmed/paid or on a newer session, kept',
+      'Expired session — booking confirmed/paid, re-claimed or on a newer session, kept',
       {
         bookingRef: booking.reference,
         expiredSessionId: session.id,
@@ -386,11 +508,6 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
     );
     return;
   }
-
-  // The row is gone; return any reserved gift funds. The gift ledger row
-  // survives the delete (keyed by bookingId, no FK), so this still works.
-  // Idempotent, no-op when no gift was applied (P-09, Luca §4).
-  await releaseGiftForBooking(bookingId);
 
   logInfo('Booking deleted due to checkout session expiry', {
     bookingRef: booking.reference,
@@ -457,23 +574,32 @@ async function handleCheckoutAsyncPaymentFailed(
     return;
   }
 
-  const cancelled = await db.booking.updateMany({
-    where: {
-      id: bookingId,
-      status: BookingStatus.PENDING_PAYMENT,
-      OR: [
-        { stripeCheckoutSessionId: session.id },
-        { stripeCheckoutSessionId: null },
-      ],
-    },
-    data: {
-      status: BookingStatus.CANCELLED_BY_CLIENT,
-      cancelledAt: new Date(),
-      cancellationReason: 'PAYMENT_FAILED',
-    },
+  // Cancellation + gift release in ONE transaction (same reason as the
+  // expiry handler): a replay finds the booking already cancelled and
+  // returns early, so the release must never be left behind.
+  const cancelled = await db.$transaction(async (tx) => {
+    const result = await tx.booking.updateMany({
+      where: {
+        id: bookingId,
+        status: BookingStatus.PENDING_PAYMENT,
+        OR: [
+          { stripeCheckoutSessionId: session.id },
+          { stripeCheckoutSessionId: null },
+        ],
+      },
+      data: {
+        status: BookingStatus.CANCELLED_BY_CLIENT,
+        cancelledAt: new Date(),
+        cancellationReason: 'PAYMENT_FAILED',
+      },
+    });
+    if (result.count === 0) return false;
+    // Idempotent, no-op when no gift was applied (P-09, Luca §4).
+    await releaseGiftForBookingInTx(tx, bookingId);
+    return true;
   });
 
-  if (cancelled.count === 0) {
+  if (!cancelled) {
     logInfo(
       'Async payment failed — booking confirmed/paid or on a newer session, kept',
       { bookingRef: booking.reference, failedSessionId: session.id }
@@ -481,10 +607,237 @@ async function handleCheckoutAsyncPaymentFailed(
     return;
   }
 
-  // Idempotent, no-op when no gift was applied (P-09, Luca §4).
-  await releaseGiftForBooking(bookingId);
-
   logInfo('Booking cancelled due to async payment failure', {
     bookingRef: booking.reference,
+  });
+}
+
+function paymentIntentIdOf(
+  value: string | Stripe.PaymentIntent | null | undefined
+): string | null {
+  if (!value) return null;
+  return typeof value === 'string' ? value : value.id;
+}
+
+/**
+ * `charge.dispute.created` / `charge.dispute.closed` — a cardholder
+ * chargeback. On a destination charge the PLATFORM is debited (amount +
+ * dispute fee); nothing in the app used to know.
+ *
+ *  - Dispute on a GIFT CARD purchase: the card is DISABLED at once (same
+ *    status flip as the admin action — balance and ledger untouched). A
+ *    card bought with a stolen card would otherwise stay redeemable and
+ *    the platform would pay the winery out of its own balance. What was
+ *    already redeemed is reported as exposure.
+ *  - Dispute on a booking (or its no-show fee): nothing destructive — the
+ *    booking is real, the dispute may be won. Alert with the reference.
+ *
+ * `closed` only reports the outcome: a disabled card is NOT re-enabled
+ * automatically (it may have been disabled for another reason) — an admin
+ * decides on a won dispute.
+ */
+async function handleChargeDispute(
+  dispute: Stripe.Dispute,
+  phase: 'opened' | 'closed'
+) {
+  const paymentIntentId = paymentIntentIdOf(dispute.payment_intent);
+  const base = {
+    disputeId: dispute.id,
+    phase,
+    disputeStatus: dispute.status,
+    reason: dispute.reason,
+    amountCents: dispute.amount,
+    paymentIntentId,
+  };
+  const alert = (target: string, extra: Record<string, unknown>) => {
+    logError(`Stripe dispute ${phase} — ${target}`, undefined, {
+      action: 'handleChargeDispute',
+      ...base,
+      ...extra,
+    });
+    Sentry.captureMessage(`stripe dispute ${phase}: ${target}`, {
+      // A lost/open dispute is money leaving; a won one is good news.
+      level: phase === 'closed' && dispute.status === 'won' ? 'info' : 'error',
+      tags: { area: 'stripe-webhook', incident: 'dispute', target },
+      extra: { ...base, ...extra },
+    });
+  };
+
+  if (!paymentIntentId) {
+    alert('unknown-payment', {});
+    return;
+  }
+
+  // Gift card purchase?
+  if (phase === 'opened') {
+    const disabled = await disableGiftCardForPayment(
+      paymentIntentId,
+      'dispute'
+    );
+    if (disabled) {
+      alert('gift-card', {
+        giftCardId: disabled.id,
+        cardDisabledNow: disabled.disabledNow,
+        initialAmountCents: disabled.initialAmount,
+        // Already spent before the dispute = the platform's real exposure.
+        redeemedCents: disabled.initialAmount - disabled.balance,
+        remainingBalanceCents: disabled.balance,
+      });
+      return;
+    }
+  } else {
+    const giftCard = await db.giftCard.findUnique({
+      where: { stripePaymentIntentId: paymentIntentId },
+      select: { id: true, status: true, balance: true },
+    });
+    if (giftCard) {
+      alert('gift-card', {
+        giftCardId: giftCard.id,
+        giftCardStatus: giftCard.status,
+        remainingBalanceCents: giftCard.balance,
+        // Won: the purchase stands — re-enable from the admin if the card
+        // was disabled by this dispute.
+        action: dispute.status === 'won' ? 'review_reenable' : 'none',
+      });
+      return;
+    }
+  }
+
+  // Booking payment, or the no-show fee charged on a booking?
+  const booking = await db.booking.findFirst({
+    where: {
+      OR: [
+        { stripePaymentIntentId: paymentIntentId },
+        { noShowFeeChargePaymentIntentId: paymentIntentId },
+      ],
+    },
+    select: {
+      id: true,
+      reference: true,
+      status: true,
+      wineryId: true,
+      stripePaymentIntentId: true,
+    },
+  });
+  if (booking) {
+    alert(
+      booking.stripePaymentIntentId === paymentIntentId
+        ? 'booking'
+        : 'no-show-fee',
+      {
+        bookingId: booking.id,
+        bookingRef: booking.reference,
+        bookingStatus: booking.status,
+        wineryId: booking.wineryId,
+      }
+    );
+    return;
+  }
+
+  alert('unmatched-payment', {});
+}
+
+/**
+ * `charge.refunded` — fired for EVERY refund on a charge: the app's own
+ * (cancellation, admin, no-show revert) and the ones issued by hand from
+ * the Stripe Dashboard, which the DB never heard about. `amount_refunded`
+ * is cumulative, so the handler is a pure, monotonic sync:
+ *
+ *  - booking payment → `refundAmount` / `refundIssued` are raised to
+ *    Stripe's truth (never lowered — an echo of our own refund is a
+ *    no-op), so a later cancellation refunds only what is still due;
+ *  - no-show fee fully refunded → marked refunded, so the statement stops
+ *    counting it and a later revert does not try to refund it again;
+ *  - gift card purchase fully refunded → the card is disabled (the money
+ *    went back, the balance must not stay spendable).
+ */
+async function handleChargeRefunded(charge: Stripe.Charge) {
+  const paymentIntentId = paymentIntentIdOf(charge.payment_intent);
+  if (!paymentIntentId) {
+    logInfo('charge.refunded without a payment intent — ignored', {
+      chargeId: charge.id,
+    });
+    return;
+  }
+
+  const booking = await db.booking.findFirst({
+    where: { stripePaymentIntentId: paymentIntentId },
+    select: { id: true, reference: true },
+  });
+  if (booking) {
+    const outcome = await syncBookingRefundFromStripe({
+      bookingId: booking.id,
+      cardRefundedCents: charge.amount_refunded,
+    });
+    logInfo('charge.refunded — booking refund ledger checked', {
+      action: 'handleChargeRefunded',
+      bookingRef: booking.reference,
+      cardRefundedCents: charge.amount_refunded,
+      outcome,
+    });
+    return;
+  }
+
+  const noShowBooking = await db.booking.findFirst({
+    where: { noShowFeeChargePaymentIntentId: paymentIntentId },
+    select: { id: true, reference: true },
+  });
+  if (noShowBooking) {
+    if (charge.refunded) {
+      // Write-once: the app's own refund flow stores the real re_ id; this
+      // only fills the gap left by a Dashboard refund.
+      const marked = await db.booking.updateMany({
+        where: {
+          id: noShowBooking.id,
+          noShowFeeChargeStatus: NoShowChargeStatus.CHARGED,
+          noShowFeeRefundId: null,
+        },
+        data: {
+          noShowFeeRefundId: `stripe:${charge.id}`,
+          noShowFeeRefundedCents: charge.amount_refunded,
+        },
+      });
+      logInfo('charge.refunded — no-show fee refund checked', {
+        action: 'handleChargeRefunded',
+        bookingRef: noShowBooking.reference,
+        markedRefunded: marked.count === 1,
+      });
+    } else {
+      logWarn('charge.refunded — PARTIAL no-show fee refund, not synced', {
+        action: 'handleChargeRefunded',
+        bookingRef: noShowBooking.reference,
+        cardRefundedCents: charge.amount_refunded,
+      });
+    }
+    return;
+  }
+
+  if (charge.refunded) {
+    const disabled = await disableGiftCardForPayment(paymentIntentId, 'refund');
+    if (disabled) {
+      logWarn('charge.refunded — gift card purchase refunded, card disabled', {
+        action: 'handleChargeRefunded',
+        giftCardId: disabled.id,
+        cardDisabledNow: disabled.disabledNow,
+        redeemedCents: disabled.initialAmount - disabled.balance,
+      });
+      Sentry.captureMessage('gift card purchase refunded — card disabled', {
+        level: 'warning',
+        tags: { area: 'stripe-webhook', incident: 'gift-purchase-refunded' },
+        extra: {
+          giftCardId: disabled.id,
+          paymentIntentId,
+          redeemedCents: disabled.initialAmount - disabled.balance,
+          remainingBalanceCents: disabled.balance,
+        },
+      });
+      return;
+    }
+  }
+
+  logInfo('charge.refunded — no booking or gift card for this payment', {
+    action: 'handleChargeRefunded',
+    paymentIntentId,
+    fullyRefunded: charge.refunded,
   });
 }

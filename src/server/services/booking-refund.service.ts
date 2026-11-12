@@ -1,10 +1,15 @@
 import * as Sentry from '@sentry/nextjs';
+import type { BookingStatus } from '@prisma/client';
 import { db } from '@/server/db';
+import { getStripe } from '@/server/stripe';
 import { processRefund } from '@/server/services/payment.service';
-import { releaseGiftForBooking } from '@/server/services/giftCard-redemption.service';
+import {
+  GIFT_CANCELLATION_REFUND_NOTE,
+  releaseGiftForBooking,
+} from '@/server/services/giftCard-redemption.service';
 import { reverseGiftTransferForCancellation } from '@/server/services/giftCard-transfer.service';
 import { splitRefundBetweenCardAndGift } from '@/lib/business-rules/cancellation-policy';
-import { logError, logInfo } from '@/lib/logger';
+import { logError, logInfo, logWarn } from '@/lib/logger';
 
 /**
  * Cancellation refund orchestration (P-16 / WS-A.3, ADR-0003) — the ONE
@@ -80,18 +85,131 @@ export interface CancellationRefundOutcome {
   giftRestoredCents: number;
   /** Client-facing total returned: card + gift. */
   totalReturnedCents: number;
+  /**
+   * Card money Stripe had ALREADY refunded on this payment that
+   * `Booking.refundAmount` did not know about (a Stripe Dashboard refund
+   * whose `charge.refunded` sync never landed). 0 in the normal case. The
+   * ledger write must add it — see {@link recordCancellationRefund}.
+   */
+  ledgerDriftCents: number;
 }
 
+const NO_REFUND: CancellationRefundOutcome = {
+  cardRefundCents: null,
+  stripeRefundId: null,
+  giftRestoredCents: 0,
+  totalReturnedCents: 0,
+  ledgerDriftCents: 0,
+};
+
+/**
+ * Card refunds Stripe holds for a payment (succeeded or still pending) —
+ * the truth `Booking.refundAmount` is supposed to mirror.
+ */
+async function sumStripeRefundedCents(
+  paymentIntentId: string
+): Promise<number> {
+  const refunds = await getStripe().refunds.list({
+    payment_intent: paymentIntentId,
+    limit: 100,
+  });
+  return refunds.data
+    .filter(
+      (refund) => refund.status !== 'failed' && refund.status !== 'canceled'
+    )
+    .reduce((sum, refund) => sum + refund.amount, 0);
+}
+
+function isStripeInvalidRequest(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'type' in error &&
+    error.type === 'StripeInvalidRequestError'
+  );
+}
+
+/**
+ * Cancellation refund, tolerant of money Stripe already returned.
+ *
+ * `refundDueCents` is derived from `Booking.refundAmount`. When a refund
+ * was made from the Stripe Dashboard and never synced, that figure is
+ * stale: the card refund asks for more than the charge has left, Stripe
+ * rejects it deterministically, the caller releases its claim — and the
+ * booking can never be cancelled again. On such a rejection we ask Stripe
+ * what it already refunded; if it holds MORE than the ledger knew, the due
+ * amount is recomputed against that truth and only the rest is refunded.
+ * Any other rejection is rethrown untouched (caller semantics unchanged).
+ */
 export async function processCancellationRefund(
   input: CancellationRefundInput
 ): Promise<CancellationRefundOutcome> {
-  const none: CancellationRefundOutcome = {
-    cardRefundCents: null,
-    stripeRefundId: null,
-    giftRestoredCents: 0,
-    totalReturnedCents: 0,
-  };
-  if (input.refundDueCents <= 0) return none;
+  if (input.refundDueCents <= 0) return NO_REFUND;
+  try {
+    return await executeCancellationRefund(input);
+  } catch (error) {
+    // Only the FIRST movement (the card refund) can throw, so nothing has
+    // moved yet when we get here — a recomputed second attempt is safe.
+    const paymentIntentId = input.stripePaymentIntentId;
+    if (
+      !isStripeInvalidRequest(error) ||
+      !paymentIntentId ||
+      !paymentIntentId.startsWith('pi_')
+    ) {
+      throw error;
+    }
+    let stripeRefundedCents: number;
+    try {
+      stripeRefundedCents = await sumStripeRefundedCents(paymentIntentId);
+    } catch (listError) {
+      logError('Could not read Stripe refunds after a rejection', listError, {
+        action: input.actionName,
+        bookingId: input.bookingId,
+      });
+      throw error;
+    }
+    const ledgerDriftCents = stripeRefundedCents - input.alreadyRefundedCents;
+    if (ledgerDriftCents <= 0) throw error; // not a drift — genuine rejection
+
+    const policyDueCents = input.refundDueCents + input.alreadyRefundedCents;
+    const remainingDueCents = Math.max(0, policyDueCents - stripeRefundedCents);
+    logWarn('Stripe already refunded more than the ledger knew', {
+      action: input.actionName,
+      bookingId: input.bookingId,
+      stripeRefundedCents,
+      ledgerRefundedCents: input.alreadyRefundedCents,
+      remainingDueCents,
+    });
+    Sentry.captureMessage('refund ledger drift reconciled on cancellation', {
+      level: 'warning',
+      tags: { area: 'gift-refund', incident: 'refund-ledger-drift' },
+      extra: {
+        bookingId: input.bookingId,
+        stripeRefundedCents,
+        ledgerRefundedCents: input.alreadyRefundedCents,
+        remainingDueCents,
+      },
+    });
+    await appendRefundError(
+      input.bookingId,
+      `STRIPE_REFUND_DRIFT: Stripe already held ${stripeRefundedCents} cents refunded (ledger knew ${input.alreadyRefundedCents}) — cancellation refunded the remaining ${remainingDueCents} only`
+    );
+    if (remainingDueCents <= 0) {
+      return { ...NO_REFUND, ledgerDriftCents };
+    }
+    const outcome = await executeCancellationRefund({
+      ...input,
+      refundDueCents: remainingDueCents,
+      alreadyRefundedCents: stripeRefundedCents,
+    });
+    return { ...outcome, ledgerDriftCents };
+  }
+}
+
+async function executeCancellationRefund(
+  input: CancellationRefundInput
+): Promise<CancellationRefundOutcome> {
+  const none = NO_REFUND;
 
   // ── Classic booking: single refund on the destination charge. ──────────
   if (input.giftAppliedCents <= 0) {
@@ -133,6 +251,7 @@ export async function processCancellationRefund(
       stripeRefundId: refund.refundId,
       giftRestoredCents: 0,
       totalReturnedCents: refund.amount,
+      ledgerDriftCents: 0,
     };
   }
 
@@ -190,7 +309,7 @@ export async function processCancellationRefund(
     if (giftRestoreCents > 0) {
       const outcome = await releaseGiftForBooking(input.bookingId, {
         amountCents: giftRestoreCents,
-        note: 'cancellation_refund',
+        note: GIFT_CANCELLATION_REFUND_NOTE,
       });
       if (outcome === 'refunded') giftRestoredCents = giftRestoreCents;
       logInfo('gift balance restored on cancellation', {
@@ -269,7 +388,262 @@ export async function processCancellationRefund(
     stripeRefundId,
     giftRestoredCents,
     totalReturnedCents: (issuedCardCents ?? 0) + giftRestoredCents,
+    ledgerDriftCents: 0,
   };
+}
+
+/**
+ * Persist what a cancellation returned on `Booking.refundAmount` — the ONE
+ * ledger write shared by cancelBooking / cancelClientBooking /
+ * cancelEventSession.
+ *
+ * Conditional on the `refundAmount` the caller READ: a concurrent refund
+ * writer must not be clobbered. Two concurrent writers are legitimate and
+ * recognised instead of being flagged:
+ *  - the `charge.refunded` webhook, which syncs our OWN card refund before
+ *    we get here (its value is exactly "read + drift + card refund");
+ *  - anything that already recorded at least our total.
+ * Everything else is a real conflict: the DB value is kept and a
+ * LEDGER_CONFLICT marker is appended for reconciliation.
+ */
+export async function recordCancellationRefund(input: {
+  bookingId: string;
+  /** `Booking.refundAmount` as read before the cancellation. */
+  readRefundAmount: number | null;
+  outcome: CancellationRefundOutcome;
+  actionName: string;
+}): Promise<void> {
+  const { bookingId, readRefundAmount, outcome, actionName } = input;
+  const returnedCents = outcome.ledgerDriftCents + outcome.totalReturnedCents;
+  if (returnedCents <= 0) return;
+
+  const baseCents = readRefundAmount ?? 0;
+  const targetCents = baseCents + returnedCents;
+  const data = {
+    refundIssued: true,
+    refundAmount: targetCents,
+    // A gift-only restitution has no Stripe refund — never null out a re_
+    // written by an earlier admin refund (review #120).
+    ...(outcome.stripeRefundId
+      ? { stripeRefundId: outcome.stripeRefundId }
+      : {}),
+  };
+
+  const recorded = await db.booking.updateMany({
+    where: { id: bookingId, refundAmount: readRefundAmount },
+    data,
+  });
+  if (recorded.count === 1) return;
+
+  const current = await db.booking.findUnique({
+    where: { id: bookingId },
+    select: { refundAmount: true },
+  });
+  const currentCents = current?.refundAmount ?? 0;
+  const webhookSyncedCents =
+    baseCents + outcome.ledgerDriftCents + (outcome.cardRefundCents ?? 0);
+  if (currentCents >= targetCents || currentCents === webhookSyncedCents) {
+    // The webhook sync got there first — complete it (never lower it).
+    await db.booking.updateMany({
+      where: { id: bookingId, refundAmount: current?.refundAmount ?? null },
+      data: { ...data, refundAmount: Math.max(currentCents, targetCents) },
+    });
+    return;
+  }
+
+  logWarn('Refund ledger conflict — concurrent refund writer', {
+    action: actionName,
+    bookingId,
+    cancelRefundCents: outcome.totalReturnedCents,
+    stripeRefundId: outcome.stripeRefundId,
+  });
+  await appendRefundError(
+    bookingId,
+    `LEDGER_CONFLICT: cancellation returned ${outcome.totalReturnedCents} (${outcome.stripeRefundId ?? 'gift only'}) concurrently with another refund writer — reconcile with Stripe`
+  );
+}
+
+/**
+ * Mirror a Stripe-side refund total onto the booking (`charge.refunded`
+ * webhook — a refund issued from the Stripe Dashboard, or the echo of our
+ * own). MONOTONIC: only ever raises `refundAmount`, so a late or replayed
+ * event can never erase a refund the app recorded, and an event for a
+ * refund the app already knows is a no-op. `refundAmount` is the TOTAL
+ * returned (card + restored gift balance, ADR-0003): the gift part comes
+ * from the ledger.
+ */
+export async function syncBookingRefundFromStripe(input: {
+  bookingId: string;
+  /** Stripe `charge.amount_refunded` — cumulative card refunds. */
+  cardRefundedCents: number;
+}): Promise<'synced' | 'noop'> {
+  if (input.cardRefundedCents <= 0) return 'noop';
+  const giftRestored = await db.giftCardTransaction.aggregate({
+    where: {
+      bookingId: input.bookingId,
+      type: 'REFUND',
+      note: GIFT_CANCELLATION_REFUND_NOTE,
+    },
+    _sum: { amount: true },
+  });
+  const targetCents = input.cardRefundedCents + (giftRestored._sum.amount ?? 0);
+  const updated = await db.$executeRaw`
+    UPDATE bookings
+    SET "refundAmount" = ${targetCents}, "refundIssued" = true
+    WHERE id = ${input.bookingId}
+      AND COALESCE("refundAmount", 0) < ${targetCents}
+  `;
+  return updated > 0 ? 'synced' : 'noop';
+}
+
+/* ───────────── cancellation claim + crash-recovery marker ───────────── */
+
+/** A refund is owed and its processing has not finished (or crashed). */
+export const CANCEL_REFUND_PENDING_PREFIX = 'CANCEL_REFUND_PENDING';
+/** Same marker once the sweep found it stale and alerted (ops must act). */
+export const CANCEL_REFUND_STUCK_PREFIX = 'CANCEL_REFUND_STUCK';
+
+function cancelRefundMarker(prefix: string, refundDueCents: number): string {
+  return `${prefix}(${refundDueCents})`;
+}
+
+/**
+ * Atomic cancellation claim (the status flip IS the lock against a double
+ * refund) that ALSO records, in the same transaction, that a refund is owed.
+ *
+ * The claim used to be a bare status update: a crash between it and the
+ * refund (function timeout, deploy, OOM) left a CANCELLED booking with no
+ * refund and NO trace — nothing retries a cancelled booking. The
+ * `CANCEL_REFUND_PENDING(<cents>)` marker in `refundError` is that trace:
+ * cleared by {@link clearCancellationRefundMarker} when the flow ends, it
+ * survives only a crash, where the expiry sweep turns it into an alert.
+ */
+export async function claimBookingCancellation(input: {
+  bookingId: string;
+  from: BookingStatus;
+  to: BookingStatus;
+  cancellationReason?: string;
+  refundDueCents: number;
+}): Promise<boolean> {
+  return db.$transaction(async (tx) => {
+    const claimed = await tx.booking.updateMany({
+      where: { id: input.bookingId, status: input.from },
+      data: {
+        status: input.to,
+        cancelledAt: new Date(),
+        ...(input.cancellationReason !== undefined
+          ? { cancellationReason: input.cancellationReason }
+          : {}),
+      },
+    });
+    if (claimed.count !== 1) return false;
+    if (input.refundDueCents > 0) {
+      const marker = cancelRefundMarker(
+        CANCEL_REFUND_PENDING_PREFIX,
+        input.refundDueCents
+      );
+      await tx.$executeRaw`
+        UPDATE bookings
+        SET "refundError" = COALESCE("refundError" || ' | ', '') || ${marker}
+        WHERE id = ${input.bookingId}
+      `;
+    }
+    return true;
+  });
+}
+
+/**
+ * Remove the pending/stuck marker once the refund flow reached an END
+ * state (refunded, claim released, or a specific reconciliation marker
+ * appended). Other markers in `refundError` are preserved. A failure here
+ * leaves the marker — the sweep then raises a (safe-side) alert.
+ *
+ * `refundDueCents` is only a shortcut: pass the amount the claim was made
+ * with to skip the query when no marker was ever written (0 due). Omit it
+ * to clear unconditionally (resumed bookings: the marker carries the amount
+ * of the ORIGINAL claim, not today's remaining due).
+ */
+export async function clearCancellationRefundMarker(
+  bookingId: string,
+  refundDueCents?: number
+): Promise<void> {
+  if (refundDueCents !== undefined && refundDueCents <= 0) return;
+  try {
+    // Character classes instead of backslash escapes: the pattern travels
+    // through a JS template literal AND a SQL string literal.
+    await db.$executeRaw`
+      UPDATE bookings
+      SET "refundError" = NULLIF(
+        regexp_replace(
+          regexp_replace(
+            "refundError",
+            '( [|] )?CANCEL_REFUND_(PENDING|STUCK)[(][0-9]+[)]',
+            '',
+            'g'
+          ),
+          '^ [|] ',
+          ''
+        ),
+        ''
+      )
+      WHERE id = ${bookingId}
+        AND "refundError" ~ 'CANCEL_REFUND_(PENDING|STUCK)[(]'
+    `;
+  } catch (error) {
+    logError('failed to clear the cancellation refund marker', error, {
+      action: 'clearCancellationRefundMarker',
+      bookingId,
+    });
+  }
+}
+
+/**
+ * Crash-recovery sweep: a `CANCEL_REFUND_PENDING` marker older than the
+ * grace period means the cancellation died between its claim and the end
+ * of its refund. Alert once (Sentry, area:gift-refund) and re-label the
+ * marker STUCK so the next pass does not alert again; the booking stays
+ * findable (refundError) for the incident-paiement runbook. The refund is
+ * NOT replayed automatically: past Stripe's 24 h idempotency window a
+ * blind retry could refund twice.
+ */
+export async function flagStuckCancellationRefunds(
+  now: Date = new Date(),
+  graceMinutes = 15
+): Promise<number> {
+  const staleBefore = new Date(now.getTime() - graceMinutes * 60 * 1000);
+  const stuck = await db.booking.findMany({
+    where: {
+      refundError: { contains: `${CANCEL_REFUND_PENDING_PREFIX}(` },
+      cancelledAt: { lt: staleBefore },
+    },
+    select: { id: true, reference: true, refundError: true },
+    orderBy: { cancelledAt: 'asc' },
+    take: 50,
+  });
+  for (const booking of stuck) {
+    logError('Cancellation refund never completed', undefined, {
+      action: 'flagStuckCancellationRefunds',
+      bookingId: booking.id,
+      bookingRef: booking.reference,
+    });
+    Sentry.captureMessage('cancelled booking with an unfinished refund', {
+      level: 'error',
+      tags: { area: 'gift-refund', incident: 'cancel-refund-stuck' },
+      extra: {
+        bookingId: booking.id,
+        bookingRef: booking.reference,
+        refundError: booking.refundError,
+      },
+    });
+    const pendingOpen = `${CANCEL_REFUND_PENDING_PREFIX}(`;
+    const stuckOpen = `${CANCEL_REFUND_STUCK_PREFIX}(`;
+    await db.$executeRaw`
+      UPDATE bookings
+      SET "refundError" = REPLACE("refundError", ${pendingOpen}, ${stuckOpen})
+      WHERE id = ${booking.id}
+    `;
+  }
+  return stuck.length;
 }
 
 /**

@@ -46,6 +46,12 @@ export function makeStripeStub() {
       id: nextId('re'),
       status: 'succeeded',
     })),
+    // Refunds Stripe already holds for a payment (drift reconciliation).
+    refundsList: vi.fn(
+      async (): Promise<{ data: { amount: number; status: string }[] }> => ({
+        data: [],
+      })
+    ),
     paymentIntentsCreate: vi.fn(async () => ({
       id: nextId('pi'),
       status: 'succeeded',
@@ -71,7 +77,7 @@ export function makeStripeStub() {
       create: fns.transfersCreate,
       createReversal: fns.transfersCreateReversal,
     },
-    refunds: { create: fns.refundsCreate },
+    refunds: { create: fns.refundsCreate, list: fns.refundsList },
     // paymentIntents.retrieve is deliberately absent: the app never calls
     // it — an undefined member is a louder failure than a silent stub.
     paymentIntents: { create: fns.paymentIntentsCreate },

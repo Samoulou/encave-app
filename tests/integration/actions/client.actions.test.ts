@@ -7,18 +7,25 @@ vi.mock('@/server/auth', () => ({
 }));
 
 // Mock db
-vi.mock('@/server/db', () => ({
-  db: {
+vi.mock('@/server/db', () => {
+  const db = {
     booking: {
       findFirst: vi.fn(),
+      findUnique: vi.fn(),
       findUniqueOrThrow: vi.fn(),
       update: vi.fn(),
       updateMany: vi.fn(),
     },
     user: { update: vi.fn() },
     $executeRaw: vi.fn(async () => 1),
-  },
-}));
+    // The cancellation claim (status flip + refund marker) is one
+    // interactive transaction — run the callback on the same mock.
+    $transaction: vi.fn(async (callback: (_tx: unknown) => unknown) =>
+      callback(db)
+    ),
+  };
+  return { db };
+});
 
 // Mock revalidatePath
 vi.mock('next/cache', () => ({

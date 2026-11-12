@@ -27,13 +27,17 @@ vi.mock('stripe', () => ({
   })),
 }));
 
-vi.mock('@/server/db', () => ({
-  db: {
+vi.mock('@/server/db', () => {
+  const db = {
     booking: {
       delete: vi.fn(),
       deleteMany: vi.fn(),
       findUnique: vi.fn(),
+      findFirst: vi.fn(),
       updateMany: vi.fn(),
+    },
+    giftCard: {
+      findUnique: vi.fn(),
     },
     stripeEvent: {
       create: vi.fn(),
@@ -41,11 +45,27 @@ vi.mock('@/server/db', () => ({
       update: vi.fn(),
       updateMany: vi.fn(),
     },
-  },
-}));
+    // "Booking is dead" + "its gift is returned" are one interactive
+    // transaction — run the callback on the same mock.
+    $transaction: vi.fn(async (callback: (_tx: unknown) => unknown) =>
+      callback(db)
+    ),
+  };
+  return { db };
+});
 
 vi.mock('@/server/services/giftCard.service', () => ({
   createGiftCardFromPayment: vi.fn(),
+  disableGiftCardForPayment: vi.fn(async () => null),
+}));
+
+vi.mock('@/server/services/booking-refund.service', () => ({
+  syncBookingRefundFromStripe: vi.fn(async () => 'synced'),
+}));
+
+vi.mock('@sentry/nextjs', () => ({
+  captureException: vi.fn(),
+  captureMessage: vi.fn(),
 }));
 
 vi.mock('@/server/services/giftCard-transfer.service', () => ({
@@ -54,6 +74,7 @@ vi.mock('@/server/services/giftCard-transfer.service', () => ({
 
 vi.mock('@/server/services/giftCard-redemption.service', () => ({
   releaseGiftForBooking: vi.fn(async () => 'noop'),
+  releaseGiftForBookingInTx: vi.fn(async () => 'noop'),
 }));
 
 // Real Stripe refunds are out of scope here — the route's job is to ROUTE a
@@ -73,6 +94,13 @@ import { headers } from 'next/headers';
 import { confirmBookingFromPaidCheckoutSession } from '@/server/services/checkout-confirmation.service';
 import { refundOrphanedCheckoutPayment } from '@/server/services/payment.service';
 import { settleGiftTransfer } from '@/server/services/giftCard-transfer.service';
+import { disableGiftCardForPayment } from '@/server/services/giftCard.service';
+import { syncBookingRefundFromStripe } from '@/server/services/booking-refund.service';
+import {
+  releaseGiftForBooking,
+  releaseGiftForBookingInTx,
+} from '@/server/services/giftCard-redemption.service';
+import * as Sentry from '@sentry/nextjs';
 import { Prisma } from '@prisma/client';
 
 const { POST } = await import('@/app/api/webhooks/stripe/checkout/route');
@@ -154,17 +182,111 @@ describe('Stripe checkout webhook handler', () => {
     const response = await POST(createMockRequest());
 
     expect(response.status).toBe(200);
-    // Guarded delete: only removes a still-pending booking on THIS session.
+    // Guarded delete: only removes a still-pending booking on THIS session
+    // that was NOT re-claimed meanwhile (its own expiry is not in the future).
     expect(db.booking.deleteMany).toHaveBeenCalledWith({
       where: {
         id: 'booking-1',
         status: 'PENDING_PAYMENT',
-        OR: [
-          { stripeCheckoutSessionId: 'cs_test_current' },
-          { stripeCheckoutSessionId: null },
+        AND: [
+          {
+            OR: [
+              { stripeCheckoutSessionId: 'cs_test_current' },
+              { stripeCheckoutSessionId: null },
+            ],
+          },
+          {
+            OR: [{ expiresAt: null }, { expiresAt: { lte: expect.any(Date) } }],
+          },
         ],
       },
     });
+    // The gift release rides the SAME transaction as the delete.
+    expect(releaseGiftForBookingInTx).toHaveBeenCalledWith(
+      expect.anything(),
+      'booking-1'
+    );
+  });
+
+  it('keeps a RE-CLAIMED booking when its previous session expires (retry in flight, hold extended)', async () => {
+    const { db } = await import('@/server/db');
+    // The client retried after an aborted payment: the action extended the
+    // hold (+30 min) and expired the old session, whose webhook lands
+    // before the new session id is written — the booking still points at
+    // the expired session.
+    vi.mocked(db.booking.findUnique).mockResolvedValue({
+      id: 'booking-1',
+      status: 'PENDING_PAYMENT',
+      reference: 'ENC-ABC123',
+      stripeCheckoutSessionId: 'cs_test_current',
+      expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+    } as never);
+    mockConstructEvent.mockReturnValue({
+      id: 'evt_checkout_expired_reclaimed',
+      type: 'checkout.session.expired',
+      data: {
+        object: {
+          id: 'cs_test_current',
+          metadata: { bookingId: 'booking-1' },
+        },
+      },
+    } as unknown as Stripe.Event);
+
+    const response = await POST(createMockRequest());
+
+    expect(response.status).toBe(200);
+    expect(db.booking.deleteMany).not.toHaveBeenCalled();
+    expect(releaseGiftForBookingInTx).not.toHaveBeenCalled();
+    expect(releaseGiftForBooking).not.toHaveBeenCalled();
+  });
+
+  it('still deletes a booking whose own expiry has just passed (natural expiry)', async () => {
+    const { db } = await import('@/server/db');
+    vi.mocked(db.booking.findUnique).mockResolvedValue({
+      id: 'booking-1',
+      status: 'PENDING_PAYMENT',
+      reference: 'ENC-ABC123',
+      stripeCheckoutSessionId: 'cs_test_current',
+      expiresAt: new Date(Date.now() - 5_000),
+    } as never);
+    vi.mocked(db.booking.deleteMany).mockResolvedValue({ count: 1 } as never);
+    mockConstructEvent.mockReturnValue({
+      id: 'evt_checkout_expired_natural',
+      type: 'checkout.session.expired',
+      data: {
+        object: {
+          id: 'cs_test_current',
+          metadata: { bookingId: 'booking-1' },
+        },
+      },
+    } as unknown as Stripe.Event);
+
+    const response = await POST(createMockRequest());
+
+    expect(response.status).toBe(200);
+    expect(db.booking.deleteMany).toHaveBeenCalledTimes(1);
+  });
+
+  it('REPLAY-safe: when the booking is already gone, the reserved gift is still returned', async () => {
+    const { db } = await import('@/server/db');
+    // A previous delivery deleted the row and died before releasing.
+    vi.mocked(db.booking.findUnique).mockResolvedValue(null);
+    mockConstructEvent.mockReturnValue({
+      id: 'evt_checkout_expired_replay',
+      type: 'checkout.session.expired',
+      data: {
+        object: {
+          id: 'cs_test_current',
+          metadata: { bookingId: 'booking-1' },
+        },
+      },
+    } as unknown as Stripe.Event);
+
+    const response = await POST(createMockRequest());
+
+    expect(response.status).toBe(200);
+    expect(releaseGiftForBooking).toHaveBeenCalledWith('booking-1');
+    expect(db.booking.deleteMany).not.toHaveBeenCalled();
   });
 
   it('keeps the booking when a STALE session expires (retry created a newer one)', async () => {
@@ -197,8 +319,6 @@ describe('Stripe checkout webhook handler', () => {
 
   it('cancels the pending booking when its async payment fails (delayed TWINT)', async () => {
     const { db } = await import('@/server/db');
-    const { releaseGiftForBooking } =
-      await import('@/server/services/giftCard-redemption.service');
     vi.mocked(db.booking.findUnique).mockResolvedValue({
       id: 'booking-1',
       status: 'PENDING_PAYMENT',
@@ -236,7 +356,11 @@ describe('Stripe checkout webhook handler', () => {
         cancellationReason: 'PAYMENT_FAILED',
       },
     });
-    expect(releaseGiftForBooking).toHaveBeenCalledWith('booking-1');
+    // Released in the same transaction as the cancellation.
+    expect(releaseGiftForBookingInTx).toHaveBeenCalledWith(
+      expect.anything(),
+      'booking-1'
+    );
   });
 
   it('keeps the booking when a STALE session fails async payment (retry created a newer one)', async () => {
@@ -349,6 +473,263 @@ describe('Stripe checkout webhook handler', () => {
         data: expect.objectContaining({ status: 'FAILED' }),
       })
     );
+  });
+
+  it('REFUNDS a paid session whose amount is not what the booking owes (amount_mismatch)', async () => {
+    const session = {
+      id: 'cs_test_wrong_amount',
+      payment_status: 'paid',
+      payment_intent: 'pi_test_wrong_amount',
+      amount_total: 4500,
+      currency: 'chf',
+      metadata: { bookingId: 'booking-1' },
+    } as unknown as Stripe.Checkout.Session;
+    mockConstructEvent.mockReturnValue({
+      id: 'evt_checkout_amount_mismatch',
+      type: 'checkout.session.completed',
+      data: { object: session },
+    } as Stripe.Event);
+    mockConfirmBookingFromPaidCheckoutSession.mockResolvedValue({
+      result: 'amount_mismatch',
+    });
+
+    const response = await POST(createMockRequest());
+
+    expect(response.status).toBe(200);
+    expect(refundOrphanedCheckoutPayment).toHaveBeenCalledWith(session);
+    expect(Sentry.captureMessage).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        tags: { area: 'stripe-webhook', incident: 'amount-mismatch' },
+      })
+    );
+  });
+
+  describe('charge.dispute.* — chargebacks', () => {
+    const dispute = (overrides: Record<string, unknown> = {}) =>
+      ({
+        id: 'dp_test_1',
+        status: 'needs_response',
+        reason: 'fraudulent',
+        amount: 10250,
+        payment_intent: 'pi_test_disputed',
+        ...overrides,
+      }) as unknown as Stripe.Dispute;
+
+    it('disables the gift card bought with the disputed payment and alerts with the exposure', async () => {
+      vi.mocked(disableGiftCardForPayment).mockResolvedValueOnce({
+        id: 'gift-1',
+        initialAmount: 10000,
+        balance: 4000,
+        disabledNow: true,
+      });
+      mockConstructEvent.mockReturnValue({
+        id: 'evt_dispute_gift',
+        type: 'charge.dispute.created',
+        data: { object: dispute() },
+      } as unknown as Stripe.Event);
+
+      const response = await POST(createMockRequest());
+
+      expect(response.status).toBe(200);
+      expect(disableGiftCardForPayment).toHaveBeenCalledWith(
+        'pi_test_disputed',
+        'dispute'
+      );
+      expect(Sentry.captureMessage).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          level: 'error',
+          tags: {
+            area: 'stripe-webhook',
+            incident: 'dispute',
+            target: 'gift-card',
+          },
+          extra: expect.objectContaining({
+            giftCardId: 'gift-1',
+            // 60.00 already spent before the chargeback.
+            redeemedCents: 6000,
+            remainingBalanceCents: 4000,
+          }),
+        })
+      );
+    });
+
+    it('alerts with the booking reference on a booking dispute — and changes NOTHING on the booking', async () => {
+      const { db } = await import('@/server/db');
+      vi.mocked(db.booking.findFirst).mockResolvedValueOnce({
+        id: 'booking-1',
+        reference: 'ENC-DISPUTE1',
+        status: 'COMPLETED',
+        wineryId: 'winery-1',
+        stripePaymentIntentId: 'pi_test_disputed',
+      } as never);
+      mockConstructEvent.mockReturnValue({
+        id: 'evt_dispute_booking',
+        type: 'charge.dispute.created',
+        data: { object: dispute() },
+      } as unknown as Stripe.Event);
+
+      const response = await POST(createMockRequest());
+
+      expect(response.status).toBe(200);
+      expect(Sentry.captureMessage).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          tags: {
+            area: 'stripe-webhook',
+            incident: 'dispute',
+            target: 'booking',
+          },
+          extra: expect.objectContaining({ bookingRef: 'ENC-DISPUTE1' }),
+        })
+      );
+      expect(db.booking.updateMany).not.toHaveBeenCalled();
+      expect(db.booking.deleteMany).not.toHaveBeenCalled();
+    });
+
+    it('reports a closed dispute without re-enabling or disabling anything', async () => {
+      const { db } = await import('@/server/db');
+      vi.mocked(db.giftCard.findUnique).mockResolvedValueOnce({
+        id: 'gift-1',
+        status: 'DISABLED',
+        balance: 4000,
+      } as never);
+      mockConstructEvent.mockReturnValue({
+        id: 'evt_dispute_closed',
+        type: 'charge.dispute.closed',
+        data: { object: dispute({ status: 'won' }) },
+      } as unknown as Stripe.Event);
+
+      const response = await POST(createMockRequest());
+
+      expect(response.status).toBe(200);
+      expect(disableGiftCardForPayment).not.toHaveBeenCalled();
+      expect(Sentry.captureMessage).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          level: 'info',
+          extra: expect.objectContaining({ action: 'review_reenable' }),
+        })
+      );
+    });
+  });
+
+  describe('charge.refunded — refunds made outside the app', () => {
+    const charge = (overrides: Record<string, unknown> = {}) =>
+      ({
+        id: 'ch_test_1',
+        payment_intent: 'pi_test_refunded',
+        amount: 9500,
+        amount_refunded: 2000,
+        refunded: false,
+        ...overrides,
+      }) as unknown as Stripe.Charge;
+
+    it('syncs the booking refund ledger with the cumulative Stripe amount', async () => {
+      const { db } = await import('@/server/db');
+      vi.mocked(db.booking.findFirst).mockResolvedValueOnce({
+        id: 'booking-1',
+        reference: 'ENC-REFUND01',
+      } as never);
+      mockConstructEvent.mockReturnValue({
+        id: 'evt_charge_refunded',
+        type: 'charge.refunded',
+        data: { object: charge() },
+      } as unknown as Stripe.Event);
+
+      const response = await POST(createMockRequest());
+
+      expect(response.status).toBe(200);
+      expect(syncBookingRefundFromStripe).toHaveBeenCalledWith({
+        bookingId: 'booking-1',
+        cardRefundedCents: 2000,
+      });
+      expect(disableGiftCardForPayment).not.toHaveBeenCalled();
+    });
+
+    it('marks a fully refunded no-show fee as refunded (write-once)', async () => {
+      const { db } = await import('@/server/db');
+      vi.mocked(db.booking.findFirst)
+        .mockResolvedValueOnce(null) // not a booking payment
+        .mockResolvedValueOnce({
+          id: 'booking-2',
+          reference: 'ENC-NOSHOW01',
+        } as never);
+      vi.mocked(db.booking.updateMany).mockResolvedValue({ count: 1 } as never);
+      mockConstructEvent.mockReturnValue({
+        id: 'evt_charge_refunded_noshow',
+        type: 'charge.refunded',
+        data: {
+          object: charge({
+            amount: 3000,
+            amount_refunded: 3000,
+            refunded: true,
+          }),
+        },
+      } as unknown as Stripe.Event);
+
+      const response = await POST(createMockRequest());
+
+      expect(response.status).toBe(200);
+      expect(db.booking.updateMany).toHaveBeenCalledWith({
+        where: {
+          id: 'booking-2',
+          noShowFeeChargeStatus: 'CHARGED',
+          noShowFeeRefundId: null,
+        },
+        data: {
+          noShowFeeRefundId: 'stripe:ch_test_1',
+          noShowFeeRefundedCents: 3000,
+        },
+      });
+      expect(syncBookingRefundFromStripe).not.toHaveBeenCalled();
+    });
+
+    it('disables the gift card when its PURCHASE was fully refunded', async () => {
+      const { db } = await import('@/server/db');
+      vi.mocked(db.booking.findFirst).mockResolvedValue(null);
+      vi.mocked(disableGiftCardForPayment).mockResolvedValueOnce({
+        id: 'gift-2',
+        initialAmount: 10000,
+        balance: 10000,
+        disabledNow: true,
+      });
+      mockConstructEvent.mockReturnValue({
+        id: 'evt_charge_refunded_gift',
+        type: 'charge.refunded',
+        data: {
+          object: charge({
+            amount: 10250,
+            amount_refunded: 10250,
+            refunded: true,
+          }),
+        },
+      } as unknown as Stripe.Event);
+
+      const response = await POST(createMockRequest());
+
+      expect(response.status).toBe(200);
+      expect(disableGiftCardForPayment).toHaveBeenCalledWith(
+        'pi_test_refunded',
+        'refund'
+      );
+    });
+
+    it('leaves a gift card alone on a PARTIAL refund of its purchase', async () => {
+      const { db } = await import('@/server/db');
+      vi.mocked(db.booking.findFirst).mockResolvedValue(null);
+      mockConstructEvent.mockReturnValue({
+        id: 'evt_charge_refunded_gift_partial',
+        type: 'charge.refunded',
+        data: { object: charge({ amount: 10250, amount_refunded: 250 }) },
+      } as unknown as Stripe.Event);
+
+      const response = await POST(createMockRequest());
+
+      expect(response.status).toBe(200);
+      expect(disableGiftCardForPayment).not.toHaveBeenCalled();
+    });
   });
 
   describe('redelivery while the event row already exists', () => {

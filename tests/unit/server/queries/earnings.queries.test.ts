@@ -1,13 +1,17 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { BookingStatus } from '@prisma/client';
+import { BookingStatus, NoShowChargeStatus } from '@prisma/client';
 
 // Mock db
 vi.mock('@/server/db', () => ({
   db: {
-    booking: { findMany: vi.fn() },
+    booking: { findMany: vi.fn(), groupBy: vi.fn() },
     winery: { findUnique: vi.fn() },
     experience: { findMany: vi.fn() },
   },
+}));
+
+vi.mock('@/lib/env', () => ({
+  env: { PLATFORM_COMMISSION_RATE: 0.12 },
 }));
 
 // Mock React cache (pass-through)
@@ -26,12 +30,78 @@ import {
 
 const mockDb = vi.mocked(db);
 
+/**
+ * A booking PAID ONLINE: 200.00 of tickets, 12 % commission → 176.00 net,
+ * 10.00 client service fee (platform money).
+ */
+function booking(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'b-1',
+    reference: 'ENC-AAAA0001',
+    date: new Date('2025-12-10T00:00:00.000Z'),
+    guestCount: 4,
+    status: BookingStatus.COMPLETED,
+    totalPrice: 20000,
+    serviceFeeCents: 1000,
+    platformFee: 2400,
+    wineryPayout: 17600,
+    refundAmount: null,
+    refundIssued: false,
+    stripePaymentIntentId: 'pi_test_1',
+    giftAppliedCents: 0,
+    giftTransferId: null,
+    visitorName: 'John',
+    noShowFeeChargeStatus: null,
+    noShowFeeChargedCents: null,
+    noShowFeeRefundId: null,
+    experience: { id: 'exp-1', title: 'Wine Tasting' },
+    ...overrides,
+  };
+}
+
+/** ON_SITE / free offer: price settled at the winery, no online money. */
+const onSite = (overrides: Record<string, unknown> = {}) =>
+  booking({
+    reference: 'ENC-ONSITE01',
+    stripePaymentIntentId: null,
+    giftAppliedCents: 0,
+    ...overrides,
+  });
+
+/** The candidates predicate every listing shares. */
+const CANDIDATES_WHERE = {
+  wineryId: 'winery-123',
+  OR: [
+    {
+      status: {
+        in: [
+          BookingStatus.CONFIRMED,
+          BookingStatus.COMPLETED,
+          BookingStatus.NO_SHOW,
+        ],
+      },
+    },
+    {
+      status: BookingStatus.CANCELLED_BY_CLIENT,
+      OR: [
+        { stripePaymentIntentId: { not: null } },
+        { giftTransferId: { not: null } },
+      ],
+    },
+  ],
+};
+
 describe('Earnings Queries', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
-    // Set system time to Wednesday, January 14, 2026 at 12:00 UTC
+    // Wednesday, January 14, 2026 at 12:00 UTC
     vi.setSystemTime(new Date('2026-01-14T12:00:00Z'));
+    mockDb.booking.findMany.mockResolvedValue([] as never);
+    mockDb.booking.groupBy.mockResolvedValue([] as never);
+    mockDb.winery.findUnique.mockResolvedValue({
+      commissionRate: null,
+    } as never);
   });
 
   afterEach(() => {
@@ -42,241 +112,154 @@ describe('Earnings Queries', () => {
   // getEarningsSummary
   // ========================================
   describe('getEarningsSummary', () => {
-    it('returns summary with zero earnings when no bookings', async () => {
-      mockDb.booking.findMany.mockResolvedValueOnce([] as never);
+    it('returns a zero summary when the winery has no booking', async () => {
+      const result = await getEarningsSummary('winery-123');
+
+      expect(result).toEqual({
+        totalEarnings: 0,
+        thisMonth: 0,
+        lastMonth: 0,
+        yearToDate: 0,
+        currentMonth: '2026-01',
+        currentMonthLabel: 'janv.',
+      });
+    });
+
+    it('localizes the month label through the formatters (no hard-coded English)', async () => {
+      expect(
+        (await getEarningsSummary('winery-123', 'fr')).currentMonthLabel
+      ).toBe('janv.');
+      expect(
+        (await getEarningsSummary('winery-123', 'en')).currentMonthLabel
+      ).toBe('Jan');
+    });
+
+    it('sums the un-refunded online majority IN THE DATABASE (group by date), never by loading every booking', async () => {
+      await getEarningsSummary('winery-123');
+
+      expect(mockDb.booking.groupBy).toHaveBeenCalledTimes(1);
+      expect(mockDb.booking.groupBy).toHaveBeenCalledWith({
+        by: ['date'],
+        where: {
+          wineryId: 'winery-123',
+          // Only experiences already held count as earned.
+          date: { lte: new Date('2026-01-14T12:00:00Z') },
+          // NO_SHOW is money kept, exactly like COMPLETED.
+          status: {
+            in: [
+              BookingStatus.CONFIRMED,
+              BookingStatus.COMPLETED,
+              BookingStatus.NO_SHOW,
+            ],
+          },
+          refundIssued: false,
+          AND: [
+            { OR: [{ refundAmount: null }, { refundAmount: { lte: 0 } }] },
+            // ON_SITE rows never reach the money sums.
+            {
+              OR: [
+                { stripePaymentIntentId: { not: null } },
+                { giftAppliedCents: { gt: 0 } },
+              ],
+            },
+          ],
+        },
+        _sum: { wineryPayout: true, totalPrice: true },
+      });
+      // The only rows loaded are the minority needing the per-booking rule.
+      expect(mockDb.booking.findMany).toHaveBeenCalledTimes(1);
+      expect(mockDb.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            AND: [
+              CANDIDATES_WHERE,
+              { date: { lte: new Date('2026-01-14T12:00:00Z') } },
+              {
+                OR: [
+                  { refundIssued: true },
+                  { refundAmount: { gt: 0 } },
+                  { status: BookingStatus.CANCELLED_BY_CLIENT },
+                ],
+              },
+            ],
+          },
+        })
+      );
+    });
+
+    it('buckets the daily sums into all-time / this month / last month / year-to-date', async () => {
+      mockDb.booking.groupBy.mockResolvedValue([
+        {
+          // 2024 — all-time only
+          date: new Date('2024-06-01T00:00:00.000Z'),
+          _sum: { wineryPayout: 1000, totalPrice: 1200 },
+        },
+        {
+          // December 2025 — last month
+          date: new Date('2025-12-10T00:00:00.000Z'),
+          _sum: { wineryPayout: 17600, totalPrice: 20000 },
+        },
+        {
+          // January 2026 — this month + year to date
+          date: new Date('2026-01-05T00:00:00.000Z'),
+          _sum: { wineryPayout: 8800, totalPrice: 10000 },
+        },
+      ] as never);
+
+      const result = await getEarningsSummary('winery-123');
+
+      expect(result.totalEarnings).toBe(1000 + 17600 + 8800);
+      expect(result.lastMonth).toBe(17600);
+      expect(result.thisMonth).toBe(8800);
+      // Year to date is GROSS revenue (tickets).
+      expect(result.yearToDate).toBe(10000);
+    });
+
+    it('deducts a PARTIAL ADMIN refund (refundIssued stays false) from net and gross', async () => {
+      mockDb.booking.findMany.mockResolvedValue([
+        booking({
+          date: new Date('2026-01-05T00:00:00.000Z'),
+          // 105.00 of the 210.00 paid went back: half.
+          refundAmount: 10500,
+          refundIssued: false,
+        }),
+      ] as never);
+
+      const result = await getEarningsSummary('winery-123');
+
+      expect(result.thisMonth).toBe(8800);
+      expect(result.yearToDate).toBe(10000);
+    });
+
+    it('counts a LATE client cancellation where the winery kept the money', async () => {
+      mockDb.booking.findMany.mockResolvedValue([
+        booking({
+          date: new Date('2026-01-05T00:00:00.000Z'),
+          status: BookingStatus.CANCELLED_BY_CLIENT,
+          refundAmount: null, // < 24 h: nothing refunded
+        }),
+      ] as never);
+
+      const result = await getEarningsSummary('winery-123');
+
+      expect(result.thisMonth).toBe(17600);
+      expect(result.totalEarnings).toBe(17600);
+    });
+
+    it('never counts an ON_SITE booking as earnings, whatever is stored on the row', async () => {
+      mockDb.booking.findMany.mockResolvedValue([
+        // Reaches the JS path only through a (bogus) refund flag.
+        onSite({
+          date: new Date('2026-01-05T00:00:00.000Z'),
+          refundIssued: true,
+          refundAmount: 0,
+        }),
+      ] as never);
 
       const result = await getEarningsSummary('winery-123');
 
       expect(result.totalEarnings).toBe(0);
-      expect(result.thisMonth).toBe(0);
-      expect(result.lastMonth).toBe(0);
       expect(result.yearToDate).toBe(0);
-      expect(result.currentMonthLabel).toBe('Jan');
-    });
-
-    it('calculates total earnings from past non-refunded bookings', async () => {
-      mockDb.booking.findMany.mockResolvedValueOnce([
-        {
-          wineryPayout: 5000,
-          totalPrice: 6000,
-          serviceFeeCents: 0,
-          date: new Date('2026-01-04T10:00:00Z'),
-          status: BookingStatus.COMPLETED,
-          refundIssued: false,
-          refundAmount: null,
-        },
-        {
-          wineryPayout: 3000,
-          totalPrice: 3600,
-          serviceFeeCents: 0,
-          date: new Date('2025-12-20T10:00:00Z'),
-          status: BookingStatus.CONFIRMED,
-          refundIssued: false,
-          refundAmount: null,
-        },
-      ] as never);
-
-      const result = await getEarningsSummary('winery-123');
-
-      expect(result.totalEarnings).toBe(8000);
-    });
-
-    it('excludes refunded bookings from total earnings', async () => {
-      mockDb.booking.findMany.mockResolvedValueOnce([
-        {
-          wineryPayout: 5000,
-          totalPrice: 6000,
-          serviceFeeCents: 0,
-          date: new Date('2026-01-04T10:00:00Z'),
-          status: BookingStatus.COMPLETED,
-          refundIssued: false,
-          refundAmount: null,
-        },
-        {
-          wineryPayout: 3000,
-          totalPrice: 3600,
-          serviceFeeCents: 0,
-          date: new Date('2026-01-04T10:00:00Z'),
-          status: BookingStatus.COMPLETED,
-          refundIssued: true,
-          refundAmount: 3600,
-        },
-      ] as never);
-
-      const result = await getEarningsSummary('winery-123');
-
-      expect(result.totalEarnings).toBe(5000);
-    });
-
-    it('excludes future bookings from total earnings', async () => {
-      mockDb.booking.findMany.mockResolvedValueOnce([
-        {
-          wineryPayout: 5000,
-          totalPrice: 6000,
-          serviceFeeCents: 0,
-          date: new Date('2026-01-04T10:00:00Z'), // Past
-          status: BookingStatus.COMPLETED,
-          refundIssued: false,
-          refundAmount: null,
-        },
-        {
-          wineryPayout: 3000,
-          totalPrice: 3600,
-          serviceFeeCents: 0,
-          date: new Date('2026-02-15T10:00:00Z'), // Future
-          status: BookingStatus.CONFIRMED,
-          refundIssued: false,
-          refundAmount: null,
-        },
-      ] as never);
-
-      const result = await getEarningsSummary('winery-123');
-
-      expect(result.totalEarnings).toBe(5000);
-    });
-
-    it('calculates this month earnings from current month past experiences only', async () => {
-      // System time: 2026-01-14
-      mockDb.booking.findMany.mockResolvedValueOnce([
-        {
-          wineryPayout: 5000,
-          totalPrice: 6000,
-          serviceFeeCents: 0,
-          date: new Date('2026-01-10T10:00:00Z'), // This month, past
-          status: BookingStatus.COMPLETED,
-          refundIssued: false,
-          refundAmount: null,
-        },
-        {
-          wineryPayout: 3000,
-          totalPrice: 3500,
-          serviceFeeCents: 0,
-          date: new Date('2026-01-20T10:00:00Z'), // This month, future
-          status: BookingStatus.CONFIRMED,
-          refundIssued: false,
-          refundAmount: null,
-        },
-        {
-          wineryPayout: 2000,
-          totalPrice: 2500,
-          serviceFeeCents: 0,
-          date: new Date('2025-12-15T10:00:00Z'), // Last month
-          status: BookingStatus.COMPLETED,
-          refundIssued: false,
-          refundAmount: null,
-        },
-      ] as never);
-
-      const result = await getEarningsSummary('winery-123');
-
-      // Only this month AND past: 5000
-      expect(result.thisMonth).toBe(5000);
-    });
-
-    it('calculates last month earnings excluding refunded', async () => {
-      // System time: 2026-01-14, last month = Dec 2025
-      mockDb.booking.findMany.mockResolvedValueOnce([
-        {
-          wineryPayout: 2000,
-          totalPrice: 2500,
-          serviceFeeCents: 0,
-          date: new Date('2025-12-10T10:00:00Z'), // Last month
-          status: BookingStatus.COMPLETED,
-          refundIssued: false,
-          refundAmount: null,
-        },
-        {
-          wineryPayout: 3000,
-          totalPrice: 3500,
-          serviceFeeCents: 0,
-          date: new Date('2025-12-20T10:00:00Z'), // Last month
-          status: BookingStatus.CONFIRMED,
-          refundIssued: false,
-          refundAmount: null,
-        },
-        {
-          wineryPayout: 1000,
-          totalPrice: 1200,
-          serviceFeeCents: 0,
-          date: new Date('2025-12-25T10:00:00Z'), // Last month but refunded
-          status: BookingStatus.COMPLETED,
-          refundIssued: true,
-          refundAmount: 3600,
-        },
-      ] as never);
-
-      const result = await getEarningsSummary('winery-123');
-
-      // Last month non-refunded: 2000 + 3000 = 5000
-      expect(result.lastMonth).toBe(5000);
-    });
-
-    it('calculates year-to-date as gross revenue (totalPrice)', async () => {
-      // System time: 2026-01-14
-      mockDb.booking.findMany.mockResolvedValueOnce([
-        {
-          wineryPayout: 8500,
-          totalPrice: 10000,
-          serviceFeeCents: 0,
-          date: new Date('2026-01-05T10:00:00Z'), // This year, past
-          status: BookingStatus.COMPLETED,
-          refundIssued: false,
-          refundAmount: null,
-        },
-        {
-          wineryPayout: 4200,
-          totalPrice: 5000,
-          serviceFeeCents: 0,
-          date: new Date('2026-01-10T10:00:00Z'), // This year, past
-          status: BookingStatus.CONFIRMED,
-          refundIssued: false,
-          refundAmount: null,
-        },
-        {
-          wineryPayout: 6000,
-          totalPrice: 7000,
-          serviceFeeCents: 0,
-          date: new Date('2025-11-10T10:00:00Z'), // Last year
-          status: BookingStatus.COMPLETED,
-          refundIssued: false,
-          refundAmount: null,
-        },
-      ] as never);
-
-      const result = await getEarningsSummary('winery-123');
-
-      // YTD uses totalPrice (gross), only 2026 bookings that have passed: 10000 + 5000 = 15000
-      expect(result.yearToDate).toBe(15000);
-    });
-
-    it('returns current month label', async () => {
-      mockDb.booking.findMany.mockResolvedValueOnce([] as never);
-
-      const result = await getEarningsSummary('winery-123');
-
-      expect(result.currentMonthLabel).toBe('Jan');
-    });
-
-    it('queries bookings with correct where clause', async () => {
-      mockDb.booking.findMany.mockResolvedValueOnce([] as never);
-
-      await getEarningsSummary('winery-123');
-
-      expect(mockDb.booking.findMany).toHaveBeenCalledWith({
-        where: {
-          wineryId: 'winery-123',
-          status: { in: [BookingStatus.CONFIRMED, BookingStatus.COMPLETED] },
-        },
-        select: {
-          wineryPayout: true,
-          totalPrice: true,
-          serviceFeeCents: true,
-          refundAmount: true,
-          date: true,
-          status: true,
-          refundIssued: true,
-        },
-      });
     });
   });
 
@@ -284,104 +267,103 @@ describe('Earnings Queries', () => {
   // getMonthlyEarnings
   // ========================================
   describe('getMonthlyEarnings', () => {
-    it('returns earnings for default 6 months in ONE query (L-208)', async () => {
-      mockDb.booking.findMany.mockResolvedValue([] as never);
-
+    it('reads the whole window in ONE query (L-208) over the shared candidates', async () => {
       const result = await getMonthlyEarnings('winery-123');
 
       expect(result).toHaveLength(6);
       expect(mockDb.booking.findMany).toHaveBeenCalledTimes(1);
-    });
-
-    it('returns earnings for custom number of months', async () => {
-      mockDb.booking.findMany.mockResolvedValue([] as never);
-
-      const result = await getMonthlyEarnings('winery-123', 3);
-
-      expect(result).toHaveLength(3);
-      expect(mockDb.booking.findMany).toHaveBeenCalledTimes(1);
-    });
-
-    it('buckets revenue and payout per month from the single window query', async () => {
-      // System time: 2026-01-14 → window months are Dec 2025 + Jan 2026.
-      mockDb.booking.findMany.mockResolvedValueOnce([
-        {
-          date: new Date('2026-01-05T00:00:00Z'),
-          totalPrice: 10000,
-          wineryPayout: 8800,
-        },
-        {
-          date: new Date('2026-01-10T00:00:00Z'),
-          totalPrice: 5000,
-          wineryPayout: 4400,
-        },
-      ] as never);
-
-      const result = await getMonthlyEarnings('winery-123', 2);
-
-      expect(result[0].revenue).toBe(0);
-      expect(result[0].payout).toBe(0);
-      expect(result[0].bookingCount).toBe(0);
-      expect(result[1].revenue).toBe(15000);
-      expect(result[1].payout).toBe(13200);
-      expect(result[1].bookingCount).toBe(2);
-    });
-
-    it('returns months in chronological order (oldest first)', async () => {
-      mockDb.booking.findMany.mockResolvedValue([] as never);
-
-      // System time: 2026-01-14
-      const result = await getMonthlyEarnings('winery-123', 3);
-
-      // Should be Nov 2025, Dec 2025, Jan 2026
-      expect(result[0].month).toBe('2025-11');
-      expect(result[1].month).toBe('2025-12');
-      expect(result[2].month).toBe('2026-01');
-    });
-
-    it('includes month and monthLabel fields', async () => {
-      mockDb.booking.findMany.mockResolvedValue([] as never);
-
-      // System time: 2026-01-14
-      const result = await getMonthlyEarnings('winery-123', 1);
-
-      expect(result[0].month).toBe('2026-01');
-      expect(result[0].monthLabel).toBe('Jan');
-    });
-
-    it('queries only confirmed/completed non-refunded bookings over the window', async () => {
-      mockDb.booking.findMany.mockResolvedValue([] as never);
-
-      await getMonthlyEarnings('winery-123', 1);
-
       expect(mockDb.booking.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({
-            wineryId: 'winery-123',
-            status: { in: [BookingStatus.CONFIRMED, BookingStatus.COMPLETED] },
-            refundIssued: false,
-            date: expect.objectContaining({
-              gte: expect.any(Date),
-              lte: expect.any(Date),
-            }),
-          }),
-          select: {
-            date: true,
-            totalPrice: true,
-            wineryPayout: true,
+          where: {
+            AND: [
+              CANDIDATES_WHERE,
+              { date: { gte: expect.any(Date), lte: expect.any(Date) } },
+            ],
           },
         })
       );
     });
 
-    it('returns zero values for months with no bookings', async () => {
-      mockDb.booking.findMany.mockResolvedValue([] as never);
+    it('returns the requested number of months, oldest first, with locale-neutral keys', async () => {
+      const result = await getMonthlyEarnings('winery-123', 3);
 
-      const result = await getMonthlyEarnings('winery-123', 1);
+      expect(result.map((m) => m.month)).toEqual([
+        '2025-11',
+        '2025-12',
+        '2026-01',
+      ]);
+      expect(result.every((m) => m.revenue === 0 && m.payout === 0)).toBe(true);
+    });
 
-      expect(result[0].revenue).toBe(0);
-      expect(result[0].payout).toBe(0);
-      expect(result[0].bookingCount).toBe(0);
+    it('localizes the month labels through the formatters', async () => {
+      const fr = await getMonthlyEarnings('winery-123', 3, 'fr');
+      const en = await getMonthlyEarnings('winery-123', 3, 'en');
+
+      expect(fr.map((m) => m.monthLabel)).toEqual(['nov.', 'déc.', 'janv.']);
+      expect(en.map((m) => m.monthLabel)).toEqual(['Nov', 'Dec', 'Jan']);
+    });
+
+    it('buckets money net of refunds and counts NO_SHOW like COMPLETED', async () => {
+      mockDb.booking.findMany.mockResolvedValue([
+        booking({ date: new Date('2025-12-10T00:00:00.000Z') }),
+        booking({
+          date: new Date('2025-12-12T00:00:00.000Z'),
+          status: BookingStatus.NO_SHOW,
+        }),
+        booking({
+          date: new Date('2026-01-05T00:00:00.000Z'),
+          refundAmount: 10500, // half refunded
+        }),
+      ] as never);
+
+      const result = await getMonthlyEarnings('winery-123', 2);
+
+      expect(result[0]).toMatchObject({
+        month: '2025-12',
+        revenue: 40000,
+        payout: 35200,
+        bookingCount: 2,
+      });
+      expect(result[1]).toMatchObject({
+        month: '2026-01',
+        revenue: 10000,
+        payout: 8800,
+        bookingCount: 1,
+      });
+    });
+
+    it('counts an ON_SITE booking as VOLUME only — no revenue, no payout', async () => {
+      mockDb.booking.findMany.mockResolvedValue([
+        booking({ date: new Date('2025-12-10T00:00:00.000Z') }),
+        onSite({ date: new Date('2025-12-11T00:00:00.000Z') }),
+      ] as never);
+
+      const [december] = await getMonthlyEarnings('winery-123', 2);
+
+      expect(december).toMatchObject({
+        revenue: 20000,
+        payout: 17600,
+        bookingCount: 2,
+      });
+    });
+
+    it('adds the money of a cancellation the winery kept, without counting it as a booking', async () => {
+      mockDb.booking.findMany.mockResolvedValue([
+        booking({
+          date: new Date('2025-12-10T00:00:00.000Z'),
+          status: BookingStatus.CANCELLED_BY_CLIENT,
+          refundAmount: 10500, // STRICT 50 %
+          refundIssued: true,
+        }),
+      ] as never);
+
+      const [december] = await getMonthlyEarnings('winery-123', 2);
+
+      expect(december).toMatchObject({
+        revenue: 10000,
+        payout: 8800,
+        bookingCount: 0,
+      });
     });
   });
 
@@ -389,48 +371,28 @@ describe('Earnings Queries', () => {
   // getTransactions
   // ========================================
   describe('getTransactions', () => {
-    const mockBookingData = {
-      id: 'b-1',
-      reference: 'REF-001',
-      date: new Date('2025-11-01T10:00:00Z'), // Long ago => paid
-      guestCount: 4,
-      totalPrice: 20000,
-      serviceFeeCents: 0,
-      platformFee: 2400,
-      wineryPayout: 17600,
-      status: BookingStatus.COMPLETED,
-      refundIssued: false,
-      refundAmount: null,
-      visitorName: 'John',
-      experience: { id: 'exp-1', title: 'Wine Tasting' },
-    };
-
-    it('queries bookings with correct status filter and ordering', async () => {
-      mockDb.booking.findMany.mockResolvedValueOnce([] as never);
-
+    it('queries the shared candidates, newest first, bounded', async () => {
       await getTransactions('winery-123');
 
       expect(mockDb.booking.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({
-            wineryId: 'winery-123',
-            status: { in: [BookingStatus.CONFIRMED, BookingStatus.COMPLETED] },
-          }),
+          where: { AND: [CANDIDATES_WHERE] },
           orderBy: { date: 'desc' },
+          take: 500,
         })
       );
     });
 
-    it('maps bookings to Transaction type', async () => {
-      mockDb.booking.findMany.mockResolvedValueOnce([mockBookingData] as never);
+    it('maps a paid booking to a Transaction', async () => {
+      mockDb.booking.findMany.mockResolvedValue([booking()] as never);
 
       const result = await getTransactions('winery-123');
 
-      expect(result).toHaveLength(1);
-      expect(result[0]).toEqual(
-        expect.objectContaining({
+      expect(result).toEqual([
+        {
           id: 'b-1',
-          bookingId: 'REF-001',
+          date: new Date('2025-12-10T00:00:00.000Z'),
+          bookingId: 'ENC-AAAA0001',
           experienceTitle: 'Wine Tasting',
           experienceId: 'exp-1',
           customer: { name: 'John', avatarUrl: undefined },
@@ -438,176 +400,107 @@ describe('Earnings Queries', () => {
           grossAmount: 20000,
           platformFee: 2400,
           netPayout: 17600,
-          reference: 'REF-001',
-        })
-      );
-    });
-
-    it('calculates completed status for past bookings', async () => {
-      // Booking from Nov 2025, system time Jan 2026 => experience over
-      mockDb.booking.findMany.mockResolvedValueOnce([mockBookingData] as never);
-
-      const result = await getTransactions('winery-123');
-
-      expect(result[0].status).toBe('completed');
-    });
-
-    it('calculates refunded status for refunded bookings', async () => {
-      mockDb.booking.findMany.mockResolvedValueOnce([
-        { ...mockBookingData, refundIssued: true },
-      ] as never);
-
-      const result = await getTransactions('winery-123');
-
-      expect(result[0].status).toBe('refunded');
-    });
-
-    it('calculates upcoming status for future bookings', async () => {
-      mockDb.booking.findMany.mockResolvedValueOnce([
-        {
-          ...mockBookingData,
-          date: new Date('2026-02-15T10:00:00Z'), // Future
-          status: BookingStatus.CONFIRMED,
+          status: 'completed',
+          reference: 'ENC-AAAA0001',
         },
-      ] as never);
-
-      const result = await getTransactions('winery-123');
-
-      expect(result[0].status).toBe('upcoming');
+      ]);
     });
 
-    it('refunded wins over upcoming/completed', async () => {
-      mockDb.booking.findMany.mockResolvedValueOnce([
-        {
-          ...mockBookingData,
-          date: new Date('2026-02-15T10:00:00Z'), // Future AND refunded
+    it('shows amounts NET of a refund and flags the row refunded — refundIssued or not', async () => {
+      mockDb.booking.findMany.mockResolvedValue([
+        booking({ refundAmount: 10500, refundIssued: false }),
+      ] as never);
+
+      const [row] = await getTransactions('winery-123');
+
+      expect(row).toMatchObject({
+        grossAmount: 20000,
+        platformFee: 1200,
+        netPayout: 8800,
+        status: 'refunded',
+      });
+    });
+
+    it('lists a NO_SHOW (money kept) and marks a future booking upcoming', async () => {
+      mockDb.booking.findMany.mockResolvedValue([
+        booking({ id: 'b-ns', status: BookingStatus.NO_SHOW }),
+        booking({
+          id: 'b-future',
           status: BookingStatus.CONFIRMED,
-          refundIssued: true,
-          refundAmount: 20000,
-        },
+          date: new Date('2026-02-01T00:00:00.000Z'),
+        }),
       ] as never);
 
       const result = await getTransactions('winery-123');
 
-      expect(result[0].status).toBe('refunded');
+      expect(result.map((t) => [t.id, t.status])).toEqual([
+        ['b-ns', 'completed'],
+        ['b-future', 'upcoming'],
+      ]);
     });
 
-    it('filters by month', async () => {
-      mockDb.booking.findMany.mockResolvedValueOnce([] as never);
+    it('is a MONEY ledger: an ON_SITE booking is not a transaction', async () => {
+      mockDb.booking.findMany.mockResolvedValue([
+        booking(),
+        onSite({ id: 'b-onsite' }),
+      ] as never);
 
-      await getTransactions('winery-123', { month: '2026-01' });
+      const result = await getTransactions('winery-123');
 
-      expect(mockDb.booking.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({
-            date: { gte: expect.any(Date), lte: expect.any(Date) },
-          }),
-        })
-      );
+      expect(result.map((t) => t.id)).toEqual(['b-1']);
     });
 
-    it('filters by experienceId', async () => {
-      mockDb.booking.findMany.mockResolvedValueOnce([] as never);
-
-      await getTransactions('winery-123', { experienceId: 'exp-1' });
-
-      expect(mockDb.booking.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({
-            experienceId: 'exp-1',
-          }),
-        })
-      );
-    });
-
-    it('filters by status after mapping (post-query filter)', async () => {
-      mockDb.booking.findMany.mockResolvedValueOnce([
-        mockBookingData, // paid
-        {
-          ...mockBookingData,
-          id: 'b-2',
-          reference: 'REF-002',
+    it('lists a cancellation the winery kept, never one that was fully refunded', async () => {
+      mockDb.booking.findMany.mockResolvedValue([
+        booking({
+          id: 'b-late',
+          status: BookingStatus.CANCELLED_BY_CLIENT,
+          date: new Date('2026-02-01T00:00:00.000Z'),
+        }),
+        booking({
+          id: 'b-full',
+          status: BookingStatus.CANCELLED_BY_CLIENT,
+          refundAmount: 21000,
           refundIssued: true,
-          refundAmount: 3600,
-          visitorName: 'Jane',
-        }, // refunded
+        }),
+      ] as never);
+
+      const result = await getTransactions('winery-123');
+
+      // Kept in full → "completed" (never "upcoming": it will not happen).
+      expect(result.map((t) => [t.id, t.status, t.netPayout])).toEqual([
+        ['b-late', 'completed', 17600],
+      ]);
+    });
+
+    it('filters by month and experience in the query, by status after mapping', async () => {
+      mockDb.booking.findMany.mockResolvedValue([
+        booking({ id: 'b-ok' }),
+        booking({ id: 'b-ref', refundAmount: 10500 }),
       ] as never);
 
       const result = await getTransactions('winery-123', {
+        month: '2025-12',
+        experienceId: 'exp-1',
         status: 'refunded',
-      });
-
-      expect(result).toHaveLength(1);
-      expect(result[0].status).toBe('refunded');
-      expect(result[0].customer.name).toBe('Jane');
-    });
-
-    it('applies multiple filters simultaneously', async () => {
-      mockDb.booking.findMany.mockResolvedValueOnce([] as never);
-
-      await getTransactions('winery-123', {
-        month: '2026-01',
-        experienceId: 'exp-456',
-        status: 'completed',
       });
 
       expect(mockDb.booking.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({
-            wineryId: 'winery-123',
-            experienceId: 'exp-456',
-            date: expect.objectContaining({
-              gte: expect.any(Date),
-              lte: expect.any(Date),
-            }),
-          }),
+          where: {
+            AND: [
+              CANDIDATES_WHERE,
+              { date: { gte: expect.any(Date), lte: expect.any(Date) } },
+              { experienceId: 'exp-1' },
+            ],
+          },
         })
       );
+      expect(result.map((t) => t.id)).toEqual(['b-ref']);
     });
 
-    it('returns empty array when no transactions', async () => {
-      mockDb.booking.findMany.mockResolvedValueOnce([] as never);
-
-      const result = await getTransactions('winery-123');
-
-      expect(result).toEqual([]);
-    });
-
-    it('returns empty array when status filter removes all results', async () => {
-      // All paid bookings, but filter for refunded
-      mockDb.booking.findMany.mockResolvedValueOnce([mockBookingData] as never);
-
-      const result = await getTransactions('winery-123', {
-        status: 'refunded',
-      });
-
-      expect(result).toEqual([]);
-    });
-
-    it('selects required fields including experience relation', async () => {
-      mockDb.booking.findMany.mockResolvedValueOnce([] as never);
-
-      await getTransactions('winery-123');
-
-      expect(mockDb.booking.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          select: expect.objectContaining({
-            id: true,
-            reference: true,
-            date: true,
-            guestCount: true,
-            totalPrice: true,
-            platformFee: true,
-            wineryPayout: true,
-            status: true,
-            refundIssued: true,
-            visitorName: true,
-            experience: {
-              select: { id: true, title: true },
-            },
-          }),
-        })
-      );
+    it('returns an empty array when there is nothing', async () => {
+      expect(await getTransactions('winery-123')).toEqual([]);
     });
   });
 
@@ -615,12 +508,8 @@ describe('Earnings Queries', () => {
   // getYearToDateSummary
   // ========================================
   describe('getYearToDateSummary', () => {
-    it('returns zero summary when no bookings', async () => {
-      mockDb.booking.findMany.mockResolvedValueOnce([] as never);
-
-      const result = await getYearToDateSummary('winery-123');
-
-      expect(result).toEqual({
+    it('returns a zero summary when no bookings', async () => {
+      expect(await getYearToDateSummary('winery-123')).toEqual({
         grossRevenue: 0,
         platformFees: 0,
         netEarnings: 0,
@@ -629,115 +518,40 @@ describe('Earnings Queries', () => {
       });
     });
 
-    it('calculates summary from non-refunded bookings', async () => {
-      mockDb.booking.findMany.mockResolvedValueOnce([
-        {
-          totalPrice: 20000,
-          serviceFeeCents: 0,
-          platformFee: 2400,
-          wineryPayout: 17600,
-          refundIssued: false,
-          refundAmount: null,
-          refundAmount: null,
-        },
-        {
-          totalPrice: 10000,
-          serviceFeeCents: 0,
-          platformFee: 1200,
-          wineryPayout: 8800,
-          refundIssued: false,
-          refundAmount: null,
-          refundAmount: null,
-        },
-      ] as never);
-
-      const result = await getYearToDateSummary('winery-123');
-
-      expect(result.grossRevenue).toBe(30000);
-      expect(result.platformFees).toBe(3600);
-      expect(result.netEarnings).toBe(26400);
-      expect(result.totalBookings).toBe(2);
-    });
-
-    it('calculates refunded amount from refunded bookings', async () => {
-      mockDb.booking.findMany.mockResolvedValueOnce([
-        {
-          totalPrice: 20000,
-          serviceFeeCents: 0,
-          platformFee: 2400,
-          wineryPayout: 17600,
-          refundIssued: false,
-          refundAmount: null,
-          refundAmount: null,
-        },
-        {
-          totalPrice: 15000,
-          serviceFeeCents: 0,
-          platformFee: 1800,
-          wineryPayout: 13200,
-          refundIssued: true,
-          refundAmount: 3600,
-          refundAmount: 15000,
-        },
-        {
-          totalPrice: 5000,
-          serviceFeeCents: 0,
-          platformFee: 600,
-          wineryPayout: 4400,
-          refundIssued: true,
-          refundAmount: 3600,
-          refundAmount: 5000,
-        },
-      ] as never);
-
-      const result = await getYearToDateSummary('winery-123');
-
-      // Non-refunded stats
-      expect(result.grossRevenue).toBe(20000);
-      expect(result.platformFees).toBe(2400);
-      expect(result.netEarnings).toBe(17600);
-      expect(result.totalBookings).toBe(1);
-
-      // Refunded stats
-      expect(result.refundedAmount).toBe(20000);
-    });
-
-    it('handles null refundAmount gracefully', async () => {
-      mockDb.booking.findMany.mockResolvedValueOnce([
-        {
-          totalPrice: 5000,
-          serviceFeeCents: 0,
-          platformFee: 600,
-          wineryPayout: 4400,
-          refundIssued: true,
-          refundAmount: null,
-        },
-      ] as never);
-
-      const result = await getYearToDateSummary('winery-123');
-
-      expect(result.refundedAmount).toBe(0);
-    });
-
-    it('queries bookings for current year', async () => {
-      mockDb.booking.findMany.mockResolvedValueOnce([] as never);
-
+    it('queries the current year over the shared candidates', async () => {
       await getYearToDateSummary('winery-123');
 
-      expect(mockDb.booking.findMany).toHaveBeenCalledWith({
-        where: {
-          wineryId: 'winery-123',
-          date: { gte: expect.any(Date), lte: expect.any(Date) },
-          status: { in: [BookingStatus.CONFIRMED, BookingStatus.COMPLETED] },
-        },
-        select: {
-          totalPrice: true,
-          platformFee: true,
-          wineryPayout: true,
-          refundIssued: true,
-          refundAmount: true,
-        },
+      expect(mockDb.booking.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            AND: [
+              CANDIDATES_WHERE,
+              { date: { gte: expect.any(Date), lte: expect.any(Date) } },
+            ],
+          },
+        })
+      );
+    });
+
+    it('reconciles: gross − fees − refunds = net, ON_SITE counted as a booking only', async () => {
+      mockDb.booking.findMany.mockResolvedValue([
+        booking(),
+        booking({ refundAmount: 10500 }), // half refunded
+        onSite(),
+      ] as never);
+
+      const result = await getYearToDateSummary('winery-123');
+
+      expect(result).toEqual({
+        grossRevenue: 40000,
+        platformFees: 2400 + 1200,
+        netEarnings: 17600 + 8800,
+        totalBookings: 3,
+        refundedAmount: 10000,
       });
+      expect(
+        result.grossRevenue - result.platformFees - result.refundedAmount
+      ).toBe(result.netEarnings);
     });
   });
 
@@ -745,95 +559,157 @@ describe('Earnings Queries', () => {
   // getMonthlyStatementData
   // ========================================
   describe('getMonthlyStatementData', () => {
-    const statementBooking = {
-      reference: 'ENC-AAAA0001',
-      date: new Date('2025-12-10T10:00:00Z'),
-      guestCount: 4,
-      totalPrice: 10000,
-      serviceFeeCents: 500,
-      platformFee: 1200,
-      wineryPayout: 8800,
-      refundIssued: false,
-      refundAmount: null,
-      experience: { title: 'Dégustation' },
-    };
-
     it('rejects an invalid month key without querying', async () => {
       const result = await getMonthlyStatementData('winery-123', '2025-13');
       expect(result).toBeNull();
       expect(mockDb.booking.findMany).not.toHaveBeenCalled();
     });
 
-    it('includes NO_SHOW bookings and filters by a UTC month window', async () => {
-      mockDb.booking.findMany.mockResolvedValueOnce([] as never);
-
+    it('filters the shared candidates by a UTC month window', async () => {
       await getMonthlyStatementData('winery-123', '2025-12');
 
       expect(mockDb.booking.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({
-            wineryId: 'winery-123',
-            status: {
-              in: [
-                BookingStatus.CONFIRMED,
-                BookingStatus.COMPLETED,
-                BookingStatus.NO_SHOW,
-              ],
-            },
-            // UTC bounds — Booking.date is a UTC-midnight @db.Date.
-            date: {
-              gte: new Date(Date.UTC(2025, 11, 1)),
-              lt: new Date(Date.UTC(2026, 0, 1)),
-            },
-          }),
+          where: {
+            AND: [
+              CANDIDATES_WHERE,
+              {
+                // UTC bounds — Booking.date is a UTC-midnight @db.Date.
+                date: {
+                  gte: new Date(Date.UTC(2025, 11, 1)),
+                  lt: new Date(Date.UTC(2026, 0, 1)),
+                },
+              },
+            ],
+          },
           orderBy: { date: 'asc' },
         })
       );
     });
 
     it('aggregates gross, commission, service fees and net', async () => {
-      mockDb.booking.findMany.mockResolvedValueOnce([
-        statementBooking,
-        {
-          ...statementBooking,
+      mockDb.booking.findMany.mockResolvedValue([
+        booking(),
+        booking({
           reference: 'ENC-AAAA0002',
-          totalPrice: 5000,
-          serviceFeeCents: 250,
-          platformFee: 600,
-          wineryPayout: 4400,
-        },
+          totalPrice: 10000,
+          serviceFeeCents: 500,
+          platformFee: 1200,
+          wineryPayout: 8800,
+          status: BookingStatus.NO_SHOW,
+        }),
       ] as never);
 
       const result = await getMonthlyStatementData('winery-123', '2025-12');
 
-      expect(result?.grossCents).toBe(15000);
-      expect(result?.commissionCents).toBe(1800);
-      expect(result?.serviceFeesCents).toBe(750);
-      expect(result?.noShowFeesCents).toBe(0);
-      expect(result?.refundedCents).toBe(0);
-      expect(result?.netCents).toBe(13200);
+      expect(result).toMatchObject({
+        month: '2025-12',
+        grossCents: 30000,
+        commissionCents: 3600,
+        serviceFeesCents: 1500,
+        noShowFeesCents: 0,
+        refundedCents: 0,
+        netCents: 26400,
+      });
       expect(result?.lines).toHaveLength(2);
     });
 
-    it('a full refund zeroes the line net; the summary reconciles exactly', async () => {
-      mockDb.booking.findMany.mockResolvedValueOnce([
-        statementBooking,
-        {
-          ...statementBooking,
-          reference: 'ENC-AAAA0003',
+    it('WRONG CASE 1 — an ON_SITE booking is listed as volume, with no commission and no "net reversé"', async () => {
+      mockDb.booking.findMany.mockResolvedValue([booking(), onSite()] as never);
+
+      const result = await getMonthlyStatementData('winery-123', '2025-12');
+
+      // Totals are the online booking alone.
+      expect(result).toMatchObject({
+        grossCents: 20000,
+        commissionCents: 2400,
+        serviceFeesCents: 1000,
+        netCents: 17600,
+      });
+      expect(result?.lines.map((l) => [l.reference, l.onSite])).toEqual([
+        ['ENC-AAAA0001', false],
+        ['ENC-ONSITE01', true],
+      ]);
+      expect(result?.lines[1]).toMatchObject({
+        grossCents: 0,
+        commissionCents: 0,
+        netCents: 0,
+      });
+    });
+
+    it('WRONG CASE 2 — a cancelled booking where the winery keeps money appears net of the refund', async () => {
+      mockDb.booking.findMany.mockResolvedValue([
+        // Late cancellation: 0 % refunded, the winery keeps everything.
+        booking({
+          reference: 'ENC-LATE0001',
+          status: BookingStatus.CANCELLED_BY_CLIENT,
+        }),
+        // STRICT middle tier: 50 % refunded.
+        booking({
+          reference: 'ENC-HALF0001',
+          status: BookingStatus.CANCELLED_BY_CLIENT,
+          refundAmount: 10500,
           refundIssued: true,
-          refundAmount: 10500, // totalPrice + serviceFee => full refund
-        },
+        }),
+        // Fully refunded: earned nothing, not on the statement.
+        booking({
+          reference: 'ENC-FULL0001',
+          status: BookingStatus.CANCELLED_BY_CLIENT,
+          refundAmount: 21000,
+          refundIssued: true,
+        }),
       ] as never);
 
       const result = await getMonthlyStatementData('winery-123', '2025-12');
 
-      // refundedCents = the NET impact (payout share), not the
-      // client-facing refundAmount — so gross − commission − refunds = net.
-      expect(result?.refundedCents).toBe(8800);
-      expect(result?.netCents).toBe(8800); // only the non-refunded line
-      expect(result?.lines[1]?.netCents).toBe(0);
-      expect(result?.lines[1]?.refunded).toBe(true);
+      expect(
+        result?.lines.map((l) => [l.reference, l.netCents, l.cancelled])
+      ).toEqual([
+        ['ENC-LATE0001', 17600, true],
+        ['ENC-HALF0001', 8800, true],
+      ]);
+      expect(result).toMatchObject({
+        grossCents: 40000,
+        commissionCents: 2400 + 1200,
+        refundedCents: 10000,
+        // Service fee kept: 10.00 in full + half of 10.00.
+        serviceFeesCents: 1500,
+        netCents: 26400,
+      });
+    });
+
+    it('WRONG CASE 3 — a partial ADMIN refund (refundIssued false) is deducted', async () => {
+      mockDb.booking.findMany.mockResolvedValue([
+        booking({ refundAmount: 10500, refundIssued: false }),
+      ] as never);
+
+      const result = await getMonthlyStatementData('winery-123', '2025-12');
+
+      expect(result).toMatchObject({
+        grossCents: 20000,
+        commissionCents: 1200,
+        refundedCents: 10000,
+        netCents: 8800,
+      });
+      expect(result?.lines[0]).toMatchObject({
+        refunded: true,
+        netCents: 8800,
+      });
+    });
+
+    it('a full refund zeroes the line net; the summary reconciles exactly', async () => {
+      mockDb.booking.findMany.mockResolvedValue([
+        booking(),
+        booking({
+          reference: 'ENC-AAAA0002',
+          refundIssued: true,
+          refundAmount: 21000,
+        }),
+      ] as never);
+
+      const result = await getMonthlyStatementData('winery-123', '2025-12');
+
+      expect(result?.lines[1]).toMatchObject({ netCents: 0, refunded: true });
       expect(
         (result?.grossCents ?? 0) -
           (result?.commissionCents ?? 0) -
@@ -841,25 +717,52 @@ describe('Earnings Queries', () => {
       ).toBe(result?.netCents);
     });
 
-    it('a partial refund keeps the proportional net and reconciles', async () => {
-      mockDb.booking.findMany.mockResolvedValueOnce([
-        {
-          ...statementBooking,
-          refundIssued: true,
-          refundAmount: 5250, // half of paid (10500)
-        },
+    it('an odd partial refund still reconciles to the cent', async () => {
+      mockDb.booking.findMany.mockResolvedValue([
+        booking({
+          totalPrice: 9990,
+          serviceFeeCents: 250,
+          platformFee: 999,
+          wineryPayout: 8991,
+          refundAmount: 3333,
+        }),
       ] as never);
 
       const result = await getMonthlyStatementData('winery-123', '2025-12');
 
-      expect(result?.lines[0]?.netCents).toBe(4400); // 8800 × 0.5
-      expect(result?.refundedCents).toBe(4400);
-      expect(result?.netCents).toBe(4400);
       expect(
         (result?.grossCents ?? 0) -
           (result?.commissionCents ?? 0) -
           (result?.refundedCents ?? 0)
       ).toBe(result?.netCents);
+    });
+
+    it('keeps no-show fees on their own line (net of the tier commission), added to the net', async () => {
+      mockDb.booking.findMany.mockResolvedValue([
+        // ON_SITE no-show whose fee was charged: 30.00 − 12 % = 26.40 kept.
+        onSite({
+          status: BookingStatus.NO_SHOW,
+          noShowFeeChargeStatus: NoShowChargeStatus.CHARGED,
+          noShowFeeChargedCents: 3000,
+        }),
+        // Charged then reverted (refunded): nets to 0.
+        onSite({
+          reference: 'ENC-ONSITE02',
+          status: BookingStatus.NO_SHOW,
+          noShowFeeChargeStatus: NoShowChargeStatus.CHARGED,
+          noShowFeeChargedCents: 3000,
+          noShowFeeRefundId: 're_1',
+        }),
+      ] as never);
+
+      const result = await getMonthlyStatementData('winery-123', '2025-12');
+
+      expect(result).toMatchObject({
+        grossCents: 0,
+        commissionCents: 0,
+        noShowFeesCents: 2640,
+        netCents: 2640,
+      });
     });
   });
 });

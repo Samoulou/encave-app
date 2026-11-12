@@ -12,8 +12,17 @@ import { db } from '@/server/db';
 import { BookingStatus } from '@prisma/client';
 
 // Mock db
-vi.mock('@/server/db', () => ({
-  db: {
+// Public read actions are rate-limited per IP (reads next/headers): the
+// limiter is out of scope here — always let the call through.
+vi.mock('@/server/services/rate-limit.service', async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import('@/server/services/rate-limit.service')
+  >()),
+  rateLimitPublicRead: vi.fn().mockResolvedValue(null),
+}));
+
+vi.mock('@/server/db', () => {
+  const db = {
     booking: {
       findUnique: vi.fn(),
       findFirst: vi.fn(),
@@ -22,8 +31,14 @@ vi.mock('@/server/db', () => ({
       updateMany: vi.fn(),
     },
     $executeRaw: vi.fn(async () => 1),
-  },
-}));
+    // The cancellation claim (status flip + refund marker) is one
+    // interactive transaction — run the callback on the same mock.
+    $transaction: vi.fn(async (callback: (_tx: unknown) => unknown) =>
+      callback(db)
+    ),
+  };
+  return { db };
+});
 
 // Mock payment service
 vi.mock('@/server/services/payment.service', () => ({
@@ -538,6 +553,34 @@ describe('Booking Cancellation Actions', () => {
       expect(processRefund).not.toHaveBeenCalled();
     });
 
+    it('records the owed refund WITH the claim (crash marker) before touching Stripe, and clears it at the end', async () => {
+      vi.mocked(db.booking.findFirst).mockResolvedValue({
+        ...mockConfirmedBooking,
+        date: new Date('2026-01-14'),
+        timeSlot: '14:00',
+      } as never);
+      vi.mocked(processRefund).mockResolvedValue({
+        refundId: 're_marker',
+        amount: 20000,
+      });
+
+      const { cancelBooking } = await import('@/server/actions/booking');
+      const result = await cancelBooking('booking-cancel-1', accessToken);
+
+      expect(result.success).toBe(true);
+      const raw = vi.mocked(db.$executeRaw).mock;
+      // 1st raw statement = the marker, appended inside the claim.
+      expect(String(raw.calls[0]?.[1])).toBe('CANCEL_REFUND_PENDING(20000)');
+      // …written BEFORE the Stripe refund: a crash from here on leaves a
+      // CANCELLED booking that says a refund is still owed.
+      expect(Number(raw.invocationCallOrder[0])).toBeLessThan(
+        Number(vi.mocked(processRefund).mock.invocationCallOrder[0])
+      );
+      // Last raw statement = the marker removal, once the flow is over.
+      const lastSql = (raw.calls.at(-1)?.[0] as readonly string[]).join('?');
+      expect(lastSql).toContain('CANCEL_REFUND_(PENDING|STUCK)');
+    });
+
     // ON_SITE / free offer (P-08): the price is settled at the winery —
     // nothing was ever charged online, so there is nothing to refund and
     // nothing "impossible" about it.
@@ -601,8 +644,14 @@ describe('Booking Cancellation Actions', () => {
 
       expect(result.success).toBe(true);
       expect(processRefund).not.toHaveBeenCalled();
-      // The reconciliation marker is persisted…
-      expect(db.$executeRaw).toHaveBeenCalledTimes(1);
+      // The reconciliation marker is persisted (next to the claim's own
+      // in-progress marker, written then cleared)…
+      const appended = vi
+        .mocked(db.$executeRaw)
+        .mock.calls.map((call) => String(call[1]));
+      expect(
+        appended.some((message) => message.startsWith('CARD_REFUND_IMPOSSIBLE'))
+      ).toBe(true);
       // …and the client is never told "no refund" while money is owed.
       expect(sendBookingCancellationEmail).toHaveBeenCalledWith(
         'cancel@example.com',

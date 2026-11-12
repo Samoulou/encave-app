@@ -16,6 +16,7 @@ import type { EarningsSummary } from '@/server/queries/earnings.queries';
 import type { NextPayoutDTO } from '@/server/queries/payouts.queries';
 import { cn } from '@/lib/utils';
 import type { Locale } from '@/i18n/routing';
+import { monthLabelFromKey } from './month-label';
 
 interface EarningsSummaryCardsProps {
   summary: EarningsSummary;
@@ -53,7 +54,8 @@ export function EarningsSummaryCards({
       <div className="group flex h-40 flex-col justify-between rounded-xl border border-border bg-white p-6 shadow-sm transition-colors hover:border-primary/30">
         <div className="flex items-center justify-between">
           <p className="text-sm font-medium text-muted-foreground">
-            {t('totalEarnings')} ({summary.currentMonthLabel})
+            {t('totalEarnings')} (
+            {monthLabelFromKey(summary.currentMonth, locale)})
           </p>
           <div className="rounded-lg bg-primary/10 p-2 text-primary">
             <Wallet className="h-5 w-5" />

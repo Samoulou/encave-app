@@ -641,9 +641,11 @@ describe.skipIf(!url)('checkout webhook route (P0 lot 1)', () => {
   });
 
   it('an unknown event type is acknowledged 200 and marked PROCESSED (log-only)', async () => {
+    // `charge.refunded` is HANDLED since the dispute/refund sync (M3) —
+    // use a type the route genuinely does not know.
     const event = buildSignedCheckoutEvent({
-      type: 'charge.refunded',
-      dataObject: { id: 'ch_dbtest_unknown_type', object: 'charge' },
+      type: 'payment_intent.created',
+      dataObject: { id: 'pi_dbtest_unknown_type', object: 'payment_intent' },
       secret: WEBHOOK_SECRET,
     });
     const { eventId } = event;
@@ -659,7 +661,7 @@ describe.skipIf(!url)('checkout webhook route (P0 lot 1)', () => {
     });
     expect(stripeEvent).toEqual({
       status: 'PROCESSED',
-      type: 'charge.refunded',
+      type: 'payment_intent.created',
     });
   });
 

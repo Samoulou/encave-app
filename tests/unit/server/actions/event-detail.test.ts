@@ -38,7 +38,7 @@ vi.mock('@/server/services/no-show.service', () => ({
 
 import { auth } from '@/server/auth';
 import { db } from '@/server/db';
-import { revalidatePath, revalidateTag } from 'next/cache';
+import { revalidatePath } from 'next/cache';
 import { logInfo } from '@/lib/logger';
 import { BookingStatus } from '@prisma/client';
 import {
@@ -248,7 +248,10 @@ describe('markBookingCheckedIn', () => {
         }),
       })
     );
-    expect(revalidatePath).toHaveBeenCalledWith('/dashboard/bookings');
+    expect(revalidatePath).toHaveBeenCalledWith(
+      '/[locale]/dashboard/bookings',
+      'page'
+    );
   });
 });
 
@@ -572,6 +575,78 @@ describe('revertBookingNoShow', () => {
         to: BookingStatus.CONFIRMED,
       })
     );
+  });
+});
+
+describe('revertBookingNoShow vs chargeNoShowFee — mutually exclusive on the row', () => {
+  it('reverts only a NO_SHOW whose fee state is settled: never charged, FAILED, or CHARGED and refunded', async () => {
+    vi.mocked(auth).mockResolvedValue(mockSession);
+    mockCtxBooking({ status: BookingStatus.NO_SHOW });
+    mockUpdateManyOk();
+    mockUpdatedDto({ status: BookingStatus.CONFIRMED, checkedInAt: null });
+
+    await revertBookingNoShow({ bookingId: VALID_BOOKING_ID });
+
+    // The charge action claims with status = NO_SHOW and fee state
+    // null/FAILED → PENDING. This CAS excludes PENDING and an un-refunded
+    // CHARGED, so whichever statement commits first makes the other miss.
+    expect(updateManyMock).toHaveBeenCalledWith({
+      where: {
+        id: VALID_BOOKING_ID,
+        status: BookingStatus.NO_SHOW,
+        OR: [
+          { noShowFeeChargeStatus: null },
+          { noShowFeeChargeStatus: 'FAILED' },
+          {
+            noShowFeeChargeStatus: 'CHARGED',
+            noShowFeeRefundId: { not: null },
+          },
+        ],
+      },
+      data: { status: BookingStatus.CONFIRMED },
+    });
+  });
+
+  it('refuses the revert when a fee charge slipped in after the refund check (still NO_SHOW)', async () => {
+    vi.mocked(auth).mockResolvedValue(mockSession);
+    mockCtxBooking({ status: BookingStatus.NO_SHOW });
+    // CAS matched nothing: the charge claimed PENDING in between…
+    updateManyMock.mockResolvedValueOnce({ count: 0 } as Awaited<
+      ReturnType<typeof db.booking.updateMany>
+    >);
+    // …and the booking is still a NO_SHOW.
+    findUniqueMock.mockResolvedValueOnce({
+      status: BookingStatus.NO_SHOW,
+    } as unknown as Awaited<ReturnType<typeof db.booking.findUnique>>);
+
+    const result = await revertBookingNoShow({ bookingId: VALID_BOOKING_ID });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.message).toBe('NO_SHOW_FEE_CHARGE_IN_PROGRESS');
+    }
+    expect(logInfo).not.toHaveBeenCalledWith(
+      'booking.revert.noshow',
+      expect.anything()
+    );
+  });
+
+  it('reports BOOKING_ALREADY_TRANSITIONED when the status itself moved', async () => {
+    vi.mocked(auth).mockResolvedValue(mockSession);
+    mockCtxBooking({ status: BookingStatus.NO_SHOW });
+    updateManyMock.mockResolvedValueOnce({ count: 0 } as Awaited<
+      ReturnType<typeof db.booking.updateMany>
+    >);
+    findUniqueMock.mockResolvedValueOnce({
+      status: BookingStatus.CONFIRMED,
+    } as unknown as Awaited<ReturnType<typeof db.booking.findUnique>>);
+
+    const result = await revertBookingNoShow({ bookingId: VALID_BOOKING_ID });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.message).toBe('BOOKING_ALREADY_TRANSITIONED');
+    }
   });
 });
 

@@ -10,12 +10,15 @@ vi.mock('@/server/db', () => ({
       updateMany: vi.fn(),
       deleteMany: vi.fn(),
     },
+    // The cancellation CAS and the gift release are one interactive
+    // transaction — run the callback on the same mocked delegates.
     $transaction: vi.fn(
       async (
-        callback: (tx: {
+        callback: (_tx: {
           booking: {
             findUnique: typeof import('@/server/db').db.booking.findUnique;
             update: typeof import('@/server/db').db.booking.update;
+            updateMany: typeof import('@/server/db').db.booking.updateMany;
           };
         }) => Promise<unknown>
       ) => {
@@ -24,6 +27,7 @@ vi.mock('@/server/db', () => ({
           booking: {
             findUnique: db.booking.findUnique,
             update: db.booking.update,
+            updateMany: db.booking.updateMany,
           },
         });
       }
@@ -41,6 +45,16 @@ vi.mock('@/server/stripe', () => ({
 
 vi.mock('@/server/services/giftCard-redemption.service', () => ({
   releaseGiftForBooking: vi.fn(async () => 'noop'),
+  releaseGiftForBookingInTx: vi.fn(async () => 'noop'),
+}));
+
+vi.mock('@/server/services/booking-refund.service', () => ({
+  flagStuckCancellationRefunds: vi.fn(async () => 0),
+}));
+
+vi.mock('@sentry/nextjs', () => ({
+  captureException: vi.fn(),
+  captureMessage: vi.fn(),
 }));
 
 vi.mock('@/server/services/email.service', () => ({
@@ -266,5 +280,128 @@ describe('expirePendingPaymentBookings', () => {
     expect(result.expired).toBe(0);
     expect(db.booking.update).not.toHaveBeenCalled();
     expect(sendBookingExpiredEmail).not.toHaveBeenCalled();
+  });
+
+  describe('sweep shape (oldest first, drained page by page)', () => {
+    const candidate = (id: string) => ({
+      id,
+      reference: `ENC-${id}`,
+      visitorEmail: `${id}@test.ch`,
+      visitorName: 'Alice',
+      locale: 'FR',
+      createdAt: new Date('2026-05-19T10:00:00Z'),
+      expiresAt: new Date('2026-05-19T11:00:00Z'),
+      stripeCheckoutSessionId: null,
+      date: new Date('2026-05-20T00:00:00Z'),
+      experience: { title: 'Atelier pinot', slug: 'atelier-pinot' },
+    });
+    const now = new Date('2026-05-19T12:00:00Z');
+
+    it('orders by expiresAt ascending and keeps paging until the queue is empty, excluding rows already seen', async () => {
+      vi.mocked(db.booking.updateMany).mockResolvedValue({ count: 1 } as never);
+      vi.mocked(db.booking.findMany)
+        .mockResolvedValueOnce([candidate('a'), candidate('b')] as never)
+        .mockResolvedValueOnce([candidate('c')] as never)
+        .mockResolvedValueOnce([] as never);
+
+      const result = await expirePendingPaymentBookings(now, { batchSize: 2 });
+
+      expect(result).toMatchObject({
+        expired: 3,
+        failed: 0,
+        budgetExhausted: false,
+      });
+      const calls = vi.mocked(db.booking.findMany).mock.calls;
+      expect(calls).toHaveLength(3);
+      for (const [args] of calls) {
+        expect(args).toMatchObject({
+          orderBy: [
+            { expiresAt: { sort: 'asc', nulls: 'first' } },
+            { id: 'asc' },
+          ],
+          take: 2,
+        });
+      }
+      // Page 2 never re-reads what page 1 handled (or skipped).
+      expect(calls[1]?.[0]).toMatchObject({
+        where: { id: { notIn: ['a', 'b'] } },
+      });
+      expect(calls[2]?.[0]).toMatchObject({
+        where: { id: { notIn: ['a', 'b', 'c'] } },
+      });
+    });
+
+    it('a row it must skip (paid session) does not stop the rows behind it', async () => {
+      const paid = { ...candidate('paid'), stripeCheckoutSessionId: 'cs_paid' };
+      retrieveMock.mockResolvedValue({
+        payment_status: 'paid',
+        status: 'complete',
+      });
+      vi.mocked(db.booking.updateMany).mockResolvedValue({ count: 1 } as never);
+      vi.mocked(db.booking.findMany)
+        .mockResolvedValueOnce([paid] as never)
+        .mockResolvedValueOnce([candidate('behind')] as never)
+        .mockResolvedValueOnce([] as never);
+
+      const result = await expirePendingPaymentBookings(now, { batchSize: 1 });
+
+      expect(result).toMatchObject({ expired: 1, skipped: 1 });
+    });
+
+    it('ends when a page brings nothing new — it can never spin on rows already handled', async () => {
+      vi.mocked(db.booking.updateMany).mockResolvedValue({ count: 1 } as never);
+      // A store that keeps answering the same row.
+      vi.mocked(db.booking.findMany).mockResolvedValue([
+        candidate('a'),
+      ] as never);
+
+      const result = await expirePendingPaymentBookings(now);
+
+      expect(result.expired).toBe(1);
+      expect(db.booking.findMany).toHaveBeenCalledTimes(2);
+    });
+
+    it('stops at the time budget and reports it', async () => {
+      vi.mocked(db.booking.findMany).mockResolvedValue([
+        candidate('a'),
+      ] as never);
+
+      const result = await expirePendingPaymentBookings(now, { budgetMs: 0 });
+
+      expect(result).toMatchObject({ expired: 0, budgetExhausted: true });
+      expect(db.booking.findMany).not.toHaveBeenCalled();
+    });
+
+    it('returns the reserved gift in the SAME transaction as the cancellation', async () => {
+      const { releaseGiftForBookingInTx } =
+        await import('@/server/services/giftCard-redemption.service');
+      vi.mocked(db.booking.updateMany).mockResolvedValue({ count: 1 } as never);
+      vi.mocked(db.booking.findMany)
+        .mockResolvedValueOnce([candidate('a')] as never)
+        .mockResolvedValueOnce([] as never);
+
+      await expirePendingPaymentBookings(now);
+
+      expect(db.$transaction).toHaveBeenCalledTimes(1);
+      expect(releaseGiftForBookingInTx).toHaveBeenCalledWith(
+        expect.anything(),
+        'a'
+      );
+    });
+
+    it('does not release anything when the cancellation CAS is lost (confirmed meanwhile)', async () => {
+      const { releaseGiftForBookingInTx } =
+        await import('@/server/services/giftCard-redemption.service');
+      vi.mocked(db.booking.updateMany).mockResolvedValue({ count: 0 } as never);
+      vi.mocked(db.booking.findMany)
+        .mockResolvedValueOnce([candidate('a')] as never)
+        .mockResolvedValueOnce([] as never);
+
+      const result = await expirePendingPaymentBookings(now);
+
+      expect(result).toMatchObject({ expired: 0, skipped: 1 });
+      expect(releaseGiftForBookingInTx).not.toHaveBeenCalled();
+      expect(sendBookingExpiredEmail).not.toHaveBeenCalled();
+    });
   });
 });

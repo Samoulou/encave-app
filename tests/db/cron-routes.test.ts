@@ -575,8 +575,8 @@ describe.skipIf(!url)('cron routes (lot 2 P0 — auth, guards, flags)', () => {
     });
   });
 
-  describe('process-scheduled-jobs — GIFT_CARDS kill-switch', () => {
-    it('flag OFF: a due GIFT_CARD_DELIVERY job is never claimed; ON: delivered', async () => {
+  describe('process-scheduled-jobs — a PAID gift is delivered whatever the GIFT_CARDS flag', () => {
+    it('flag OFF: a due GIFT_CARD_DELIVERY job is still claimed and delivered (the flag gates new sales, not obligations)', async () => {
       const { GET } =
         await import('@/app/api/cron/process-scheduled-jobs/route');
       const emailService = await import('@/server/services/email.service');
@@ -610,85 +610,148 @@ describe.skipIf(!url)('cron routes (lot 2 P0 — auth, guards, flags)', () => {
         select: { id: true },
       });
 
+      // EVERY kill-switch OFF — the purchaser paid before the switch was
+      // flipped: the recipient must still receive the card.
       await setFlag('GIFT_CARDS', false);
       await setFlag('TASTING_SHEET', false);
       await setFlag('REQUESTS', false);
       setRequestHeaders({ authorization: `Bearer ${CRON_SECRET}` });
 
-      // Kill-switch OFF: the runner must not even claim the due job —
-      // status stays PENDING with 0 attempts consumed (reversible).
-      let res = await GET();
+      const res = await GET();
       expect(res.status).toBe(200);
-      let body = await res.json();
-      expect(body).toMatchObject({ claimed: 0, done: 0, failed: 0 });
-      expect(body.enabledTypes).not.toContain(GIFT_CARD_DELIVERY_JOB_TYPE);
-      let jobRow = await db.scheduledJob.findUniqueOrThrow({
+      const body = await res.json();
+      expect(body).toMatchObject({ claimed: 1, done: 1, failed: 0 });
+      // The flag-gated types stay parked; only the obligation runs.
+      expect(body.enabledTypes).toEqual([GIFT_CARD_DELIVERY_JOB_TYPE]);
+      const jobRow = await db.scheduledJob.findUniqueOrThrow({
         where: { id: job.id },
         select: { status: true, attempts: true },
       });
       expect(jobRow).toMatchObject({
-        status: ScheduledJobStatus.PENDING,
-        attempts: 0,
+        status: ScheduledJobStatus.DONE,
+        attempts: 1,
       });
-      expect(sendMock).not.toHaveBeenCalled();
+      expect(sendMock).toHaveBeenCalledTimes(1);
+      expect(sendMock.mock.calls[0]?.[0]).toBe(
+        `${RUN_TAG}-recipient@test.encave.ch`
+      );
+      const card = await db.giftCard.findUniqueOrThrow({
+        where: { id: giftCard.id },
+        select: { deliveredAt: true },
+      });
+      expect(card.deliveredAt).not.toBeNull();
+      // The same GET also ran the booking maintenance sweep.
+      expect(body.maintenance).toMatchObject({ failed: 0 });
+    });
 
-      // Kill-switch ON: same GET drains the job to DONE and delivers.
-      await setFlag('GIFT_CARDS', true);
-      try {
-        res = await GET();
-        expect(res.status).toBe(200);
-        body = await res.json();
-        expect(body).toMatchObject({ claimed: 1, done: 1, failed: 0 });
-        expect(body.enabledTypes).toEqual([GIFT_CARD_DELIVERY_JOB_TYPE]);
-        jobRow = await db.scheduledJob.findUniqueOrThrow({
-          where: { id: job.id },
-          select: { status: true, attempts: true },
-        });
-        expect(jobRow).toMatchObject({
-          status: ScheduledJobStatus.DONE,
-          attempts: 1,
-        });
-        expect(sendMock).toHaveBeenCalledTimes(1);
-        expect(sendMock.mock.calls[0]?.[0]).toBe(
-          `${RUN_TAG}-recipient@test.encave.ch`
-        );
-        const card = await db.giftCard.findUniqueOrThrow({
-          where: { id: giftCard.id },
-          select: { deliveredAt: true },
-        });
-        expect(card.deliveredAt).not.toBeNull();
-      } finally {
-        await setFlag('GIFT_CARDS', false);
-      }
+    it('a DISABLED card (fraud / chargeback) is never delivered, flag or not', async () => {
+      const { GET } =
+        await import('@/app/api/cron/process-scheduled-jobs/route');
+      const emailService = await import('@/server/services/email.service');
+      const sendMock = vi.mocked(emailService.sendGiftCardDeliveryEmail);
+      sendMock.mockClear();
+
+      const giftCard = await db.giftCard.create({
+        data: {
+          code: `${RUN_TAG}GC2`.toUpperCase(),
+          status: GiftCardStatus.DISABLED,
+          initialAmount: 5000,
+          balance: 5000,
+          purchaserEmail: `${RUN_TAG}-purchaser@test.encave.ch`,
+          recipientEmail: `${RUN_TAG}-recipient2@test.encave.ch`,
+          expiresAt: new Date(Date.now() + 5 * 365 * 24 * 60 * 60 * 1000),
+        },
+        select: { id: true },
+      });
+      const job = await db.scheduledJob.create({
+        data: {
+          type: GIFT_CARD_DELIVERY_JOB_TYPE,
+          runAt: new Date(Date.now() - 60_000),
+          payload: { giftCardId: giftCard.id },
+          dedupeKey: `${GIFT_CARD_DELIVERY_JOB_TYPE}:${RUN_TAG}:disabled`,
+        },
+        select: { id: true },
+      });
+      setRequestHeaders({ authorization: `Bearer ${CRON_SECRET}` });
+
+      const res = await GET();
+
+      expect(res.status).toBe(200);
+      expect(sendMock).not.toHaveBeenCalled();
+      const jobRow = await db.scheduledJob.findUniqueOrThrow({
+        where: { id: job.id },
+        select: { status: true },
+      });
+      expect(jobRow.status).toBe(ScheduledJobStatus.CANCELLED);
+      await db.giftCard.delete({ where: { id: giftCard.id } });
     });
   });
 
-  describe('reconcile-gift-transfers — GIFT_CARDS kill-switch', () => {
-    it('flag OFF → explicit skip; flag ON on an empty base → zero-scan 200', async () => {
+  describe('reconcile-gift-transfers — money owed is paid whatever the GIFT_CARDS flag', () => {
+    it('flag OFF: a confirmed gift-funded booking still gets its winery transfer; nothing pending → zero-scan', async () => {
       const { GET } =
         await import('@/app/api/cron/reconcile-gift-transfers/route');
+      if (!ids.wineryId) throw new Error('fixture missing');
       await setFlag('GIFT_CARDS', false);
       setRequestHeaders({ authorization: `Bearer ${CRON_SECRET}` });
 
+      // Nothing pending: one indexed query, Stripe never touched.
+      stripeStub.fns.transfersCreate.mockClear();
       let res = await GET();
       expect(res.status).toBe(200);
-      expect(await res.json()).toEqual({ skipped: 'flag_off', durationMs: 0 });
+      expect(await res.json()).toMatchObject({
+        scanned: 0,
+        transferred: 0,
+        failed: 0,
+      });
+      expect(stripeStub.fns.transfersCreate).not.toHaveBeenCalled();
 
-      // Flag ON with no gift-funded CONFIRMED booking anywhere: a clean
-      // zero-scan run, and Stripe is never touched.
-      await setFlag('GIFT_CARDS', true);
+      // A guest paid with a gift BEFORE the kill-switch was flipped; the
+      // transfer to the winery never landed.
+      await db.winery.update({
+        where: { id: ids.wineryId },
+        data: { stripeAccountId: `acct_dbtest_${RUN_TAG}` },
+      });
+      const booking = await makeBooking({
+        date: new Date('2027-05-01T00:00:00.000Z'),
+        status: BookingStatus.CONFIRMED,
+        email: `${RUN_TAG}-gift-owed@test.encave.ch`,
+      });
+      await db.booking.update({
+        where: { id: booking.id },
+        data: {
+          giftCardId: `gift_dbtest_${RUN_TAG}`,
+          giftAppliedCents: 5000,
+        },
+      });
       try {
-        stripeStub.fns.transfersCreate.mockClear();
         res = await GET();
         expect(res.status).toBe(200);
         expect(await res.json()).toMatchObject({
-          scanned: 0,
-          transferred: 0,
+          scanned: 1,
+          transferred: 1,
           failed: 0,
         });
-        expect(stripeStub.fns.transfersCreate).not.toHaveBeenCalled();
+        // The winery payout (44.00), not the gift amount.
+        expect(stripeStub.fns.transfersCreate).toHaveBeenCalledTimes(1);
+        expect(stripeStub.fns.transfersCreate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            amount: 4400,
+            destination: `acct_dbtest_${RUN_TAG}`,
+          }),
+          { idempotencyKey: `gift_payout_${booking.id}` }
+        );
+        const row = await db.booking.findUniqueOrThrow({
+          where: { id: booking.id },
+          select: { giftTransferId: true },
+        });
+        expect(row.giftTransferId).not.toBeNull();
       } finally {
-        await setFlag('GIFT_CARDS', false);
+        await db.booking.delete({ where: { id: booking.id } });
+        await db.winery.update({
+          where: { id: ids.wineryId },
+          data: { stripeAccountId: null },
+        });
       }
     });
   });

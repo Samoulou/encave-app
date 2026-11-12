@@ -8,9 +8,15 @@ import { logError, logInfo } from '@/lib/logger';
 import { getStripe } from '@/server/stripe';
 import {
   appendRefundError,
+  CANCEL_REFUND_PENDING_PREFIX,
+  CANCEL_REFUND_STUCK_PREFIX,
+  claimBookingCancellation,
+  clearCancellationRefundMarker,
   processCancellationRefund,
+  recordCancellationRefund,
   wasNeverChargedOnline,
 } from '@/server/services/booking-refund.service';
+import { mapWithConcurrency } from '@/lib/utils/concurrency';
 import { sendBookingCancelledByWineryEmail } from '@/server/services/email.service';
 import { getNearbyWineryAlternatives } from '@/server/queries/winery-alternatives.queries';
 import {
@@ -51,6 +57,9 @@ const cancelSessionSchema = z.object({
   sessionId: z.string().min(6),
   reason: z.string().trim().min(10).max(500),
 });
+
+/** Bookings of a cancelled session processed in parallel (Stripe + email). */
+const CANCEL_SESSION_CONCURRENCY = 4;
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -187,7 +196,7 @@ async function resolveContext(
  * the bookings dashboard so list + calendar views refresh on next navigation.
  */
 function invalidate(_experienceSlug: string): void {
-  revalidatePath('/dashboard/bookings');
+  revalidatePath('/[locale]/dashboard/bookings', 'page');
 }
 
 async function loadBookingDTO(bookingId: string): Promise<BookingDTO | null> {
@@ -537,18 +546,45 @@ export async function revertBookingNoShow(
   }
 
   try {
-    // CAS: only revert a booking STILL marked NO_SHOW.
+    // CAS: only revert a booking STILL marked NO_SHOW — AND whose fee state
+    // is one the refund step above has fully dealt with. The charge action
+    // claims with `status = NO_SHOW` + fee state null/FAILED → PENDING, so
+    // the two are mutually exclusive on the same row:
+    //  - charge claimed first (PENDING, or CHARGED and not yet refunded
+    //    because it landed after our refund check) → this CAS matches
+    //    nothing: never a CONFIRMED booking with a fee in flight / kept;
+    //  - this CAS first → the charge claim finds status ≠ NO_SHOW.
     const reverted = await db.booking.updateMany({
-      where: { id: booking.id, status: BookingStatus.NO_SHOW },
+      where: {
+        id: booking.id,
+        status: BookingStatus.NO_SHOW,
+        OR: [
+          { noShowFeeChargeStatus: null },
+          { noShowFeeChargeStatus: NoShowChargeStatus.FAILED },
+          {
+            noShowFeeChargeStatus: NoShowChargeStatus.CHARGED,
+            noShowFeeRefundId: { not: null },
+          },
+        ],
+      },
       data: { status: BookingStatus.CONFIRMED },
     });
 
     if (reverted.count === 0) {
+      const current = await db.booking.findUnique({
+        where: { id: booking.id },
+        select: { status: true },
+      });
       return {
         success: false,
         error: {
           code: 'VALIDATION_ERROR',
-          message: 'BOOKING_ALREADY_TRANSITIONED',
+          message:
+            current?.status === BookingStatus.NO_SHOW
+              ? // A fee charge started (or completed) while we were
+                // reverting — retry once it settles; it is then refunded.
+                'NO_SHOW_FEE_CHARGE_IN_PROGRESS'
+              : 'BOOKING_ALREADY_TRANSITIONED',
         },
       };
     }
@@ -587,10 +623,18 @@ export async function revertBookingNoShow(
   }
 }
 
-export async function cancelEventSession(
-  input: unknown
-): Promise<
-  ActionResult<{ cancelled: number; refunded: number; failed: number }>
+export async function cancelEventSession(input: unknown): Promise<
+  ActionResult<{
+    cancelled: number;
+    refunded: number;
+    failed: number;
+    /**
+     * Booking references whose refund/email did not complete. They stay
+     * claimed with a CANCEL_REFUND_* marker: calling the action again for
+     * the same session resumes exactly these.
+     */
+    failedReferences: string[];
+  }>
 > {
   const parsed = cancelSessionSchema.safeParse(input);
   if (!parsed.success) {
@@ -656,7 +700,26 @@ export async function cancelEventSession(
       experienceId: experience.id,
       date,
       timeSlot,
-      status: { in: [BookingStatus.CONFIRMED, BookingStatus.PENDING_PAYMENT] },
+      OR: [
+        {
+          status: {
+            in: [BookingStatus.CONFIRMED, BookingStatus.PENDING_PAYMENT],
+          },
+        },
+        // RESUME: a booking this action already claimed on a previous run
+        // but whose refund did not finish (Stripe error, timeout). Its
+        // CANCEL_REFUND_* marker is still on the row, the client was not
+        // emailed — pick it up again instead of leaving it half-done.
+        {
+          status: BookingStatus.CANCELLED_BY_WINERY,
+          OR: [
+            {
+              refundError: { contains: `${CANCEL_REFUND_PENDING_PREFIX}(` },
+            },
+            { refundError: { contains: `${CANCEL_REFUND_STUCK_PREFIX}(` } },
+          ],
+        },
+      ],
     },
     select: {
       id: true,
@@ -681,9 +744,6 @@ export async function cancelEventSession(
     },
   });
 
-  let cancelled = 0;
-  let refunded = 0;
-  let failed = 0;
   const startsAt = zonedWallClockToUTC(date, timeSlot);
   // 3 nearby publicly-visible wineries to offer as alternatives (#5); the
   // list is locale-agnostic, the email builds each URL with the guest locale.
@@ -691,13 +751,24 @@ export async function cancelEventSession(
     limit: 3,
   });
 
-  for (const booking of bookings) {
+  type BookingOutcome =
+    | { kind: 'cancelled'; returnedCents: number }
+    | { kind: 'skipped' }
+    | { kind: 'failed'; reference: string };
+
+  const cancelOne = async (
+    booking: (typeof bookings)[number]
+  ): Promise<BookingOutcome> => {
+    const isResume = booking.status === BookingStatus.CANCELLED_BY_WINERY;
+    const wasConfirmed = isResume || booking.status === BookingStatus.CONFIRMED;
+    let pendingRefundCents = 0;
     try {
       // Unclaimed hold (P-04 / L-050): placeholder visitor, no Stripe
       // session — not a real booking. Delete it silently; emailing the
       // sentinel address would bounce, and a CANCELLED_BY_WINERY row
       // would pollute the winery's cancellation history.
       if (
+        !isResume &&
         isHoldPlaceholderEmail(booking.visitorEmail) &&
         !booking.stripeCheckoutSessionId
       ) {
@@ -708,64 +779,80 @@ export async function cancelEventSession(
             stripeCheckoutSessionId: null,
           },
         });
-        continue;
+        return { kind: 'skipped' };
       }
+
+      // Fresh refund base — the pre-loop snapshot may predate a concurrent
+      // admin refund (review #120 sweep), and a resumed booking may have
+      // been partially handled by the run that failed.
+      let freshRefundAmount: number | null = booking.refundAmount;
+      let refundDueCents = 0;
+      const paidCents = booking.totalPrice + booking.serviceFeeCents;
+      if (wasConfirmed) {
+        const fresh = await db.booking.findUnique({
+          where: { id: booking.id },
+          select: { refundAmount: true },
+        });
+        freshRefundAmount = fresh?.refundAmount ?? null;
+        // Winery-initiated cancellation refunds everything the client paid
+        // — tickets AND service fee (D2). Nothing charged online (ON_SITE)
+        // → nothing due, no incident.
+        refundDueCents = wasNeverChargedOnline(booking)
+          ? 0
+          : Math.max(0, paidCents - (freshRefundAmount ?? 0));
+      }
+      pendingRefundCents = refundDueCents;
 
       // Atomic claim FIRST (review #120 sweep, mirrors cancelBooking): the
       // bookings were read once before the loop — a concurrent client
       // cancellation must be neither double-refunded nor have its
       // CANCELLED_BY_CLIENT overwritten (forbidden transition). Losing the
       // claim = someone else already handled (and emailed) this booking.
-      // Unlike the client path there is no claim-release on refund error:
-      // the session IS cancelled — a failed refund leaves the booking
-      // CANCELLED with an appended refundError for reconciliation.
-      const claimed = await db.booking.updateMany({
-        where: { id: booking.id, status: booking.status },
-        data: {
-          status: BookingStatus.CANCELLED_BY_WINERY,
-          cancelledAt: new Date(),
+      // The claim records the owed refund atomically (CANCEL_REFUND_PENDING
+      // marker). Unlike the client path there is no claim-release on refund
+      // error: the session IS cancelled — a failed refund keeps the marker,
+      // which is exactly what makes the next run RESUME this booking.
+      if (!isResume) {
+        const claimed = await claimBookingCancellation({
+          bookingId: booking.id,
+          from: booking.status,
+          to: BookingStatus.CANCELLED_BY_WINERY,
           cancellationReason: parsed.data.reason,
-        },
-      });
-      if (claimed.count === 0) continue;
-
-      // Winery-initiated cancellation refunds everything the client paid
-      // — tickets AND service fee (D2). Routed through the gift-aware
-      // orchestrator (P-16 / ADR-0003, review #120): the old direct
-      // refunds.create pretended a card refund on gift-funded bookings
-      // (card=0 → nothing moved; gift+card → Stripe 400 on the platform
-      // charge) and never restored the gift nor reversed the transfer.
-      let stripeRefundId: string | null = null;
-      let totalReturnedCents = 0;
-      let freshRefundAmount: number | null = booking.refundAmount;
-      if (booking.status === BookingStatus.CONFIRMED) {
-        // Fresh refund base — the pre-loop snapshot may predate a
-        // concurrent admin refund (review #120 sweep).
-        const fresh = await db.booking.findUnique({
-          where: { id: booking.id },
-          select: { refundAmount: true },
+          refundDueCents,
         });
-        freshRefundAmount = fresh?.refundAmount ?? null;
-        const alreadyRefundedCents = freshRefundAmount ?? 0;
-        const paidCents = booking.totalPrice + booking.serviceFeeCents;
+        if (!claimed) return { kind: 'skipped' };
+      }
+
+      // Routed through the gift-aware orchestrator (P-16 / ADR-0003, review
+      // #120): the old direct refunds.create pretended a card refund on
+      // gift-funded bookings (card=0 → nothing moved; gift+card → Stripe 400
+      // on the platform charge) and never restored the gift nor reversed the
+      // transfer. Idempotent on replay (Stripe keys + one-restore ledger
+      // guard + durable reversal id; a drifted ledger is reconciled against
+      // Stripe's own refund list).
+      let totalReturnedCents = 0;
+      if (wasConfirmed) {
         const outcome = await processCancellationRefund({
           bookingId: booking.id,
           stripePaymentIntentId: booking.stripePaymentIntentId,
           giftAppliedCents: booking.giftAppliedCents,
           wineryPayout: booking.wineryPayout,
-          // Nothing charged online (ON_SITE) → nothing due, no incident.
-          refundDueCents: wasNeverChargedOnline(booking)
-            ? 0
-            : Math.max(0, paidCents - alreadyRefundedCents),
-          alreadyRefundedCents,
+          refundDueCents,
+          alreadyRefundedCents: freshRefundAmount ?? 0,
           paidCents,
           // 100% refund → full winery clawback.
           reversalCents: booking.wineryPayout,
           actionName: 'cancelEventSession',
         });
-        stripeRefundId = outcome.stripeRefundId;
         totalReturnedCents = outcome.totalReturnedCents;
-        refunded += totalReturnedCents;
+        // Record what was actually returned (card + gift), never a claim —
+        // conditional on the refundAmount we READ (shared ledger guard).
+        await recordCancellationRefund({
+          bookingId: booking.id,
+          readRefundAmount: freshRefundAmount,
+          outcome,
+          actionName: 'cancelEventSession',
+        });
       }
 
       if (
@@ -785,25 +872,13 @@ export async function cancelEventSession(
         await releaseGiftForBooking(booking.id);
       }
 
-      // Record what was actually returned (card + gift), never a claim —
-      // conditional on the refundAmount we READ (same ledger guard as the
-      // sibling cancellation actions).
-      if (totalReturnedCents > 0) {
-        const recorded = await db.booking.updateMany({
-          where: { id: booking.id, refundAmount: freshRefundAmount },
-          data: {
-            refundIssued: true,
-            refundAmount: (freshRefundAmount ?? 0) + totalReturnedCents,
-            ...(stripeRefundId ? { stripeRefundId } : {}),
-          },
-        });
-        if (recorded.count === 0) {
-          await appendRefundError(
-            booking.id,
-            `LEDGER_CONFLICT: session cancellation returned ${totalReturnedCents} (${stripeRefundId ?? 'gift only'}) concurrently with another refund writer — reconcile with Stripe`
-          );
-        }
-      }
+      // Money is settled — the crash-recovery marker has done its job. The
+      // email comes AFTER: a booking is only ever resumed with its refund
+      // still owed, so the client is told once, with the real amount.
+      await clearCancellationRefundMarker(
+        booking.id,
+        isResume ? undefined : pendingRefundCents
+      );
 
       await sendBookingCancelledByWineryEmail(
         booking.visitorEmail,
@@ -819,18 +894,42 @@ export async function cancelEventSession(
         // Client email in the guest's own locale, not the winemaker's.
         booking.locale
       );
-      cancelled++;
+      return { kind: 'cancelled', returnedCents: totalReturnedCents };
     } catch (error) {
-      failed++;
       // Appended, never overwritten — the orchestrator may have just
-      // written GIFT_* reconciliation markers (review #120).
+      // written GIFT_* reconciliation markers (review #120). The
+      // CANCEL_REFUND_PENDING marker is deliberately LEFT in place: it is
+      // what lets a re-run of this action resume the booking.
       await appendRefundError(booking.id, String(error));
       logError('cancelEventSession booking failed', error, {
         action: 'cancelEventSession',
         bookingId: booking.id,
       });
+      return { kind: 'failed', reference: booking.reference };
+    }
+  };
+
+  // Bounded fan-out: each booking is a Stripe refund + an email. Strictly
+  // sequential, a busy session outlived the action's time budget and
+  // stopped mid-loop; unbounded, it would hammer Stripe/Resend rate limits.
+  // Every booking is isolated (cancelOne never throws) and reported.
+  const outcomes = await mapWithConcurrency(
+    bookings,
+    CANCEL_SESSION_CONCURRENCY,
+    cancelOne
+  );
+  let cancelled = 0;
+  let refunded = 0;
+  const failedReferences: string[] = [];
+  for (const outcome of outcomes) {
+    if (outcome.kind === 'cancelled') {
+      cancelled++;
+      refunded += outcome.returnedCents;
+    } else if (outcome.kind === 'failed') {
+      failedReferences.push(outcome.reference);
     }
   }
+  const failed = failedReferences.length;
 
   // The cancelled session must stop selling instantly (P-05): mark the
   // backing occurrence CANCELLED (terminal — an active weekly slot would
@@ -861,7 +960,7 @@ export async function cancelEventSession(
 
   return {
     success: true,
-    data: { cancelled, refunded, failed },
+    data: { cancelled, refunded, failed, failedReferences },
   };
 }
 

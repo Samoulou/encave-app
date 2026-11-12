@@ -157,8 +157,14 @@ describe('confirmBookingFromPaidCheckoutSession', () => {
     expect(mockSendBookingConfirmationEmail).not.toHaveBeenCalled();
   });
 
-  it('does not send emails when another caller already claimed the confirmation', async () => {
+  it('does not send emails when another caller already claimed the confirmation — and says the booking IS confirmed', async () => {
     mockDb.booking.updateMany.mockResolvedValue({ count: 0 } as never);
+    // The confirmation page won the CAS between our read and our update:
+    // the re-read sees CONFIRMED. The caller must know (the sur-mesure
+    // offer still has to flip to PAID, the gift transfer to settle).
+    mockDb.booking.findUnique
+      .mockResolvedValueOnce(pendingBooking as never)
+      .mockResolvedValueOnce({ status: BookingStatus.CONFIRMED } as never);
 
     const { confirmBookingFromPaidCheckoutSession } =
       await import('@/server/services/checkout-confirmation.service');
@@ -168,9 +174,86 @@ describe('confirmBookingFromPaidCheckoutSession', () => {
       'webhook'
     );
 
-    expect(result.result).toBe('race_lost');
+    expect(result.result).toBe('already_confirmed');
     expect(mockSendBookingConfirmationEmail).not.toHaveBeenCalled();
     expect(mockSendWinemakerNewBookingEmail).not.toHaveBeenCalled();
+  });
+
+  it('reports not_pending when the lost race was a CANCELLATION (the caller refunds the orphan charge)', async () => {
+    mockDb.booking.updateMany.mockResolvedValue({ count: 0 } as never);
+    mockDb.booking.findUnique
+      .mockResolvedValueOnce(pendingBooking as never)
+      .mockResolvedValueOnce({
+        status: BookingStatus.CANCELLED_BY_WINERY,
+      } as never);
+
+    const { confirmBookingFromPaidCheckoutSession } =
+      await import('@/server/services/checkout-confirmation.service');
+
+    const result = await confirmBookingFromPaidCheckoutSession(
+      paidSession,
+      'webhook'
+    );
+
+    expect(result.result).toBe('not_pending');
+    expect(mockSendBookingConfirmationEmail).not.toHaveBeenCalled();
+  });
+
+  describe('paid amount cross-check', () => {
+    // 200.00 tickets + 10.00 service fee − 50.00 gift = 160.00 on the card.
+    const bookingWithMoney = {
+      ...pendingBooking,
+      serviceFeeCents: 1000,
+      giftAppliedCents: 5000,
+    };
+    const sessionPaying = (amountTotal: number, currency = 'chf') =>
+      ({
+        ...paidSession,
+        amount_total: amountTotal,
+        currency,
+      }) as Stripe.Checkout.Session;
+
+    beforeEach(() => {
+      mockDb.booking.findUnique.mockResolvedValue(bookingWithMoney as never);
+    });
+
+    it('confirms when the session charged exactly what the booking owes', async () => {
+      const { confirmBookingFromPaidCheckoutSession } =
+        await import('@/server/services/checkout-confirmation.service');
+
+      const result = await confirmBookingFromPaidCheckoutSession(
+        sessionPaying(16000)
+      );
+
+      expect(result.result).toBe('confirmed');
+    });
+
+    it('does NOT confirm when the paid amount differs — amount_mismatch, no status change, no email', async () => {
+      const { confirmBookingFromPaidCheckoutSession } =
+        await import('@/server/services/checkout-confirmation.service');
+
+      const result = await confirmBookingFromPaidCheckoutSession(
+        sessionPaying(21000)
+      );
+
+      expect(result.result).toBe('amount_mismatch');
+      expect(mockDb.booking.updateMany).not.toHaveBeenCalled();
+      expect(mockSendBookingConfirmationEmail).not.toHaveBeenCalled();
+    });
+
+    it('skips the check for a non-CHF total (presentment currency) and for events without amount_total', async () => {
+      const { confirmBookingFromPaidCheckoutSession } =
+        await import('@/server/services/checkout-confirmation.service');
+
+      const foreign = await confirmBookingFromPaidCheckoutSession(
+        sessionPaying(17250, 'eur')
+      );
+      const synthetic =
+        await confirmBookingFromPaidCheckoutSession(paidSession);
+
+      expect(foreign.result).toBe('confirmed');
+      expect(synthetic.result).toBe('confirmed');
+    });
   });
 
   it('refuses to confirm when the session does not match the booking', async () => {
@@ -288,6 +371,20 @@ describe('confirmation side effects (emails + analytics)', () => {
     expect(rejected.result).toBe('confirmed');
     expect(hanging.result).toBe('confirmed');
     expect(capture).toHaveBeenCalledTimes(2);
+
+    // No consent signal server-side: never the visitor's email as the
+    // PostHog identity, no person profile, nothing that names a person.
+    const event = capture.mock.calls[0]?.[0] as {
+      distinctId: string;
+      properties: Record<string, unknown>;
+    };
+    expect(event.distinctId).toMatch(/^booking_[0-9a-f]{32}$/);
+    expect(event.distinctId).not.toContain('@');
+    expect(event.properties.$process_person_profile).toBe(false);
+    const serialized = JSON.stringify(event);
+    expect(serialized).not.toContain(pendingBooking.visitorEmail);
+    expect(serialized).not.toContain(pendingBooking.reference);
+    expect(serialized).not.toContain(pendingBooking.id);
     expect(mockSendBookingConfirmationEmail).toHaveBeenCalledTimes(2);
   });
 });

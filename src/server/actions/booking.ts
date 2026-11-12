@@ -8,14 +8,19 @@ import { db } from '@/server/db';
 import type { ActionResult } from '@/types/actions';
 import { BookingStatus } from '@prisma/client';
 import type { CancellationPolicy, ExperiencePaymentMode } from '@prisma/client';
+import { rateLimitPublicRead } from '@/server/services/rate-limit.service';
 import {
   sendBookingCancellationEmail,
   sendWinemakerCancellationEmail,
 } from '@/server/services/email.service';
 import {
   appendRefundError,
+  claimBookingCancellation,
+  clearCancellationRefundMarker,
   processCancellationRefund,
+  recordCancellationRefund,
   wasNeverChargedOnline,
+  type CancellationRefundOutcome,
 } from '@/server/services/booking-refund.service';
 import {
   computeBookingRefund,
@@ -29,7 +34,7 @@ import {
 import { calculateEndTime } from '@/lib/constants/time-slots';
 import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
 import { OccurrenceStatus } from '@prisma/client';
-import { logError, logWarn } from '@/lib/logger';
+import { logError } from '@/lib/logger';
 
 const CheckAvailabilitySchema = z.object({
   experienceId: z.string(),
@@ -56,6 +61,9 @@ export async function checkAvailability(
   input: z.infer<typeof CheckAvailabilitySchema>
 ): Promise<ActionResult<AvailabilityResult>> {
   try {
+    const limited = await rateLimitPublicRead('availability');
+    if (limited) return limited;
+
     const validated = CheckAvailabilitySchema.safeParse(input);
     if (!validated.success) {
       return {
@@ -169,6 +177,9 @@ export async function getTimeSlotsForDate(
   date: string
 ): Promise<ActionResult<TimeSlotAvailability[]>> {
   try {
+    const limited = await rateLimitPublicRead('time-slots');
+    if (limited) return limited;
+
     const bookingDate = new Date(date);
     const dayOfWeek = bookingDate.getDay();
 
@@ -324,6 +335,9 @@ export async function getExperienceForBooking(
   slug: string
 ): Promise<ActionResult<ExperienceForBooking>> {
   try {
+    const limited = await rateLimitPublicRead('booking-form');
+    if (limited) return limited;
+
     const experience = await db.experience.findFirst({
       where: {
         slug,
@@ -421,6 +435,9 @@ export async function getBookingByToken(token: string): Promise<
   }>
 > {
   try {
+    const limited = await rateLimitPublicRead('booking-token');
+    if (limited) return limited;
+
     // Hash the token to compare with stored hash (SEC-002: plaintext token no longer stored)
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
 
@@ -597,22 +614,24 @@ export async function cancelBooking(
       ? 0
       : policyRefundDueCents;
     let refundAmount: number | null = null;
-    let stripeRefundId: string | null = null;
     let giftRestoredCents = 0;
     let totalReturnedCents = 0;
+    let refundOutcome: CancellationRefundOutcome | null = null;
 
     // Atomic claim: the status flip IS the lock. Two concurrent
     // cancellations would otherwise both pass the CONFIRMED check and
     // both obtain a 50% partial refund (100% total, taken twice from
     // the winery). Only the request that wins this update refunds.
-    const claimed = await db.booking.updateMany({
-      where: { id: bookingId, status: BookingStatus.CONFIRMED },
-      data: {
-        status: BookingStatus.CANCELLED_BY_CLIENT,
-        cancelledAt: new Date(),
-      },
+    // The claim also records, atomically, that a refund is owed
+    // (CANCEL_REFUND_PENDING marker): a crash before the refund completes
+    // no longer leaves a silently un-refunded cancelled booking.
+    const claimed = await claimBookingCancellation({
+      bookingId,
+      from: BookingStatus.CONFIRMED,
+      to: BookingStatus.CANCELLED_BY_CLIENT,
+      refundDueCents,
     });
-    if (claimed.count === 0) {
+    if (!claimed) {
       return {
         success: false,
         error: {
@@ -644,8 +663,8 @@ export async function cancelBooking(
           ),
           actionName: 'cancelBooking',
         });
+        refundOutcome = outcome;
         refundAmount = outcome.cardRefundCents;
-        stripeRefundId = outcome.stripeRefundId;
         giftRestoredCents = outcome.giftRestoredCents;
         totalReturnedCents = outcome.totalReturnedCents;
       } catch (refundError) {
@@ -679,6 +698,9 @@ export async function cancelBooking(
               : String(refundError)
           );
         }
+        // End state reached either way (claim released, or a specific
+        // reconciliation marker appended) — drop the in-progress marker.
+        await clearCancellationRefundMarker(bookingId, refundDueCents);
         logError('Refund processing error', refundError, {
           action: 'cancelBooking',
           bookingId,
@@ -703,30 +725,16 @@ export async function cancelBooking(
     // Conditional on the refundAmount we READ: a concurrent admin refund
     // that landed in between must not be clobbered out of the ledger —
     // on conflict we keep the DB value and flag for reconciliation.
-    if (totalReturnedCents > 0) {
-      const recorded = await db.booking.updateMany({
-        where: { id: bookingId, refundAmount: booking.refundAmount },
-        data: {
-          refundIssued: true,
-          refundAmount: alreadyRefundedCents + totalReturnedCents,
-          // A gift-only restitution has no Stripe refund — never null out
-          // a re_ written by an earlier admin refund (review #120).
-          ...(stripeRefundId ? { stripeRefundId } : {}),
-        },
+    if (refundOutcome) {
+      await recordCancellationRefund({
+        bookingId,
+        readRefundAmount: booking.refundAmount,
+        outcome: refundOutcome,
+        actionName: 'cancelBooking',
       });
-      if (recorded.count === 0) {
-        logWarn('Refund ledger conflict — concurrent refund writer', {
-          action: 'cancelBooking',
-          bookingId,
-          cancelRefundCents: totalReturnedCents,
-          stripeRefundId,
-        });
-        await appendRefundError(
-          bookingId,
-          `LEDGER_CONFLICT: cancellation returned ${totalReturnedCents} (${stripeRefundId ?? 'gift only'}) concurrently with another refund writer — reconcile with Stripe`
-        );
-      }
     }
+    // The refund flow is over — the crash-recovery marker has done its job.
+    await clearCancellationRefundMarker(bookingId, refundDueCents);
     const updatedBooking = await db.booking.findUniqueOrThrow({
       where: { id: bookingId },
       select: { id: true, status: true },
@@ -759,6 +767,7 @@ export async function cancelBooking(
         date: bookingDateTime,
         totalPrice: paidCents,
         refundAmountCents: refundUnprocessable ? null : totalReturnedCents,
+        nothingCharged: wasNeverChargedOnline(booking),
         bookingRef: booking.reference,
       },
       booking.locale
@@ -816,6 +825,9 @@ export async function getCancellationInfo(
   }>
 > {
   try {
+    const limited = await rateLimitPublicRead('cancellation-info');
+    if (limited) return limited;
+
     // Hash the token to compare with stored hash (SEC-002: plaintext token no longer stored)
     const tokenHash = crypto
       .createHash('sha256')

@@ -309,3 +309,40 @@ export async function createGiftCardFromPayment(
 
   return { created: true, giftCardId: giftCard.id };
 }
+
+/**
+ * Disable the gift card minted from a payment that is being clawed back
+ * (chargeback opened, or the purchase refunded from the Stripe Dashboard).
+ * Same mechanism as the admin action: the status flips to DISABLED, the
+ * balance and the append-only ledger are untouched (a re-enable restores
+ * it), and the redemption service refuses a DISABLED card. Idempotent.
+ * Returns null when no card was minted from this payment.
+ */
+export async function disableGiftCardForPayment(
+  paymentIntentId: string,
+  reason: 'dispute' | 'refund'
+): Promise<{
+  id: string;
+  initialAmount: number;
+  balance: number;
+  /** false when the card was already disabled before this call. */
+  disabledNow: boolean;
+} | null> {
+  const card = await db.giftCard.findUnique({
+    where: { stripePaymentIntentId: paymentIntentId },
+    select: { id: true, initialAmount: true, balance: true },
+  });
+  if (!card) return null;
+
+  const updated = await db.giftCard.updateMany({
+    where: { id: card.id, status: { not: GiftCardStatus.DISABLED } },
+    data: { status: GiftCardStatus.DISABLED },
+  });
+  logInfo('gift_card.disabled', {
+    action: 'disableGiftCardForPayment',
+    giftCardId: card.id,
+    reason,
+    disabledNow: updated.count === 1,
+  });
+  return { ...card, disabledNow: updated.count === 1 };
+}

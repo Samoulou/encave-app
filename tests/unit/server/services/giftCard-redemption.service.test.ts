@@ -137,6 +137,37 @@ describe('redeemGiftCardInTx', () => {
     });
   });
 
+  it('never leaves a 1–49 centime card remainder: the redemption is capped so the card pays exactly 0.50', async () => {
+    // Balance 79.80 on a due of 80.00 → the naive remainder (0.20) is under
+    // Stripe's CHF minimum and the Checkout Session would be rejected.
+    const tx = makeTx({
+      id: 'gc-1',
+      code: base.code,
+      balance: 7980,
+      status: 'ACTIVE',
+      experienceId: null,
+    });
+    const r = await redeemGiftCardInTx(tx as never, base); // due 8000
+    expect(r).toEqual({
+      ok: true,
+      result: {
+        giftCardId: 'gc-1',
+        code: base.code,
+        // 79.50 applied → 0.50 on the card; 0.30 STAYS on the gift card.
+        appliedCents: 7950,
+        remainingBalance: 30,
+      },
+    });
+    expect(tx.giftCard.update).toHaveBeenCalledWith({
+      where: { id: 'gc-1' },
+      data: { balance: 30 },
+    });
+    // The ledger records exactly what left the card — nothing is waived.
+    expect(tx.giftCardTransaction.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ type: 'REDEMPTION', amount: -7950 }),
+    });
+  });
+
   it('leaves a remaining balance when the card covers the whole due', async () => {
     const tx = makeTx({
       id: 'gc-1',
@@ -204,6 +235,29 @@ describe('previewGiftRedemption', () => {
     });
   });
 
+  it('previews the SAME capped amount the redemption will apply (GIFT_CHANGED guard stays quiet)', async () => {
+    findUnique.mockResolvedValue({
+      code: 'ABCDEFGHJKMN',
+      balance: 7980,
+      status: 'ACTIVE',
+      experienceId: null,
+    });
+    const r = await previewGiftRedemption({
+      code: 'abcd-efgh-jkmn',
+      dueCents: 8000,
+      experienceId: EXPERIENCE_ID,
+    });
+    expect(r).toEqual({
+      ok: true,
+      preview: {
+        code: 'ABCDEFGHJKMN',
+        balance: 7980,
+        applicableCents: 7950,
+        remainingDueCents: 50,
+      },
+    });
+  });
+
   it('errors on an unknown code', async () => {
     findUnique.mockResolvedValue(null);
     const r = await previewGiftRedemption({
@@ -235,7 +289,7 @@ describe('releaseGiftForBooking', () => {
 
   it('noops when the booking has no redemption', async () => {
     const tx = makeReleaseTx({ redemption: null, movements: [] });
-    transaction.mockImplementation((cb: (t: unknown) => unknown) => cb(tx));
+    transaction.mockImplementation((cb: (_t: unknown) => unknown) => cb(tx));
     const r = await releaseGiftForBooking('bk-1');
     expect(r).toBe('noop');
     expect(tx.giftCard.update).not.toHaveBeenCalled();
@@ -249,7 +303,7 @@ describe('releaseGiftForBooking', () => {
         { type: 'REFUND', amount: 5000 },
       ],
     });
-    transaction.mockImplementation((cb: (t: unknown) => unknown) => cb(tx));
+    transaction.mockImplementation((cb: (_t: unknown) => unknown) => cb(tx));
     const r = await releaseGiftForBooking('bk-1');
     expect(r).toBe('noop');
     expect(tx.giftCard.update).not.toHaveBeenCalled();
@@ -260,7 +314,7 @@ describe('releaseGiftForBooking', () => {
       redemption: { giftCardId: 'gc-1' },
       movements: [{ type: 'REDEMPTION', amount: -5000 }],
     });
-    transaction.mockImplementation((cb: (t: unknown) => unknown) => cb(tx));
+    transaction.mockImplementation((cb: (_t: unknown) => unknown) => cb(tx));
     const r = await releaseGiftForBooking('bk-1');
     expect(r).toBe('refunded');
     expect(tx.giftCard.update).toHaveBeenCalledWith({
@@ -290,7 +344,7 @@ describe('releaseGiftForBooking', () => {
         { type: 'REDEMPTION', amount: -3000 },
       ],
     });
-    transaction.mockImplementation((cb: (t: unknown) => unknown) => cb(tx));
+    transaction.mockImplementation((cb: (_t: unknown) => unknown) => cb(tx));
     const r = await releaseGiftForBooking('bk-1', {
       amountCents: 3000,
       note: 'cancellation_refund',
@@ -319,7 +373,7 @@ describe('releaseGiftForBooking', () => {
         { type: 'REFUND', amount: 4000 },
       ],
     });
-    transaction.mockImplementation((cb: (t: unknown) => unknown) => cb(tx));
+    transaction.mockImplementation((cb: (_t: unknown) => unknown) => cb(tx));
     const r = await releaseGiftForBooking('bk-1', { amountCents: 5000 });
     expect(r).toBe('refunded');
     expect(tx.giftCard.update).toHaveBeenCalledWith({

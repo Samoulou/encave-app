@@ -8,11 +8,15 @@ import { db } from '@/server/db';
 import { auth } from '@/server/auth';
 import { BookingStatus, Locale } from '@prisma/client';
 import type { ActionResult } from '@/types/actions';
-import { logError, logWarn } from '@/lib/logger';
+import { logError } from '@/lib/logger';
 import {
   appendRefundError,
+  claimBookingCancellation,
+  clearCancellationRefundMarker,
   processCancellationRefund,
+  recordCancellationRefund,
   wasNeverChargedOnline,
+  type CancellationRefundOutcome,
 } from '@/server/services/booking-refund.service';
 import {
   computeBookingRefund,
@@ -138,20 +142,22 @@ export async function cancelClientBooking(
       ? 0
       : policyRefundDueCents;
     let refundAmount: number | null = null;
-    let stripeRefundId: string | null = null;
     let giftRestoredCents = 0;
     let totalReturnedCents = 0;
+    let refundOutcome: CancellationRefundOutcome | null = null;
 
     // Atomic claim — see cancelBooking: prevents two concurrent
     // cancellations from both obtaining a partial refund.
-    const claimed = await db.booking.updateMany({
-      where: { id: bookingId, status: BookingStatus.CONFIRMED },
-      data: {
-        status: BookingStatus.CANCELLED_BY_CLIENT,
-        cancelledAt: new Date(),
-      },
+    // The claim also records, atomically, that a refund is owed
+    // (CANCEL_REFUND_PENDING marker): a crash before the refund completes
+    // no longer leaves a silently un-refunded cancelled booking.
+    const claimed = await claimBookingCancellation({
+      bookingId,
+      from: BookingStatus.CONFIRMED,
+      to: BookingStatus.CANCELLED_BY_CLIENT,
+      refundDueCents,
     });
-    if (claimed.count === 0) {
+    if (!claimed) {
       return {
         success: false,
         error: {
@@ -181,8 +187,8 @@ export async function cancelClientBooking(
           ),
           actionName: 'cancelClientBooking',
         });
+        refundOutcome = outcome;
         refundAmount = outcome.cardRefundCents;
-        stripeRefundId = outcome.stripeRefundId;
         giftRestoredCents = outcome.giftRestoredCents;
         totalReturnedCents = outcome.totalReturnedCents;
       } catch (refundError) {
@@ -216,6 +222,9 @@ export async function cancelClientBooking(
               : String(refundError)
           );
         }
+        // End state reached either way (claim released, or a specific
+        // reconciliation marker appended) — drop the in-progress marker.
+        await clearCancellationRefundMarker(bookingId, refundDueCents);
         logError('Refund processing error', refundError, {
           action: 'cancelClientBooking',
           bookingId,
@@ -236,30 +245,16 @@ export async function cancelClientBooking(
     // gift balance (ADR-0003, Codex review; see cancelBooking).
     // Conditional on the refundAmount we READ — a concurrent admin
     // refund must not be clobbered out of the ledger (see cancelBooking).
-    if (totalReturnedCents > 0) {
-      const recorded = await db.booking.updateMany({
-        where: { id: bookingId, refundAmount: booking.refundAmount },
-        data: {
-          refundIssued: true,
-          refundAmount: alreadyRefundedCents + totalReturnedCents,
-          // A gift-only restitution has no Stripe refund — never null out
-          // a re_ written by an earlier admin refund (review #120).
-          ...(stripeRefundId ? { stripeRefundId } : {}),
-        },
+    if (refundOutcome) {
+      await recordCancellationRefund({
+        bookingId,
+        readRefundAmount: booking.refundAmount,
+        outcome: refundOutcome,
+        actionName: 'cancelClientBooking',
       });
-      if (recorded.count === 0) {
-        logWarn('Refund ledger conflict — concurrent refund writer', {
-          action: 'cancelClientBooking',
-          bookingId,
-          cancelRefundCents: totalReturnedCents,
-          stripeRefundId,
-        });
-        await appendRefundError(
-          bookingId,
-          `LEDGER_CONFLICT: cancellation returned ${totalReturnedCents} (${stripeRefundId ?? 'gift only'}) concurrently with another refund writer — reconcile with Stripe`
-        );
-      }
     }
+    // The refund flow is over — the crash-recovery marker has done its job.
+    await clearCancellationRefundMarker(bookingId, refundDueCents);
     const updatedBooking = await db.booking.findUniqueOrThrow({
       where: { id: bookingId },
       select: { id: true, status: true },
@@ -289,6 +284,7 @@ export async function cancelClientBooking(
         date: bookingDateTime,
         totalPrice: paidCents,
         refundAmountCents: refundUnprocessable ? null : totalReturnedCents,
+        nothingCharged: wasNeverChargedOnline(booking),
         bookingRef: booking.reference,
       },
       booking.locale
@@ -308,7 +304,7 @@ export async function cancelClientBooking(
       booking.winery.user?.preferredLocale
     );
 
-    revalidatePath('/dashboard/my-bookings');
+    revalidatePath('/[locale]/dashboard/my-bookings', 'page');
 
     return {
       success: true,
@@ -373,7 +369,7 @@ export async function updateClientProfile(
       data: { name, preferredLocale },
     });
 
-    revalidatePath('/dashboard/profile');
+    revalidatePath('/[locale]/dashboard/profile', 'page');
 
     return {
       success: true,

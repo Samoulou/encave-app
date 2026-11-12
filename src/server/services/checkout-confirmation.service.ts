@@ -27,7 +27,72 @@ export type CheckoutConfirmationResult =
   | 'missing_metadata'
   | 'session_mismatch'
   | 'missing_payment_intent'
+  /**
+   * The session is PAID but its total is not what the booking owes
+   * (`totalPrice + serviceFeeCents − giftAppliedCents`). Never confirmed —
+   * the webhook refunds it through the orphan path and alerts.
+   */
+  | 'amount_mismatch'
   | 'race_lost';
+
+/**
+ * What the card must have been charged for this booking, in cents: tickets
+ * + client service fee, net of the gift already applied to the ledger.
+ */
+export function expectedCardChargeCents(booking: {
+  totalPrice: number;
+  serviceFeeCents: number;
+  giftAppliedCents: number;
+}): number {
+  return (
+    booking.totalPrice + booking.serviceFeeCents - booking.giftAppliedCents
+  );
+}
+
+/**
+ * Cross-check of the PAID amount against the DB (defense in depth: every
+ * session is server-built, so a difference means a bug or a stale session
+ * that slipped through — never something to confirm silently). Compared
+ * only when Stripe reports a CHF total: a synthetic test event carries no
+ * `amount_total`, and a presentment-currency total (adaptive pricing) is
+ * not comparable to our CHF cents.
+ */
+function paidAmountMismatch(
+  session: Stripe.Checkout.Session,
+  booking: {
+    totalPrice: number;
+    serviceFeeCents: number;
+    giftAppliedCents: number;
+  }
+): { expectedCents: number; paidCents: number } | null {
+  if (typeof session.amount_total !== 'number') return null;
+  if (session.currency?.toLowerCase() !== 'chf') return null;
+  const expectedCents = expectedCardChargeCents(booking);
+  if (session.amount_total === expectedCents) return null;
+  return { expectedCents, paidCents: session.amount_total };
+}
+
+/**
+ * The confirmation CAS matched nothing: another writer moved the booking
+ * off PENDING_PAYMENT between our read and our update. Say WHICH way it
+ * went instead of an opaque `race_lost` — the callers act on it:
+ *  - CONFIRMED (the confirmation page / a twin delivery won) →
+ *    `already_confirmed`: gift settle and sur-mesure PAID flip still run;
+ *  - anything else (cancelled / expired meanwhile) → `not_pending`: the
+ *    orphan-refund guard decides whether the charge must go back.
+ */
+async function resolveLostConfirmationRace(
+  bookingId: string
+): Promise<CheckoutConfirmationResult> {
+  const current = await db.booking.findUnique({
+    where: { id: bookingId },
+    select: { status: true },
+  });
+  if (!current) return 'missing_booking';
+  return current.status === BookingStatus.CONFIRMED
+    ? 'already_confirmed'
+    : 'not_pending';
+}
 
 export interface CheckoutConfirmationOutcome {
   result: CheckoutConfirmationResult;
@@ -127,6 +192,22 @@ export async function confirmBookingFromPaidCheckoutSession(
     return { result: 'not_pending' };
   }
 
+  const amountMismatch = paidAmountMismatch(session, booking);
+  if (amountMismatch) {
+    logError(
+      'Paid amount does not match the booking — not confirmed',
+      undefined,
+      {
+        bookingId,
+        bookingRef: booking.reference,
+        sessionId: session.id,
+        ...amountMismatch,
+        source,
+      }
+    );
+    return { result: 'amount_mismatch' };
+  }
+
   const accessToken = crypto.randomBytes(32).toString('hex');
   const accessTokenHash = crypto
     .createHash('sha256')
@@ -145,11 +226,13 @@ export async function confirmBookingFromPaidCheckoutSession(
   });
 
   if (updated.count !== 1) {
+    const resolved = await resolveLostConfirmationRace(bookingId);
     logInfo('Booking no longer pending payment after confirmation claim', {
       bookingRef: booking.reference,
+      resolved,
       source,
     });
-    return { result: 'race_lost' };
+    return { result: resolved };
   }
 
   logInfo('Booking confirmed from paid checkout session', {
@@ -159,6 +242,15 @@ export async function confirmBookingFromPaidCheckoutSession(
 
   await sendBookingConfirmationNotifications(booking, accessToken, source);
   return { result: 'confirmed', accessToken };
+}
+
+/** Non-identifying, stable analytics id for a booking (sha256, truncated). */
+function anonymousAnalyticsId(bookingId: string): string {
+  return `booking_${crypto
+    .createHash('sha256')
+    .update(bookingId)
+    .digest('hex')
+    .slice(0, 32)}`;
 }
 
 const bookingConfirmationInclude = {
@@ -192,11 +284,15 @@ async function sendBookingConfirmationNotifications(
   const posthogServer = getPostHogServer();
   if (posthogServer) {
     posthogServer.capture({
-      distinctId: booking.visitorEmail,
+      // Server-side capture has NO consent signal (webhook / cron context,
+      // no cookie): never send the visitor's email as the PostHog identity,
+      // nor any property that points back at a person. A one-way hash of
+      // the booking id keeps events de-duplicable without identifying
+      // anyone, and no person profile is created.
+      distinctId: anonymousAnalyticsId(booking.id),
       event: 'booking_completed',
       properties: {
-        booking_id: booking.id,
-        booking_reference: booking.reference,
+        $process_person_profile: false,
         experience_id: booking.experienceId,
         experience_title: booking.experience.title,
         winery_id: booking.wineryId,

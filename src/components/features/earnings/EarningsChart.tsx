@@ -9,9 +9,11 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { formatPrice } from '@/lib/i18n/formatters';
 import type { MonthlyEarning } from '@/server/queries/earnings.queries';
+import type { Locale } from '@/i18n/routing';
+import { monthLabelFromKey } from './month-label';
 
 interface EarningsChartProps {
   data: MonthlyEarning[];
@@ -60,10 +62,14 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
  */
 export function EarningsChart({ data }: EarningsChartProps) {
   const t = useTranslations('earnings.chart');
+  const locale = useLocale() as Locale;
 
-  // Format data for chart (convert cents to CHF for display)
+  // Format data for chart (convert cents to CHF for display). The axis and
+  // tooltip month label is derived from the locale-neutral key, in the
+  // visitor's language (it used to be a hard English "MMM").
   const chartData = data.map((d) => ({
     ...d,
+    monthLabel: monthLabelFromKey(d.month, locale),
     revenueDisplay: d.revenue / 100,
     payoutDisplay: d.payout / 100,
   }));

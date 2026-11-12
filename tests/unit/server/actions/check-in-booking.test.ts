@@ -38,6 +38,7 @@ vi.mock('@/lib/logger', () => ({
 const { auth } = await import('@/server/auth');
 const { db } = await import('@/server/db');
 const { checkInBooking } = await import('@/server/actions/checkInBooking');
+const { revalidatePath } = await import('next/cache');
 
 const session: Session = {
   user: {
@@ -96,6 +97,12 @@ describe('checkInBooking', () => {
         where: { id: 'booking-1', status: BookingStatus.CONFIRMED },
         data: expect.objectContaining({ status: BookingStatus.COMPLETED }),
       })
+    );
+    // Route pattern under [locale] — a bare '/dashboard/bookings' matches
+    // no route with localePrefix: 'always'.
+    expect(revalidatePath).toHaveBeenCalledWith(
+      '/[locale]/dashboard/bookings',
+      'page'
     );
   });
 

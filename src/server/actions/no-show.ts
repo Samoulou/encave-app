@@ -296,6 +296,6 @@ export async function chargeNoShowFee(
     logError('no-show.fee.email_failed', error, { bookingId: booking.id });
   }
 
-  revalidatePath('/dashboard/bookings');
+  revalidatePath('/[locale]/dashboard/bookings', 'page');
   return { success: true, data: { chargedCents: amountCents } };
 }

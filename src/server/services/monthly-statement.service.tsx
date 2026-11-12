@@ -40,8 +40,10 @@ const DICT = {
     colCommission: 'Commission',
     colNet: 'Net',
     refundedMark: 'remboursé',
+    onSiteMark: 'payé sur place',
+    cancelledMark: 'annulé',
     empty: 'Aucune réservation sur ce mois.',
-    note: 'Les frais de service client sont perçus par EnCave et n’entrent pas dans votre net. Les dates et montants exacts des virements figurent sur votre page Reversements et dans votre dashboard Stripe.',
+    note: 'Les frais de service client sont perçus par EnCave et n’entrent pas dans votre net. Les réservations payées sur place sont listées pour information : elles ne passent pas par EnCave et n’entrent ni dans le brut, ni dans la commission, ni dans le net. Une réservation annulée figure ici lorsque la politique d’annulation vous laisse tout ou partie du montant. Les dates et montants exacts des virements figurent sur votre page Reversements et dans votre dashboard Stripe.',
     footer: 'Généré via la plateforme EnCave — encave.ch',
   },
   de: {
@@ -63,8 +65,10 @@ const DICT = {
     colCommission: 'Kommission',
     colNet: 'Netto',
     refundedMark: 'erstattet',
+    onSiteMark: 'vor Ort bezahlt',
+    cancelledMark: 'storniert',
     empty: 'Keine Reservierung in diesem Monat.',
-    note: 'Die Servicegebühren der Gäste werden von EnCave erhoben und sind nicht Teil Ihres Nettobetrags. Die genauen Auszahlungsdaten und -beträge finden Sie auf Ihrer Auszahlungsseite und in Ihrem Stripe-Dashboard.',
+    note: 'Die Servicegebühren der Gäste werden von EnCave erhoben und sind nicht Teil Ihres Nettobetrags. Vor Ort bezahlte Reservierungen sind zur Information aufgeführt: Sie laufen nicht über EnCave und zählen weder zum Brutto noch zur Kommission noch zum Netto. Eine stornierte Reservierung erscheint hier, wenn Ihnen die Stornierungsbedingungen den Betrag ganz oder teilweise belassen. Die genauen Auszahlungsdaten und -beträge finden Sie auf Ihrer Auszahlungsseite und in Ihrem Stripe-Dashboard.',
     footer: 'Erstellt über die EnCave-Plattform — encave.ch',
   },
   en: {
@@ -86,8 +90,10 @@ const DICT = {
     colCommission: 'Commission',
     colNet: 'Net',
     refundedMark: 'refunded',
+    onSiteMark: 'paid on site',
+    cancelledMark: 'cancelled',
     empty: 'No booking this month.',
-    note: 'Client service fees are collected by EnCave and are not part of your net. Exact payout dates and amounts live on your Payouts page and in your Stripe dashboard.',
+    note: 'Client service fees are collected by EnCave and are not part of your net. Bookings paid on site are listed for information: they do not go through EnCave and count in neither gross, commission nor net. A cancelled booking appears here when the cancellation policy leaves you all or part of the amount. Exact payout dates and amounts live on your Payouts page and in your Stripe dashboard.',
     footer: 'Generated via the EnCave platform — encave.ch',
   },
 } as const;
@@ -348,16 +354,20 @@ function MonthlyStatement({
                     {line.experienceTitle.length > 34
                       ? `${line.experienceTitle.slice(0, 34)}...`
                       : line.experienceTitle}
+                    {line.onSite ? ` (${t.onSiteMark})` : ''}
+                    {line.cancelled ? ` (${t.cancelledMark})` : ''}
                     {line.refunded ? ` (${t.refundedMark})` : ''}
                   </Text>
                   <Text style={[styles.tableCell, styles.colGuests]}>
                     {line.guestCount}
                   </Text>
+                  {/* ON_SITE: no money went through EnCave — a dash, never
+                      a "0.00" that reads like an amount charged. */}
                   <Text style={[styles.tableCell, styles.colGross]}>
-                    {chf(line.grossCents)}
+                    {line.onSite ? '—' : chf(line.grossCents)}
                   </Text>
                   <Text style={[styles.tableCell, styles.colCommission]}>
-                    -{chf(line.commissionCents)}
+                    {line.onSite ? '—' : `-${chf(line.commissionCents)}`}
                   </Text>
                   <Text
                     style={[
@@ -365,7 +375,7 @@ function MonthlyStatement({
                       styles.colNet,
                     ]}
                   >
-                    {chf(line.netCents)}
+                    {line.onSite ? '—' : chf(line.netCents)}
                   </Text>
                 </View>
               ))}

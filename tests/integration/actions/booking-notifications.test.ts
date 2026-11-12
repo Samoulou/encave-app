@@ -4,6 +4,15 @@ import { db } from '@/server/db';
 import { BookingStatus, UserRole } from '@prisma/client';
 
 // Mock db
+// Public read actions are rate-limited per IP (reads next/headers): the
+// limiter is out of scope here — always let the call through.
+vi.mock('@/server/services/rate-limit.service', async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import('@/server/services/rate-limit.service')
+  >()),
+  rateLimitPublicRead: vi.fn().mockResolvedValue(null),
+}));
+
 vi.mock('@/server/db', () => ({
   db: {
     booking: {

@@ -1,6 +1,5 @@
 'use server';
 
-import crypto from 'crypto';
 import { headers } from 'next/headers';
 import { revalidateTag } from 'next/cache';
 import { addDays, addMinutes } from 'date-fns';
@@ -10,6 +9,7 @@ import { getTranslations } from 'next-intl/server';
 import {
   BookingStatus,
   Locale,
+  type Prisma,
   RequestStatus,
   RequestOfferStatus,
   WineryStatus,
@@ -18,6 +18,8 @@ import { auth } from '@/server/auth';
 import { db } from '@/server/db';
 import { getStripe } from '@/server/stripe';
 import { getBaseUrl } from '@/lib/env';
+import { hashToken } from '@/lib/utils/token';
+import { deriveOfferPaymentToken } from '@/lib/utils/offer-payment-token';
 import { isE2ETest } from '@/lib/e2e-mode';
 import type { ActionResult, ErrorCode } from '@/types/actions';
 import { isFlagEnabled } from '@/server/queries/feature-flags.queries';
@@ -309,7 +311,13 @@ export async function composeRequestOfferAction(
     // Validate the request transition before writing (never bypass the machine).
     assertRequestTransition(RequestStatus.PENDING, RequestStatus.OFFERED);
 
-    const paymentToken = crypto.randomBytes(24).toString('hex');
+    // Hash-at-rest (audit 2026-11-12): the offer id is minted here so the
+    // payment-link token can be DERIVED from it (HMAC, server secret) — the
+    // link stays rebuildable (reminder #10, « mes demandes ») while the DB
+    // only needs its sha256. The plaintext column is still dual-written
+    // until its readers derive the token too (see schema.prisma).
+    const offerId = createId();
+    const paymentToken = deriveOfferPaymentToken(offerId);
     const expiresAt = addDays(new Date(), data.validityDays);
 
     const offer = await db.$transaction(async (tx) => {
@@ -323,6 +331,7 @@ export async function composeRequestOfferAction(
       }
       const created = await tx.requestOffer.create({
         data: {
+          id: offerId,
           requestId: request.id,
           status: RequestOfferStatus.SENT,
           message: data.message,
@@ -330,7 +339,9 @@ export async function composeRequestOfferAction(
           scheduledDate: new Date(data.scheduledDate),
           scheduledStartTime: data.scheduledStartTime,
           expiresAt,
-          paymentToken,
+          // Hash only: the plaintext is never stored (it is re-derived from
+          // the offer id whenever a link has to be rebuilt).
+          paymentTokenHash: hashToken(paymentToken),
         },
         select: { id: true },
       });
@@ -429,38 +440,47 @@ export async function createRequestOfferCheckout(
       };
     }
 
-    const offer = await db.requestOffer.findUnique({
-      where: { paymentToken: parsed.data.token },
-      select: {
-        id: true,
-        status: true,
-        totalPrice: true,
-        expiresAt: true,
-        scheduledDate: true,
-        scheduledStartTime: true,
-        bookingId: true,
-        request: {
-          select: {
-            clientEmail: true,
-            clientName: true,
-            clientPhone: true,
-            guestCount: true,
-            locale: true,
-            winery: {
-              select: {
-                id: true,
-                name: true,
-                status: true,
-                stripeAccountId: true,
-                stripeOnboardingComplete: true,
-                commissionRate: true,
-                cancellationPolicy: true,
-              },
+    // Hash-first lookup (audit 2026-11-12). Offers created before
+    // paymentTokenHash existed carry no hash: they are still resolved by
+    // the legacy plaintext column until they expire.
+    const offerSelect = {
+      id: true,
+      status: true,
+      totalPrice: true,
+      expiresAt: true,
+      scheduledDate: true,
+      scheduledStartTime: true,
+      bookingId: true,
+      request: {
+        select: {
+          clientEmail: true,
+          clientName: true,
+          clientPhone: true,
+          guestCount: true,
+          locale: true,
+          winery: {
+            select: {
+              id: true,
+              name: true,
+              status: true,
+              stripeAccountId: true,
+              stripeOnboardingComplete: true,
+              commissionRate: true,
+              cancellationPolicy: true,
             },
           },
         },
       },
-    });
+    } satisfies Prisma.RequestOfferSelect;
+    const offer =
+      (await db.requestOffer.findUnique({
+        where: { paymentTokenHash: hashToken(parsed.data.token) },
+        select: offerSelect,
+      })) ??
+      (await db.requestOffer.findUnique({
+        where: { paymentToken: parsed.data.token },
+        select: offerSelect,
+      }));
     if (!offer) {
       return {
         success: false,
