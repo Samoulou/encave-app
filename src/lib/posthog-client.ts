@@ -1,27 +1,8 @@
 import type { PostHog } from 'posthog-js';
-import { CONSENT_COOKIE_NAME, CONSENT_VERSION } from '@/lib/constants/consent';
-
-interface ConsentCookie {
-  analytics: boolean;
-  version: string;
-}
+import { hasAnalyticsConsent } from '@/lib/consent-client';
 
 let client: PostHog | null = null;
 let loading: Promise<PostHog | null> | null = null;
-
-function readConsent(): ConsentCookie | null {
-  if (typeof document === 'undefined') return null;
-  const value = document.cookie
-    .split('; ')
-    .find((row) => row.startsWith(`${CONSENT_COOKIE_NAME}=`))
-    ?.split('=')[1];
-  if (!value) return null;
-  try {
-    return JSON.parse(decodeURIComponent(value)) as ConsentCookie;
-  } catch {
-    return null;
-  }
-}
 
 /**
  * Lazily loads and initializes posthog-js (L-204).
@@ -33,8 +14,7 @@ export function initPostHogFromConsent(): Promise<PostHog | null> {
   if (client) return Promise.resolve(client);
 
   const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-  const consent = readConsent();
-  if (!key || !consent?.analytics || consent.version !== CONSENT_VERSION) {
+  if (!key || !hasAnalyticsConsent()) {
     return Promise.resolve(null);
   }
 

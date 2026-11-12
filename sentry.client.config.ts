@@ -1,51 +1,58 @@
-import * as Sentry from '@sentry/nextjs';
+import { bufferEarlyError, loadSentryClient } from '@/lib/sentry-client';
 
-Sentry.init({
-  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+/**
+ * Browser Sentry bootstrap. The SDK itself is NOT imported here: it loads
+ * as a separate chunk on the first user interaction, or after
+ * SDK_IDLE_FALLBACK_MS when the visitor does nothing (see
+ * src/lib/sentry-client.ts for the why). Until then, uncaught errors and
+ * unhandled rejections are buffered and reported as soon as it is ready.
+ *
+ * Known trade-off: a visitor who leaves within the fallback delay without
+ * interacting is not traced, and an error buffered for them is not sent.
+ */
+const SDK_IDLE_FALLBACK_MS = 8000;
+const INTERACTION_EVENTS = [
+  'pointerdown',
+  'keydown',
+  'touchstart',
+  'scroll',
+] as const;
 
-  // Only enable Sentry when DSN is configured
-  enabled: !!process.env.NEXT_PUBLIC_SENTRY_DSN,
+if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_SENTRY_DSN) {
+  const onError = (event: ErrorEvent) => {
+    bufferEarlyError(event.error ?? event.message);
+  };
+  const onRejection = (event: PromiseRejectionEvent) => {
+    bufferEarlyError(event.reason);
+  };
+  window.addEventListener('error', onError);
+  window.addEventListener('unhandledrejection', onRejection);
 
-  // Environment: use Vercel env if available, fallback to NODE_ENV
-  environment: process.env.NEXT_PUBLIC_VERCEL_ENV || process.env.NODE_ENV,
+  let started = false;
+  const start = () => {
+    if (started) return;
+    started = true;
+    for (const name of INTERACTION_EVENTS) {
+      window.removeEventListener(name, start);
+    }
 
-  // Performance: sample 20% of transactions in production
-  tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.2 : 1.0,
+    const load = () => {
+      void loadSentryClient().then(() => {
+        // The SDK installs its own global handlers on init.
+        window.removeEventListener('error', onError);
+        window.removeEventListener('unhandledrejection', onRejection);
+      });
+    };
+    // Never inside the interaction's own task (INP).
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(load, { timeout: 2000 });
+    } else {
+      setTimeout(load, 200);
+    }
+  };
 
-  // Session Replay: capture 10% of sessions, 100% of sessions with errors.
-  // The Replay integration itself is lazy-loaded below (L-205).
-  replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1.0,
-
-  integrations: [Sentry.browserTracingIntegration()],
-
-  // Filter out common non-actionable errors
-  ignoreErrors: [
-    'Failed to fetch',
-    'NetworkError',
-    'Load failed',
-    /^chrome-extension:\/\//,
-    'ResizeObserver loop',
-    'Non-Error promise rejection',
-  ],
-
-  debug: false,
-});
-
-// L-205: Session Replay is loaded lazily (fetched from the Sentry CDN after
-// startup) so its ~50-60 kB gz never ship in the initial bundle. The sample
-// rates configured in init() above still apply once the integration is added.
-if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
-  Sentry.lazyLoadIntegration('replayIntegration')
-    .then((replayIntegration) => {
-      Sentry.getClient()?.addIntegration(
-        replayIntegration({
-          maskAllText: true,
-          blockAllMedia: true,
-        })
-      );
-    })
-    .catch(() => {
-      // Replay is best-effort — ignore load failures (offline, ad-blocker).
-    });
+  for (const name of INTERACTION_EVENTS) {
+    window.addEventListener(name, start, { passive: true, once: true });
+  }
+  setTimeout(start, SDK_IDLE_FALLBACK_MS);
 }

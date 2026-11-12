@@ -7,6 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { updateConsent } from '@/server/actions/consent';
 import { CONSENT_COOKIE_NAME, CONSENT_VERSION } from '@/lib/constants/consent';
+import { CONSENT_UPDATED_EVENT } from '@/lib/consent-client';
 import type { ConsentPayload } from '@/lib/validators/consent';
 
 function readConsent(): ConsentPayload | null {
@@ -27,7 +28,7 @@ function writeConsent(payload: ConsentPayload): void {
   document.cookie = `${CONSENT_COOKIE_NAME}=${encodeURIComponent(
     JSON.stringify(payload)
   )}; Max-Age=31536000; Path=/; SameSite=Lax${secure}`;
-  window.dispatchEvent(new Event('encave-consent-updated'));
+  window.dispatchEvent(new Event(CONSENT_UPDATED_EVENT));
 }
 
 export function CookieConsentBanner() {

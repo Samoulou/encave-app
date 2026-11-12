@@ -3,9 +3,9 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import * as Sentry from '@sentry/nextjs';
 import { AlertTriangle, Home, RefreshCw, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { loadSentryClient } from '@/lib/sentry-client';
 
 export default function Error({
   error,
@@ -18,7 +18,9 @@ export default function Error({
   const tCommon = useTranslations('common');
 
   useEffect(() => {
-    Sentry.captureException(error);
+    void loadSentryClient().then((Sentry) => {
+      Sentry?.captureException(error);
+    });
   }, [error]);
 
   return (

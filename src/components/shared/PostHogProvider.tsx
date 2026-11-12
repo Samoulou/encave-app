@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useSession } from '@/lib/auth-client';
 import { getPostHogClient, initPostHogFromConsent } from '@/lib/posthog-client';
+import { CONSENT_UPDATED_EVENT } from '@/lib/consent-client';
 
 /**
  * Initializes PostHog (EU-hosted for nLPD compliance) once analytics consent
@@ -13,9 +14,9 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const init = () => void initPostHogFromConsent();
     init();
-    window.addEventListener('encave-consent-updated', init);
+    window.addEventListener(CONSENT_UPDATED_EVENT, init);
     return () => {
-      window.removeEventListener('encave-consent-updated', init);
+      window.removeEventListener(CONSENT_UPDATED_EVENT, init);
     };
   }, []);
 
