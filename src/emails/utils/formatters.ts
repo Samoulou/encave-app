@@ -10,6 +10,14 @@ const PRISMA_LOCALE_MAP: Record<Locale, string> = {
 } as const;
 
 /**
+ * Sessions happen in Valais: every date/time printed in an email is a
+ * Europe/Zurich wall clock. Callers pass real instants
+ * (`zonedWallClockToUTC`), and the server runs in UTC — without an explicit
+ * time zone a 14:00 session was printed as 13:00 (winter) or 12:00 (summer).
+ */
+const EMAIL_TIME_ZONE = 'Europe/Zurich';
+
+/**
  * Format a date for email display with full weekday and date
  */
 export function formatEmailDate(date: Date, locale: Locale): string {
@@ -18,6 +26,7 @@ export function formatEmailDate(date: Date, locale: Locale): string {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
+    timeZone: EMAIL_TIME_ZONE,
   }).format(date);
 }
 
@@ -29,6 +38,7 @@ export function formatEmailDateShort(date: Date, locale: Locale): string {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
+    timeZone: EMAIL_TIME_ZONE,
   }).format(date);
 }
 
@@ -39,6 +49,7 @@ export function formatEmailTime(date: Date, locale: Locale): string {
   return new Intl.DateTimeFormat(PRISMA_LOCALE_MAP[locale], {
     hour: '2-digit',
     minute: '2-digit',
+    timeZone: EMAIL_TIME_ZONE,
   }).format(date);
 }
 

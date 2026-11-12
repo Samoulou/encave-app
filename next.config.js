@@ -12,6 +12,11 @@ const connectSrc = [
   'https://*.vercel-insights.com',
   'https://*.vercel-analytics.com',
   'https://*.ingest.sentry.io',
+  // PostHog EU ingestion (api_host in src/lib/posthog-client.ts) — without
+  // these the browser blocked every analytics/web-vitals request.
+  'https://eu.posthog.com',
+  'https://eu.i.posthog.com',
+  'https://eu-assets.i.posthog.com',
   'https://api.mapbox.com',
   'https://events.mapbox.com',
   'https://*.tiles.mapbox.com',
@@ -66,7 +71,9 @@ const securityHeaders = [
   },
   {
     key: 'Permissions-Policy',
-    value: 'geolocation=(self), microphone=(), camera=()',
+    // camera=(self): the winemaker ticket scanner (/dashboard/scan) calls
+    // getUserMedia — `camera=()` disabled it for our own origin too.
+    value: 'geolocation=(self), microphone=(), camera=(self)',
   },
 ];
 

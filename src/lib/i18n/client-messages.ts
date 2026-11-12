@@ -41,6 +41,7 @@ export const SEGMENT_EXTRA_NAMESPACES = {
   cadeaux: ['giftCards'], // /cadeaux configurator (P-09)
   bon: ['giftCards'], // /bon/[code] public gift view (P-09)
   surMesure: ['surMesure'], // /sur-mesure form + offer pay button (P-10)
+  contact: ['contact.form'], // /contact form island (P-12)
   experiences: [
     'experience',
     'gallery',

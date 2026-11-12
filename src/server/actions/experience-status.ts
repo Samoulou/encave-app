@@ -352,7 +352,7 @@ export async function duplicateExperience(
     const baseSlug = generateSlug(`${experience.title} copy`);
     const slug = await ensureUniqueSlug(
       baseSlug,
-      createExperienceSlugChecker(winery.id)
+      createExperienceSlugChecker()
     );
 
     // Get winery slug for cache invalidation

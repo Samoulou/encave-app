@@ -19,12 +19,23 @@ export function invalidateExperienceCaches(
 }
 
 /**
- * Create a slug existence checker for a specific winery
+ * Create a slug existence checker for experiences.
+ *
+ * The check is GLOBAL, not per winery: the DB constraint is
+ * `@@unique([wineryId, slug])`, but the public fiche lives at
+ * `/experiences/[slug]` and is resolved by slug alone. Two wineries naming
+ * an offer "Dégustation découverte" used to get the same slug — one fiche
+ * became unreachable and its card opened (and booked) the other winery.
+ *
+ * `excludeExperienceId` lets an edit keep its own slug.
  */
-export function createExperienceSlugChecker(wineryId: string) {
+export function createExperienceSlugChecker(excludeExperienceId?: string) {
   return async (slug: string): Promise<boolean> => {
-    const existing = await db.experience.findUnique({
-      where: { wineryId_slug: { wineryId, slug } },
+    const existing = await db.experience.findFirst({
+      where: {
+        slug,
+        ...(excludeExperienceId && { id: { not: excludeExperienceId } }),
+      },
       select: { id: true },
     });
     return !!existing;

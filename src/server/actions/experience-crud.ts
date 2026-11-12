@@ -85,11 +85,11 @@ export async function createExperience(
       availabilitySlots,
     } = validated.data;
 
-    // 4. Generate unique slug within winery (AC 9)
+    // 4. Generate a globally unique slug (the fiche URL has no winery segment)
     const baseSlug = generateSlug(title);
     const slug = await ensureUniqueSlug(
       baseSlug,
-      createExperienceSlugChecker(winery.id)
+      createExperienceSlugChecker()
     );
 
     // 5. Convert price to cents for storage
@@ -284,7 +284,7 @@ export async function updateExperience(
       const baseSlug = generateSlug(title);
       slug = await ensureUniqueSlug(
         baseSlug,
-        createExperienceSlugChecker(winery.id)
+        createExperienceSlugChecker(existingExperience.id)
       );
     }
 

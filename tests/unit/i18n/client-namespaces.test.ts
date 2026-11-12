@@ -119,6 +119,11 @@ const PUBLIC_SURFACES: Record<
     componentDirs: [],
     appDirs: ['app/[locale]/(public)/bon'],
   },
+  'contact segment (contact form)': {
+    provided: [...PUBLIC_BASE_NAMESPACES, ...SEGMENT_EXTRA_NAMESPACES.contact],
+    componentDirs: [],
+    appDirs: ['app/[locale]/(public)/contact'],
+  },
   'sur-mesure segment (request form + offer pay)': {
     provided: [
       ...PUBLIC_BASE_NAMESPACES,
@@ -200,4 +205,29 @@ describe('i18n client-namespace coverage (P-06 / L-203)', () => {
       expect(violations, violations.join('\n')).toEqual([]);
     });
   }
+
+  // Catch-all: a client island colocated under (public)/<segment> that is
+  // NOT mapped above only gets the root provider (BASE). The contact form
+  // shipped raw keys in production because its segment had no mapping —
+  // an unmapped segment must therefore live on BASE alone.
+  it('unmapped (public) segments only use BASE namespaces', () => {
+    const publicRoot = join(SRC, 'app/[locale]/(public)');
+    const mappedDirs = Object.values(PUBLIC_SURFACES)
+      .flatMap((config) => config.appDirs)
+      .map((d) => join(SRC, d) + sep);
+    const violations: string[] = [];
+
+    for (const file of walk(publicRoot)) {
+      if (mappedDirs.some((dir) => file.startsWith(dir))) continue;
+      const source = readFileSync(file, 'utf-8');
+      if (!isClientComponent(source)) continue;
+      for (const ns of usedNamespaces(source)) {
+        if (!covered(ns, PUBLIC_BASE_NAMESPACES)) {
+          violations.push(`${file.replace(SRC + sep, '')} → '${ns}'`);
+        }
+      }
+    }
+
+    expect(violations, violations.join('\n')).toEqual([]);
+  });
 });
