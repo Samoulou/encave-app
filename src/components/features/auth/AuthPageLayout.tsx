@@ -26,16 +26,20 @@ export function AuthPageLayout({
 
   return (
     <div className="flex min-h-screen flex-col overflow-hidden md:flex-row">
-      {/* Left Panel - Image (hidden on mobile, shown as header on mobile) */}
-      <div className="relative hidden h-screen w-1/2 overflow-hidden bg-[#2a1a1f] lg:flex lg:w-[55%]">
+      {/* Image panel — ONE responsive element: a header strip on small
+          screens, the left hero panel from lg. Two separate <Image> (one
+          per breakpoint) made every device download both: the hidden
+          desktop one was preloaded on mobile while the visible mobile one
+          (the LCP) loaded lazily. */}
+      <div className="relative h-48 w-full overflow-hidden bg-[#2a1a1f] lg:flex lg:h-screen lg:w-[55%]">
         <Image
           src={imageUrl}
           alt={imageAlt}
           fill
-          className="duration-[20s] object-cover transition-transform ease-out hover:scale-105"
+          className="duration-[20s] object-cover object-center transition-transform ease-out lg:hover:scale-105"
           priority
-          sizes="55vw"
-          quality={75}
+          sizes="(min-width: 1024px) 55vw, 100vw"
+          quality={70}
           placeholder="blur"
           blurDataURL={
             typeof imageUrl === 'string'
@@ -43,11 +47,13 @@ export function AuthPageLayout({
               : undefined
           }
         />
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
+        {/* Small screens: fade into the form background */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#f8f6f6] lg:hidden" />
+        {/* lg: dark gradient under the hero copy */}
+        <div className="absolute inset-0 hidden bg-gradient-to-t from-slate-900/80 via-transparent to-transparent lg:block" />
 
-        {/* Hero content at bottom */}
-        <div className="absolute bottom-12 left-12 z-10 max-w-md text-white">
+        {/* Hero content at bottom (lg only) */}
+        <div className="absolute bottom-12 left-12 z-10 hidden max-w-md text-white lg:block">
           <div className="mb-4 flex items-center gap-2 opacity-80">
             <MapPin className="h-5 w-5" />
             <span className="text-sm font-medium uppercase tracking-wide">
@@ -63,20 +69,6 @@ export function AuthPageLayout({
             <p className="text-lg font-light opacity-80">{heroSubtitle}</p>
           )}
         </div>
-      </div>
-
-      {/* Mobile Header Image (shown only on small screens) */}
-      <div className="relative h-48 w-full overflow-hidden lg:hidden">
-        <Image
-          src={imageUrl}
-          alt={imageAlt}
-          fill
-          className="object-cover object-center"
-          sizes="100vw"
-          quality={60}
-          {...(typeof imageUrl !== 'string' ? { placeholder: 'blur' } : {})}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#f8f6f6]" />
       </div>
 
       {/* Right Panel - Form */}

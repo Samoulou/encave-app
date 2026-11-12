@@ -95,9 +95,12 @@ export function InteractiveMap({
         attributionControl: false,
       });
 
+      // bottom-RIGHT: the bottom-left corner holds our own "my location"
+      // button, which sat on top of the credits toggle (unreachable
+      // attribution + axe target-size).
       m.addControl(
         new maplibregl.AttributionControl({ compact: true }),
-        'bottom-left'
+        'bottom-right'
       );
       m.addControl(new maplibregl.NavigationControl(), 'top-right');
 
