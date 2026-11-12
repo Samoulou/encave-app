@@ -264,6 +264,21 @@ Current architecture: `docs/ARCHITECTURE.md`. Historical audits (pre-delivery sn
 - The 3 aggregate emails (DailyDigest, WeeklySummary, PostExperienceFollowUp) don't pass a tokenised `unsubscribeUrl` → they fall back to the static `/unsubscribe` page (compliance gap; the tokenised route `/api/unsubscribe/[token]` exists but has no producer)
 - The middleware hardcodes the Coming Soon gate on `encave.ch` — remove at launch
 
+## Pre-launch audit (12.11.2026)
+
+Full report: `docs/audits/2026-11-12-audit-pre-launch.md` (findings, what was fixed, what is still open). Conventions introduced by its fixes:
+
+- **Browser Sentry is deferred**: never `import * as Sentry from '@sentry/nextjs'` in a client component — use `loadSentryClient()` / `onSentryReady()` from `src/lib/sentry-client.ts` (a static import puts the 107 kB SDK back in the shared bundle). Session Replay only runs with analytics consent (`src/lib/consent-client.ts`)
+- **A client island that reads the URL (nuqs / `useSearchParams`) on an ISR page needs its OWN `<Suspense>`** — otherwise the whole page bails out to client rendering up to the route's `loading.tsx` and the prerendered HTML is empty. Listings use a server-rendered grid as the fallback (`ExperiencesStaticFallback`, `WineriesStaticFallback`)
+- A `(public)` segment with a client component using its own namespace needs a provider layout + an entry in `SEGMENT_EXTRA_NAMESPACES` (guarded by `tests/unit/i18n/client-namespaces.test.ts`)
+- Every page exposes `<main id="main-content">` (skip-link target)
+- Admin pages call `requireAdminPage()` first; admin actions call `requireAdmin()` (role + not suspended + TOTP + session age)
+- Crons authenticate with `Authorization: Bearer $CRON_SECRET` only — `CRON_SECRET` is mandatory on every Vercel environment
+- `isE2ETest()` (`src/lib/e2e-mode.ts`) is the only way to read the E2E switch; it is refused in production
+- Experience slugs are globally unique at creation (the fiche URL has no winery segment)
+- Emails print Europe/Zurich wall-clock times (`src/emails/utils/formatters.ts`)
+- JSON-LD goes through `serializeJsonLd()`; blob URLs through `isOwnedBlobUrl()`; CSV cells through `escapeCsvField()`
+
 ## NEVER Do These
 
 - Import from `next/navigation` or `next/link` — use `@/i18n/navigation`
