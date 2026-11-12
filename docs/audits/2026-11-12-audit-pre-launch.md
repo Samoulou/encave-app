@@ -1,77 +1,86 @@
 # Audit pré-launch — qualité, sécurité, performance, capacité à partir en prod
 
-> **Date** : 12.11.2026 · **Base auditée** : `main` @ `dab4701` · **Branche de correctifs** : `claude/audit-qualite-performance-dk8p8z` (7 commits)
-> **Périmètre** : revue complète du code (89 server actions, 23 handlers API, requêtes, crons, emails), scan Lighthouse des 16 pages publiques (mobile + desktop), audit de mise en production.
-> **Méthode** : build de production local sur Postgres 16 seedé, serveur `next start`, Lighthouse 12.6 ; les constats bloquants ont été reproduits à chaud contre ce serveur avant correction.
+> **Date** : 12.11.2026 · **Base auditée** : `main` @ `dab4701` · **Branche** : `claude/audit-qualite-performance-dk8p8z` (14 commits, poussée)
+> **Périmètre** : revue complète du code (89 server actions, 23 handlers API, requêtes, crons, emails), scan Lighthouse des 16 pages publiques (mobile + desktop), audit de mise en production, puis correction de tout ce qui pouvait l'être dans le code.
+> **Méthode** : build de production local sur Postgres 16 seedé, serveur `next start`, Lighthouse 12.6 ; les constats bloquants ont été reproduits à chaud avant correction.
 
 ## 1. Verdict
 
-**NO-GO en l'état de `main`. GO atteignable pour le 16.11 si la branche est mergée et si les actes « propriétaire » du §5 sont faits** — sinon le fusible du 23.11 prévu au planning s'applique.
+**`main` n'était pas prêt. La branche l'est côté code, sous réserve de la validation Stripe en mode test (§4) et des actes « propriétaire » (§5).** Si l'un des deux glisse, le fusible du 23.11 prévu au planning s'applique.
 
-`main` contenait des défauts qui auraient été visibles ou exploitables dès le premier jour :
+Ce que `main` contenait, reproduit avant correction :
 
-| Constat sur `main`                                                                                 | Vérifié comment                                   | État                    |
-| -------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ----------------------- |
-| N'importe qui pouvait s'inscrire en `ADMIN` (`POST /api/auth/sign-up/email` avec `"role":"ADMIN"`) | Reproduit : compte créé avec `role=ADMIN` en base | Corrigé                 |
-| Les crons s'exécutaient avec un simple en-tête `x-vercel-cron: 1`                                  | Reproduit : 200 sans secret                       | Corrigé                 |
-| Les emails affichaient l'heure de la séance en UTC (14:00 → 13:00 en hiver)                        | Lecture + test                                    | Corrigé                 |
-| Les frais de no-show ne pouvaient jamais être prélevés (1er essai toujours refusé)                 | Lecture SQL + test sur Postgres réel              | Corrigé                 |
-| La fiche expérience n'avait aucun contenu dans son HTML serveur (ni h1, ni description)            | Reproduit : 20 caractères de texte visible        | Corrigé                 |
-| `/contact` affichait des clés brutes (`contact.form.email`…) dans les 3 langues                    | Reproduit                                         | Corrigé                 |
-| Le scanner de billets ne pouvait pas ouvrir la caméra (`Permissions-Policy: camera=()`)            | Lecture de la config                              | Corrigé                 |
-| PostHog bloqué par la CSP (aucune statistique ni web-vitals en prod)                               | Lecture de la config                              | Corrigé                 |
-| `/api/auth/get-session` en 429 après ~10 pages vues par minute                                     | Reproduit pendant le crawl                        | Corrigé                 |
-| Mentions légales avec `[À COMPLÉTER]`, « EnCave SA » et adresse fictives                           | Lecture                                           | **Ouvert — action Sam** |
+| Constat sur `main`                                                          | État                    |
+| --------------------------------------------------------------------------- | ----------------------- |
+| N'importe qui pouvait s'inscrire en `ADMIN` (un POST avec `"role":"ADMIN"`) | Corrigé                 |
+| Les crons s'exécutaient avec un simple en-tête `x-vercel-cron: 1`           | Corrigé                 |
+| Les emails affichaient l'heure de la séance en UTC (14:00 → 13:00 en hiver) | Corrigé                 |
+| Les frais de no-show ne pouvaient jamais être prélevés                      | Corrigé                 |
+| La fiche expérience n'avait aucun contenu dans son HTML serveur             | Corrigé                 |
+| `/contact` affichait des clés brutes dans les 3 langues                     | Corrigé                 |
+| Le scanner de billets ne pouvait pas ouvrir la caméra                       | Corrigé                 |
+| PostHog bloqué par la CSP                                                   | Corrigé                 |
+| `/api/auth/get-session` en 429 après ~10 pages vues par minute              | Corrigé                 |
+| Mentions légales avec `[À COMPLÉTER]`, « EnCave SA » et adresse fictives    | **Ouvert — action Sam** |
 
-Ce qui était déjà solide : isolation des données entre caves (aucun IDOR trouvé sur les 89 actions), tokens invités hashés, signatures des webhooks, ledger des bons cadeaux (verrou `FOR UPDATE`, contrainte de solde ≥ 0), calculs de prix côté serveur, holds en transaction Serializable.
+**Validation de la branche** (état final) : lint, prettier, `i18n:check`, `tsc` verts · 1767 tests unitaires/intégration · 183 tests sur Postgres réel · 43 E2E Playwright · build de production · `npm ci` propre sur le lockfile · schéma Prisma et migrations strictement alignés (`migrate diff` vide).
 
-## 2. Ce que contient la branche
+**Non validé** : rien n'a été exercé contre Stripe en mode test, ni contre un vrai fournisseur Google, ni sur un déploiement Vercel (le projet Vercel d'EnCave n'est pas visible depuis cette session).
 
-| Commit                   | Contenu                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `9787606` fix(security)  | Rôle non modifiable par le client · garde admin sur chaque page + TOTP/suspension vérifiés dans les actions · cron par `CRON_SECRET` uniquement · échappement JSON-LD (XSS stocké) · propriété des images Blob · bons cadeaux / demandes réservés aux emails vérifiés · `E2E_TEST` refusé en production · injection de formules CSV                                                                                             |
-| `2ef2d61` fix(payments)  | Prélèvement no-show · session Stripe payée « orpheline » remboursée au lieu d'être ignorée · places des billets scannés non revendues + créneau commencé non réservable · événements Stripe jamais perdus sur redélivrance concurrente · faux incidents « remboursement impossible » sur le paiement sur place · limite par IP au checkout · email de confirmation non bloqué par PostHog et jamais marqué envoyé s'il a échoué |
-| `6df5884` fix            | Heure des emails en Europe/Zurich · `/contact` · caméra du scanner · CSP PostHog · slugs d'expérience uniques globalement                                                                                                                                                                                                                                                                                                       |
-| `172da81` perf(sentry)   | SDK Sentry hors du bundle initial (165 → 91,5 kB de JS partagé) · Session Replay uniquement avec consentement                                                                                                                                                                                                                                                                                                                   |
-| `196d782` perf(seo,a11y) | Rendu serveur des fiches et des listings · images LCP · polices · titres, canonical, image sociale · lien d'évitement, landmarks, libellés                                                                                                                                                                                                                                                                                      |
-| `a74d6ff` perf(a11y)     | Image unique sur login/register · crédits de la carte accessibles                                                                                                                                                                                                                                                                                                                                                               |
-| `9a3d5c2` chore(deps)    | Sentry 10.78, next-intl 4.15, zod 4.6.7 (correctifs de sécurité)                                                                                                                                                                                                                                                                                                                                                                |
+## 2. Contenu de la branche
 
-**Validation de la branche** : lint, prettier, `i18n:check`, `tsc` verts · 1368 tests unitaires/intégration · 129 tests sur Postgres réel (invariants + concurrence) · 43 E2E Playwright (invité, cadeau, sur-mesure, annulation, scan, onboarding, a11y) · build de production.
+### Premier passage — audit et bloquants
 
-**Non validé — à faire sur staging avant la bascule** : les chemins d'argent modifiés n'ont pas été exercés contre Stripe en mode test (voir §4.1).
+| Commit                               | Contenu                                                                                                                                                                                                  |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `9787606` fix(security)              | Rôle non modifiable par le client · garde admin sur chaque page · cron par `CRON_SECRET` · échappement JSON-LD · propriété des images Blob · `E2E_TEST` refusé en production · injection de formules CSV |
+| `2ef2d61` fix(payments)              | Prélèvement no-show · session payée orpheline remboursée · places des billets scannés non revendues · événements Stripe jamais perdus · limite par IP au checkout                                        |
+| `6df5884` fix                        | Heure des emails en Europe/Zurich · `/contact` · caméra · CSP PostHog · slugs uniques                                                                                                                    |
+| `172da81` perf(sentry)               | SDK Sentry hors du bundle initial (165 → 92 kB de JS partagé) · Session Replay avec consentement                                                                                                         |
+| `196d782` · `a74d6ff` perf(seo,a11y) | Rendu serveur des fiches et listings · images LCP · polices · titres, canonical, image sociale · accessibilité                                                                                           |
+| `9a3d5c2` chore(deps)                | Sentry 10.78, next-intl 4.15, zod 4.6.7                                                                                                                                                                  |
+
+### Second passage — tout le reste
+
+| Commit                    | Contenu                                                                                                                                                                                                                                                                                                                                           |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `35bfa25` fix(security)   | **better-auth 1.4.17 → 1.7.21** (3 failles de détournement de compte) · liaison Google refusée sur compte non vérifié · reset de mot de passe qui révoque les sessions · utilisateur suspendu sans session possible · tokens sur-mesure hachés en base · export et anonymisation nLPD complets · images d'expérience limitées à son propre espace |
+| `1571e9e` fix(payments)   | Litiges et remboursements Stripe synchronisés · course à l'expiration · montant payé recoupé avec la réservation · relevés et revenus sur une règle unique · bons cadeaux indépendants du flag · reliquat < 0.50 CHF · balayage d'expiration paginé · annulation de session bornée et reprenable                                                  |
+| `3317667` fix(emails,ops) | Français accentué dans tous les emails · désinscription tokenisée et `List-Unsubscribe` · rappel 2 h réellement déclenchable · **mode maintenance** · mention TVA unique · purge de rétention · docs et runbooks à jour                                                                                                                           |
+| `1936f7b` perf(data)      | Pagination serveur des réservations · tags de cache par expérience / cave · 9 index · messages d'erreur traduits par code (34 sites) · chaînes en dur traduites · tests des 13 actions qui n'en avaient pas                                                                                                                                       |
+| `4fcf1b2` perf            | `/cadeaux` statique · calendrier chargé à l'ouverture · hydratation progressive de la home                                                                                                                                                                                                                                                        |
+
+Découvert **en intégrant** les lots, grâce aux E2E : better-auth 1.7 refuse une connexion par mot de passe si le compte n'est pas indexé sur l'identifiant utilisateur, or les scripts de seed l'indexaient sur l'email. Sans la migration de données ajoutée (`20261112130200_sec_credential_account_id`), tout compte créé par seed — l'admin de production s'il vient de là — aurait été bloqué après la montée de version.
 
 ## 3. Lighthouse
 
-### 3.1 Résultat
+**Accessibilité 100, bonnes pratiques 100, SEO 100** sur les 13 pages indexables, mobile et desktop. Les trois pages à SEO 66/69 (`/coming-soon`, `/login`, `/register`) sont en `noindex` volontaire.
 
-Sur les 13 pages indexables : **accessibilité 100, bonnes pratiques 100, SEO 100**, mobile et desktop. Les trois pages à SEO 66/69 (`/coming-soon`, `/login`, `/register`) sont en `noindex` volontaire.
-
-**Performance** : desktop 97–100 (médiane 99). Mobile simulé 77–93 (médiane 85, contre 78 avant). **Le 100 mobile n'est pas atteint.**
+**Performance** : desktop 97–100 (médiane 99). Mobile simulé 79–97 (médiane 87, contre 78). **Le 100 mobile n'est pas atteint.**
 
 | Page (mobile)                | Perf        | A11y         | Bonnes pratiques | SEO          | LCP simulé    | TBT             |
 | ---------------------------- | ----------- | ------------ | ---------------- | ------------ | ------------- | --------------- |
-| `/coming-soon`               | 78 → **88** | 100          | 100              | 66           | 5.3 s → 3.8 s | 140 ms → 20 ms  |
-| `/fr`                        | 71 → **82** | 100          | 96 → **100**     | 100          | 8.5 s → 4.6 s | 230 ms → 110 ms |
-| `/fr/about`                  | 84 → **88** | 98 → **100** | 96 → **100**     | 100          | 4.2 s → 3.8 s | 150 ms → 100 ms |
-| `/fr/cadeaux`                | 80 → **77** | 98 → **100** | 96 → **100**     | 92 → **100** | 4.7 s → 5.2 s | 190 ms → 230 ms |
-| `/fr/cepages-valaisans`      | 81 → **91** | 98 → **100** | 96 → **100**     | 100          | 5.0 s → 3.4 s | 90 ms → 30 ms   |
-| `/fr/contact`                | 86 → **91** | 98 → **100** | 96 → **100**     | 100          | 3.8 s → 3.4 s | 190 ms → 120 ms |
-| `/fr/degustation-vin-valais` | 79 → **93** | 98 → **100** | 96 → **100**     | 100          | 5.1 s → 3.1 s | 180 ms → 130 ms |
-| `/fr/experiences`            | 71 → **78** | 91 → **100** | 96 → **100**     | 100          | 5.6 s → 4.5 s | 350 ms → 280 ms |
-| `/fr/experiences/[slug]`     | 70 → **84** | 94 → **100** | 96 → **100**     | 100          | 6.5 s → 4.4 s | 330 ms → 90 ms  |
-| `/fr/legal/terms`            | 82 → **93** | 98 → **100** | 100              | 100          | 4.2 s → 3.1 s | 230 ms → 110 ms |
-| `/fr/login`                  | 75 → **83** | 94 → **100** | 96 → **100**     | 69           | 5.7 s → 3.8 s | 230 ms → 290 ms |
-| `/fr/mentions-legales`       | 77 → **87** | 98 → **100** | 100              | 100          | 5.5 s → 3.6 s | 190 ms → 170 ms |
-| `/fr/register`               | 76 → **85** | 98 → **100** | 100              | 69           | 5.7 s → 3.8 s | 180 ms → 200 ms |
-| `/fr/sur-mesure`             | 79          | 97 → **100** | 96 → **100**     | 66 → **100** | 5.0 s → 4.8 s | 190 ms → 180 ms |
-| `/fr/wineries`               | 76 → **81** | 93 → **100** | 100              | 100          | 5.3 s → 4.6 s | 240 ms → 170 ms |
-| `/fr/wineries/[slug]`        | 70 → **80** | 98 → **100** | 96 → **100**     | 100          | 6.5 s → 4.8 s | 320 ms → 190 ms |
+| `/coming-soon`               | 78 → **87** | 100          | 100              | 66           | 5.3 s → 3.9 s | 140 ms → 30 ms  |
+| `/fr`                        | 71 → **81** | 100          | 96 → **100**     | 100          | 8.5 s → 4.9 s | 230 ms → 60 ms  |
+| `/fr/about`                  | 84 → **90** | 98 → **100** | 96 → **100**     | 100          | 4.2 s → 3.6 s | 150 ms → 20 ms  |
+| `/fr/cadeaux`                | 80 → **82** | 98 → **100** | 96 → **100**     | 92 → **100** | 4.7 s → 4.3 s | 190 ms → 210 ms |
+| `/fr/cepages-valaisans`      | 81 → **91** | 98 → **100** | 96 → **100**     | 100          | 5.0 s → 3.5 s | 90 ms → 90 ms   |
+| `/fr/contact`                | 86 → **88** | 98 → **100** | 96 → **100**     | 100          | 3.8 s → 3.8 s | 190 ms → 110 ms |
+| `/fr/degustation-vin-valais` | 79 → **95** | 98 → **100** | 96 → **100**     | 100          | 5.1 s → 2.9 s | 180 ms → 30 ms  |
+| `/fr/experiences`            | 71 → **79** | 91 → **100** | 96 → **100**     | 100          | 5.6 s → 4.7 s | 350 ms → 230 ms |
+| `/fr/experiences/[slug]`     | 70 → **82** | 94 → **100** | 96 → **100**     | 100          | 6.5 s → 4.7 s | 330 ms → 70 ms  |
+| `/fr/legal/terms`            | 82 → **97** | 98 → **100** | 100              | 100          | 4.2 s → 2.6 s | 230 ms → 90 ms  |
+| `/fr/login`                  | 75 → **84** | 94 → **100** | 96 → **100**     | 69           | 5.7 s → 4.4 s | 230 ms → 120 ms |
+| `/fr/mentions-legales`       | 77 → **91** | 98 → **100** | 100              | 100          | 5.5 s → 3.5 s | 190 ms → 30 ms  |
+| `/fr/register`               | 76 → **83** | 98 → **100** | 100              | 69           | 5.7 s → 4.7 s | 180 ms → 70 ms  |
+| `/fr/sur-mesure`             | 79 → **95** | 97 → **100** | 96 → **100**     | 66 → **100** | 5.0 s → 2.6 s | 190 ms → 150 ms |
+| `/fr/wineries`               | 76 → **85** | 93 → **100** | 100              | 100          | 5.3 s → 3.9 s | 240 ms → 180 ms |
+| `/fr/wineries/[slug]`        | 70 → **79** | 98 → **100** | 96 → **100**     | 100          | 6.5 s → 5.2 s | 320 ms → 160 ms |
 
 | Page (desktop)               | Perf         | A11y         | Bonnes pratiques | SEO          |
 | ---------------------------- | ------------ | ------------ | ---------------- | ------------ |
 | `/coming-soon`               | 97 → **99**  | 100          | 100              | 66           |
-| `/fr`                        | 96 → **97**  | 96 → **100** | 96 → **100**     | 100          |
+| `/fr`                        | 96 → **98**  | 96 → **100** | 96 → **100**     | 100          |
 | `/fr/about`                  | 98 → **99**  | 98 → **100** | 96 → **100**     | 100          |
 | `/fr/cadeaux`                | 97 → **99**  | 98 → **100** | 100              | 92 → **100** |
 | `/fr/cepages-valaisans`      | 98 → **100** | 98 → **100** | 96 → **100**     | 100          |
@@ -87,143 +96,109 @@ Sur les 13 pages indexables : **accessibilité 100, bonnes pratiques 100, SEO 10
 | `/fr/wineries`               | 97 → **98**  | 93 → **100** | 100              | 100          |
 | `/fr/wineries/[slug]`        | 97 → **98**  | 98 → **100** | 96 → **100**     | 100          |
 
-Limites de la mesure : un seul run par page (±5 points de bruit sur la perf mobile), serveur local sans CDN, base seedée avec 3 caves et 4 expériences. Le « avant » a été mesuré sans DSN Sentry ; le « après » avec un DSN factice, donc dans la configuration de production. `/cadeaux` (80 → 77) est dans le bruit ; c'est aussi la seule page publique encore dynamique.
+Limites : un seul run par page (±5 points de bruit sur la perf mobile), serveur local sans CDN, 3 caves et 4 expériences en base. Le gate officiel reste **LHCI ≥ 95 sur staging** ; il est à repasser sur cette branche.
 
-### 3.2 Ce qui expliquait les mauvais scores
+### Ce qui expliquait les mauvais scores
 
-1. **La fiche expérience basculait entièrement en rendu client.** `BookingWidget` lit l'URL (nuqs) sans frontière `Suspense` : sur une page ISR, Next abandonne alors le rendu serveur jusqu'à la frontière la plus proche, ici le `loading.tsx` de la route. Le HTML prérendu ne contenait que le squelette. Même mécanisme sur le catalogue et la liste des domaines : aucune carte ni aucun lien vers une fiche dans le HTML.
-2. **Les images prioritaires étaient invisibles jusqu'à l'hydratation** (`opacity-0` levé par un `onLoad` React dans `ImageWithFallback`). Le LCP dépendait de l'exécution du JavaScript.
-3. **Le SDK Sentry (107 kB gzip) était dans le bundle partagé par toutes les pages** : 0,6 à 1,2 s de CPU sur mobile simulé. Le Session Replay était en plus téléchargé pour 100 % des visiteurs.
-4. 10 polices préchargées par page, deux préconnexions Stripe inutiles (Stripe.js n'est jamais chargé), 7 préchargements du même payload catalogue depuis la home (~200 kB).
+1. **La fiche expérience basculait entièrement en rendu client** : `BookingWidget` lit l'URL (nuqs) sans frontière `Suspense`, ce qui sur une page ISR abandonne le rendu serveur jusqu'au `loading.tsx` de la route. Même mécanisme sur le catalogue et les domaines : aucune carte ni lien dans le HTML.
+2. **Les images prioritaires étaient invisibles jusqu'à l'hydratation** (`opacity-0` levé par un `onLoad` React).
+3. **Le SDK Sentry (107 kB gzip) était dans le bundle de toutes les pages**, et le Session Replay téléchargé pour tous.
+4. 10 polices préchargées, préconnexions Stripe inutiles, 7 préchargements du même payload catalogue, calendrier chargé d'emblée.
 
-Le plan P-06 attribuait l'écart à un « artefact Lantern ». Les points 1 à 3 étaient des dépendances réelles au JavaScript ; l'artefact n'explique que le reste.
+Le plan P-06 attribuait l'écart à un « artefact Lantern » ; les points 1 à 3 étaient des dépendances réelles au JavaScript.
 
-### 3.3 Pourquoi pas 100 en performance mobile, et ce qui reste
+### Pourquoi pas 100 en mobile
 
-Les métriques **observées** sont bonnes (LCP réel 200–450 ms en local). Le score mobile est une simulation (4G lente + CPU ÷4) qui pénalise le volume total de JavaScript : environ 410 kB transférés par page.
+Les temps observés sont bons (LCP réel 200–450 ms en local, 2,3–3,1 s sous throttling appliqué). Le score simulé pénalise le volume de JavaScript (~330 kB) et le CSS bloquant (21 kB). Les deux leviers restants sont structurels et **volontairement non faits à quatre jours du launch** :
 
-| Levier restant                                                                                  | Gain attendu                    | Effort |
-| ----------------------------------------------------------------------------------------------- | ------------------------------- | ------ |
-| Home : ne plus rendre les deux arbres mobile **et** desktop (HTML 210 kB, double hydratation)   | Élevé sur `/fr`                 | 1–2 j  |
-| Catalogue : sortir filtres et carte du composant client de 932 lignes (`ExperiencesPageClient`) | Élevé sur `/experiences`        | 1–2 j  |
-| `/cadeaux` : lire `searchParams` côté client pour redevenir statique                            | Moyen                           | 2 h    |
-| CSS bloquant (21 kB) et polyfills hérités de Next 14 (11 kB)                                    | Faible, lié à la montée Next 15 | —      |
+| Levier                                                                    | Pourquoi pas maintenant                                             |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Home : un seul arbre responsive au lieu de mobile + desktop (HTML 210 kB) | Refonte visuelle de la page d'accueil sans maquette de référence    |
+| Next 15 (retire les polyfills hérités, permet d'inliner le CSS critique)  | Migration majeure : sémantique de cache et APIs de requête changent |
 
-Le gate officiel reste **LHCI ≥ 95 sur staging** (CDN, médiane de 3 runs). Il est à repasser sur cette branche ; je ne peux pas le mesurer d'ici.
+## 4. À valider avant la bascule
 
-### 3.4 Autres défauts SEO corrigés au passage
+### 4.1 Stripe en mode test (bloquant)
 
-- Aucune page n'avait d'`og:image` (`/og-image.jpg` et `/logo.png` en 404). `public/og-image.jpg` est une image provisoire générée depuis le hero : **à remplacer par un visuel de marque**.
-- Titres en « … | EnCave | EnCave ».
-- `/cadeaux` avait pour canonical la page d'accueil : Google l'aurait fusionnée avec elle, à cinq semaines de Noël.
-- `/sur-mesure` était en `noindex` tout en figurant dans le sitemap. Je l'ai rendue indexable (**décision produit à confirmer**).
-- About, articles et pages légales sans canonical ni hreflang.
+Événements à **ajouter sur l'endpoint webhook plateforme** : `charge.dispute.created`, `charge.dispute.closed`, `charge.refunded`.
 
-## 4. Ce qui reste ouvert dans le code
+| Scénario                                                          | Attendu                                                                      |
+| ----------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Réservation simple, réservation bon + carte, paiement sur-mesure  | Confirmées, aucune alerte `amount-mismatch`                                  |
+| Payer → retour → payer à nouveau                                  | La réservation survit à l'expiration de l'ancienne session                   |
+| Offre sur-mesure ouverte sur deux onglets                         | Un seul paiement possible ; un paiement sur l'ancienne session est remboursé |
+| Remboursement partiel depuis le Dashboard, puis annulation client | Seul le reliquat est remboursé                                               |
+| Carte de test « litige » sur un bon cadeau                        | Le bon passe en désactivé                                                    |
+| Bon laissant moins de 0.50 CHF à payer                            | 0.50 CHF débité, reliquat conservé sur le bon                                |
+| Annulation d'une session à plusieurs réservations                 | Tous remboursés ; un échec forcé est repris au second passage                |
+| Frais de no-show                                                  | Prélevés une seule fois                                                      |
 
-### 4.1 À vérifier sur staging avant la bascule (changements de la branche)
+### 4.2 Authentification (staging)
 
-| Changement                                                                                                 | À vérifier                                                                                                       |
-| ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Remboursement automatique d'une session payée qui n'est plus celle de la réservation                       | Le remboursement passe en Stripe test, y compris sur une réservation financée par bon (`refund_application_fee`) |
-| 409 renvoyé à Stripe quand une redélivrance chevauche un traitement en cours                               | L'alerting webhook le tolère                                                                                     |
-| Fenêtre de paiement d'une offre sur-mesure : 24 h → ~31 min ; un 2e clic « Payer » invalide la 1re session | Parcours offre sur deux onglets                                                                                  |
-| Créneaux du jour déjà commencés masqués et refusés                                                         | Le sélecteur de date peut encore proposer « aujourd'hui » avec une liste vide                                    |
-| Limite checkout par IP : 12 tentatives / 10 min                                                            | Acceptable pour un groupe sur un même Wi-Fi ?                                                                    |
-| `maxDuration = 60` sur les webhooks Stripe                                                                 | Pas inférieur au réglage Vercel actuel                                                                           |
-| Sentry différé                                                                                             | Avec le vrai DSN : une erreur volontaire arrive bien dans Sentry                                                 |
-| Actions admin : TOTP et compte non suspendu désormais exigés                                               | L'admin de prod est bien enrôlé TOTP                                                                             |
-| Upload : seule une image de son propre espace Blob est acceptée                                            | Changer la photo de couverture d'une cave                                                                        |
+- **Appliquer les migrations avant de déployer le code** : better-auth 1.7 contrôle le schéma et refuse toute requête d'auth si une colonne manque.
+- Connexion Google : compte vérifié, nouveau compte, et compte mot de passe non vérifié (désormais refusé, message traduit sur `/login`).
+- Connexion par code, simple et pour un admin avec TOTP ; admin déjà enrôlé ; nouvel enrôlement. Dix codes faux verrouillent le compte 15 minutes.
+- Les sessions existantes doivent survivre au déploiement (non vérifiable ici).
 
-### 4.2 Sécurité
+### 4.3 Changements de comportement à connaître
 
-| Sév.    | Constat                                                                                                                                                                                                                                                                                                                                           | Action                                                                                                                                                                                      |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Haute   | **better-auth 1.4.17** : avis publiés corrigés seulement en 1.6.22 / 1.7.7 — détournement de compte par pré-inscription sur la connexion par code email (GHSA-qq9h-g4jm-xgf3), `state` OAuth utilisable comme lien magique (GHSA-965c-763c-88jm), liaison Google sur email non vérifié (GHSA-g38m-r43w-p2q7). L'app utilise les trois mécanismes. | Monter en 1.7.x. Le plugin `auth-hardening` s'appuie sur des internes de better-auth : prévoir une demi-journée à une journée avec re-validation G-1 (MFA). **À trancher avant le launch.** |
-| Haute   | **Pré-détournement de compte** : pas de `requireEmailVerification`, Google est fournisseur de liaison « de confiance », un changement de mot de passe ne révoque pas les sessions. `provisionFounderWinery` ne vérifie pas `emailVerified`.                                                                                                       | À la première connexion OAuth/OTP sur un compte non vérifié, effacer mot de passe et sessions ; exiger l'email vérifié pour l'invitation fondateur                                          |
-| Haute   | **Next.js 14.2.35 est la dernière version 14** ; les avis suivants ne sont corrigés qu'en 15.5.x (DoS Server Actions / Server Components, empoisonnement de cache RSC). Plusieurs avis « critiques » de la liste ne concernent que l'auto-hébergement.                                                                                            | Vérifier dans le tableau de bord Vercel les mitigations plateforme ; planifier Next 15 après le launch                                                                                      |
-| Moyenne | La suspension n'est vérifiée que dans les layouts côté encaveur : une cave suspendue peut encore appeler les actions (`chargeNoShowFee`, annulation de session)                                                                                                                                                                                   | Garde encaveur partagée, comme `checkAdminAccess`                                                                                                                                           |
-| Moyenne | `createExperience` / `updateExperience` acceptent des URL d'image non validées                                                                                                                                                                                                                                                                    | `isOwnedBlobUrl`                                                                                                                                                                            |
-| Moyenne | CSP avec `'unsafe-inline' 'unsafe-eval'` : ne bloque pas un XSS ; limiteur de débit en mémoire si Upstash absent                                                                                                                                                                                                                                  | Upstash obligatoire en prod (§5) ; CSP à nonce après le launch                                                                                                                              |
-| Moyenne | maplibre-gl 5.24 (GHSA-jrc7-96c5-q579, contournement du sanitizer) : corrigé en v6 seulement. Les popups de la carte échappent déjà leur HTML.                                                                                                                                                                                                    | Montée v6 après le launch                                                                                                                                                                   |
-| Basse   | Tokens de paiement sur-mesure et de désinscription en clair en base · `?token=` capturé par PostHog et Sentry · actions de lecture publiques sans limite de débit · export et anonymisation nLPD sans GiftCard / Request / WineOrderRequest                                                                                                       | Backlog                                                                                                                                                                                     |
-
-`npm audit --omit=dev` après montées : 49 avis contre 65, dont 6 critiques — tous portés par Next, better-auth, maplibre et vitest ; le reste est transitif et modéré.
-
-### 4.3 Argent — décisions à prendre (non implémenté)
-
-| Sév.    | Constat                                                                                                                                                                                                                               | Décision attendue                                                                 |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| Haute   | **Aucune gestion des litiges** (`charge.dispute.*`, `charge.refunded`) : un bon acheté avec une carte volée reste actif après le chargeback ; un remboursement fait dans le Dashboard Stripe n'est pas reflété en base                | Au minimum : alerte + désactivation du bon                                        |
-| Haute   | **Course** entre « réessayer après abandon de paiement » et le webhook d'expiration de l'ancienne session : la réservation peut être supprimée en plein réessai (à confirmer en Stripe test)                                          | Le handler d'expiration ignore une réservation dont `expiresAt` est dans le futur |
-| Moyenne | **Relevé mensuel et revenus faux dans trois cas** : paiement sur place compté comme « net reversé », annulations où la cave garde de l'argent exclues, remboursements partiels admin ignorés                                          | Règle comptable à définir avant le premier relevé (début décembre)                |
-| Moyenne | Couper le flag `GIFT_CARDS` arrête aussi la réconciliation des transferts et les envois programmés de bons déjà payés                                                                                                                 | Sortir ces deux jobs du flag                                                      |
-| Moyenne | Les transferts « bon cadeau » partent du solde disponible de la plateforme (`balance_insufficient` possible au lancement)                                                                                                             | Buffer de trésorerie (déjà ouvert, protocole A.f)                                 |
-| Basse   | `PLATFORM_COMMISSION_RATE` vaut 0,12 par défaut alors que le taux de lancement est 10 % · reliquat de bon de 1 à 49 centimes refusé par Stripe · validité 5 ans jamais appliquée · balayage d'expiration limité à 100 lignes par jour | —                                                                                 |
-
-### 4.4 Emails et conformité
-
-- Les anciens blocs de `src/emails/translations.ts` sont en français sans accents, **sujet de l'email de confirmation compris**.
-- Aucun en-tête `List-Unsubscribe` ; les 3 emails d'agrégat n'ont pas de lien de désinscription tokenisé.
-- L'email de remboursement manuel (admin) part toujours en français.
-- Le rappel « 2 h avant » ne peut se déclencher que pour des séances entre ~18h30 et 21h30 (le cron ne tourne que deux fois par jour).
-- PostHog côté serveur enregistre l'email du visiteur comme identifiant **sans tenir compte du consentement** (`checkout-confirmation.service.ts`), alors que la politique de confidentialité dit le contraire.
-- Mentions TVA contradictoires : « Taxes et frais de service inclus » (page de confirmation), « TVA incluse » (offres), « non assujettie » (reçu).
-
-### 4.5 Qualité et efficacité — par rapport bénéfice / effort
-
-| #   | Constat                                                                                                                                                                                                                                 | Effort                   |
-| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| 1   | Liste des réservations encaveur **sans pagination** : toutes les réservations (emails, téléphones) sont envoyées au navigateur, qui en affiche 5                                                                                        | 0,5 j                    |
-| 2   | Résumé des revenus : toutes les réservations de tous les temps chargées pour être sommées en JS                                                                                                                                         | 0,5 j                    |
-| 3   | Rappels J-1 : boucle séquentielle sous 60 s, sans rattrapage ; ~100 réservations ou un incident Resend tronquent l'envoi                                                                                                                | 2 h                      |
-| 4   | Le moindre changement d'un créneau par une cave purge le cache de **toutes** les pages publiques (`revalidateTag('experiences')` global)                                                                                                | 0,5 j                    |
-| 5   | Index manquants : `Experience(slug)`, images de galerie (clé étrangère), `Session(userId)`, `EmailLog(status, createdAt)` ; 5 index redondants sur `Booking`                                                                            | 2 h (migration additive) |
-| 6   | Annulation d'une session : remboursements Stripe en série dans une seule action (25 réservations = risque de timeout à mi-parcours)                                                                                                     | 0,5 j                    |
-| 7   | Emails « fire-and-forget » dans des actions (refus de réservation, création de cave) : perdus si la lambda gèle                                                                                                                         | 1 h                      |
-| 8   | Pas de purge : `EmailLog`, `rate_limits`, `sessions`, `scheduled_jobs` terminés                                                                                                                                                         | 2 h                      |
-| 9   | i18n : 411 messages d'erreur d'actions en anglais, affichés tels quels à 45 endroits ; chaînes françaises en dur dans le catalogue et le checkout (« Affiner », « Expériences disponibles », « Paiement sécurisé ») — visibles en DE/EN | 1–2 j                    |
-| 10  | 16 fichiers de plus de 600 lignes (`email.service.ts` 1558, `checkout.ts` 1286) ; 14 actions sur 89 sans aucun test (`createExperience`, `createWinery`, `rejectBooking`, `searchExperiencesAction`…)                                   | Continu                  |
-
-Points propres : aucun `as any`, aucun `@ts-ignore`, aucune assertion `!`, aucun `parse()` dans une action, aucun appel Stripe ou Resend à l'intérieur d'une transaction, aucun module mort.
-
-Deux choix laissés volontairement en l'état : le TTL de 60 s du cache des flags (il réduit l'ISR à 60 s au lieu de 300, mais c'est lui qui garantit le kill-switch en moins d'une minute) et les slugs en doublon éventuellement déjà présents en base (résolus de façon déterministe : la plus ancienne garde l'URL).
-
-### 4.6 Documentation à remettre à jour
-
-`CLAUDE.md` : polices (Nunito / Averia / Mukta, pas Manrope / Fraunces), dette connue déjà corrigée (email de confirmation avec token, UI de remboursement admin, gate Coming Soon par variable d'env). `ARCHITECTURE.md` : `/cadeaux` et `/sur-mesure` existent, `/api/health` n'est plus inerte. `kill-switch-flags.md` renvoie à `/admin/compliance` au lieu de `/admin`. ADR-0002 §1 : le prédicat de capacité compte désormais COMPLETED et NO_SHOW.
+- **Invitation fondateur** : deux étapes pour un nouveau compte (inscription, clic sur le lien de vérification, puis validation).
+- **Liste des réservations** : 10 par page, découpées côté serveur.
+- **Messages d'erreur** : génériques par code et traduits ; le détail serveur n'est plus affiché, sauf « a des réservations » et « créneaux qui se chevauchent » qui ont leur propre message.
+- **Créneaux du jour déjà commencés** : masqués et refusés.
+- **Relevés et revenus** : les chiffres changent pour les caves avec paiement sur place, annulations tardives ou remboursements partiels. Les lignes « sur place » ne sont pas encore listées dans le tableau des transactions.
+- **Emails** : le rappel 2 h part désormais réellement ; toutes les réponses arrivent sur `support@encave.ch` (variable `EMAIL_REPLY_TO`).
+- **Crons** : 33 entrées dans `vercel.json`.
+- **Mode maintenance** : `MAINTENANCE_MODE=true` + redéploiement ; webhooks, crons et health restent ouverts. Le 503 de la page n'a été vérifié qu'en test unitaire.
+- **Seed via le workflow GitHub** : bloqué tant que la variable de dépôt `SEED_ALLOWED_DB_HOSTS` ne liste pas les hôtes staging/preview.
+- **Rétention** : logs d'emails 180 jours (365 pour les échecs), sessions et codes expirés, jobs terminés 90 jours.
 
 ## 5. Bloquants hors code — actions Sam
 
-1. **Identité légale** : compléter les mentions légales (3 langues), remplacer « EnCave SA » et l'adresse fictive dans CGV, confidentialité et annulation. L'adresse diffère même entre le français et l'allemand.
-2. **Campagne UAT** : `UAT-EXIT-REPORT.md` est un gabarit vide, non signé ; les 15 sessions et le registre de défauts sont vierges. La vérification money-routing A.2, marquée bloquante, n'est pas faite.
-3. **Variables d'environnement de production** — seules `DATABASE_URL` et `BETTER_AUTH_SECRET` sont obligatoires ; tout le reste se dégrade en silence :
+1. **Identité légale** : mentions légales (3 langues), « EnCave SA » et l'adresse fictive dans CGV, confidentialité, annulation.
+2. **Campagne UAT** : `UAT-EXIT-REPORT.md` est un gabarit vide ; la vérification money-routing A.2 n'est pas faite.
+3. **Variables d'environnement de production** :
 
-   | Variable                                                          | Si oubliée                                                                                     |
-   | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-   | `CRON_SECRET`                                                     | **Depuis cette branche : les 18 crons répondent 401**                                          |
-   | `UPSTASH_REDIS_REST_*`                                            | Limite de débit en mémoire par instance, donc inopérante                                       |
-   | `RESEND_API_KEY`                                                  | Aucun email, connexion par code comprise                                                       |
-   | `STRIPE_WEBHOOK_SECRET`, `STRIPE_CONNECT_WEBHOOK_SECRET`          | Webhooks en 500                                                                                |
-   | `BETTER_AUTH_URL`, `NEXT_PUBLIC_BASE_URL`, `NEXT_PUBLIC_SITE_URL` | Liens d'emails, QR, canonical et sitemap sur une URL Vercel                                    |
-   | `PLATFORM_COMMISSION_RATE`                                        | 12 % au lieu des 10 % de lancement                                                             |
-   | `NEXT_PUBLIC_SENTRY_DSN`                                          | Ni Sentry ni moniteurs de cron                                                                 |
-   | `E2E_TEST`                                                        | Doit être **absente** (la branche fait échouer le démarrage si elle vaut `true` en production) |
-   | `DIRECT_URL` (scope Preview)                                      | Ne doit pas pointer sur la base de production : tout build lance `migrate deploy`              |
+   | Variable                                                          | Si oubliée                                                                    |
+   | ----------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+   | `CRON_SECRET`                                                     | **Les 33 crons répondent 401**                                                |
+   | `UPSTASH_REDIS_REST_*`                                            | Limite de débit en mémoire par instance, donc inopérante                      |
+   | `RESEND_API_KEY`                                                  | Aucun email, connexion par code comprise                                      |
+   | `STRIPE_WEBHOOK_SECRET`, `STRIPE_CONNECT_WEBHOOK_SECRET`          | Webhooks en 500                                                               |
+   | `BETTER_AUTH_URL`, `NEXT_PUBLIC_BASE_URL`, `NEXT_PUBLIC_SITE_URL` | Liens d'emails, QR, canonical et sitemap sur une URL Vercel                   |
+   | `PLATFORM_COMMISSION_RATE`                                        | 12 % au lieu des 10 % de lancement                                            |
+   | `NEXT_PUBLIC_SENTRY_DSN`                                          | Ni Sentry ni moniteurs de cron                                                |
+   | `E2E_TEST`                                                        | Doit être **absente** (le démarrage échoue si elle vaut `true` en production) |
+   | `DIRECT_URL` (scope Preview)                                      | Ne doit pas pointer sur la production : tout build lance `migrate deploy`     |
 
-4. **Vercel** : plan compatible avec 18 crons et `maxDuration = 300` ; région alignée sur Neon ; protection du domaine `*.vercel.app` de production (le gate Coming Soon ne filtre que `encave.ch`).
-5. **Données de production** : tous les flags sont OFF par défaut alors que la matrice de lancement en veut six ON ; compte admin avec TOTP ; caves vérifiées avec Stripe Connect actif ; expériences publiées.
-6. **Alerting** : `astreinte.md` contient encore `[À DÉCIDER]` ; aucun moniteur externe sur `/api/health?deep=1` ; règles d'alerte Sentry à créer.
-7. **Email** : boîtes `support@`, `privacy@`, `legal@`, `contact@` ; SPF, DKIM et DMARC pour Resend.
+4. **Vercel** : plan compatible avec 33 crons et `maxDuration = 300` ; région alignée sur Neon ; protection du domaine `*.vercel.app` de production.
+5. **Données de production** : flags (tous OFF par défaut, la matrice de lancement en veut six ON), admin avec TOTP, caves vérifiées avec Stripe Connect actif.
+6. **Alerting** : `astreinte.md` contient encore `[À DÉCIDER]` ; moniteur externe sur `/api/health?deep=1` ; règles d'alerte Sentry (`area:stripe-webhook`, `area:email`, `incident:*`).
+7. **Email** : boîte `support@encave.ch` lue ; SPF, DKIM, DMARC pour Resend.
 8. **Neon** : rétention PITR confirmée, restauration testée une fois.
-9. **GitHub** : l'accès de Claude au dépôt est refusé (403) — la branche n'a pas pu être poussée depuis cette session.
+9. **Image sociale** : `public/og-image.jpg` est provisoire.
 
-## 6. Ordre conseillé d'ici le 16.11
+## 6. Reste ouvert dans le code
 
-1. Pousser et merger la branche ; CI verte.
-2. Décider : montée better-auth 1.7.x avant le launch, ou risque accepté par écrit.
-3. Renseigner l'identité légale ; corriger le français sans accents de l'email de confirmation.
-4. Staging : vérifications du §4.1, money-routing A.2, LHCI.
-5. Variables de production (§5.3), flags, Stripe live (deux endpoints sur le domaine apex, TWINT), moniteur externe.
-6. Redéployer la production avec le gate encore levé, pour prouver migrations et build.
-7. Bascule `COMING_SOON=false`, puis : `/api/health?deep=1` en 200, un cron sans secret en 401, une réservation réelle TWINT et carte avec email reçu à la bonne heure, une annulation remboursée, un achat de bon.
+| Sujet                                                                                          | Pourquoi ce n'est pas fait                                                                  |
+| ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| **Next.js 14 → 15** (avis DoS / empoisonnement de cache corrigés seulement en 15.5.x)          | Migration majeure ; vérifier les mitigations plateforme Vercel et planifier après le launch |
+| **maplibre-gl v6** (contournement du sanitizer)                                                | Version majeure ; les popups échappent déjà leur HTML                                       |
+| **CSP à nonce** (`'unsafe-inline'` et `'unsafe-eval'` encore présents)                         | Demande une refonte du chargement des scripts                                               |
+| Suspension effective sous 5 minutes seulement                                                  | Fermer la fenêtre coûterait une lecture en base par appel                                   |
+| Tokens de désinscription en clair en base                                                      | Faible valeur ; non traité                                                                  |
+| Index redondants sur `Booking` et `Experience`                                                 | Suppression = migration destructive sur la table la plus chaude                             |
+| 27 messages d'erreur bruts dans admin, auth et revenus ; libellés des squelettes de chargement | Hors périmètre des lots, sans impact client                                                 |
+| Lignes « paiement sur place » absentes du tableau des transactions                             | Demande un nouveau statut d'affichage                                                       |
+| Home en double arbre, composant catalogue de 932 lignes                                        | Voir §3                                                                                     |
+| Champ `engines` Node dans `package.json`                                                       | La CI tourne en Node 20, la version Vercel n'est pas connue d'ici                           |
+
+`npm audit --omit=dev` : 47 avis contre 65 au départ ; les critiques restants sont portés par Next, maplibre et vitest (dépendance de test).
+
+## 7. Ordre conseillé d'ici le 16.11
+
+1. Relire et merger la branche (PR vers `dev`) ; CI verte.
+2. Staging : migrations, puis validations des §4.1 et §4.2, LHCI.
+3. Identité légale ; variables de production ; événements webhook Stripe ; moniteur externe.
+4. Redéployer la production avec le gate encore levé, pour prouver migrations et build.
+5. Bascule `COMING_SOON=false`, puis : `/api/health?deep=1` en 200, un cron sans secret en 401, une réservation réelle TWINT et carte avec email reçu à la bonne heure, une annulation remboursée, un achat de bon.

@@ -280,6 +280,13 @@ Full report: `docs/audits/2026-11-12-audit-pre-launch.md` (findings, what was fi
 - Experience slugs are globally unique at creation (the fiche URL has no winery segment)
 - Emails print Europe/Zurich wall-clock times (`src/emails/utils/formatters.ts`)
 - JSON-LD goes through `serializeJsonLd()`; blob URLs through `isOwnedBlobUrl()`; CSV cells through `escapeCsvField()`
+- **better-auth is on 1.7**: a credential account is keyed on the USER ID (`accountId === user.id`) — a seed or script that creates one with the email there produces an account that cannot sign in. Migrations must be applied BEFORE the code (the library validates the schema at runtime)
+- Client components show server-action errors through `useActionErrorMessage()` (`errors.codes.*`), never the raw `error.message`; a case that needs specific guidance gets its own `ErrorCode`
+- Sur-mesure payment tokens are derived (`deriveOfferPaymentToken(offer.id)`) and only their hash is stored — never read a token from the database
+- Cache tags have three levels (`src/lib/utils/cache-tags.ts`): broad listings, `experiences:availability`, and one entity (`experience:{slug}` / `winery:{slug}`). Use the narrowest one that is correct
+- Money figures in earnings and statements come from ONE rule (`src/lib/business-rules/earnings.ts`): only real online money counts
+- `MAINTENANCE_MODE=true` (env + redeploy) freezes writes; webhooks, crons and health stay open
+- Calendars inside a closed popover use `LazyCalendar`; a page that only needs `searchParams` for optional UI reads them in a client island (nuqs) to stay static
 
 ## NEVER Do These
 
