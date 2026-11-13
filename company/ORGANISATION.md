@@ -12,14 +12,18 @@ Sam ──► CEO ──► spécialistes ──► résultat ──► CEO ─�
 
 ## Où vit le CEO
 
-Le CEO existe à deux endroits, avec la même mémoire : ce dossier.
+Dans un **projet Claude Code** (claude.ai/code) : une conversation continue avec Sam, dont chaque travail délégué est un fil. Le projet porte les instructions du CEO ([BRIEF-CEO.md](./BRIEF-CEO.md)), le dépôt, les connecteurs et les tâches planifiées qui font sa proactivité. Sa mémoire de référence reste ce dossier.
 
-| Où                                   | À quoi ça sert                                                                                                                                                                               |
-| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Claude Duet ou un Claude Project** | La conversation avec Sam, la veille, le point du matin, tout ce qui passe par les comptes connectés (messagerie, agenda, documents). Instructions : [BRIEF-CEO.md](./BRIEF-CEO.md)           |
-| **Claude Code** (ce dépôt)           | Tout ce qui touche au code, aux données et à ce dossier. La session principale **est** le CEO : elle lit `company/`, distribue le travail aux spécialistes de `.claude/agents/` et consolide |
+Deux particularités de la plateforme, vérifiées dans sa documentation le 13.11.2026, commandent la manière de déléguer :
 
-Un spécialiste ne peut pas en appeler un autre : c'est le CEO qui enchaîne. Un spécialiste ne parle jamais à Sam.
+| Contexte                            | Les fiches de `.claude/agents/`            | Comment le CEO délègue                                                                                  |
+| ----------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| **Fil d'un projet**                 | Ne sont **pas** chargées automatiquement   | Il ouvre un fil dont le mandat commence par « Lis `.claude/agents/<nom>.md` : c'est ta fiche de poste » |
+| **Session Claude Code hors projet** | Chargées automatiquement comme sous-agents | La session principale tient le rôle du CEO et appelle les spécialistes directement                      |
+
+**Claude Duet** n'est pas retenu pour l'instant : au 13.11.2026 il est en préversion sur liste d'attente, réservé aux États-Unis.
+
+Un spécialiste ne parle jamais à Sam, et ne confie pas de travail à un autre : c'est le CEO qui enchaîne.
 
 ## Les spécialistes
 
