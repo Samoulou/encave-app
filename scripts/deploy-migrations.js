@@ -8,7 +8,7 @@ const RECOVERABLE_MIGRATION = '20260512000000_add_booking_checked_in_at';
 // P-06: static generation fans out build workers — without a bounded
 // pool the ~270-page prerender exhausts Postgres/pgbouncer connections
 // (P2024/'too many clients'). Warn loudly instead of relying on tribal
-// knowledge in docs/plans/P-06-performance.md.
+// knowledge (see the Vercel env checklist in docs/audits/).
 if (
   process.env.DATABASE_URL &&
   !process.env.DATABASE_URL.includes('connection_limit')

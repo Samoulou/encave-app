@@ -1,5 +1,5 @@
 /**
- * Sur-mesure request constants (P-10 / L-090→L-095, docs/v3 US-240,
+ * Sur-mesure request constants (P-10 / L-090→L-095, company/PRODUIT.md,
  * ENCAVE-V3-PAGES-EMAILS §2/§5/§8). All amounts in cents (CHF).
  *
  * Business decisions (Sam, 2026-07-13):

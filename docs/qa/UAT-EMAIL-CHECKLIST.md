@@ -1,6 +1,6 @@
 # UAT-EMAIL-CHECKLIST — Les 22 emails transactionnels
 
-> Référentiel : `docs/v3/ENCAVE-V3-PAGES-EMAILS.md` §8. Fonctions vérifiées
+> Référentiel : `docs/PAGES-EMAILS.md` §8. Fonctions vérifiées
 > dans `src/server/services/email.service.ts`. Méthode **triple source** dans
 > l'ordre : boîte Gmail → dashboard Resend → table `email_logs` (SQL Q6,
 > UAT-CAMPAIGN §7).

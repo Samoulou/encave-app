@@ -3,7 +3,7 @@ import type { WineryVisibilityCriteria } from '@/lib/business-rules/winery-visib
 /**
  * Pick the deep-link URL for the dashboard visibility banner CTA
  * (ENC-027) based on the first criterion that is not yet satisfied,
- * in the UX priority order defined in `docs/archive/specs-v2/ENC-027-ux-ui.md` §4.
+ * in the UX priority order defined in the original dashboard spec (ENC-027, Git history).
  *
  * Falls back to the profile page when every criterion is satisfied
  * (the banner should never render in that case, but we stay defensive).

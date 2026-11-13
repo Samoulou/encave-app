@@ -2,7 +2,7 @@
  * LHCI — PR stage (P-16 / L-182): runs against the local production build
  * in CI. The Lantern mobile simulation is a KNOWN artifact on this app
  * (home simulated ~73 while every observed metric is green — see
- * docs/archive/plans/P-06-performance.md), so the SCORE asserts are
+ * docs/audits/2026-11-12-audit-pre-launch.md §3), so the SCORE asserts are
  * warn-only here; the blocking gate is the resource budgets (JS/doc
  * weight — insensitive to Lantern) plus the ≥ 95 staging config
  * (lighthouserc.staging.cjs), which measures the CDN/ISR truth.

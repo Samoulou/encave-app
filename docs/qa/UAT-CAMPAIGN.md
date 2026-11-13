@@ -3,8 +3,8 @@
 > **Statut** : prêt à exécuter · **Exécutant** : Sam (seul, fiches autoportantes)
 > **Source** : plan approuvé « Plan de test pré-launch EnCave V3 » (2026-07-17), Volet C
 > (UAT) + Volet D (argent & ops, voir [MONEY-ROUTING-PROTOCOL.md](./MONEY-ROUTING-PROTOCOL.md)).
-> **Traçabilité** : parcours 1–31 (§4) ↔ US-XXX du PRD (`docs/v3/ENCAVE-V3-PRD.md`)
-> ↔ emails #1–#22 (`docs/v3/ENCAVE-V3-PAGES-EMAILS.md` §8).
+> **Traçabilité** : parcours 1–31 (§4) ↔ US-XXX de l'ancien PRD (supprimé lors de la refonte du 13.11.2026, consultable dans l'historique Git)
+> ↔ emails #1–#22 (`docs/PAGES-EMAILS.md` §8).
 > Chaque détail opérationnel (URL, table, colonne, flag, montant) a été vérifié
 > dans le code au SHA de préparation — quand le plan et le code divergent, le
 > code gagne (écarts consignés en §11).
@@ -144,7 +144,7 @@ booking `ENC-XXXXXXXX`, `pi_…`, `cs_…`, code bon `ENCV-…`, `REQ-…`).
 
 Le PRD ne numérote que 10 US (US-101, 201, 210, 220, 230, 240, 250, 301, 501 —
 US-601 est V3.2, hors launch). La traçabilité est N parcours → 1 US ; les
-parcours sans ancre US référencent leur package P-XX (`docs/plans/`).
+parcours sans ancre US référencent leur package P-XX (anciens plans de livraison, dans l'historique Git).
 
 | #   | Parcours                                                                                      | Ancre               | Session          |
 | --- | --------------------------------------------------------------------------------------------- | ------------------- | ---------------- |

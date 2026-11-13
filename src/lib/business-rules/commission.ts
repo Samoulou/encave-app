@@ -1,5 +1,5 @@
 /**
- * Per-winery commission (P-03 / L-042, docs/v3/ENCAVE-V3-BUSINESS.md §2).
+ * Per-winery commission (P-03 / L-042, company/MODELE.md).
  *
  * The winery record is the source of truth: `commissionRate` is set by an
  * admin (0 for the ≤20 Founders until 31.03.2027). A null rate means the

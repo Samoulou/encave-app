@@ -1,6 +1,6 @@
 /**
- * Gift card constants (P-09 / L-080→L-087, docs/v3/ENCAVE-V3-BUSINESS.md §4,
- * docs/v3/ENCAVE-V3-PRD.md US-210). All amounts in cents (CHF).
+ * Gift card constants (P-09 / L-080→L-087, company/MODELE.md,
+ * company/PRODUIT.md). All amounts in cents (CHF).
  */
 
 /**

@@ -1,5 +1,5 @@
 /**
- * V3 pricing constants (docs/v3/ENCAVE-V3-BUSINESS.md §2).
+ * Pricing constants (company/MODELE.md).
  * All amounts in cents (CHF).
  */
 

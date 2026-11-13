@@ -9,7 +9,7 @@ import type { Locale } from '@prisma/client';
 
 /**
  * P-16 / WS-G — closes the three P-14 security gaps documented in
- * docs/plans/P-14-auth-v3.md §6bis.
+ * the P-14 auth plan (Git history) and docs/audits/.
  *
  * G-1: the built-in twoFactor plugin only challenges `/sign-in/email` — a
  *      TOTP-enrolled admin signing in via email OTP or Google entered

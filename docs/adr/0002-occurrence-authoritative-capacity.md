@@ -149,10 +149,11 @@ CONFLICT DO UPDATE` sous SERIALIZABLE lève 40001 ; un upsert Prisma sur clé
 
 ## Références
 
-- Plan : `docs/archive/plans/P-05-creneaux-recherche-date.md`
 - ADR lié : `docs/adr/0001-booking-backward-status-transitions.md`
-- Cœur durci : `docs/archive/plans/P-04-checkout-v3.md`,
-  `src/server/actions/checkout.ts`, `src/lib/business-rules/capacity.ts`,
+- Cœur durci : `src/server/actions/checkout.ts`,
+  `src/lib/business-rules/capacity.ts`,
   `src/server/services/serializable-retry.service.ts`
-- Source unique de vérité produit : `docs/v3/ENCAVE-V3-PRD.md` US-101 ;
-  exécution : `docs/ENCAVE-V3-DELIVERY-PLAN.md` §P-05 (L-024, L-110/111, L-131/132)
+- Les plans P-04 / P-05, le PRD (US-101) et le plan de livraison cités à
+  l'origine ont été supprimés lors de la refonte du 13.11.2026 ; ils restent
+  consultables dans l'historique Git. Le prédicat de capacité a depuis été
+  étendu aux statuts COMPLETED et NO_SHOW (audit du 12.11.2026).

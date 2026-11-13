@@ -1,8 +1,8 @@
 # ARCHITECTURE — EnCave (état réel)
 
 > **Rôle** : décrit l'application **telle qu'elle tourne** sur `main` après P-01→P-16 et les correctifs de l'audit pré-launch du 12.11.2026.
-> Source de vérité **technique** de l'état courant. Le **produit/cible** vit dans [`v3/`](./v3/),
-> le **pilotage** dans [`ENCAVE-V3-DELIVERY-PLAN.md`](./ENCAVE-V3-DELIVERY-PLAN.md), les **décisions** dans [`adr/`](./adr/).
+> Source de vérité **technique** de l'état courant. Le **produit/cible** vit dans [`company/PRODUIT.md`](../company/PRODUIT.md),
+> le **pilotage** dans [`company/PRIORITES.md`](../company/PRIORITES.md), les **décisions** dans [`adr/`](./adr/).
 > Dernière révision : 2026-11-12 (audit pré-launch — routing/middleware, API/crons, flags, emails, sections « dormant » et « à construire » remises à plat ; rapport : [`audits/2026-11-12-audit-pre-launch.md`](./audits/2026-11-12-audit-pre-launch.md)). Vérifié contre le code, pas contre les docs.
 
 ## Vue d'ensemble

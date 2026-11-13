@@ -131,11 +131,13 @@ npx prisma migrate reset
 
 Deployed on [Vercel](https://vercel.com) through the Git integration:
 
-| Environment | Branch           | URL                     |
-| ----------- | ---------------- | ----------------------- |
-| Preview     | feature branches | auto Vercel URL         |
-| Staging     | `dev`            | `encave-dev.vercel.app` |
-| Production  | `main`           | `encave.ch`             |
+| Environment | Source   | URL             |
+| ----------- | -------- | --------------- |
+| Preview     | every PR | auto Vercel URL |
+| Production  | `main`   | `encave.ch`     |
+
+There is no `dev` branch at the time of writing (13.11.2026); see `CLAUDE.md`
+→ "Git & environments".
 
 - Each build runs `prisma migrate deploy` first (see the warning above).
   Migrations are additive only; production requires `DIRECT_URL`. The
@@ -150,15 +152,20 @@ Deployed on [Vercel](https://vercel.com) through the Git integration:
 - Feature kill-switches live in the database and are toggled from `/admin`
   (`docs/runbooks/kill-switch-flags.md`).
 
+## How this project is run
+
+EnCave is operated by agents: a CEO that talks to the founder and dispatches
+work to specialists. Start with [`company/README.md`](./company/README.md) for
+the goal, the organisation and the current priorities; the specialists are
+defined in `.claude/agents/`; `CLAUDE.md` holds the rules for the code.
+
 ## Contributing
 
-1. Create a feature branch from **`dev`** (`samuel/enc-XX-slug`) — never
-   commit to `dev` or `main` directly
-2. Make your changes
+1. Create a feature branch from **`main`** — never commit to `main` directly
+2. Make your changes, following `CLAUDE.md`
 3. Run `npm run lint`, `npm run format:check` and `npm run i18n:check`
 4. Run `npm run test:run` to ensure tests pass
-5. Open a pull request targeting **`dev`** (staging). `dev` → `main`
-   (production) is a separate pull request, once staging is validated
+5. Open a pull request targeting **`main`**; it deploys production once merged
 
 ## License
 

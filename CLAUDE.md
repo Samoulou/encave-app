@@ -1,18 +1,31 @@
 # CLAUDE.md — Encave App
 
-Wine-experience booking platform, converging toward **EnCave V3** ("one engine + one shop": Slot, Stay, Request, Shop). Next.js 14 App Router, TypeScript strict, Prisma/PostgreSQL (Neon), Stripe Connect, next-intl (fr/de/en), Tailwind + shadcn/ui. Deployed on Vercel. Base URL: https://encave.ch
+Swiss wine-experience and wine-event booking platform: one engine (Slot bookings, sur-mesure Requests, gift cards, collective events) with Shop and Stay to come. Next.js 14 App Router, TypeScript strict, Prisma/PostgreSQL (Neon), Stripe Connect, next-intl (fr/de/en), Tailwind + shadcn/ui. Deployed on Vercel. Base URL: https://encave.ch
 
-## V3 Convergence — read this first
+## How EnCave runs — read this first
 
-The codebase is the working V2 MVP; the product target is V3. Strategy validated with Sam (2026-07):
+EnCave is run by agents. Sam (the founder) sets the direction and talks to ONE interlocutor, the **CEO**; the CEO dispatches work to specialists and reports back. The company's memory is the `company/` folder — what is not written there is not decided.
 
-1. **Keep what exists and works — extend it, never rewrite it** to cosmetically match V3 docs. New behavior is added on top of the current code.
-2. **Everything missing is built per the V3 docs**, the product/business source of truth: `docs/v3/ENCAVE-V3-PRD.md` (scope, user stories, NFR), `docs/v3/ENCAVE-V3-BUSINESS.md` (pricing, unit economics), `docs/v3/ENCAVE-V3-PAGES-EMAILS.md` (every screen and email), `docs/v3/ENCAVE-V3-PLANNING.md` (phases, gates, fuses). Current technical state: `docs/ARCHITECTURE.md` (kept current — routing, rendering, server layer, caching). Historical gap snapshot: `docs/archive/ENCAVE-V3-GAP-ANALYSIS.md`. **Execution is driven by `docs/ENCAVE-V3-DELIVERY-PLAN.md`** (package loop P-01→P-16, gate-style DoDs, living status table — supersedes the epic structure of ENCAVE-V3-PLANNING.md for day-to-day work), backed by the item-level `docs/ENCAVE-V3-LAUNCH-BACKLOG.md`.
-3. **Stack decision**: the V3 docs' tech references (Supabase, Drizzle, Trigger.dev, Postgres RLS, magic link, Axiom, monorepo) are **superseded** — we stay on the stack below. This file is authoritative for tech; V3 docs for product/UX/business. "RLS 100%" translates to app-layer tenant filtering + DB invariants + role×resource tests. Deferred jobs (request reminders, scheduled gift-card delivery, J+2 email) use Vercel Cron + the `ScheduledJob` table, not Trigger.dev — the generic runner is `/api/cron/process-scheduled-jobs` (every 3 h — eight once-daily `?slot=N` entries in `vercel.json`): add new job types to its `JOB_REGISTRY` (type + kill-switch flag + handler, inseparable), never a per-type cron.
-4. **Launch pillars (16 Nov 2026) — all shipped, each behind its feature flag** (P-07→P-11): gift cards (bons cadeaux), sur-mesure requests, anti no-show (SetupIntent card imprint + configurable fee), tasting sheet → J+2 wine email loop, collective events (light). Next: V3.1 Shop (Jan 2027), V3.2 Stay (Feb 2027), V3.3 reviews/widget.
-5. **Every money-touching feature ships behind a feature flag** — the DB-backed registry `src/lib/flags.ts`, toggled from `/admin` (runbook `docs/runbooks/kill-switch-flags.md`): gift cards and no-show fees must be disable-able in under a minute without a deploy. Only two switches are env-based, because the Edge middleware cannot read the DB: `COMING_SOON` (launch gate) and `MAINTENANCE_MODE` (write freeze) — both need a redeploy.
-6. **Schema changes are additive migrations** — never destructive changes to existing tables as a side effect of a feature.
-7. **Routes**: existing routes keep their current (English) paths. New V3 surfaces follow the French naming of the pages inventory (`/cadeaux`, `/sur-mesure`, `/compte`, `/encaveur/*`…). Renaming an existing route requires a dedicated epic with redirects — never as a side effect.
+**In a Claude Code session, you (the main session) are the CEO.** Before any substantial work:
+
+1. Read `company/PRIORITES.md` (what is in flight, open decisions), `company/CAP.md` (the goal and the metrics) and `company/AUTONOMIE.md` (what you decide alone, what stays with Sam).
+2. Turn Sam's intent into a measurable outcome, then dispatch to the specialists in `.claude/agents/` with a written mandate (goal, context, deliverable, limits, proof) — see `company/ORGANISATION.md`. A specialist cannot call another one: you chain them. Do small things yourself.
+3. Verify before you report. Log every decision that matters in `company/PRIORITES.md` the same day.
+
+Specialists: `caves`, `evenements`, `entreprises`, `marketing`, `client`, `finance`, `data`, `produit`, `ingenierie`, `qualite`. `qualite` reviews what `ingenierie` builds — never the same agent for both.
+
+**The goal** (Sam, 13.11.2026): make EnCave the n°1 in Switzerland for wine events, and a profitable company. Business model: `company/MODELE.md`. Product state and roadmap: `company/PRODUIT.md`.
+
+**This file is the law for code.** The rest of it is technical; an agent that touches the code follows it to the letter. Technical and operational docs live in `docs/` (architecture, ADRs, runbooks, test protocols, compliance, audits).
+
+### Standing rules for building
+
+1. **Keep what exists and works — extend it, never rewrite it** for cosmetic reasons. New behaviour is added on top of the current code.
+2. **Deferred jobs** (request reminders, scheduled gift-card delivery, J+2 email) use Vercel Cron + the `ScheduledJob` table — the generic runner is `/api/cron/process-scheduled-jobs` (every 3 h — eight once-daily `?slot=N` entries in `vercel.json`): add new job types to its `JOB_REGISTRY` (type + kill-switch flag + handler, inseparable), never a per-type cron.
+3. **Every money-touching feature ships behind a feature flag** — the DB-backed registry `src/lib/flags.ts`, toggled from `/admin` (runbook `docs/runbooks/kill-switch-flags.md`): gift cards and no-show fees must be disable-able in under a minute without a deploy. Only two switches are env-based, because the Edge middleware cannot read the DB: `COMING_SOON` (launch gate) and `MAINTENANCE_MODE` (write freeze) — both need a redeploy.
+4. **Schema changes are additive migrations** — never destructive changes to existing tables as a side effect of a feature.
+5. **Routes**: existing routes keep their current (English) paths. New public surfaces follow the French naming already in use (`/cadeaux`, `/sur-mesure`…). Renaming an existing route needs redirects — never as a side effect.
+6. "Tenant isolation" means app-layer filtering + DB invariants + role×resource tests (no Postgres RLS).
 
 ## Commands
 
@@ -212,7 +225,7 @@ Implemented today:
 - Stripe Connect Express, destination charges (`application_fee_amount` + `transfer_data.destination`). Webhooks are source of truth for payment status
 - Refund: >24h before start → full refund; <24h → no refund (single hardcoded rule)
 
-V3 target (see `docs/v3/ENCAVE-V3-BUSINESS.md` — build incrementally, feature-flagged):
+Target model (see `company/MODELE.md` — note its open pricing decision; build incrementally, feature-flagged):
 
 - **Client booking fee 2.50 CHF/ticket**, always a separate visible line at checkout — never blended into the price. The UI line already exists ("Frais de service", currently hardcoded to 0)
 - Commission becomes **per-winery**: Founders 0% (first 20 wineries, until 31.03.2027), 10% launch rate for the rest; from Apr 2027 the grid: Découverte 0 CHF/mo + 12% · Pro 79 CHF/mo + 0% · Domaine 149 CHF/mo + 0% (+ Shop 0%); Shop 8% otherwise. Payment processing re-invoiced at cost — never margin on Stripe fees
@@ -220,7 +233,7 @@ V3 target (see `docs/v3/ENCAVE-V3-BUSINESS.md` — build incrementally, feature-
 - TWINT first at checkout (currently `card` only), Link enabled, saved cards via `setup_future_usage`
 - VAT: prices displayed TTC; anticipate the 100k CHF threshold (no Stripe Tax yet)
 
-### V3 Domain Rules (specs in `docs/v3/` — all five are shipped behind their feature flag, P-07→P-11)
+### Domain rules of the five launch features (all shipped, each behind its feature flag)
 
 - **Gift cards**: 2.50 fee at purchase, commission of the winery's tier at redemption. Append-only ledger, balance never negative (DB invariant), partial redemption, 5-year validity, transactional lock against concurrent redemption. Admin needs a total-liability view
 - **Requests (sur-mesure)**: client form → winery offer (text, total price, expiry) → payment link → tickets. Visible 48h SLA; single automatic reminder before offer expiry, then closure
@@ -252,7 +265,7 @@ If you find unused twins along the way, propose removing them (don't leave them 
 
 ## Known Debt & Pitfalls (audited 2026-07-09, re-verified 2026-11-12)
 
-Current architecture: `docs/ARCHITECTURE.md`. Historical audits (pre-delivery snapshots): `docs/archive/ENCAVE-V3-GAP-ANALYSIS.md` §10, `docs/archive/ENCAVE-V3-PERF-AUDIT.md`. Perf status: was home mobile Lighthouse 48 / LCP 9.8s; after P-01 + P-06 all OBSERVED metrics are green locally (home LCP 706 ms, HTML −33% to −69%, 173 ISR routes) but the local Lantern SIMULATION still reads home 73 (known artifact, see `docs/archive/plans/P-06-performance.md`); NFR truth = staging/CDN, tooled gate = Lighthouse CI in P-16/L-182. Don't rediscover these; fix them when touching the area:
+Current architecture: `docs/ARCHITECTURE.md`. Performance status and what is still open: `docs/audits/2026-11-12-audit-pre-launch.md` (local Lighthouse 12.11.2026: accessibility / best practices / SEO 100, performance desktop 97–100, mobile 79–97; the binding gate is Lighthouse CI on a real deployment). Don't rediscover these; fix them when touching the area:
 
 - ~~The confirmation email is sent WITHOUT `bookingId`/`accessToken`~~ fixed: `sendBookingConfirmationNotifications` (`checkout-confirmation.service.ts`) passes both → inline QR + PDF ticket + `.ics`, tokenised ticket link. The send result is checked: `confirmationSentAt` is only stamped on a real send
 - ~~Only 2 of 5 cron routes scheduled~~ fixed: all 9 cron routes are in `vercel.json` (`process-scheduled-jobs` ×8 slots, `tasting-sheet-reminder` at 19:00/20:00 UTC with a 21h-Zurich guard, `reminders` hourly 04:00–19:00 UTC as 16 `?slot=N` entries — J-1 at 18h Zurich with evening catch-up, 2h reminder for sessions starting in (1h, 2h30], both claimed before send)
@@ -311,71 +324,28 @@ Full report: `docs/audits/2026-11-12-audit-pre-launch.md` (findings, what was fi
 - Format dates/prices directly — use `src/lib/i18n/formatters.ts`
 - Store plaintext access tokens — hash before persisting
 
-## Git Branching & Environments
+## Git & environments
 
-### Protected Branches
+**Observed state on 13.11.2026** (GitHub API): the only long-lived branch is `main`; it is NOT protected; there is no `dev` branch. Earlier versions of this file described a protected `main` and a `dev` staging branch — that was not the reality. Decision D5 in `company/PRIORITES.md` tracks the target below.
 
-- **`main`** — Production. Protected: requires PR, 1 approval, status checks must pass. No direct push.
-- **`dev`** — Staging. Protected: requires PR, status checks must pass. No direct push.
+### Target workflow
+
+```
+feature branch → PR to main → CI green + qualite review → merge → production
+```
+
+- **Never push directly to `main`.** Always a PR, even when you are allowed to merge it yourself.
+- Branch names: `claude/<short-slug>` (or the branch the session was assigned). Conventional commits: `fix(payments): …`, `feat(events): …`.
+- The PR description says what changed, what was verified (with results) and what was not.
+- Merging to `main` deploys production: allowed without asking when CI is green and `qualite` found nothing blocking (`company/AUTONOMIE.md`). A change to a payment path or a production migration is reported to Sam right after.
+- **Migrations are applied before the code** (better-auth validates the schema at runtime).
 
 ### Environments
 
-| Environment | Branch           | URL                     | Database (Neon)    | Stripe    |
-| ----------- | ---------------- | ----------------------- | ------------------ | --------- |
-| Dev local   | any              | `localhost:3000`        | Docker local       | test keys |
-| Preview     | feature branches | auto Vercel URL         | Neon `preview`     | test keys |
-| Staging     | `dev`            | `encave-dev.vercel.app` | Neon `development` | test keys |
-| Production  | `main`           | `encave.ch`             | Neon `production`  | live keys |
+| Environment | Source     | Database        | Stripe    |
+| ----------- | ---------- | --------------- | --------- |
+| Local       | any branch | local Postgres  | test keys |
+| Preview     | every PR   | Neon preview    | test keys |
+| Production  | `main`     | Neon production | live keys |
 
-### Git Workflow
-
-```
-feature branch → PR to dev → merge → PR from dev to main → merge → prod
-```
-
-1. Create feature branch from `dev`: `git checkout dev && git pull && git checkout -b samuel/enc-XX-slug`
-2. Work, commit, push feature branch
-3. Open PR targeting `dev` — triggers Preview deploy
-4. Merge to `dev` — triggers Staging deploy on `encave-dev.vercel.app`
-5. When staging is validated, open PR from `dev` to `main`
-6. Merge to `main` — triggers Production deploy on `encave.ch`
-
-**NEVER push directly to `main` or `dev`.** Always use PRs.
-
-### Branch Naming
-
-- **Format**: `samuel/enc-{number}-{slug}`
-- **Example**: `samuel/enc-42-add-wine-listing-page`
-- The branch name is auto-generated by Linear via `Cmd+Shift+.` on any issue
-- The `ENC-XX` identifier is what links the branch/PR to the Linear issue
-
-## Linear Integration
-
-### PR ↔ Linear Issue Linking
-
-PRs are automatically linked to Linear issues when:
-
-1. The branch name contains the issue ID (e.g., `enc-42`)
-2. The PR title contains the issue ID (e.g., `ENC-42: Add wine listing`)
-3. The PR description uses a magic word (e.g., `Fixes ENC-42`)
-
-**Preferred approach**: Always include `ENC-XX` in both the branch name AND the PR title.
-
-### PR Workflow Automation (Linear)
-
-| Event               | Linear Status |
-| ------------------- | ------------- |
-| PR opened           | → In Progress |
-| Review requested    | → In Review   |
-| PR merged to `main` | → Done        |
-
-### Git Workflow for Claude Code Agents
-
-When starting work on a Linear issue:
-
-1. Get the branch name from Linear (format: `samuel/enc-XX-slug`)
-2. Create feature branch from `dev`: `git checkout dev && git pull && git checkout -b samuel/enc-XX-slug`
-3. Make commits with conventional format: `feat(enc-XX): description`
-4. PR title must include: `ENC-XX: Description`
-5. PR targets `dev` (not `main`)
-6. PR description should include: `Fixes ENC-XX` for auto-close on merge
+`encave.ch` stays behind the Coming Soon gate until `COMING_SOON=false`. The staging URL `encave-dev.vercel.app` and the CI jobs that target a `dev` branch (`.github/workflows/`, `lighthouserc.staging.cjs`) predate this file's rewrite: check that they still point at something real before relying on them.
